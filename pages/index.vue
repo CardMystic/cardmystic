@@ -79,6 +79,7 @@ const searchResults: Ref<any[]> = ref([]);
 const searching = ref(false);
 
 async function search() {
+  console.log('url: ', `${process.env.BACKEND_URL}:${process.env.BACKEND_PORT}/search`)
   filterRef.value?.closePanel();
   searching.value = true;
 
