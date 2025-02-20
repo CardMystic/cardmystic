@@ -71,6 +71,7 @@
 import { ref } from 'vue';
 import { type IFilter, type IMagicCardsSearchFilters, type IMagicCardsSearch, type Legalities } from '@/types/IVectorBackend';
 import { cardFormats } from '@/utils/mtgCommon';
+const config = useRuntimeConfig();
 
 const filterRef: any = ref(null);
 const searchText = ref('');
@@ -79,7 +80,7 @@ const searchResults: Ref<any[]> = ref([]);
 const searching = ref(false);
 
 async function search() {
-  console.log('url: ', `${process.env.BACKEND_URL}:${process.env.BACKEND_PORT}/search`)
+  console.log('url: ', `${config.public.NUXT_PUBLIC_API_URL}:${config.public.NUXT_PUBLIC_API_PORT}/search`)
   filterRef.value?.closePanel();
   searching.value = true;
 
