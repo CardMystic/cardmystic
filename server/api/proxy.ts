@@ -1,3 +1,4 @@
+import { useRuntimeConfig } from '#imports';
 const config = useRuntimeConfig();
 
 export default defineEventHandler(async (event) => {
