@@ -93,12 +93,11 @@ async function search() {
 
   if(data.value) {
     searchResults.value = data.value.objects;
-    searching.value = false;
   } else {
     searchResults.value = [];
     // TODO: give a message
   }
-  
+  searching.value = false;
 }
 
 function formatFilters() {
