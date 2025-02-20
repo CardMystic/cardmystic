@@ -1,9 +1,9 @@
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
 
-  console.log('url: ', `${process.env.BACKEND_URL}:${process.env.BACKEND_PORT}/search`)
+  console.log('url: ', `${process.env.NUXT_PUBLIC_API_URL}:${process.env.NUXT_PUBLIC_API_PORT}/search`)
 
-  const response = await $fetch(`${process.env.BACKEND_URL}:${process.env.BACKEND_PORT}/search`, {
+  const response = await $fetch(`${process.env.NUXT_PUBLIC_API_URL}:${process.env.NUXT_PUBLIC_API_PORT}/search`, {
     method: 'POST',
     body: body
   });
