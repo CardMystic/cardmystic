@@ -103,11 +103,7 @@ async function search() {
 function formatFilters() {
   const filters: IMagicCardsSearchFilters = { legalities: {}};
   searchFilters.value.forEach(filter => {
-  console.log('filter', filter) 
-  console.log('card formats', cardFormats)
   let filterKey = filter.type // as keyof IMagicCardsSearchFilters; // Type assertion here
-  console.log('filterkey', filterKey)
-  console.log('key in formats' , cardFormats.includes(filterKey))
     if(filterKey == 'powers' || filterKey == 'toughnesses') {
       if (!filters[filterKey]) {
           filters[filterKey] = [filter.value as number];
@@ -121,13 +117,10 @@ function formatFilters() {
           (filters[filterKey] as string[]).push(filter.value as string);
         }
     } else if(cardFormats.includes(filterKey)) {
-      console.log('cardFormats', cardFormats)
-      console.log('filterKey', filterKey) 
       const legalityKey = filterKey as keyof Legalities;
       filters['legalities']![legalityKey] = filter.value as string;
     } 
   });
-  console.log('filters', filters)
   return filters;
 }
 
