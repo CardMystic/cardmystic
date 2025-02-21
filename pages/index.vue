@@ -80,7 +80,7 @@ const searchResults: Ref<any[]> = ref([]);
 const searching = ref(false);
 
 async function search() {
-  console.log('url: ', `${config.public.NUXT_PUBLIC_API_URL}:${config.public.NUXT_PUBLIC_API_PORT}/search`)
+  console.log('url: ', `https://api.cardmystic.io/search`)
   filterRef.value?.closePanel();
   searching.value = true;
 
