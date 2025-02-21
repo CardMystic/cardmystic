@@ -6,7 +6,7 @@
       <!-- Title container -->
       <v-row class="title-container" v-if="searchResults.length === 0">
         <h1 class="title">CardMystic</h1>
-        <h2 class="subtitle">Vector and Similarity Search For Trading Card Games</h2>
+        <h2 class="subtitle">Vector / Semantic Search For Trading Card Games</h2>
       </v-row>
 
       <!-- Search bar and filters -->
@@ -15,7 +15,7 @@
           <v-text-field v-model="searchText" label="Search..." variant="solo" elevation="5"></v-text-field>
         </v-col>
         <v-col class="d-flex flex-grow-0 pt-3">
-          <v-btn style="height: 56px" @click="search()" color="primary" elevation="3" :loading="searching">Search</v-btn>
+          <v-btn :disabled="searchText.length == 0" style="height: 56px" @click="search()" color="primary" elevation="3" :loading="searching">Search</v-btn>
         </v-col>
       </v-row>
 
@@ -48,6 +48,15 @@
         </v-card>
       </v-row>
 
+      <v-row class="mt-10" justify="center" v-if="searchResults.length !== 0">
+        <v-card style="max-width: 500px" elevation="5">
+          <v-card-text class="d-flex flex-row text-left align-center">
+            <v-icon color="primary">mdi-help-circle</v-icon>
+            <p class="ml-2">The percentage (%) under each card represents the model's <b class="important-text">confidence</b> that the result is relevant. If confidence is low, try being more specific in your search. <b class="important-text">Avoid slang terms</b> that don't appear on cards such as "loot" or "rummage".</p>
+          </v-card-text>
+        </v-card>
+      </v-row>
+
       <!-- Results, show image with properties.url -->
       <!-- TODO: return more results and paginate -->
       <v-row>
@@ -58,6 +67,11 @@
               alt="Card Image"
               style="border-radius: 12px;"
             ></v-img>
+            <v-progress-linear rounded color="primary" :model-value="result.metadata.confidence * 100" :height="20" class="mt-2" style="max-width: 220px">
+              <template v-slot:default="{ value }">
+                <p style="color: black; font-size: 14px;">{{ Math.ceil(value) }}%</p>
+              </template>
+            </v-progress-linear>
         </v-col>
       </v-row>
 
@@ -94,7 +108,14 @@ async function search() {
   });
 
   if(data.value) {
-    searchResults.value = data.value.objects;
+    const resultsWithConfidence = data.value.objects.map((result: any) => {
+      result.metadata.confidence = 1 - result.metadata.distance;
+      return result;
+    });
+    const sortedResults = resultsWithConfidence.sort((a: any, b: any) => b.metadata.confidence - a.metadata.confidence);
+
+    searchResults.value = sortedResults;
+    console.log(searchResults.value)
   } else {
     searchResults.value = [];
     // TODO: give a message
