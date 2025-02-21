@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   devServer: {
-    port: process.env.NUXT_PUBLIC_API_PORT ? parseInt(process.env.NUXT_PUBLIC_API_PORT) : 3000
+    port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 80
   },
   build: {
     transpile: ['vuetify'],
