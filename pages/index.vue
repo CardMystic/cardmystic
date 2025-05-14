@@ -67,7 +67,7 @@
               alt="Card Image"
               style="border-radius: 12px;"
             ></v-img>
-            <v-progress-linear rounded color="black" :model-value="result.metadata.confidence * 100" :height="20" class="mt-2" style="max-width: 220px">
+            <v-progress-linear rounded color="black" :model-value="result.metadata.score * 100" :height="20" class="mt-2" style="max-width: 220px">
               <template v-slot:default="{ value }">
                 <p style="color: white; font-size: 14px;">{{ Math.ceil(value) }}%</p>
               </template>
