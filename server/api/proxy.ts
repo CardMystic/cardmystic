@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
 
   const response = await $fetch(`https://api.cardmystic.io/search`, {
     method: 'POST',
-    body: body
+    body: body,
   });
 
   return response;

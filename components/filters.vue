@@ -1,123 +1,147 @@
 <template>
   <v-expansion-panels v-model="panel">
-  <v-expansion-panel
-  value="1"
-    title="Filters"
-    color="white"
-  >
-  <template #text>
-    <p style="margin-bottom: 8px;">Click <v-icon style="position: relative; top: -1px">mdi-plus-box</v-icon> to add the Filter</p>
+    <v-expansion-panel value="1" title="Filters" color="white">
+      <template #text>
+        <!-- Type Filter -->
+        <v-row class="mt-0">
+          <v-col cols="3" class="d-flex align-center justify-content-center">
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-paw</v-icon>Type</v-label
+            >
+          </v-col>
+          <v-col class="align-center justify-content-center">
+            <v-select
+              :items="cardTypes"
+              v-model="selectedCardType"
+              :multiple="true"
+              :chips="true"
+            ></v-select>
+          </v-col>
+        </v-row>
 
-    <!-- Type Filter -->
-    <v-row class="mt-0">
-      <v-col class="py-0">
-        <v-select
-          label="Type"
-          :items="cardTypes"
-          v-model="selectedCardType"
-        ></v-select>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('types', selectedCardType)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
-    <!-- Color Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-select
-          label="Color"
-          :items="cardColors"
-          v-model="selectedCardColor"
-        ></v-select>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('colors', selectedCardColor)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <!-- Color Filter -->
+        <v-row>
+          <v-col cols="3" class="d-flex align-center justify-content-center">
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-palette</v-icon>Color</v-label
+            >
+          </v-col>
+          <v-col class="d-flex flex-row align-center justify-content-center">
+            <div class="d-flex flex-row align-center justify-content-center">
+              <v-checkbox
+                v-for="color in cardColors"
+                :key="color"
+                :label="color"
+                :value="color"
+                v-model="selectedCardColor"
+                class="mr-3"
+              ></v-checkbox>
+            </div>
+          </v-col>
+        </v-row>
 
-    <!-- Color Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-select
-          label="Rarity"
-          :items="cardRarities"
-          v-model="selectedCardRarity"
-        ></v-select>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('rarities', selectedCardRarity)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
-    <!-- CMC Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-text-field label="Converted Mana Cost" v-model="selectedCMC"></v-text-field>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('manaCosts', selectedCMC)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <!-- Rarity Filter -->
+        <v-row>
+          <v-col cols="3" class="d-flex align-center justify-content-center">
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-cards-playing</v-icon>Rarity</v-label
+            >
+          </v-col>
+          <v-col class="align-center justify-content-center">
+            <v-select
+              :items="cardRarities"
+              v-model="selectedCardRarity"
+            ></v-select>
+          </v-col>
+        </v-row>
 
-    <!-- Power Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-text-field label="Power" v-model="selectedPower" type="number"></v-text-field>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('powers', selectedPower)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
+        <!-- CMC Filter -->
+        <v-row>
+          <v-col cols="3" class="d-flex align-center justify-content-center">
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-gold</v-icon>CMC</v-label
+            >
+          </v-col>
+          <v-col class="align-center justify-content-center">
+            <v-text-field v-model="selectedCMC" type="number"></v-text-field>
+          </v-col>
+        </v-row>
 
-    <!-- Toughness Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-text-field label="Toughness" v-model="selectedToughness" type="number"></v-text-field>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('toughnesses', selectedToughness)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
+        <!-- Power Filter -->
+        <v-row>
+          <v-col cols="3" class="d-flex align-center justify-content-center">
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-arm-flex</v-icon>Power</v-label
+            >
+          </v-col>
+          <v-col class="align-center justify-content-center">
+            <v-text-field v-model="selectedPower" type="number"></v-text-field>
+          </v-col>
+        </v-row>
 
-    <!-- Legality Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-select label="Format" :items="cardFormats" v-model="selectedCardFormat"></v-select>
-      </v-col>
-      <v-col class="py-0">
-        <v-select label="Legality" :items="cardFormatStatuses" v-model="selectedCardFormatStatus"></v-select>
-      </v-col>
-      <v-col class="py-0" cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter(selectedCardFormat, selectedCardFormatStatus)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
-  </template>
-  </v-expansion-panel>
-</v-expansion-panels>
+        <!-- Toughness Filter -->
+        <v-row>
+          <v-col cols="3" class="d-flex align-center justify-content-center">
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-wall</v-icon>Defense</v-label
+            >
+          </v-col>
+          <v-col class="align-center justify-content-center">
+            <v-text-field
+              v-model="selectedToughness"
+              type="number"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
+
+        <!-- Legality Filter -->
+        <v-row>
+          <v-col cols="3" class="d-flex align-center justify-content-center">
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-shield-check</v-icon>Legality</v-label
+            >
+          </v-col>
+          <v-col class="mt-1 pb-0">
+            <v-select
+              label="Format"
+              :items="cardFormats"
+              v-model="selectedCardFormat"
+            ></v-select>
+          </v-col>
+          <v-col class="mt-1 pb-0">
+            <v-select
+              label="Legality"
+              :items="cardFormatStatuses"
+              v-model="selectedCardFormatStatus"
+            ></v-select>
+          </v-col>
+        </v-row>
+      </template>
+    </v-expansion-panel>
+  </v-expansion-panels>
 </template>
 
 <script setup lang="ts">
 import { ref, type Ref, defineExpose } from 'vue';
 import { type IFilter } from '@/types/IVectorBackend';
-import { cardColors, cardTypes, cardRarities, cardFormats } from '@/utils/mtgCommon';
+import {
+  cardColors,
+  cardTypes,
+  cardRarities,
+  cardFormats,
+} from '@/utils/mtgCommon';
 
 const emit = defineEmits<{
   (event: 'newFilter', newFilter: IFilter): void;
@@ -125,59 +149,53 @@ const emit = defineEmits<{
 
 const panel = ref([]);
 
-const selectedCardType = ref()
-const selectedCardColor = ref()
-const selectedCardRarity = ref()
-const selectedCardFormat = ref()
+const selectedCardType = ref();
+const selectedCardColor = ref();
+const selectedCardRarity = ref();
+const selectedCardFormat = ref();
 
-const selectedCardFormatStatus = ref()
-const cardFormatStatuses = [
-  "banned",
-  "restricted",
-  "legal"
-]
+const selectedCardFormatStatus = ref();
+const cardFormatStatuses = ['banned', 'restricted', 'legal'];
 
-const selectedCMC = ref('')
+const selectedCMC = ref('');
 function addFilter(type: string, value: string) {
   const newFilter = {
-    'type': type,
-    'value': value,
+    type: type,
+    value: value,
   };
 
-  if(type == 'manaCosts') {
-    selectedCMC.value = ''
-  } else if(type == 'powers') {
-    selectedPower.value = ''
-  } else if(type == 'toughnesses') {
-    selectedToughness.value = ''
-  } else if(type == 'types') {
-    selectedCardType.value = null
-  } else if(type == 'colors') {
-    selectedCardColor.value = null
-  } else if(type == 'rarities') {
-    selectedCardRarity.value = null
-  } else if(type == 'legalities') {
-    selectedCardFormat.value = null
-    selectedCardFormatStatus.value = null
+  if (type == 'manaCosts') {
+    selectedCMC.value = '';
+  } else if (type == 'powers') {
+    selectedPower.value = '';
+  } else if (type == 'toughnesses') {
+    selectedToughness.value = '';
+  } else if (type == 'types') {
+    selectedCardType.value = null;
+  } else if (type == 'colors') {
+    selectedCardColor.value = null;
+  } else if (type == 'rarities') {
+    selectedCardRarity.value = null;
+  } else if (type == 'legalities') {
+    selectedCardFormat.value = null;
+    selectedCardFormatStatus.value = null;
   }
-  console.log('emitting', newFilter)
+  console.log('emitting', newFilter);
 
   emit('newFilter', newFilter);
 }
 
-const selectedPower = ref('')
-const selectedToughness = ref('')
+const selectedPower = ref('');
+const selectedToughness = ref('');
 
 function closePanel() {
-  panel.value = []
+  panel.value = [];
 }
 
 // Expose the method to the parent
 defineExpose({
-  closePanel
+  closePanel,
 });
-
 </script>
 
-<style lang="sass" scoped>
-</style>
+<style lang="sass" scoped></style>

@@ -1,12 +1,12 @@
 <template>
-  <div>
-    <Analytics></Analytics>
-    <v-app  class="gradient-background">
-      <NuxtLayout >
-        <NuxtPage />
-      </NuxtLayout>
-    </v-app>
-  </div>
+    <div>
+      <Analytics></Analytics>
+      <v-app class="gradient-background">
+        <NuxtLayout>
+          <NuxtPage />
+        </NuxtLayout>
+      </v-app>
+    </div>
 </template>
 
 <style lang="sass" scoped>
@@ -16,6 +16,5 @@
 </style>
 
 <script setup lang="ts">
-import { Analytics } from '@vercel/analytics/nuxt'
-
+import { Analytics } from '@vercel/analytics/nuxt';
 </script>

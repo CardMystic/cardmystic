@@ -1,11 +1,10 @@
 // import this after install `@mdi/font` package
-import '@mdi/font/css/materialdesignicons.css'
+import '@mdi/font/css/materialdesignicons.css';
 
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
+import 'vuetify/styles';
+import { createVuetify } from 'vuetify';
 
 export default defineNuxtPlugin((app) => {
-
   const myDarkTheme = {
     dark: true,
     colors: {
@@ -21,7 +20,7 @@ export default defineNuxtPlugin((app) => {
       'border-color': '#000000',
       'border-opacity': 0.12,
       'high-emphasis-opacity': 0.87,
-      'medium-emphasis-opacity': 0.60,
+      'medium-emphasis-opacity': 0.6,
       'disabled-opacity': 0.38,
       'idle-opacity': 0.04,
       'hover-opacity': 0.04,
@@ -34,9 +33,8 @@ export default defineNuxtPlugin((app) => {
       'theme-on-kbd': '#FFFFFF',
       'theme-code': '#F5F5F5',
       'theme-on-code': '#000000',
-    }
-  }
-
+    },
+  };
 
   const vuetify = createVuetify({
     theme: {
@@ -45,8 +43,7 @@ export default defineNuxtPlugin((app) => {
         myDarkTheme,
       },
     },
-  })
+  });
 
-  app.vueApp.use(vuetify)
-
-})
+  app.vueApp.use(vuetify);
+});

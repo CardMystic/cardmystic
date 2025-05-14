@@ -17,7 +17,15 @@
     "vue-router": "latest"
   },
   "devDependencies": {
+    "@eslint/js": "^9.26.0",
+    "eslint": "^9.26.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.4.0",
+    "eslint-plugin-vue": "^10.1.0",
+    "globals": "^16.1.0",
+    "prettier": "^3.5.3",
     "sass-embedded": "^1.83.4",
+    "typescript-eslint": "^8.32.1",
     "vite-plugin-vuetify": "^2.1.0",
     "vuetify": "^3.7.11"
   }

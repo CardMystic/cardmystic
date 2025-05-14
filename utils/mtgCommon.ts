@@ -1,43 +1,32 @@
 export const cardFormats = [
-  "alchemy",
-  "brawl",
-  "commander",
-  "duel",
-  "explorer",
-  "future",
-  "gladiator",
-  "historic",
-  "historicbrawl",
-  "legacy",
-  "modern",
-  "oathbreaker",
-  "oldschool",
-  "pauper",
-  "paupercommander",
-  "penny",
-  "pioneer",
-  "predh",
-  "premodern",
-  "standard",
-  "standardbrawl",
-  "timeless",
-  "vintage"
+  'alchemy',
+  'brawl',
+  'commander',
+  'duel',
+  'explorer',
+  'future',
+  'gladiator',
+  'historic',
+  'historicbrawl',
+  'legacy',
+  'modern',
+  'oathbreaker',
+  'oldschool',
+  'pauper',
+  'paupercommander',
+  'penny',
+  'pioneer',
+  'predh',
+  'premodern',
+  'standard',
+  'standardbrawl',
+  'timeless',
+  'vintage',
 ];
 
-export const cardRarities = [
-  'common',
-  'uncommon',
-  'rare',
-  'mythic',
-]
+export const cardRarities = ['common', 'uncommon', 'rare', 'mythic'];
 
-export const cardColors = [
-  'W',
-  'B',
-  'U',
-  'R',
-  'G',
-]
+export const cardColors = ['White', 'Black', 'Blue', 'Red', 'Green'];
 
 export const cardTypes = [
   'Creature',
@@ -47,4 +36,4 @@ export const cardTypes = [
   'Planeswalker',
   'Instant',
   'Sorcery',
-]
+];
