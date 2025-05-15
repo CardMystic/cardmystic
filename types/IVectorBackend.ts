@@ -1,3 +1,8 @@
+export interface FormatEntry {
+  format: string | null;
+  status: string | null;
+}
+
 export interface IMagicCardsSearch {
   query: string;
   limit?: number;
@@ -5,15 +10,42 @@ export interface IMagicCardsSearch {
 }
 
 export interface IMagicCardsSearchFilters {
-  types?: string[];
-  colors?: string[];
-  rarities?: string[];
-  sets?: string[];
-  powers?: number[];
-  toughnesses?: number[];
-  artists?: string[];
-  manaCosts?: string[];
-  legalities?: Legalities;
+  selectedCardTypes: string[];
+  selectedColorFilterOption:
+    | 'Match Exactly'
+    | 'Contains At Least'
+    | 'Contains At Most';
+  selectedColors: {
+    Red: boolean;
+    Blue: boolean;
+    Green: boolean;
+    White: boolean;
+    Black: boolean;
+  };
+  selectedRarities: {
+    Common: boolean;
+    Uncommon: boolean;
+    Rare: boolean;
+    Mythic: boolean;
+  };
+  selectedCMCOption: 'Equal To' | 'Less Than' | 'Greater Than' | 'Not Equal To';
+  selectedPowerOption:
+    | 'Equal To'
+    | 'Less Than'
+    | 'Greater Than'
+    | 'Not Equal To';
+  selectedToughnessOption:
+    | 'Equal To'
+    | 'Less Than'
+    | 'Greater Than'
+    | 'Not Equal To';
+  selectedCMC: string;
+  selectedPower: string;
+  selectedToughness: string;
+  selectedCardFormats: {
+    format: string | null;
+    status: string | null;
+  }[];
 }
 
 export type Legalities = {

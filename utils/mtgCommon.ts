@@ -1,43 +1,36 @@
 export const cardFormats = [
-  "alchemy",
-  "brawl",
-  "commander",
-  "duel",
-  "explorer",
-  "future",
-  "gladiator",
-  "historic",
-  "historicbrawl",
-  "legacy",
-  "modern",
-  "oathbreaker",
-  "oldschool",
-  "pauper",
-  "paupercommander",
-  "penny",
-  "pioneer",
-  "predh",
-  "premodern",
-  "standard",
-  "standardbrawl",
-  "timeless",
-  "vintage"
+  'Alchemy',
+  'Brawl',
+  'Commander',
+  'Duel',
+  'Explorer',
+  'Future',
+  'Gladiator',
+  'Historic',
+  'HistoricBrawl',
+  'Legacy',
+  'Modern',
+  'Oathbreaker',
+  'OldSchool',
+  'Pauper',
+  'PauperCommander',
+  'Penny',
+  'Pioneer',
+  'Predh',
+  'Premodern',
+  'Standard',
+  'StandardBrawl',
+  'Timeless',
+  'Vintage',
 ];
 
-export const cardRarities = [
-  'common',
-  'uncommon',
-  'rare',
-  'mythic',
-]
+type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Mythic';
 
-export const cardColors = [
-  'W',
-  'B',
-  'U',
-  'R',
-  'G',
-]
+export const cardRarities: Rarity[] = ['Common', 'Uncommon', 'Rare', 'Mythic'];
+
+type Color = 'Red' | 'Blue' | 'Green' | 'White' | 'Black';
+
+export const cardColors: Color[] = ['White', 'Black', 'Blue', 'Red', 'Green'];
 
 export const cardTypes = [
   'Creature',
@@ -47,4 +40,4 @@ export const cardTypes = [
   'Planeswalker',
   'Instant',
   'Sorcery',
-]
+];

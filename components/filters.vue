@@ -1,183 +1,300 @@
 <template>
   <v-expansion-panels v-model="panel">
-  <v-expansion-panel
-  value="1"
-    title="Filters"
-    color="white"
-  >
-  <template #text>
-    <p style="margin-bottom: 8px;">Click <v-icon style="position: relative; top: -1px">mdi-plus-box</v-icon> to add the Filter</p>
+    <v-expansion-panel value="1" title="Filters" color="white">
+      <template #text>
+        <!-- Type Filter -->
+        <v-row class="mt-0">
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-content-center"
+          >
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
+              ><v-icon class="mr-1">mdi-paw</v-icon>Type</v-label
+            >
+          </v-col>
+          <v-col class="align-center justify-content-center">
+            <v-select
+              :items="cardTypes"
+              v-model="filters.selectedCardTypes"
+              :multiple="true"
+              :chips="true"
+              clearable
+            ></v-select>
+          </v-col>
+        </v-row>
 
-    <!-- Type Filter -->
-    <v-row class="mt-0">
-      <v-col class="py-0">
-        <v-select
-          label="Type"
-          :items="cardTypes"
-          v-model="selectedCardType"
-        ></v-select>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('types', selectedCardType)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
-    <!-- Color Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-select
-          label="Color"
-          :items="cardColors"
-          v-model="selectedCardColor"
-        ></v-select>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('colors', selectedCardColor)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <!-- Color Filters -->
+        <v-row>
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-content-center"
+          >
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white">
+              <v-icon class="mr-1">mdi-palette</v-icon>Color
+            </v-label>
+          </v-col>
 
-    <!-- Color Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-select
-          label="Rarity"
-          :items="cardRarities"
-          v-model="selectedCardRarity"
-        ></v-select>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('rarities', selectedCardRarity)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+          <v-col cols="12" md="9">
+            <div class="d-flex flex-wrap" style="gap: 8px">
+              <v-checkbox
+                v-for="color in cardColors"
+                :key="color"
+                :label="color"
+                :value="true"
+                v-model="filters.selectedColors[color]"
+                style="white-space: nowrap"
+              />
+            </div>
 
-    <!-- CMC Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-text-field label="Converted Mana Cost" v-model="selectedCMC"></v-text-field>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('manaCosts', selectedCMC)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+            <v-select
+              class="mt-4"
+              style="max-width: 250px"
+              :items="colorFiltersOptions"
+              v-model="filters.selectedColorFilterOption"
+            />
+          </v-col>
+        </v-row>
 
-    <!-- Power Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-text-field label="Power" v-model="selectedPower" type="number"></v-text-field>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('powers', selectedPower)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
+        <!-- Rarity Filter -->
+        <v-row>
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-content-center"
+          >
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white">
+              <v-icon class="mr-1">mdi-cards-playing</v-icon>Rarity
+            </v-label>
+          </v-col>
 
-    <!-- Toughness Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-text-field label="Toughness" v-model="selectedToughness" type="number"></v-text-field>
-      </v-col>
-      <v-col cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter('toughnesses', selectedToughness)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+          <v-col cols="12" md="9">
+            <div class="d-flex flex-wrap" style="gap: 8px">
+              <v-checkbox
+                v-for="rarity in cardRarities"
+                :key="rarity"
+                :label="rarity"
+                :value="rarity"
+                v-model="filters.selectedRarities[rarity]"
+                style="white-space: nowrap"
+              />
+            </div>
+          </v-col>
+        </v-row>
 
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
 
-    <!-- Legality Filter -->
-    <v-row>
-      <v-col class="py-0">
-        <v-select label="Format" :items="cardFormats" v-model="selectedCardFormat"></v-select>
-      </v-col>
-      <v-col class="py-0">
-        <v-select label="Legality" :items="cardFormatStatuses" v-model="selectedCardFormatStatus"></v-select>
-      </v-col>
-      <v-col class="py-0" cols="1" style="display: flex; align-items: center; justify-content: center;">
-        <v-icon @click="addFilter(selectedCardFormat, selectedCardFormatStatus)" size="30" style="position: relative; top: -12px">
-          mdi-plus-box
-        </v-icon>
-      </v-col>
-    </v-row>
+        <!-- CMC Filter -->
+        <v-row class="mt-1">
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-content-center"
+          >
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white">
+              <v-icon class="mr-1">mdi-gold</v-icon>CMC
+            </v-label>
+          </v-col>
 
-  </template>
-  </v-expansion-panel>
-</v-expansion-panels>
+          <v-col cols="12" md="9">
+            <div class="d-flex flex-wrap align-center" style="gap: 12px">
+              <v-select
+                :items="statOptions"
+                v-model="filters.selectedCMCOption"
+                style="max-width: 250px"
+              />
+              <v-text-field
+                v-model="filters.selectedCMC"
+                type="number"
+                style="max-width: 150px"
+                clearable
+              />
+            </div>
+          </v-col>
+        </v-row>
+
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
+
+        <!-- Power Filter -->
+        <v-row class="mt-1">
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-content-center"
+          >
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white">
+              <v-icon class="mr-1">mdi-arm-flex</v-icon>Power
+            </v-label>
+          </v-col>
+
+          <v-col cols="12" md="9">
+            <div class="d-flex flex-wrap align-center" style="gap: 12px">
+              <v-select
+                :items="statOptions"
+                v-model="filters.selectedPowerOption"
+                style="max-width: 250px"
+              />
+              <v-text-field
+                v-model="filters.selectedPower"
+                type="number"
+                style="max-width: 150px"
+                clearable
+              />
+            </div>
+          </v-col>
+        </v-row>
+
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
+
+        <!-- Toughness Filter -->
+        <v-row class="mt-1">
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-content-center"
+          >
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white">
+              <v-icon class="mr-1">mdi-wall</v-icon>Defense
+            </v-label>
+          </v-col>
+
+          <v-col cols="12" md="9">
+            <div class="d-flex flex-wrap align-center" style="gap: 12px">
+              <v-select
+                :items="statOptions"
+                v-model="filters.selectedToughnessOption"
+                style="max-width: 250px"
+              />
+              <v-text-field
+                v-model="filters.selectedToughness"
+                type="number"
+                style="max-width: 150px"
+                clearable
+              />
+            </div>
+          </v-col>
+        </v-row>
+
+        <v-divider class="my-2" color="white" opacity="1"></v-divider>
+
+        <!-- Legality Filter -->
+        <v-row class="mt-1">
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-content-center"
+          >
+            <v-label class="mt-0 mr-4" style="font-size: 18px; color: white">
+              <v-icon class="mr-1">mdi-shield-check</v-icon>Legality
+            </v-label>
+          </v-col>
+
+          <v-col cols="12" md="9">
+            <div
+              v-for="(entry, index) in filters.selectedCardFormats"
+              :key="index"
+              class="d-flex flex-wrap align-center mb-2"
+              style="gap: 12px"
+            >
+              <div style="flex: 1 1 200px; min-width: 160px">
+                <v-select
+                  label="Format"
+                  :items="cardFormats"
+                  v-model="entry.format"
+                  clearable
+                />
+              </div>
+
+              <div style="flex: 1 1 200px; min-width: 160px">
+                <v-select
+                  label="Legality"
+                  :items="cardFormatStatuses"
+                  v-model="entry.status"
+                  clearable
+                />
+              </div>
+
+              <!-- <v-btn
+                icon
+                variant="text"
+                color="red"
+                density="compact"
+                class="pb-9"
+                style="flex-shrink: 0; align-self: center"
+                @click="removeCardFormat(index)"
+                v-if="selectedCardFormats.length > 1"
+              >
+                <v-icon size="18">mdi-close-circle-outline</v-icon>
+              </v-btn> -->
+            </div>
+          </v-col>
+        </v-row>
+      </template>
+    </v-expansion-panel>
+  </v-expansion-panels>
 </template>
 
 <script setup lang="ts">
 import { ref, type Ref, defineExpose } from 'vue';
-import { type IFilter } from '@/types/IVectorBackend';
-import { cardColors, cardTypes, cardRarities, cardFormats } from '@/utils/mtgCommon';
+import {
+  cardColors,
+  cardTypes,
+  cardRarities,
+  cardFormats,
+} from '@/utils/mtgCommon';
+import { useSearchStore } from '~/stores/searchStore';
+import { storeToRefs } from 'pinia';
 
-const emit = defineEmits<{
-  (event: 'newFilter', newFilter: IFilter): void;
-}>();
+const searchStore = useSearchStore();
 
-const panel = ref([]);
+// Get filters from the pinia store
+const { filters } = storeToRefs(searchStore);
 
-const selectedCardType = ref()
-const selectedCardColor = ref()
-const selectedCardRarity = ref()
-const selectedCardFormat = ref()
+const panel = ref([]); // open or close this panel
 
-const selectedCardFormatStatus = ref()
-const cardFormatStatuses = [
-  "banned",
-  "restricted",
-  "legal"
-]
+// Dropdown options
+const cardFormatStatuses = ['banned', 'restricted', 'legal'];
+const colorFiltersOptions = [
+  'Match Exactly',
+  'Contains At Least',
+  'Contains At Most',
+];
+const statOptions = [
+  'Equal To',
+  'Less Than',
+  'Less Than Or Equal To',
+  'Greater Than',
+  'Greater Than Or Equal To',
+  'Not Equal To',
+];
 
-const selectedCMC = ref('')
-function addFilter(type: string, value: string) {
-  const newFilter = {
-    'type': type,
-    'value': value,
-  };
-
-  if(type == 'manaCosts') {
-    selectedCMC.value = ''
-  } else if(type == 'powers') {
-    selectedPower.value = ''
-  } else if(type == 'toughnesses') {
-    selectedToughness.value = ''
-  } else if(type == 'types') {
-    selectedCardType.value = null
-  } else if(type == 'colors') {
-    selectedCardColor.value = null
-  } else if(type == 'rarities') {
-    selectedCardRarity.value = null
-  } else if(type == 'legalities') {
-    selectedCardFormat.value = null
-    selectedCardFormatStatus.value = null
-  }
-  console.log('emitting', newFilter)
-
-  emit('newFilter', newFilter);
-}
-
-const selectedPower = ref('')
-const selectedToughness = ref('')
+// Watch for changes in selectedCardFormats and add a new entry if all are filled
+watch(
+  filters.value.selectedCardFormats,
+  (newVal) => {
+    const allFilled = newVal.every(
+      (entry) => entry.format !== null && entry.status !== null,
+    );
+    if (allFilled) {
+      filters.value.selectedCardFormats.push({ format: null, status: null });
+    }
+  },
+  { deep: true },
+);
 
 function closePanel() {
-  panel.value = []
+  panel.value = [];
 }
 
 // Expose the method to the parent
 defineExpose({
-  closePanel
+  closePanel,
 });
-
 </script>
 
-<style lang="sass" scoped>
-</style>
+<style lang="sass" scoped></style>
