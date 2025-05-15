@@ -38,36 +38,9 @@
         </v-col>
       </v-row>
 
-      <v-row
-        v-if="searchFilters.length > 0"
-        class="mt-0 pb-0"
-        justify="center"
-        style="max-width: 800px"
-      >
-        <!-- Current filters chips -->
-        <v-chip-group class="mb-2">
-          <v-chip
-            class="chip"
-            v-for="(filter, index) in searchFilters"
-            :key="index"
-          >
-            <span style="position: relative; top: -1.3px"
-              ><b class="primary">{{ filter.type }}</b
-              >: {{ filter.value }}</span
-            >
-            <template #append>
-              <v-icon @click="removeFilter(index)">mdi-close</v-icon>
-            </template>
-          </v-chip>
-        </v-chip-group>
-      </v-row>
-
       <v-row style="max-width: 800px">
         <v-col class="d-flex flex-grow-1 align-center pt-0">
-          <filters
-            ref="filterRef"
-            @newFilter="(newFilter: IFilter) => addFilter(newFilter)"
-          ></filters>
+          <filters ref="filterRef"></filters>
         </v-col>
       </v-row>
 
@@ -137,33 +110,29 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import {
-  type IFilter,
-  type IMagicCardsSearchFilters,
-  type IMagicCardsSearch,
-  type Legalities,
-} from '@/types/IVectorBackend';
-import { cardFormats } from '@/utils/mtgCommon';
-const config = useRuntimeConfig();
+import { useSearchStore } from '~/stores/searchStore';
+
+const searchStore = useSearchStore();
 
 const filterRef: any = ref(null);
 const searchText = ref('');
-const searchFilters: Ref<IFilter[]> = ref([]);
 const searchResults: Ref<any[]> = ref([]);
 const searching = ref(false);
 
 async function search() {
-  console.log('url: ', `https://api.cardmystic.io/search`);
   filterRef.value?.closePanel();
   searching.value = true;
 
+  const body = {
+    query: searchText.value,
+    limit: 80,
+    filters: searchStore.filters,
+  };
+  console.log('body: ', body);
+
   const { data } = await useFetch<any>('/api/proxy', {
     method: 'POST',
-    body: JSON.stringify({
-      query: searchText.value,
-      limit: 80,
-      filters: formatFilters(),
-    }),
+    body: JSON.stringify(body),
   });
 
   if (data.value) {
@@ -176,51 +145,12 @@ async function search() {
     );
 
     searchResults.value = sortedResults;
-    console.log(searchResults.value);
+    console.log('Results:', searchResults.value);
   } else {
     searchResults.value = [];
     // TODO: give a message
   }
   searching.value = false;
-}
-
-function formatFilters() {
-  const filters: IMagicCardsSearchFilters = { legalities: {} };
-  searchFilters.value.forEach((filter) => {
-    let filterKey = filter.type; // as keyof IMagicCardsSearchFilters; // Type assertion here
-    if (filterKey == 'powers' || filterKey == 'toughnesses') {
-      if (!filters[filterKey]) {
-        filters[filterKey] = [filter.value as number];
-      } else {
-        (filters[filterKey] as number[]).push(filter.value as number);
-      }
-    } else if (
-      filterKey == 'types' ||
-      filterKey == 'colors' ||
-      filterKey == 'rarities' ||
-      filterKey == 'sets' ||
-      filterKey == 'artists' ||
-      filterKey == 'manaCosts'
-    ) {
-      if (!filters[filterKey]) {
-        filters[filterKey] = [filter.value as string];
-      } else {
-        (filters[filterKey] as string[]).push(filter.value as string);
-      }
-    } else if (cardFormats.includes(filterKey)) {
-      const legalityKey = filterKey as keyof Legalities;
-      filters['legalities']![legalityKey] = filter.value as string;
-    }
-  });
-  return filters;
-}
-
-function addFilter(newFilter: IFilter) {
-  searchFilters.value.push(newFilter);
-}
-
-function removeFilter(index: number) {
-  searchFilters.value.splice(index, 1);
 }
 </script>
 

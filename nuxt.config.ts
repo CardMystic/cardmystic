@@ -5,12 +5,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   devServer: {
-    port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 80,
+    port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
   },
   build: {
     transpile: ['vuetify'],
   },
   modules: [
+    '@pinia/nuxt',
     (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
         // @ts-expect-error
