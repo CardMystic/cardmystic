@@ -4,18 +4,20 @@
       <v-img
         width="250"
         height="250"
-        src="/public/mysticsearch_ai4_nobg.png"
+        src="/public/crystall_ball.png"
         class="image"
         v-if="searchResults.length === 0"
       ></v-img>
       <!-- Title container -->
-      <v-row class="title-container" v-if="searchResults.length === 0">
-        <h1 class="title">{{ typedTitle }}</h1>
+      <v-row class="title-container">
+        <h1 class="title" v-if="searchResults.length === 0">
+          {{ typedTitle }}
+        </h1>
 
-        <h2 class="subtitle mt-2">
+        <h2 class="subtitle mt-2" v-if="searchResults.length === 0">
           <b class="important-text">Open Source</b> Vector Search For MTG
         </h2>
-        <h2 class="subtitle">
+        <h2 class="subtitle" v-if="searchResults.length === 0">
           You Can <b class="important-text">Support Us</b> With the Links Below!
         </h2>
         <div class="icon-container d-flex align-center" style="gap: 8px">
@@ -153,7 +155,7 @@ import { useSearchStore } from '~/stores/searchStore';
 
 const searchStore = useSearchStore();
 
-const fullTitle = 'CardMystic.io';
+const fullTitle = 'CardMystic';
 const typedTitle = ref('');
 
 onMounted(() => {
