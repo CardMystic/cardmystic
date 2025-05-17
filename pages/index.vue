@@ -2,17 +2,81 @@
   <v-container class="fill-height d-flex align-center justify-center">
     <v-col justify="center" align="center" class="col-container">
       <v-img
-        width="360"
-        height="360"
+        width="250"
+        height="250"
         src="/public/mysticsearch_ai4_nobg.png"
+        class="image"
         v-if="searchResults.length === 0"
       ></v-img>
       <!-- Title container -->
       <v-row class="title-container" v-if="searchResults.length === 0">
-        <h1 class="title">CardMystic</h1>
-        <h2 class="subtitle">
-          Vector / Semantic Search For Trading Card Games
+        <h1 class="title">{{ typedTitle }}</h1>
+
+        <h2 class="subtitle mt-2">
+          <b class="important-text">Open Source</b> Vector Search For MTG
         </h2>
+        <h2 class="subtitle">
+          You Can <b class="important-text">Support Us</b> With the Links Below!
+        </h2>
+        <div class="icon-container d-flex align-center" style="gap: 8px">
+          <!-- GitHub Button -->
+          <v-btn
+            icon
+            color="black"
+            variant="flat"
+            elevation="3"
+            href="https://github.com/yourusername"
+            target="_blank"
+            rel="noopener"
+          >
+            <v-icon size="28" color="white">mdi-github</v-icon>
+          </v-btn>
+
+          <!-- Patreon Button -->
+          <v-btn
+            icon
+            color="black"
+            variant="flat"
+            elevation="3"
+            href="https://patreon.com/yourusername"
+            target="_blank"
+            rel="noopener"
+          >
+            <v-icon size="28" color="white">mdi-patreon</v-icon>
+          </v-btn>
+
+          <!-- Discord Button -->
+          <v-btn
+            icon
+            color="black"
+            variant="flat"
+            elevation="3"
+            href="https://discord.gg/yourinvite"
+            target="_blank"
+            rel="noopener"
+          >
+            <v-img
+              src="@/public/discord-icon.svg"
+              width="28"
+              height="28"
+              alt="Discord"
+              contain
+            />
+          </v-btn>
+
+          <!-- YouTube Button -->
+          <v-btn
+            icon
+            color="black"
+            variant="flat"
+            elevation="3"
+            href="https://youtube.com/yourchannel"
+            target="_blank"
+            rel="noopener"
+          >
+            <v-icon size="30" color="red">mdi-youtube</v-icon>
+          </v-btn>
+        </div>
       </v-row>
 
       <!-- Search bar and filters -->
@@ -23,36 +87,30 @@
             label="Search..."
             variant="solo"
             elevation="5"
+            @keyup.enter="search"
           ></v-text-field>
-        </v-col>
-        <v-col class="d-flex flex-grow-0 pt-3">
-          <v-btn
-            :disabled="searchText.length == 0"
-            style="height: 56px"
-            @click="search()"
-            color="primary"
-            elevation="3"
-            :loading="searching"
-            >Search</v-btn
-          >
         </v-col>
       </v-row>
 
       <v-row style="max-width: 800px">
         <v-col class="d-flex flex-grow-1 align-center pt-0">
-          <filters ref="filterRef"></filters>
+          <filters
+            ref="filterRef"
+            :search-text="searchText"
+            :searching="searching"
+            @search="search"
+          ></filters>
         </v-col>
       </v-row>
 
       <!-- Help container -->
-      <v-row class="mt-8" justify="center" v-if="searchResults.length === 0">
+      <v-row class="pa-3" justify="center" v-if="searchResults.length === 0">
         <v-card style="max-width: 500px" elevation="5">
           <v-card-text class="d-flex flex-row text-left align-center">
             <v-icon color="primary">mdi-help-circle</v-icon>
             <p class="ml-2">
-              Our algorithm uses Artificial Intelligence to search by
-              <b class="important-text">meaning</b> instead of keywords. Simply
-              describe what you want the card to do! The more descriptive the
+              Our algorithm uses AI to search by
+              <b class="important-text">meaning</b>. The more descriptive the
               prompt, the better the results!
             </p>
           </v-card-text>
@@ -77,42 +135,38 @@
       <!-- Results, show image with properties.url -->
       <!-- TODO: return more results and paginate -->
       <v-row>
-        <v-col
+        <div
           class="mt-10 px-0 py-0 flex-grow-1"
           v-for="result in searchResults"
           :key="result.id"
         >
-          <v-img
-            width="250px"
-            :src="result.properties.url"
-            alt="Card Image"
-            style="border-radius: 12px"
-          ></v-img>
-          <v-progress-linear
-            rounded
-            color="black"
-            :model-value="result.metadata.score * 100"
-            :height="20"
-            class="mt-2"
-            style="max-width: 220px"
-          >
-            <template v-slot:default="{ value }">
-              <p style="color: white; font-size: 14px">
-                {{ Math.ceil(value) }}%
-              </p>
-            </template>
-          </v-progress-linear>
-        </v-col>
+          <card :card="result"></card>
+        </div>
       </v-row>
     </v-col>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 
 const searchStore = useSearchStore();
+
+const fullTitle = 'CardMystic.io';
+const typedTitle = ref('');
+
+onMounted(() => {
+  let i = 0;
+  const typingInterval = setInterval(() => {
+    if (i < fullTitle.length) {
+      typedTitle.value += fullTitle[i];
+      i++;
+    } else {
+      clearInterval(typingInterval);
+    }
+  }, 200); // typing speed
+});
 
 const filterRef: any = ref(null);
 const searchText = ref('');
@@ -155,6 +209,21 @@ async function search() {
 </script>
 
 <style lang="sass" scoped>
+.title::after
+  content: '|'
+  animation: blink 1s infinite
+  margin-left: 5px
+
+@keyframes blink
+  0%, 100%
+    opacity: 1
+  50%
+    opacity: 0
+
+.image
+  position: relative
+  bottom: -35px
+
 .col-container
   position: relative
 
@@ -163,24 +232,20 @@ async function search() {
   flex-direction: column
   align-items: center
   justify-content: center
-  position: absolute
-  top: 230px
+  top: 160px
   left: 0
   right: 0
   margin: auto
 
 .title
-  font-size: 4rem
-  color: black
-  text-shadow: -3px 0 #FF68FF, 0 3px #FF68FF, 3px 0 #FF68FF, 0 -3px #FF68FF
-
+  font-size: 3.5rem
+  color: white
 
 .subtitle
   font-size: 1rem
   color: white
   position: relative
   top: -14px
-  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black
 
 .important-text
   color: rgb(var(--v-theme-primary))
