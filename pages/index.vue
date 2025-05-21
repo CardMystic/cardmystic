@@ -1,13 +1,16 @@
 <template>
   <v-container class="fill-height d-flex align-center justify-center">
     <v-col justify="center" align="center" class="col-container">
-      <v-img
-        width="250"
-        height="250"
-        src="/public/crystall_ball.png"
-        class="image"
-        v-if="searchResults.length === 0"
-      ></v-img>
+      <div class="glow-wrapper" v-if="searchResults.length === 0">
+        <v-img
+          width="250"
+          height="250"
+          src="/public/crystall_ball.png"
+          class="image"
+          v-if="searchResults.length === 0"
+        ></v-img>
+      </div>
+
       <!-- Title container -->
       <v-row class="title-container">
         <h1 class="title" v-if="searchResults.length === 0">
@@ -27,7 +30,7 @@
             color="black"
             variant="flat"
             elevation="3"
-            href="https://github.com/yourusername"
+            href="https://github.com/imdarkmode?tab=repositories"
             target="_blank"
             rel="noopener"
           >
@@ -40,7 +43,7 @@
             color="black"
             variant="flat"
             elevation="3"
-            href="https://patreon.com/yourusername"
+            href="https://patreon.com/ImDarkMode"
             target="_blank"
             rel="noopener"
           >
@@ -53,7 +56,7 @@
             color="black"
             variant="flat"
             elevation="3"
-            href="https://discord.gg/yourinvite"
+            href="https://discord.gg/GmPZ3e7tZH"
             target="_blank"
             rel="noopener"
           >
@@ -72,7 +75,7 @@
             color="black"
             variant="flat"
             elevation="3"
-            href="https://youtube.com/yourchannel"
+            href="https://www.youtube.com/@imdarkmode"
             target="_blank"
             rel="noopener"
           >
@@ -157,6 +160,17 @@ const searchStore = useSearchStore();
 
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
+
+useHead({
+  title: 'CardMystic',
+  link: [
+    {
+      rel: 'icon',
+      type: 'image/x-icon',
+      href: '/favicon.ico',
+    },
+  ],
+});
 
 onMounted(() => {
   let i = 0;
@@ -261,4 +275,30 @@ async function search() {
 
 .primary
   color: rgb(var(--v-theme-primary))
+
+.glow-wrapper
+  position: relative
+  display: inline-block
+
+.glow-wrapper::after
+  content: ''
+  position: absolute
+  top: 72%
+  left: 49%
+  width: 100px
+  height: 100px
+  background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0.1) 70%, rgba(147,114,255,0) 100%)
+  border-radius: 50%
+  transform: translate(-50%, -50%)
+  animation: glowPulse 7s ease-in-out infinite
+  pointer-events: none
+  z-index: 1
+
+@keyframes glowPulse
+  0%, 100%
+    opacity: 0.6
+    transform: translate(-50%, -50%) scale(1)
+  50%
+    opacity: 1
+    transform: translate(-50%, -50%) scale(1.4)
 </style>
