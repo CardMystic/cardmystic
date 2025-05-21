@@ -26,8 +26,8 @@
         </v-col>
       </v-row>
 
-      <v-row class="mt-10" justify="center">
-        <v-card style="max-width: 500px" elevation="5">
+      <v-row class="pa-3 mt-6" justify="center">
+        <v-card style="max-width: 400px" elevation="5">
           <v-card-text class="d-flex flex-row text-left align-center">
             <v-icon color="primary">mdi-help-circle</v-icon>
             <p class="ml-2">
