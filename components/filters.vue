@@ -10,7 +10,7 @@
             class="d-flex align-center justify-content-center"
           >
             <v-label class="mt-0 mr-4" style="font-size: 18px; color: white"
-              ><v-icon class="mr-1">mdi-paw</v-icon>Type</v-label
+              ><v-icon class="mr-1">mdi-paw</v-icon>Types</v-label
             >
           </v-col>
           <v-col class="align-center justify-content-center">
@@ -218,22 +218,17 @@
                   clearable
                 />
               </div>
-
-              <!-- <v-btn
-                icon
-                variant="text"
-                color="red"
-                density="compact"
-                class="pb-9"
-                style="flex-shrink: 0; align-self: center"
-                @click="removeCardFormat(index)"
-                v-if="selectedCardFormats.length > 1"
-              >
-                <v-icon size="18">mdi-close-circle-outline</v-icon>
-              </v-btn> -->
             </div>
           </v-col>
         </v-row>
+        <v-btn
+          :disabled="searchText.length == 0"
+          style="height: 56px"
+          @click="emit('search')"
+          color="primary"
+          elevation="3"
+          >Search</v-btn
+        >
       </template>
     </v-expansion-panel>
   </v-expansion-panels>
@@ -249,6 +244,15 @@ import {
 } from '@/utils/mtgCommon';
 import { useSearchStore } from '~/stores/searchStore';
 import { storeToRefs } from 'pinia';
+
+const props = defineProps({
+  searchText: {
+    type: String,
+    required: true,
+  },
+});
+
+const emit = defineEmits(['search']);
 
 const searchStore = useSearchStore();
 
