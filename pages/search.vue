@@ -45,7 +45,7 @@
         <template v-if="searchStore.results.length > 0">
           <v-row>
             <v-col
-              class="mt-4 px-0 py-0 flex-grow-1"
+              class="px-0 py-0 flex-grow-1"
               v-for="result in searchStore.results"
               :key="result.uuid"
             >
