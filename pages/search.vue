@@ -3,7 +3,7 @@
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-0">
       <!-- Search bar and filters -->
-      <v-row class="mt-0 pb-0 px-0" justify="center" style="max-width: 705px">
+      <v-row class="mt-2 pb-0 px-0" justify="center" style="max-width: 705px">
         <v-col class="py-0 px-0">
           <v-text-field
             v-model="searchStore.query"
@@ -62,7 +62,8 @@
 
         <template v-else>
           <div class="no-results-container">
-            <h2>No Results Found</h2>
+            <h2>No Results</h2>
+            <v-btn to="/" class="mt-4" color="primary">Home</v-btn>
           </div>
         </template>
       </div>
@@ -74,6 +75,10 @@
 import { onMounted, ref } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 const router = useRouter();
+
+definePageMeta({
+  middleware: ['require-results'],
+});
 
 const searchStore = useSearchStore();
 const cardStore = useCardStore();
@@ -229,12 +234,13 @@ async function search() {
     transform: translate(-50%, -50%) scale(1.4)
 
 .no-results-container
-  height: calc(100vh - 150px)
+  margin-top: 40px
   display: flex
   align-items: center
   justify-content: center
   text-align: center
   color: white
   font-size: 1.5rem
-  opacity: 0.7
+  display: flex
+  flex-direction: column
 </style>

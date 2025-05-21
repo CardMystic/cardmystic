@@ -79,7 +79,12 @@
 import { computed } from 'vue';
 import type { IWeaviateMagicCardSchema } from '~/types/IVectorBackend';
 
+definePageMeta({
+  middleware: ['require-card'],
+});
+
 const cardStore = useCardStore();
+
 const card = computed(
   () => cardStore.card?.properties ?? ({} as IWeaviateMagicCardSchema),
 );
@@ -97,6 +102,7 @@ const formatsToIgnore = [
 useHead({ title: `${card.value.name}` });
 
 const legalities = computed(() => {
+  if (!card.value) return {};
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(card.value)) {
     if (key.startsWith('legalityIn')) {
