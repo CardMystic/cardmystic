@@ -1,14 +1,11 @@
 <template>
   <navbar :show-actions="false"></navbar>
-  <v-container class="fill-height d-flex align-start justify-center">
+  <v-container
+    class="container fill-height d-flex align-center justify-center pt-0"
+  >
     <v-col justify="center" align="center" class="col-container">
       <div class="glow-wrapper">
-        <v-img
-          width="250"
-          height="250"
-          src="/public/crystall_ball.png"
-          class="image"
-        ></v-img>
+        <v-img src="/public/crystall_ball.png" class="image"></v-img>
       </div>
 
       <!-- Title container -->
@@ -34,8 +31,9 @@
             href="https://github.com/imdarkmode?tab=repositories"
             target="_blank"
             rel="noopener"
+            class="link-btn"
           >
-            <v-icon size="28" color="white">mdi-github</v-icon>
+            <v-icon size="26" color="white">mdi-github</v-icon>
           </v-btn>
 
           <!-- Patreon Button -->
@@ -47,8 +45,9 @@
             href="https://patreon.com/ImDarkMode"
             target="_blank"
             rel="noopener"
+            class="link-btn"
           >
-            <v-icon size="28" color="white">mdi-patreon</v-icon>
+            <v-icon size="26" color="white">mdi-patreon</v-icon>
           </v-btn>
 
           <!-- Discord Button -->
@@ -60,11 +59,12 @@
             href="https://discord.gg/GmPZ3e7tZH"
             target="_blank"
             rel="noopener"
+            class="link-btn"
           >
             <v-img
               src="@/public/discord-icon.png"
-              width="28"
-              height="28"
+              width="26"
+              height="26"
               alt="Discord"
               contain
             />
@@ -79,15 +79,16 @@
             href="https://www.youtube.com/@imdarkmode"
             target="_blank"
             rel="noopener"
+            class="link-btn"
           >
-            <v-icon size="30" color="white">mdi-youtube</v-icon>
+            <v-icon size="26" color="white">mdi-youtube</v-icon>
           </v-btn>
         </div>
       </v-row>
 
       <!-- Search bar and filters -->
       <v-row class="mt-0 pb-0" justify="center" style="max-width: 800px">
-        <v-col class="pb-0">
+        <v-col class="py-0">
           <v-text-field
             v-model="searchStore.query"
             label="Search..."
@@ -111,7 +112,7 @@
 
       <!-- Help container -->
       <v-row class="pa-3" justify="center">
-        <v-card style="max-width: 500px" elevation="5">
+        <v-card density="compact" style="max-width: 500px" elevation="5">
           <v-card-text class="d-flex flex-row text-left align-center">
             <v-icon color="primary">mdi-help-circle</v-icon>
             <p class="ml-2">
@@ -201,6 +202,7 @@ async function search() {
 </script>
 
 <style lang="sass" scoped>
+
 .title::after
   content: '|'
   animation: blink 1s infinite
@@ -213,8 +215,12 @@ async function search() {
     opacity: 0
 
 .image
-  position: relative
-  bottom: -35px
+  width: 250px
+  height: 250px
+
+  @media (max-width: 600px)
+    width: 150px
+    height: 150px
 
 .col-container
   position: relative
@@ -224,28 +230,43 @@ async function search() {
   flex-direction: column
   align-items: center
   justify-content: center
-  top: 160px
-  left: 0
-  right: 0
-  margin: auto
+  position: relative
+  top: -30px
+  @media (max-width: 600px)
+    top: -23px
 
 .title
-  font-size: 3.5rem
+  font-size: 3.3rem
   color: rgb(var(--v-theme-primary))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
+  margin-top: 6px
+  @media (max-width: 600px)
+    font-size: 2.5rem
 
 .subtitle
   font-size: 1.65rem
   color: white
   position: relative
   top: -14px
+  @media (max-width: 600px)
+    font-size: 1.25rem
 
 .subtitle2
   font-size: 0.9rem
   color: white
   position: relative
   top: -14px
+  @media (max-width: 600px)
+    font-size: 0.68rem
 
+.link-btn
+  color: white
+  background-color: black
+  border-radius: 50%
+  padding: 0px
+  min-width: 0px
+  width: 40px
+  height: 40px
 
 .important-text
   color: rgb(var(--v-theme-primary))
@@ -267,7 +288,7 @@ async function search() {
 .glow-wrapper::after
   content: ''
   position: absolute
-  top: 72%
+  top: 58%
   left: 49.5%
   width: 100px
   height: 100px
@@ -277,6 +298,9 @@ async function search() {
   animation: glowPulse 5s ease-in-out infinite
   pointer-events: none
   z-index: 1
+  @media (max-width: 600px)
+    width: 70px
+    height: 70px
 
 @keyframes glowPulse
   0%, 100%

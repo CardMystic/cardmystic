@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar app dark elevation="0" color="#1e1e1e">
+  <v-app-bar density="compact" app dark elevation="0" color="#1e1e1e">
     <!-- Hamburger only visible on small screens -->
     <v-app-bar-nav-icon
       class="d-sm-none"
