@@ -3,8 +3,8 @@
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-0">
       <!-- Search bar and filters -->
-      <v-row class="mt-0 pb-0" justify="center" style="max-width: 800px">
-        <v-col class="pb-0">
+      <v-row class="mt-0 pb-0 px-0" justify="center" style="max-width: 705px">
+        <v-col class="py-0 px-0">
           <v-text-field
             v-model="searchStore.query"
             label="Search..."
@@ -16,8 +16,8 @@
         </v-col>
       </v-row>
 
-      <v-row style="max-width: 800px">
-        <v-col class="d-flex flex-grow-1 align-center pt-0">
+      <v-row class="mt-0 pb-0 px-0" style="max-width: 705px">
+        <v-col class="d-flex flex-grow-1 align-center py-0 px-0">
           <filters
             ref="filterRef"
             :search-text="searchStore.query"
