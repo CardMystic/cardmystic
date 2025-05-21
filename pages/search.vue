@@ -1,6 +1,6 @@
 <template>
   <navbar></navbar>
-  <v-container class="fill-height d-flex align-center justify-center pt-0">
+  <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-0">
       <!-- Search bar and filters -->
       <v-row class="mt-0 pb-0" justify="center" style="max-width: 800px">

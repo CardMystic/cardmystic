@@ -1,6 +1,6 @@
 <template>
   <navbar :show-actions="false"></navbar>
-  <v-container class="fill-height d-flex align-center justify-center">
+  <v-container class="fill-height d-flex align-start justify-center">
     <v-col justify="center" align="center" class="col-container">
       <div class="glow-wrapper">
         <v-img
