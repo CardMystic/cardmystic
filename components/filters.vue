@@ -227,7 +227,6 @@
           @click="emit('search')"
           color="primary"
           elevation="3"
-          :loading="searching"
           >Search</v-btn
         >
       </template>
@@ -249,10 +248,6 @@ import { storeToRefs } from 'pinia';
 const props = defineProps({
   searchText: {
     type: String,
-    required: true,
-  },
-  searching: {
-    type: Boolean,
     required: true,
   },
 });

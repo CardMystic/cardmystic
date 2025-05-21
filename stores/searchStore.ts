@@ -1,10 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { IMagicCardsSearchFilters } from '@/types/IVectorBackend';
+import type {
+  IMagicCardsSearchFilters,
+  IWeaviateMagicCardResponse,
+  IWeaviateMagicCardSchema,
+} from '@/types/IVectorBackend';
 
 export const useSearchStore = defineStore('search', () => {
   const query = ref('');
-  const results = ref<any[]>([]);
+  const results: Ref<IWeaviateMagicCardResponse[]> = ref<any[]>([]);
   const loading = ref(false);
 
   // Filters

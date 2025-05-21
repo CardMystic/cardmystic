@@ -1,90 +1,7 @@
 <template>
-  <navbar :show-actions="false"></navbar>
-  <v-container class="fill-height d-flex align-center justify-center">
-    <v-col justify="center" align="center" class="col-container">
-      <div class="glow-wrapper">
-        <v-img
-          width="250"
-          height="250"
-          src="/public/crystall_ball.png"
-          class="image"
-        ></v-img>
-      </div>
-
-      <!-- Title container -->
-      <v-row class="title-container">
-        <h1 class="title">
-          {{ typedTitle }}
-        </h1>
-
-        <h2 class="subtitle mt-2">
-          Vector Search For MTG
-          <!-- <b class="important-text">Open Source</b> -->
-        </h2>
-        <h2 class="subtitle2">
-          You Can <b class="important-text">Support Us</b> With The Links Below!
-        </h2>
-        <div class="icon-container d-flex align-center" style="gap: 8px">
-          <!-- GitHub Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://github.com/imdarkmode?tab=repositories"
-            target="_blank"
-            rel="noopener"
-          >
-            <v-icon size="28" color="white">mdi-github</v-icon>
-          </v-btn>
-
-          <!-- Patreon Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://patreon.com/ImDarkMode"
-            target="_blank"
-            rel="noopener"
-          >
-            <v-icon size="28" color="white">mdi-patreon</v-icon>
-          </v-btn>
-
-          <!-- Discord Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://discord.gg/GmPZ3e7tZH"
-            target="_blank"
-            rel="noopener"
-          >
-            <v-img
-              src="@/public/discord-icon.png"
-              width="28"
-              height="28"
-              alt="Discord"
-              contain
-            />
-          </v-btn>
-
-          <!-- YouTube Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://www.youtube.com/@imdarkmode"
-            target="_blank"
-            rel="noopener"
-          >
-            <v-icon size="30" color="white">mdi-youtube</v-icon>
-          </v-btn>
-        </div>
-      </v-row>
-
+  <navbar></navbar>
+  <v-container class="fill-height d-flex align-center justify-center pt-0">
+    <v-col justify="center" align="center" class="col-container pt-0">
       <!-- Search bar and filters -->
       <v-row class="mt-0 pb-0" justify="center" style="max-width: 800px">
         <v-col class="pb-0">
@@ -109,19 +26,46 @@
         </v-col>
       </v-row>
 
-      <!-- Help container -->
-      <v-row class="pa-3" justify="center">
+      <v-row class="mt-10" justify="center">
         <v-card style="max-width: 500px" elevation="5">
           <v-card-text class="d-flex flex-row text-left align-center">
             <v-icon color="primary">mdi-help-circle</v-icon>
             <p class="ml-2">
-              Our algorithm uses AI to search by
-              <b class="important-text">meaning</b>. The more descriptive the
-              prompt, the better the results!
+              The <b class="important-text">%</b> under each card represents the
+              model's <b class="important-text">confidence</b> that the result
+              is relevant.
             </p>
           </v-card-text>
         </v-card>
       </v-row>
+
+      <!-- Results, show image with properties.url -->
+      <!-- TODO: return more results and paginate -->
+      <div style="max-width: 1072px" class="mt-4">
+        <template v-if="searchStore.results.length > 0">
+          <v-row>
+            <v-col
+              class="mt-4 px-0 py-0 flex-grow-1"
+              v-for="result in searchStore.results"
+              :key="result.uuid"
+            >
+              <card
+                :card="result"
+                @click="
+                  cardStore.card = result;
+                  router.push({ name: 'cardDetails' });
+                "
+              />
+            </v-col>
+          </v-row>
+        </template>
+
+        <template v-else>
+          <div class="no-results-container">
+            <h2>No Results Found</h2>
+          </div>
+        </template>
+      </div>
     </v-col>
   </v-container>
 </template>
@@ -132,6 +76,8 @@ import { useSearchStore } from '~/stores/searchStore';
 const router = useRouter();
 
 const searchStore = useSearchStore();
+const cardStore = useCardStore();
+
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
 
@@ -188,10 +134,6 @@ async function search() {
 
     searchStore.results = sortedResults;
     console.log('Results:', searchStore.results);
-
-    // Go To Search Page
-    searching.value = false;
-    router.push({ name: 'search' });
   } else {
     searchStore.results = [];
     // TODO: give a message
@@ -235,13 +177,13 @@ async function search() {
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
 
 .subtitle
-  font-size: 1.65rem
+  font-size: 1.05rem
   color: white
   position: relative
   top: -14px
 
 .subtitle2
-  font-size: 0.9rem
+  font-size: 1.01rem
   color: white
   position: relative
   top: -14px
@@ -268,10 +210,10 @@ async function search() {
   content: ''
   position: absolute
   top: 72%
-  left: 49.5%
+  left: 49%
   width: 100px
   height: 100px
-  background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0) 70%, rgba(147,114,255,0) 100%)
+  background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0.1) 70%, rgba(147,114,255,0) 100%)
   border-radius: 50%
   transform: translate(-50%, -50%)
   animation: glowPulse 5s ease-in-out infinite
@@ -284,5 +226,15 @@ async function search() {
     transform: translate(-50%, -50%) scale(1)
   50%
     opacity: 1
-    transform: translate(-50%, -50%) scale(1.5)
+    transform: translate(-50%, -50%) scale(1.4)
+
+.no-results-container
+  height: calc(100vh - 150px)
+  display: flex
+  align-items: center
+  justify-content: center
+  text-align: center
+  color: white
+  font-size: 1.5rem
+  opacity: 0.7
 </style>
