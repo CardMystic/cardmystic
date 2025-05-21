@@ -87,8 +87,8 @@
       </v-row>
 
       <!-- Search bar and filters -->
-      <v-row class="mt-0 pb-0" justify="center" style="max-width: 800px">
-        <v-col class="py-0">
+      <v-row class="mt-0 pb-0 px-0" justify="center" style="max-width: 705px">
+        <v-col class="py-0 px-0">
           <v-text-field
             v-model="searchStore.query"
             label="Search..."
@@ -100,8 +100,8 @@
         </v-col>
       </v-row>
 
-      <v-row style="max-width: 800px">
-        <v-col class="d-flex flex-grow-1 align-center pt-0">
+      <v-row class="mt-0 pb-0 px-0" style="max-width: 705px">
+        <v-col class="d-flex flex-grow-1 align-center py-0 px-0">
           <filters
             ref="filterRef"
             :search-text="searchStore.query"
@@ -111,8 +111,8 @@
       </v-row>
 
       <!-- Help container -->
-      <v-row class="pa-3" justify="center">
-        <v-card density="compact" style="max-width: 500px" elevation="5">
+      <v-row class="pa-3 mt-6" justify="center">
+        <v-card density="compact" style="max-width: 400px" elevation="5">
           <v-card-text class="d-flex flex-row text-left align-center">
             <v-icon color="primary">mdi-help-circle</v-icon>
             <p class="ml-2">
