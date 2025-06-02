@@ -6,6 +6,7 @@ export interface FormatEntry {
 export interface IMagicCardsSearch {
   query: string;
   limit?: number;
+  image?: string;
   filters: IMagicCardsSearchFilters;
 }
 

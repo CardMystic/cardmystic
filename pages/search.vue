@@ -1,7 +1,15 @@
 <template>
   <navbar></navbar>
   <v-container class="fill-height d-flex align-start justify-center pt-0">
-    <v-col justify="center" align="center" class="col-container pt-0">
+    <v-col justify="center" align="center" class="col-container pt-4">
+      <ChipSelector
+        class="chip-selector"
+        :options="chipSelectorOptions"
+        :tooltips="chipSelectorTooltips"
+        :selected-index="chipSelectedIndex"
+        @update:selectedIndex="chipSelectedIndex = $event"
+      />
+
       <!-- Search bar and filters -->
       <v-row class="mt-2 pb-0 px-0" justify="center" style="max-width: 705px">
         <v-col class="py-0 px-0">
@@ -26,7 +34,7 @@
         </v-col>
       </v-row>
 
-      <v-row class="pa-3 mt-6" justify="center">
+      <!-- <v-row class="pa-3 mt-6" justify="center">
         <v-card style="max-width: 400px" elevation="5">
           <v-card-text class="d-flex flex-row text-left align-center">
             <v-icon color="primary">mdi-help-circle</v-icon>
@@ -37,11 +45,11 @@
             </p>
           </v-card-text>
         </v-card>
-      </v-row>
+      </v-row> -->
 
       <!-- Results, show image with properties.url -->
       <!-- TODO: return more results and paginate -->
-      <div style="max-width: 1072px" class="mt-4">
+      <div style="max-width: 1072px" class="mt-6">
         <template v-if="searchStore.results.length > 0">
           <v-row>
             <v-col
@@ -83,8 +91,10 @@ definePageMeta({
 const searchStore = useSearchStore();
 const cardStore = useCardStore();
 
-const fullTitle = 'CardMystic';
-const typedTitle = ref('');
+// Chip Selector component
+const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);
+const chipSelectorTooltips = searchStore.endpoints.map((e: any) => e.tooltip);
+const chipSelectedIndex = ref(0);
 
 useHead({
   title: 'CardMystic',
@@ -96,54 +106,22 @@ useHead({
     },
   ],
 });
-
-onMounted(() => {
-  let i = 0;
-  const typingInterval = setInterval(() => {
-    if (i < fullTitle.length) {
-      typedTitle.value += fullTitle[i];
-      i++;
-    } else {
-      clearInterval(typingInterval);
-    }
-  }, 200); // typing speed
-});
-
 const filterRef: any = ref(null);
 const searching = ref(false);
 
 async function search() {
   filterRef.value?.closePanel();
   searching.value = true;
-
-  const body = {
-    query: searchStore.query,
-    limit: 80,
-    filters: searchStore.filters,
-  };
-  console.log('body: ', body);
-
-  const { data } = await useFetch<any>('/api/proxy', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
-
-  if (data.value) {
-    const resultsWithConfidence = data.value.objects.map((result: any) => {
-      result.metadata.confidence = 1 - result.metadata.distance;
-      return result;
-    });
-    const sortedResults = resultsWithConfidence.sort(
-      (a: any, b: any) => b.metadata.confidence - a.metadata.confidence,
-    );
-
-    searchStore.results = sortedResults;
-    console.log('Results:', searchStore.results);
-  } else {
-    searchStore.results = [];
-    // TODO: give a message
+  try {
+    await searchStore.search(chipSelectedIndex.value);
+    if (searchStore.results.length == 0) {
+      router.push('/home');
+    }
+  } catch (error) {
+    console.error('Search failed:', error);
   }
   searching.value = false;
+  router.push({ name: 'search' });
 }
 </script>
 

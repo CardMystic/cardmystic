@@ -1,5 +1,5 @@
 <template>
-  <navbar :show-actions="false"></navbar>
+  <navbar></navbar>
   <v-container
     class="container fill-height d-flex align-center justify-center pt-0"
   >
@@ -15,81 +15,23 @@
         </h1>
 
         <h2 class="subtitle mt-2">
-          Vector Search For MTG
-          <!-- <b class="important-text">Open Source</b> -->
+          <b class="important-text">Open Source</b> MTG Vector Search Engine
         </h2>
-        <h2 class="subtitle2">
-          You Can <b class="important-text">Support Us</b> With The Links Below!
-        </h2>
-        <div class="icon-container d-flex align-center" style="gap: 8px">
-          <!-- GitHub Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://github.com/imdarkmode?tab=repositories"
-            target="_blank"
-            rel="noopener"
-            class="link-btn"
-          >
-            <v-icon size="26" color="white">mdi-github</v-icon>
-          </v-btn>
-
-          <!-- Patreon Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://patreon.com/ImDarkMode"
-            target="_blank"
-            rel="noopener"
-            class="link-btn"
-          >
-            <v-icon size="26" color="white">mdi-patreon</v-icon>
-          </v-btn>
-
-          <!-- Discord Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://discord.gg/GmPZ3e7tZH"
-            target="_blank"
-            rel="noopener"
-            class="link-btn"
-          >
-            <v-img
-              src="@/public/discord-icon.png"
-              width="26"
-              height="26"
-              alt="Discord"
-              contain
-            />
-          </v-btn>
-
-          <!-- YouTube Button -->
-          <v-btn
-            icon
-            color="black"
-            variant="flat"
-            elevation="3"
-            href="https://www.youtube.com/@imdarkmode"
-            target="_blank"
-            rel="noopener"
-            class="link-btn"
-          >
-            <v-icon size="26" color="white">mdi-youtube</v-icon>
-          </v-btn>
-        </div>
       </v-row>
+
+      <ChipSelector
+        class="chip-selector"
+        :options="chipSelectorOptions"
+        :tooltips="chipSelectorTooltips"
+        :selected-index="chipSelectedIndex"
+        @update:selectedIndex="chipSelectedIndex = $event"
+      />
 
       <!-- Search bar and filters -->
       <v-row class="mt-0 pb-0 px-0" justify="center" style="max-width: 705px">
         <v-col class="py-0 px-0">
           <v-text-field
+            v-if="chipSelectedIndex !== 2"
             v-model="searchStore.query"
             label="Search..."
             variant="solo"
@@ -97,6 +39,15 @@
             @keyup.enter="search"
             :loading="searching"
           ></v-text-field>
+
+          <v-file-input
+            v-else
+            v-model="uploadedFile"
+            label="Upload an image"
+            accept="image/*"
+            variant="solo"
+            prepend-icon="mdi-camera"
+          />
         </v-col>
       </v-row>
 
@@ -109,22 +60,9 @@
           ></filters>
         </v-col>
       </v-row>
-
-      <!-- Help container -->
-      <v-row class="pa-3 mt-6" justify="center">
-        <v-card density="compact" style="max-width: 400px" elevation="5">
-          <v-card-text class="d-flex flex-row text-left align-center">
-            <v-icon color="primary">mdi-help-circle</v-icon>
-            <p class="ml-2">
-              Our algorithm uses AI to search by
-              <b class="important-text">meaning</b>. The more descriptive the
-              prompt, the better the results!
-            </p>
-          </v-card-text>
-        </v-card>
-      </v-row>
     </v-col>
   </v-container>
+  <Footer></Footer>
 </template>
 
 <script setup lang="ts">
@@ -135,6 +73,21 @@ const router = useRouter();
 const searchStore = useSearchStore();
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
+
+// Chip Selector component
+const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);
+const chipSelectorTooltips = searchStore.endpoints.map((e: any) => e.tooltip);
+const chipSelectedIndex = ref(0);
+
+const uploadedFile = ref<File | null>(null);
+
+watch(uploadedFile, (file) => {
+  if (file) {
+    searchStore.imageFile = file;
+    searchStore.query = '';
+    search();
+  }
+});
 
 useHead({
   title: 'CardMystic',
@@ -165,44 +118,20 @@ const searching = ref(false);
 async function search() {
   filterRef.value?.closePanel();
   searching.value = true;
-
-  const body = {
-    query: searchStore.query,
-    limit: 80,
-    filters: searchStore.filters,
-  };
-  console.log('body: ', body);
-
-  const { data } = await useFetch<any>('/api/proxy', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
-
-  if (data.value) {
-    const resultsWithConfidence = data.value.objects.map((result: any) => {
-      result.metadata.confidence = 1 - result.metadata.distance;
-      return result;
-    });
-    const sortedResults = resultsWithConfidence.sort(
-      (a: any, b: any) => b.metadata.confidence - a.metadata.confidence,
-    );
-
-    searchStore.results = sortedResults;
-    console.log('Results:', searchStore.results);
-
-    // Go To Search Page
-    searching.value = false;
-    router.push({ name: 'search' });
-  } else {
-    searchStore.results = [];
-    // TODO: give a message
+  try {
+    await searchStore.search(chipSelectedIndex.value);
+    if (searchStore.results.length > 0) {
+      router.push('/search');
+    }
+  } catch (error) {
+    console.error('Search failed:', error);
   }
   searching.value = false;
+  router.push({ name: 'search' });
 }
 </script>
 
 <style lang="sass" scoped>
-
 .title::after
   content: '|'
   animation: blink 1s infinite
@@ -219,8 +148,8 @@ async function search() {
   height: 250px
 
   @media (max-width: 600px)
-    width: 150px
-    height: 150px
+    width: 190px
+    height: 190px
 
 .col-container
   position: relative
@@ -236,28 +165,24 @@ async function search() {
     top: -23px
 
 .title
-  font-size: 3.3rem
+  font-family: "Alfa Slab One", serif
+  font-weight: 400
+  font-style: normal
+  font-size: 3.2rem
   color: rgb(var(--v-theme-primary))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   margin-top: 6px
   @media (max-width: 600px)
-    font-size: 2.5rem
+    font-size: 3.0rem
 
 .subtitle
-  font-size: 1.65rem
+  font-size: 1.05rem
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   color: white
   position: relative
-  top: -14px
+  top: -20px
   @media (max-width: 600px)
-    font-size: 1.25rem
-
-.subtitle2
-  font-size: 0.9rem
-  color: white
-  position: relative
-  top: -14px
-  @media (max-width: 600px)
-    font-size: 0.68rem
+    font-size: 1.0rem
 
 .link-btn
   color: white
@@ -272,11 +197,13 @@ async function search() {
   color: rgb(var(--v-theme-primary))
   font-style: italic
 
-.chip
-  display: flex
-  justify-content: center
-  align-content: center
-  background-color: black
+.chip-selector
+  position: relative
+  top: -20px
+
+.help-container
+  position: relative
+  top: -20px
 
 .primary
   color: rgb(var(--v-theme-primary))

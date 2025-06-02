@@ -1,130 +1,86 @@
 <template>
-  <v-app-bar density="compact" app dark elevation="0" color="#1e1e1e">
-    <!-- Hamburger only visible on small screens -->
-    <v-app-bar-nav-icon
-      class="d-sm-none"
-      @click="drawer = !drawer"
-    ></v-app-bar-nav-icon>
+  <div class="navbar-container">
+    <v-app-bar app dark elevation="3" color="#383d7a" class="navbar">
+      <div class="navbar-inner">
+        <!-- Left side: Hamburger & nav -->
+        <div class="left-section">
+          <v-app-bar-nav-icon class="d-sm-none" @click="drawer = !drawer" />
+          <div class="d-none d-sm-flex">
+            <NuxtLink
+              v-for="item in filteredNavItems"
+              :key="item.to"
+              :to="item.to"
+              class="nav-link"
+              :class="{ active: $route.path === item.to }"
+            >
+              <v-btn>
+                <v-icon start size="20">{{ item.icon }}</v-icon>
+                {{ item.label }}
+              </v-btn>
+            </NuxtLink>
+          </div>
+        </div>
 
-    <!-- Centered nav for larger screens -->
-    <div class="nav-center d-none d-sm-flex">
-      <NuxtLink
-        to="/"
-        class="nav-link"
-        :class="{ active: $route.path === '/' }"
-      >
-        <v-btn>Home</v-btn>
-      </NuxtLink>
-      <NuxtLink
-        v-if="searchStore.results.length > 0"
-        to="/search"
-        class="nav-link"
-        :class="{ active: $route.path === '/search' }"
-      >
-        <v-btn>Results</v-btn>
-      </NuxtLink>
-      <NuxtLink
-        v-if="cardStore.card"
-        to="/cardDetails"
-        class="nav-link"
-        :class="{ active: $route.path === '/cardDetails' }"
-      >
-        <v-btn>{{ cardStore.card?.properties.name }}</v-btn>
-      </NuxtLink>
-      <NuxtLink
-        to="/about"
-        class="nav-link"
-        :class="{ active: $route.path === '/about' }"
-      >
-        <v-btn>About</v-btn>
-      </NuxtLink>
-      <NuxtLink
-        to="/contact"
-        class="nav-link"
-        :class="{ active: $route.path === '/contact' }"
-      >
-        <v-btn>Contact</v-btn>
-      </NuxtLink>
-    </div>
+        <!-- Right side: Patreon button -->
+        <div v-if="showActions" class="right-actions">
+          <v-btn
+            href="https://www.patreon.com/thecardmystic"
+            target="_blank"
+            rel="noopener"
+            class="patreon-btn"
+            variant="outlined"
+          >
+            <div class="btn-left">Support us on Patreon!</div>
+            <div class="btn-right">
+              <v-icon size="24" color="black">mdi-patreon</v-icon>
+            </div>
+          </v-btn>
+        </div>
+      </div>
+    </v-app-bar>
 
-    <!-- Right-side icons -->
-    <template v-if="showActions" v-slot:append>
-      <v-btn
-        icon
-        variant="text"
-        href="https://github.com/imdarkmode?tab=repositories"
-        target="_blank"
-        rel="noopener"
-      >
-        <v-icon size="28" color="white">mdi-github</v-icon>
-      </v-btn>
-
-      <v-btn
-        icon
-        variant="text"
-        href="https://patreon.com/ImDarkMode"
-        target="_blank"
-        rel="noopener"
-      >
-        <v-icon size="28" color="white">mdi-patreon</v-icon>
-      </v-btn>
-
-      <v-btn
-        icon
-        variant="text"
-        href="https://discord.gg/GmPZ3e7tZH"
-        target="_blank"
-        rel="noopener"
-      >
-        <v-img
-          src="@/public/discord-icon.png"
-          width="28"
-          height="28"
-          alt="Discord"
-          contain
-        />
-      </v-btn>
-
-      <v-btn
-        icon
-        variant="text"
-        href="https://www.youtube.com/@imdarkmode"
-        target="_blank"
-        rel="noopener"
-      >
-        <v-icon size="30" color="white">mdi-youtube</v-icon>
-      </v-btn>
-    </template>
-  </v-app-bar>
-
-  <!-- Drawer for mobile -->
-  <v-navigation-drawer v-model="drawer" temporary app class="d-sm-none">
-    <v-list nav>
-      <v-list-item to="/" @click="drawer = false">Home</v-list-item>
-      <v-list-item
-        v-if="searchStore.results.length > 0"
-        to="/search"
-        @click="drawer = false"
-        >Results</v-list-item
-      >
-      <v-list-item
-        v-if="cardStore.card"
-        to="/cardDetails"
-        @click="drawer = false"
-        >{{ cardStore.card?.properties.name }}</v-list-item
-      >
-      <v-list-item to="/about" @click="drawer = false">About</v-list-item>
-      <v-list-item to="/contact" @click="drawer = false">Contact</v-list-item>
-    </v-list>
-  </v-navigation-drawer>
+    <!-- Drawer for mobile -->
+    <client-only>
+      <v-navigation-drawer v-model="drawer" temporary app class="d-sm-none">
+        <v-list nav>
+          <v-list-item
+            v-for="item in filteredNavItems"
+            :key="item.to"
+            :to="item.to"
+            @click="drawer = false"
+          >
+            <template #prepend>
+              <v-icon>{{ item.icon }}</v-icon>
+            </template>
+            {{ item.label }}
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
+    </client-only>
+  </div>
 </template>
+
 <script setup lang="ts">
+const drawer = ref(false);
 const searchStore = useSearchStore();
 const cardStore = useCardStore();
 
-const drawer = ref(false); // toggle for mobile drawer
+const navItems = [
+  { to: '/', label: 'Home', icon: 'mdi-home' },
+  {
+    to: '/search',
+    label: 'Results',
+    icon: 'mdi-magnify',
+    condition: () => searchStore.results.length > 0,
+  },
+  { to: '/about', label: 'About', icon: 'mdi-information' },
+  { to: '/contact', label: 'Contact', icon: 'mdi-email' },
+];
 
-// No script logic needed for basic navbar
+const filteredNavItems = computed(() =>
+  navItems.filter((item) => !item.condition || item.condition()),
+);
+
 const props = defineProps({
   showActions: {
     type: Boolean,
@@ -133,23 +89,77 @@ const props = defineProps({
 });
 </script>
 
-<style scoped>
-.nav-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 16px;
+<style scoped lang="scss">
+.navbar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.navbar {
+  background-color: #1e1e1e;
+
+  .navbar-inner {
+    max-width: 740px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+
+  .left-section {
+    display: flex;
+    align-items: center;
+  }
+
+  .right-actions {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .v-btn {
-  margin: 0 0px;
+  margin: 0;
   color: white;
-  padding: 0px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.nav-link {
+  margin-left: 0px;
 }
 
 .nav-link.active .v-btn {
-  color: rgb(var(--v-theme-primary));
+  border: 1px solid white;
+}
+
+.patreon-btn {
+  display: flex;
+  padding: 0;
+  border: 2px solid white;
+  overflow: hidden;
+  text-transform: none;
+
+  .btn-left {
+    padding: 8px 12px;
+    background-color: transparent;
+    color: white;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    flex-grow: 1;
+  }
+
+  .btn-right {
+    background-color: white;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 </style>

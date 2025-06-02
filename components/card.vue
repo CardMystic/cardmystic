@@ -1,7 +1,7 @@
 <template>
   <div class="card-container">
     <!-- Left side: image + score -->
-    <v-col class="card-left" cols="3">
+    <v-col class="card" cols="3">
       <v-img
         class="card-image"
         :src="card.properties.url"
@@ -63,13 +63,15 @@ function getScoreColor(score: number): string {
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-  max-height: 392px;
+  max-height: 410px;
 }
 
-.card-left {
+.card {
   flex-shrink: 0;
   min-width: 268px;
   max-width: 268px;
+  padding: 0px;
+  padding-bottom: 12px;
 }
 
 .card-image {
