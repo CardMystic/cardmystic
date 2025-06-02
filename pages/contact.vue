@@ -8,13 +8,15 @@
       rounded="xl"
       color="secondary"
     >
-      <v-card-title class="text-h5 font-weight-bold"> Contact Us </v-card-title>
+      <v-card-title class="text-h5 font-weight-bold">
+        💬 Contact Us
+      </v-card-title>
 
       <v-card-text class="mt-2 text-body-1">
         Have questions, feedback, or ideas for CardMystic? We'd love to hear
         from you!
         <br /><br />
-        💬 Discord:
+        👾 Discord:
         <a href="https://discord.gg/GmPZ3e7tZH" target="_blank"
           >Join our server</a
         >
