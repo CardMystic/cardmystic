@@ -44,19 +44,19 @@ The CardMystic server code is kept private and is not contained in this reposito
 
 ### Home Page
 
-<img src="docs/homepage.png" alt="HomePage" width="700"/>
+<img src="docs/homepage.PNG" alt="HomePage" width="700"/>
 
 ### Filters
 
-<img src="docs/filters.png" alt="Filters" width="700"/>
+<img src="docs/filters.PNG" alt="Filters" width="700"/>
 
 ### Results
 
-<img src="docs/results.png" alt="Results" width="700"/>
+<img src="docs/results.PNG" alt="Results" width="700"/>
 
 ### Card Details
 
-<img src="docs/carddetails.png" alt="Card Details" width="700"/>
+<img src="docs/carddetails.PNG" alt="Card Details" width="700"/>
 
 ## 🛠️ Setup
 
