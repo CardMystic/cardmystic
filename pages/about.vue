@@ -1,6 +1,8 @@
 <template>
   <navbar></navbar>
-  <v-container class="fill-height d-flex align-center justify-center">
+  <v-container
+    class="fill-height d-flex align-center justify-center d-flex flex-column"
+  >
     <v-card
       class="pa-6 mb-6"
       max-width="600"
@@ -9,7 +11,7 @@
       color="secondary"
     >
       <v-card-title class="text-h5 font-weight-bold">
-        What is CardMystic?
+        🔮 What is <b class="title">CardMystic</b>?
       </v-card-title>
 
       <v-card-text class="mt-2 text-body-1">
@@ -26,7 +28,7 @@
       color="secondary"
     >
       <v-card-title class="text-h5 font-weight-bold">
-        Why CardMystic?
+        🧙‍♂️ Why <b class="title">CardMystic</b>?
       </v-card-title>
 
       <v-card-text class="mt-2 text-body-1">
@@ -48,3 +50,15 @@
 <script setup lang="ts">
 useHead({ title: 'About - CardMystic' });
 </script>
+
+<style lang="sass" scoped>
+.title
+  font-family: "Alfa Slab One", serif
+  font-weight: 400
+  font-style: normal
+  color: rgb(var(--v-theme-primary))
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
+  margin-top: 6px
+  @media (max-width: 600px)
+    font-size: 3.0rem
+</style>
