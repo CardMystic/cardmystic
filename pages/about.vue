@@ -4,7 +4,7 @@
     class="fill-height d-flex align-center justify-center d-flex flex-column"
   >
     <v-card
-      class="pa-6 mb-6"
+      class="pa-4 mb-6"
       max-width="600"
       elevation="10"
       rounded="xl"
@@ -21,7 +21,7 @@
       </v-card-text>
     </v-card>
     <v-card
-      class="pa-6"
+      class="pa-4"
       max-width="600"
       elevation="10"
       rounded="xl"
@@ -59,6 +59,4 @@ useHead({ title: 'About - CardMystic' });
   color: rgb(var(--v-theme-primary))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   margin-top: 6px
-  @media (max-width: 600px)
-    font-size: 3.0rem
 </style>

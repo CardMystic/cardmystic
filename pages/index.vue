@@ -136,6 +136,13 @@ async function search() {
   content: '|'
   animation: blink 1s infinite
   margin-left: 5px
+  position: relative
+  top: -10px
+  font-size: 2.6rem
+  @media (max-width: 600px)
+    top: -10px
+    font-size: 2.4rem
+
 
 @keyframes blink
   0%, 100%
