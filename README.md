@@ -11,7 +11,7 @@ CardMystic makes card discovery effortless with natural language search. Just ty
 
 🚧 We are experimenting with state-of-the-art methods to improve the quality of results. Currently the project performs a dense vector search using Weaviate to retrieve results, but they can be improved greatly. See this great [blog post](https://www.notion.so/Magic-Card-Search-Engine-1fd1a1085527808488dad794522e9158) for more detailed information on the incredible potential with other methods. 🚧
 
-This project uses Vue & Nuxt. Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+This project uses Vue & Nuxt as well as the Vuetify component library.
 
 ## ✨ Features
 
