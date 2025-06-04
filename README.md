@@ -1,9 +1,12 @@
-# CardMystic Frontend
+# CardMystic
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Support on Patreon](https://img.shields.io/badge/support-patreon-F96854.svg)](https://www.patreon.com/thecardmystic)
 
-🧙‍♂️ Check it out here: [https://cardmystic.com](https://cardmystic.com)
+<div align="center">
+  <img src="public/crystall_ball.PNG" alt="Filters" width="350"/>
+</div>
+🧙‍♂️ Check it out: [https://cardmystic.com](https://cardmystic.com)
 
 Magic: The Gathering is a complex and intricate game, but finding cards shouldn't be. Our developers decided that traditional keyword search engines fall short. They require exact wording and an intimate knowledge of Magic terms.
 
