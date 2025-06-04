@@ -20,7 +20,7 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
   - Confidence reflects how strongly the model believes a card matches your search. A higher percentage means a closer match to your query.
 - Filter by colors, types, converted mana cost, power/toughness, etc.
 - View card details & legalities
-- Public API access WIP 🚧
+- Public API access
 - Hybrid search: semantic + keyword combined
 - Traditional Keyword search
 - image Search WIP 🚧
@@ -40,7 +40,9 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 ## 🖥️ Server
 
-The CardMystic server code is private and is not contained in this repository. Instead, the frontend connects to the public API (WIP) through the proxy defined in `server\api\proxy\[...path.ts]`
+The CardMystic server code is private and is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
+
+[API Documentation](http://api.cardmystic.io/docs/)
 
 ## 🖼️ Preview
 

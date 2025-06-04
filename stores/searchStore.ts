@@ -89,6 +89,7 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     const data = await response.json();
+    console.log('results', data);
 
     if (data?.objects) {
       const resultsWithConfidence = data.objects.map((result: any) => {
