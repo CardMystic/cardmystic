@@ -4,7 +4,7 @@
     class="fill-height d-flex align-center justify-center d-flex flex-column"
   >
     <v-card
-      class="pa-4 mb-6"
+      class="pa-2 mb-6"
       max-width="600"
       elevation="10"
       rounded="xl"
@@ -21,7 +21,7 @@
       </v-card-text>
     </v-card>
     <v-card
-      class="pa-4"
+      class="pa-2"
       max-width="600"
       elevation="10"
       rounded="xl"
