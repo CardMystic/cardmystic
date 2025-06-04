@@ -4,7 +4,7 @@
 [![Support on Patreon](https://img.shields.io/badge/support-patreon-F96854.svg)](https://www.patreon.com/thecardmystic)
 
 <div align="center">
-  <img src="public/crystall_ball.png" alt="Filters" width="350"/>
+  <img src="public/crystall_ball.png" alt="CardMystic" width="350"/>
 </div>
 
 🧙‍♂️ Check it out: [https://cardmystic.com](https://cardmystic.com)
