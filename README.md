@@ -5,7 +5,7 @@
 
 🧙‍♂️ Check it out here: [https://cardmystic.com](https://cardmystic.com)
 
-Magic: The Gathering is a complex and intricate game, but finding cards shouldn't be. Our developers decided that traditional keywork search engines fall short. They require exact wording and an intimate knowledge of Magic terms.
+Magic: The Gathering is a complex and intricate game, but finding cards shouldn't be. Our developers decided that traditional keyword search engines fall short. They require exact wording and an intimate knowledge of Magic terms.
 
 CardMystic makes card discovery effortless with natural language search. Just type what you're thinking: “a blue creature that draws cards” or “a cheap red burn spell” and let CardMystic handle the rest. Whether you're a seasoned deckbuilder or brand new to the game, CardMystic helps you find the perfect card without the guesswork.
 
@@ -16,9 +16,9 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 ## ✨ Features
 
 - Vector/Semantic search for MTG cards
-- See the model's Confidence for each result
+- See the model's confidence for each result
   - Confidence reflects how strongly the model believes a card matches your search. A higher percentage means a closer match to your query.
-- Filter by colors, types, CMC, power/toughness, etc.
+- Filter by colors, types, converted mana cost, power/toughness, etc.
 - View card details & legalities
 - Public API access WIP 🚧
 - Hybrid search: semantic + keyword combined
@@ -31,7 +31,7 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 - Image-based search
 - User database integration
 - Save searches & prompts
-- Save cards for easy export
+- Save & export cards
 
 ## 🤝 Contributing
 
@@ -40,7 +40,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 ## 🖥️ Server
 
-The CardMystic server code is kept private and is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
+The CardMystic server code is private and is not contained in this repository. Instead, the frontend connects to the public API (WIP) through the proxy defined in `server\api\proxy\[...path.ts]`
 
 ## 🖼️ Preview
 
