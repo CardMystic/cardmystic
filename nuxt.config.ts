@@ -36,6 +36,12 @@ export default defineNuxtConfig({
     },
   ],
   vite: {
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 100,
+      },
+    },
     vue: {
       template: {
         transformAssetUrls,
