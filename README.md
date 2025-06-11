@@ -1,35 +1,41 @@
-# CardMystic Frontend
+# CardMystic
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Support on Patreon](https://img.shields.io/badge/support-patreon-F96854.svg)](https://www.patreon.com/thecardmystic)
 
-🧙‍♂️ Check it out here: [https://cardmystic.com](https://cardmystic.com)
+<div align="center">
+  <img src="public/crystall_ball.png" alt="CardMystic" width="350"/>
+</div>
 
-This project is Open Source. The server is kept private for security reasons, but maintains a public API.
+🧙‍♂️ Check it out: [https://cardmystic.com](https://cardmystic.com)
 
-This project is an active WIP 🚧
+Magic: The Gathering is a complex and intricate game, but finding cards shouldn't be. Our developers decided that traditional keyword search engines fall short. They require exact wording and an intimate knowledge of Magic terms.
 
-This project uses Vue & Nuxt. Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+CardMystic makes card discovery effortless with natural language search. Just type what you're thinking: “a blue creature that draws cards” or “a cheap red burn spell” and let CardMystic handle the rest. Whether you're a seasoned deckbuilder or brand new to the game, CardMystic helps you find the perfect card without the guesswork.
+
+🚧 We are experimenting with state-of-the-art methods to improve the quality of results. Currently the project performs a dense vector search using Weaviate to retrieve results, but they can be improved greatly. See this great [blog post](https://www.notion.so/Magic-Card-Search-Engine-1fd1a1085527808488dad794522e9158) for more detailed information on the incredible potential with other methods. 🚧
+
+This project uses Vue & Nuxt as well as the Vuetify component library.
 
 ## ✨ Features
 
-- 🔍 Vector/Semantic search for MTG cards
-- 👁️ See the model's Confidence for each result
+- Vector/Semantic search for MTG cards
+- See the model's confidence for each result
   - Confidence reflects how strongly the model believes a card matches your search. A higher percentage means a closer match to your query.
-- 💪 NLP enhanced properties
-- 🧙 Filter by colors, types, CMC, power/toughness, etc.
-- 📜 View card details & legalities
-- 🛡️ Public API access through proxy WIP 🚧
-- 🧪 Hybrid search: semantic + keyword combined
-- ⌨️ Traditional Keyword search
-- 🖼️ image Search WIP 🚧
+- Filter by colors, types, converted mana cost, power/toughness, etc.
+- View card details & legalities
+- Public API access
+- Hybrid search: semantic + keyword combined
+- Traditional Keyword search
+- image Search WIP 🚧
 
 ## 🛣️ Roadmap
 
+- Improve quality of results using state-of-the-art methods
 - Image-based search
 - User database integration
 - Save searches & prompts
-- Save cards for easy export
+- Save & export cards
 
 ## 🤝 Contributing
 
@@ -38,25 +44,39 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 ## 🖥️ Server
 
-The CardMystic server code is kept private and is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
+The CardMystic server code is private and is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
+
+[API Documentation](http://api.cardmystic.io/docs/)
 
 ## 🖼️ Preview
 
 ### Home Page
 
-<img src="docs/homepage.png" alt="HomePage" width="700"/>
+<details>
+<summary>Click to view home page</summary>
+<img src="docs/homepage.PNG" alt="HomePage" width="700"/>
+</details>
 
 ### Filters
 
-<img src="docs/filters.png" alt="Filters" width="700"/>
+<details>
+<summary>Click to view filters</summary>
+<img src="docs/filters.PNG" alt="Filters" width="700"/>
+</details>
 
 ### Results
 
-<img src="docs/results.png" alt="Results" width="700"/>
+<details>
+<summary>Click to view results page</summary>
+<img src="docs/results.PNG" alt="Results" width="700"/>
+</details>
 
 ### Card Details
 
-<img src="docs/carddetails.png" alt="Card Details" width="700"/>
+<details>
+<summary>Click to card details page</summary>
+<img src="docs/carddetails.PNG" alt="Card Details" width="700"/>
+</details>
 
 ## 🛠️ Setup
 
@@ -139,8 +159,6 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 ## 🚫 Ignored Sets
 
 **CardMystic** is meant for finding magic cards that are relevant to typical casual & competitive players, as well as collectors. Because of this, any joke & test sets are left out.
-
-Any set _containing_ any of the following words (i.e. _Mystery Booster Playtest Cards 2019_ would be caught by _Mystery Booster Playtest Cards_) are ignored
 
 - Unglued
 - Unhinged

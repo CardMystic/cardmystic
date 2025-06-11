@@ -15,7 +15,8 @@
         </h1>
 
         <h2 class="subtitle mt-2">
-          <b class="important-text">Open Source</b> MTG Vector Search Engine
+          <b class="important-text">A.I. Search Engine</b> for Magic: The
+          Gathering
         </h2>
       </v-row>
 
@@ -136,6 +137,13 @@ async function search() {
   content: '|'
   animation: blink 1s infinite
   margin-left: 5px
+  position: relative
+  top: -10px
+  font-size: 2.6rem
+  @media (max-width: 600px)
+    top: -10px
+    font-size: 2.4rem
+
 
 @keyframes blink
   0%, 100%
@@ -176,13 +184,13 @@ async function search() {
     font-size: 3.0rem
 
 .subtitle
-  font-size: 1.05rem
+  font-size: 1.00rem
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   color: white
   position: relative
   top: -20px
   @media (max-width: 600px)
-    font-size: 1.0rem
+    font-size: 0.96rem
 
 .link-btn
   color: white
