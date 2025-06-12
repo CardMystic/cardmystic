@@ -14,7 +14,20 @@
 	"forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "corepack enable && corepack enable npm && pnpm install --frozen-lockfile"
+	"postCreateCommand": "pnpm install --frozen-lockfile",
+	"containerEnv": {
+		"NEXT_TELEMETRY_DISABLED": "1"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"christian-kohler.npm-intellisense"
+			]
+		}
+	}
 
 	// Configure tool-specific properties.
 	// "customizations": {},

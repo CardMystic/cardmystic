@@ -1,30 +1,27 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Next.js",
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": ".",
-    "types": ["node", "jest", "@testing-library/jest-dom"],
     "plugins": [
       {
         "name": "next"
       }
-    ]
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mjs", "jest.config.js", ".next/types/**/*.ts", "eslint.config.mjs"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

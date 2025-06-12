@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode-remote.vscode-remote-extensionpack",
+        "christian-kohler.npm-intellisense"
+    ]
+}
