@@ -1,391 +1,105 @@
-# CardMystic
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Support on Patreon](https://img.shields.io/badge/support-patreon-F96854.svg)](https://www.patreon.com/thecardmystic)
+# [Next.js Enterprise Boilerplate](https://blazity.com/open-source/nextjs-enterprise-boilerplate) 
 
-<div align="center">
-  <img src="public/crystall_ball.png" alt="CardMystic" width="350"/>
-</div>
+A production-ready template for building enterprise applications with Next.js. This boilerplate provides a solid foundation with carefully selected technologies and ready-to-go infrastructure to help you develop high-quality applications efficiently.
 
-🧙‍♂️ Check it out: [https://cardmystic.com](https://cardmystic.com)
+## Motivation
 
-Magic: The Gathering is a complex and intricate game, but finding cards shouldn't be. Our developers decided that traditional keyword search engines fall short. They require exact wording and an intimate knowledge of Magic terms.
+While most Next.js boilerplates focus on individual developer needs with excessive complexity, **next-enterprise** prioritizes strategic simplicity for enterprise teams. It offers a streamlined foundation with high-impact features that maximize developer productivity and accelerate time-to-market for business-critical applications.
 
-CardMystic makes card discovery effortless with natural language search. Just type what you're thinking: “a blue creature that draws cards” or “a cheap red burn spell” and let CardMystic handle the rest. Whether you're a seasoned deckbuilder or brand new to the game, CardMystic helps you find the perfect card without the guesswork.
+<a href="https://blazity.com/">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="/assets/blazity-logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="/assets/blazity-logo-light.svg">
+  <img alt="Logo" align="right" height="80" src="/assets/blazity-logo-light.svg">
+</picture>
+</a>
 
-🚧 We are experimenting with state-of-the-art methods to improve the quality of results. Currently the project performs a dense vector search using Weaviate to retrieve results, but they can be improved greatly. See this great [blog post](https://www.notion.so/Magic-Card-Search-Engine-1fd1a1085527808488dad794522e9158) for more detailed information on the incredible potential with other methods. 🚧
+> [!NOTE]
+> **Blazity** is a group of Next.js architects. We help organizations architect, optimize, and deploy high-performance Next.js applications at scale. Contact us at [contact@blazity.com](https://blazity.com) if you’d like to talk about your project.
 
-This project uses Vue & Nuxt as well as the Vuetify component library.
 
-## ✨ Features
 
-- Vector/Semantic search for MTG cards
-- See the model's confidence for each result
-  - Confidence reflects how strongly the model believes a card matches your search. A higher percentage means a closer match to your query.
-- Filter by colors, types, converted mana cost, power/toughness, etc.
-- View card details & legalities
-- Public API access
-- Hybrid search: semantic + keyword combined
-- Traditional Keyword search
-- image Search WIP 🚧
+## Documentation
 
-## 🛣️ Roadmap
+There is a separate documentation that explains its functionality, highlights core business values and technical decisions, provides guidelines for future development, and includes architectural diagrams.
 
-- Improve quality of results using state-of-the-art methods
-- Image-based search
-- User database integration
-- Save searches & prompts
-- Save & export cards
+We encourage you to [visit our docs (docs.blazity.com)](https://docs.blazity.com) to learn more
 
-## 🤝 Contributing
+## Integrated features
 
-We welcome pull requests and feedback!  
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding guidelines.
+### Boilerplate
+With this template you will get all the boilerplate features included:
 
-## 🖥️ Server
+* [Next.js 15](https://nextjs.org/) - Performance-optimized configuration using App Directory
+* [Tailwind CSS v4](https://tailwindcss.com/) - Utility-first CSS framework for efficient UI development
+* [ESlint 9](https://eslint.org/) and [Prettier](https://prettier.io/) - Code consistency and error prevention
+* [Corepack](https://github.com/nodejs/corepack) & [pnpm](https://pnpm.io/) as the package manager - For project management without compromises 
+* [Strict TypeScript](https://www.typescriptlang.org/) - Enhanced type safety with carefully crafted config and [ts-reset](https://github.com/total-typescript/ts-reset) library
+* [GitHub Actions](https://github.com/features/actions) - Pre-configured workflows including bundle size and performance tracking
+* Perfect Lighthouse score - Optimized performance metrics
+* [Bundle analyzer](https://www.npmjs.com/package/@next/bundle-analyzer) - Monitor and manage bundle size during development
+* Testing suite - [Jest](https://jestjs.io/), [React Testing Library](https://testing-library.com/react), and [Playwright](https://playwright.dev/) for comprehensive testing
+* [Storybook](https://storybook.js.org/) - Component development and documentation
+* Advanced testing - Smoke and acceptance testing capabilities
+* [Conventional commits](https://www.conventionalcommits.org/) - Standardized commit history management
+* [Observability](https://opentelemetry.io/) - Open Telemetry integration
+* [Absolute imports](https://nextjs.org/docs/advanced-features/module-path-aliases) - Simplified import structure
+* [Health checks](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) - Kubernetes-compatible monitoring
+* [Radix UI](https://www.radix-ui.com/) - Headless components for customization
+* [CVA](http://cva.style/) (Class Variance Authority) - Consistent design system creation
+* [Renovate BOT](https://www.whitesourcesoftware.com/free-developer-tools/renovate) - Automated dependency and security updates
+* [Patch-package](https://www.npmjs.com/package/patch-package) - External dependency fixes without compromises
+* Component relationship tools - Graph for managing coupling and cohesion
+* [Semantic Release](https://github.com/semantic-release/semantic-release) - Automated changelog generation
+* [T3 Env](https://env.t3.gg/) - Streamlined environment variable management
 
-The CardMystic server code is private and is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
+### Infrastructure & deployments
 
-[API Documentation](http://api.cardmystic.io/docs/)
+#### Vercel
 
-## 🖼️ Preview
+Easily deploy your Next.js app with [Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=github&utm_campaign=next-enterprise) by clicking the button below:
 
-### Home Page
+[![Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/Blazity/next-enterprise)
 
-<details>
-<summary>Click to view home page</summary>
-<img src="docs/homepage.PNG" alt="HomePage" width="700"/>
-</details>
+#### Custom cloud infrastructure
 
-### Filters
+**next-enterprise** offers dedicated infrastructure as code (IaC) solutions built with Terraform, designed specifically for deploying Next.js applications based on our extensive experience working with enterprise clients.
 
-<details>
-<summary>Click to view filters</summary>
-<img src="docs/filters.PNG" alt="Filters" width="700"/>
-</details>
+Learn more in our [documentation (docs.blazity.com)][docs] how to quickstart with the deployments using simple CLI.
 
-### Results
+#### Available cloud providers and theirs features:
 
-<details>
-<summary>Click to view results page</summary>
-<img src="docs/results.PNG" alt="Results" width="700"/>
-</details>
+* **AWS (Amazon Web Services)**
+  * Automated provisioning of AWS infrastructure
+  * Scalable & secure setup using:
+     * VPC - Isolated network infrastructure
+     * Elastic Container Service (ECS) - Container orchestration
+     * Elastic Container Registry (ECR) - Container image storage
+     * Application Load Balancer - Traffic distribution
+     * S3 + CloudFront - Static asset delivery and caching
+     * AWS WAF - Web Application Firewall protection
+     * Redis Cluster - Caching
+  * CI/CD ready - Continuous integration and deployment pipeline
 
-### Card Details
+*... more coming soon*
 
-<details>
-<summary>Click to card details page</summary>
-<img src="docs/carddetails.PNG" alt="Card Details" width="700"/>
-</details>
+### Team & maintenance
 
-## 🛠️ Setup
+**next-enterprise** is backed and maintained by [Blazity](https://blazity.com), providing up to date security features and integrated feature updates.
 
-Make sure to install dependencies:
+#### Active maintainers
 
-```bash
-# npm
-npm install
+- Igor Klepacki ([neg4n](https://github.com/neg4n)) - Open Source Software Developer
+- Tomasz Czechowski ([tomaszczechowski](https://github.com/tomaszczechowski)) - Solutions Architect & DevOps
+- Jakub Jabłoński ([jjablonski-it](https://github.com/jjablonski-it)) - Head of Integrations
 
-# pnpm
-pnpm install
+#### All-time contributors
+[bmstefanski](https://github.com/bmstefanski)
 
-# yarn
-yarn install
+## License
 
-# bun
-bun install
-```
+MIT
 
-Configure environment variables (and edit as needed):
 
-```bash
-cp .env_defaults .env
-```
-
-### Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-### Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
-
-## 🚫 Ignored Sets
-
-**CardMystic** is meant for finding magic cards that are relevant to typical casual & competitive players, as well as collectors. Because of this, any joke & test sets are left out.
-
-- Unglued
-- Unhinged
-- Unstable
-- Unsanctioned
-- Unfinity
-- Mystery Booster Playtest Cards
-- Happy Holidays
-- Ponies: The Galloping
-- Hero's Path
-- Unknown Event
-
-## 🧪 Hybrid Search
-
-This projects uses [Weaviate's hybrid search](https://weaviate.io/developers/weaviate/search/hybrid) to combine keyword search with vector search.
-
-The score for each card is computed with this algorithm:
-
-final*score = alpha * vector*score + (1 - alpha) * bm25_score
-
-The alpha is adjustable, 1.0 being a pure vector search and 0.0 being a pure keyword search.
-
-The current alpha: **0.7**
-
-## 🧠 Weaviate
-
-The Vector Database for this project is [Weaviate](https://weaviate.io/)
-
-### Weaviate Schema
-
-The schema of the data in Weaviate is shown here. This shows whether each property is vectorized (where it is taken into consideration during a vector search) and filterable.
-
-The fields with NLP in the name are enhanced for Natural Language Processing. This includes altering the text slightly so the vectorization model can better understanding the meaning.
-
-"Property name Is Vectorized" is whether or not the property name is vectorized with the value.
-
-<details>
-<summary>Click to view schema table</summary>
-
-<table border="1" style="border-collapse: collapse;">
-  <tr style="background-color: black; color: white;">
-    <th>Property</th>
-    <th>Data Type</th>
-    <th>Is Vectorized</th>
-    <th>Is Filterable</th>
-    <th>Property Name Is Vectorized</th>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">name</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">types</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">subtypes</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">supertypes</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">manaCost</td>
-    <td style="background-color: white; color: black;">Text Array</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">manaCostNLP</td>
-    <td style="background-color: white; color: black;">Text Array</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">cardColors</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">cardColorsLength</td>
-    <td style="background-color: white; color: black;">Number</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">colorIdentity</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">convertedManaCost</td>
-    <td style="background-color: white; color: black;">Number</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">convertedManaCostNLP</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">rarity</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">rarityNLP</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">setCode</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">setName</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">setNameNLP</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">cardText</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">flavorText</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">power</td>
-    <td style="background-color: white; color: black;">Number</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">powerNLP</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">toughness</td>
-    <td style="background-color: white; color: black;">Number</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">toughnessNLP</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">artist</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">url</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-    <td style="background-color: lightcoral; color: black;">No</td>
-  </tr>
-  <tr>
-    <td style="background-color: white; color: black;">legalityIn${FormatName}Format</td>
-    <td style="background-color: white; color: black;">Text</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-    <td style="background-color: lightgreen; color: black;">Yes</td>
-  </tr>
-</table>
-
-</details>
-
-## 🙏 Acknowledgements
-
-- [Scryfall](https://scryfall.com/) for inspiration
-- [MTGJson](https://mtgjson.com/) for card data
+[docs]: https://docs.blazity.com/next-enterprise/deployments/enterprise-cli
