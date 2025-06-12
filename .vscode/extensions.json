@@ -5,6 +5,7 @@
         "github.copilot-chat",
         "ms-vscode-remote.remote-containers",
         "ms-vscode-remote.vscode-remote-extensionpack",
-        "christian-kohler.npm-intellisense"
+        "christian-kohler.npm-intellisense",
+        "biomejs.biome"
     ]
 }
