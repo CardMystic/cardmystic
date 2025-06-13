@@ -1,0 +1,16 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
+#
+
+commit-msg:
+  commands:
+    lint-commit-msg:
+      run: pnpm commitlint --edit {1}
+pre-commit:
+  parallel: true
+  jobs:
+    - name: check staged files
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: pnpm check:staged
