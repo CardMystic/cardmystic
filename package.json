@@ -14,11 +14,15 @@
     "check:fix": "biome check --fix ."
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
     "@opentelemetry/api-logs": "^0.202.0",
     "@opentelemetry/instrumentation": "^0.202.0",
     "@opentelemetry/sdk-logs": "^0.202.0",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@vercel/otel": "^1.13.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.17.3",
     "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -36,7 +40,7 @@
     "@types/react-dom": "^19",
     "lefthook": "^1.11.13",
     "semantic-release": "^24.2.5",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.10",
     "typescript": "^5"
   }
 }

@@ -1,2 +1,5 @@
 onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@tailwindcss/oxide'
   - lefthook
+  - sharp
