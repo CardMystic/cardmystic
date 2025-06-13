@@ -10,7 +10,7 @@
     "format": "biome format .",
     "format:write": "biome format --write .",
     "check": "biome check .",
-    "check:staged": "biome check --staged .",
+    "check:staged": "biome check --staged --no-errors-on-unmatched --files-ignore-unknown=true --colors=off .",
     "check:fix": "biome check --fix ."
   },
   "dependencies": {
