@@ -10,7 +10,7 @@
         class="d-flex justify-start align-center flex-column"
       >
         <v-img
-          :src="card.url"
+          :src="card.image_uris?.normal"
           style="border-radius: 16px"
           max-width="300"
           min-width="300"
@@ -21,7 +21,7 @@
         <v-progress-linear
           rounded
           :color="getScoreColor(metadata.score)"
-          :model-value="metadata.score * 100"
+          :model-value="metadata.score"
           :height="20"
           class="mt-6"
           style="border: 1px solid black; max-width: 300px"
@@ -36,20 +36,20 @@
       <v-col cols="12" md="5">
         <h2 class="text-h5 font-weight-bold mb-2">
           {{ card.name }}
-          <span v-if="card.manaCost">({{ card.manaCost }})</span>
+          <span v-if="card.mana_cost">({{ card.mana_cost }})</span>
         </h2>
         <p class="text-subtitle-1 mb-2">
-          Creature — {{ card.subtypes || card.types }}
+          {{ card.type_line }}
         </p>
 
         <div
           class="text-body-1 mb-4"
-          v-html="card.cardText.replace(/\n/g, '<br/>')"
+          v-html="card.oracle_text?.replace(/\n/g, '<br/>') || ''"
         ></div>
 
-        <em v-if="card.flavorText">{{ card.flavorText }}</em>
+        <em v-if="card.flavor_text">{{ card.flavor_text }}</em>
 
-        <div class="mt-4 font-weight-bold">
+        <div class="mt-4 font-weight-bold" v-if="card.power && card.toughness">
           Power / Toughness: {{ card.power }}/{{ card.toughness }}
         </div>
 
@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { IWeaviateMagicCardSchema } from '~/types/IVectorBackend';
+import type { ICardResult } from '~/types/IColbert';
 
 definePageMeta({
   middleware: ['require-card'],
@@ -86,30 +86,28 @@ definePageMeta({
 const cardStore = useCardStore();
 
 const card = computed(
-  () => cardStore.card?.properties ?? ({} as IWeaviateMagicCardSchema),
+  () => cardStore.card?.card_data ?? ({} as ICardResult['card_data']),
 );
 const metadata = computed(() => cardStore.card?.metadata ?? ({} as any));
 const formatsToIgnore = [
-  'OldSchool',
-  'StandardBrawl',
-  'Explorer',
-  'HistoricBrawl',
-  'Gladiator',
-  'Premodern',
-  'Predh',
-  'PauperCommander',
+  'oldschool',
+  'standardbrawl',
+  'explorer',
+  'historicbrawl',
+  'gladiator',
+  'premordern',
+  'predh',
+  'paupercommander',
 ];
 useHead({ title: `${card.value.name}` });
 
 const legalities = computed(() => {
-  if (!card.value) return {};
+  if (!card.value?.legalities) return {};
   const result: Record<string, string> = {};
-  for (const [key, value] of Object.entries(card.value)) {
-    if (key.startsWith('legalityIn')) {
-      const format = key.replace('legalityIn', '').replace('Format', '');
-      if (!formatsToIgnore.includes(format)) {
-        result[format] = (value as string).toUpperCase(); // normalize casing
-      }
+  for (const [key, value] of Object.entries(card.value.legalities)) {
+    const format = key.charAt(0).toUpperCase() + key.slice(1);
+    if (!formatsToIgnore.includes(format)) {
+      result[format] = (value as string).toUpperCase(); // normalize casing
     }
   }
   return result;
@@ -118,7 +116,7 @@ const legalities = computed(() => {
 console.log('legalities', legalities.value);
 
 function getScoreColor(score: number): string {
-  const pct = Math.min(Math.max(score, 0), 1);
+  const pct = Math.min(Math.max(score / 100, 0), 1);
 
   const r = pct < 0.5 ? 200 : Math.floor(200 - (pct - 0.5) * 2 * 200); // red from 200 → 0
   const g =

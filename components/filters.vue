@@ -221,14 +221,25 @@
             </div>
           </v-col>
         </v-row>
-        <v-btn
-          :disabled="searchText.length == 0"
-          style="height: 56px"
-          @click="emit('search')"
-          color="primary"
-          elevation="3"
-          >Search</v-btn
-        >
+        <div class="d-flex gap-3 justify-end">
+          <v-btn
+            style="height: 56px"
+            class="mr-2"
+            @click="clearFilters"
+            color="white"
+            variant="outlined"
+            elevation="3"
+            >Reset</v-btn
+          >
+          <v-btn
+            :disabled="searchText.length == 0"
+            style="height: 56px"
+            @click="emit('search')"
+            color="primary"
+            elevation="3"
+            >Search</v-btn
+          >
+        </div>
       </template>
     </v-expansion-panel>
   </v-expansion-panels>
@@ -293,6 +304,32 @@ watch(
 
 function closePanel() {
   panel.value = [];
+}
+
+function clearFilters() {
+  // Reset all filters to their default values
+  filters.value.selectedCardTypes = [];
+  filters.value.selectedColorFilterOption = 'Contains At Most';
+  filters.value.selectedColors = {
+    Red: true,
+    Blue: true,
+    Green: true,
+    White: true,
+    Black: true,
+  };
+  filters.value.selectedRarities = {
+    Common: false,
+    Uncommon: false,
+    Rare: false,
+    Mythic: false,
+  };
+  filters.value.selectedCMCOption = 'Equal To';
+  filters.value.selectedPowerOption = 'Equal To';
+  filters.value.selectedToughnessOption = 'Equal To';
+  filters.value.selectedCMC = '';
+  filters.value.selectedPower = '';
+  filters.value.selectedToughness = '';
+  filters.value.selectedCardFormats = [{ format: null, status: null }];
 }
 
 // Expose the method to the parent

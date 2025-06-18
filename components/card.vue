@@ -4,14 +4,14 @@
     <v-col class="card" cols="3">
       <v-img
         class="card-image"
-        :src="card.properties.url"
+        :src="card.card_data.image_uris?.normal"
         alt="Card Image"
       ></v-img>
 
       <v-progress-linear
         rounded
-        :color="getScoreColor(card.metadata.score)"
-        :model-value="card.metadata.score * 100"
+        :color="getScoreColor(card.score)"
+        :model-value="card.score"
         :height="20"
         class="mt-2"
         style="border: 1px solid black"
@@ -25,15 +25,17 @@
 </template>
 
 <script setup lang="ts">
+import type { ICardResult } from '~/types/IColbert';
+
 defineProps({
   card: {
-    type: Object,
+    type: Object as PropType<ICardResult>,
     required: true,
   },
 });
 
 function getScoreColor(score: number): string {
-  const pct = Math.min(Math.max(score, 0), 1);
+  const pct = Math.min(Math.max(score / 100, 0), 1);
 
   const r = pct < 0.5 ? 200 : Math.floor(200 - (pct - 0.5) * 2 * 200); // red from 200 → 0
   const g =

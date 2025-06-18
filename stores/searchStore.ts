@@ -1,26 +1,24 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type {
-  IMagicCardsSearchFilters,
-  IWeaviateMagicCardResponse,
-} from '@/types/IVectorBackend';
+import type { IMagicCardsSearchFilters } from '~/types/IModelGateway';
+import type { IColbertResponse, ICardResult } from '~/types/IColbert';
 
 export const useSearchStore = defineStore('search', () => {
   const query = ref('');
   const imageFile = ref<File | null>(null);
-  const results: Ref<IWeaviateMagicCardResponse[]> = ref<any[]>([]);
+  const results: Ref<ICardResult[]> = ref<any[]>([]);
   const loading = ref(false);
 
   // Filters
   const filters: Ref<IMagicCardsSearchFilters> = ref({
-    selectedCardTypes: [] as string[],
-    selectedColorFilterOption: 'Match Exactly',
+    selectedCardTypes: [],
+    selectedColorFilterOption: 'Contains At Most',
     selectedColors: {
-      Red: false,
-      Blue: false,
-      Green: false,
-      White: false,
-      Black: false,
+      Red: true,
+      Blue: true,
+      Green: true,
+      White: true,
+      Black: true,
     },
     selectedRarities: {
       Common: false,
@@ -39,9 +37,9 @@ export const useSearchStore = defineStore('search', () => {
 
   const endpoints = [
     {
-      name: 'Vector',
+      name: 'A.I.',
       tooltip: 'Search by Meaning using AI',
-      endpoint: '/vector_search',
+      endpoint: '/colbert/vector_search',
     },
     {
       name: 'Keyword',
@@ -60,6 +58,7 @@ export const useSearchStore = defineStore('search', () => {
     const url = '/api/proxy' + endpoint;
 
     console.log('url', url);
+    console.log('filters', filters.value);
 
     let response;
 
@@ -81,6 +80,8 @@ export const useSearchStore = defineStore('search', () => {
         filters: filters.value,
       };
 
+      console.log('body', body);
+
       response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,18 +89,12 @@ export const useSearchStore = defineStore('search', () => {
       });
     }
 
-    const data = await response.json();
+    const data: IColbertResponse = await response.json();
     console.log('results', data);
 
-    if (data?.objects) {
-      const resultsWithConfidence = data.objects.map((result: any) => {
-        result.metadata.confidence = 1 - result.metadata.distance;
-        return result;
-      });
-
-      results.value = resultsWithConfidence.sort(
-        (a: any, b: any) => b.metadata.confidence - a.metadata.confidence,
-      );
+    if (data?.results && data.results.length > 0) {
+      results.value = data.results;
+      loading.value = false;
     } else {
       results.value = [];
     }

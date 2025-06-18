@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const method = event.method;
 
-  const response = await $fetch(`https://api.cardmystic.io/${path}`, {
+  const response = await $fetch(`http://localhost:3000/${path}`, {
     method,
     body: ['POST', 'PUT', 'PATCH'].includes(method) ? body : undefined,
     query: getQuery(event),

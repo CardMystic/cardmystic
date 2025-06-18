@@ -34,19 +34,6 @@
         </v-col>
       </v-row>
 
-      <!-- <v-row class="pa-3 mt-6" justify="center">
-        <v-card style="max-width: 400px" elevation="5">
-          <v-card-text class="d-flex flex-row text-left align-center">
-            <v-icon color="primary">mdi-help-circle</v-icon>
-            <p class="ml-2">
-              The <b class="important-text">%</b> under each card represents the
-              model's <b class="important-text">confidence</b> that the result
-              is relevant.
-            </p>
-          </v-card-text>
-        </v-card>
-      </v-row> -->
-
       <!-- Results, show image with properties.url -->
       <!-- TODO: return more results and paginate -->
       <div style="max-width: 1072px" class="mt-6">
@@ -55,8 +42,9 @@
             <v-col
               class="px-0 py-0 flex-grow-1"
               v-for="result in searchStore.results"
-              :key="result.uuid"
+              :key="result.card_data.id"
             >
+              <!-- TODO: use http GET and query params to go to cardDetails page -->
               <card
                 :card="result"
                 @click="
