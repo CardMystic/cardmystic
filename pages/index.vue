@@ -118,17 +118,25 @@ const searching = ref(false);
 
 async function search() {
   filterRef.value?.closePanel();
-  searching.value = true;
-  try {
-    await searchStore.search(chipSelectedIndex.value);
-    if (searchStore.results.length > 0) {
-      router.push('/search');
-    }
-  } catch (error) {
-    console.error('Search failed:', error);
+
+  // Navigate to search page with query parameters
+  const queryParams: any = {
+    q: searchStore.query,
+    endpoint: chipSelectedIndex.value,
+    filters: JSON.stringify(searchStore.filters),
+  };
+
+  // If image file is selected, we'll handle it differently
+  if (chipSelectedIndex.value === 2 && uploadedFile.value) {
+    // For image search, we need to store the file and navigate
+    searchStore.imageFile = uploadedFile.value;
+    queryParams.hasImage = 'true';
   }
-  searching.value = false;
-  router.push({ name: 'search' });
+
+  router.push({
+    name: 'search',
+    query: queryParams,
+  });
 }
 </script>
 

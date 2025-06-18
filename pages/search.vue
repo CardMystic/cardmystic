@@ -58,7 +58,6 @@
 
         <template v-else>
           <div class="no-results-container">
-            <h2>No Results</h2>
             <v-btn to="/" class="mt-4" color="primary">Home</v-btn>
           </div>
         </template>
@@ -71,10 +70,7 @@
 import { onMounted, ref } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 const router = useRouter();
-
-definePageMeta({
-  middleware: ['require-results'],
-});
+const route = useRoute();
 
 const searchStore = useSearchStore();
 const cardStore = useCardStore();
@@ -94,22 +90,66 @@ useHead({
     },
   ],
 });
+
 const filterRef: any = ref(null);
 const searching = ref(false);
 
+onMounted(async () => {
+  // Check if we have query parameters to perform a search
+  const query = route.query.q as string;
+  const endpoint = parseInt(route.query.endpoint as string) || 0;
+  const filtersParam = route.query.filters as string;
+  const hasImage = route.query.hasImage === 'true';
+
+  if (query || hasImage) {
+    // Set the search parameters
+    searchStore.query = query || '';
+    chipSelectedIndex.value = endpoint;
+
+    // Parse and apply filters if provided
+    if (filtersParam) {
+      try {
+        const parsedFilters = JSON.parse(filtersParam);
+        Object.assign(searchStore.filters, parsedFilters);
+      } catch (error) {
+        console.error('Error parsing filters:', error);
+      }
+    }
+
+    // Perform the search
+    await performSearch();
+  }
+});
+
 async function search() {
+  // Update URL with new search parameters
+  const queryParams: any = {
+    q: searchStore.query,
+    endpoint: chipSelectedIndex.value,
+    filters: JSON.stringify(searchStore.filters),
+  };
+
+  // Update the URL without triggering navigation
+  await router.replace({
+    name: 'search',
+    query: queryParams,
+  });
+
+  await performSearch();
+}
+
+async function performSearch() {
   filterRef.value?.closePanel();
   searching.value = true;
   try {
     await searchStore.search(chipSelectedIndex.value);
     if (searchStore.results.length == 0) {
-      router.push('/home');
+      router.push('/');
     }
   } catch (error) {
     console.error('Search failed:', error);
   }
   searching.value = false;
-  router.push({ name: 'search' });
 }
 </script>
 
