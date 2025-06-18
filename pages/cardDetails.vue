@@ -3,9 +3,9 @@
 
   <!-- Back to Results button -->
   <v-container v-if="searchStore.results.length > 0" class="pt-4 pb-0">
-    <v-btn 
-      to="/search" 
-      color="primary" 
+    <v-btn
+      to="/search"
+      color="primary"
       variant="outlined"
       prepend-icon="mdi-arrow-left"
       class="mb-4"
@@ -35,7 +35,7 @@
       >
         <v-img
           :src="card.image_uris?.normal"
-          style="border-radius: 16px"
+          style="border-radius: 20px"
           max-width="300"
           min-width="300"
           max-height="420"
@@ -204,7 +204,6 @@ em
   color: white
 
 .v-img
-  border-radius: 12px
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5)
 
 .v-card

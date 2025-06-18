@@ -1,5 +1,5 @@
 <template>
-  <div class="card-container">
+  <div class="card-container" :class="sizeClass">
     <!-- Left side: image + score -->
     <v-col class="card" cols="3">
       <v-img
@@ -12,8 +12,8 @@
         rounded
         :color="getScoreColor(card.score)"
         :model-value="card.score"
-        :height="20"
-        class="mt-2"
+        :height="progressHeight"
+        class="confidence-bar"
         style="border: 1px solid black"
       >
         <template v-slot:default="{ value }">
@@ -26,12 +26,32 @@
 
 <script setup lang="ts">
 import type { ICardResult } from '~/types/IColbert';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 
-defineProps({
+const props = defineProps({
   card: {
     type: Object as PropType<ICardResult>,
     required: true,
   },
+  size: {
+    type: String as PropType<'small' | 'medium' | 'large'>,
+    default: 'large',
+  },
+});
+
+const sizeClass = computed(() => `card-${props.size}`);
+const progressHeight = computed(() => {
+  switch (props.size) {
+    case 'small':
+      return 12;
+    case 'medium':
+      return 16;
+    case 'large':
+      return 20;
+    default:
+      return 20;
+  }
 });
 
 function getScoreColor(score: number): string {
@@ -50,7 +70,6 @@ function getScoreColor(score: number): string {
 <style scoped>
 .confidence-text {
   color: white;
-  font-size: 14px;
   font-weight: bold;
   text-align: center;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 1);
@@ -61,23 +80,71 @@ function getScoreColor(score: number): string {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-  max-height: 410px;
 }
 
 .card {
   flex-shrink: 0;
-  min-width: 268px;
-  max-width: 268px;
   padding: 0px;
-  padding-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .card-image {
-  border-radius: 12px;
   width: 100%;
+  height: auto;
+  aspect-ratio: 5/7; /* MTG card aspect ratio */
+  object-fit: cover;
+  flex: 1;
+}
+
+.confidence-bar {
+  margin: 0;
+}
+
+/* Size variants */
+.card-small .card {
+  min-width: 150px;
+  max-width: 150px;
+}
+
+.card-small .card-image {
+  max-height: 210px;
+  border-radius: 10px;
+}
+
+.card-small .confidence-text {
+  font-size: 11px;
+}
+
+.card-medium .card {
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.card-medium .card-image {
+  max-height: 280px;
+  border-radius: 16px;
+}
+
+.card-medium .confidence-text {
+  font-size: 12px;
+}
+
+.card-large .card {
+  min-width: 268px;
+  max-width: 268px;
+}
+
+.card-large .card-image {
+  max-height: 375px;
+  border-radius: 20px;
+}
+
+.card-large .confidence-text {
+  font-size: 14px;
 }
 </style>

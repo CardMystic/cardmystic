@@ -1,24 +1,26 @@
 <template>
   <navbar></navbar>
   <v-container
-    class="container fill-height d-flex align-center justify-center pt-0"
+    class="fill-height container d-flex align-center justify-center"
+    style="padding-top: 0"
   >
-    <v-col justify="center" align="center" class="col-container">
-      <div class="glow-wrapper">
-        <v-img src="/public/crystall_ball.png" class="image"></v-img>
+    <v-col justify="center" align="center" class="col-container px-0">
+      <!-- Header with image and title side by side -->
+      <div class="header-layout">
+        <div class="glow-wrapper">
+          <v-img src="/public/crystall_ball.png" class="image"></v-img>
+        </div>
+
+        <div class="title-container">
+          <h1 class="title">
+            {{ typedTitle }}
+          </h1>
+          <h2 class="subtitle">
+            <b class="important-text">A.I. Search Engine</b> for Magic: The
+            Gathering
+          </h2>
+        </div>
       </div>
-
-      <!-- Title container -->
-      <v-row class="title-container">
-        <h1 class="title">
-          {{ typedTitle }}
-        </h1>
-
-        <h2 class="subtitle mt-2">
-          <b class="important-text">A.I. Search Engine</b> for Magic: The
-          Gathering
-        </h2>
-      </v-row>
 
       <ChipSelector
         class="chip-selector"
@@ -29,45 +31,40 @@
       />
 
       <!-- Search bar and filters -->
-      <v-row class="mt-0 pb-0 px-0" justify="center" style="max-width: 705px">
-        <v-col class="py-0 px-0">
-          <v-text-field
-            v-if="chipSelectedIndex !== 2"
-            v-model="searchStore.query"
-            label="Search..."
-            variant="solo"
-            elevation="5"
-            @keyup.enter="search"
-            :loading="searching"
-          ></v-text-field>
+      <div style="max-width: 768px">
+        <v-text-field
+          v-if="chipSelectedIndex !== 2"
+          v-model="searchStore.query"
+          label="Search..."
+          variant="solo"
+          elevation="5"
+          @keyup.enter="search"
+          :loading="searching"
+        ></v-text-field>
 
-          <v-file-input
-            v-else
-            v-model="uploadedFile"
-            label="Upload an image"
-            accept="image/*"
-            variant="solo"
-            prepend-icon="mdi-camera"
-          />
-        </v-col>
-      </v-row>
-
-      <v-row class="mt-0 pb-0 px-0" style="max-width: 705px">
-        <v-col class="d-flex flex-grow-1 align-center py-0 px-0">
-          <filters
-            ref="filterRef"
-            :search-text="searchStore.query"
-            @search="search"
-          ></filters>
-        </v-col>
-      </v-row>
+        <v-file-input
+          v-else
+          v-model="uploadedFile"
+          label="Upload an image"
+          accept="image/*"
+          variant="solo"
+          prepend-icon="mdi-camera"
+        />
+        <filters
+          ref="filterRef"
+          :search-text="searchStore.query"
+          @search="search"
+        ></filters>
+        <ExampleQuery class="mt-6" />
+      </div>
     </v-col>
   </v-container>
+
   <Footer></Footer>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 const router = useRouter();
 
@@ -160,45 +157,63 @@ async function search() {
     opacity: 0
 
 .image
-  width: 250px
-  height: 250px
+  width: 120px
+  height: 120px
+  position: relative
+  bottom: 10px
+  left: 20px
 
-  @media (max-width: 600px)
-    width: 190px
-    height: 190px
+  @media (max-width: 768px)
+    width: 100px
+    height: 100px
+    bottom: -15px
+    left: 0px
 
 .col-container
   position: relative
 
+.header-layout
+  display: flex
+  align-items: center
+  justify-content: center
+  gap: 24px
+  margin-bottom: 16px
+  @media (max-width: 768px)
+    flex-direction: column
+    gap: 12px
+
 .title-container
   display: flex
   flex-direction: column
-  align-items: center
+  align-items: flex-start
   justify-content: center
-  position: relative
-  top: -30px
-  @media (max-width: 600px)
-    top: -23px
+  @media (max-width: 768px)
+    align-items: center
+    text-align: center
 
 .title
   font-family: "Alfa Slab One", serif
   font-weight: 400
   font-style: normal
-  font-size: 3.2rem
+  font-size: 3.6rem
   color: rgb(var(--v-theme-primary))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
-  margin-top: 6px
-  @media (max-width: 600px)
-    font-size: 3.0rem
+  margin: 0
+  line-height: 1
+  @media (max-width: 768px)
+    font-size: 3.3rem
+    text-align: center
 
 .subtitle
-  font-size: 1.00rem
+  font-size: 1.1rem
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   color: white
-  position: relative
-  top: -20px
-  @media (max-width: 600px)
-    font-size: 0.96rem
+  margin: 4px 0 0 0
+  line-height: 1.2
+  width: 100%
+  @media (max-width: 768px)
+    font-size: 1.0rem
+    text-align: center
 
 .link-btn
   color: white
@@ -215,7 +230,7 @@ async function search() {
 
 .chip-selector
   position: relative
-  top: -20px
+  margin-bottom: 20px
 
 .help-container
   position: relative
@@ -231,19 +246,21 @@ async function search() {
 .glow-wrapper::after
   content: ''
   position: absolute
-  top: 58%
-  left: 49.5%
-  width: 100px
-  height: 100px
+  top: 50%
+  left: 66%
+  width: 50px
+  height: 50px
   background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0) 70%, rgba(147,114,255,0) 100%)
   border-radius: 50%
   transform: translate(-50%, -50%)
   animation: glowPulse 5s ease-in-out infinite
   pointer-events: none
   z-index: 1
-  @media (max-width: 600px)
-    width: 70px
-    height: 70px
+  @media (max-width: 768px)
+    width: 40px
+    height: 40px
+    top: 58%
+    left: 49.5%
 
 @keyframes glowPulse
   0%, 100%
