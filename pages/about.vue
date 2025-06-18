@@ -4,11 +4,10 @@
     class="fill-height d-flex align-center justify-center d-flex flex-column"
   >
     <v-card
-      class="pa-2 mb-6"
+      class="pa-2 mb-6 text-card"
       max-width="600"
       elevation="10"
       rounded="xl"
-      color="secondary"
     >
       <v-card-title class="text-h5 font-weight-bold">
         🔮 What is <b class="title">CardMystic</b>?
@@ -20,13 +19,7 @@
         amazing MTG community.
       </v-card-text>
     </v-card>
-    <v-card
-      class="pa-2"
-      max-width="600"
-      elevation="10"
-      rounded="xl"
-      color="secondary"
-    >
+    <v-card class="pa-2 text-card" max-width="600" elevation="10" rounded="xl">
       <v-card-title class="text-h5 font-weight-bold">
         🧙‍♂️ Why <b class="title">CardMystic</b>?
       </v-card-title>
@@ -59,4 +52,8 @@ useHead({ title: 'About - CardMystic' });
   color: rgb(var(--v-theme-primary))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   margin-top: 6px
+
+.text-card
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
+  border: 1px solid rgba(147, 114, 255, 0.2)
 </style>

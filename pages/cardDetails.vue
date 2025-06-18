@@ -26,59 +26,92 @@
       <v-btn to="/search" color="primary" class="mt-4">Back to Search</v-btn>
     </div>
 
-    <v-row v-else-if="card">
+    <v-row
+      v-else-if="card"
+      style="max-width: 1400px"
+      class="d-flex justify-center"
+    >
       <!-- Left: Card Image -->
       <v-col
-        cols="12"
         md="4"
-        class="d-flex justify-start align-center flex-column"
+        class="d-flex justify-start align-center flex-column mr-6"
+        style="max-width: 300px"
       >
-        <v-img
-          :src="card.image_uris?.normal"
-          style="border-radius: 20px"
-          max-width="300"
-          min-width="300"
-          max-height="420"
-          min-height="420"
-          rounded
-        />
+        <div class="card-image-container">
+          <div class="card-glow"></div>
+          <v-img
+            :src="card.image_uris?.normal"
+            class="card-image"
+            max-width="300"
+            min-width="300"
+            max-height="420"
+            min-height="420"
+            rounded
+          />
+        </div>
       </v-col>
 
       <!-- Center: Card Details -->
       <v-col cols="12" md="5">
-        <h2 class="text-h5 font-weight-bold mb-2">
-          {{ card.name }}
-          <span v-if="card.mana_cost">({{ card.mana_cost }})</span>
-        </h2>
-        <p class="text-subtitle-1 mb-2">
-          {{ card.type_line }}
-        </p>
-
-        <div
-          class="text-body-1 mb-4"
-          v-html="card.oracle_text?.replace(/\n/g, '<br/>') || ''"
-        ></div>
-
-        <em v-if="card.flavor_text">{{ card.flavor_text }}</em>
-
-        <div class="mt-4 font-weight-bold" v-if="card.power && card.toughness">
-          Power / Toughness: {{ card.power }}/{{ card.toughness }}
+        <div class="card-header">
+          <h2 class="card-title">
+            {{ card.name }}
+            <span v-if="card.mana_cost" class="mana-cost"
+              >({{ card.mana_cost }})</span
+            >
+          </h2>
+          <p class="card-type">
+            {{ card.type_line }}
+          </p>
         </div>
 
-        <div v-if="card.artist" class="mt-2">
-          <span class="text-caption"
-            >Illustrated by <strong>{{ card.artist }}</strong></span
-          >
-        </div>
-        <v-card elevation="2" class="pa-4 mt-4">
-          <h3 class="text-subtitle-1 font-weight-bold mb-3">Legalities</h3>
+        <div class="card-text-container">
+          <div
+            class="oracle-text"
+            v-html="card.oracle_text?.replace(/\n/g, '<br/>') || ''"
+          ></div>
 
-          <v-row dense>
-            <v-col v-for="(format, name) in legalities" :key="name" cols="6">
-              <v-chip class="chip" :color="getLegalityColor(format)" dark>{{
-                format
-              }}</v-chip>
-              <span class="ml-1 format-text">{{ formatName(name) }}</span>
+          <em v-if="card.flavor_text" class="flavor-text">{{
+            card.flavor_text
+          }}</em>
+
+          <div class="stats-container" v-if="card.power && card.toughness">
+            <div class="power-toughness">
+              Power / Toughness:
+              <span class="stats">{{ card.power }}/{{ card.toughness }}</span>
+            </div>
+          </div>
+
+          <div v-if="card.artist" class="artist-info">
+            <span class="artist-label">Illustrated by</span>
+            <strong class="artist-name">{{ card.artist }}</strong>
+          </div>
+        </div>
+
+        <v-card elevation="8" class="legalities-card">
+          <div class="legalities-header">
+            <v-icon color="primary" class="mr-2">mdi-gavel</v-icon>
+            <h3 class="legalities-title">Legalities</h3>
+          </div>
+
+          <v-row dense class="pa-2">
+            <v-col
+              v-for="(format, name) in legalities"
+              :key="name"
+              cols="6"
+              class="mb-2"
+            >
+              <div class="legality-item">
+                <v-chip
+                  class="legality-chip"
+                  :color="getLegalityColor(format)"
+                  variant="elevated"
+                  size="small"
+                >
+                  {{ format }}
+                </v-chip>
+                <span class="format-name">{{ formatName(name) }}</span>
+              </div>
             </v-col>
           </v-row>
         </v-card>
@@ -130,14 +163,14 @@ onMounted(async () => {
 const card = computed(() => cardData.value as IScryfallCard | null);
 
 const formatsToIgnore = [
-  'oldschool',
-  'standardbrawl',
-  'explorer',
-  'historicbrawl',
-  'gladiator',
-  'premordern',
-  'predh',
-  'paupercommander',
+  'Oldschool',
+  'Standardbrawl',
+  'Explorer',
+  'Historicbrawl',
+  'Gladiator',
+  'Premordern',
+  'Predh',
+  'Paupercommander',
 ];
 
 useHead({
@@ -150,37 +183,25 @@ const legalities = computed(() => {
   for (const [key, value] of Object.entries(card.value.legalities)) {
     const format = key.charAt(0).toUpperCase() + key.slice(1);
     if (!formatsToIgnore.includes(format)) {
-      result[format] = (value as string).toUpperCase(); // normalize casing
+      result[format] = (value as string).toUpperCase().replaceAll('_', ' '); // normalize casing
     }
   }
   return result;
 });
 
-console.log('legalities', legalities.value);
-
-function getScoreColor(score: number): string {
-  const pct = Math.min(Math.max(score / 100, 0), 1);
-
-  const r = pct < 0.5 ? 200 : Math.floor(200 - (pct - 0.5) * 2 * 200); // red from 200 → 0
-  const g =
-    pct < 0.5
-      ? Math.floor(pct * 2 * 160) // green from 0 → 160
-      : 160;
-
-  return `rgb(${r},${g},40)`; // add some darkness with fixed low blue
-}
-
 const getLegalityColor = (status: string) => {
   const s = status.toUpperCase();
   switch (s) {
     case 'LEGAL':
-      return 'green';
+      return 'success';
     case 'BANNED':
-      return 'red';
+      return 'error';
     case 'NOT LEGAL':
-      return 'grey';
+      return 'surface-variant';
+    case 'RESTRICTED':
+      return 'warning';
     default:
-      return 'blue';
+      return 'primary';
   }
 };
 
@@ -190,6 +211,151 @@ const formatName = (raw: string) => {
 </script>
 
 <style scoped lang="sass">
+// Card Image Styling
+.card-image-container
+  position: relative
+  display: inline-block
+
+.card-glow
+  position: absolute
+  top: -5px
+  left: -5px
+  right: -5px
+  bottom: -5px
+  background: linear-gradient(45deg, rgba(147, 114, 255, 0.3), rgba(255, 114, 147, 0.3), rgba(114, 255, 147, 0.3))
+  border-radius: 25px
+  filter: blur(15px)
+  z-index: 0
+  animation: glowPulse 3s ease-in-out infinite alternate
+
+.card-image
+  border-radius: 20px !important
+  box-shadow: 0 8px 8px rgba(147, 114, 255, 0.4), 0 4px 4px rgba(0, 0, 0, 0.6)
+  position: relative
+  z-index: 1
+  transition: all 0.3s ease
+
+  &:hover
+    transform: translateY(-5px) scale(1.02)
+    box-shadow: 0 12px 40px rgba(147, 114, 255, 0.6), 0 6px 20px rgba(0, 0, 0, 0.8)
+
+// Card Header Styling
+.card-header
+  margin-bottom: 24px
+
+.card-title
+  font-size: 2.2rem
+  font-weight: 700
+  background: linear-gradient(135deg, rgb(147, 114, 255), rgb(255, 114, 147))
+  background-clip: text
+  margin-bottom: 4px
+  text-shadow: 0 4px 8px rgba(147, 114, 255, 0.3)
+
+.mana-cost
+  color: rgb(255, 193, 7)
+  font-weight: 600
+  text-shadow: 0 2px 4px rgba(255, 193, 7, 0.4)
+
+.card-type
+  color: rgb(var(--v-theme-primary))
+  font-size: 1.1rem
+  font-weight: 500
+  margin: 0
+
+// Card Text Container
+.card-text-container
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
+  border-radius: 16px
+  padding: 24px
+  margin-bottom: 24px
+  border: 1px solid rgba(147, 114, 255, 0.2)
+  backdrop-filter: blur(10px)
+
+.oracle-text
+  color: white
+  font-size: 1.1rem
+  line-height: 1.6
+  margin-bottom: 16px
+
+.flavor-text
+  color: rgba(147, 114, 255, 0.9)
+  font-style: italic
+  font-size: 1rem
+  line-height: 1.5
+  display: block
+  margin-top: 16px
+  padding-top: 16px
+  border-top: 1px solid rgba(147, 114, 255, 0.2)
+
+// Stats and Artist Info
+.stats-container
+  margin-top: 20px
+
+.power-toughness
+  color: white
+  font-size: 1.1rem
+  font-weight: 600
+
+.stats
+  color: rgb(255, 193, 7)
+  font-weight: 700
+  font-size: 1.2rem
+
+.artist-info
+  margin-top: 16px
+  padding-top: 16px
+  border-top: 1px solid rgba(147, 114, 255, 0.2)
+
+.artist-label
+  color: rgba(255, 255, 255, 0.7)
+  font-size: 0.9rem
+
+.artist-name
+  color: rgb(var(--v-theme-primary))
+  margin-left: 8px
+  font-size: 1rem
+
+// Legalities Card
+.legalities-card
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
+  border: 1px solid rgba(147, 114, 255, 0.3) !important
+  border-radius: 16px !important
+  padding: 20px !important
+
+.legalities-header
+  display: flex
+  align-items: center
+  margin-bottom: 16px
+
+.legalities-title
+  color: white
+  font-size: 1.3rem
+  font-weight: 600
+  margin: 0
+
+// Legality Items
+.legality-item
+  display: flex
+  flex-direction: row
+  align-items: center
+  text-align: center
+
+.legality-chip
+  font-size: 11px !important
+  font-weight: 600
+  min-width: 84px
+  text-transform: uppercase
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)
+  justify-content: center
+
+.format-name
+  color: rgba(255, 255, 255, 0.9)
+  font-size: 14px
+  font-weight: bold
+  text-align: center
+  margin-left: 4px
+
+// Legacy styles cleanup
 .chip
   font-size: 10px !important
   min-width: 76px
@@ -202,9 +368,6 @@ h2,
 p,
 em
   color: white
-
-.v-img
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5)
 
 .v-card
   background-color: #2c2c2c
@@ -222,4 +385,13 @@ em
   font-size: 12px
   text-align: center
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
+
+// Animations
+@keyframes glowPulse
+  0%
+    opacity: 0.6
+    transform: scale(1)
+  100%
+    opacity: 0.9
+    transform: scale(1.05)
 </style>

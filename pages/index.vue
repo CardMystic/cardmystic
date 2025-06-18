@@ -40,6 +40,7 @@
           elevation="5"
           @keyup.enter="search"
           :loading="searching"
+          prepend-inner-icon="mdi-magnify"
         ></v-text-field>
 
         <v-file-input

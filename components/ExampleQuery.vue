@@ -279,10 +279,11 @@ function goToCard(cardId: string) {
   margin: 0 auto
 
 .example-content
-  background: rgba(44, 44, 44, 0.8)
   border-radius: 16px
   padding: 12px
   backdrop-filter: blur(10px)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
+  border: 1px solid rgba(147, 114, 255, 0.2)
 
 .query-header
   display: flex

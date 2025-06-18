@@ -1,13 +1,7 @@
 <template>
   <navbar></navbar>
   <v-container class="fill-height d-flex align-center justify-center">
-    <v-card
-      class="pa-6"
-      max-width="600"
-      elevation="10"
-      rounded="xl"
-      color="secondary"
-    >
+    <v-card class="pa-6 text-card" max-width="600" elevation="10" rounded="xl">
       <v-card-title class="text-h5 font-weight-bold">
         💬 Contact Us
       </v-card-title>
@@ -31,3 +25,9 @@
 <script setup lang="ts">
 useHead({ title: 'Contact - CardMystic' });
 </script>
+
+<style lang="sass" scoped>
+.text-card
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
+  border: 1px solid rgba(147, 114, 255, 0.2)
+</style>
