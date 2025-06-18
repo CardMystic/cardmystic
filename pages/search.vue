@@ -48,8 +48,10 @@
               <card
                 :card="result"
                 @click="
-                  cardStore.card = result;
-                  router.push({ name: 'cardDetails' });
+                  router.push({
+                    name: 'cardDetails',
+                    query: { id: result.card_data.id },
+                  })
                 "
               />
             </v-col>
@@ -73,7 +75,6 @@ const router = useRouter();
 const route = useRoute();
 
 const searchStore = useSearchStore();
-const cardStore = useCardStore();
 
 // Chip Selector component
 const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);

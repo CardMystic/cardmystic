@@ -63,23 +63,14 @@
 <script setup lang="ts">
 const drawer = ref(false);
 const searchStore = useSearchStore();
-const cardStore = useCardStore();
 
 const navItems = [
   { to: '/', label: 'Home', icon: 'mdi-home' },
-  {
-    to: '/search',
-    label: 'Results',
-    icon: 'mdi-magnify',
-    condition: () => searchStore.results.length > 0,
-  },
   { to: '/about', label: 'About', icon: 'mdi-information' },
   { to: '/contact', label: 'Contact', icon: 'mdi-email' },
 ];
 
-const filteredNavItems = computed(() =>
-  navItems.filter((item) => !item.condition || item.condition()),
-);
+const filteredNavItems = computed(() => navItems);
 
 const props = defineProps({
   showActions: {

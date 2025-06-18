@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { IWeaviateMagicCardResponse } from '~/types/IModelGateway';
+import type { ICardResult } from '~/types/IColbert';
 
 export const useCardStore = defineStore('card', () => {
-  const card: Ref<IWeaviateMagicCardResponse | null> = ref(null);
+  const card: Ref<ICardResult | null> = ref(null);
 
   return {
     card,

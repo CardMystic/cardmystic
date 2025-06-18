@@ -1,8 +1,32 @@
 <template>
   <navbar />
 
+  <!-- Back to Results button -->
+  <v-container v-if="searchStore.results.length > 0" class="pt-4 pb-0">
+    <v-btn 
+      to="/search" 
+      color="primary" 
+      variant="outlined"
+      prepend-icon="mdi-arrow-left"
+      class="mb-4"
+    >
+      Back to Results
+    </v-btn>
+  </v-container>
+
   <v-container class="py-8 d-flex justify-center">
-    <v-row>
+    <div v-if="loading" class="text-center">
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+      <p class="mt-4 text-white">Loading card details...</p>
+    </div>
+
+    <div v-else-if="error" class="text-center">
+      <v-icon color="error" size="48">mdi-alert-circle</v-icon>
+      <p class="mt-4 text-white">{{ error }}</p>
+      <v-btn to="/search" color="primary" class="mt-4">Back to Search</v-btn>
+    </div>
+
+    <v-row v-else-if="card">
       <!-- Left: Card Image -->
       <v-col
         cols="12"
@@ -18,18 +42,6 @@
           min-height="420"
           rounded
         />
-        <v-progress-linear
-          rounded
-          :color="getScoreColor(metadata.score)"
-          :model-value="metadata.score"
-          :height="20"
-          class="mt-6"
-          style="border: 1px solid black; max-width: 300px"
-        >
-          <template v-slot:default="{ value }">
-            <p class="confidence-text">{{ Math.ceil(value) }}%</p>
-          </template>
-        </v-progress-linear>
       </v-col>
 
       <!-- Center: Card Details -->
@@ -76,19 +88,47 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { ICardResult } from '~/types/IColbert';
+import { computed, ref, onMounted } from 'vue';
+import type { IScryfallCard } from '~/types/IScryfall';
+import { useSearchStore } from '~/stores/searchStore';
 
-definePageMeta({
-  middleware: ['require-card'],
+const route = useRoute();
+const searchStore = useSearchStore();
+const cardData = ref<IScryfallCard | null>(null);
+const loading = ref(false);
+const error = ref<string | null>(null);
+
+onMounted(async () => {
+  const cardId = route.query.id as string;
+  if (!cardId) {
+    error.value = 'No card ID provided';
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const response = await fetch(
+      `/api/proxy/scryfall/card_search?id=${cardId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    if (!response.ok) {
+      throw new Error('Failed to fetch card data');
+    }
+    cardData.value = await response.json();
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error';
+  } finally {
+    loading.value = false;
+  }
 });
 
-const cardStore = useCardStore();
+const card = computed(() => cardData.value as IScryfallCard | null);
 
-const card = computed(
-  () => cardStore.card?.card_data ?? ({} as ICardResult['card_data']),
-);
-const metadata = computed(() => cardStore.card?.metadata ?? ({} as any));
 const formatsToIgnore = [
   'oldschool',
   'standardbrawl',
@@ -99,7 +139,10 @@ const formatsToIgnore = [
   'predh',
   'paupercommander',
 ];
-useHead({ title: `${card.value.name}` });
+
+useHead({
+  title: computed(() => card.value?.name || 'CardMystic'),
+});
 
 const legalities = computed(() => {
   if (!card.value?.legalities) return {};

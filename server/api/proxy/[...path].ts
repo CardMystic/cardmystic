@@ -4,12 +4,16 @@ export default defineEventHandler(async (event) => {
     ? pathParam.join('/')
     : (pathParam ?? '');
 
-  const body = await readBody(event);
   const method = event.method;
+
+  // Only read body for methods that typically have a body
+  const body = ['POST', 'PUT', 'PATCH'].includes(method)
+    ? await readBody(event)
+    : undefined;
 
   const response = await $fetch(`http://localhost:3000/${path}`, {
     method,
-    body: ['POST', 'PUT', 'PATCH'].includes(method) ? body : undefined,
+    body,
     query: getQuery(event),
   });
 
