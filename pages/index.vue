@@ -141,7 +141,7 @@ async function search() {
 <style lang="sass" scoped>
 .title::after
   content: '|'
-  animation: blink 1s infinite
+  animation: blink 3s infinite
   margin-left: 5px
   position: relative
   top: -10px
@@ -149,7 +149,6 @@ async function search() {
   @media (max-width: 600px)
     top: -10px
     font-size: 2.4rem
-
 
 @keyframes blink
   0%, 100%
@@ -188,7 +187,9 @@ async function search() {
   flex-direction: column
   align-items: flex-start
   justify-content: center
+  min-width: 372px
   @media (max-width: 768px)
+    min-width: 0px
     align-items: center
     text-align: center
 

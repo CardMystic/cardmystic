@@ -78,9 +78,12 @@ const exampleQueries = [
   'green ramp spells',
   'white removal spells',
   'black creatures with flying',
-  'creatures with enters the battlefield effects',
+  'creatures with enter the battlefield effects',
   'spells that destroy artifacts',
-  'powerful late game threats',
+  'x spells that are board wipes',
+  'low cost sultai commanders',
+  'finishers for a mono white tokens deck',
+  'golgari elves that draw',
 ];
 
 onMounted(async () => {

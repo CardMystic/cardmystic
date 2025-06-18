@@ -40,7 +40,7 @@
         <template v-if="searchStore.results.length > 0">
           <v-row>
             <v-col
-              class="px-0 py-0 flex-grow-1"
+              class="px-0 py-0 flex-grow-1 mb-2"
               v-for="result in searchStore.results"
               :key="result.card_data.id"
             >

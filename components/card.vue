@@ -102,7 +102,7 @@ function getScoreColor(score: number): string {
 }
 
 .confidence-bar {
-  margin: 0;
+  margin-top: 2px;
 }
 
 /* Size variants */
