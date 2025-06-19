@@ -68,7 +68,7 @@
           </p>
         </div>
 
-        <div class="card-text-container">
+        <div v-if="card.oracle_text" class="card-text-container">
           <div
             class="oracle-text"
             v-html="formatSymbols(card.oracle_text, 16)"
@@ -264,7 +264,7 @@ const formatSymbols = (text: string | undefined, size: number = 30): string => {
 
     result = workingString;
   } else {
-    result = manaCost;
+    result = text;
   }
 
   console.log('Final result:', result);
