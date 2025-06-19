@@ -146,7 +146,7 @@ async function search() {
   position: relative
   top: -10px
   font-size: 2.6rem
-  @media (max-width: 600px)
+  @media (max-width: 768px)
     top: -10px
     font-size: 2.4rem
 

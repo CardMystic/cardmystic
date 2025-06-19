@@ -49,6 +49,73 @@
             rounded
           />
         </div>
+
+        <!-- Price Information -->
+        <v-card
+          v-if="card.prices && hasPrices"
+          elevation="4"
+          class="price-card mt-4"
+        >
+          <div class="price-header">
+            <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
+            <h4 class="price-title">Current Prices</h4>
+          </div>
+
+          <div class="price-list">
+            <div v-if="card.prices.usd" class="price-item">
+              <span class="currency-label">USD:</span>
+              <span class="price-value">${{ card.prices.usd }}</span>
+            </div>
+
+            <div v-if="card.prices.usd_foil" class="price-item">
+              <span class="currency-label">USD Foil:</span>
+              <span class="price-value">${{ card.prices.usd_foil }}</span>
+            </div>
+
+            <div v-if="card.prices.eur" class="price-item">
+              <span class="currency-label">EUR:</span>
+              <span class="price-value">€{{ card.prices.eur }}</span>
+            </div>
+
+            <div v-if="card.prices.eur_foil" class="price-item">
+              <span class="currency-label">EUR Foil:</span>
+              <span class="price-value">€{{ card.prices.eur_foil }}</span>
+            </div>
+
+            <div v-if="card.prices.tix" class="price-item">
+              <span class="currency-label">MTGO Tix:</span>
+              <span class="price-value">{{ card.prices.tix }}</span>
+            </div>
+          </div>
+        </v-card>
+
+        <!-- TCGPlayer Button -->
+        <v-btn
+          v-if="card.purchase_uris?.tcgplayer"
+          :href="card.purchase_uris.tcgplayer"
+          target="_blank"
+          color="primary"
+          variant="elevated"
+          class="mt-6 tcgplayer-btn"
+          prepend-icon="mdi-shopping"
+          size="large"
+        >
+          Buy on TCGPlayer
+        </v-btn>
+
+        <!-- Fallback button if no direct TCGPlayer link -->
+        <v-btn
+          v-else-if="card.name"
+          :href="generateTCGPlayerSearchUrl(card.name)"
+          target="_blank"
+          color="primary"
+          variant="outlined"
+          class="mt-4 tcgplayer-btn"
+          prepend-icon="mdi-magnify"
+          size="large"
+        >
+          Search on TCGPlayer
+        </v-btn>
       </v-col>
 
       <!-- Center: Card Details -->
@@ -218,15 +285,11 @@ const formatName = (raw: string) => {
 const formatSymbols = (text: string | undefined, size: number = 30): string => {
   if (!text) return '';
 
-  console.log('Original Mana Cost:', text);
-
   // Use replaceAll or a more explicit approach to ensure all symbols are processed
   let result = '';
   const symbols = text.match(/\{([^}]+)\}/g);
 
   if (symbols) {
-    console.log('Found symbols:', symbols);
-
     // Replace the original string by processing each symbol
     let workingString = text;
     symbols.forEach((symbol) => {
@@ -254,8 +317,6 @@ const formatSymbols = (text: string | undefined, size: number = 30): string => {
           specialSymbols[symbolForUrl as keyof typeof specialSymbols];
       }
 
-      console.log('url', symbolForUrl);
-
       let imgTag = `<img src="https://svgs.scryfall.io/card-symbols/${symbolForUrl}.svg" height="${size}" class="mana-symbol"/>`;
 
       // Replace the first occurrence of this symbol
@@ -267,9 +328,24 @@ const formatSymbols = (text: string | undefined, size: number = 30): string => {
     result = text;
   }
 
-  console.log('Final result:', result);
   return result;
 };
+
+/**
+ * Generate a TCGPlayer search URL for a card name
+ */
+const generateTCGPlayerSearchUrl = (cardName: string): string => {
+  const encodedName = encodeURIComponent(cardName);
+  return `https://www.tcgplayer.com/search/magic/product?q=${encodedName}`;
+};
+
+const hasPrices = computed(() => {
+  if (!card.value?.prices) return false;
+  const prices = card.value.prices;
+  return (
+    prices.usd || prices.usd_foil || prices.eur || prices.eur_foil || prices.tix
+  );
+});
 </script>
 
 <style scoped lang="sass">
@@ -383,6 +459,8 @@ const formatSymbols = (text: string | undefined, size: number = 30): string => {
   border: 1px solid rgba(147, 114, 255, 0.3) !important
   border-radius: 16px !important
   padding: 20px !important
+  @media (max-width: 768px)
+    padding: 12px !important
 
 .legalities-header
   display: flex
@@ -403,19 +481,67 @@ const formatSymbols = (text: string | undefined, size: number = 30): string => {
   text-align: center
 
 .legality-chip
-  font-size: 11px !important
+  font-size: 9px !important
   font-weight: 600
-  min-width: 84px
+  min-width: 72px
   text-transform: uppercase
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)
   justify-content: center
+  @media (max-width: 768px)
+    font-size: 8px !important
+    min-width: 66.2px
 
 .format-name
   color: rgba(255, 255, 255, 0.9)
-  font-size: 14px
+  font-size: 12px
   font-weight: bold
   text-align: center
   margin-left: 4px
+  @media (max-width: 768px)
+    font-size: 10px
+
+// Price Card Styling
+.price-card
+  width: 100%
+  max-width: 280px
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
+  border: 1px solid rgba(34, 197, 94, 0.3) !important
+  border-radius: 12px !important
+  padding: 16px !important
+
+.price-header
+  display: flex
+  align-items: center
+  margin-bottom: 12px
+
+.price-title
+  color: white
+  font-size: 1.3rem
+  font-weight: 600
+  margin: 0
+  position: relative
+  top: 4px
+
+.price-list
+  display: flex
+  flex-direction: column
+  gap: 8px
+
+.price-item
+  display: flex
+  justify-content: space-between
+  align-items: center
+  padding: 4px 0
+
+.currency-label
+  color: rgba(255, 255, 255, 0.8)
+  font-size: 0.9rem
+  font-weight: 500
+
+.price-value
+  color: rgb(34, 197, 94)
+  font-size: 1rem
+  font-weight: 700
 
 // Legacy styles cleanup
 .chip
@@ -458,6 +584,19 @@ em
   display: inline-block
   vertical-align: -0.15em
   margin: 0 1px
+
+// TCGPlayer Button Styling
+.tcgplayer-btn
+  width: 100%
+  max-width: 280px
+  font-weight: 600
+  text-transform: none
+  letter-spacing: 0.5px
+  box-shadow: 0 4px 12px rgba(147, 114, 255, 0.3)
+
+  &:hover
+    box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
+    transform: translateY(-2px)
 
 // Animations
 @keyframes glowPulse
