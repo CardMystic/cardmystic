@@ -67,22 +67,34 @@
           <div class="price-list">
             <div v-if="card.prices.usd" class="price-item">
               <span class="currency-label">USD:</span>
-              <span class="price-value">${{ card.prices.usd }}</span>
+              <span class="price-value"
+                ><span style="color: rgb(34, 197, 94)">$</span
+                >{{ card.prices.usd }}</span
+              >
             </div>
 
             <div v-if="card.prices.usd_foil" class="price-item">
               <span class="currency-label">USD Foil:</span>
-              <span class="price-value">${{ card.prices.usd_foil }}</span>
+              <span class="price-value"
+                ><span style="color: rgb(34, 197, 94)">$</span
+                >{{ card.prices.usd_foil }}</span
+              >
             </div>
 
             <div v-if="card.prices.eur" class="price-item">
               <span class="currency-label">EUR:</span>
-              <span class="price-value">€{{ card.prices.eur }}</span>
+              <span class="price-value"
+                ><span style="color: rgb(34, 197, 94)">€</span
+                >{{ card.prices.eur }}</span
+              >
             </div>
 
             <div v-if="card.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR Foil:</span>
-              <span class="price-value">€{{ card.prices.eur_foil }}</span>
+              <span class="price-value"
+                ><span style="color: rgb(34, 197, 94)">€</span
+                >{{ card.prices.eur_foil }}</span
+              >
             </div>
 
             <div v-if="card.prices.tix" class="price-item">
@@ -542,7 +554,7 @@ const hasPrices = computed(() => {
   font-weight: 500
 
 .price-value
-  color: rgb(34, 197, 94)
+  color: white
   font-size: 1rem
   font-weight: 700
 
