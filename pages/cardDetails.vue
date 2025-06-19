@@ -14,7 +14,7 @@
     </v-btn>
   </v-container>
 
-  <v-container class="py-0 d-flex justify-center">
+  <v-container class="py-4 d-flex justify-center">
     <div v-if="loading" class="text-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
       <p class="mt-4 text-white">Loading card details...</p>
