@@ -14,7 +14,7 @@
     </v-btn>
   </v-container>
 
-  <v-container class="py-8 d-flex justify-center">
+  <v-container class="py-0 d-flex justify-center">
     <div v-if="loading" class="text-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
       <p class="mt-4 text-white">Loading card details...</p>
@@ -56,9 +56,12 @@
         <div class="card-header">
           <h2 class="card-title">
             {{ card.name }}
-            <span v-if="card.mana_cost" class="mana-cost"
-              >({{ card.mana_cost }})</span
-            >
+            <span v-if="card.mana_cost" class="mana-cost">
+              <span
+                v-html="formatManaCost(card.mana_cost)"
+                style="white-space: nowrap"
+              ></span>
+            </span>
           </h2>
           <p class="card-type">
             {{ card.type_line }}
@@ -68,7 +71,7 @@
         <div class="card-text-container">
           <div
             class="oracle-text"
-            v-html="card.oracle_text?.replace(/\n/g, '<br/>') || ''"
+            v-html="formatOracleText(card.oracle_text)"
           ></div>
 
           <em v-if="card.flavor_text" class="flavor-text">{{
@@ -207,6 +210,118 @@ const getLegalityColor = (status: string) => {
 
 const formatName = (raw: string) => {
   return raw.replace(/([A-Z])/g, ' $1').trim();
+};
+
+/**
+ * Convert mana symbols in a string to Scryfall SVG images
+ */
+const formatManaCost = (manaCost: string | undefined): string => {
+  if (!manaCost) return '';
+
+  console.log('Original Mana Cost:', manaCost);
+
+  // Use replaceAll or a more explicit approach to ensure all symbols are processed
+  let result = '';
+  const symbols = manaCost.match(/\{([^}]+)\}/g);
+
+  if (symbols) {
+    console.log('Found symbols:', symbols);
+
+    // Replace the original string by processing each symbol
+    let workingString = manaCost;
+    symbols.forEach((symbol) => {
+      let symbolForUrl = symbol.slice(1, -1); // Remove { and }
+
+      // Handle hybrid mana (e.g., W/U becomes wu)
+      if (symbolForUrl.includes('/')) {
+        symbolForUrl = symbolForUrl.replace('/', '');
+      }
+
+      // Handle special symbols
+      const specialSymbols = {
+        t: 'tap',
+        q: 'untap',
+        e: 'energy',
+        s: 'snow',
+        chaos: 'chaos',
+        pw: 'planeswalker',
+        loyalty: 'loyalty',
+        '∞': 'infinity',
+      };
+
+      if (specialSymbols[symbolForUrl as keyof typeof specialSymbols]) {
+        symbolForUrl =
+          specialSymbols[symbolForUrl as keyof typeof specialSymbols];
+      }
+
+      console.log('url', symbolForUrl);
+
+      let imgTag = `<img src="https://svgs.scryfall.io/card-symbols/${symbolForUrl}.svg" height="30" class="mana-symbol"/>`;
+
+      // Replace the first occurrence of this symbol
+      workingString = workingString.replace(symbol, imgTag);
+    });
+
+    result = workingString;
+  } else {
+    result = manaCost;
+  }
+
+  console.log('Final result:', result);
+  return result;
+};
+
+/**
+ * Format oracle text to convert mana symbols to images and handle newlines
+ */
+const formatOracleText = (text: string | undefined): string => {
+  if (!text) return '';
+
+  // First replace newlines with <br/>
+  let formattedText = text.replace(/\n/g, '<br/>');
+
+  // Find all mana symbols
+  const symbols = formattedText.match(/\{([^}]+)\}/g);
+
+  if (symbols) {
+    // Replace each symbol individually
+    let workingString = formattedText;
+    symbols.forEach((symbol) => {
+      const innerSymbol = symbol.slice(1, -1); // Remove { and }
+      let symbolForUrl = innerSymbol.toLowerCase();
+
+      // Handle hybrid mana
+      if (symbolForUrl.includes('/')) {
+        symbolForUrl = symbolForUrl.replace('/', '');
+      }
+
+      // Handle special symbols
+      const specialSymbols = {
+        t: 'tap',
+        q: 'untap',
+        e: 'energy',
+        s: 'snow',
+        chaos: 'chaos',
+        pw: 'planeswalker',
+        loyalty: 'loyalty',
+        '∞': 'infinity',
+      };
+
+      if (specialSymbols[symbolForUrl as keyof typeof specialSymbols]) {
+        symbolForUrl =
+          specialSymbols[symbolForUrl as keyof typeof specialSymbols];
+      }
+
+      const imgTag = `<img src="https://svgs.scryfall.io/card-symbols/${symbolForUrl}.svg" height="14" alt="${symbol}" class="mana-symbol-text"/>`;
+
+      // Replace the first occurrence of this symbol
+      workingString = workingString.replace(symbol, imgTag);
+    });
+
+    formattedText = workingString;
+  }
+
+  return formattedText;
 };
 </script>
 
@@ -385,6 +500,17 @@ em
   font-size: 12px
   text-align: center
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
+
+// Add styles for mana symbols
+:deep(.mana-symbol)
+  display: inline-block
+  vertical-align: -0.1em
+  margin: 0 1px
+
+:deep(.mana-symbol-text)
+  display: inline-block
+  vertical-align: -0.15em
+  margin: 0 1px
 
 // Animations
 @keyframes glowPulse

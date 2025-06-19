@@ -84,6 +84,7 @@ const exampleQueries = [
   'low cost sultai commanders',
   'finishers for a mono white tokens deck',
   'golgari elves that draw',
+  'five color dragon for commander',
 ];
 
 onMounted(async () => {
