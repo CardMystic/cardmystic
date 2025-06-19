@@ -40,14 +40,22 @@
         <div class="card-image-container">
           <div class="card-glow"></div>
           <v-img
-            :src="card.image_uris?.normal"
+            :src="getCardImageUrl(card)"
             class="card-image"
             max-width="300"
             min-width="300"
             max-height="420"
             min-height="420"
             rounded
-          />
+            @error="handleImageError"
+          >
+            <template v-slot:placeholder>
+              <div class="image-placeholder-large">
+                <v-icon size="64" color="grey">mdi-image-off</v-icon>
+                <p class="placeholder-text-large">Image not available</p>
+              </div>
+            </template>
+          </v-img>
 
           <!-- Game Changer Badge -->
           <GameChangerBadge :game-changer="card.game_changer" size="large" />
@@ -361,6 +369,38 @@ const hasPrices = computed(() => {
     prices.usd || prices.usd_foil || prices.eur || prices.eur_foil || prices.tix
   );
 });
+
+function getCardImageUrl(cardData: IScryfallCard): string {
+  // Try different image URI options in order of preference
+  if (cardData.image_uris?.normal) {
+    return cardData.image_uris.normal;
+  }
+  if (cardData.image_uris?.large) {
+    return cardData.image_uris.large;
+  }
+  if (cardData.image_uris?.small) {
+    return cardData.image_uris.small;
+  }
+  if (cardData.image_uris?.png) {
+    return cardData.image_uris.png;
+  }
+
+  // For double-faced cards, try the first face
+  if (cardData.card_faces && cardData.card_faces[0]?.image_uris) {
+    const firstFace = cardData.card_faces[0].image_uris;
+    if (firstFace.normal) return firstFace.normal;
+    if (firstFace.large) return firstFace.large;
+    if (firstFace.small) return firstFace.small;
+    if (firstFace.png) return firstFace.png;
+  }
+
+  // Fallback to empty string
+  return '';
+}
+
+function handleImageError(value: string | undefined) {
+  console.warn('Card image failed to load:', value);
+}
 </script>
 
 <style scoped lang="sass">
@@ -621,4 +661,20 @@ em
   100%
     opacity: 0.9
     transform: scale(1.05)
+
+.image-placeholder-large
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  height: 100%
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
+  border-radius: 20px
+  padding: 40px
+
+.placeholder-text-large
+  color: rgba(255, 255, 255, 0.7)
+  font-size: 16px
+  margin-top: 16px
+  text-align: center
 </style>

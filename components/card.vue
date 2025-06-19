@@ -5,9 +5,17 @@
       <div class="card-image-wrapper">
         <v-img
           class="card-image"
-          :src="card.card_data.image_uris?.normal"
+          :src="getCardImageUrl(card.card_data)"
           alt="Card Image"
-        ></v-img>
+          @error="handleImageError"
+        >
+          <template v-slot:placeholder>
+            <div class="image-placeholder">
+              <v-icon size="48" color="grey">mdi-image-off</v-icon>
+              <p class="placeholder-text">Image not available</p>
+            </div>
+          </template>
+        </v-img>
 
         <!-- Game Changer Badge -->
         <GameChangerBadge
@@ -19,7 +27,7 @@
       <v-progress-linear
         rounded
         :color="getScoreColor(card.score)"
-        :model-value="card.score"
+        :model-value="normalizeScore(card.score)"
         :height="progressHeight"
         class="confidence-bar"
         style="border: 1px solid black"
@@ -36,6 +44,7 @@
 import type { ICardResult } from '~/types/IColbert';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
+import { useSearchStore } from '~/stores/searchStore';
 
 const props = defineProps({
   card: {
@@ -47,6 +56,8 @@ const props = defineProps({
     default: 'large',
   },
 });
+
+const searchStore = useSearchStore();
 
 const sizeClass = computed(() => `card-${props.size}`);
 const progressHeight = computed(() => {
@@ -62,8 +73,33 @@ const progressHeight = computed(() => {
   }
 });
 
+function normalizeScore(score: number): number {
+  // Get all scores from search results to find the highest
+  const allScores = searchStore.results.map((result) => result.score);
+
+  if (allScores.length === 0) {
+    return 0;
+  }
+
+  const highestScore = Math.max(...allScores);
+
+  // Default range is 30-5, but expand max if scores exceed 30
+  const maxScore = Math.max(30, highestScore);
+  const minScore = maxScore - 25; // Always 25 points below max
+
+  // Clamp the score to the calculated range
+  const clampedScore = Math.min(Math.max(score, minScore), maxScore);
+
+  // Convert to 0-100 percentage
+  const normalizedScore =
+    ((clampedScore - minScore) / (maxScore - minScore)) * 100;
+
+  return normalizedScore;
+}
+
 function getScoreColor(score: number): string {
-  const pct = Math.min(Math.max(score / 100, 0), 1);
+  const normalizedScore = normalizeScore(score);
+  const pct = Math.min(Math.max(normalizedScore / 100, 0), 1);
 
   const r = pct < 0.5 ? 200 : Math.floor(200 - (pct - 0.5) * 2 * 200); // red from 200 → 0
   const g =
@@ -72,6 +108,38 @@ function getScoreColor(score: number): string {
       : 160;
 
   return `rgb(${r},${g},40)`; // add some darkness with fixed low blue
+}
+
+function getCardImageUrl(cardData: any): string {
+  // Try different image URI options in order of preference
+  if (cardData.image_uris?.normal) {
+    return cardData.image_uris.normal;
+  }
+  if (cardData.image_uris?.large) {
+    return cardData.image_uris.large;
+  }
+  if (cardData.image_uris?.small) {
+    return cardData.image_uris.small;
+  }
+  if (cardData.image_uris?.png) {
+    return cardData.image_uris.png;
+  }
+
+  // For double-faced cards, try the first face
+  if (cardData.card_faces && cardData.card_faces[0]?.image_uris) {
+    const firstFace = cardData.card_faces[0].image_uris;
+    if (firstFace.normal) return firstFace.normal;
+    if (firstFace.large) return firstFace.large;
+    if (firstFace.small) return firstFace.small;
+    if (firstFace.png) return firstFace.png;
+  }
+
+  // Fallback to a placeholder or empty string
+  return '';
+}
+
+function handleImageError(value: string | undefined) {
+  console.warn('Card image failed to load:', value);
 }
 </script>
 
@@ -162,5 +230,27 @@ function getScoreColor(score: number): string {
 
 .card-large .confidence-text {
   font-size: 14px;
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(44, 44, 44, 0.9),
+    rgba(66, 66, 66, 0.8)
+  );
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.placeholder-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin-top: 8px;
+  text-align: center;
 }
 </style>
