@@ -498,17 +498,17 @@ const hasPrices = computed(() => {
 .legality-chip
   font-size: 9px !important
   font-weight: 600
-  min-width: 72px
+  min-width: 77.5px
   text-transform: uppercase
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)
   justify-content: center
   @media (max-width: 768px)
     font-size: 8px !important
-    min-width: 66.2px
+    min-width: 71.2px
 
 .format-name
   color: rgba(255, 255, 255, 0.9)
-  font-size: 12px
+  font-size: 11px
   font-weight: bold
   text-align: center
   margin-left: 4px
