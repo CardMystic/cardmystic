@@ -2,11 +2,19 @@
   <div class="card-container" :class="sizeClass">
     <!-- Left side: image + score -->
     <v-col class="card" cols="3">
-      <v-img
-        class="card-image"
-        :src="card.card_data.image_uris?.normal"
-        alt="Card Image"
-      ></v-img>
+      <div class="card-image-wrapper">
+        <v-img
+          class="card-image"
+          :src="card.card_data.image_uris?.normal"
+          alt="Card Image"
+        ></v-img>
+
+        <!-- Game Changer Badge -->
+        <GameChangerBadge
+          :game-changer="card.card_data.game_changer"
+          size="small"
+        />
+      </div>
 
       <v-progress-linear
         rounded
@@ -83,6 +91,7 @@ function getScoreColor(score: number): string {
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
+  overflow: visible;
 }
 
 .card {
@@ -93,6 +102,11 @@ function getScoreColor(score: number): string {
   overflow: hidden;
 }
 
+.card-image-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .card-image {
   width: 100%;
   height: auto;
@@ -100,6 +114,8 @@ function getScoreColor(score: number): string {
   object-fit: cover;
   flex: 1;
 }
+
+/* Remove the old GC badge styles since they're now in the component */
 
 .confidence-bar {
   margin-top: 2px;

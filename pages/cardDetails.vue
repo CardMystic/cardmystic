@@ -48,6 +48,9 @@
             min-height="420"
             rounded
           />
+
+          <!-- Game Changer Badge -->
+          <GameChangerBadge :game-changer="card.game_changer" size="large" />
         </div>
 
         <!-- Price Information -->
