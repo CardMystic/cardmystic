@@ -29,7 +29,6 @@ const searchExamples: string[] = [
   "Green ramp spells under 3 mana",
   "Artifacts that tap for mana",
   "Enchantments that draw cards",
-  "Planeswalkers that protect themselves",
   "Cards that put +1/+1 counters on creatures",
   "Instants and sorceries that cost X mana",
   "Standard legal red aggro cards",
