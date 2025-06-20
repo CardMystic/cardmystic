@@ -1,14 +1,7 @@
 "use client";
 
-import { Button } from "@/components/catalyst/button";
-import { Input } from "@/components/catalyst/input";
 import { SearchInterface } from "@/components/search";
 import type { WordSearch } from "@/models/searchModel";
-import {
-  ChatBubbleLeftRightIcon,
-  CurrencyDollarIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

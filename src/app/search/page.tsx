@@ -1,5 +1,6 @@
 "use client";
 
+import { ManaCost } from "@/components/card/ManaCost";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heading } from "../../components/catalyst/heading";
@@ -245,7 +246,7 @@ function CardDisplay({ card }: CardDisplayProps) {
       <div className="p-4">
         <div className="mb-2">
           <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-            {cardData.name} - {cardData.mana_cost}
+            {cardData.name} <ManaCost cost={cardData.mana_cost} />
           </h3>
         </div>
       </div>
