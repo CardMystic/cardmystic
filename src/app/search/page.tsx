@@ -215,7 +215,7 @@ function CardDisplay({ card }: CardDisplayProps) {
   const cardData = card.card_data;
   const imageUrl =
     cardData.image_uris?.normal || cardData.card_faces?.[0]?.image_uris?.normal;
-  const score = card.score ? Math.round(card.score * 100) : null;
+  const score = card.score ? card.score.toFixed(0) : null;
 
   return (
     <div className="group relative bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
@@ -235,7 +235,7 @@ function CardDisplay({ card }: CardDisplayProps) {
 
         {/* Score Badge */}
         {score && (
-          <div className="absolute top-2 right-2 bg-black/75 text-white px-2 py-1 rounded text-sm font-semibold">
+          <div className="absolute bottom-2 right-2 bg-black/75 text-white px-2 py-1 rounded text-sm font-semibold">
             {score}%
           </div>
         )}
@@ -245,29 +245,9 @@ function CardDisplay({ card }: CardDisplayProps) {
       <div className="p-4">
         <div className="mb-2">
           <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-            {cardData.name}
+            {cardData.name} - {cardData.mana_cost}
           </h3>
-          <Text className="text-sm text-zinc-600 dark:text-zinc-400 truncate">
-            {cardData.type_line}
-          </Text>
         </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-zinc-500 dark:text-zinc-400">
-            {cardData.set_name}
-          </span>
-          <span className="font-semibold text-zinc-700 dark:text-zinc-300 capitalize">
-            {cardData.rarity}
-          </span>
-        </div>
-
-        {cardData.mana_cost && (
-          <div className="mt-2">
-            <Text className="text-sm text-zinc-600 dark:text-zinc-400">
-              {cardData.mana_cost}
-            </Text>
-          </div>
-        )}
       </div>
     </div>
   );
