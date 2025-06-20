@@ -47,7 +47,7 @@ const CARD_TYPES = [
 ];
 
 const COLORS = [
-  { key: "White", className: "ms ms-g ms-cost" },
+  { key: "White", className: "ms ms-w ms-cost" },
   { key: "Blue", className: "ms ms-u ms-cost" },
   { key: "Black", className: "ms ms-b ms-cost" },
   { key: "Red", className: "ms ms-r ms-cost" },
