@@ -35,6 +35,9 @@ importers:
       framer-motion:
         specifier: ^12.17.3
         version: 12.17.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      mana-font:
+        specifier: ^1.18.0
+        version: 1.18.0
       next:
         specifier: 15.3.3
         version: 15.3.3(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -44,6 +47,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.1.0(react@19.1.0)
+      react-mana-font:
+        specifier: ^0.1.1
+        version: 0.1.1(react@19.1.0)
       zod:
         specifier: ^3.25.63
         version: 3.25.63
@@ -1692,6 +1698,9 @@ packages:
   magic-string@0.30.17:
     resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
 
+  mana-font@1.18.0:
+    resolution: {integrity: sha512-PKCR5z/eeOBbox0Lu5b6A0QUWVUUa3A3LWXb9sw4N5ThIWXxRbCagXPSL4k6Cnh2Fre6Y4+2Xl819OrY7m1cUA==}
+
   marked-terminal@7.3.0:
     resolution: {integrity: sha512-t4rBvPsHc57uE/2nJOLmMbZCQ4tgAccAED3ngXQqW6g+TxA488JzJ+FK3lQkzBQOI1mRV/r/Kq+1ZlJ4D0owQw==}
     engines: {node: '>=16.0.0'}
@@ -2056,6 +2065,11 @@ packages:
     resolution: {integrity: sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g==}
     peerDependencies:
       react: ^19.1.0
+
+  react-mana-font@0.1.1:
+    resolution: {integrity: sha512-fflZEz+N8UgHYpHepBIFcj40QzF/pzTbdGhba62CQshbz/OUkCpF7dibY8BI0NZY89blxrG/dsnoJXfTKbdhYQ==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
@@ -4007,6 +4021,8 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
+  mana-font@1.18.0: {}
+
   marked-terminal@7.3.0(marked@15.0.12):
     dependencies:
       ansi-escapes: 7.0.0
@@ -4269,6 +4285,11 @@ snapshots:
     dependencies:
       react: 19.1.0
       scheduler: 0.26.0
+
+  react-mana-font@0.1.1(react@19.1.0):
+    dependencies:
+      mana-font: 1.18.0
+      react: 19.1.0
 
   react@19.1.0: {}
 

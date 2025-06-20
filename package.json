@@ -23,9 +23,11 @@
     "@vercel/otel": "^1.13.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.17.3",
+    "mana-font": "^1.18.0",
     "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-mana-font": "^0.1.1",
     "zod": "^3.25.63"
   },
   "devDependencies": {

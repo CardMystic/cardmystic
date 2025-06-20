@@ -9,7 +9,7 @@
     { "text": "Include scope when relevant (e.g., api, ui, auth)" },
     { "text": "Reference issue numbers with # prefix" }
   ],
-  "conventionalCommits.scopes": ["vscode", "package"],
+  "conventionalCommits.scopes": ["vscode", "package", "frontend"],
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "biomejs.biome"
 }

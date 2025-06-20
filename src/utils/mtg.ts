@@ -41,3 +41,11 @@ export const cardTypes = [
   "Instant",
   "Sorcery",
 ];
+
+export const manaIconsClass: { [key: string]: string } = {
+  G: "ms ms-g ms-cost",
+  R: "ms ms-r ms-cost",
+  U: "ms ms-u ms-cost",
+  B: "ms ms-b ms-cost",
+  W: "ms ms-w ms-cost",
+};

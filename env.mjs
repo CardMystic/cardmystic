@@ -12,4 +12,4 @@ export const env = createEnv({
     SECRET_KEY: process.env.SECRET_KEY,
     API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
-})
+});
