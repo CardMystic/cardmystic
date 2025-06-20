@@ -9,15 +9,60 @@ import {
   CurrencyDollarIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Home() {
   const [searchResults, setSearchResults] = useState<WordSearch | null>(null);
+  const router = useRouter();
 
   const handleSearch = (searchData: WordSearch) => {
     console.log("Search triggered:", searchData);
     setSearchResults(searchData);
     // Here you would typically make an API call to your backend
+  };
+
+  const handleRedirect = (searchData: WordSearch) => {
+    // Build URL with query parameters
+    const params = new URLSearchParams({
+      q: searchData.query,
+      limit: searchData.limit.toString(),
+    });
+
+    // Add filters as URL parameters if they have values
+    if (searchData.filters.selectedCardTypes.length > 0) {
+      params.set("cardTypes", searchData.filters.selectedCardTypes.join(","));
+    }
+
+    if (searchData.filters.selectedColorFilterOption !== "Contains At Least") {
+      params.set("colorFilter", searchData.filters.selectedColorFilterOption);
+    }
+
+    const selectedColors = Object.entries(
+      searchData.filters.selectedColors || {},
+    )
+      .filter(([_, selected]) => selected)
+      .map(([color, _]) => color);
+    if (selectedColors.length > 0) {
+      params.set("colors", selectedColors.join(","));
+    }
+
+    if (searchData.filters.selectedCMC) {
+      params.set("cmc", searchData.filters.selectedCMC);
+      params.set("cmcOp", searchData.filters.selectedCMCOption);
+    }
+
+    if (searchData.filters.selectedPower) {
+      params.set("power", searchData.filters.selectedPower);
+      params.set("powerOp", searchData.filters.selectedPowerOption);
+    }
+
+    if (searchData.filters.selectedToughness) {
+      params.set("toughness", searchData.filters.selectedToughness);
+      params.set("toughnessOp", searchData.filters.selectedToughnessOption);
+    }
+
+    router.push(`/search?${params.toString()}`);
   };
   return (
     <div className="flex-1 flex flex-col items-center justify-center">
@@ -40,7 +85,7 @@ export default function Home() {
       </div>
 
       {/* Search Input */}
-      <SearchInterface onSearch={handleSearch} />
+      <SearchInterface onSearch={handleSearch} onRedirect={handleRedirect} />
     </div>
   );
 }

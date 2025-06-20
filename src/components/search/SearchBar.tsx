@@ -13,6 +13,7 @@ interface SearchBarProps {
   query: string;
   onQueryChange: (query: string) => void;
   onFiltersToggle: () => void;
+  onSearch?: () => void;
   showFilters: boolean;
 }
 
@@ -43,6 +44,7 @@ export function SearchBar({
   query,
   onQueryChange,
   onFiltersToggle,
+  onSearch,
   showFilters,
 }: SearchBarProps) {
   const [currentExampleIndex, setCurrentExampleIndex] = useState(0);
@@ -72,6 +74,11 @@ export function SearchBar({
             }
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && onSearch) {
+                onSearch();
+              }
+            }}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className="relative"
@@ -99,6 +106,17 @@ export function SearchBar({
           )}
         </InputGroup>
       </div>
+      {onSearch && (
+        <Button
+          color="blue"
+          onClick={onSearch}
+          disabled={!query.trim()}
+          aria-label="Search"
+        >
+          <MagnifyingGlassIcon data-slot="icon" />
+          Search
+        </Button>
+      )}
       <Button
         color={showFilters ? "blue" : "light"}
         onClick={onFiltersToggle}

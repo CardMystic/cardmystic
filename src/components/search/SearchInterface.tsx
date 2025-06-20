@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { WordSearch } from "../../models/searchModel";
 import { Filters } from "./Filters";
 import { SearchBar } from "./SearchBar";
@@ -8,11 +8,13 @@ import { SearchBar } from "./SearchBar";
 interface SearchInterfaceProps {
   onSearch: (searchData: WordSearch) => void;
   initialQuery?: string;
+  onRedirect?: (searchData: WordSearch) => void;
 }
 
 export function SearchInterface({
   onSearch,
   initialQuery = "",
+  onRedirect,
 }: SearchInterfaceProps) {
   const [query, setQuery] = useState(initialQuery);
   const [showFilters, setShowFilters] = useState(false);
@@ -36,6 +38,11 @@ export function SearchInterface({
     selectedCardFormats: [],
   });
 
+  // Update query when initialQuery changes
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
+
   const handleSearch = () => {
     const searchData: WordSearch = {
       query,
@@ -43,7 +50,28 @@ export function SearchInterface({
       filters,
       exclude_card_data: false,
     };
-    onSearch(searchData);
+
+    if (onRedirect) {
+      onRedirect(searchData);
+    } else {
+      onSearch(searchData);
+    }
+  };
+
+  const handleEnterKeySearch = () => {
+    // On Enter key, prioritize redirect if available, otherwise do regular search
+    const searchData: WordSearch = {
+      query,
+      limit: 10,
+      filters,
+      exclude_card_data: false,
+    };
+
+    if (onRedirect) {
+      onRedirect(searchData);
+    } else {
+      onSearch(searchData);
+    }
   };
 
   // Automatically trigger search when query changes (debounced in real implementation)
@@ -81,6 +109,7 @@ export function SearchInterface({
         query={query}
         onQueryChange={handleQueryChange}
         onFiltersToggle={() => setShowFilters(!showFilters)}
+        onSearch={handleEnterKeySearch}
         showFilters={showFilters}
       />
       <Filters
