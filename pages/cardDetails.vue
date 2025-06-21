@@ -181,7 +181,10 @@
               ></span>
             </span>
           </h2>
-          <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
+          <div class="set-rarity-info">
+            <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
+            <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
+          </div>
           <p class="card-type">
             {{ currentTypeLine }}
           </p>
@@ -576,11 +579,17 @@ function findSimilarCards() {
   margin-bottom: 4px
   text-shadow: 0 4px 8px rgba(147, 114, 255, 0.3)
 
+.set-rarity-info
+  display: flex
+  gap: 16px
+  align-items: center
+  margin-bottom: 8px
+
 .set-name
   color: rgba(255, 255, 255, 0.7)
   font-size: 0.9rem
   font-weight: 400
-  margin: 0 0 8px 0
+  margin: 0
   font-style: italic
 
 .mana-cost
