@@ -65,7 +65,7 @@
         <v-btn
           color="white"
           variant="elevated"
-          class="mt-4 similar-cards-btn"
+          class="mt-6 similar-cards-btn"
           prepend-icon="mdi-cards"
           size="large"
           @click=""
