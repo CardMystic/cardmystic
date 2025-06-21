@@ -61,6 +61,18 @@
           <GameChangerBadge :game-changer="card.game_changer" size="large" />
         </div>
 
+        <!-- Similar Cards Button TODO: add similar search -->
+        <v-btn
+          color="white"
+          variant="elevated"
+          class="mt-4 similar-cards-btn"
+          prepend-icon="mdi-cards"
+          size="large"
+          @click=""
+        >
+          Similar Cards
+        </v-btn>
+
         <!-- Price Information -->
         <v-card
           v-if="card.prices && hasPrices"
@@ -597,6 +609,19 @@ function handleImageError(value: string | undefined) {
   color: white
   font-size: 1rem
   font-weight: 700
+
+// Similar Cards Button Styling
+.similar-cards-btn
+  width: 100%
+  max-width: 280px
+  font-weight: 600
+  text-transform: none
+  letter-spacing: 0.5px
+  box-shadow: 0 4px 12px rgba(147, 114, 255, 0.3)
+
+  &:hover
+    box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
+    transform: translateY(-2px)
 
 // Legacy styles cleanup
 .chip
