@@ -39,6 +39,7 @@
       >
         <div class="card-image-container">
           <div class="card-glow"></div>
+          <!-- Single image that changes based on flip state -->
           <v-img
             :src="getCardImageUrl(card)"
             class="card-image"
@@ -61,14 +62,29 @@
           <GameChangerBadge :game-changer="card.game_changer" size="large" />
         </div>
 
-        <!-- Similar Cards Button TODO: add similar search -->
+        <!-- Flip Button for Dual-Faced Cards -->
+        <v-btn
+          v-if="isDualFaced"
+          color="info"
+          variant="elevated"
+          class="mt-4 flip-btn"
+          prepend-icon="mdi-rotate-3d-variant"
+          size="large"
+          @click="flipCard"
+        >
+          {{ isFlipped ? 'Show Front' : 'Show Back' }}
+        </v-btn>
+
+        <!-- Similar Cards Button -->
         <v-btn
           color="white"
           variant="elevated"
-          class="mt-6 similar-cards-btn"
+          :class="
+            isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
+          "
           prepend-icon="mdi-cards"
           size="large"
-          @click=""
+          @click="findSimilarCards"
         >
           Similar Cards
         </v-btn>
@@ -157,33 +173,35 @@
       <v-col cols="12" md="5">
         <div class="card-header">
           <h2 class="card-title">
-            {{ card.name }}
-            <span v-if="card.mana_cost" class="mana-cost">
+            {{ currentName }}
+            <span v-if="currentManaCost" class="mana-cost">
               <span
-                v-html="formatSymbols(card.mana_cost)"
+                v-html="formatSymbols(currentManaCost)"
                 style="white-space: nowrap"
               ></span>
             </span>
           </h2>
           <p class="card-type">
-            {{ card.type_line }}
+            {{ currentTypeLine }}
           </p>
         </div>
 
-        <div v-if="card.oracle_text" class="card-text-container">
+        <div v-if="currentOracleText" class="card-text-container">
           <div
             class="oracle-text"
-            v-html="formatSymbols(card.oracle_text, 16)"
+            v-html="formatSymbols(currentOracleText, 16)"
           ></div>
 
           <em v-if="card.flavor_text" class="flavor-text">{{
             card.flavor_text
           }}</em>
 
-          <div class="stats-container" v-if="card.power && card.toughness">
+          <div class="stats-container" v-if="currentPower && currentToughness">
             <div class="power-toughness">
               Power / Toughness:
-              <span class="stats">{{ card.power }}/{{ card.toughness }}</span>
+              <span class="stats"
+                >{{ currentPower }}/{{ currentToughness }}</span
+              >
             </div>
           </div>
 
@@ -235,6 +253,7 @@ const searchStore = useSearchStore();
 const cardData = ref<IScryfallCard | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const isFlipped = ref(false);
 
 onMounted(async () => {
   const cardId = route.query.id as string;
@@ -382,8 +401,73 @@ const hasPrices = computed(() => {
   );
 });
 
+// Computed properties for current face data
+const currentFace = computed(() => {
+  if (!card.value) return null;
+
+  // If it's a dual-faced card, return the appropriate face
+  if (isDualFaced.value && card.value.card_faces) {
+    return isFlipped.value
+      ? card.value.card_faces[1]
+      : card.value.card_faces[0];
+  }
+
+  // For single-faced cards, return the card itself
+  return card.value;
+});
+
+const currentManaCost = computed(() => {
+  if (!currentFace.value) return '';
+  return currentFace.value.mana_cost || '';
+});
+
+const currentOracleText = computed(() => {
+  if (!currentFace.value) return '';
+  return currentFace.value.oracle_text || '';
+});
+
+const currentTypeLine = computed(() => {
+  if (!currentFace.value) return '';
+  return currentFace.value.type_line || '';
+});
+
+const currentName = computed(() => {
+  if (!currentFace.value) return '';
+
+  // For dual-faced cards, show the face name
+  if (isDualFaced.value && 'name' in currentFace.value) {
+    return currentFace.value.name;
+  }
+
+  // For single-faced cards, show the card name
+  return card.value?.name || '';
+});
+
+const currentPower = computed(() => {
+  if (!currentFace.value) return '';
+  return currentFace.value.power || '';
+});
+
+const currentToughness = computed(() => {
+  if (!currentFace.value) return '';
+  return currentFace.value.toughness || '';
+});
+
 function getCardImageUrl(cardData: IScryfallCard): string {
-  // Try different image URI options in order of preference
+  // For dual-faced cards, show the appropriate face
+  if (isDualFaced.value && cardData.card_faces) {
+    const face = isFlipped.value
+      ? cardData.card_faces[1]
+      : cardData.card_faces[0];
+    if (face.image_uris) {
+      if (face.image_uris.normal) return face.image_uris.normal;
+      if (face.image_uris.large) return face.image_uris.large;
+      if (face.image_uris.small) return face.image_uris.small;
+      if (face.image_uris.png) return face.image_uris.png;
+    }
+  }
+
+  // For single-faced cards, try different image URI options
   if (cardData.image_uris?.normal) {
     return cardData.image_uris.normal;
   }
@@ -397,7 +481,7 @@ function getCardImageUrl(cardData: IScryfallCard): string {
     return cardData.image_uris.png;
   }
 
-  // For double-faced cards, try the first face
+  // Fallback to first face if available
   if (cardData.card_faces && cardData.card_faces[0]?.image_uris) {
     const firstFace = cardData.card_faces[0].image_uris;
     if (firstFace.normal) return firstFace.normal;
@@ -406,12 +490,44 @@ function getCardImageUrl(cardData: IScryfallCard): string {
     if (firstFace.png) return firstFace.png;
   }
 
-  // Fallback to empty string
   return '';
 }
 
 function handleImageError(value: string | undefined) {
   console.warn('Card image failed to load:', value);
+}
+
+const isDualFaced = computed(() => {
+  const isDualFacedCard =
+    card.value?.card_faces && card.value.card_faces.length >= 2;
+  console.log('isDualFacedCard:', isDualFacedCard);
+  return isDualFacedCard;
+});
+
+function flipCard() {
+  isFlipped.value = !isFlipped.value;
+}
+
+function getBackFaceImageUrl(cardData: IScryfallCard): string {
+  if (!cardData.card_faces || cardData.card_faces.length < 2) {
+    return '';
+  }
+
+  const backFace = cardData.card_faces[1];
+  if (!backFace.image_uris) return '';
+
+  // Try different image URI options in order of preference
+  if (backFace.image_uris.normal) return backFace.image_uris.normal;
+  if (backFace.image_uris.large) return backFace.image_uris.large;
+  if (backFace.image_uris.small) return backFace.image_uris.small;
+  if (backFace.image_uris.png) return backFace.image_uris.png;
+
+  return '';
+}
+
+function findSimilarCards() {
+  if (!card.value) return;
+  // TODO: not implemented yet
 }
 </script>
 
@@ -420,6 +536,9 @@ function handleImageError(value: string | undefined) {
 .card-image-container
   position: relative
   display: inline-block
+
+// Remove the flip container styles since we're using a single image now
+// .card-flip-container, .card-front, .card-back styles removed
 
 .card-glow
   position: absolute
@@ -609,6 +728,19 @@ function handleImageError(value: string | undefined) {
   color: white
   font-size: 1rem
   font-weight: 700
+
+// Flip Button Styling
+.flip-btn
+  width: 100%
+  max-width: 280px
+  font-weight: 600
+  text-transform: none
+  letter-spacing: 0.5px
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3)
+
+  &:hover
+    box-shadow: 0 6px 16px rgba(33, 150, 243, 0.5)
+    transform: translateY(-2px)
 
 // Similar Cards Button Styling
 .similar-cards-btn
