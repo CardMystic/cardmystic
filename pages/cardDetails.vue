@@ -38,7 +38,10 @@
         style="max-width: 300px"
       >
         <div class="card-image-container">
-          <div class="card-glow"></div>
+          <div
+            class="card-glow"
+            :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"
+          ></div>
           <!-- Single image that changes based on flip state -->
           <v-img
             :src="getCardImageUrl(card)"
@@ -545,31 +548,42 @@ function findSimilarCards() {
   position: relative
   display: inline-block
 
-// Remove the flip container styles since we're using a single image now
-// .card-flip-container, .card-front, .card-back styles removed
-
 .card-glow
   position: absolute
   top: -5px
   left: -5px
   right: -5px
   bottom: -5px
-  background: linear-gradient(45deg, rgba(147, 114, 255, 0.3), rgba(255, 114, 147, 0.3), rgba(114, 255, 147, 0.3))
   border-radius: 25px
   filter: blur(15px)
   z-index: 0
-  animation: glowPulse 3s ease-in-out infinite alternate
+  animation: glowPulse 4s ease-in-out infinite alternate
+
+// Rarity-based glow colors
+.glow-common
+  background: linear-gradient(45deg, rgba(44, 44, 44, 0.3), rgba(66, 66, 66, 0.3), rgba(88, 88, 88, 0.3))
+
+.glow-uncommon
+  background: linear-gradient(45deg, rgba(192, 192, 192, 0.3), rgba(169, 169, 169, 0.3), rgba(211, 211, 211, 0.3))
+
+.glow-rare
+  background: linear-gradient(45deg, rgba(255, 215, 0, 0.4), rgba(255, 176, 0, 0.4), rgba(255, 193, 7, 0.4))
+  animation: glowPulseRare 3s ease-in-out infinite alternate
+
+.glow-mythic
+  background: linear-gradient(45deg, rgba(255, 140, 0, 0.5), rgba(255, 107, 53, 0.5), rgba(255, 69, 0, 0.5))
+  animation: glowPulseMythic 2.5s ease-in-out infinite alternate
 
 .card-image
   border-radius: 20px !important
-  box-shadow: 0 8px 8px rgba(147, 114, 255, 0.4), 0 4px 4px rgba(0, 0, 0, 0.6)
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)
   position: relative
   z-index: 1
   transition: all 0.3s ease
 
   &:hover
-    transform: translateY(-5px) scale(1.02)
-    box-shadow: 0 12px 40px rgba(147, 114, 255, 0.6), 0 6px 20px rgba(0, 0, 0, 0.8)
+    transform: translateY(-2px) scale(1.02)
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3)
 
 // Card Header Styling
 .card-header
@@ -834,11 +848,27 @@ em
 // Animations
 @keyframes glowPulse
   0%
-    opacity: 0.6
+    opacity: 0.7
     transform: scale(1)
   100%
     opacity: 0.9
-    transform: scale(1.05)
+    transform: scale(1.02)
+
+@keyframes glowPulseRare
+  0%
+    opacity: 0.7
+    transform: scale(1)
+  100%
+    opacity: 0.9
+    transform: scale(1.02)
+
+@keyframes glowPulseMythic
+  0%
+    opacity: 0.8
+    transform: scale(1)
+  100%
+    opacity: 1.0
+    transform: scale(1.02)
 
 .image-placeholder-large
   display: flex
