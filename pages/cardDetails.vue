@@ -181,6 +181,7 @@
               ></span>
             </span>
           </h2>
+          <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
           <p class="card-type">
             {{ currentTypeLine }}
           </p>
@@ -574,6 +575,13 @@ function findSimilarCards() {
   background-clip: text
   margin-bottom: 4px
   text-shadow: 0 4px 8px rgba(147, 114, 255, 0.3)
+
+.set-name
+  color: rgba(255, 255, 255, 0.7)
+  font-size: 0.9rem
+  font-weight: 400
+  margin: 0 0 8px 0
+  font-style: italic
 
 .mana-cost
   color: rgb(255, 193, 7)
