@@ -183,7 +183,11 @@
           </h2>
           <div class="set-rarity-info">
             <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
-            <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
+            <RarityBadge
+              v-if="card.rarity"
+              :rarity="card.rarity"
+              size="medium"
+            />
           </div>
           <p class="card-type">
             {{ currentTypeLine }}
