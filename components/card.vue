@@ -55,6 +55,11 @@ const props = defineProps({
     type: String as PropType<'small' | 'medium' | 'large'>,
     default: 'large',
   },
+  // Optional normalization context - if provided, use this instead of search store
+  normalizationContext: {
+    type: Array as PropType<number[]>,
+    default: undefined,
+  },
 });
 
 const searchStore = useSearchStore();
@@ -74,11 +79,14 @@ const progressHeight = computed(() => {
 });
 
 function normalizeScore(score: number): number {
-  // Get all scores from search results to find the highest
-  const allScores = searchStore.results.map((result) => result.score);
+  // Use provided normalization context if available, otherwise fall back to search store
+  const allScores =
+    props.normalizationContext ||
+    searchStore.results.map((result) => result.score);
 
+  // If no context available, return score as-is (assume it's already normalized)
   if (allScores.length === 0) {
-    return 0;
+    return score;
   }
 
   const highestScore = Math.max(...allScores);

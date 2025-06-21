@@ -47,6 +47,7 @@
           >
             <Card
               :card="result"
+              :normalization-context="allScores"
               size="small"
               @click="goToCard(result.card_data.id)"
             />
@@ -58,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import type { ICardResult, IColbertResponse } from '~/types/IColbert';
 
 const router = useRouter();
@@ -68,6 +69,9 @@ const results = ref<ICardResult[]>([]);
 const loading = ref(false);
 const scrollContainer = ref<HTMLElement>();
 let scrollAnimationId: number | null = null;
+
+// Computed property to get all scores for normalization context
+const allScores = computed(() => results.value.map((r) => r.score));
 
 // Example queries to choose from
 const exampleQueries = [
@@ -116,7 +120,7 @@ async function loadRandomExample() {
       },
       body: JSON.stringify({
         query: currentQuery.value,
-        limit: 10,
+        limit: 80,
       }),
     });
 
@@ -126,7 +130,7 @@ async function loadRandomExample() {
 
     const data: IColbertResponse = await response.json();
     if (data?.results && data.results.length > 0) {
-      results.value = data.results.slice(0, 10); // Ensure we only have 10 results
+      results.value = data.results.slice(0, 20); // Ensure we only have 10 results
       // Restart scrolling after loading new results
       setTimeout(() => {
         startAutoScroll();
@@ -349,16 +353,4 @@ function goToCard(cardId: string) {
   &:hover
     transform: translateY(-4px) scale(1.02)
     box-shadow: 0 8px 24px rgba(147, 114, 255, 0.3)
-
-// @media (max-width: 768px)
-//   .query-header
-//     flex-direction: column
-//     align-items: stretch
-//     text-align: center
-
-//   .query-text
-//     justify-content: center
-
-//   .button-group
-//     justify-content: center
 </style>
