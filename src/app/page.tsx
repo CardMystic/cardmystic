@@ -1,21 +1,11 @@
-"use client";
-
 import { SearchInterface } from "@/components/search";
 import type { WordSearch } from "@/models/searchModel";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default function Home() {
-  const [searchResults, setSearchResults] = useState<WordSearch | null>(null);
   const router = useRouter();
 
   const handleSearch = (searchData: WordSearch) => {
-    console.log("Search triggered:", searchData);
-    setSearchResults(searchData);
-    // Here you would typically make an API call to your backend
-  };
-
-  const handleRedirect = (searchData: WordSearch) => {
     // Build URL with query parameters
     const params = new URLSearchParams({
       q: searchData.query,
@@ -78,7 +68,7 @@ export default function Home() {
       </div>
 
       {/* Search Input */}
-      <SearchInterface onSearch={handleSearch} onRedirect={handleRedirect} />
+      <SearchInterface onSearch={handleSearch} />
     </div>
   );
 }

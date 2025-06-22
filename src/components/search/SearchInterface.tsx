@@ -8,13 +8,11 @@ import { SearchBar } from "./SearchBar";
 interface SearchInterfaceProps {
   onSearch: (searchData: WordSearch) => void;
   initialQuery?: string;
-  onRedirect?: (searchData: WordSearch) => void;
 }
 
 export function SearchInterface({
   onSearch,
   initialQuery = "",
-  onRedirect,
 }: SearchInterfaceProps) {
   const [query, setQuery] = useState(initialQuery);
   const [showFilters, setShowFilters] = useState(false);
@@ -51,56 +49,15 @@ export function SearchInterface({
       exclude_card_data: false,
     };
 
-    if (onRedirect) {
-      onRedirect(searchData);
-    } else {
-      onSearch(searchData);
-    }
+    onSearch(searchData);
   };
 
-  const handleEnterKeySearch = () => {
-    // On Enter key, prioritize redirect if available, otherwise do regular search
-    const searchData: WordSearch = {
-      query,
-      limit: 10,
-      filters,
-      exclude_card_data: false,
-    };
-
-    if (onRedirect) {
-      onRedirect(searchData);
-    } else {
-      onSearch(searchData);
-    }
-  };
-
-  // Automatically trigger search when query changes (debounced in real implementation)
   const handleQueryChange = (newQuery: string) => {
     setQuery(newQuery);
-    // You might want to add debouncing here in a real implementation
-    if (newQuery.trim()) {
-      const searchData: WordSearch = {
-        query: newQuery,
-        limit: 10,
-        filters,
-        exclude_card_data: false,
-      };
-      onSearch(searchData);
-    }
   };
 
   const handleFiltersChange = (newFilters: WordSearch["filters"]) => {
     setFilters(newFilters);
-    // Auto-search when filters change if there's a query
-    if (query.trim()) {
-      const searchData: WordSearch = {
-        query,
-        limit: 10,
-        filters: newFilters,
-        exclude_card_data: false,
-      };
-      onSearch(searchData);
-    }
   };
 
   return (
@@ -109,7 +66,7 @@ export function SearchInterface({
         query={query}
         onQueryChange={handleQueryChange}
         onFiltersToggle={() => setShowFilters(!showFilters)}
-        onSearch={handleEnterKeySearch}
+        onSearch={handleSearch}
         showFilters={showFilters}
       />
       <Filters

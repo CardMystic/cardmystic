@@ -12,7 +12,6 @@ import type { WordSearch } from "../../models/searchModel";
 interface SearchResult {
   cards: CardType[];
   total: number;
-  page: number;
 }
 
 export default function SearchPage() {
@@ -44,7 +43,6 @@ export default function SearchPage() {
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
 
   // Parse query parameters on component mount
   useEffect(() => {
@@ -107,7 +105,6 @@ export default function SearchPage() {
       setSearchResult({
         cards,
         total: cards.length,
-        page: 1,
       });
     } catch (err) {
       setError(
@@ -130,15 +127,6 @@ export default function SearchPage() {
     url.searchParams.set("q", newSearchData.query);
     url.searchParams.set("limit", newSearchData.limit.toString());
     window.history.pushState({}, "", url.toString());
-  };
-
-  const handleQueryChange = (query: string) => {
-    const newSearchData = { ...searchData, query };
-    setSearchData(newSearchData);
-
-    if (query.trim()) {
-      performSearch(newSearchData);
-    }
   };
 
   return (
