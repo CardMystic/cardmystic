@@ -293,8 +293,23 @@ function CardDisplay({ card }: CardDisplayProps) {
     cardData.image_uris?.normal || cardData.card_faces?.[0]?.image_uris?.normal;
   const score = card.score ? card.score.toFixed(0) : null;
 
+  const handleCardClick = () => {
+    // Store score in localStorage before navigation
+    if (score) {
+      try {
+        localStorage.setItem(`card-score-${cardData.id}`, score);
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+  };
+
   return (
-    <Link href={`/card/${cardData.id}`} className="block">
+    <Link
+      href={`/card/${cardData.id}`}
+      className="block"
+      onClick={handleCardClick}
+    >
       <div className="group relative bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer">
         {/* Card Image */}
         <div className="aspect-[5/7] relative overflow-hidden bg-zinc-100 dark:bg-zinc-700">

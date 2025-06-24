@@ -23,6 +23,7 @@ export default function CardPage() {
   const [card, setCard] = useState<ScryfallCard>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
+  const [searchScore, setSearchScore] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCard = async () => {
@@ -32,9 +33,20 @@ export default function CardPage() {
       setError(undefined);
 
       try {
+        // Check for stored score
+        if (typeof window !== "undefined") {
+          const storedScore = localStorage.getItem(`card-score-${cardId}`);
+          if (storedScore) {
+            setSearchScore(storedScore);
+            // Clean up the stored score after retrieving it
+            localStorage.removeItem(`card-score-${cardId}`);
+          }
+        }
+
         // Fetch card from Scryfall API
         const response = await fetch(
           `https://api.scryfall.com/cards/${cardId}`,
+          { cache: "force-cache" },
         );
 
         if (!response.ok) {
@@ -129,12 +141,14 @@ export default function CardPage() {
       <div className="max-w-7xl mx-auto p-6">
         {/* Back Button */}
         <div className="mb-6">
-          <Link href="/">
-            <Button color="light" className="mb-4">
-              <ChevronLeftIcon className="w-4 h-4" />
-              Back to Search
-            </Button>
-          </Link>
+          <Button
+            color="light"
+            className="mb-4"
+            onClick={() => window.history.back()}
+          >
+            <ChevronLeftIcon className="w-4 h-4" />
+            Back
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -166,6 +180,11 @@ export default function CardPage() {
                 </Heading>
                 {card.mana_cost && (
                   <ManaCost cost={card.mana_cost} size="large" />
+                )}
+                {searchScore && (
+                  <Badge color="blue" className="text-sm font-semibold">
+                    {searchScore}% Match
+                  </Badge>
                 )}
               </div>
 
