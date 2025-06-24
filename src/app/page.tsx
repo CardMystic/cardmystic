@@ -14,37 +14,41 @@ export default function Home() {
       limit: searchData.limit.toString(),
     });
 
-    // Add filters as URL parameters if they have values
-    if (searchData.filters.selectedCardTypes.length > 0) {
-      params.set("cardTypes", searchData.filters.selectedCardTypes.join(","));
-    }
+    if (searchData.filters) {
+      // Add filters as URL parameters if they have values
+      if (searchData.filters.selectedCardTypes.length > 0) {
+        params.set("cardTypes", searchData.filters.selectedCardTypes.join(","));
+      }
 
-    if (searchData.filters.selectedColorFilterOption !== "Contains At Least") {
-      params.set("colorFilter", searchData.filters.selectedColorFilterOption);
-    }
+      if (
+        searchData.filters.selectedColorFilterOption !== "Contains At Least"
+      ) {
+        params.set("colorFilter", searchData.filters.selectedColorFilterOption);
+      }
 
-    const selectedColors = Object.entries(
-      searchData.filters.selectedColors || {},
-    )
-      .filter(([_, selected]) => selected)
-      .map(([color, _]) => color);
-    if (selectedColors.length > 0) {
-      params.set("colors", selectedColors.join(","));
-    }
+      const selectedColors = Object.entries(
+        searchData.filters.selectedColors || {},
+      )
+        .filter(([_, selected]) => selected)
+        .map(([color, _]) => color);
+      if (selectedColors.length > 0) {
+        params.set("colors", selectedColors.join(","));
+      }
 
-    if (searchData.filters.selectedCMC) {
-      params.set("cmc", searchData.filters.selectedCMC);
-      params.set("cmcOp", searchData.filters.selectedCMCOption);
-    }
+      if (searchData.filters.selectedCMC) {
+        params.set("cmc", searchData.filters.selectedCMC);
+        params.set("cmcOp", searchData.filters.selectedCMCOption);
+      }
 
-    if (searchData.filters.selectedPower) {
-      params.set("power", searchData.filters.selectedPower);
-      params.set("powerOp", searchData.filters.selectedPowerOption);
-    }
+      if (searchData.filters.selectedPower) {
+        params.set("power", searchData.filters.selectedPower);
+        params.set("powerOp", searchData.filters.selectedPowerOption);
+      }
 
-    if (searchData.filters.selectedToughness) {
-      params.set("toughness", searchData.filters.selectedToughness);
-      params.set("toughnessOp", searchData.filters.selectedToughnessOption);
+      if (searchData.filters.selectedToughness) {
+        params.set("toughness", searchData.filters.selectedToughness);
+        params.set("toughnessOp", searchData.filters.selectedToughnessOption);
+      }
     }
 
     router.push(`/search?${params.toString()}`);

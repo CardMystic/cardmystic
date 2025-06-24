@@ -2,49 +2,32 @@
 
 import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import type { z } from "zod";
-import type { CardSearchFiltersSchema } from "../../models/searchModel";
-import { Button } from "../catalyst/button";
-import { Checkbox, CheckboxField, CheckboxGroup } from "../catalyst/checkbox";
-import { Field, FieldGroup, Fieldset, Legend } from "../catalyst/fieldset";
-import { Input, InputGroup } from "../catalyst/input";
-import { Select } from "../catalyst/select";
-import { Text } from "../catalyst/text";
+import { useState } from "react";
 
-type CardSearchFilters = z.infer<typeof CardSearchFiltersSchema>;
-
-type ColorFilterOption =
-  | "Match Exactly"
-  | "Contains At Least"
-  | "Contains At Most";
-type ComparisonOperator =
-  | "Equal To"
-  | "Not Equal To"
-  | "Greater Than"
-  | "Less Than";
+import { Button } from "@/components/catalyst/button";
+import { Checkbox, CheckboxField } from "@/components/catalyst/checkbox";
+import { Field, FieldGroup } from "@/components/catalyst/fieldset";
+import { Input } from "@/components/catalyst/input";
+import { Select } from "@/components/catalyst/select";
+import { Text } from "@/components/catalyst/text";
+import {
+  CardFormat,
+  CardFormatStatus,
+  CardRarity,
+  CardType,
+} from "@/models/cardModel";
+import {
+  type CardSearchFilters,
+  CardSearchFiltersSchema,
+  type ColorFilterOption,
+  type ComparisonOperator,
+} from "@/models/searchModel";
 
 interface FiltersProps {
   filters: CardSearchFilters;
   onFiltersChange: (filters: CardSearchFilters) => void;
   isVisible: boolean;
 }
-
-const CARD_TYPES = [
-  "Artifact",
-  "Conspiracy",
-  "Creature",
-  "Enchantment",
-  "Instant",
-  "Land",
-  "Phenomenon",
-  "Plane",
-  "Planeswalker",
-  "Scheme",
-  "Sorcery",
-  "Tribal",
-  "Vanguard",
-];
 
 const COLORS = [
   { key: "White", className: "ms ms-w ms-cost" },
@@ -53,25 +36,6 @@ const COLORS = [
   { key: "Red", className: "ms ms-r ms-cost" },
   { key: "Green", className: "ms ms-g ms-cost" },
 ] as const;
-
-const RARITIES = ["Common", "Uncommon", "Rare", "Mythic"] as const;
-
-const FORMATS = [
-  "Standard",
-  "Pioneer",
-  "Modern",
-  "Legacy",
-  "Vintage",
-  "Commander",
-  "Pauper",
-  "Historic",
-  "Alchemy",
-  "Explorer",
-  "Brawl",
-  "Penny Dreadful",
-];
-
-const FORMAT_STATUSES = ["Legal", "Banned", "Restricted", "Not Legal"];
 
 interface FilterSectionProps {
   title: string;
@@ -143,25 +107,7 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
   };
 
   const clearAllFilters = () => {
-    onFiltersChange({
-      selectedCardTypes: [],
-      selectedColorFilterOption: "Contains At Least",
-      selectedColors: {
-        White: false,
-        Blue: false,
-        Black: false,
-        Red: false,
-        Green: false,
-      },
-      selectedRarities: {},
-      selectedCMCOption: "Equal To",
-      selectedPowerOption: "Equal To",
-      selectedToughnessOption: "Equal To",
-      selectedCMC: "",
-      selectedPower: "",
-      selectedToughness: "",
-      selectedCardFormats: [],
-    });
+    onFiltersChange(CardSearchFiltersSchema.parse({}));
   };
 
   const hasActiveFilters = () => {
@@ -191,16 +137,15 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
               <Text className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                 Advanced Filters
               </Text>
-              {hasActiveFilters() && (
-                <Button
-                  color="light"
-                  onClick={clearAllFilters}
-                  className="text-sm"
-                >
-                  <XMarkIcon data-slot="icon" />
-                  Clear All
-                </Button>
-              )}
+              <Button
+                color="light"
+                onClick={clearAllFilters}
+                disabled={!hasActiveFilters()}
+                className="text-sm"
+              >
+                <XMarkIcon data-slot="icon" />
+                Clear All
+              </Button>
             </div>
 
             <div className="space-y-0">
@@ -213,7 +158,7 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
               >
                 <FieldGroup>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                    {CARD_TYPES.map((type) => (
+                    {CardType.options.map((type) => (
                       <CheckboxField key={type}>
                         <Checkbox
                           checked={filters.selectedCardTypes.includes(type)}
@@ -273,6 +218,7 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
                         </CheckboxField>
                       ))}
 
+                      {/* Colorless checkbox */}
                       <CheckboxField className="flex-row items-center gap-2">
                         <Checkbox
                           checked={false}
@@ -280,7 +226,7 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
                             // Handle colorless selection if needed
                           }}
                         />
-                        <span className="text-lg">⚪</span>
+                        <span className="ms ms-c ms-cost text-lg" />
                         <Text className="font-medium">Colorless</Text>
                       </CheckboxField>
                     </div>
@@ -323,7 +269,7 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
               >
                 <FieldGroup>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {RARITIES.map((rarity) => (
+                    {CardRarity.options.map((rarity) => (
                       <CheckboxField key={rarity}>
                         <Checkbox
                           checked={
@@ -460,7 +406,7 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
               >
                 <FieldGroup>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {FORMATS.map((format) => {
+                    {CardFormat.options.map((format) => {
                       const currentFilter = filters.selectedCardFormats.find(
                         (f) => f.format === format,
                       );
@@ -495,7 +441,7 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
                             className="w-32"
                           >
                             <option value="">Any</option>
-                            {FORMAT_STATUSES.map((status) => (
+                            {CardFormatStatus.options.map((status) => (
                               <option key={status} value={status}>
                                 {status}
                               </option>

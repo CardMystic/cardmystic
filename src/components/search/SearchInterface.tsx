@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { WordSearch } from "../../models/searchModel";
-import { Filters } from "./Filters";
-import { SearchBar } from "./SearchBar";
+
+import { Filters } from "@/components/search/Filters";
+import { SearchBar } from "@/components/search/SearchBar";
+import {
+  type CardSearchFilters,
+  CardSearchFiltersSchema,
+  type WordSearch,
+} from "@/models/searchModel";
 
 interface SearchInterfaceProps {
   onSearch: (searchData: WordSearch) => void;
@@ -16,25 +21,9 @@ export function SearchInterface({
 }: SearchInterfaceProps) {
   const [query, setQuery] = useState(initialQuery);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<WordSearch["filters"]>({
-    selectedCardTypes: [],
-    selectedColorFilterOption: "Contains At Least",
-    selectedColors: {
-      White: false,
-      Blue: false,
-      Black: false,
-      Red: false,
-      Green: false,
-    },
-    selectedRarities: {},
-    selectedCMCOption: "Equal To",
-    selectedPowerOption: "Equal To",
-    selectedToughnessOption: "Equal To",
-    selectedCMC: "",
-    selectedPower: "",
-    selectedToughness: "",
-    selectedCardFormats: [],
-  });
+  const [filters, setFilters] = useState<CardSearchFilters>(
+    CardSearchFiltersSchema.parse({}), // Initialize with default filters
+  );
 
   // Update query when initialQuery changes
   useEffect(() => {
@@ -56,7 +45,7 @@ export function SearchInterface({
     setQuery(newQuery);
   };
 
-  const handleFiltersChange = (newFilters: WordSearch["filters"]) => {
+  const handleFiltersChange = (newFilters: CardSearchFilters) => {
     setFilters(newFilters);
   };
 
