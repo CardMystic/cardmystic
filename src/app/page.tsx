@@ -1,3 +1,5 @@
+"use client";
+
 import { SearchInterface } from "@/components/search";
 import type { WordSearch } from "@/models/searchModel";
 import { useRouter } from "next/navigation";
