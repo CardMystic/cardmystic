@@ -16,6 +16,64 @@ interface SearchResult {
   total: number;
 }
 
+// Cache key for localStorage
+const SEARCH_CACHE_KEY = "cardmystic-search-cache";
+
+interface SearchCache {
+  searchData: WordSearch;
+  searchResult: SearchResult;
+  timestamp: number;
+}
+
+// Cache management functions
+const getCachedResults = (query: string): SearchCache | null => {
+  try {
+    if (typeof window === "undefined") return null; // SSR safety
+
+    const cached = localStorage.getItem(SEARCH_CACHE_KEY);
+    if (!cached) return null;
+
+    const parsedData = JSON.parse(cached) as SearchCache;
+
+    // Check if cache is still valid (24 hours)
+    const isExpired = Date.now() - parsedData.timestamp > 24 * 60 * 60 * 1000;
+    if (isExpired) {
+      localStorage.removeItem(SEARCH_CACHE_KEY);
+      return null;
+    }
+
+    // Check if the cached query matches current query
+    if (parsedData.searchData.query.toLowerCase() === query.toLowerCase()) {
+      return parsedData;
+    }
+
+    return null;
+  } catch {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(SEARCH_CACHE_KEY);
+    }
+    return null;
+  }
+};
+
+const setCachedResults = (
+  searchData: WordSearch,
+  searchResult: SearchResult,
+) => {
+  try {
+    if (typeof window === "undefined") return; // SSR safety
+
+    const cacheData: SearchCache = {
+      searchData,
+      searchResult,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(SEARCH_CACHE_KEY, JSON.stringify(cacheData));
+  } catch {
+    // Ignore localStorage errors (quota exceeded, etc.)
+  }
+};
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const [searchData, setSearchData] = useState<WordSearch>({
@@ -45,6 +103,7 @@ export default function SearchPage() {
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFromCache, setIsFromCache] = useState(false);
 
   // Parse query parameters on component mount
   useEffect(() => {
@@ -52,6 +111,19 @@ export default function SearchPage() {
     const limit = Number.parseInt(searchParams.get("limit") || "10");
 
     if (query) {
+      // First, check if we have cached results for this query
+      const cachedResults = getCachedResults(query);
+
+      if (cachedResults) {
+        // Use cached results
+        setSearchData(cachedResults.searchData);
+        setSearchResult(cachedResults.searchResult);
+        setIsFromCache(true);
+        return;
+      }
+
+      // No cache found, proceed with API call
+      setIsFromCache(false);
       const initialSearchData: WordSearch = {
         query,
         limit,
@@ -104,10 +176,16 @@ export default function SearchPage() {
 
       const responseData = await response.json();
       const cards = responseData as CardType[];
-      setSearchResult({
+      const newSearchResult = {
         cards,
         total: cards.length,
-      });
+      };
+
+      setSearchResult(newSearchResult);
+
+      // Cache the results
+      setCachedResults(data, newSearchResult);
+      setIsFromCache(false);
     } catch (err) {
       setError(
         err instanceof Error
@@ -171,10 +249,17 @@ export default function SearchPage() {
           <div>
             {/* Results Header */}
             <div className="mb-6">
-              <Text className="text-lg font-semibold">
-                Found {searchResult.total} cards
-                {searchData.query && ` for "${searchData.query}"`}
-              </Text>
+              <div className="flex items-center gap-2">
+                <Text className="text-lg font-semibold">
+                  Found {searchResult.total} cards
+                  {searchData.query && ` for "${searchData.query}"`}
+                </Text>
+                {isFromCache && (
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">
+                    Cached
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Card Grid */}
