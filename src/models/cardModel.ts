@@ -27,29 +27,24 @@ export const CardFormat = z.enum([
   "Future",
   "Gladiator",
   "Historic",
-  "HistoricBrawl",
+  "Historic Brawl",
   "Legacy",
   "Modern",
   "Oathbreaker",
-  "OldSchool",
+  "Old School",
   "Pauper",
-  "PauperCommander",
+  "Pauper Commander",
   "Penny",
   "Pioneer",
   "Predh",
   "Premodern",
   "Standard",
-  "StandardBrawl",
+  "Standard Brawl",
   "Timeless",
   "Vintage",
 ]);
 
-export const CardFormatStatus = z.enum([
-  "Legal",
-  "Banned",
-  "Restricted",
-  "Not Legal",
-]);
+export const CardFormatStatus = z.enum(["Legal", "Banned", "Restricted"]);
 
 // Image URIs Schema
 const imageUrisSchema = z.object({

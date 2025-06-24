@@ -6,16 +6,13 @@ import { useState } from "react";
 
 import { Button } from "@/components/catalyst/button";
 import { Checkbox, CheckboxField } from "@/components/catalyst/checkbox";
+
 import { Field, FieldGroup } from "@/components/catalyst/fieldset";
 import { Input } from "@/components/catalyst/input";
 import { Select } from "@/components/catalyst/select";
 import { Text } from "@/components/catalyst/text";
-import {
-  CardFormat,
-  CardFormatStatus,
-  CardRarity,
-  CardType,
-} from "@/models/cardModel";
+import { FormatFilter } from "@/components/search/FormatFilter";
+import { CardRarity, CardType } from "@/models/cardModel";
 import {
   type CardSearchFilters,
   CardSearchFiltersSchema,
@@ -404,54 +401,12 @@ export function Filters({ filters, onFiltersChange, isVisible }: FiltersProps) {
                 expandedSections={expandedSections}
                 onToggleSection={toggleSection}
               >
-                <FieldGroup>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {CardFormat.options.map((format) => {
-                      const currentFilter = filters.selectedCardFormats.find(
-                        (f) => f.format === format,
-                      );
-
-                      return (
-                        <div
-                          key={format}
-                          className="flex items-center justify-between gap-3"
-                        >
-                          <Text className="text-sm font-medium flex-1">
-                            {format}
-                          </Text>
-                          <Select
-                            value={currentFilter?.status || ""}
-                            onChange={(e) => {
-                              const newFormats =
-                                filters.selectedCardFormats.filter(
-                                  (f) => f.format !== format,
-                                );
-
-                              if (e.target.value) {
-                                newFormats.push({
-                                  format,
-                                  status: e.target.value,
-                                });
-                              }
-
-                              updateFilters({
-                                selectedCardFormats: newFormats,
-                              });
-                            }}
-                            className="w-32"
-                          >
-                            <option value="">Any</option>
-                            {CardFormatStatus.options.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </Select>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </FieldGroup>
+                <FormatFilter
+                  selectedCardFormats={filters.selectedCardFormats}
+                  onChange={(selectedCardFormats) =>
+                    updateFilters({ selectedCardFormats })
+                  }
+                />
               </FilterSection>
             </div>
           </div>

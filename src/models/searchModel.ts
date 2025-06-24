@@ -14,6 +14,18 @@ const comparisonOperatorEnum = z.enum([
 ]);
 export type ComparisonOperator = z.infer<typeof comparisonOperatorEnum>;
 
+export const SelectedCardFormatsSchema = z
+  .array(
+    z.object({
+      format: z.string().optional(),
+      status: z.string().optional(),
+    }),
+  )
+  .optional()
+  .default([]);
+
+export type SelectedCardFormats = z.infer<typeof SelectedCardFormatsSchema>;
+
 export type CardSearchFilters = z.infer<typeof CardSearchFiltersSchema>;
 export const CardSearchFiltersSchema = z.object({
   selectedCardTypes: z.array(z.string()).optional().default([]),
@@ -46,15 +58,7 @@ export const CardSearchFiltersSchema = z.object({
   selectedCMC: z.string().optional().default(""),
   selectedPower: z.string().optional().default(""),
   selectedToughness: z.string().optional().default(""),
-  selectedCardFormats: z
-    .array(
-      z.object({
-        format: z.string().optional(),
-        status: z.string().optional(),
-      }),
-    )
-    .optional()
-    .default([]),
+  selectedCardFormats: SelectedCardFormatsSchema,
 });
 
 export function cardSearchFiltersToQueryParams(
