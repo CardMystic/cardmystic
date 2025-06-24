@@ -1,13 +1,15 @@
 "use client";
 
-import { ManaCost } from "@/components/card/ManaCost";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Heading } from "../../components/catalyst/heading";
-import { Text } from "../../components/catalyst/text";
-import { SearchInterface } from "../../components/search";
-import type { Card as CardType } from "../../models/cardModel";
-import type { WordSearch } from "../../models/searchModel";
+
+import { ManaCost } from "@/components/card/ManaCost";
+import { Heading } from "@/components/catalyst/heading";
+import { Text } from "@/components/catalyst/text";
+import { SearchInterface } from "@/components/search";
+import type { Card as CardType } from "@/models/cardModel";
+import type { WordSearch } from "@/models/searchModel";
 
 interface SearchResult {
   cards: CardType[];
@@ -207,37 +209,39 @@ function CardDisplay({ card }: CardDisplayProps) {
   const score = card.score ? card.score.toFixed(0) : null;
 
   return (
-    <div className="group relative bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
-      {/* Card Image */}
-      <div className="aspect-[5/7] relative overflow-hidden bg-zinc-100 dark:bg-zinc-700">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={cardData.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Text className="text-zinc-400">No Image</Text>
-          </div>
-        )}
+    <Link href={`/card/${cardData.id}`} className="block">
+      <div className="group relative bg-white dark:bg-zinc-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer">
+        {/* Card Image */}
+        <div className="aspect-[5/7] relative overflow-hidden bg-zinc-100 dark:bg-zinc-700">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={cardData.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Text className="text-zinc-400">No Image</Text>
+            </div>
+          )}
 
-        {/* Score Badge */}
-        {score && (
-          <div className="absolute bottom-2 right-2 bg-black/75 text-white px-2 py-1 rounded text-sm font-semibold">
-            {score}%
-          </div>
-        )}
-      </div>
+          {/* Score Badge */}
+          {score && (
+            <div className="absolute bottom-2 right-2 bg-black/75 text-white px-2 py-1 rounded text-sm font-semibold">
+              {score}%
+            </div>
+          )}
+        </div>
 
-      {/* Card Info */}
-      <div className="p-4">
-        <div className="mb-2">
-          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-            {cardData.name} <ManaCost cost={cardData.mana_cost} />
-          </h3>
+        {/* Card Info */}
+        <div className="p-4">
+          <div className="mb-2">
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+              {cardData.name} <ManaCost cost={cardData.mana_cost} />
+            </h3>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
