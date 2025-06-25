@@ -41,6 +41,9 @@
               @search="search"
             ></filters>
           </div>
+
+          <!-- Active Filter Chips -->
+          <FilterChips class="mt-2" />
         </v-col>
       </v-row>
 

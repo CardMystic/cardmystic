@@ -65,7 +65,7 @@
           ></v-btn>
         </div>
 
-        <div v-if="showFilters" class="mt-0">
+        <div v-if="showFilters" class="mt-2">
           <filters
             ref="filterRef"
             :search-text="searchStore.query"
@@ -73,7 +73,11 @@
           ></filters>
         </div>
 
-        <ExampleQuery class="mt-0" />
+        <!-- Active Filter Chips -->
+        <FilterChips class="mt-0" />
+
+        <!-- Example Query -->
+        <ExampleQuery class="mt-4" />
       </div>
     </v-col>
   </v-container>
