@@ -118,8 +118,7 @@ async function search(selectedIndex: number) {
   height: 120px
   position: relative
   bottom: 10px
-  left: 20px
-
+  left: 0px
   @media (max-width: 768px)
     width: 100px
     height: 100px
@@ -145,6 +144,8 @@ async function search(selectedIndex: number) {
   align-items: flex-start
   justify-content: center
   min-width: 372px
+  position: relative
+  right: 13px
   @media (max-width: 768px)
     min-width: 0px
     align-items: center
@@ -206,7 +207,7 @@ async function search(selectedIndex: number) {
   content: ''
   position: absolute
   top: 50%
-  left: 66%
+  left: 56%
   width: 50px
   height: 50px
   background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0) 70%, rgba(147,114,255,0) 100%)
