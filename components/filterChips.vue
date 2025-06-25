@@ -20,7 +20,7 @@
       color="white"
       class="clear-all-btn"
     >
-      Clear All
+      Clear Filters
     </v-btn>
   </div>
 </template>
