@@ -1,19 +1,6 @@
 <template>
   <navbar />
 
-  <!-- Back to Results button -->
-  <v-container v-if="searchStore.results.length > 0" class="pt-4 pb-0">
-    <v-btn
-      to="/search"
-      color="primary"
-      variant="outlined"
-      prepend-icon="mdi-arrow-left"
-      class="mb-4"
-    >
-      Back to Results
-    </v-btn>
-  </v-container>
-
   <v-container class="py-4 d-flex justify-center">
     <div v-if="loading" class="text-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
@@ -31,6 +18,24 @@
       style="max-width: 1400px"
       class="d-flex justify-center"
     >
+      <!-- Back to Results button aligned with card image -->
+      <v-col cols="12" class="pb-0">
+        <div
+          v-if="searchStore.results.length > 0"
+          class="back-button-container"
+        >
+          <v-btn
+            to="/search"
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-arrow-left"
+            class="mb-4"
+          >
+            Back to Results
+          </v-btn>
+        </div>
+      </v-col>
+
       <!-- Left: Card Image -->
       <v-col
         md="4"
@@ -927,4 +932,14 @@ em
   font-size: 16px
   margin-top: 16px
   text-align: center
+
+.back-button-container
+  display: flex
+  justify-content: flex-start
+  max-width: 1400px
+  margin: 0 auto
+  padding-left: calc((100% - 300px) / 2 - 24px) // Align with left edge of card image column
+
+  @media (max-width: 768px)
+    padding-left: 0 // Reset on mobile
 </style>
