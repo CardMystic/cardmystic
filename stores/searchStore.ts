@@ -58,6 +58,34 @@ export const useSearchStore = defineStore('search', () => {
     },
   ];
 
+  function clearFilters() {
+    // Reset all filters to their default values
+    filters.value = {
+      selectedCardTypes: [],
+      selectedColorFilterOption: 'Contains At Most',
+      selectedColors: {
+        Red: true,
+        Blue: true,
+        Green: true,
+        White: true,
+        Black: true,
+      },
+      selectedRarities: {
+        Common: false,
+        Uncommon: false,
+        Rare: false,
+        Mythic: false,
+      },
+      selectedCMCOption: 'Equal To',
+      selectedPowerOption: 'Equal To',
+      selectedToughnessOption: 'Equal To',
+      selectedCMC: '',
+      selectedPower: '',
+      selectedToughness: '',
+      selectedCardFormats: [],
+    };
+  }
+
   const search = async (selectedIndex: number): Promise<void> => {
     loading.value = true;
     results.value = []; // Clear previous results
@@ -126,7 +154,7 @@ export const useSearchStore = defineStore('search', () => {
     const body = {
       card_name: query.value,
       limit: 80,
-      filters: {},
+      filters: filters.value,
     };
 
     console.log('similar search body', body);
@@ -150,6 +178,7 @@ export const useSearchStore = defineStore('search', () => {
   };
 
   return {
+    clearFilters,
     search,
     vectorSearch,
     similarSearch,

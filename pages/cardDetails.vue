@@ -527,6 +527,7 @@ function flipCard() {
 
 function findSimilarCards() {
   if (!card.value) return;
+  searchStore.clearFilters();
 
   // Navigate to search page with similarity search endpoint
   const queryParams: any = {

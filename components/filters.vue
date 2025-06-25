@@ -302,29 +302,7 @@ watch(
 );
 
 function clearFilters() {
-  // Reset all filters to their default values
-  filters.value.selectedCardTypes = [];
-  filters.value.selectedColorFilterOption = 'Contains At Most';
-  filters.value.selectedColors = {
-    Red: true,
-    Blue: true,
-    Green: true,
-    White: true,
-    Black: true,
-  };
-  filters.value.selectedRarities = {
-    Common: false,
-    Uncommon: false,
-    Rare: false,
-    Mythic: false,
-  };
-  filters.value.selectedCMCOption = 'Equal To';
-  filters.value.selectedPowerOption = 'Equal To';
-  filters.value.selectedToughnessOption = 'Equal To';
-  filters.value.selectedCMC = '';
-  filters.value.selectedPower = '';
-  filters.value.selectedToughness = '';
-  filters.value.selectedCardFormats = [{ format: null, status: null }];
+  searchStore.clearFilters();
 }
 </script>
 
