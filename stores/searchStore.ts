@@ -42,6 +42,11 @@ export const useSearchStore = defineStore('search', () => {
       endpoint: '/search/colbert',
     },
     {
+      name: 'Similar Search',
+      tooltip: 'Search For Similar Cards',
+      endpoint: '/search/similarity',
+    },
+    {
       name: 'Keyword',
       tooltip: 'Traditional Keyword Search',
       endpoint: '/keyword_search',
@@ -54,10 +59,21 @@ export const useSearchStore = defineStore('search', () => {
   ];
 
   const search = async (selectedIndex: number): Promise<void> => {
+    loading.value = true;
+
+    // Route to appropriate search function based on endpoint
+    if (selectedIndex === 1) {
+      await similarSearch();
+    } else {
+      await vectorSearch(selectedIndex);
+    }
+  };
+
+  const vectorSearch = async (selectedIndex: number = 0): Promise<void> => {
     const endpoint = endpoints[selectedIndex].endpoint;
     const url = '/api/proxy' + endpoint;
 
-    console.log('url', url);
+    console.log('vector search url', url);
     console.log('filters', filters.value);
 
     let response;
@@ -80,7 +96,7 @@ export const useSearchStore = defineStore('search', () => {
         filters: filters.value,
       };
 
-      console.log('body', body);
+      console.log('vector search body', body);
 
       response = await fetch(url, {
         method: 'POST',
@@ -90,18 +106,52 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     const data: ICardResult[] = await response.json();
-    console.log('results', data);
+    console.log('vector search results', data);
 
     if (data && data.length > 0) {
       results.value = data;
-      loading.value = false;
     } else {
       results.value = [];
     }
+
+    loading.value = false;
+  };
+
+  const similarSearch = async (): Promise<void> => {
+    const url = '/api/proxy/search/similarity';
+
+    console.log('similar search url', url);
+
+    const body = {
+      card_name: query.value,
+      limit: 80,
+      filters: {},
+    };
+
+    console.log('similar search body', body);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data: ICardResult[] = await response.json();
+    console.log('similar search results', data);
+
+    if (data && data.length > 0) {
+      results.value = data;
+    } else {
+      results.value = [];
+    }
+
+    loading.value = false;
   };
 
   return {
     search,
+    vectorSearch,
+    similarSearch,
     endpoints,
     query,
     imageFile,

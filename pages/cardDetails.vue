@@ -268,6 +268,7 @@ import type { IScryfallCard } from '~/types/IScryfall';
 import { useSearchStore } from '~/stores/searchStore';
 
 const route = useRoute();
+const router = useRouter();
 const searchStore = useSearchStore();
 const cardData = ref<IScryfallCard | null>(null);
 const loading = ref(false);
@@ -524,26 +525,20 @@ function flipCard() {
   isFlipped.value = !isFlipped.value;
 }
 
-function getBackFaceImageUrl(cardData: IScryfallCard): string {
-  if (!cardData.card_faces || cardData.card_faces.length < 2) {
-    return '';
-  }
-
-  const backFace = cardData.card_faces[1];
-  if (!backFace.image_uris) return '';
-
-  // Try different image URI options in order of preference
-  if (backFace.image_uris.normal) return backFace.image_uris.normal;
-  if (backFace.image_uris.large) return backFace.image_uris.large;
-  if (backFace.image_uris.small) return backFace.image_uris.small;
-  if (backFace.image_uris.png) return backFace.image_uris.png;
-
-  return '';
-}
-
 function findSimilarCards() {
   if (!card.value) return;
-  // TODO: not implemented yet
+
+  // Navigate to search page with similarity search endpoint
+  const queryParams: any = {
+    q: card.value.name,
+    endpoint: 1, // Similar Search endpoint
+    filters: JSON.stringify(searchStore.filters),
+  };
+
+  router.push({
+    name: 'search',
+    query: queryParams,
+  });
 }
 </script>
 
