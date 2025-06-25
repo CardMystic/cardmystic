@@ -43,7 +43,7 @@
         ></v-btn>
       </div>
 
-      <div v-if="showFilters" class="mt-2">
+      <div v-if="showFilters" class="mt-0">
         <filters
           ref="filterRef"
           :search-text="searchStore.query"
