@@ -89,6 +89,8 @@ const exampleQueries = [
   'finishers for a mono white tokens deck',
   'golgari elves that draw',
   'five color dragon for commander',
+  'mono red burn spells',
+  'creatures that come back from the graveyard',
 ];
 
 onMounted(async () => {

@@ -61,6 +61,14 @@
             </template>
           </v-img>
 
+          <!-- Sheen container with same dimensions as card - only for mythic -->
+          <div
+            v-if="card.rarity?.toLowerCase() === 'mythic'"
+            class="card-sheen-container"
+          >
+            <div class="card-sheen"></div>
+          </div>
+
           <!-- Game Changer Badge -->
           <GameChangerBadge :game-changer="card.game_changer" size="large" />
         </div>
@@ -547,24 +555,50 @@ function findSimilarCards() {
 .card-image-container
   position: relative
   display: inline-block
+  overflow: visible
+  padding: 10px
+  margin: -10px
 
 .card-glow
   position: absolute
-  top: -5px
-  left: -5px
-  right: -5px
-  bottom: -5px
+  top: 5px
+  left: 5px
+  right: 5px
+  bottom: 5px
   border-radius: 25px
   filter: blur(15px)
   z-index: 0
-  animation: glowPulse 4s ease-in-out infinite alternate
+
+.card-sheen-container
+  position: absolute
+  top: 10px
+  left: 10px
+  right: 10px
+  bottom: 10px
+  border-radius: 20px
+  overflow: hidden
+  z-index: 2
+  pointer-events: none
+
+.card-sheen
+  position: absolute
+  top: -20%
+  left: -100%
+  width: 25%
+  height: 140%
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent)
+  animation: sheen 6s infinite
+  pointer-events: none
+  transform: rotate(45deg)
 
 // Rarity-based glow colors
 .glow-common
   background: linear-gradient(45deg, rgba(44, 44, 44, 0.3), rgba(66, 66, 66, 0.3), rgba(88, 88, 88, 0.3))
+  animation: glowPulse 4s ease-in-out infinite alternate
 
 .glow-uncommon
   background: linear-gradient(45deg, rgba(192, 192, 192, 0.3), rgba(169, 169, 169, 0.3), rgba(211, 211, 211, 0.3))
+  animation: glowPulse 4s ease-in-out infinite alternate
 
 .glow-rare
   background: linear-gradient(45deg, rgba(255, 215, 0, 0.4), rgba(255, 176, 0, 0.4), rgba(255, 193, 7, 0.4))
@@ -868,7 +902,22 @@ em
     transform: scale(1)
   100%
     opacity: 1.0
-    transform: scale(1.02)
+    transform: scale(1.04)
+
+@keyframes sheen
+  0%
+    left: -100%
+    opacity: 0
+  5%
+    opacity: 1
+  20%
+    left: 200%
+    opacity: 1
+  25%
+    opacity: 0
+  100%
+    left: 200%
+    opacity: 0
 
 .image-placeholder-large
   display: flex
