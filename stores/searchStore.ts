@@ -32,7 +32,7 @@ export const useSearchStore = defineStore('search', () => {
     selectedCMC: '',
     selectedPower: '',
     selectedToughness: '',
-    selectedCardFormats: [{ format: null, status: null }],
+    selectedCardFormats: [],
   });
 
   const endpoints = [
