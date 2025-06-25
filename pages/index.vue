@@ -22,63 +22,18 @@
         </div>
       </div>
 
-      <ChipSelector
-        class="chip-selector"
-        :options="chipSelectorOptions"
-        :tooltips="chipSelectorTooltips"
-        :selected-index="chipSelectedIndex"
-        @update:selectedIndex="chipSelectedIndex = $event"
+      <!-- Basic Search Component -->
+      <BasicSearch
+        ref="basicSearchRef"
+        max-width="768px"
+        :is-home-page="true"
+        :searching="searching"
+        @search="search"
+        @update:chipSelectedIndex="chipSelectedIndex = $event"
       />
 
-      <!-- Search bar and filters -->
-      <div style="max-width: 768px">
-        <div class="d-flex align-center">
-          <v-text-field
-            v-if="chipSelectedIndex !== 2"
-            v-model="searchStore.query"
-            label="Search..."
-            variant="solo"
-            elevation="5"
-            @keyup.enter="search"
-            :loading="searching"
-            prepend-inner-icon="mdi-magnify"
-            class="flex-grow-1"
-          ></v-text-field>
-
-          <v-file-input
-            v-else
-            v-model="uploadedFile"
-            label="Upload an image"
-            accept="image/*"
-            variant="solo"
-            prepend-icon="mdi-camera"
-            class="flex-grow-1"
-          />
-
-          <v-btn
-            @click="toggleFilters"
-            color="primary"
-            variant="elevated"
-            icon="mdi-filter"
-            class="ml-2 mb-6 filters-btn"
-            size="default"
-          ></v-btn>
-        </div>
-
-        <div v-if="showFilters" class="mt-2">
-          <filters
-            ref="filterRef"
-            :search-text="searchStore.query"
-            @search="search"
-          ></filters>
-        </div>
-
-        <!-- Active Filter Chips -->
-        <FilterChips class="mt-0" />
-
-        <!-- Example Query -->
-        <ExampleQuery class="mt-4" />
-      </div>
+      <!-- Example Query -->
+      <ExampleQuery class="mt-4" style="max-width: 768px" />
     </v-col>
   </v-container>
 
@@ -86,28 +41,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 const router = useRouter();
 
 const searchStore = useSearchStore();
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
-
-// Chip Selector component
-const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);
-const chipSelectorTooltips = searchStore.endpoints.map((e: any) => e.tooltip);
 const chipSelectedIndex = ref(0);
-
-const uploadedFile = ref<File | null>(null);
-
-watch(uploadedFile, (file) => {
-  if (file) {
-    searchStore.imageFile = file;
-    searchStore.query = '';
-    search();
-  }
-});
+const searching = ref(false);
+const basicSearchRef = ref();
 
 useHead({
   title: 'CardMystic',
@@ -132,29 +75,16 @@ onMounted(() => {
   }, 200); // typing speed
 });
 
-const filterRef: any = ref(null);
-const searching = ref(false);
-const showFilters = ref(false);
-
-function toggleFilters() {
-  showFilters.value = !showFilters.value;
-}
-
-async function search() {
-  filterRef.value?.closePanel();
-  showFilters.value = false; // Hide filters when searching
-
+async function search(selectedIndex: number) {
   // Navigate to search page with query parameters
   const queryParams: any = {
     q: searchStore.query,
-    endpoint: chipSelectedIndex.value,
+    endpoint: selectedIndex,
     filters: JSON.stringify(searchStore.filters),
   };
 
   // If image file is selected, we'll handle it differently
-  if (chipSelectedIndex.value === 2 && uploadedFile.value) {
-    // For image search, we need to store the file and navigate
-    searchStore.imageFile = uploadedFile.value;
+  if (selectedIndex === 2 && searchStore.imageFile) {
     queryParams.hasImage = 'true';
   }
 

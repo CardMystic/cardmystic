@@ -223,24 +223,36 @@
           </div>
         </v-col>
       </v-row>
-      <div class="d-flex gap-3 justify-end mt-4">
+      <div class="d-flex gap-3 justify-space-between mt-4">
         <v-btn
           style="height: 56px"
-          class="mr-2"
-          @click="clearFilters"
-          color="white"
+          @click="emit('close')"
+          color="grey"
           variant="outlined"
           elevation="3"
-          >Reset</v-btn
+          prepend-icon="mdi-close"
+          >Close</v-btn
         >
-        <v-btn
-          :disabled="searchText.length == 0"
-          style="height: 56px"
-          @click="emit('search')"
-          color="primary"
-          elevation="3"
-          >Search</v-btn
-        >
+
+        <div class="d-flex gap-3">
+          <v-btn
+            style="height: 56px"
+            @click="clearFilters"
+            color="white"
+            variant="outlined"
+            elevation="3"
+            >Reset</v-btn
+          >
+          <v-btn
+            :disabled="searchText.length == 0"
+            style="height: 56px"
+            @click="emit('search')"
+            color="primary"
+            elevation="3"
+            class="ml-2"
+            >Search</v-btn
+          >
+        </div>
       </div>
     </v-card-text>
   </v-card>
@@ -264,7 +276,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['search']);
+const emit = defineEmits(['search', 'close']);
 
 const searchStore = useSearchStore();
 

@@ -2,53 +2,17 @@
   <navbar></navbar>
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
-      <ChipSelector
-        class="chip-selector"
-        :options="chipSelectorOptions"
-        :tooltips="chipSelectorTooltips"
-        :selected-index="chipSelectedIndex"
-        @update:selectedIndex="chipSelectedIndex = $event"
+      <!-- Basic Search Component -->
+      <BasicSearch
+        ref="basicSearchRef"
+        max-width="705px"
+        :is-home-page="false"
+        :searching="searching"
+        @search="search"
+        @update:chipSelectedIndex="chipSelectedIndex = $event"
       />
 
-      <!-- Search bar and filters -->
-      <v-row class="mt-2 pb-0 px-0" justify="center" style="max-width: 705px">
-        <v-col class="py-0 px-0">
-          <div class="d-flex align-center">
-            <v-text-field
-              v-model="searchStore.query"
-              label="Search..."
-              variant="solo"
-              elevation="5"
-              @keyup.enter="search"
-              :loading="searching"
-              class="flex-grow-1"
-            ></v-text-field>
-
-            <v-btn
-              @click="toggleFilters"
-              color="primary"
-              variant="elevated"
-              icon="mdi-filter"
-              class="ml-2 mb-6 filters-btn"
-              size="default"
-            ></v-btn>
-          </div>
-
-          <div v-if="showFilters" class="mt-0">
-            <filters
-              ref="filterRef"
-              :search-text="searchStore.query"
-              @search="search"
-            ></filters>
-          </div>
-
-          <!-- Active Filter Chips -->
-          <FilterChips class="mt-2" />
-        </v-col>
-      </v-row>
-
-      <!-- Results, show image with properties.url -->
-      <!-- TODO: return more results and paginate -->
+      <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
         <template v-if="searchStore.results.length > 0">
           <v-row>
@@ -77,6 +41,15 @@
           </div>
         </template>
       </div>
+
+      <div v-if="showFilters" class="mt-0">
+        <filters
+          ref="filterRef"
+          :search-text="searchStore.query"
+          @search="search"
+          @close="toggleFilters"
+        ></filters>
+      </div>
     </v-col>
   </v-container>
 </template>
@@ -88,11 +61,10 @@ const router = useRouter();
 const route = useRoute();
 
 const searchStore = useSearchStore();
-
-// Chip Selector component
-const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);
-const chipSelectorTooltips = searchStore.endpoints.map((e: any) => e.tooltip);
 const chipSelectedIndex = ref(0);
+const searching = ref(false);
+const basicSearchRef = ref();
+const showFilters = ref(false);
 
 useHead({
   title: 'CardMystic',
@@ -105,14 +77,6 @@ useHead({
   ],
 });
 
-const filterRef: any = ref(null);
-const searching = ref(false);
-const showFilters = ref(false);
-
-function toggleFilters() {
-  showFilters.value = !showFilters.value;
-}
-
 onMounted(async () => {
   // Check if we have query parameters to perform a search
   const query = route.query.q as string;
@@ -124,6 +88,9 @@ onMounted(async () => {
     // Set the search parameters
     searchStore.query = query || '';
     chipSelectedIndex.value = endpoint;
+
+    // Set the chip index in the BasicSearch component
+    basicSearchRef.value?.setChipIndex(endpoint);
 
     // Parse and apply filters if provided
     if (filtersParam) {
@@ -140,11 +107,11 @@ onMounted(async () => {
   }
 });
 
-async function search() {
+async function search(selectedIndex: number) {
   // Update URL with new search parameters
   const queryParams: any = {
     q: searchStore.query,
-    endpoint: chipSelectedIndex.value,
+    endpoint: selectedIndex,
     filters: JSON.stringify(searchStore.filters),
   };
 
@@ -158,7 +125,6 @@ async function search() {
 }
 
 async function performSearch() {
-  showFilters.value = false; // Close filters on search
   searching.value = true;
   try {
     await searchStore.search(chipSelectedIndex.value);
@@ -166,6 +132,10 @@ async function performSearch() {
     console.error('Search failed:', error);
   }
   searching.value = false;
+}
+
+function toggleFilters() {
+  showFilters.value = !showFilters.value;
 }
 </script>
 
