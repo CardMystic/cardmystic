@@ -60,6 +60,7 @@ export const useSearchStore = defineStore('search', () => {
 
   const search = async (selectedIndex: number): Promise<void> => {
     loading.value = true;
+    results.value = []; // Clear previous results
 
     // Route to appropriate search function based on endpoint
     if (selectedIndex === 1) {

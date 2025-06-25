@@ -13,24 +13,34 @@
       <!-- Search bar and filters -->
       <v-row class="mt-2 pb-0 px-0" justify="center" style="max-width: 705px">
         <v-col class="py-0 px-0">
-          <v-text-field
-            v-model="searchStore.query"
-            label="Search..."
-            variant="solo"
-            elevation="5"
-            @keyup.enter="search"
-            :loading="searching"
-          ></v-text-field>
-        </v-col>
-      </v-row>
+          <div class="d-flex align-center">
+            <v-text-field
+              v-model="searchStore.query"
+              label="Search..."
+              variant="solo"
+              elevation="5"
+              @keyup.enter="search"
+              :loading="searching"
+              class="flex-grow-1"
+            ></v-text-field>
 
-      <v-row class="mt-0 pb-0 px-0" style="max-width: 705px">
-        <v-col class="d-flex flex-grow-1 align-center py-0 px-0">
-          <filters
-            ref="filterRef"
-            :search-text="searchStore.query"
-            @search="search"
-          ></filters>
+            <v-btn
+              @click="toggleFilters"
+              color="primary"
+              variant="elevated"
+              icon="mdi-filter"
+              class="ml-2 mb-6 filters-btn"
+              size="default"
+            ></v-btn>
+          </div>
+
+          <div v-if="showFilters" class="mt-0">
+            <filters
+              ref="filterRef"
+              :search-text="searchStore.query"
+              @search="search"
+            ></filters>
+          </div>
         </v-col>
       </v-row>
 
@@ -94,6 +104,11 @@ useHead({
 
 const filterRef: any = ref(null);
 const searching = ref(false);
+const showFilters = ref(false);
+
+function toggleFilters() {
+  showFilters.value = !showFilters.value;
+}
 
 onMounted(async () => {
   // Check if we have query parameters to perform a search
@@ -140,13 +155,10 @@ async function search() {
 }
 
 async function performSearch() {
-  filterRef.value?.closePanel();
+  showFilters.value = false; // Close filters on search
   searching.value = true;
   try {
     await searchStore.search(chipSelectedIndex.value);
-    if (searchStore.results.length == 0) {
-      router.push('/');
-    }
   } catch (error) {
     console.error('Search failed:', error);
   }
@@ -250,4 +262,10 @@ async function performSearch() {
   font-size: 1.5rem
   display: flex
   flex-direction: column
+
+.filters-btn
+  width: 40px
+  height: 56px
+  border-radius: 4px
+  margin-left: 12px
 </style>

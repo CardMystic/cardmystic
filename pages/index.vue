@@ -32,31 +32,48 @@
 
       <!-- Search bar and filters -->
       <div style="max-width: 768px">
-        <v-text-field
-          v-if="chipSelectedIndex !== 2"
-          v-model="searchStore.query"
-          label="Search..."
-          variant="solo"
-          elevation="5"
-          @keyup.enter="search"
-          :loading="searching"
-          prepend-inner-icon="mdi-magnify"
-        ></v-text-field>
+        <div class="d-flex align-center">
+          <v-text-field
+            v-if="chipSelectedIndex !== 2"
+            v-model="searchStore.query"
+            label="Search..."
+            variant="solo"
+            elevation="5"
+            @keyup.enter="search"
+            :loading="searching"
+            prepend-inner-icon="mdi-magnify"
+            class="flex-grow-1"
+          ></v-text-field>
 
-        <v-file-input
-          v-else
-          v-model="uploadedFile"
-          label="Upload an image"
-          accept="image/*"
-          variant="solo"
-          prepend-icon="mdi-camera"
-        />
-        <filters
-          ref="filterRef"
-          :search-text="searchStore.query"
-          @search="search"
-        ></filters>
-        <ExampleQuery class="mt-6" />
+          <v-file-input
+            v-else
+            v-model="uploadedFile"
+            label="Upload an image"
+            accept="image/*"
+            variant="solo"
+            prepend-icon="mdi-camera"
+            class="flex-grow-1"
+          />
+
+          <v-btn
+            @click="toggleFilters"
+            color="primary"
+            variant="elevated"
+            icon="mdi-filter"
+            class="ml-2 mb-6 filters-btn"
+            size="default"
+          ></v-btn>
+        </div>
+
+        <div v-if="showFilters" class="mt-0">
+          <filters
+            ref="filterRef"
+            :search-text="searchStore.query"
+            @search="search"
+          ></filters>
+        </div>
+
+        <ExampleQuery class="mt-0" />
       </div>
     </v-col>
   </v-container>
@@ -113,9 +130,15 @@ onMounted(() => {
 
 const filterRef: any = ref(null);
 const searching = ref(false);
+const showFilters = ref(false);
+
+function toggleFilters() {
+  showFilters.value = !showFilters.value;
+}
 
 async function search() {
   filterRef.value?.closePanel();
+  showFilters.value = false; // Hide filters when searching
 
   // Navigate to search page with query parameters
   const queryParams: any = {
@@ -271,4 +294,10 @@ async function search() {
   50%
     opacity: 1
     transform: translate(-50%, -50%) scale(1.5)
+
+.filters-btn
+  width: 40px
+  height: 56px
+  border-radius: 4px
+  margin-left: 12px
 </style>
