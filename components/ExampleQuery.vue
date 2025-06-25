@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import type { ICardResult, IColbertResponse } from '~/types/IColbert';
+import type { ICardResult } from '~/types/IColbert';
 
 const router = useRouter();
 
@@ -88,7 +88,7 @@ const exampleQueries = [
   'low cost sultai commanders',
   'finishers for a mono white tokens deck',
   'golgari elves that draw',
-  'five color dragon for commander',
+  'five color dragon commander',
   'mono red burn spells',
   'creatures that come back from the graveyard',
 ];
@@ -115,7 +115,7 @@ async function loadRandomExample() {
     const randomIndex = Math.floor(Math.random() * exampleQueries.length);
     currentQuery.value = exampleQueries[randomIndex];
     // Perform search using the colbert endpoint (index 0)
-    const response = await fetch('/api/proxy/colbert/vector_search', {
+    const response = await fetch('/api/proxy/search/colbert', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -123,6 +123,8 @@ async function loadRandomExample() {
       body: JSON.stringify({
         query: currentQuery.value,
         limit: 80,
+        filters: {},
+        exclude_card_data: false,
       }),
     });
 
@@ -130,9 +132,9 @@ async function loadRandomExample() {
       throw new Error('Failed to fetch example results');
     }
 
-    const data: IColbertResponse = await response.json();
-    if (data?.results && data.results.length > 0) {
-      results.value = data.results.slice(0, 20); // Ensure we only have 10 results
+    const data: ICardResult[] = await response.json();
+    if (data && data.length > 0) {
+      results.value = data.slice(0, 20); // Ensure we only have 10 results
       // Restart scrolling after loading new results
       setTimeout(() => {
         startAutoScroll();

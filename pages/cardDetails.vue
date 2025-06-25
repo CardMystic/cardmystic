@@ -283,15 +283,12 @@ onMounted(async () => {
 
   loading.value = true;
   try {
-    const response = await fetch(
-      `/api/proxy/scryfall/card_search?id=${cardId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`/api/proxy/cards/${cardId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    );
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch card data');
     }

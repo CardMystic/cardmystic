@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { IMagicCardsSearchFilters } from '~/types/IModelGateway';
-import type { IColbertResponse, ICardResult } from '~/types/IColbert';
+import type { ICardResult } from '~/types/IColbert';
 
 export const useSearchStore = defineStore('search', () => {
   const query = ref('');
@@ -39,7 +39,7 @@ export const useSearchStore = defineStore('search', () => {
     {
       name: 'A.I.',
       tooltip: 'Search by Meaning using AI',
-      endpoint: '/colbert/vector_search',
+      endpoint: '/search/colbert',
     },
     {
       name: 'Keyword',
@@ -89,11 +89,11 @@ export const useSearchStore = defineStore('search', () => {
       });
     }
 
-    const data: IColbertResponse = await response.json();
+    const data: ICardResult[] = await response.json();
     console.log('results', data);
 
-    if (data?.results && data.results.length > 0) {
-      results.value = data.results;
+    if (data && data.length > 0) {
+      results.value = data;
       loading.value = false;
     } else {
       results.value = [];
