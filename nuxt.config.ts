@@ -1,4 +1,4 @@
-import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
+import tailwindcss from '@tailwindcss/vite';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -20,21 +20,20 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+  css: ['~/assets/css/tailwind.css'],
   devServer: {
     port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
   },
   build: {
-    transpile: ['vuetify'],
   },
   modules: [
     '@pinia/nuxt',
-    (_options, nuxt) => {
-      nuxt.hooks.hook('vite:extendConfig', (config) => {
-        // @ts-expect-error
-        config.plugins.push(vuetify({ autoImport: true }));
-      });
-    },
+    'shadcn-nuxt',
   ],
+  shadcn: {
+    prefix: '',
+    componentDir: './components/ui'
+  },
   vite: {
     server: {
       watch: {
@@ -42,10 +41,8 @@ export default defineNuxtConfig({
         interval: 100,
       },
     },
-    vue: {
-      template: {
-        transformAssetUrls,
-      },
-    },
+    plugins: [
+      tailwindcss(),
+    ]
   },
 });

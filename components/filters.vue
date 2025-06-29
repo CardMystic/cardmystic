@@ -260,12 +260,7 @@
 
 <script setup lang="ts">
 import { ref, type Ref, defineExpose } from 'vue';
-import {
-  cardColors,
-  cardTypes,
-  cardRarities,
-  cardFormats,
-} from '@/utils/mtgCommon';
+
 import { useSearchStore } from '~/stores/searchStore';
 import { storeToRefs } from 'pinia';
 

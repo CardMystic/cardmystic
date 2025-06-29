@@ -1,19 +1,11 @@
 <template>
-  <div>
-    <Analytics></Analytics>
-    <v-app class="gradient-background">
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
-    </v-app>
-  </div>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
 
 <style lang="sass" scoped>
-.gradient-background
-  min-height: 100vh !important
 </style>
 
 <script setup lang="ts">
-import { Analytics } from '@vercel/analytics/nuxt';
 </script>
