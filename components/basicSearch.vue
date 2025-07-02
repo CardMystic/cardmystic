@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 
 const props = defineProps({
@@ -110,7 +110,24 @@ const searchStore = useSearchStore();
 // Chip Selector component
 const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);
 const chipSelectorTooltips = searchStore.endpoints.map((e: any) => e.tooltip);
-const chipSelectedIndex = ref(0);
+// Use the store's selectedChipIndex and ensure it defaults to 0
+const chipSelectedIndex = computed({
+  get: () => searchStore.selectedChipIndex,
+  set: (value: number) => {
+    searchStore.selectedChipIndex = value;
+    emit('update:chipSelectedIndex', value);
+  },
+});
+
+// Ensure the store starts with AI search selected
+onMounted(() => {
+  if (
+    searchStore.selectedChipIndex === undefined ||
+    searchStore.selectedChipIndex === null
+  ) {
+    searchStore.selectedChipIndex = 0; // Default to AI search
+  }
+});
 
 // File upload
 const uploadedFile = ref<File | null>(null);
@@ -141,13 +158,16 @@ watch(uploadedFile, (file) => {
   }
 });
 
-watch(chipSelectedIndex, (newValue) => {
-  if (newValue !== 1) {
-    autocompleteItems.value = [];
-    autocompleteSearch.value = '';
-  }
-  emit('update:chipSelectedIndex', newValue);
-});
+// Clear autocomplete when switching away from similar search
+watch(
+  () => searchStore.selectedChipIndex,
+  (newValue) => {
+    if (newValue !== 1) {
+      autocompleteItems.value = [];
+      autocompleteSearch.value = '';
+    }
+  },
+);
 
 function toggleFilters() {
   showFilters.value = !showFilters.value;
@@ -218,7 +238,7 @@ async function fetchAutocompleteResults(query: string) {
 // Expose methods that parent components might need
 defineExpose({
   setChipIndex: (index: number) => {
-    chipSelectedIndex.value = index;
+    searchStore.selectedChipIndex = index;
   },
 });
 </script>

@@ -30,7 +30,6 @@
         :is-home-page="true"
         :searching="searching"
         @search="search"
-        @update:chipSelectedIndex="chipSelectedIndex = $event"
       />
 
       <!-- Example Query -->
@@ -52,7 +51,7 @@ const router = useRouter();
 const searchStore = useSearchStore();
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
-const chipSelectedIndex = ref(0);
+// Remove local chipSelectedIndex, use store instead
 const searching = ref(false);
 const basicSearchRef = ref();
 
@@ -80,6 +79,9 @@ onMounted(() => {
 });
 
 async function search(selectedIndex: number) {
+  // Update store with selected index
+  searchStore.selectedChipIndex = selectedIndex;
+
   // Navigate to search page with query parameters
   const queryParams: any = {
     q: searchStore.query,

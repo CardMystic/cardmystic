@@ -9,7 +9,6 @@
         :is-home-page="false"
         :searching="searching"
         @search="search"
-        @update:chipSelectedIndex="chipSelectedIndex = $event"
       />
 
       <!-- Results -->
@@ -61,7 +60,6 @@ const router = useRouter();
 const route = useRoute();
 
 const searchStore = useSearchStore();
-const chipSelectedIndex = ref(0);
 const searching = ref(false);
 const basicSearchRef = ref();
 const showFilters = ref(false);
@@ -85,9 +83,9 @@ onMounted(async () => {
   const hasImage = route.query.hasImage === 'true';
 
   if (query || hasImage) {
-    // Set the search parameters
+    // Set the search parameters and update store
     searchStore.query = query || '';
-    chipSelectedIndex.value = endpoint;
+    searchStore.selectedChipIndex = endpoint;
 
     // Set the chip index in the BasicSearch component
     basicSearchRef.value?.setChipIndex(endpoint);
@@ -108,6 +106,9 @@ onMounted(async () => {
 });
 
 async function search(selectedIndex: number) {
+  // Update store with selected index
+  searchStore.selectedChipIndex = selectedIndex;
+
   // Update URL with new search parameters
   const queryParams: any = {
     q: searchStore.query,
@@ -127,7 +128,7 @@ async function search(selectedIndex: number) {
 async function performSearch() {
   searching.value = true;
   try {
-    await searchStore.search(chipSelectedIndex.value);
+    await searchStore.search(searchStore.selectedChipIndex);
   } catch (error) {
     console.error('Search failed:', error);
   }

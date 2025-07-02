@@ -58,6 +58,9 @@ export const useSearchStore = defineStore('search', () => {
     // },
   ];
 
+  // Set selectedChipIndex to 0 (AI search) by default
+  const selectedChipIndex = ref(0);
+
   function clearFilters() {
     // Reset all filters to their default values
     filters.value = {
@@ -84,6 +87,7 @@ export const useSearchStore = defineStore('search', () => {
       selectedToughness: '',
       selectedCardFormats: [],
     };
+    // Don't reset selectedChipIndex when clearing filters
   }
 
   const search = async (selectedIndex: number): Promise<void> => {
@@ -188,5 +192,6 @@ export const useSearchStore = defineStore('search', () => {
     results,
     loading,
     filters,
+    selectedChipIndex,
   };
 });
