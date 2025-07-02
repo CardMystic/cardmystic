@@ -142,8 +142,6 @@ async function loadRandomExample() {
     }
   } catch (error) {
     console.error('Failed to load example:', error);
-    // If this fails, try another query
-    setTimeout(() => loadRandomExample(), 2000);
   } finally {
     loading.value = false;
   }
