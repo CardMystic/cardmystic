@@ -1,7 +1,7 @@
 <template>
   <div>
     <Analytics></Analytics>
-    <v-app class="gradient-background">
+    <v-app>
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>

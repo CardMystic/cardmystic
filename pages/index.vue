@@ -1,11 +1,7 @@
 <template>
   <navbar></navbar>
   <v-container
-    class="fill-height d-flex"
-    :class="{
-      'align-center': $vuetify.display.mdAndUp,
-      'align-start': $vuetify.display.mdAndDown,
-    }"
+    class="fill-height d-flex responsive-align"
     style="padding-top: 0px"
   >
     <v-col class="col-container px-0">
@@ -36,10 +32,10 @@
       />
 
       <!-- Example Query -->
-      <ExampleQuery class="mt-4" style="max-width: 768px" />
+      <ExampleQuery class="mt-0" style="max-width: 768px" />
 
       <!-- Top Queries -->
-      <TopQueries class="mt-4" style="max-width: 768px" />
+      <TopQueries class="mt-6" style="max-width: 768px" />
     </v-col>
   </v-container>
 
@@ -92,11 +88,6 @@ async function search(selectedIndex: number) {
     filters: JSON.stringify(searchStore.filters),
   };
 
-  // If image file is selected, we'll handle it differently
-  if (selectedIndex === 2 && searchStore.imageFile) {
-    queryParams.hasImage = 'true';
-  }
-
   router.push({
     name: 'search',
     query: queryParams,
@@ -105,6 +96,12 @@ async function search(selectedIndex: number) {
 </script>
 
 <style lang="sass" scoped>
+.responsive-align
+  align-items: flex-start
+
+  @media (min-width: 960px)
+    align-items: center
+
 .title::after
   content: '|'
   animation: blink 3s infinite
