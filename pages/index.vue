@@ -1,7 +1,8 @@
 <template>
   <navbar></navbar>
   <v-container
-    class="fill-height d-flex align-start justify-center"
+    class="fill-height d-flex"
+    :class="{ 'align-start': $vuetify.display.mdAndDown }"
     style="padding-top: 0px"
   >
     <v-col class="col-container px-0">
