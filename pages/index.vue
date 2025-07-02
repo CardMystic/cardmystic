@@ -1,10 +1,10 @@
 <template>
   <navbar></navbar>
   <v-container
-    class="fill-height container d-flex align-center justify-center"
-    style="padding-top: 0"
+    class="fill-height d-flex align-start justify-center"
+    style="padding-top: 0px"
   >
-    <v-col justify="center" align="center" class="col-container px-0">
+    <v-col class="col-container px-0">
       <!-- Header with image and title side by side -->
       <div class="header-layout">
         <div class="glow-wrapper">
@@ -153,6 +153,7 @@ async function search(selectedIndex: number) {
     min-width: 0px
     align-items: center
     text-align: center
+    right: 0px
 
 .title
   font-family: "Alfa Slab One", serif

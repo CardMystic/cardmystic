@@ -28,12 +28,11 @@
           ></v-btn>
           <v-btn
             color="primary"
-            variant="elevated"
-            prepend-icon="mdi-magnify"
+            variant="outlined"
             @click="tryQuery"
             class="try-button"
           >
-            TRY IT!
+            TRY
           </v-btn>
         </div>
       </div>
@@ -310,10 +309,10 @@ function goToCard(cardId: string) {
   flex-shrink: 0
 
 .refresh-button
-  min-width: 40px !important
-  width: 40px !important
-  height: 40px !important
-  border-radius: 50% !important
+  min-width: 30px
+  width: 30px
+  height: 30px
+  border-radius: 50%
 
 .try-button
   flex-shrink: 0
@@ -329,6 +328,8 @@ function goToCard(cardId: string) {
   font-size: 16px
   font-weight: bold
   font-style: italic
+  @media (max-width: 768px)
+    font-size: 12px
 
 .results-container
   width: 100%
