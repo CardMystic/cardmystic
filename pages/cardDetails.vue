@@ -522,7 +522,6 @@ function handleImageError(value: string | undefined) {
 const isDualFaced = computed(() => {
   const isDualFacedCard =
     card.value?.card_faces && card.value.card_faces.length >= 2;
-  console.log('isDualFacedCard:', isDualFacedCard);
   return isDualFacedCard;
 });
 

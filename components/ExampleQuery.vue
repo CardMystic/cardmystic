@@ -148,7 +148,6 @@ async function loadRandomExample() {
 
 function startAutoScroll() {
   if (!scrollContainer.value || results.value.length === 0) {
-    console.log('Cannot start scroll: container or results missing');
     return;
   }
 

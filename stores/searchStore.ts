@@ -96,7 +96,6 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     loading.value = true;
-    console.log('searching', loading.value);
 
     const endpoint = endpoints[endpointIndex];
     if (!endpoint) {
@@ -147,8 +146,6 @@ export const useSearchStore = defineStore('search', () => {
         };
       }
 
-      console.log('body', body);
-
       // Handle text-based searches - cache these
       const response = await fetch(`/api/proxy${endpoint.url}`, {
         method: 'POST',
@@ -178,12 +175,6 @@ export const useSearchStore = defineStore('search', () => {
           results.value,
         );
         // Trigger the "Query Cached" indicator
-        console.log(
-          'Store: Incrementing queryCachedTriggered from',
-          queryCachedTriggered.value,
-          'to',
-          queryCachedTriggered.value + 1,
-        );
         queryCachedTriggered.value++;
         loading.value = false;
       } else if (results.value.length === 0) {

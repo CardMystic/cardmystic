@@ -31,17 +31,11 @@ onMounted(() => {
 watch(
   () => searchStore.cacheHitTriggered,
   (newValue, oldValue) => {
-    console.log(
-      'CacheIndicator: cacheHitTriggered changed',
-      newValue,
-      oldValue,
-    );
     if (mounted.value && newValue > oldValue) {
       indicatorText.value = 'Used Cached Query';
       indicatorColor.value = 'success';
       indicatorIcon.value = 'mdi-lightning-bolt';
       showIndicator.value = true;
-      console.log('CacheIndicator: Showing "Used Cached Query"');
       setTimeout(() => {
         showIndicator.value = false;
       }, 3000);
@@ -53,17 +47,11 @@ watch(
 watch(
   () => searchStore.queryCachedTriggered,
   (newValue, oldValue) => {
-    console.log(
-      'CacheIndicator: queryCachedTriggered changed',
-      newValue,
-      oldValue,
-    );
     if (mounted.value && newValue > oldValue) {
       indicatorText.value = 'Query Cached';
       indicatorColor.value = 'info';
       indicatorIcon.value = 'mdi-refresh';
       showIndicator.value = true;
-      console.log('CacheIndicator: Showing "Query Cached"');
       setTimeout(() => {
         showIndicator.value = false;
       }, 3000);
