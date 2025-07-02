@@ -122,12 +122,28 @@ export const useSearchStore = defineStore('search', () => {
     );
 
     try {
-      const body: any = {
-        query: query.value,
-        limit: 80,
-        filters: filters.value,
-        exclude_card_data: false,
-      };
+      let body: any;
+
+      // Different body format for similarity search vs other searches
+      if (endpointIndex === 1) {
+        // Similar Search
+        body = {
+          card_name: query.value,
+          limit: 80,
+          filters: filters.value,
+          exclude_card_data: false,
+        };
+      } else {
+        // A.I. Search and others
+        body = {
+          query: query.value,
+          limit: 80,
+          filters: filters.value,
+          exclude_card_data: false,
+        };
+      }
+
+      console.log('body', body);
 
       // Handle text-based searches - cache these
       const response = await fetch(`/api/proxy${endpoint.url}`, {
@@ -191,6 +207,23 @@ export const useSearchStore = defineStore('search', () => {
     };
   }
 
+  function findSimilarCards(cardName: string) {
+    // Clear filters for clean similarity search
+    clearFilters();
+
+    // Set the query to the card name
+    query.value = cardName;
+
+    // Set to Similar Search endpoint (index 1)
+    selectedChipIndex.value = 1;
+
+    return {
+      q: cardName,
+      endpoint: 1,
+      filters: JSON.stringify(filters.value),
+    };
+  }
+
   return {
     clearFilters,
     search,
@@ -205,5 +238,6 @@ export const useSearchStore = defineStore('search', () => {
     lastResultsFromCache,
     cacheHitTriggered,
     queryCachedTriggered,
+    findSimilarCards,
   };
 });
