@@ -19,6 +19,7 @@
           :loading="autocompleteLoading"
           :search="autocompleteSearch"
           @update:search="onAutocompleteSearch"
+          @update:modelValue="onAutocompleteSelection"
           @blur="onAutocompleteBlur"
           label="Search for a card..."
           variant="solo"
@@ -177,6 +178,14 @@ function onAutocompleteSearch(query: string) {
   } else {
     // Clear items but don't show loading for short queries
     autocompleteItems.value = [];
+  }
+}
+
+function onAutocompleteSelection(value: string) {
+  if (value && value !== lastTypedValue.value) {
+    searchStore.query = value;
+    // Automatically run search when user selects from autocomplete
+    handleSearch();
   }
 }
 
