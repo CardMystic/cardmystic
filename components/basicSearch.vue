@@ -3,16 +3,18 @@
     <!-- Cache Indicator -->
     <CacheIndicator />
 
-    <!-- Cached Searches Button -->
-    <CachedSearchesButton />
+    <!-- Header with Chip Selector and Cached Searches Button -->
+    <div class="search-header">
+      <ChipSelector
+        class="chip-selector"
+        :options="chipSelectorOptions"
+        :tooltips="chipSelectorTooltips"
+        :selected-index="chipSelectedIndex"
+        @update:selectedIndex="chipSelectedIndex = $event"
+      />
 
-    <ChipSelector
-      class="chip-selector"
-      :options="chipSelectorOptions"
-      :tooltips="chipSelectorTooltips"
-      :selected-index="chipSelectedIndex"
-      @update:selectedIndex="chipSelectedIndex = $event"
-    />
+      <CachedSearchesButton />
+    </div>
 
     <!-- Search bar and filters -->
     <div class="search-section" :style="{ maxWidth: maxWidth }">
@@ -227,9 +229,21 @@ defineExpose({
   flex-direction: column
   align-items: center
 
+.search-header
+  display: flex
+  justify-content: space-between
+  align-items: center
+  width: 100%
+  max-width: 1096px
+  margin-bottom: 20px
+
+  @media (max-width: 768px)
+    flex-direction: column
+    gap: 12px
+    align-items: center
+
 .chip-selector
   position: relative
-  margin-bottom: 20px
 
 .search-section
   width: 100%

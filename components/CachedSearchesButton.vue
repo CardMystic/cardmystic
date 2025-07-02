@@ -1,5 +1,5 @@
 <template>
-  <div class="cached-searches-button">
+  <div>
     <v-menu
       v-model="menuOpen"
       :close-on-content-click="false"
@@ -162,9 +162,7 @@ function clearAllCache() {
 
 <style scoped lang="sass">
 .cached-searches-button
-  position: fixed
-  top: 20px
-  right: 20px
+  position: relative
   z-index: 1500
 
 .cached-btn

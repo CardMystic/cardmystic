@@ -23,13 +23,13 @@
       </div>
 
       <!-- Basic Search Component -->
-      <BasicSearch ref="basicSearchRef" max-width="768px" @search="search" />
+      <BasicSearch ref="basicSearchRef" max-width="1096px" @search="search" />
 
       <!-- Example Query -->
-      <ExampleQuery class="mt-0" style="max-width: 768px" />
+      <ExampleQuery class="mt-0" style="max-width: 1096px" />
 
       <!-- Top Queries -->
-      <TopQueries class="mt-6" style="max-width: 768px" />
+      <TopQueries class="mt-6" style="max-width: 1096px" />
     </v-col>
   </v-container>
 

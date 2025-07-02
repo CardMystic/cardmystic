@@ -3,7 +3,7 @@
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
       <!-- Basic Search Component -->
-      <BasicSearch ref="basicSearchRef" max-width="705px" @search="search" />
+      <BasicSearch ref="basicSearchRef" max-width="1086px" @search="search" />
 
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
