@@ -34,6 +34,9 @@
 
       <!-- Example Query -->
       <ExampleQuery class="mt-4" style="max-width: 768px" />
+
+      <!-- Top Queries -->
+      <TopQueries class="mt-4" style="max-width: 768px" />
     </v-col>
   </v-container>
 
