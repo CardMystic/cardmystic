@@ -3,6 +3,9 @@
     <!-- Cache Indicator -->
     <CacheIndicator />
 
+    <!-- Cached Searches Button -->
+    <CachedSearchesButton />
+
     <ChipSelector
       class="chip-selector"
       :options="chipSelectorOptions"

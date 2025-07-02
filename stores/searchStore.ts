@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { IMagicCardsSearchFilters } from '~/types/IModelGateway';
 import type { ICardResult } from '~/types/IColbert';
-import { searchCache } from '~/utils/searchCache';
+import { useCacheStore } from './cacheStore';
 
 export const useSearchStore = defineStore('search', () => {
   const query = ref('');
@@ -96,6 +96,7 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     loading.value = true;
+    const cacheStore = useCacheStore();
 
     const endpoint = endpoints[endpointIndex];
     if (!endpoint) {
@@ -104,7 +105,7 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     // Check cache first for text-based searches
-    const cachedResults = searchCache.get(
+    const cachedResults = cacheStore.get(
       query.value,
       endpointIndex,
       filters.value,
@@ -169,7 +170,7 @@ export const useSearchStore = defineStore('search', () => {
         console.log(
           `CACHED: "${query.value}" (${endpoint.name}) - ${results.value.length} results stored in memory`,
         );
-        searchCache.set(
+        cacheStore.set(
           query.value,
           endpointIndex,
           filters.value,
@@ -195,14 +196,16 @@ export const useSearchStore = defineStore('search', () => {
   }
 
   function clearCache() {
-    searchCache.clear();
+    const cacheStore = useCacheStore();
+    cacheStore.clear();
   }
 
   function getCacheInfo() {
+    const cacheStore = useCacheStore();
     return {
-      size: searchCache.getCacheSize(),
-      entries: searchCache.getCacheInfo(),
-      stats: searchCache.getStats(),
+      size: cacheStore.cacheSize,
+      entries: cacheStore.cacheEntries,
+      stats: cacheStore.cacheStats,
     };
   }
 
