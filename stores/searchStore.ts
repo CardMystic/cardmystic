@@ -46,16 +46,16 @@ export const useSearchStore = defineStore('search', () => {
       tooltip: 'Search For Similar Cards',
       endpoint: '/search/similarity',
     },
-    {
-      name: 'Keyword',
-      tooltip: 'Traditional Keyword Search',
-      endpoint: '/keyword_search',
-    },
-    {
-      name: 'Image',
-      tooltip: 'Search by Image using AI',
-      endpoint: '/image_search',
-    },
+    // {
+    //   name: 'Keyword',
+    //   tooltip: 'Traditional Keyword Search',
+    //   endpoint: '/keyword_search',
+    // },
+    // {
+    //   name: 'Image',
+    //   tooltip: 'Search by Image using AI',
+    //   endpoint: '/image_search',
+    // },
   ];
 
   function clearFilters() {
