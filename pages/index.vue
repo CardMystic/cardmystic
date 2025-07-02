@@ -207,7 +207,7 @@ async function search(selectedIndex: number) {
   content: ''
   position: absolute
   top: 50%
-  left: 56%
+  left: 50%
   width: 50px
   height: 50px
   background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0) 70%, rgba(147,114,255,0) 100%)
