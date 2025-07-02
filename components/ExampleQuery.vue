@@ -245,7 +245,7 @@ function tryQuery() {
     name: 'search',
     query: {
       q: currentQuery.value,
-      endpoint: 0, // Vector search endpoint
+      endpoint: 0, // A.I. search endpoint (not similar search)
       filters: JSON.stringify({
         selectedCardTypes: [],
         selectedColorFilterOption: 'Contains At Most',
