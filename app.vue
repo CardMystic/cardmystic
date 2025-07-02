@@ -1,7 +1,7 @@
 <template>
   <div>
     <Analytics></Analytics>
-    <v-app>
+    <v-app class="gradient-background">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
@@ -9,7 +9,11 @@
   </div>
 </template>
 
-<style lang="sass"></style>
+<style lang="sass">
+// Override Vuetify's default v-main padding
+.v-main
+  padding-top: 64px !important
+</style>
 
 <script setup lang="ts">
 import { Analytics } from '@vercel/analytics/nuxt';
