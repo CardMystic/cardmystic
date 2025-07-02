@@ -46,6 +46,13 @@
           an independent project and is not affiliated with or endorsed by
           Wizards of the Coast.
         </p>
+        <p class="disclaimer-text mt-2">
+          Card prices are estimates provided by Scryfall and are not guaranteed
+          to be accurate. See stores for official prices.
+        </p>
+        <p class="disclaimer-text mt-2">
+          All other content © 2023 Fiasco Games LLC
+        </p>
       </div>
     </v-container>
   </v-footer>
