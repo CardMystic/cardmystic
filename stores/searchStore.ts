@@ -99,6 +99,7 @@ export const useSearchStore = defineStore('search', () => {
 
     const endpoint = endpoints[endpointIndex];
     if (!endpoint) {
+      loading.value = false;
       throw new Error('Invalid endpoint index');
     }
 
@@ -176,12 +177,10 @@ export const useSearchStore = defineStore('search', () => {
         );
         // Trigger the "Query Cached" indicator
         queryCachedTriggered.value++;
-        loading.value = false;
       } else if (results.value.length === 0) {
         console.log(
           `NO RESULTS: "${query.value}" (${endpoint.name}) - query returned no results`,
         );
-        loading.value = false;
       }
     } catch (error) {
       console.error(
@@ -189,10 +188,10 @@ export const useSearchStore = defineStore('search', () => {
         error,
       );
       results.value = [];
-      loading.value = false;
       throw error;
+    } finally {
+      loading.value = false;
     }
-    loading.value = false;
   }
 
   function clearCache() {
