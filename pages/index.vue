@@ -23,13 +23,7 @@
       </div>
 
       <!-- Basic Search Component -->
-      <BasicSearch
-        ref="basicSearchRef"
-        max-width="768px"
-        :is-home-page="true"
-        :searching="searching"
-        @search="search"
-      />
+      <BasicSearch ref="basicSearchRef" max-width="768px" @search="search" />
 
       <!-- Example Query -->
       <ExampleQuery class="mt-0" style="max-width: 768px" />
@@ -50,8 +44,7 @@ const router = useRouter();
 const searchStore = useSearchStore();
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
-// Remove local chipSelectedIndex, use store instead
-const searching = ref(false);
+const { loading } = storeToRefs(searchStore);
 const basicSearchRef = ref();
 
 useHead({

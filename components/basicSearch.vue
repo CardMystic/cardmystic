@@ -19,7 +19,7 @@
           v-if="chipSelectedIndex === 1"
           v-model="searchStore.query"
           :items="autocompleteItems"
-          :loading="autocompleteLoading"
+          :loading="loading"
           :search="autocompleteSearch"
           @update:search="onAutocompleteSearch"
           @update:modelValue="onAutocompleteSelection"
@@ -45,7 +45,7 @@
           variant="solo"
           elevation="5"
           @keyup.enter="handleSearch"
-          :loading="searching"
+          :loading="loading"
           prepend-inner-icon="mdi-magnify"
           class="flex-grow-1"
           :clearable="!!searchStore.query"
@@ -85,19 +85,12 @@ const props = defineProps({
     type: String,
     default: '705px',
   },
-  isHomePage: {
-    type: Boolean,
-    default: false,
-  },
-  searching: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 const emit = defineEmits(['search', 'update:chipSelectedIndex']);
 
 const searchStore = useSearchStore();
+const { loading } = storeToRefs(searchStore);
 
 // Chip Selector component
 const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);

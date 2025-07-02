@@ -3,13 +3,7 @@
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
       <!-- Basic Search Component -->
-      <BasicSearch
-        ref="basicSearchRef"
-        max-width="705px"
-        :is-home-page="false"
-        :searching="searching"
-        @search="search"
-      />
+      <BasicSearch ref="basicSearchRef" max-width="705px" @search="search" />
 
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
@@ -102,7 +96,7 @@ const router = useRouter();
 const route = useRoute();
 
 const searchStore = useSearchStore();
-const searching = ref(false);
+const { loading } = storeToRefs(searchStore);
 const basicSearchRef = ref();
 const showFilters = ref(false);
 const showCacheStats = ref(false);
@@ -169,13 +163,11 @@ async function search(selectedIndex: number) {
 }
 
 async function performSearch() {
-  searching.value = true;
   try {
     await searchStore.search(searchStore.selectedChipIndex);
   } catch (error) {
     console.error('Search failed:', error);
   }
-  searching.value = false;
 }
 
 function toggleFilters() {
