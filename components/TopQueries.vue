@@ -1,5 +1,5 @@
 <template>
-  <div class="top-queries-container mt-12">
+  <div class="top-queries-container">
     <div v-if="loading" class="text-center py-4">
       <v-progress-circular
         indeterminate

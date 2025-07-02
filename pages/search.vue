@@ -13,6 +13,49 @@
 
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
+        <!-- Cache Stats (development only) -->
+        <div v-if="showCacheStats" class="cache-stats mb-4">
+          <v-card class="cache-stats-card" elevation="2">
+            <div class="cache-stats-header">
+              <v-icon class="mr-2" color="info">mdi-database</v-icon>
+              <span class="cache-stats-title">Cache Stats</span>
+              <v-btn
+                @click="showCacheStats = false"
+                icon="mdi-close"
+                size="x-small"
+                variant="text"
+                class="ml-auto"
+              ></v-btn>
+            </div>
+            <div class="cache-stats-content">
+              <div class="cache-stat">
+                <span class="stat-label">Cached Queries:</span>
+                <span class="stat-value">{{ cacheInfo.size }}</span>
+              </div>
+              <div class="cache-stat">
+                <span class="stat-label">Total Results:</span>
+                <span class="stat-value">{{
+                  cacheInfo.stats.totalResults
+                }}</span>
+              </div>
+              <div class="cache-stat">
+                <span class="stat-label">Avg Results:</span>
+                <span class="stat-value">{{ cacheInfo.stats.avgResults }}</span>
+              </div>
+              <v-btn
+                @click="clearCache"
+                color="warning"
+                size="small"
+                variant="outlined"
+                prepend-icon="mdi-delete"
+                class="mt-2"
+              >
+                Clear Cache
+              </v-btn>
+            </div>
+          </v-card>
+        </div>
+
         <template v-if="searchStore.results.length > 0">
           <v-row>
             <v-col
@@ -20,7 +63,6 @@
               v-for="result in searchStore.results"
               :key="result.card_data.id"
             >
-              <!-- TODO: use http GET and query params to go to cardDetails page -->
               <card
                 :card="result"
                 @click="
@@ -54,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 const router = useRouter();
 const route = useRoute();
@@ -63,6 +105,7 @@ const searchStore = useSearchStore();
 const searching = ref(false);
 const basicSearchRef = ref();
 const showFilters = ref(false);
+const showCacheStats = ref(false);
 
 useHead({
   title: 'CardMystic',
@@ -137,6 +180,29 @@ async function performSearch() {
 
 function toggleFilters() {
   showFilters.value = !showFilters.value;
+}
+
+// Computed property for cache info
+const cacheInfo = computed(() => searchStore.getCacheInfo());
+
+// Add keyboard shortcut to show cache stats (development helper)
+onMounted(() => {
+  const handleKeyPress = (event: KeyboardEvent) => {
+    if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+      showCacheStats.value = !showCacheStats.value;
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyPress);
+
+  return () => {
+    window.removeEventListener('keydown', handleKeyPress);
+  };
+});
+
+function clearCache() {
+  searchStore.clearCache();
+  showCacheStats.value = false;
 }
 </script>
 
@@ -242,4 +308,38 @@ function toggleFilters() {
   height: 56px
   border-radius: 4px
   margin-left: 12px
+
+.cache-stats-card
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
+  border: 1px solid rgba(33, 150, 243, 0.3) !important
+  border-radius: 12px !important
+  padding: 16px !important
+
+.cache-stats-header
+  display: flex
+  align-items: center
+  margin-bottom: 12px
+
+.cache-stats-title
+  color: white
+  font-size: 1.1rem
+  font-weight: 600
+
+.cache-stats-content
+  display: flex
+  flex-direction: column
+  gap: 8px
+
+.cache-stat
+  display: flex
+  justify-content: space-between
+  align-items: center
+
+.stat-label
+  color: rgba(255, 255, 255, 0.8)
+  font-size: 0.9rem
+
+.stat-value
+  color: rgb(var(--v-theme-primary))
+  font-weight: 600
 </style>

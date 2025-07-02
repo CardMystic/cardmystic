@@ -1,5 +1,8 @@
 <template>
   <div class="basic-search-container">
+    <!-- Cache Indicator -->
+    <CacheIndicator />
+
     <ChipSelector
       class="chip-selector"
       :options="chipSelectorOptions"
@@ -36,7 +39,7 @@
 
         <!-- Regular text field for other search types -->
         <v-text-field
-          v-else-if="chipSelectedIndex !== 2"
+          v-else
           v-model="searchStore.query"
           label="Search..."
           variant="solo"
@@ -47,17 +50,6 @@
           class="flex-grow-1"
           :clearable="!!searchStore.query"
         ></v-text-field>
-
-        <!-- File input for image search -->
-        <v-file-input
-          v-else
-          v-model="uploadedFile"
-          label="Upload an image"
-          accept="image/*"
-          variant="solo"
-          prepend-icon="mdi-camera"
-          class="flex-grow-1"
-        />
 
         <v-btn
           @click="toggleFilters"
@@ -129,9 +121,6 @@ onMounted(() => {
   }
 });
 
-// File upload
-const uploadedFile = ref<File | null>(null);
-
 // Filters
 const filterRef: any = ref(null);
 const showFilters = ref(false);
@@ -149,14 +138,6 @@ function getNoDataText() {
   }
   return 'No cards found';
 }
-
-watch(uploadedFile, (file) => {
-  if (file) {
-    searchStore.imageFile = file;
-    searchStore.query = '';
-    handleSearch();
-  }
-});
 
 // Clear autocomplete when switching away from similar search
 watch(

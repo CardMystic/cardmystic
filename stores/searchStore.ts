@@ -2,10 +2,10 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { IMagicCardsSearchFilters } from '~/types/IModelGateway';
 import type { ICardResult } from '~/types/IColbert';
+import { searchCache } from '~/utils/searchCache';
 
 export const useSearchStore = defineStore('search', () => {
   const query = ref('');
-  const imageFile = ref<File | null>(null);
   const results: Ref<ICardResult[]> = ref<any[]>([]);
   const loading = ref(false);
 
@@ -39,27 +39,26 @@ export const useSearchStore = defineStore('search', () => {
     {
       name: 'A.I.',
       tooltip: 'Search by Meaning using AI',
-      endpoint: '/search/colbert',
+      url: '/search/colbert',
     },
     {
       name: 'Similar Search',
       tooltip: 'Search For Similar Cards',
-      endpoint: '/search/similarity',
+      url: '/search/similarity',
     },
-    // {
-    //   name: 'Keyword',
-    //   tooltip: 'Traditional Keyword Search',
-    //   endpoint: '/keyword_search',
-    // },
-    // {
-    //   name: 'Image',
-    //   tooltip: 'Search by Image using AI',
-    //   endpoint: '/image_search',
-    // },
   ];
 
   // Set selectedChipIndex to 0 (AI search) by default
   const selectedChipIndex = ref(0);
+
+  // Add a flag to track if results came from cache
+  const lastResultsFromCache = ref(false);
+
+  // Add a reactive property to trigger cache indicator - initialize to avoid hydration mismatch
+  const cacheHitTriggered = ref(0);
+
+  // Add a trigger for when queries are cached
+  const queryCachedTriggered = ref(0);
 
   function clearFilters() {
     // Reset all filters to their default values
@@ -90,108 +89,121 @@ export const useSearchStore = defineStore('search', () => {
     // Don't reset selectedChipIndex when clearing filters
   }
 
-  const search = async (selectedIndex: number): Promise<void> => {
-    loading.value = true;
-    results.value = []; // Clear previous results
-
-    // Route to appropriate search function based on endpoint
-    if (selectedIndex === 1) {
-      await similarSearch();
-    } else {
-      await vectorSearch(selectedIndex);
+  async function search(endpointIndex: number) {
+    if (!query.value) {
+      results.value = [];
+      return;
     }
-  };
 
-  const vectorSearch = async (selectedIndex: number = 0): Promise<void> => {
-    const endpoint = endpoints[selectedIndex].endpoint;
-    const url = '/api/proxy' + endpoint;
+    const endpoint = endpoints[endpointIndex];
+    if (!endpoint) {
+      throw new Error('Invalid endpoint index');
+    }
 
-    console.log('vector search url', url);
-    console.log('filters', filters.value);
+    // Check cache first for text-based searches
+    const cachedResults = searchCache.get(
+      query.value,
+      endpointIndex,
+      filters.value,
+    );
+    if (cachedResults) {
+      console.log(
+        `CACHE HIT: "${query.value}" (${endpoint.name}) - ${cachedResults.length} results served from memory`,
+      );
+      results.value = cachedResults;
+      // Increment cache hit counter to trigger indicator
+      cacheHitTriggered.value++;
+      return;
+    }
 
-    let response;
+    // Log server request
+    console.log(
+      `SERVER REQUEST: "${query.value}" (${endpoint.name}) - fetching from server...`,
+    );
 
-    // If its an image upload, we need to handle the file differently
-    if (endpoint == '/image_search' && imageFile.value) {
-      const formData = new FormData();
-      formData.append('image', imageFile.value);
-      formData.append('filters', JSON.stringify(filters.value));
-      formData.append('limit', '80');
-
-      response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-      });
-    } else {
-      const body = {
+    try {
+      const body: any = {
         query: query.value,
         limit: 80,
         filters: filters.value,
+        exclude_card_data: false,
       };
 
-      console.log('vector search body', body);
-
-      response = await fetch(url, {
+      // Handle text-based searches - cache these
+      const response = await fetch(`/api/proxy${endpoint.url}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(body),
       });
-    }
 
-    const data: ICardResult[] = await response.json();
-    console.log('vector search results', data);
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.statusText}`);
+      }
 
-    if (data && data.length > 0) {
-      results.value = data;
-    } else {
+      const data = await response.json();
+      results.value = data || [];
+
+      // Cache the results for text-based searches
+      if (query.value && results.value.length > 0) {
+        console.log(
+          `CACHED: "${query.value}" (${endpoint.name}) - ${results.value.length} results stored in memory`,
+        );
+        searchCache.set(
+          query.value,
+          endpointIndex,
+          filters.value,
+          results.value,
+        );
+        // Trigger the "Query Cached" indicator
+        console.log(
+          'Store: Incrementing queryCachedTriggered from',
+          queryCachedTriggered.value,
+          'to',
+          queryCachedTriggered.value + 1,
+        );
+        queryCachedTriggered.value++;
+      } else if (results.value.length === 0) {
+        console.log(
+          `NO RESULTS: "${query.value}" (${endpoint.name}) - query returned no results`,
+        );
+      }
+    } catch (error) {
+      console.error(
+        `SEARCH ERROR: "${query.value}" (${endpoint.name}) -`,
+        error,
+      );
       results.value = [];
+      throw error;
     }
+  }
 
-    loading.value = false;
-  };
+  function clearCache() {
+    searchCache.clear();
+  }
 
-  const similarSearch = async (): Promise<void> => {
-    const url = '/api/proxy/search/similarity';
-
-    console.log('similar search url', url);
-
-    const body = {
-      card_name: query.value,
-      limit: 80,
-      filters: filters.value,
+  function getCacheInfo() {
+    return {
+      size: searchCache.getCacheSize(),
+      entries: searchCache.getCacheInfo(),
+      stats: searchCache.getStats(),
     };
-
-    console.log('similar search body', body);
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    const data: ICardResult[] = await response.json();
-    console.log('similar search results', data);
-
-    if (data && data.length > 0) {
-      results.value = data;
-    } else {
-      results.value = [];
-    }
-
-    loading.value = false;
-  };
+  }
 
   return {
     clearFilters,
     search,
-    vectorSearch,
-    similarSearch,
     endpoints,
     query,
-    imageFile,
     results,
     loading,
     filters,
     selectedChipIndex,
+    clearCache,
+    getCacheInfo,
+    lastResultsFromCache,
+    cacheHitTriggered,
+    queryCachedTriggered,
   };
 });

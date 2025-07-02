@@ -1,6 +1,6 @@
 <template>
   <div class="example-query-container">
-    <div v-if="loading" class="text-center py-8">
+    <div v-if="loading" class="text-center">
       <v-progress-circular
         indeterminate
         color="primary"
