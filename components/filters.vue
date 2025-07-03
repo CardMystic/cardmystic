@@ -81,8 +81,9 @@
               v-for="rarity in cardRarities"
               :key="rarity"
               :label="rarity"
-              :value="rarity"
               v-model="filters.selectedRarities[rarity]"
+              :true-value="true"
+              :false-value="false"
               style="white-space: nowrap"
             />
           </div>

@@ -121,7 +121,6 @@ export const useSearchStore = defineStore('search', () => {
       return;
     }
 
-    // Log server request
     console.log(
       `SERVER REQUEST: "${query.value}" (${endpoint.name}) - fetching from server...`,
     );
@@ -139,7 +138,7 @@ export const useSearchStore = defineStore('search', () => {
           exclude_card_data: false,
         };
       } else {
-        // A.I. Search and others
+        // A.I. Search
         body = {
           query: query.value,
           limit: 80,
@@ -148,7 +147,8 @@ export const useSearchStore = defineStore('search', () => {
         };
       }
 
-      // Handle text-based searches - cache these
+      console.log(`SEARCH BODY: ${JSON.stringify(body)}`);
+
       const response = await fetch(`/api/proxy${endpoint.url}`, {
         method: 'POST',
         headers: {

@@ -31,6 +31,7 @@
             variant="outlined"
             @click="tryQuery"
             class="try-button"
+            prepend-icon="mdi-magnify"
           >
             TRY
           </v-btn>

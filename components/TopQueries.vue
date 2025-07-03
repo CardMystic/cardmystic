@@ -15,23 +15,47 @@
         <h3 class="queries-title">Top Searches This Week</h3>
       </div>
 
-      <div class="queries-list">
-        <div
-          v-for="(queryData, index) in topQueries.slice(0, 10)"
-          :key="queryData.query"
-          class="query-item"
-        >
-          <div class="query-rank">#{{ index + 1 }}</div>
-          <div class="query-text">{{ queryData.query }}</div>
-          <v-btn
-            color="primary"
-            variant="outlined"
-            size="small"
-            @click="tryQuery(queryData.query)"
-            class="try-btn"
+      <div class="queries-grid">
+        <div class="queries-column">
+          <div
+            v-for="(queryData, index) in leftColumnQueries"
+            :key="queryData.query"
+            class="query-item"
           >
-            Try
-          </v-btn>
+            <div class="query-rank">#{{ index + 1 }}</div>
+            <div class="query-text">{{ queryData.query }}</div>
+            <v-btn
+              color="primary"
+              variant="outlined"
+              size="small"
+              @click="tryQuery(queryData.query)"
+              prepend-icon="mdi-magnify"
+              class="try-btn"
+            >
+              Try
+            </v-btn>
+          </div>
+        </div>
+
+        <div class="queries-column">
+          <div
+            v-for="(queryData, index) in rightColumnQueries"
+            :key="queryData.query"
+            class="query-item"
+          >
+            <div class="query-rank">#{{ index + 6 }}</div>
+            <div class="query-text">{{ queryData.query }}</div>
+            <v-btn
+              color="primary"
+              variant="outlined"
+              size="small"
+              @click="tryQuery(queryData.query)"
+              prepend-icon="mdi-magnify"
+              class="try-btn"
+            >
+              Try
+            </v-btn>
+          </div>
         </div>
       </div>
     </div>
@@ -44,7 +68,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 interface TopQuery {
   query: string;
@@ -82,6 +107,9 @@ async function fetchTopQueries() {
     loading.value = false;
   }
 }
+
+const leftColumnQueries = computed(() => topQueries.value.slice(0, 5));
+const rightColumnQueries = computed(() => topQueries.value.slice(5, 10));
 
 function tryQuery(query: string) {
   // Navigate to search page with the selected query
@@ -127,7 +155,7 @@ function tryQuery(query: string) {
 
 .top-queries-content
   border-radius: 16px
-  padding: 16px
+  padding: 20px
   backdrop-filter: blur(10px)
   background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
   border: 1px solid rgba(147, 114, 255, 0.2)
@@ -135,15 +163,24 @@ function tryQuery(query: string) {
 .queries-header
   display: flex
   align-items: center
-  margin-bottom: 12px
+  margin-bottom: 16px
 
 .queries-title
   color: white
-  font-size: 1.1rem
+  font-size: 1.3rem
   font-weight: 600
   margin: 0
 
-.queries-list
+.queries-grid
+  display: grid
+  grid-template-columns: 1fr 1fr
+  gap: 16px
+
+  @media (max-width: 768px)
+    grid-template-columns: 1fr
+    gap: 8px
+
+.queries-column
   display: flex
   flex-direction: column
   gap: 8px
@@ -151,36 +188,42 @@ function tryQuery(query: string) {
 .query-item
   display: flex
   align-items: center
-  padding: 8px 12px
-  border-radius: 8px
-  background: rgba(255, 255, 255, 0.05)
-  transition: all 0.2s ease
+  gap: 12px
+  padding: 12px 16px
+  border-radius: 12px
+  background: linear-gradient(135deg, rgba(147, 114, 255, 0.1), rgba(147, 114, 255, 0.05))
+  border: 1px solid rgba(147, 114, 255, 0.2)
+  cursor: pointer
+  transition: all 0.3s ease
 
   &:hover
-    background: rgba(147, 114, 255, 0.1)
-    transform: translateX(2px)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.2), rgba(147, 114, 255, 0.1))
+    border-color: rgba(147, 114, 255, 0.4)
+    transform: translateY(-2px)
+    box-shadow: 0 4px 12px rgba(147, 114, 255, 0.3)
 
 .query-rank
-  color: rgb(var(--v-theme-primary))
-  font-weight: bold
-  font-size: 0.9rem
-  min-width: 24px
-  margin-right: 12px
+  display: flex
+  align-items: center
+  justify-content: center
+  width: 24px
+  height: 24px
+  border-radius: 50%
+  background-color: black
+  color: white
+  font-size: 12px
+  font-weight: 600
+  flex-shrink: 0
 
 .query-text
   color: white
-  font-size: 0.9rem
-  flex: 1
-  margin-right: 8px
-
-.query-stats
-  color: rgba(255, 255, 255, 0.6)
-  font-size: 0.8rem
-  margin-right: 8px
-  white-space: nowrap
-
-.hit-count
+  font-size: 0.95rem
   font-weight: 500
+  flex: 1
+  line-height: 1.2
+
+  @media (max-width: 768px)
+    font-size: 0.9rem
 
 .try-btn
   min-width: 50px !important
