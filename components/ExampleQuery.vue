@@ -76,21 +76,20 @@ const allScores = computed(() => results.value.map((r) => r.score));
 // Example queries to choose from
 const exampleQueries = [
   'creatures that draw cards',
-  'cheap red burn spells',
-  'artifacts that make mana',
-  'blue counterspells',
-  'green ramp spells',
-  'white removal spells',
+  'stax pieces',
+  'blue cantrips',
+  'adventure ramp',
+  'orzhov removal',
   'black creatures with flying',
-  'creatures with enter the battlefield effects',
-  'spells that destroy artifacts',
-  'x spells that are board wipes',
+  'etb effects',
+  'artifact removal',
+  'x spell board wipes',
   'low cost sultai commanders',
-  'finishers for a mono white tokens deck',
+  'mono white token finishers',
   'golgari elves that draw',
   'five color dragon commander',
-  'mono red burn spells',
-  'creatures that come back from the graveyard',
+  'red burn',
+  'graveyard recursion',
 ];
 
 onMounted(async () => {
@@ -111,9 +110,17 @@ async function loadRandomExample() {
   loading.value = true;
 
   try {
-    // Select random query
-    const randomIndex = Math.floor(Math.random() * exampleQueries.length);
-    currentQuery.value = exampleQueries[randomIndex];
+    // Select random query, ensuring it's different from the current one
+    let randomIndex;
+    let newQuery;
+    
+    do {
+      randomIndex = Math.floor(Math.random() * exampleQueries.length);
+      newQuery = exampleQueries[randomIndex];
+    } while (newQuery === currentQuery.value && exampleQueries.length > 1);
+    
+    currentQuery.value = newQuery;
+    
     // Perform search using the colbert endpoint (index 0)
     const response = await fetch('/api/proxy/search/colbert', {
       method: 'POST',
@@ -134,7 +141,7 @@ async function loadRandomExample() {
 
     const data: ICardResult[] = await response.json();
     if (data && data.length > 0) {
-      results.value = data.slice(0, 20); // Ensure we only have 10 results
+      results.value = data.slice(0, 20); // Ensure we only have 20 results
       // Restart scrolling after loading new results
       setTimeout(() => {
         startAutoScroll();
