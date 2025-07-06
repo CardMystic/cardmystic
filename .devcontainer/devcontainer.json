@@ -1,9 +1,15 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js & TypeScript",
+	"name": "cardmystic-frontend",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+    "build": {
+        "dockerfile": "Dockerfile",
+
+        // Runs docker from the project root instead of `.devcontainer`,
+        // to ensure `COPY pnpm-lock.yaml ./` works
+        "context": ".."
+    },
 	"features": {
 		"ghcr.io/devcontainers-extra/features/vue-cli:2": {}
 	},
@@ -15,7 +21,7 @@
 	"forwardPorts": [5173, 3000],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install"
+	"postCreateCommand": "pnpm install --offline"
 
 	// Configure tool-specific properties.
 	// "customizations": {},
