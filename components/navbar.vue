@@ -93,13 +93,13 @@ const props = defineProps({
   background-color: #1e1e1e;
 
   .navbar-inner {
-    max-width: 740px;
+    max-width: 1096px;
     margin: 0 auto;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 0px;
   }
 
   .left-section {

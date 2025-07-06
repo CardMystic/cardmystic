@@ -1,49 +1,72 @@
 <template>
   <div class="basic-search-container">
-    <ChipSelector
-      class="chip-selector mb-4"
-      :options="chipSelectorOptions"
-      :tooltips="chipSelectorTooltips"
-      :selected-index="chipSelectedIndex"
-      @update:selectedIndex="chipSelectedIndex = $event"
-    />
+    <!-- Cache Indicator -->
+    <CacheIndicator />
+
+    <!-- Header with Chip Selector and Cached Searches Button -->
+    <div class="search-header">
+      <ChipSelector
+        class="chip-selector"
+        :options="chipSelectorOptions"
+        :tooltips="chipSelectorTooltips"
+        :selected-index="chipSelectedIndex"
+        @update:selectedIndex="chipSelectedIndex = $event"
+      />
+
+      <CachedSearchesButton />
+    </div>
 
     <!-- Search bar and filters -->
     <div class="search-section" :style="{ maxWidth: maxWidth }">
       <div class="d-flex align-center">
+        <!-- Autocomplete for Similar Search -->
+        <v-autocomplete
+          v-if="chipSelectedIndex === 1"
+          v-model="searchStore.query"
+          :items="autocompleteItems"
+          :loading="loading"
+          :search="autocompleteSearch"
+          @update:search="onAutocompleteSearch"
+          @update:modelValue="onAutocompleteSelection"
+          @blur="onAutocompleteBlur"
+          label="Search for a card..."
+          variant="solo"
+          elevation="5"
+          @keyup.enter="handleSearch"
+          prepend-inner-icon="mdi-magnify"
+          class="flex-grow-1"
+          no-filter
+          :clearable="!!searchStore.query"
+          :no-data-text="getNoDataText()"
+          auto-select-first
+          :menu-props="{ maxHeight: '200px' }"
+        ></v-autocomplete>
+
+        <!-- Regular text field for other search types -->
         <v-text-field
-          v-if="chipSelectedIndex !== 2"
+          v-else
           v-model="searchStore.query"
           label="Search..."
           variant="solo"
           elevation="5"
           @keyup.enter="handleSearch"
-          :loading="searching"
+          :loading="loading"
           prepend-inner-icon="mdi-magnify"
           class="flex-grow-1"
+          :clearable="!!searchStore.query"
         ></v-text-field>
-
-        <v-file-input
-          v-else
-          v-model="uploadedFile"
-          label="Upload an image"
-          accept="image/*"
-          variant="solo"
-          prepend-icon="mdi-camera"
-          class="flex-grow-1"
-        />
 
         <v-btn
           @click="toggleFilters"
           color="primary"
           variant="elevated"
           icon="mdi-filter"
-          class="ml-2 mb-6 filters-btn"
+          class="ml-2 filters-btn"
           size="default"
         ></v-btn>
       </div>
 
-      <div v-if="showFilters" class="mt-0">
+      <div v-if="showFilters" class="mt-2">
         <filters
           ref="filterRef"
           :search-text="searchStore.query"
@@ -59,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useSearchStore } from '~/stores/searchStore';
 
 const props = defineProps({
@@ -67,59 +90,134 @@ const props = defineProps({
     type: String,
     default: '705px',
   },
-  isHomePage: {
-    type: Boolean,
-    default: false,
-  },
-  searching: {
-    type: Boolean,
-    default: false,
-  },
 });
 
 const emit = defineEmits(['search', 'update:chipSelectedIndex']);
 
-const router = useRouter();
 const searchStore = useSearchStore();
+const { loading } = storeToRefs(searchStore);
 
 // Chip Selector component
 const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);
 const chipSelectorTooltips = searchStore.endpoints.map((e: any) => e.tooltip);
-const chipSelectedIndex = ref(0);
+// Use the store's selectedChipIndex and ensure it defaults to 0
+const chipSelectedIndex = computed({
+  get: () => searchStore.selectedChipIndex,
+  set: (value: number) => {
+    searchStore.selectedChipIndex = value;
+    emit('update:chipSelectedIndex', value);
+  },
+});
 
-// File upload
-const uploadedFile = ref<File | null>(null);
+// Ensure the store starts with AI search selected
+onMounted(() => {
+  if (
+    searchStore.selectedChipIndex === undefined ||
+    searchStore.selectedChipIndex === null
+  ) {
+    searchStore.selectedChipIndex = 0; // Default to AI search
+  }
+});
 
 // Filters
 const filterRef: any = ref(null);
 const showFilters = ref(false);
 
-watch(uploadedFile, (file) => {
-  if (file) {
-    searchStore.imageFile = file;
-    searchStore.query = '';
-    handleSearch();
-  }
-});
+// Autocomplete functionality
+const autocompleteItems = ref<string[]>([]);
+const autocompleteLoading = ref(false);
+const autocompleteSearch = ref('');
+const lastTypedValue = ref('');
+let debounceTimeout: NodeJS.Timeout | null = null;
 
-watch(chipSelectedIndex, (newValue) => {
-  emit('update:chipSelectedIndex', newValue);
-});
+function getNoDataText() {
+  if (!autocompleteSearch.value || autocompleteSearch.value.length < 2) {
+    return 'Begin typing for card suggestions';
+  }
+  return 'No cards found';
+}
+
+// Clear autocomplete when switching away from similar search
+watch(
+  () => searchStore.selectedChipIndex,
+  (newValue) => {
+    if (newValue !== 1) {
+      autocompleteItems.value = [];
+      autocompleteSearch.value = '';
+    }
+  },
+);
 
 function toggleFilters() {
   showFilters.value = !showFilters.value;
 }
 
 function handleSearch() {
-  filterRef.value?.closePanel();
-  showFilters.value = false; // Hide filters when searching
+  showFilters.value = false;
   emit('search', chipSelectedIndex.value);
+}
+
+// Debounced autocomplete search
+function onAutocompleteSearch(query: string) {
+  autocompleteSearch.value = query;
+  lastTypedValue.value = query; // Store what user actually typed
+
+  // Immediately update the search store with the typed value
+  searchStore.query = query;
+
+  if (debounceTimeout) {
+    clearTimeout(debounceTimeout);
+  }
+
+  // Only search if query has at least 2 characters
+  if (query && query.length >= 2) {
+    debounceTimeout = setTimeout(async () => {
+      await fetchAutocompleteResults(query);
+    }, 300);
+  } else {
+    // Clear items but don't show loading for short queries
+    autocompleteItems.value = [];
+  }
+}
+
+function onAutocompleteSelection(value: string) {
+  if (value && value !== lastTypedValue.value) {
+    searchStore.query = value;
+    // Automatically run search when user selects from autocomplete
+    handleSearch();
+  }
+}
+
+function onAutocompleteBlur() {
+  // Since we're now updating searchStore.query immediately in onAutocompleteSearch,
+  // we don't need to restore anything here. The value is already preserved.
+}
+
+async function fetchAutocompleteResults(query: string) {
+  autocompleteLoading.value = true;
+  try {
+    const response = await fetch(
+      `/api/proxy/cards/autocomplete?q=${encodeURIComponent(query)}&limit=10`,
+    );
+    if (response.ok) {
+      const data = await response.json();
+      // Extract suggestions array from the response
+      autocompleteItems.value = data.suggestions || [];
+    } else {
+      autocompleteItems.value = [];
+    }
+  } catch (error) {
+    console.error('Autocomplete error:', error);
+    autocompleteItems.value = [];
+  } finally {
+    autocompleteLoading.value = false;
+  }
 }
 
 // Expose methods that parent components might need
 defineExpose({
   setChipIndex: (index: number) => {
-    chipSelectedIndex.value = index;
+    searchStore.selectedChipIndex = index;
   },
 });
 </script>
@@ -131,19 +229,35 @@ defineExpose({
   flex-direction: column
   align-items: center
 
+.search-header
+  display: flex
+  justify-content: space-between
+  align-items: center
+  width: 100%
+  max-width: 1096px
+  margin-bottom: 20px
+
+  @media (max-width: 768px)
+    flex-direction: column
+    gap: 12px
+    align-items: center
+
 .chip-selector
   position: relative
-  margin-bottom: 20px
 
 .search-section
   width: 100%
 
 .filters-btn
   width: 40px
-  height: 48px
+  height: 56px
   border-radius: 4px
   margin-left: 12px
+  margin-bottom: 24px
 
-.filters-btn.mb-6
-  height: 56px
+:deep(.v-autocomplete .v-field__append-inner)
+  display: none !important
+
+:deep(.v-autocomplete .v-input__append)
+  display: none !important
 </style>

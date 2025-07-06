@@ -1,6 +1,6 @@
 <template>
   <div class="example-query-container">
-    <div v-if="loading" class="text-center py-8">
+    <div v-if="loading" class="text-center">
       <v-progress-circular
         indeterminate
         color="primary"
@@ -28,12 +28,12 @@
           ></v-btn>
           <v-btn
             color="primary"
-            variant="elevated"
-            prepend-icon="mdi-magnify"
+            variant="outlined"
             @click="tryQuery"
             class="try-button"
+            prepend-icon="mdi-magnify"
           >
-            TRY IT!
+            TRY
           </v-btn>
         </div>
       </div>
@@ -142,8 +142,6 @@ async function loadRandomExample() {
     }
   } catch (error) {
     console.error('Failed to load example:', error);
-    // If this fails, try another query
-    setTimeout(() => loadRandomExample(), 2000);
   } finally {
     loading.value = false;
   }
@@ -151,7 +149,6 @@ async function loadRandomExample() {
 
 function startAutoScroll() {
   if (!scrollContainer.value || results.value.length === 0) {
-    console.log('Cannot start scroll: container or results missing');
     return;
   }
 
@@ -247,7 +244,7 @@ function tryQuery() {
     name: 'search',
     query: {
       q: currentQuery.value,
-      endpoint: 0, // Vector search endpoint
+      endpoint: 0, // A.I. search endpoint (not similar search)
       filters: JSON.stringify({
         selectedCardTypes: [],
         selectedColorFilterOption: 'Contains At Most',
@@ -312,10 +309,10 @@ function goToCard(cardId: string) {
   flex-shrink: 0
 
 .refresh-button
-  min-width: 40px !important
-  width: 40px !important
-  height: 40px !important
-  border-radius: 50% !important
+  min-width: 30px
+  width: 30px
+  height: 30px
+  border-radius: 50%
 
 .try-button
   flex-shrink: 0
@@ -331,6 +328,8 @@ function goToCard(cardId: string) {
   font-size: 16px
   font-weight: bold
   font-style: italic
+  @media (max-width: 768px)
+    font-size: 12px
 
 .results-container
   width: 100%
