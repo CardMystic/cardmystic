@@ -18,10 +18,21 @@
 	// "features": {},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [5173, 3000],
+	"forwardPorts": [5173],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pnpm install --offline"
+	"postCreateCommand": "pnpm install --offline",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Vue.volar",
+				"humao.rest-client",
+				"christian-kohler.npm-intellisense",
+				"vivaxy.vscode-conventional-commits",
+				"Nuxtr.nuxtr-vscode"
+			]
+		}
+	}
 
 	// Configure tool-specific properties.
 	// "customizations": {},

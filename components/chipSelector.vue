@@ -1,35 +1,19 @@
 <template>
   <div class="chip-group">
-    <div
-      v-for="(option, index) in options"
-      :key="option"
-      class="chip-container"
-    >
-      <v-chip
-        :color="selectedIndex === index ? 'primary' : 'default'"
-        :variant="selectedIndex === index ? 'elevated' : 'outlined'"
-        class="chip"
-        @click="select(index)"
-        :disabled="option === 'Image' || option === 'Keyword'"
-      >
+    <div v-for="(option, index) in options" :key="option" class="chip-container">
+      <v-chip :color="selectedIndex === index ? 'primary' : 'default'"
+        :variant="selectedIndex === index ? 'elevated' : 'outlined'" class="chip" @click="select(index)"
+        :disabled="option === 'Image' || option === 'Keyword'">
         {{ option }}
         <v-icon size="18" class="ml-2" @click.stop="toggleTooltip(index)">
           mdi-help-circle
         </v-icon>
       </v-chip>
-      <p
-        class="ma-0 pa-0"
-        v-if="option == 'Image' || option == 'Keyword'"
-        style="font-size: 11px"
-      >
+      <p class="ma-0 pa-0" v-if="option == 'Image' || option == 'Keyword'" style="font-size: 11px">
         Coming Soon!
       </p>
       <client-only>
-        <v-tooltip
-          v-model="tooltipOpen[index]"
-          location="top"
-          activator="parent"
-        >
+        <v-tooltip v-model="tooltipOpen[index]" location="top" activator="parent">
           <span>{{ tooltips[index] }}</span>
         </v-tooltip>
       </client-only>

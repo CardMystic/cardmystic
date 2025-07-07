@@ -35,13 +35,11 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useSearchStore } from '~/stores/searchStore';
+// import { useSearchStore } from '~/stores/searchStore';
 const router = useRouter();
 
-const searchStore = useSearchStore();
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
-const { loading } = storeToRefs(searchStore);
 const basicSearchRef = ref();
 
 useHead({
@@ -67,20 +65,12 @@ onMounted(() => {
   }, 200); // typing speed
 });
 
-async function search(selectedIndex: number) {
-  // Update store with selected index
-  searchStore.selectedChipIndex = selectedIndex;
+async function search() {
 
-  // Navigate to search page with query parameters
-  const queryParams: any = {
-    q: searchStore.query,
-    endpoint: selectedIndex,
-    filters: JSON.stringify(searchStore.filters),
-  };
 
   router.push({
     name: 'search',
-    query: queryParams,
+    query: {},
   });
 }
 </script>

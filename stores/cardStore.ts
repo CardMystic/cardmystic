@@ -1,11 +1,11 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import type { ICardResult } from '~/types/IColbert';
+// import { defineStore } from 'pinia';
+// import { ref } from 'vue';
+// import type { Card } from '~/models/cardModel';
 
-export const useCardStore = defineStore('card', () => {
-  const card: Ref<ICardResult | null> = ref(null);
+// export const useCardStore = defineStore('card', () => {
+//   const card: Ref<Card | null> = ref(null);
 
-  return {
-    card,
-  };
-});
+//   return {
+//     card,
+//   };
+// });

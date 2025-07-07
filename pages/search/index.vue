@@ -7,65 +7,16 @@
 
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
-        <!-- Cache Stats (development only) -->
-        <div v-if="showCacheStats" class="cache-stats mb-4">
-          <v-card class="cache-stats-card" elevation="2">
-            <div class="cache-stats-header">
-              <v-icon class="mr-2" color="info">mdi-database</v-icon>
-              <span class="cache-stats-title">Cache Stats</span>
-              <v-btn
-                @click="showCacheStats = false"
-                icon="mdi-close"
-                size="x-small"
-                variant="text"
-                class="ml-auto"
-              ></v-btn>
-            </div>
-            <div class="cache-stats-content">
-              <div class="cache-stat">
-                <span class="stat-label">Cached Queries:</span>
-                <span class="stat-value">{{ cacheInfo.size }}</span>
-              </div>
-              <div class="cache-stat">
-                <span class="stat-label">Total Results:</span>
-                <span class="stat-value">{{
-                  cacheInfo.stats.totalResults
-                }}</span>
-              </div>
-              <div class="cache-stat">
-                <span class="stat-label">Avg Results:</span>
-                <span class="stat-value">{{ cacheInfo.stats.avgResults }}</span>
-              </div>
-              <v-btn
-                @click="clearCache"
-                color="warning"
-                size="small"
-                variant="outlined"
-                prepend-icon="mdi-delete"
-                class="mt-2"
-              >
-                Clear Cache
-              </v-btn>
-            </div>
-          </v-card>
-        </div>
 
-        <template v-if="searchStore.results.length > 0">
+        <template v-if="1 > 0">
           <v-row>
-            <v-col
-              class="px-0 py-0 flex-grow-1 mb-2"
-              v-for="result in searchStore.results"
-              :key="result.card_data.id"
-            >
-              <card
-                :card="result"
-                @click="
-                  router.push({
-                    name: 'cardDetails',
-                    query: { id: result.card_data.id },
-                  })
-                "
-              />
+            <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in []" :key="result.card_data.id">
+              <card :card="result" @click="
+                router.push({
+                  name: 'cardDetails',
+                  query: { id: result.card_data.id },
+                })
+                " />
             </v-col>
           </v-row>
         </template>
@@ -78,31 +29,25 @@
       </div>
 
       <div v-if="showFilters" class="mt-0">
-        <filters
-          ref="filterRef"
-          :search-text="searchStore.query"
-          @search="search"
-          @close="toggleFilters"
-        ></filters>
+        <filters ref="filterRef" :search-text="basicSearchRef" @search="search" @close="toggleFilters"></filters>
       </div>
     </v-col>
   </v-container>
 </template>
 
 <script setup lang="ts">
+import { useQuery } from '@tanstack/vue-query';
 import { onMounted, ref, computed } from 'vue';
-import { useSearchStore } from '~/stores/searchStore';
+import axios from 'axios';
 const router = useRouter();
 const route = useRoute();
 
-const searchStore = useSearchStore();
-const { loading } = storeToRefs(searchStore);
 const basicSearchRef = ref();
 const showFilters = ref(false);
 const showCacheStats = ref(false);
 
 useHead({
-  title: 'CardMystic',
+  title: 'CardMystic Search',
   link: [
     {
       rel: 'icon',
@@ -112,45 +57,49 @@ useHead({
   ],
 });
 
+
 onMounted(async () => {
   // Check if we have query parameters to perform a search
   const query = route.query.q as string;
-  const endpoint = parseInt(route.query.endpoint as string) || 0;
   const filtersParam = route.query.filters as string;
   const hasImage = route.query.hasImage === 'true';
 
   if (query || hasImage) {
     // Set the search parameters and update store
-    searchStore.query = query || '';
-    searchStore.selectedChipIndex = endpoint;
 
-    // Set the chip index in the BasicSearch component
-    basicSearchRef.value?.setChipIndex(endpoint);
+
+    useQuery({
+      queryKey: ['search', 'colbert', query, filtersParam],
+      queryFn: async () => {
+        const response = await axios.post('http://localhost:3000/search/colbert', {
+          query,
+          filters: filtersParam ? JSON.parse(filtersParam) : {},
+        });
+        if (response.status !== 200) {
+          throw new Error('Network response was not ok')
+        }
+        return response.data;
+      },
+    })
 
     // Parse and apply filters if provided
     if (filtersParam) {
       try {
         const parsedFilters = JSON.parse(filtersParam);
-        Object.assign(searchStore.filters, parsedFilters);
       } catch (error) {
         console.error('Error parsing filters:', error);
       }
     }
 
     // Perform the search
-    await performSearch();
   }
 });
 
-async function search(selectedIndex: number) {
-  // Update store with selected index
-  searchStore.selectedChipIndex = selectedIndex;
+async function search() {
 
-  // Update URL with new search parameters
   const queryParams: any = {
-    q: searchStore.query,
-    endpoint: selectedIndex,
-    filters: JSON.stringify(searchStore.filters),
+    q: "ttt",
+    filters: JSON.stringify("{ttt}"),
   };
 
   // Update the URL without triggering navigation
@@ -159,42 +108,10 @@ async function search(selectedIndex: number) {
     query: queryParams,
   });
 
-  await performSearch();
-}
-
-async function performSearch() {
-  try {
-    await searchStore.search(searchStore.selectedChipIndex);
-  } catch (error) {
-    console.error('Search failed:', error);
-  }
 }
 
 function toggleFilters() {
   showFilters.value = !showFilters.value;
-}
-
-// Computed property for cache info
-const cacheInfo = computed(() => searchStore.getCacheInfo());
-
-// Add keyboard shortcut to show cache stats (development helper)
-onMounted(() => {
-  const handleKeyPress = (event: KeyboardEvent) => {
-    if (event.ctrlKey && event.shiftKey && event.key === 'C') {
-      showCacheStats.value = !showCacheStats.value;
-    }
-  };
-
-  window.addEventListener('keydown', handleKeyPress);
-
-  return () => {
-    window.removeEventListener('keydown', handleKeyPress);
-  };
-});
-
-function clearCache() {
-  searchStore.clearCache();
-  showCacheStats.value = false;
 }
 </script>
 

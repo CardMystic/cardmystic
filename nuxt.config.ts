@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
+import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -25,10 +26,17 @@ export default defineNuxtConfig({
     port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
   },
   build: {
+    transpile: ['vuetify'],
   },
+  plugins: ['~/plugins/vue-query.ts'],
   modules: [
-    '@pinia/nuxt',
     'shadcn-nuxt',
+     (_options, nuxt) => {
+      nuxt.hooks.hook('vite:extendConfig', (config) => {
+        // @ts-expect-error transformAssetUrls is not typed in vite-plugin-vuetify
+        config.plugins.push(vuetify({ autoImport: true }));
+      });
+    },
   ],
   shadcn: {
     prefix: '',
@@ -43,6 +51,11 @@ export default defineNuxtConfig({
     },
     plugins: [
       tailwindcss(),
-    ]
+    ],
+    vue: {
+      template: {
+        transformAssetUrls,
+      },
+    }
   },
 });

@@ -123,7 +123,15 @@ export function cardSearchFiltersToQueryParams(
 export type WordSearch = z.infer<typeof WordSearchSchema>;
 export const WordSearchSchema = z.object({
   query: z.string(),
-  limit: z.number().min(1).optional().default(10),
+  limit: z.number().min(1).max(80).optional().default(10),
   filters: CardSearchFiltersSchema.optional(),
   exclude_card_data: z.boolean().optional().default(false),
+});
+
+export type SimilaritySearch = z.infer<typeof SimilaritySearchSchema>;
+export const SimilaritySearchSchema = z.object({
+	card_name: z.string(),
+	limit: z.number().min(1).max(120).optional().default(10),
+	filters: CardSearchFiltersSchema.optional(),
+	exclude_card_data: z.boolean().optional().default(false),
 });
