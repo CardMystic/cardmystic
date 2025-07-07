@@ -19,14 +19,14 @@
         </div>
       </div>
 
-      <!-- Basic Search Component -->
-      <BasicSearch ref="basicSearchRef" max-width="1096px" @search="search" />
+      <!-- Search Component -->
+      <SearchForm class="mt-6" style="max-width: 1096px" />
 
       <!-- Example Query -->
-      <ExampleQuery class="mt-0" style="max-width: 1096px" />
+      <!-- <ExampleQuery class="mt-0" style="max-width: 1096px" /> -->
 
       <!-- Top Queries -->
-      <TopQueries class="mt-6" style="max-width: 1096px" />
+      <!-- <TopQueries class="mt-6" style="max-width: 1096px" /> -->
     </v-col>
   </v-container>
 
@@ -34,13 +34,14 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'HomePage' });
+
 import { onMounted, ref } from 'vue';
+import SearchForm from '~/components/search/Search.vue';
 // import { useSearchStore } from '~/stores/searchStore';
-const router = useRouter();
 
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
-const basicSearchRef = ref();
 
 useHead({
   title: 'CardMystic',
@@ -65,14 +66,6 @@ onMounted(() => {
   }, 200); // typing speed
 });
 
-async function search() {
-
-
-  router.push({
-    name: 'search',
-    query: {},
-  });
-}
 </script>
 
 <style lang="sass" scoped>

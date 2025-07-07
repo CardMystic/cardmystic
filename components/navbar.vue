@@ -6,13 +6,8 @@
         <div class="left-section">
           <v-app-bar-nav-icon class="d-sm-none" @click="drawer = !drawer" />
           <div class="d-none d-sm-flex">
-            <NuxtLink
-              v-for="item in filteredNavItems"
-              :key="item.to"
-              :to="item.to"
-              class="nav-link"
-              :class="{ active: $route.path === item.to }"
-            >
+            <NuxtLink v-for="item in filteredNavItems" :key="item.to" :to="item.to" class="nav-link"
+              :class="{ active: $route.path === item.to }">
               <v-btn>
                 <v-icon start size="20">{{ item.icon }}</v-icon>
                 {{ item.label }}
@@ -23,13 +18,8 @@
 
         <!-- Right side: Patreon button -->
         <div v-if="showActions" class="right-actions">
-          <v-btn
-            href="https://www.patreon.com/thecardmystic"
-            target="_blank"
-            rel="noopener"
-            class="patreon-btn"
-            variant="outlined"
-          >
+          <v-btn href="https://www.patreon.com/thecardmystic" target="_blank" rel="noopener" class="patreon-btn"
+            variant="outlined">
             <div class="btn-left">Support us on Patreon!</div>
             <div class="btn-right">
               <v-icon size="24" color="black">mdi-patreon</v-icon>
@@ -43,12 +33,7 @@
     <client-only>
       <v-navigation-drawer v-model="drawer" temporary app class="d-sm-none">
         <v-list nav>
-          <v-list-item
-            v-for="item in filteredNavItems"
-            :key="item.to"
-            :to="item.to"
-            @click="drawer = false"
-          >
+          <v-list-item v-for="item in filteredNavItems" :key="item.to" :to="item.to" @click="drawer = false">
             <template #prepend>
               <v-icon>{{ item.icon }}</v-icon>
             </template>
@@ -62,7 +47,6 @@
 
 <script setup lang="ts">
 const drawer = ref(false);
-const searchStore = useSearchStore();
 
 const navItems = [
   { to: '/', label: 'Home', icon: 'mdi-home' },

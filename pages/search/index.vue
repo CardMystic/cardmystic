@@ -2,15 +2,20 @@
   <navbar></navbar>
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
-      <!-- Basic Search Component -->
-      <BasicSearch ref="basicSearchRef" max-width="1086px" @search="search" />
-
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
 
-        <template v-if="1 > 0">
+        <template v-if="isLoading">
           <v-row>
-            <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in []" :key="result.card_data.id">
+            <v-col cols="12" class="text-center">
+              <v-progress-circular indeterminate color="primary" />
+            </v-col>
+          </v-row>
+        </template>
+
+        <template v-else-if="searchResults && searchResults.length">
+          <v-row>
+            <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in searchResults" :key="result.card_data.id">
               <card :card="result" @click="
                 router.push({
                   name: 'cardDetails',
@@ -27,24 +32,18 @@
           </div>
         </template>
       </div>
-
-      <div v-if="showFilters" class="mt-0">
-        <filters ref="filterRef" :search-text="basicSearchRef" @search="search" @close="toggleFilters"></filters>
-      </div>
     </v-col>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import { onMounted, ref, computed } from 'vue';
-import axios from 'axios';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { WordSearchSchema } from '~/models/searchModel';
+
 const router = useRouter();
 const route = useRoute();
-
-const basicSearchRef = ref();
-const showFilters = ref(false);
-const showCacheStats = ref(false);
 
 useHead({
   title: 'CardMystic Search',
@@ -57,62 +56,53 @@ useHead({
   ],
 });
 
+// Parse query params into a WordSearch model
+const queryParam = computed(() => String(route.query.q || ''));
+const filtersParam = computed(() => String(route.query.filters || ''));
+const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
+const excludeCardDataParam = computed(() => route.query.exclude_card_data === 'true');
 
-onMounted(async () => {
-  // Check if we have query parameters to perform a search
-  const query = route.query.q as string;
-  const filtersParam = route.query.filters as string;
-  const hasImage = route.query.hasImage === 'true';
-
-  if (query || hasImage) {
-    // Set the search parameters and update store
-
-
-    useQuery({
-      queryKey: ['search', 'colbert', query, filtersParam],
-      queryFn: async () => {
-        const response = await axios.post('http://localhost:3000/search/colbert', {
-          query,
-          filters: filtersParam ? JSON.parse(filtersParam) : {},
-        });
-        if (response.status !== 200) {
-          throw new Error('Network response was not ok')
-        }
-        return response.data;
-      },
-    })
-
-    // Parse and apply filters if provided
-    if (filtersParam) {
-      try {
-        const parsedFilters = JSON.parse(filtersParam);
-      } catch (error) {
-        console.error('Error parsing filters:', error);
-      }
-    }
-
-    // Perform the search
+const parsedFilters = computed(() => {
+  if (!filtersParam.value) return undefined;
+  try {
+    return JSON.parse(filtersParam.value);
+  } catch (e) {
+    return undefined;
   }
 });
 
-async function search() {
+const wordSearch = computed(() =>
+  WordSearchSchema.parse({
+    query: queryParam.value,
+    limit: limitParam.value,
+    filters: parsedFilters.value,
+    exclude_card_data: excludeCardDataParam.value,
+  })
+);
 
-  const queryParams: any = {
-    q: "ttt",
-    filters: JSON.stringify("{ttt}"),
-  };
+const { data: searchResults, isLoading } = useQuery({
+  queryKey: [
+    'search',
+    'colbert',
+    wordSearch.value.query,
+    JSON.stringify(wordSearch.value.filters || {}),
+    wordSearch.value.limit,
+    wordSearch.value.exclude_card_data,
+  ],
+  queryFn: async () => {
+    const response = await fetch('http://localhost:3000/search/colbert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(wordSearch.value),
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  },
+  enabled: !!wordSearch.value.query,
+});
 
-  // Update the URL without triggering navigation
-  await router.replace({
-    name: 'search',
-    query: queryParams,
-  });
-
-}
-
-function toggleFilters() {
-  showFilters.value = !showFilters.value;
-}
 </script>
 
 <style lang="sass" scoped>
