@@ -1,3 +1,5 @@
+import { env } from '~/utils/envConfig';
+
 export default defineEventHandler(async (event) => {
   const pathParam = event.context.params?.path;
   const path = Array.isArray(pathParam)
