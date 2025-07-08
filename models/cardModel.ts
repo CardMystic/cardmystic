@@ -40,6 +40,7 @@ export const CardFormat = z.enum([
   "Timeless",
   "Vintage",
 ]);
+export type CardFormatType = z.infer<typeof CardFormat>;
 
 export const CardFormatStatus = z.enum(["Legal", "Banned", "Restricted"]);
 
