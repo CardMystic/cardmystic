@@ -4,6 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "nuxt build",
+		"build:azure": "nuxi build --preset=azure",
 		"dev": "nuxt dev",
 		"generate": "nuxt generate",
 		"preview": "nuxt preview",
