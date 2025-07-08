@@ -60,7 +60,10 @@ const progressHeight = computed(() => {
   }
 });
 
-function normalizeScore(score: number): number {
+function normalizeScore(score: number | undefined): number {
+  if (score === undefined) {
+    return 0; // Default to 0 if score is undefined
+  }
   // Use provided normalization context if available, otherwise fall back to search store
   const allScores =
     props.normalizationContext ||
@@ -87,7 +90,7 @@ function normalizeScore(score: number): number {
   return normalizedScore;
 }
 
-function getScoreColor(score: number): string {
+function getScoreColor(score: number | undefined): string {
   const normalizedScore = normalizeScore(score);
   const pct = Math.min(Math.max(normalizedScore / 100, 0), 1);
 
