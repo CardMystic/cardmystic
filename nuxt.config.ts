@@ -2,8 +2,7 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  app: {
-  },
+  app: {},
   compatibilityDate: '2025-05-15',
   devtools: {
     enabled: true,
@@ -22,14 +21,13 @@ export default defineNuxtConfig({
     // The private keys which are only available server-side
     backendUrl: 'http://localhost:3000',
     // Keys within public are also exposed client-side
-    public: {
-    }
+    public: {},
   },
   plugins: ['~/plugins/vue-query.ts'],
   modules: [
     '@nuxtjs/google-fonts',
     '@vee-validate/nuxt',
-     (_options, nuxt) => {
+    (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
         // @ts-expect-error transformAssetUrls is not typed in vite-plugin-vuetify
         config.plugins.push(vuetify({ autoImport: true }));
@@ -39,7 +37,7 @@ export default defineNuxtConfig({
   googleFonts: {
     families: {
       'Alfa+Slab+One': true,
-    }
+    },
   },
   vite: {
     server: {
@@ -48,12 +46,11 @@ export default defineNuxtConfig({
         interval: 100,
       },
     },
-    plugins: [
-    ],
+    plugins: [],
     vue: {
       template: {
         transformAssetUrls,
       },
-    }
+    },
   },
 });

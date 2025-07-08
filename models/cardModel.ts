@@ -1,48 +1,65 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const CardType = z.enum([
-  "Artifact",
-  "Creature",
-  "Enchantment",
-  "Instant",
-  "Land",
-  "Planeswalker",
-  "Sorcery",
+  'Artifact',
+  'Creature',
+  'Enchantment',
+  'Instant',
+  'Land',
+  'Planeswalker',
+  'Sorcery',
 ]);
 
-export const CardRarity = z.enum(["Common", "Uncommon", "Rare", "Mythic"]);
+export const CardRarity = z.enum(['Common', 'Uncommon', 'Rare', 'Mythic']);
 
-export const CardColor = z.enum(["White", "Blue", "Black", "Red", "Green"]);
+export const CardColor = z.enum(['White', 'Blue', 'Black', 'Red', 'Green']);
 export type CardColorType = z.infer<typeof CardColor>;
 
+export function cardColorToSymbol(color: CardColorType): string {
+  switch (color) {
+    case 'White':
+      return 'w';
+    case 'Blue':
+      return 'u';
+    case 'Black':
+      return 'b';
+    case 'Red':
+      return 'r';
+    case 'Green':
+      return 'g';
+    default:
+      return '';
+  }
+}
+
 export const CardFormat = z.enum([
-  "Alchemy",
-  "Brawl",
-  "Commander",
-  "Duel",
-  "Explorer",
-  "Future",
-  "Gladiator",
-  "Historic",
-  "Historic Brawl",
-  "Legacy",
-  "Modern",
-  "Oathbreaker",
-  "Old School",
-  "Pauper",
-  "Pauper Commander",
-  "Penny",
-  "Pioneer",
-  "Predh",
-  "Premodern",
-  "Standard",
-  "Standard Brawl",
-  "Timeless",
-  "Vintage",
+  'Alchemy',
+  'Brawl',
+  'Commander',
+  'Duel',
+  'Explorer',
+  'Future',
+  'Gladiator',
+  'Historic',
+  'Historic Brawl',
+  'Legacy',
+  'Modern',
+  'Oathbreaker',
+  'Old School',
+  'Pauper',
+  'Pauper Commander',
+  'Penny',
+  'Pioneer',
+  'Predh',
+  'Premodern',
+  'Standard',
+  'Standard Brawl',
+  'Timeless',
+  'Vintage',
 ]);
 export type CardFormatType = z.infer<typeof CardFormat>;
 
-export const CardFormatStatus = z.enum(["Legal", "Banned", "Restricted"]);
+export const CardFormatStatus = z.enum(['Legal', 'Banned', 'Restricted']);
 
 // Image URIs Schema
 const imageUrisSchema = z.object({
@@ -101,7 +118,7 @@ const previewSchema = z
 
 // Card Face Schema (for double-faced cards)
 const cardFaceSchema = z.object({
-  object: z.literal("card_face"),
+  object: z.literal('card_face'),
   name: z.string(),
   mana_cost: z.string(),
   type_line: z.string(),
@@ -124,7 +141,7 @@ const cardFaceSchema = z.object({
 // Main Scryfall Card Schema
 export type ScryfallCard = z.infer<typeof ScryfallCardSchema>;
 export const ScryfallCardSchema = z.object({
-  object: z.literal("card"),
+  object: z.literal('card'),
   id: z.string().uuid(),
   oracle_id: z.string().uuid(),
   multiverse_ids: z.array(z.number()).optional(),

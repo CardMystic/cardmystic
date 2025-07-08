@@ -12,6 +12,7 @@
         <!-- Colors Chips -->
         <v-chip v-for="color in selectedColors || []" :key="`color-${color}`" closable color="primary"
           variant="outlined" size="small" class="ma-1" @click:close="removeColor(color)">
+          <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />
           {{ color }}
         </v-chip>
 
@@ -92,7 +93,12 @@
               <div class="color-checkboxes">
                 <v-checkbox v-for="color in cardColors" :key="color" :label="color"
                   :model-value="isColorSelected(color)" @update:model-value="(value) => toggleColor(color, value)"
-                  color="primary" density="compact" hide-details />
+                  color="primary" density="compact" hide-details>
+                  <template #label>
+                    <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />
+                    {{ color }}
+                  </template>
+                </v-checkbox>
               </div>
             </v-expansion-panel-text>
           </v-expansion-panel>
@@ -181,8 +187,9 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 import { z } from 'zod';
-import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus } from '~/models/cardModel';
+import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus, cardColorToSymbol } from '~/models/cardModel';
 import type { CardSearchFilters } from '~/models/searchModel';
+import ManaIcon from '../manaIcon.vue';
 
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
