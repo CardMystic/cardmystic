@@ -31,8 +31,7 @@ const filters = useField<CardSearchFilters>('filters');
 const onSubmit = form.handleSubmit((values) => {
   const query: Record<string, any> = {
     query: values.query,
-    limit: '10',
-    filters: JSON.stringify(values.filters)
+    filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
   };
   console.log('Submitting search with query:', query);
   navigateTo({ path: '/search', query });
