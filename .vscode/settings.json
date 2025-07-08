@@ -9,5 +9,8 @@
   ],
   "[vue]": {
     "editor.defaultFormatter": "Vue.volar"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
