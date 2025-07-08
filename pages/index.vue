@@ -21,8 +21,8 @@
       <!-- Search Component -->
       <SearchForm class="mt-6" style="max-width: 1096px" />
 
-      <!-- Example Query -->
-      <!-- <ExampleQuery class="mt-0" style="max-width: 1096px" /> -->
+      <!-- Example Queries -->
+      <ExampleQueries class="mt-0" style="max-width: 1096px" />
 
       <!-- Top Queries -->
       <!-- <TopQueries class="mt-6" style="max-width: 1096px" /> -->
