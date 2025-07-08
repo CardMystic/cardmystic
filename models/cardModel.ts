@@ -1,24 +1,19 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const CardType = z.enum([
   "Artifact",
-  "Conspiracy",
   "Creature",
   "Enchantment",
   "Instant",
   "Land",
-  "Phenomenon",
-  "Plane",
   "Planeswalker",
-  "Scheme",
   "Sorcery",
-  "Tribal",
-  "Vanguard",
 ]);
 
 export const CardRarity = z.enum(["Common", "Uncommon", "Rare", "Mythic"]);
 
 export const CardColor = z.enum(["White", "Blue", "Black", "Red", "Green"]);
+export type CardColorType = z.infer<typeof CardColor>;
 
 export const CardFormat = z.enum([
   "Alchemy",
@@ -50,12 +45,12 @@ export const CardFormatStatus = z.enum(["Legal", "Banned", "Restricted"]);
 
 // Image URIs Schema
 const imageUrisSchema = z.object({
-  small: z.url(),
-  normal: z.url(),
-  large: z.url(),
-  png: z.url(),
-  art_crop: z.url(),
-  border_crop: z.url(),
+  small: z.string().url(),
+  normal: z.string().url(),
+  large: z.string().url(),
+  png: z.string().url(),
+  art_crop: z.string().url(),
+  border_crop: z.string().url(),
 });
 
 // Legalities Schema
@@ -85,20 +80,20 @@ const legalitiesSchema = z.object({
 });
 
 // RelatedUris Schema
-const relatedUrisSchema = z.record(z.string(), z.url());
+const relatedUrisSchema = z.record(z.string(), z.string().url());
 
 // PurchaseUris Schema
 const purchaseUrisSchema = z.object({
-  tcgplayer: z.url().optional(),
-  cardmarket: z.url().optional(),
-  cardhoarder: z.url().optional(),
+  tcgplayer: z.string().url().optional(),
+  cardmarket: z.string().url().optional(),
+  cardhoarder: z.string().url().optional(),
 });
 
 // Preview Schema
 const previewSchema = z
   .object({
     source: z.string(),
-    source_uri: z.url(),
+    source_uri: z.string().url(),
     previewed_at: z.string(),
   })
   .optional();
@@ -139,8 +134,8 @@ export const ScryfallCardSchema = z.object({
   name: z.string(),
   lang: z.string(),
   released_at: z.string(),
-  uri: z.url(),
-  scryfall_uri: z.url(),
+  uri: z.string().url(),
+  scryfall_uri: z.string().url(),
   layout: z.string(),
   highres_image: z.boolean(),
   image_status: z.string(),
@@ -169,11 +164,11 @@ export const ScryfallCardSchema = z.object({
   set: z.string(),
   set_name: z.string(),
   set_type: z.string(),
-  set_uri: z.url(),
-  set_search_uri: z.url(),
-  scryfall_set_uri: z.url(),
-  rulings_uri: z.url(),
-  prints_search_uri: z.url(),
+  set_uri: z.string().url(),
+  set_search_uri: z.string().url(),
+  scryfall_set_uri: z.string().url(),
+  rulings_uri: z.string().url(),
+  prints_search_uri: z.string().url(),
   collector_number: z.string(),
   digital: z.boolean(),
   rarity: CardRarity,

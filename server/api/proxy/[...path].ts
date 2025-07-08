@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     ? await readBody(event)
     : undefined;
 
-  const response = await $fetch(`http://localhost:3000/${path}`, {
+  const response = await $fetch(`${env.BACKEND_URL}/${path}`, {
     method,
     body,
     query: getQuery(event),

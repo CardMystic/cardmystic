@@ -5,6 +5,7 @@
         <NuxtPage />
       </NuxtLayout>
     </v-app>
+    <VueQueryDevtools />
   </div>
 </template>
 
@@ -15,4 +16,5 @@
 </style>
 
 <script setup lang="ts">
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 </script>

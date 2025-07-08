@@ -3,13 +3,7 @@
 {
 	"name": "cardmystic-frontend",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-    "build": {
-        "dockerfile": "Dockerfile",
-
-        // Runs docker from the project root instead of `.devcontainer`,
-        // to ensure `COPY pnpm-lock.yaml ./` works
-        "context": ".."
-    },
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
 	"features": {
 		"ghcr.io/devcontainers-extra/features/vue-cli:2": {}
 	},
@@ -21,7 +15,7 @@
 	"forwardPorts": [5173],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pnpm install --offline",
+	"postCreateCommand": "npm install",
 	"customizations": {
 		"vscode": {
 			"extensions": [

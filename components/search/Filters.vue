@@ -1,37 +1,33 @@
 <template>
   <v-expansion-panels multiple>
     <v-expansion-panel title="Card Types">
-      <v-select v-model="filters.selectedCardTypes" :items="cardTypes" label="Card Types" multiple clearable />
+      <v-select v-model="selectedCardTypes" :items="cardTypes" label="Card Types" multiple clearable />
     </v-expansion-panel>
     <v-expansion-panel title="Colors">
-      <v-select v-model="filters.selectedColorFilterOption" :items="colorFilterOptions" label="Color Filter Option"
-        clearable />
-      <v-checkbox v-for="color in cardColors" :key="color" v-model="filters.selectedColors[color]" :label="color"
-        :value="true" hide-details class="ml-2" />
+      <v-select v-model="selectedColorFilterOption" :items="colorFilterOptions" label="Color Filter Option" clearable />
+      <v-select v-model="selectedColors" :items="cardColors" label="Colors" multiple clearable class="ml-2" />
     </v-expansion-panel>
     <v-expansion-panel title="Rarities">
-      <v-checkbox v-for="rarity in cardRarities" :key="rarity" v-model="filters.selectedRarities[rarity]"
-        :label="rarity" :value="true" hide-details class="ml-2" />
+      <v-select v-model="selectedRarities" :items="cardRarities" label="Rarities" multiple clearable class="ml-2" />
     </v-expansion-panel>
     <v-expansion-panel title="CMC / Power / Toughness">
       <v-row>
         <v-col cols="4">
-          <v-select v-model="filters.selectedCMCOption" :items="comparisonOperators" label="CMC Option" clearable />
-          <v-text-field v-model="filters.selectedCMC" label="CMC" clearable />
+          <v-select v-model="selectedCMCOption" :items="comparisonOperators" label="CMC Option" clearable />
+          <v-text-field v-model="selectedCMC" label="CMC" clearable />
         </v-col>
         <v-col cols="4">
-          <v-select v-model="filters.selectedPowerOption" :items="comparisonOperators" label="Power Option" clearable />
-          <v-text-field v-model="filters.selectedPower" label="Power" clearable />
+          <v-select v-model="selectedPowerOption" :items="comparisonOperators" label="Power Option" clearable />
+          <v-text-field v-model="selectedPower" label="Power" clearable />
         </v-col>
         <v-col cols="4">
-          <v-select v-model="filters.selectedToughnessOption" :items="comparisonOperators" label="Toughness Option"
-            clearable />
-          <v-text-field v-model="filters.selectedToughness" label="Toughness" clearable />
+          <v-select v-model="selectedToughnessOption" :items="comparisonOperators" label="Toughness Option" clearable />
+          <v-text-field v-model="selectedToughness" label="Toughness" clearable />
         </v-col>
       </v-row>
     </v-expansion-panel>
     <v-expansion-panel title="Formats">
-      <v-row v-for="(format, i) in filters.selectedCardFormats" :key="i" class="mb-2">
+      <v-row v-for="(format, i) in selectedCardFormats" :key="i" class="mb-2">
         <v-col cols="6">
           <v-select v-model="format.format" :items="cardFormats" label="Format" clearable />
         </v-col>
@@ -45,17 +41,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, defineProps, defineEmits } from 'vue';
+import { computed } from 'vue';
 import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus } from '~/models/cardModel';
+import type { CardSearchFilters } from '~/models/searchModel';
 
-const props = defineProps({
-  filters: {
-    type: Object,
-    required: false,
-    default: () => ({}),
-  },
-});
-const emit = defineEmits(['update:filters']);
+const props = defineProps<{
+  modelValue?: CardSearchFilters
+}>();
+
+const emit = defineEmits<{
+  'update:modelValue': [value: CardSearchFilters]
+}>();
 
 const cardTypes = CardType.options;
 const cardColors = CardColor.options;
@@ -74,29 +70,74 @@ const comparisonOperators = [
   'Less Than',
 ];
 
-const filters = ref({
-  selectedCardTypes: [],
-  selectedColorFilterOption: 'Contains At Least',
-  selectedColors: {},
-  selectedRarities: {},
-  selectedCMCOption: 'Equal To',
-  selectedPowerOption: 'Equal To',
-  selectedToughnessOption: 'Equal To',
-  selectedCMC: '',
-  selectedPower: '',
-  selectedToughness: '',
-  selectedCardFormats: [],
-  ...props.filters,
+function updateFilters(updates: Partial<CardSearchFilters>) {
+  const current = props.modelValue ?? {} as CardSearchFilters;
+  emit('update:modelValue', { ...current, ...updates });
+}
+
+const selectedCardTypes = computed({
+  get: () => props.modelValue?.selectedCardTypes,
+  set: (value) => updateFilters({ selectedCardTypes: value })
 });
 
-watch(
-  filters,
-  (val) => emit('update:filters', val),
-  { deep: true }
-);
+const selectedColorFilterOption = computed({
+  get: () => props.modelValue?.selectedColorFilterOption,
+  set: (value) => {
+    updateFilters({ selectedColorFilterOption: value })
+  }
+});
+
+const selectedColors = computed({
+  get: () => (props.modelValue?.selectedColors),
+  set: (value) => {
+    updateFilters({ selectedColors: value });
+  }
+});
+
+const selectedRarities = computed({
+  get: () => (props.modelValue?.selectedRarities),
+  set: (value) => updateFilters({ selectedRarities: value })
+});
+
+const selectedCMCOption = computed({
+  get: () => props.modelValue?.selectedCMCOption,
+  set: (value) => updateFilters({ selectedCMCOption: value })
+});
+
+const selectedPowerOption = computed({
+  get: () => props.modelValue?.selectedPowerOption,
+  set: (value) => updateFilters({ selectedPowerOption: value })
+});
+
+const selectedToughnessOption = computed({
+  get: () => props.modelValue?.selectedToughnessOption,
+  set: (value) => updateFilters({ selectedToughnessOption: value })
+});
+
+const selectedCMC = computed({
+  get: () => props.modelValue?.selectedCMC,
+  set: (value) => updateFilters({ selectedCMC: value })
+});
+
+const selectedPower = computed({
+  get: () => props.modelValue?.selectedPower,
+  set: (value) => updateFilters({ selectedPower: value })
+});
+
+const selectedToughness = computed({
+  get: () => props.modelValue?.selectedToughness,
+  set: (value) => updateFilters({ selectedToughness: value })
+});
+
+const selectedCardFormats = computed({
+  get: () => props.modelValue?.selectedCardFormats,
+  set: (value) => updateFilters({ selectedCardFormats: value })
+});
 
 function addFormatRow() {
-  filters.value.selectedCardFormats.push({ format: '', status: '' });
+  const currentFormats = [...(props.modelValue?.selectedCardFormats || [])];
+  currentFormats.push({ format: undefined, status: undefined });
+  updateFilters({ selectedCardFormats: currentFormats });
 }
 </script>
 

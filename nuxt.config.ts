@@ -5,7 +5,13 @@ export default defineNuxtConfig({
   app: {
   },
   compatibilityDate: '2025-05-15',
-  devtools: { enabled: true },
+  devtools: {
+    enabled: true,
+
+    timeline: {
+      enabled: true,
+    },
+  },
   devServer: {
     port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
   },

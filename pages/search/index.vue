@@ -40,7 +40,8 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { WordSearchSchema } from '~/models/searchModel';
+import type { Card } from '~/models/cardModel';
+import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
 
 const router = useRouter();
 const route = useRoute();
@@ -57,26 +58,16 @@ useHead({
 });
 
 // Parse query params into a WordSearch model
-const queryParam = computed(() => String(route.query.q || ''));
-const filtersParam = computed(() => String(route.query.filters || ''));
+const queryParam = computed(() => String(route.query.query || ''));
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
-const excludeCardDataParam = computed(() => route.query.exclude_card_data === 'true');
-
-const parsedFilters = computed(() => {
-  if (!filtersParam.value) return undefined;
-  try {
-    return JSON.parse(filtersParam.value);
-  } catch (e) {
-    return undefined;
-  }
-});
+const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
 
 const wordSearch = computed(() =>
   WordSearchSchema.parse({
     query: queryParam.value,
     limit: limitParam.value,
     filters: parsedFilters.value,
-    exclude_card_data: excludeCardDataParam.value,
+    exclude_card_data: false, // Default to false, can be overridden by query param
   })
 );
 
@@ -84,13 +75,10 @@ const { data: searchResults, isLoading } = useQuery({
   queryKey: [
     'search',
     'colbert',
-    wordSearch.value.query,
-    JSON.stringify(wordSearch.value.filters || {}),
-    wordSearch.value.limit,
-    wordSearch.value.exclude_card_data,
+    JSON.stringify(wordSearch.value)
   ],
   queryFn: async () => {
-    const response = await fetch('http://localhost:3000/search/colbert', {
+    const response = await fetch('/api/proxy/search/colbert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(wordSearch.value),
@@ -98,8 +86,9 @@ const { data: searchResults, isLoading } = useQuery({
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return response.json();
+    return response.json() as Promise<Array<Card>>;
   },
+  staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: !!wordSearch.value.query,
 });
 

@@ -14,6 +14,7 @@
 	"dependencies": {
 		"@mdi/font": "^7.4.47",
 		"@nuxtjs/google-fonts": "^3.2.0",
+		"@tanstack/query-persist-client-core": "^5.81.5",
 		"@tanstack/vue-query": "^5.81.5",
 		"@tanstack/vue-query-devtools": "^5.81.5",
 		"@vee-validate/nuxt": "^4.15.1",
@@ -41,6 +42,5 @@
 		"typescript-eslint": "^8.32.1",
 		"vite-plugin-vuetify": "^2.1.1",
 		"vuetify": "^3.8.12"
-	},
-	"packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184"
+	}
 }
