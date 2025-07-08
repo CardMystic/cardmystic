@@ -2,9 +2,10 @@
   <div class="search-container">
     <form @submit.prevent="onSubmit" class="search-form">
       <div class="search-input-row">
-        <v-text-field v-model="query.value.value" label="Search..." variant="solo" elevation="5" :hide-details="true"
-          prepend-inner-icon="mdi-magnify" class="flex-grow-1" :clearable="!!query.value.value" />
-        <v-btn type="submit" color="primary" class="ml-2" size="large">
+        <v-text-field v-model="query.value.value" placeholder="Search..." variant="solo" hide-details="auto"
+          :error-messages="query.errorMessage.value" prepend-inner-icon="mdi-magnify" class="flex-grow-1"
+          :clearable="!!query.value.value" v-on:click:clear="clearQuery" />
+        <v-btn type="submit" color="primary" class="ml-2 search-btn" size="large">
           Search
         </v-btn>
       </div>
@@ -43,27 +44,18 @@ const form = useForm({
 const query = useField('query');
 const filters = useField<CardSearchFilters>('filters');
 
-// Watch for route changes and update form fields
-watch(queryParam, (newQuery) => {
-  query.value.value = newQuery || '';
-}, { immediate: true });
-
-watch(parsedFilters, (newFilters) => {
-  filters.value.value = newFilters || {};
-}, { immediate: true, deep: true });
-
 const onSubmit = form.handleSubmit((values) => {
-  // Don't search if there's no query
-  if (!values.query || values.query.trim() === '') {
-    return;
-  }
-
   const query: Record<string, any> = {
     query: values.query,
     filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
   };
   navigateTo({ path: '/search', query });
 })
+
+function clearQuery() {
+  query.value.value = '';
+}
+
 </script>
 
 <style scoped>
@@ -79,9 +71,16 @@ const onSubmit = form.handleSubmit((values) => {
 
 .search-input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   width: 100%;
+}
+
+.search-btn {
+  margin-top: 0;
+  align-self: flex-start;
+  height: 56px;
+  /* Match the height of the v-text-field input */
 }
 
 .filters-section {
