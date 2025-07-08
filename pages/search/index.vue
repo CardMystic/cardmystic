@@ -1,6 +1,9 @@
 <template>
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
+
+      <SearchForm class="mt-6" style="max-width: 1096px" />
+
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
 
@@ -36,6 +39,7 @@ import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
+import SearchForm from '~/components/search/Search.vue';
 
 const router = useRouter();
 const route = useRoute();
