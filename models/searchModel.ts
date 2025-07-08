@@ -1,17 +1,23 @@
-import { z } from "zod";
-import { CardColor, CardFormat, CardFormatStatus, CardRarity, CardType } from "./cardModel";
+import { z } from 'zod';
+import {
+  CardColor,
+  CardFormat,
+  CardFormatStatus,
+  CardRarity,
+  CardType,
+} from './cardModel';
 
 const colorFilterOptionEnum = z.enum([
-  "Match Exactly",
-  "Contains At Least",
-  "Contains At Most",
+  'Match Exactly',
+  'Contains At Least',
+  'Contains At Most',
 ]);
 export type ColorFilterOption = z.infer<typeof colorFilterOptionEnum>;
 const comparisonOperatorEnum = z.enum([
-  "Equal To",
-  "Not Equal To",
-  "Greater Than",
-  "Less Than",
+  'Equal To',
+  'Not Equal To',
+  'Greater Than',
+  'Less Than',
 ]);
 export type ComparisonOperator = z.infer<typeof comparisonOperatorEnum>;
 
@@ -43,7 +49,7 @@ export const CardSearchFiltersSchema = z.object({
 
 export type WordSearch = z.infer<typeof WordSearchSchema>;
 export const WordSearchSchema = z.object({
-  query: z.string(),
+  query: z.string().min(1, 'Query must not be empty'),
   limit: z.number().min(1).max(80).optional().default(10),
   filters: CardSearchFiltersSchema.optional(),
   exclude_card_data: z.boolean().optional().default(false),
@@ -51,8 +57,8 @@ export const WordSearchSchema = z.object({
 
 export type SimilaritySearch = z.infer<typeof SimilaritySearchSchema>;
 export const SimilaritySearchSchema = z.object({
-	card_name: z.string(),
-	limit: z.number().min(1).max(120).optional().default(10),
-	filters: CardSearchFiltersSchema.optional(),
-	exclude_card_data: z.boolean().optional().default(false),
+  card_name: z.string().min(1, 'Card name must not be empty'),
+  limit: z.number().min(1).max(120).optional().default(10),
+  filters: CardSearchFiltersSchema.optional(),
+  exclude_card_data: z.boolean().optional().default(false),
 });
