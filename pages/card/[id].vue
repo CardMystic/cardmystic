@@ -69,7 +69,7 @@
                         <div v-if="card.prices.usd" class="price-item">
                             <span class="currency-label">USD:</span>
                             <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-                                }}</span>
+                            }}</span>
                         </div>
 
                         <div v-if="card.prices.usd_foil" class="price-item">
@@ -81,7 +81,7 @@
                         <div v-if="card.prices.eur" class="price-item">
                             <span class="currency-label">EUR:</span>
                             <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-                                }}</span>
+                            }}</span>
                         </div>
 
                         <div v-if="card.prices.eur_foil" class="price-item">
@@ -429,5 +429,399 @@ function flipCard() {
 
 </script>
 
-<style lang="sass" scoped>
+
+<style scoped lang="sass">
+// Card Image Styling
+.card-image-container
+  position: relative
+  display: inline-block
+  overflow: visible
+  padding: 10px
+  margin: -10px
+
+.card-glow
+  position: absolute
+  top: 5px
+  left: 5px
+  right: 5px
+  bottom: 5px
+  border-radius: 25px
+  filter: blur(15px)
+  z-index: 0
+
+.card-sheen-container
+  position: absolute
+  top: 10px
+  left: 10px
+  right: 10px
+  bottom: 10px
+  border-radius: 20px
+  overflow: hidden
+  z-index: 2
+  pointer-events: none
+
+.card-sheen
+  position: absolute
+  top: -20%
+  left: -100%
+  width: 25%
+  height: 140%
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent)
+  animation: sheen 6s infinite
+  pointer-events: none
+  transform: rotate(45deg)
+
+// Rarity-based glow colors
+.glow-common
+  background: linear-gradient(45deg, rgba(44, 44, 44, 0.3), rgba(66, 66, 66, 0.3), rgba(88, 88, 88, 0.3))
+  animation: glowPulse 4s ease-in-out infinite alternate
+
+.glow-uncommon
+  background: linear-gradient(45deg, rgba(192, 192, 192, 0.3), rgba(169, 169, 169, 0.3), rgba(211, 211, 211, 0.3))
+  animation: glowPulse 4s ease-in-out infinite alternate
+
+.glow-rare
+  background: linear-gradient(45deg, rgba(255, 215, 0, 0.4), rgba(255, 176, 0, 0.4), rgba(255, 193, 7, 0.4))
+  animation: glowPulseRare 3s ease-in-out infinite alternate
+
+.glow-mythic
+  background: linear-gradient(45deg, rgba(255, 140, 0, 0.5), rgba(255, 107, 53, 0.5), rgba(255, 69, 0, 0.5))
+  animation: glowPulseMythic 2.5s ease-in-out infinite alternate
+
+.card-image
+  border-radius: 20px !important
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)
+  position: relative
+  z-index: 1
+  transition: all 0.3s ease
+
+  &:hover
+    transform: translateY(-2px) scale(1.02)
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3)
+
+// Card Header Styling
+.card-header
+  margin-bottom: 24px
+
+.card-title
+  font-size: 2.2rem
+  font-weight: 700
+  background: linear-gradient(135deg, rgb(147, 114, 255), rgb(255, 114, 147))
+  background-clip: text
+  margin-bottom: 4px
+  text-shadow: 0 4px 8px rgba(147, 114, 255, 0.3)
+
+.set-rarity-info
+  display: flex
+  gap: 16px
+  align-items: center
+  margin-bottom: 8px
+
+.set-name
+  color: rgba(255, 255, 255, 0.7)
+  font-size: 0.9rem
+  font-weight: 400
+  margin: 0
+  font-style: italic
+
+.mana-cost
+  color: rgb(255, 193, 7)
+  font-weight: 600
+  text-shadow: 0 2px 4px rgba(255, 193, 7, 0.4)
+
+.card-type
+  color: rgb(var(--v-theme-primary))
+  font-size: 1.1rem
+  font-weight: 500
+  margin: 0
+
+// Card Text Container
+.card-text-container
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
+  border-radius: 16px
+  padding: 24px
+  margin-bottom: 24px
+  border: 1px solid rgba(147, 114, 255, 0.2)
+  backdrop-filter: blur(10px)
+
+.oracle-text
+  color: white
+  font-size: 1.1rem
+  line-height: 1.6
+  margin-bottom: 16px
+
+.flavor-text
+  color: rgba(147, 114, 255, 0.9)
+  font-style: italic
+  font-size: 1rem
+  line-height: 1.5
+  display: block
+  margin-top: 16px
+  padding-top: 16px
+  border-top: 1px solid rgba(147, 114, 255, 0.2)
+
+// Stats and Artist Info
+.stats-container
+  margin-top: 20px
+
+.power-toughness
+  color: white
+  font-size: 1.1rem
+  font-weight: 600
+
+.stats
+  color: rgb(255, 193, 7)
+  font-weight: 700
+  font-size: 1.2rem
+
+.artist-info
+  margin-top: 16px
+  padding-top: 16px
+  border-top: 1px solid rgba(147, 114, 255, 0.2)
+
+.artist-label
+  color: rgba(255, 255, 255, 0.7)
+  font-size: 0.9rem
+
+.artist-name
+  color: rgb(var(--v-theme-primary))
+  margin-left: 8px
+  font-size: 1rem
+
+// Legalities Card
+.legalities-card
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
+  border: 1px solid rgba(147, 114, 255, 0.3) !important
+  border-radius: 16px !important
+  padding: 20px !important
+  @media (max-width: 768px)
+    padding: 12px !important
+
+.legalities-header
+  display: flex
+  align-items: center
+  margin-bottom: 16px
+
+.legalities-title
+  color: white
+  font-size: 1.3rem
+  font-weight: 600
+  margin: 0
+
+// Legality Items
+.legality-item
+  display: flex
+  flex-direction: row
+  align-items: center
+  text-align: center
+
+.legality-chip
+  font-size: 9px !important
+  font-weight: 600
+  min-width: 77.5px
+  text-transform: uppercase
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)
+  justify-content: center
+  @media (max-width: 768px)
+    font-size: 8px !important
+    min-width: 71.2px
+
+.format-name
+  color: rgba(255, 255, 255, 0.9)
+  font-size: 11px
+  font-weight: bold
+  text-align: center
+  margin-left: 4px
+  @media (max-width: 768px)
+    font-size: 10px
+
+// Price Card Styling
+.price-card
+  width: 100%
+  max-width: 280px
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
+  border: 1px solid rgba(34, 197, 94, 0.3) !important
+  border-radius: 12px !important
+  padding: 16px !important
+
+.price-header
+  display: flex
+  align-items: center
+  margin-bottom: 12px
+
+.price-title
+  color: white
+  font-size: 1.3rem
+  font-weight: 600
+  margin: 0
+  position: relative
+  top: 4px
+
+.price-list
+  display: flex
+  flex-direction: column
+  gap: 8px
+
+.price-item
+  display: flex
+  justify-content: space-between
+  align-items: center
+  padding: 4px 0
+
+.currency-label
+  color: rgba(255, 255, 255, 0.8)
+  font-size: 0.9rem
+  font-weight: 500
+
+.price-value
+  color: white
+  font-size: 1rem
+  font-weight: 700
+
+// Flip Button Styling
+.flip-btn
+  width: 100%
+  max-width: 280px
+  font-weight: 600
+  text-transform: none
+  letter-spacing: 0.5px
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3)
+
+  &:hover
+    box-shadow: 0 6px 16px rgba(33, 150, 243, 0.5)
+    transform: translateY(-2px)
+
+// Similar Cards Button Styling
+.similar-cards-btn
+  width: 100%
+  max-width: 280px
+  font-weight: 600
+  text-transform: none
+  letter-spacing: 0.5px
+  box-shadow: 0 4px 12px rgba(147, 114, 255, 0.3)
+
+  &:hover
+    box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
+    transform: translateY(-2px)
+
+// Legacy styles cleanup
+.chip
+  font-size: 10px !important
+  min-width: 76px
+  text-align: center
+  justify-content: center
+  padding: 0px !important
+  margin: 0px !important
+
+h2,
+p,
+em
+  color: white
+
+.v-card
+  background-color: #2c2c2c
+  color: white
+
+.confidence-text
+  color: white
+  font-size: 14px
+  font-weight: bold
+  text-align: center
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
+
+.format-text
+  color: white
+  font-size: 12px
+  text-align: center
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
+
+// Add styles for mana symbols
+:deep(.mana-symbol)
+  display: inline-block
+  vertical-align: -0.1em
+  margin: 0 1px
+
+:deep(.mana-symbol-text)
+  display: inline-block
+  vertical-align: -0.15em
+  margin: 0 1px
+
+// TCGPlayer Button Styling
+.tcgplayer-btn
+  width: 100%
+  max-width: 280px
+  font-weight: 600
+  text-transform: none
+  letter-spacing: 0.5px
+  box-shadow: 0 4px 12px rgba(147, 114, 255, 0.3)
+
+  &:hover
+    box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
+    transform: translateY(-2px)
+
+// Animations
+@keyframes glowPulse
+  0%
+    opacity: 0.7
+    transform: scale(1)
+  100%
+    opacity: 0.9
+    transform: scale(1.02)
+
+@keyframes glowPulseRare
+  0%
+    opacity: 0.7
+    transform: scale(1)
+  100%
+    opacity: 0.9
+    transform: scale(1.02)
+
+@keyframes glowPulseMythic
+  0%
+    opacity: 0.8
+    transform: scale(1)
+  100%
+    opacity: 1.0
+    transform: scale(1.04)
+
+@keyframes sheen
+  0%
+    left: -100%
+    opacity: 0
+  5%
+    opacity: 1
+  20%
+    left: 200%
+    opacity: 1
+  25%
+    opacity: 0
+  100%
+    left: 200%
+    opacity: 0
+
+.image-placeholder-large
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  height: 100%
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
+  border-radius: 20px
+  padding: 40px
+
+.placeholder-text-large
+  color: rgba(255, 255, 255, 0.7)
+  font-size: 16px
+  margin-top: 16px
+  text-align: center
+
+.back-button-container
+  display: flex
+  justify-content: flex-start
+  max-width: 1400px
+  margin: 0 auto
+  padding-left: calc((100% - 300px) / 2 - 24px) // Align with left edge of card image column
+
+  @media (max-width: 768px)
+    padding-left: 0 // Reset on mobile
 </style>

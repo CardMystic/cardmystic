@@ -11,7 +11,6 @@
             </div>
           </template>
         </v-img>
-
       </div>
 
       <v-progress-linear rounded :color="getScoreColor(card.score)" :model-value="normalizeScore(card.score)"
