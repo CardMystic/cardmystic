@@ -46,8 +46,15 @@ import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel'
 const router = useRouter();
 const route = useRoute();
 
-useHead({
-  title: 'CardMystic Search',
+// Parse query params into a WordSearch model
+const queryParam = computed(() => String(route.query.query || ''));
+const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
+const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+
+useHead(() => ({
+  title: queryParam.value
+    ? `CardMystic | ${queryParam.value}`
+    : 'CardMystic | Search',
   link: [
     {
       rel: 'icon',
@@ -55,12 +62,7 @@ useHead({
       href: '/favicon.ico',
     },
   ],
-});
-
-// Parse query params into a WordSearch model
-const queryParam = computed(() => String(route.query.query || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+}));
 
 const wordSearch = computed(() =>
   WordSearchSchema.parse({
