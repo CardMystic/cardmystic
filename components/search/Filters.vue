@@ -1,5 +1,64 @@
 <template>
   <div class="filters-container">
+    <!-- Active Filters Chips -->
+    <div v-if="hasActiveFilters" class="active-filters-section mb-4">
+      <div class="active-filters-chips">
+        <!-- Card Types Chips -->
+        <v-chip v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`" closable color="primary"
+          variant="outlined" size="small" class="ma-1" @click:close="removeCardType(cardType)">
+          {{ cardType }}
+        </v-chip>
+
+        <!-- Colors Chips -->
+        <v-chip v-for="color in selectedColors || []" :key="`color-${color}`" closable color="primary"
+          variant="outlined" size="small" class="ma-1" @click:close="removeColor(color)">
+          {{ color }}
+        </v-chip>
+
+        <!-- Rarities Chips -->
+        <v-chip v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`" closable color="accent"
+          variant="outlined" size="small" class="ma-1" @click:close="removeRarity(rarity)">
+          {{ rarity }}
+        </v-chip>
+
+        <!-- Stats Chips -->
+        <v-chip v-if="selectedCMC" closable color="info" variant="outlined" size="small" class="ma-1"
+          @click:close="clearCMC">
+          CMC {{ selectedCMCOption || 'Equal To' }} {{ selectedCMC }}
+        </v-chip>
+
+        <v-chip v-if="selectedPower" closable color="info" variant="outlined" size="small" class="ma-1"
+          @click:close="clearPower">
+          Power {{ selectedPowerOption || 'Equal To' }} {{ selectedPower }}
+        </v-chip>
+
+        <v-chip v-if="selectedToughness" closable color="info" variant="outlined" size="small" class="ma-1"
+          @click:close="clearToughness">
+          Toughness {{ selectedToughnessOption || 'Equal To' }} {{ selectedToughness }}
+        </v-chip>
+
+        <!-- Color Filter Option Chip -->
+        <v-chip v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'" closable
+          color="warning" variant="outlined" size="small" class="ma-1" @click:close="clearColorFilterOption">
+          Color: {{ selectedColorFilterOption }}
+        </v-chip>
+
+        <!-- Formats Chips -->
+        <template v-for="(formatItem, index) in selectedCardFormats || []" :key="`format-${index}`">
+          <v-chip v-if="formatItem.format || formatItem.status" closable color="success" variant="outlined" size="small"
+            class="ma-1" @click:close="removeFormat(index)">
+            {{ formatItem.format || 'Any' }} - {{ formatItem.status || 'Any Status' }}
+          </v-chip>
+        </template>
+
+        <!-- Clear All Button -->
+        <v-btn v-if="hasActiveFilters" variant="tonal" color="error" size="small" class="ma-1 rounded-pill"
+          @click="clearAllFilters" prepend-icon="mdi-close">
+          Clear All
+        </v-btn>
+      </div>
+    </div>
+
     <v-btn @click="isExpanded = !isExpanded" variant="outlined" color="primary" class="filters-toggle-btn mb-3" block>
       <v-icon :class="{ 'rotate-180': isExpanded }" class="transition-transform">
         mdi-chevron-down
@@ -64,7 +123,7 @@
                     <label class="stat-label">Mana Cost</label>
                     <v-select v-model="selectedCMCOption" :items="comparisonOperators" variant="outlined"
                       density="compact" hide-details class="mb-2" />
-                    <v-text-field v-model="selectedCMC" placeholder="Any value, e.g. '3'" variant="outlined"
+                    <v-number-input v-model="selectedCMC" placeholder="Any value, e.g. '3'" variant="outlined"
                       density="compact" hide-details />
                   </div>
                 </v-col>
@@ -73,7 +132,7 @@
                     <label class="stat-label">Power</label>
                     <v-select v-model="selectedPowerOption" :items="comparisonOperators" variant="outlined"
                       density="compact" hide-details class="mb-2" />
-                    <v-text-field v-model="selectedPower" placeholder="Any value, e.g. '2'" variant="outlined"
+                    <v-number-input v-model="selectedPower" placeholder="Any value, e.g. '2'" variant="outlined"
                       density="compact" hide-details />
                   </div>
                 </v-col>
@@ -82,7 +141,7 @@
                     <label class="stat-label">Toughness</label>
                     <v-select v-model="selectedToughnessOption" :items="comparisonOperators" variant="outlined"
                       density="compact" hide-details class="mb-2" />
-                    <v-text-field v-model="selectedToughness" placeholder="Any value, e.g. '2'" variant="outlined"
+                    <v-number-input v-model="selectedToughness" placeholder="Any value, e.g. '2'" variant="outlined"
                       density="compact" hide-details />
                   </div>
                 </v-col>
@@ -161,6 +220,23 @@ function updateFilters(updates: Partial<CardSearchFilters>) {
   emit('update:modelValue', { ...current, ...updates });
 }
 
+// Computed property to check if there are any active filters
+const hasActiveFilters = computed(() => {
+  const filters = props.modelValue;
+  if (!filters) return false;
+
+  return !!(
+    (filters.selectedCardTypes && filters.selectedCardTypes.length > 0) ||
+    (filters.selectedColors && filters.selectedColors.length > 0) ||
+    (filters.selectedRarities && filters.selectedRarities.length > 0) ||
+    filters.selectedCMC ||
+    filters.selectedPower ||
+    filters.selectedToughness ||
+    (filters.selectedColorFilterOption && filters.selectedColorFilterOption !== 'Contains At Least') ||
+    (filters.selectedCardFormats && filters.selectedCardFormats.length > 0)
+  );
+});
+
 const selectedCardTypes = computed({
   get: () => props.modelValue?.selectedCardTypes,
   set: (value) => updateFilters({ selectedCardTypes: value })
@@ -201,18 +277,18 @@ const selectedToughnessOption = computed({
 });
 
 const selectedCMC = computed({
-  get: () => props.modelValue?.selectedCMC,
-  set: (value) => updateFilters({ selectedCMC: value })
+  get: () => Number(props.modelValue?.selectedCMC),
+  set: (value) => updateFilters({ selectedCMC: String(value) })
 });
 
 const selectedPower = computed({
-  get: () => props.modelValue?.selectedPower,
-  set: (value) => updateFilters({ selectedPower: value })
+  get: () => Number(props.modelValue?.selectedPower),
+  set: (value) => updateFilters({ selectedPower: String(value) })
 });
 
 const selectedToughness = computed({
-  get: () => props.modelValue?.selectedToughness,
-  set: (value) => updateFilters({ selectedToughness: value })
+  get: () => Number(props.modelValue?.selectedToughness),
+  set: (value) => updateFilters({ selectedToughness: String(value) })
 });
 
 const selectedCardFormats = computed({
@@ -265,6 +341,72 @@ function toggleRarity(rarity: CardRarityType, isSelected: boolean | null) {
 
   updateFilters({ selectedRarities: currentRarities });
 }
+
+// Chip removal functions
+function removeCardType(cardType: string) {
+  const currentTypes = [...(props.modelValue?.selectedCardTypes || [])];
+  const index = currentTypes.indexOf(cardType as any);
+  if (index !== -1) {
+    currentTypes.splice(index, 1);
+    updateFilters({ selectedCardTypes: currentTypes });
+  }
+}
+
+function removeColor(color: CardColorType) {
+  const currentColors = [...(props.modelValue?.selectedColors || [])];
+  const index = currentColors.indexOf(color);
+  if (index !== -1) {
+    currentColors.splice(index, 1);
+    updateFilters({ selectedColors: currentColors });
+  }
+}
+
+function removeRarity(rarity: CardRarityType) {
+  const currentRarities = [...(props.modelValue?.selectedRarities || [])];
+  const index = currentRarities.indexOf(rarity);
+  if (index !== -1) {
+    currentRarities.splice(index, 1);
+    updateFilters({ selectedRarities: currentRarities });
+  }
+}
+
+function clearCMC() {
+  updateFilters({ selectedCMC: '', selectedCMCOption: 'Equal To' });
+}
+
+function clearPower() {
+  updateFilters({ selectedPower: '', selectedPowerOption: 'Equal To' });
+}
+
+function clearToughness() {
+  updateFilters({ selectedToughness: '', selectedToughnessOption: 'Equal To' });
+}
+
+function clearColorFilterOption() {
+  updateFilters({ selectedColorFilterOption: 'Contains At Least' });
+}
+
+function removeFormat(index: number) {
+  const currentFormats = [...(props.modelValue?.selectedCardFormats || [])];
+  currentFormats.splice(index, 1);
+  updateFilters({ selectedCardFormats: currentFormats });
+}
+
+function clearAllFilters() {
+  updateFilters({
+    selectedCardTypes: [],
+    selectedColors: [],
+    selectedRarities: [],
+    selectedCMC: '',
+    selectedPower: '',
+    selectedToughness: '',
+    selectedCMCOption: 'Equal To',
+    selectedPowerOption: 'Equal To',
+    selectedToughnessOption: 'Equal To',
+    selectedColorFilterOption: 'Contains At Least',
+    selectedCardFormats: []
+  });
+}
 </script>
 
 <style scoped>
@@ -293,6 +435,13 @@ function toggleRarity(rarity: CardRarityType, isSelected: boolean | null) {
 
 .filters-content {
   margin-top: 8px;
+}
+
+.active-filters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
 }
 
 .color-checkboxes,

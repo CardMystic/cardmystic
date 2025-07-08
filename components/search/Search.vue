@@ -2,7 +2,7 @@
   <div class="search-container">
     <form @submit.prevent="onSubmit" class="search-form">
       <div class="search-input-row">
-        <v-text-field v-model="query.value.value" label="Search..." variant="solo" elevation="5"
+        <v-text-field v-model="query.value.value" label="Search..." variant="solo" elevation="5" :hide-details="true"
           prepend-inner-icon="mdi-magnify" class="flex-grow-1" :clearable="!!query.value.value" />
         <v-btn type="submit" color="primary" class="ml-2" size="large">
           Search
