@@ -57,7 +57,7 @@ import { WordSearchSchema } from '~/models/searchModel';
 import type { Card } from '~/models/cardModel';
 const router = useRouter();
 
-const currentQuery = ref<string>('');
+const currentQuery = ref<string>('creatures that draw cards');
 const scrollContainer = ref<HTMLElement>();
 let scrollAnimationId: number | null = null;
 
