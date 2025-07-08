@@ -25,7 +25,7 @@
       <ExampleQueries class="mt-0" style="max-width: 1096px" />
 
       <!-- Top Queries -->
-      <!-- <TopQueries class="mt-6" style="max-width: 1096px" /> -->
+      <TopQueries class="mt-6" style="max-width: 1096px" />
     </v-col>
   </v-container>
 </template>
