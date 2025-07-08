@@ -24,7 +24,22 @@
             <!-- Horizontal scrolling results -->
             <div class="results-container">
                 <div class="results-scroll" ref="scrollContainer">
+                    <!-- First set of cards -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
+                        class="result-card-wrapper">
+                        <Card :card="result" :normalization-context="allScores" size="small"
+                            @click="goToCard(result.card_data.id)" />
+                    </div>
+                    <!-- Loop divider -->
+                    <div class="loop-divider">
+                        <div class="divider-line"></div>
+                        <div class="divider-icon">
+                            <v-icon color="primary" size="20">mdi-repeat</v-icon>
+                        </div>
+                        <div class="divider-line"></div>
+                    </div>
+                    <!-- Duplicate set for seamless looping -->
+                    <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}-duplicate`"
                         class="result-card-wrapper">
                         <Card :card="result" :normalization-context="allScores" size="small"
                             @click="goToCard(result.card_data.id)" />
@@ -127,44 +142,30 @@ function startAutoScroll() {
     if (scrollAnimationId) {
         cancelAnimationFrame(scrollAnimationId);
     }
+
     const scrollSpeed = 1; // pixels per movement
     const baseFrameSkip = 3; // target speed (move every 3 frames)
     let frameCounter = 0;
     let animationFrame = 0; // total frames since start/reset
     const accelerationFrames = 120; // 2 seconds at 60fps to reach full speed
-    const pauseFrames = 120; // 2 second pause when resetting or at end
-    let isPaused = false;
+    const initialPauseFrames = 120; // 2 second pause at the beginning
+    let isPaused = true; // start with initial pause
     let pauseCounter = 0;
-    let isAtEnd = false; // track if we're at the end waiting to reset
-    let hasReset = false; // track if we just reset and need a second pause
 
     function animate() {
         if (!scrollContainer.value) return;
 
         const container = scrollContainer.value;
-        const maxScroll = container.scrollWidth - container.clientWidth;
+        const singleSetWidth = container.scrollWidth / 2; // Width of one set of cards
 
         // Only proceed if there's content to scroll
-        if (maxScroll > 0) {
+        if (singleSetWidth > 0) {
             if (isPaused) {
                 pauseCounter++;
-                if (pauseCounter >= pauseFrames) {
+                if (pauseCounter >= initialPauseFrames) {
                     isPaused = false;
                     pauseCounter = 0;
-                    if (isAtEnd) {
-                        // Reset to beginning after end pause
-                        container.scrollLeft = 0;
-                        isAtEnd = false;
-                        hasReset = true; // mark that we just reset
-                        isPaused = true; // start second pause after reset
-                    } else if (hasReset) {
-                        // Finished second pause after reset
-                        hasReset = false;
-                        animationFrame = 0; // reset animation frame for smooth acceleration
-                    } else {
-                        // Initial pause finished
-                        animationFrame = 0; // reset animation frame for smooth acceleration
-                    }
+                    animationFrame = 0; // reset animation frame for smooth acceleration
                 }
             } else {
                 frameCounter++;
@@ -184,11 +185,10 @@ function startAutoScroll() {
                 if (frameCounter >= currentFrameSkip) {
                     frameCounter = 0; // reset counter
 
-                    if (container.scrollLeft >= maxScroll) {
-                        // Reached the end, start pause before reset
-                        isPaused = true;
-                        pauseCounter = 0;
-                        isAtEnd = true;
+                    // Check if we've scrolled through the first set of cards
+                    if (container.scrollLeft >= singleSetWidth) {
+                        // Reset to beginning for seamless loop
+                        container.scrollLeft = 0;
                     } else {
                         // Smooth continuous scroll
                         container.scrollLeft += scrollSpeed;
@@ -200,12 +200,11 @@ function startAutoScroll() {
         // Schedule next frame
         scrollAnimationId = requestAnimationFrame(animate);
     }
+
     // Start the animation with initial pause
     isPaused = true;
     pauseCounter = 0;
     animationFrame = 0;
-    isAtEnd = false;
-    hasReset = false;
     scrollAnimationId = requestAnimationFrame(animate);
 }
 
@@ -303,4 +302,27 @@ function goToCard(cardId: string | undefined) {
   &:hover
     transform: translateY(-4px) scale(1.02)
     box-shadow: 0 8px 24px rgba(147, 114, 255, 0.3)
+
+.loop-divider
+  flex: 0 0 auto
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  height: 100%
+  min-height: 200px
+  margin: 0 16px
+  opacity: 0.6
+
+.divider-line
+  width: 2px
+  flex: 1
+  background: linear-gradient(to bottom, transparent, rgb(var(--v-theme-primary)), transparent)
+  min-height: 60px
+
+.divider-icon
+  padding: 8px 0
+  display: flex
+  align-items: center
+  justify-content: center
 </style>
