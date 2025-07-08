@@ -88,7 +88,7 @@
             </v-expansion-panel-title>
             <v-expansion-panel-text>
               <v-select v-model="selectedColorFilterOption" :items="colorFilterOptions" label="Color matching" clearable
-                variant="outlined" density="comfortable" class="mb-4" />
+                variant="outlined" density="comfortable" />
 
               <div class="color-checkboxes">
                 <v-checkbox v-for="color in cardColors" :key="color" :label="color"
@@ -285,17 +285,17 @@ const selectedToughnessOption = computed({
 
 const selectedCMC = computed({
   get: () => Number(props.modelValue?.selectedCMC),
-  set: (value) => updateFilters({ selectedCMC: String(value) })
+  set: (value) => updateFilters({ selectedCMC: value ? String(value) : undefined })
 });
 
 const selectedPower = computed({
   get: () => Number(props.modelValue?.selectedPower),
-  set: (value) => updateFilters({ selectedPower: String(value) })
+  set: (value) => updateFilters({ selectedPower: value ? String(value) : undefined })
 });
 
 const selectedToughness = computed({
   get: () => Number(props.modelValue?.selectedToughness),
-  set: (value) => updateFilters({ selectedToughness: String(value) })
+  set: (value) => updateFilters({ selectedToughness: value ? String(value) : undefined })
 });
 
 const selectedCardFormats = computed({
@@ -378,19 +378,19 @@ function removeRarity(rarity: CardRarityType) {
 }
 
 function clearCMC() {
-  updateFilters({ selectedCMC: '', selectedCMCOption: 'Equal To' });
+  updateFilters({ selectedCMC: undefined, selectedCMCOption: undefined });
 }
 
 function clearPower() {
-  updateFilters({ selectedPower: '', selectedPowerOption: 'Equal To' });
+  updateFilters({ selectedPower: undefined, selectedPowerOption: undefined });
 }
 
 function clearToughness() {
-  updateFilters({ selectedToughness: '', selectedToughnessOption: 'Equal To' });
+  updateFilters({ selectedToughness: undefined, selectedToughnessOption: undefined });
 }
 
 function clearColorFilterOption() {
-  updateFilters({ selectedColorFilterOption: 'Contains At Least' });
+  updateFilters({ selectedColorFilterOption: undefined });
 }
 
 function removeFormat(index: number) {
@@ -401,17 +401,17 @@ function removeFormat(index: number) {
 
 function clearAllFilters() {
   updateFilters({
-    selectedCardTypes: [],
-    selectedColors: [],
-    selectedRarities: [],
-    selectedCMC: '',
-    selectedPower: '',
-    selectedToughness: '',
-    selectedCMCOption: 'Equal To',
-    selectedPowerOption: 'Equal To',
-    selectedToughnessOption: 'Equal To',
-    selectedColorFilterOption: 'Contains At Least',
-    selectedCardFormats: []
+    selectedCardTypes: undefined,
+    selectedColors: undefined,
+    selectedRarities: undefined,
+    selectedCMC: undefined,
+    selectedPower: undefined,
+    selectedToughness: undefined,
+    selectedCMCOption: undefined,
+    selectedPowerOption: undefined,
+    selectedToughnessOption: undefined,
+    selectedColorFilterOption: undefined,
+    selectedCardFormats: undefined
   });
 }
 </script>
@@ -456,7 +456,6 @@ function clearAllFilters() {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
-  margin-top: 8px;
 }
 
 .stat-group {

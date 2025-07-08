@@ -22,9 +22,3 @@ export default {
     }
 };
 </script>
-
-<!--
-    Usage:
-    <ManaIcon type="blue" size="32" />
-    Requires mana-icons CSS to be loaded globally.
--->

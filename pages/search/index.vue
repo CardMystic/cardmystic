@@ -84,7 +84,7 @@ const { data: searchResults, isLoading } = useQuery({
   queryKey: [
     'search',
     'colbert',
-    JSON.stringify(wordSearch.value)
+    wordSearch,
   ],
   queryFn: async () => {
     const response = await fetch('/api/proxy/search/colbert', {
