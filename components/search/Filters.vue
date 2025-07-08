@@ -1,47 +1,63 @@
 <template>
-  <v-expansion-panels multiple>
-    <v-expansion-panel title="Card Types">
-      <v-select v-model="selectedCardTypes" :items="cardTypes" label="Card Types" multiple clearable />
-    </v-expansion-panel>
-    <v-expansion-panel title="Colors">
-      <v-select v-model="selectedColorFilterOption" :items="colorFilterOptions" label="Color Filter Option" clearable />
-      <v-select v-model="selectedColors" :items="cardColors" label="Colors" multiple clearable class="ml-2" />
-    </v-expansion-panel>
-    <v-expansion-panel title="Rarities">
-      <v-select v-model="selectedRarities" :items="cardRarities" label="Rarities" multiple clearable class="ml-2" />
-    </v-expansion-panel>
-    <v-expansion-panel title="CMC / Power / Toughness">
-      <v-row>
-        <v-col cols="4">
-          <v-select v-model="selectedCMCOption" :items="comparisonOperators" label="CMC Option" clearable />
-          <v-text-field v-model="selectedCMC" label="CMC" clearable />
-        </v-col>
-        <v-col cols="4">
-          <v-select v-model="selectedPowerOption" :items="comparisonOperators" label="Power Option" clearable />
-          <v-text-field v-model="selectedPower" label="Power" clearable />
-        </v-col>
-        <v-col cols="4">
-          <v-select v-model="selectedToughnessOption" :items="comparisonOperators" label="Toughness Option" clearable />
-          <v-text-field v-model="selectedToughness" label="Toughness" clearable />
-        </v-col>
-      </v-row>
-    </v-expansion-panel>
-    <v-expansion-panel title="Formats">
-      <v-row v-for="(format, i) in selectedCardFormats" :key="i" class="mb-2">
-        <v-col cols="6">
-          <v-select v-model="format.format" :items="cardFormats" label="Format" clearable />
-        </v-col>
-        <v-col cols="6">
-          <v-select v-model="format.status" :items="cardFormatStatuses" label="Status" clearable />
-        </v-col>
-      </v-row>
-      <v-btn @click="addFormatRow" size="small" class="mt-2">Add Format</v-btn>
-    </v-expansion-panel>
-  </v-expansion-panels>
+  <div class="filters-container">
+    <v-btn @click="isExpanded = !isExpanded" variant="outlined" color="primary" class="filters-toggle-btn mb-3" block>
+      <v-icon :class="{ 'rotate-180': isExpanded }" class="transition-transform">
+        mdi-chevron-down
+      </v-icon>
+      {{ isExpanded ? 'Hide Filters' : 'Show Filters' }}
+    </v-btn>
+
+    <v-expand-transition>
+      <div v-show="isExpanded" class="filters-content">
+        <v-expansion-panels multiple>
+          <v-expansion-panel title="Card Types">
+            <v-select v-model="selectedCardTypes" :items="cardTypes" label="Card Types" multiple clearable />
+          </v-expansion-panel>
+          <v-expansion-panel title="Colors">
+            <v-select v-model="selectedColorFilterOption" :items="colorFilterOptions" label="Color Filter Option"
+              clearable />
+            <v-select v-model="selectedColors" :items="cardColors" label="Colors" multiple clearable class="ml-2" />
+          </v-expansion-panel>
+          <v-expansion-panel title="Rarities">
+            <v-select v-model="selectedRarities" :items="cardRarities" label="Rarities" multiple clearable
+              class="ml-2" />
+          </v-expansion-panel>
+          <v-expansion-panel title="CMC / Power / Toughness">
+            <v-row>
+              <v-col cols="4">
+                <v-select v-model="selectedCMCOption" :items="comparisonOperators" label="CMC Option" clearable />
+                <v-text-field v-model="selectedCMC" label="CMC" clearable />
+              </v-col>
+              <v-col cols="4">
+                <v-select v-model="selectedPowerOption" :items="comparisonOperators" label="Power Option" clearable />
+                <v-text-field v-model="selectedPower" label="Power" clearable />
+              </v-col>
+              <v-col cols="4">
+                <v-select v-model="selectedToughnessOption" :items="comparisonOperators" label="Toughness Option"
+                  clearable />
+                <v-text-field v-model="selectedToughness" label="Toughness" clearable />
+              </v-col>
+            </v-row>
+          </v-expansion-panel>
+          <v-expansion-panel title="Formats">
+            <v-row v-for="(format, i) in selectedCardFormats" :key="i" class="mb-2">
+              <v-col cols="6">
+                <v-select v-model="format.format" :items="cardFormats" label="Format" clearable />
+              </v-col>
+              <v-col cols="6">
+                <v-select v-model="format.status" :items="cardFormatStatuses" label="Status" clearable />
+              </v-col>
+            </v-row>
+            <v-btn @click="addFormatRow" size="small" class="mt-2">Add Format</v-btn>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </div>
+    </v-expand-transition>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus } from '~/models/cardModel';
 import type { CardSearchFilters } from '~/models/searchModel';
 
@@ -52,6 +68,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: CardSearchFilters]
 }>();
+
+// Collapsible state
+const isExpanded = ref(false);
 
 const cardTypes = CardType.options;
 const cardColors = CardColor.options;
@@ -141,4 +160,31 @@ function addFormatRow() {
 }
 </script>
 
-<style></style>
+<style scoped>
+.filters-container {
+  width: 100%;
+}
+
+.filters-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.filters-toggle-btn .v-icon {
+  transition: transform 0.3s ease-in-out;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.transition-transform {
+  transition: transform 0.3s ease-in-out;
+}
+
+.filters-content {
+  margin-top: 8px;
+}
+</style>
