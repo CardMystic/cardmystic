@@ -4,7 +4,7 @@
       <div class="search-input-row">
         <v-text-field v-model="query.value.value" label="Search..." variant="solo" elevation="5" :hide-details="true"
           prepend-inner-icon="mdi-magnify" class="flex-grow-1" :clearable="!!query.value.value" />
-        <v-btn type="submit" color="primary" class="ml-2" size="large" :disabled="isSearchDisabled">
+        <v-btn type="submit" color="primary" class="ml-2" size="large">
           Search
         </v-btn>
       </div>
@@ -51,12 +51,6 @@ watch(queryParam, (newQuery) => {
 watch(parsedFilters, (newFilters) => {
   filters.value.value = newFilters || {};
 }, { immediate: true, deep: true });
-
-// Computed property to check if search should be disabled
-const isSearchDisabled = computed(() => {
-  const queryValue = query.value.value;
-  return !queryValue || (typeof queryValue === 'string' && queryValue.trim() === '');
-});
 
 const onSubmit = form.handleSubmit((values) => {
   // Don't search if there's no query
