@@ -1,5 +1,4 @@
 <template>
-  <navbar></navbar>
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
       <!-- Results -->
@@ -16,12 +15,7 @@
         <template v-else-if="searchResults && searchResults.length">
           <v-row>
             <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in searchResults" :key="result.card_data.id">
-              <card :card="result" @click="
-                router.push({
-                  name: 'cardDetails',
-                  query: { id: result.card_data.id },
-                })
-                " />
+              <card :card="result" @click="navigateToCard(result.card_data.id)" />
             </v-col>
           </v-row>
         </template>
@@ -45,6 +39,15 @@ import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel'
 
 const router = useRouter();
 const route = useRoute();
+
+// Navigation helper
+function navigateToCard(cardId: string | undefined) {
+  if (!cardId) {
+    console.warn('Cannot navigate to card: ID is undefined');
+    return;
+  }
+  router.push(`/card/${cardId}`);
+}
 
 // Parse query params into a WordSearch model
 const queryParam = computed(() => String(route.query.query || ''));

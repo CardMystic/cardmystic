@@ -1,5 +1,4 @@
 <template>
-  <navbar></navbar>
   <v-container class="fill-height d-flex responsive-align" style="padding-top: 0px">
     <v-col class="col-container px-0">
       <!-- Header with image and title side by side -->
@@ -29,8 +28,6 @@
       <!-- <TopQueries class="mt-6" style="max-width: 1096px" /> -->
     </v-col>
   </v-container>
-
-  <Footer></Footer>
 </template>
 
 <script setup lang="ts">
@@ -38,7 +35,6 @@ defineOptions({ name: 'HomePage' });
 
 import { onMounted, ref } from 'vue';
 import SearchForm from '~/components/search/Search.vue';
-// import { useSearchStore } from '~/stores/searchStore';
 
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');

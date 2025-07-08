@@ -1,14 +1,6 @@
 <template>
-  <navbar></navbar>
-  <v-container
-    class="fill-height d-flex align-center justify-center d-flex flex-column"
-  >
-    <v-card
-      class="pa-2 mb-6 text-card"
-      max-width="600"
-      elevation="10"
-      rounded="xl"
-    >
+  <v-container class="fill-height d-flex align-center justify-center d-flex flex-column">
+    <v-card class="pa-2 mb-6 text-card" max-width="600" elevation="10" rounded="xl">
       <v-card-title class="text-h5 font-weight-bold">
         🔮 What is <b class="title">CardMystic</b>?
       </v-card-title>

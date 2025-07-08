@@ -1,5 +1,4 @@
 <template>
-  <navbar></navbar>
   <v-container class="fill-height d-flex align-center justify-center">
     <v-card class="pa-6 text-card" max-width="600" elevation="10" rounded="xl">
       <v-card-title class="text-h5 font-weight-bold">
@@ -11,9 +10,7 @@
         from you!
         <br /><br />
         👾 Discord:
-        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank"
-          >Join our server</a
-        >
+        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank">Join our server</a>
         <br />
         📧 Email:
         <a href="mailto:thecardmystic@gmail.com"> thecardmystic@gmail.com </a>
