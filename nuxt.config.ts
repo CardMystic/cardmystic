@@ -18,6 +18,13 @@ export default defineNuxtConfig({
   build: {
     transpile: ['vuetify'],
   },
+  runtimeConfig: {
+    // The private keys which are only available server-side
+    backendUrl: 'http://localhost:3000',
+    // Keys within public are also exposed client-side
+    public: {
+    }
+  },
   plugins: ['~/plugins/vue-query.ts'],
   modules: [
     '@nuxtjs/google-fonts',

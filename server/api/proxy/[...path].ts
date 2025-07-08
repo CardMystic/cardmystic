@@ -1,4 +1,4 @@
-import { env } from '~/utils/envConfig';
+const runtimeConfig = useRuntimeConfig();
 
 export default defineEventHandler(async (event) => {
   const pathParam = event.context.params?.path;
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     ? await readBody(event)
     : undefined;
 
-  const response = await $fetch(`${env.BACKEND_URL}/${path}`, {
+  const response = await $fetch(`${runtimeConfig.backendUrl}/${path}`, {
     method,
     body,
     query: getQuery(event),
