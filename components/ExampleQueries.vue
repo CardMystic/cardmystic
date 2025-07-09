@@ -24,22 +24,8 @@
             <!-- Horizontal scrolling results -->
             <div class="results-container">
                 <div class="results-scroll" ref="scrollContainer">
-                    <!-- First set of cards -->
+                    <!-- Cards -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
-                        class="result-card-wrapper">
-                        <Card :card="result" :normalization-context="allScores" size="small"
-                            @click="goToCard(result.card_data.id)" />
-                    </div>
-                    <!-- Loop divider -->
-                    <div class="loop-divider">
-                        <div class="divider-line"></div>
-                        <div class="divider-icon">
-                            <v-icon color="primary" size="20">mdi-repeat</v-icon>
-                        </div>
-                        <div class="divider-line"></div>
-                    </div>
-                    <!-- Duplicate set for seamless looping -->
-                    <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}-duplicate`"
                         class="result-card-wrapper">
                         <Card :card="result" :normalization-context="allScores" size="small"
                             @click="goToCard(result.card_data.id)" />
@@ -51,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import { useQuery } from '@tanstack/vue-query'
 import { DefaultLimit, WordSearchSchema } from '~/models/searchModel';
 import type { Card } from '~/models/cardModel';
@@ -103,14 +89,21 @@ onUnmounted(() => {
 });
 
 async function loadRandomExample() {
+    // Stop current animation
+    if (scrollAnimationId) {
+        cancelAnimationFrame(scrollAnimationId);
+        scrollAnimationId = null;
+    }
+
     const randomIndex = Math.floor(Math.random() * exampleQueries.length);
     currentQuery.value = exampleQueries[randomIndex];
 
-    // Reset scroll position and start auto-scrolling
+    // Reset scroll position
     if (scrollContainer.value) {
         scrollContainer.value.scrollLeft = 0;
     }
-    startAutoScroll();
+
+    // The watcher will handle starting the animation when results load
 }
 
 const { data: results, isLoading } = useQuery({
@@ -133,14 +126,37 @@ const { data: results, isLoading } = useQuery({
     staleTime: 1000 * 60 * 15, // 15 minutes
 });
 
+// Watch for results to change and start auto-scroll when ready
+watch([results, isLoading], async ([newResults, newIsLoading]) => {
+    if (!newIsLoading && newResults && newResults.length > 0) {
+        // Wait for DOM to update
+        await nextTick();
+        // Add a small delay to ensure rendering is complete
+        setTimeout(() => {
+            startAutoScroll();
+        }, 100);
+    }
+}, { immediate: true });
+
 function startAutoScroll() {
-    if (!scrollContainer.value || results.value?.length === 0) {
+    if (!scrollContainer.value || !results.value || results.value.length === 0) {
         return;
     }
 
     // Clear any existing animation
     if (scrollAnimationId) {
         cancelAnimationFrame(scrollAnimationId);
+        scrollAnimationId = null;
+    }
+
+    // Ensure container has content to scroll
+    const container = scrollContainer.value;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+
+    if (maxScroll <= 0) {
+        // Not enough content to scroll, try again later
+        setTimeout(() => startAutoScroll(), 200);
+        return;
     }
 
     const scrollSpeed = 1; // pixels per movement
@@ -149,20 +165,46 @@ function startAutoScroll() {
     let animationFrame = 0; // total frames since start/reset
     const accelerationFrames = 120; // 2 seconds at 60fps to reach full speed
     const initialPauseFrames = 120; // 2 second pause at the beginning
+    const endPauseFrames = 180; // 3 second pause at the end
+    const resetDurationFrames = 30; // 0.5 second (30 frames at 60fps) to scroll back
     let isPaused = true; // start with initial pause
     let pauseCounter = 0;
+    let isResetting = false;
+    let resetStartScroll = 0;
+    let resetTargetScroll = 0;
+    let resetFrameCounter = 0;
 
     function animate() {
-        if (!scrollContainer.value) return;
+        if (!scrollContainer.value || !results.value || results.value.length === 0) {
+            return;
+        }
 
         const container = scrollContainer.value;
-        const singleSetWidth = container.scrollWidth / 2; // Width of one set of cards
+        const currentMaxScroll = container.scrollWidth - container.clientWidth;
 
         // Only proceed if there's content to scroll
-        if (singleSetWidth > 0) {
-            if (isPaused) {
+        if (currentMaxScroll > 0) {
+            if (isResetting) {
+                // Smooth scroll back to start
+                resetFrameCounter++;
+                const progress = Math.min(resetFrameCounter / resetDurationFrames, 1);
+                const easedProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-out
+
+                container.scrollLeft = resetStartScroll + (resetTargetScroll - resetStartScroll) * easedProgress;
+
+                if (progress >= 1) {
+                    // Reset complete
+                    container.scrollLeft = 0;
+                    isResetting = false;
+                    isPaused = true;
+                    pauseCounter = 0;
+                    animationFrame = 0;
+                    resetFrameCounter = 0;
+                }
+            } else if (isPaused) {
                 pauseCounter++;
-                if (pauseCounter >= initialPauseFrames) {
+                const currentPauseFrames = animationFrame === 0 ? initialPauseFrames : endPauseFrames;
+                if (pauseCounter >= currentPauseFrames) {
                     isPaused = false;
                     pauseCounter = 0;
                     animationFrame = 0; // reset animation frame for smooth acceleration
@@ -185,15 +227,26 @@ function startAutoScroll() {
                 if (frameCounter >= currentFrameSkip) {
                     frameCounter = 0; // reset counter
 
-                    // Check if we've scrolled through the first set of cards
-                    if (container.scrollLeft >= singleSetWidth) {
-                        // Reset to beginning for seamless loop
-                        container.scrollLeft = 0;
+                    if (container.scrollLeft >= currentMaxScroll) {
+                        // Reached the end, start end pause before reset
+                        isPaused = true;
+                        pauseCounter = 0;
                     } else {
                         // Smooth continuous scroll
                         container.scrollLeft += scrollSpeed;
                     }
                 }
+            }
+
+            // Check if we need to start reset after end pause
+            if (isPaused && pauseCounter >= endPauseFrames && animationFrame > 0 && !isResetting) {
+                // Start smooth reset
+                isResetting = true;
+                resetStartScroll = container.scrollLeft;
+                resetTargetScroll = 0;
+                resetFrameCounter = 0;
+                isPaused = false;
+                pauseCounter = 0;
             }
         }
 
@@ -205,6 +258,7 @@ function startAutoScroll() {
     isPaused = true;
     pauseCounter = 0;
     animationFrame = 0;
+    isResetting = false;
     scrollAnimationId = requestAnimationFrame(animate);
 }
 
@@ -302,27 +356,4 @@ function goToCard(cardId: string | undefined) {
   &:hover
     transform: translateY(-4px) scale(1.02)
     box-shadow: 0 8px 24px rgba(147, 114, 255, 0.3)
-
-.loop-divider
-  flex: 0 0 auto
-  display: flex
-  flex-direction: column
-  align-items: center
-  justify-content: center
-  height: 100%
-  min-height: 200px
-  margin: 0 16px
-  opacity: 0.6
-
-.divider-line
-  width: 2px
-  flex: 1
-  background: linear-gradient(to bottom, transparent, rgb(var(--v-theme-primary)), transparent)
-  min-height: 60px
-
-.divider-icon
-  padding: 8px 0
-  display: flex
-  align-items: center
-  justify-content: center
 </style>
