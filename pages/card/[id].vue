@@ -69,7 +69,7 @@
             <div v-if="card.prices.usd" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.usd_foil" class="price-item">
@@ -81,7 +81,7 @@
             <div v-if="card.prices.eur" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.eur_foil" class="price-item">
@@ -489,10 +489,6 @@ function flipCard() {
   position: relative
   z-index: 1
   transition: all 0.3s ease
-
-  &:hover
-    transform: translateY(-2px) scale(1.02)
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3)
 
 // Card Header Styling
 .card-header
