@@ -2,6 +2,9 @@
 	"name": "nuxt-app",
 	"private": true,
 	"type": "module",
+	"engines": {
+		"node": ">=22.0.0"
+	},
 	"scripts": {
 		"build": "nuxt build",
 		"build:azure": "nuxi build --preset=azure",
