@@ -91,11 +91,25 @@ function clearQuery() {
   .search-input-row {
     flex-direction: column;
     gap: 12px;
+    width: 100%;
   }
 
-  .search-input-row .v-btn {
+  .search-btn {
     width: 100%;
     margin-left: 0 !important;
+    align-self: flex-start;
+    height: 56px !important;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .search-container {
+    padding: 0 16px;
+  }
+
+  /* Ensure the text field container takes full width */
+  .search-input-row :deep(.v-text-field) {
+    width: 100% !important;
   }
 }
 </style>
