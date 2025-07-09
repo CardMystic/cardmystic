@@ -1,4 +1,15 @@
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
+import { execSync } from 'child_process';
+
+// Get the current git commit hash
+function getCommitHash() {
+  try {
+    return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+  } catch (error) {
+    console.warn('Could not get git commit hash:', error);
+    return 'unknown';
+  }
+}
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -21,7 +32,9 @@ export default defineNuxtConfig({
     // The private keys which are only available server-side
     backendUrl: 'http://localhost:3000',
     // Keys within public are also exposed client-side
-    public: {},
+    public: {
+      commitHash: getCommitHash(),
+    },
   },
   plugins: ['~/plugins/vue-query.ts'],
   modules: [

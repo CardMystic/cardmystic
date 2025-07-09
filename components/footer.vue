@@ -32,10 +32,32 @@
         <p class="disclaimer-text mt-2">
           All other content © 2025 Fiasco Games LLC
         </p>
+        <p class="disclaimer-text mt-2">
+          <a :href="commitUrl" target="_blank" rel="noopener" class="commit-link">
+            Frontend: {{ commitHash }}
+          </a>
+        </p>
       </div>
     </v-container>
   </v-footer>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+
+// Get commit hash from runtime config
+const { public: { commitHash: fullCommitHash } } = useRuntimeConfig();
+
+const commitHash = computed(() => {
+  // Show only first 7 characters for display
+  return typeof fullCommitHash === 'string' ? fullCommitHash.substring(0, 7) : 'dev';
+});
+
+const commitUrl = computed(() => {
+  const hash = typeof fullCommitHash === 'string' ? fullCommitHash : 'main';
+  return `https://github.com/CardMystic/cardmystic/commit/${hash}`;
+});
+</script>
 
 <style scoped lang="scss">
 .footer {
@@ -71,5 +93,18 @@
   margin: 0;
   max-width: 800px;
   margin: 0 auto;
+}
+
+.commit-link {
+  color: rgba(147, 114, 255, 0.8);
+  text-decoration: none;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: rgb(147, 114, 255);
+    text-decoration: underline;
+  }
 }
 </style>
