@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useQuery } from '@tanstack/vue-query'
-import { WordSearchSchema } from '~/models/searchModel';
+import { DefaultLimit, WordSearchSchema } from '~/models/searchModel';
 import type { Card } from '~/models/cardModel';
 const router = useRouter();
 
@@ -64,7 +64,7 @@ let scrollAnimationId: number | null = null;
 const wordSearch = computed(() =>
     WordSearchSchema.parse({
         query: currentQuery.value,
-        limit: 10,
+        limit: DefaultLimit,
         exclude_card_data: false, // Default to false, can be overridden by query param
     })
 );
