@@ -64,3 +64,14 @@ export const SimilaritySearchSchema = z.object({
   filters: CardSearchFiltersSchema.optional(),
   exclude_card_data: z.boolean().optional().default(false),
 });
+
+export const AutocompleteSearchSchema = z.object({
+  query: z.string().min(1).max(100),
+  limit: z.coerce.number().int().positive().max(50).default(DefaultLimit),
+});
+
+export const AutocompleteSearchResponseSchema = z.object({
+  suggestions: z.array(z.string()),
+  query: z.string(),
+  count: z.number(),
+});
