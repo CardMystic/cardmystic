@@ -69,7 +69,7 @@
             <div v-if="card.prices.usd" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.usd_foil" class="price-item">
@@ -81,7 +81,7 @@
             <div v-if="card.prices.eur" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.eur_foil" class="price-item">
@@ -116,7 +116,10 @@
           <h2 class="card-title">
             {{ currentName }}
             <span v-if="currentManaCost" class="mana-cost">
-              <span v-html="formatSymbols(currentManaCost)" style="white-space: nowrap"></span>
+              <template v-for="(part, index) in formattedManaCost" :key="index">
+                <template v-if="typeof part === 'string'">{{ part }}</template>
+                <component v-else :is="part" />
+              </template>
             </span>
           </h2>
           <div class="set-rarity-info">
@@ -129,7 +132,12 @@
         </div>
 
         <div v-if="currentOracleText" class="card-text-container">
-          <div class="oracle-text" v-html="formatSymbols(currentOracleText, 16)"></div>
+          <div class="oracle-text">
+            <template v-for="(part, index) in formattedOracleText" :key="index">
+              <template v-if="typeof part === 'string'">{{ part }}</template>
+              <component v-else :is="part" />
+            </template>
+          </div>
 
           <div class="stats-container" v-if="currentPower && currentToughness">
             <div class="power-toughness">
@@ -139,7 +147,7 @@
           </div>
 
           <div v-if="card.artist" class="artist-info">
-            <span class="artist-label">Illustrated by</span>
+            <span class="artist-label">Illustrated by </span>
             <strong class="artist-name">{{ card.artist }}</strong>
           </div>
         </div>
@@ -168,13 +176,13 @@
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, h } from 'vue';
+import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimit } from '~/models/searchModel';
+import ManaIcon from '~/components/manaIcon.vue';
 
 const route = useRoute();
-const router = useRouter();
 
 const isFlipped = ref(false);
 
@@ -253,55 +261,81 @@ const formatName = (raw: string) => {
 };
 
 /**
- * Convert symbols (mana, tap, etc) in a string to Scryfall SVG images
+ * Convert symbols (mana, tap, etc) in a string to ManaIcon components
  */
-const formatSymbols = (text: string | undefined, size: number = 30): string => {
-  if (!text) return '';
+const formatSymbols = (text: string | undefined) => {
+  if (!text) return [];
 
-  // Use replaceAll or a more explicit approach to ensure all symbols are processed
-  let result = '';
   const symbols = text.match(/\{([^}]+)\}/g);
 
-  if (symbols) {
-    // Replace the original string by processing each symbol
-    let workingString = text;
-    symbols.forEach((symbol) => {
-      let symbolForUrl = symbol.slice(1, -1); // Remove { and }
+  if (!symbols) return [text];
 
-      // Handle hybrid mana (e.g., W/U becomes wu)
-      if (symbolForUrl.includes('/')) {
-        symbolForUrl = symbolForUrl.replace('/', '');
+  // Split text into parts and symbols while preserving newlines
+  const parts: (string | ReturnType<typeof h>)[] = [];
+  let lastIndex = 0;
+
+  symbols.forEach((symbol) => {
+    const symbolIndex = text.indexOf(symbol, lastIndex);
+
+    // Add text before the symbol (preserving newlines)
+    if (symbolIndex > lastIndex) {
+      const textBefore = text.substring(lastIndex, symbolIndex);
+      // Split by newlines and add each part with line breaks
+      const lines = textBefore.split('\n');
+      lines.forEach((line, index) => {
+        if (index > 0) {
+          parts.push(h('br')); // Add line break for newlines
+        }
+        if (line) {
+          parts.push(line);
+        }
+      });
+    }
+
+    let symbolForUrl = symbol.slice(1, -1); // Remove { and }
+
+    // Handle hybrid mana (e.g., W/U becomes wu)
+    if (symbolForUrl.includes('/')) {
+      symbolForUrl = symbolForUrl.replace('/', '').toLowerCase();
+    }
+
+    // Handle special symbols
+    const specialSymbols: Record<string, string> = {
+      t: 'tap',
+      q: 'untap',
+      e: 'energy',
+      s: 'snow',
+      chaos: 'chaos',
+      pw: 'planeswalker',
+      loyalty: 'loyalty',
+      '∞': 'infinity',
+    };
+
+    if (specialSymbols[symbolForUrl]) {
+      symbolForUrl = specialSymbols[symbolForUrl];
+    }
+
+    // Create ManaIcon component
+    parts.push(h(ManaIcon, { type: symbolForUrl }));
+
+    lastIndex = symbolIndex + symbol.length;
+  });
+
+  // Add remaining text (preserving newlines)
+  if (lastIndex < text.length) {
+    const remainingText = text.substring(lastIndex);
+    const lines = remainingText.split('\n');
+    lines.forEach((line, index) => {
+      if (index > 0) {
+        parts.push(h('br')); // Add line break for newlines
       }
-
-      // Handle special symbols
-      const specialSymbols = {
-        t: 'tap',
-        q: 'untap',
-        e: 'energy',
-        s: 'snow',
-        chaos: 'chaos',
-        pw: 'planeswalker',
-        loyalty: 'loyalty',
-        '∞': 'infinity',
-      };
-
-      if (specialSymbols[symbolForUrl as keyof typeof specialSymbols]) {
-        symbolForUrl =
-          specialSymbols[symbolForUrl as keyof typeof specialSymbols];
+      if (line) {
+        parts.push(line);
       }
-
-      let imgTag = `<img src="https://svgs.scryfall.io/card-symbols/${symbolForUrl}.svg" height="${size}" class="mana-symbol"/>`;
-
-      // Replace the first occurrence of this symbol
-      workingString = workingString.replace(symbol, imgTag);
     });
-
-    result = workingString;
-  } else {
-    result = text;
   }
 
-  return result;
+  return parts;
 };
 
 /**
@@ -370,6 +404,15 @@ const currentPower = computed(() => {
 const currentToughness = computed(() => {
   if (!currentFace.value) return '';
   return currentFace.value.toughness || '';
+});
+
+// Computed properties for formatted symbols
+const formattedManaCost = computed(() => {
+  return formatSymbols(currentManaCost.value);
+});
+
+const formattedOracleText = computed(() => {
+  return formatSymbols(currentOracleText.value);
 });
 
 function getCardImageUrl(cardData: ScryfallCard): string {
@@ -553,8 +596,13 @@ function findSimilarCards() {
 .oracle-text
   color: white
   font-size: 1.1rem
-  line-height: 1.6
+  line-height: 1.2
   margin-bottom: 16px
+
+  br
+    display: block
+    content: ""
+    margin-top: 0.5em
 
 .flavor-text
   color: rgba(147, 114, 255, 0.9)
@@ -591,7 +639,6 @@ function findSimilarCards() {
 
 .artist-name
   color: rgb(var(--v-theme-primary))
-  margin-left: 8px
   font-size: 1rem
 
 // Legalities Card

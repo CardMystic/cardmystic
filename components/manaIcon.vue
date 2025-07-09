@@ -8,11 +8,7 @@ export default {
     props: {
         type: {
             type: String,
-            required: true,
-            validator: value =>
-                [
-                    'c', 'w', 'u', 'b', 'r', 'g'
-                ].includes(value.toLowerCase())
+            required: true
         }
     },
     computed: {
