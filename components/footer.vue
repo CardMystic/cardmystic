@@ -3,36 +3,15 @@
     <v-container class="footer-content">
       <!-- Social Links -->
       <div class="social-links d-flex justify-center align-center gap-4 mb-3">
-        <a
-          href="https://github.com/imdarkmode"
-          target="_blank"
-          aria-label="GitHub"
-          rel="noopener"
-        >
+        <a href="https://github.com/imdarkmode" target="_blank" aria-label="GitHub" rel="noopener">
           <v-icon color="white" size="24">mdi-github</v-icon>
         </a>
 
-        <a
-          href="https://discord.gg/GmPZ3e7tZH"
-          target="_blank"
-          aria-label="Discord"
-          rel="noopener"
-        >
-          <v-img
-            src="@/public/discord-icon.png"
-            width="24"
-            height="24"
-            alt="Discord"
-            contain
-          />
+        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
+          <v-img src="@/public/discord-icon.png" width="24" height="24" alt="Discord" contain />
         </a>
 
-        <a
-          href="https://www.youtube.com/@imdarkmode"
-          target="_blank"
-          aria-label="YouTube"
-          rel="noopener"
-        >
+        <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
           <v-icon color="white" size="24">mdi-youtube</v-icon>
         </a>
       </div>
@@ -51,7 +30,7 @@
           to be accurate. See stores for official prices.
         </p>
         <p class="disclaimer-text mt-2">
-          All other content © 2023 Fiasco Games LLC
+          All other content © 2025 Fiasco Games LLC
         </p>
       </div>
     </v-container>
