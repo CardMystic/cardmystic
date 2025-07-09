@@ -53,10 +53,10 @@
         </v-btn>
 
         <!-- Similar Cards Button -->
-        <!-- <v-btn color="white" variant="elevated" :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
-                    " prepend-icon="mdi-cards" size="large" @click="findSimilarCards">
-                    Similar Cards
-                </v-btn> -->
+        <v-btn color="white" variant="elevated" :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
+          " prepend-icon="mdi-cards" size="large" @click="findSimilarCards">
+          Similar Cards
+        </v-btn>
 
         <!-- Price Information -->
         <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4">
@@ -69,7 +69,7 @@
             <div v-if="card.prices.usd" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-                }}</span>
+              }}</span>
             </div>
 
             <div v-if="card.prices.usd_foil" class="price-item">
@@ -81,7 +81,7 @@
             <div v-if="card.prices.eur" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-                }}</span>
+              }}</span>
             </div>
 
             <div v-if="card.prices.eur_foil" class="price-item">
@@ -169,10 +169,12 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
 import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
+import { DefaultLimit } from '~/models/searchModel';
 
 const route = useRoute();
+const router = useRouter();
 
 const isFlipped = ref(false);
 
@@ -422,6 +424,19 @@ const isDualFaced = computed(() => {
 
 function flipCard() {
   isFlipped.value = !isFlipped.value;
+}
+
+function findSimilarCards() {
+  if (!card.value) return;
+
+  // Navigate to search page with similarity search endpoint
+  const queryParams = {
+    card_name: card.value.name,
+    limit: DefaultLimit,
+    filters: undefined, // No additional filters for similarity search
+  };
+
+  navigateTo({ path: '/search/similarity', query: queryParams });
 }
 
 </script>
