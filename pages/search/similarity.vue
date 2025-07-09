@@ -23,8 +23,19 @@
           </v-row>
         </template>
 
+        <template v-else-if="!cardNameParam">
+          <div class="no-results-container">
+            <v-alert type="info" class="mb-4">
+              Please enter a card name to search for similar cards.
+            </v-alert>
+          </div>
+        </template>
+
         <template v-else>
           <div class="no-results-container">
+            <v-alert type="info" class="mb-4">
+              No results found for "{{ cardNameParam }}". Try a different search term or check your filters.
+            </v-alert>
             <v-btn to="/" class="mt-4" color="primary">Home</v-btn>
           </div>
         </template>
@@ -71,14 +82,18 @@ useHead(() => ({
   ],
 }));
 
-const similaritySearch = computed(() =>
-  SimilaritySearchSchema.parse({
+const similaritySearch = computed(() => {
+  if (!cardNameParam.value) {
+    return null;
+  }
+
+  return SimilaritySearchSchema.parse({
     card_name: cardNameParam.value,
     limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false, // Default to false, can be overridden by query param
-  })
-);
+  });
+});
 
 const { data: searchResults, isLoading } = useQuery({
   queryKey: [
@@ -98,7 +113,7 @@ const { data: searchResults, isLoading } = useQuery({
     return response.json() as Promise<Array<Card>>;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: !!similaritySearch.value.card_name,
+  enabled: !!similaritySearch.value?.card_name,
 });
 
 </script>
