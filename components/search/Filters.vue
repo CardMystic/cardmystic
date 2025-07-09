@@ -68,7 +68,7 @@
     </v-btn>
 
     <v-expand-transition>
-      <div v-show="isExpanded" class="filters-content">
+      <div v-show="isExpanded" class="filters-content mb-4">
         <v-expansion-panels multiple variant="accordion">
           <v-expansion-panel>
             <v-expansion-panel-title>
