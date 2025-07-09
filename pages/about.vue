@@ -11,7 +11,7 @@
         amazing MTG community.
       </v-card-text>
     </v-card>
-    <v-card class="pa-2 text-card" max-width="600" elevation="10" rounded="xl">
+    <v-card class="pa-2 mb-6 text-card" max-width="600" elevation="10" rounded="xl">
       <v-card-title class="text-h5 font-weight-bold">
         🧙‍♂️ Why <b class="title">CardMystic</b>?
       </v-card-title>
@@ -27,6 +27,22 @@
         cheap red burn spell” and let CardMystic handle the rest. Whether you're
         a seasoned deckbuilder or brand new to the game, CardMystic helps you
         find the perfect card without the guesswork.
+      </v-card-text>
+    </v-card>
+    <v-card class="pa-2 text-card" max-width="600" elevation="10" rounded="xl">
+      <v-card-title class="text-h5 font-weight-bold">
+        💬 Contact Us
+      </v-card-title>
+
+      <v-card-text class="mt-2 text-body-1">
+        Have questions, feedback, or ideas for CardMystic? We'd love to hear
+        from you!
+        <br /><br />
+        👾 Discord:
+        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank">Join our server</a>
+        <br />
+        📧 Email:
+        <a href="mailto:thecardmystic@gmail.com"> thecardmystic@gmail.com </a>
       </v-card-text>
     </v-card>
   </v-container>

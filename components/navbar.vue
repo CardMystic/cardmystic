@@ -51,7 +51,6 @@ const drawer = ref(false);
 const navItems = [
   { to: '/', label: 'Home', icon: 'mdi-home' },
   { to: '/about', label: 'About', icon: 'mdi-information' },
-  { to: '/contact', label: 'Contact', icon: 'mdi-email' },
 ];
 
 const filteredNavItems = computed(() => navItems);
