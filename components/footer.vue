@@ -3,7 +3,7 @@
     <v-container class="footer-content">
       <!-- Social Links -->
       <div class="social-links d-flex justify-center align-center gap-4 mb-3">
-        <a href="https://github.com/imdarkmode" target="_blank" aria-label="GitHub" rel="noopener">
+        <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
           <v-icon color="white" size="24">mdi-github</v-icon>
         </a>
 
@@ -13,6 +13,10 @@
 
         <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
           <v-icon color="white" size="24">mdi-youtube</v-icon>
+        </a>
+
+        <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
+          <v-icon color="white" size="24">mdi-patreon</v-icon>
         </a>
       </div>
 
@@ -34,7 +38,7 @@
         </p>
         <p class="disclaimer-text mt-2">
           <a :href="commitUrl" target="_blank" rel="noopener" class="commit-link">
-            Frontend: {{ commitHash }}
+            Version: {{ commitHash }}
           </a>
         </p>
       </div>
@@ -98,7 +102,6 @@ const commitUrl = computed(() => {
 .commit-link {
   color: rgba(147, 114, 255, 0.8);
   text-decoration: none;
-  font-family: 'Courier New', monospace;
   font-size: 10px;
   transition: color 0.2s;
 
