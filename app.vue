@@ -16,6 +16,6 @@
 </style>
 
 <script setup lang="ts">
-import 'mana-font';
+import('~/assets/css/mana.min.css')
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 </script>
