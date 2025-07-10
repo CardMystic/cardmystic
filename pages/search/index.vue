@@ -56,7 +56,7 @@ function navigateToCard(cardId: string | undefined) {
 // Parse query params into a WordSearch model
 const queryParam = computed(() => String(route.query.query || ''));
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 useHead(() => ({
   title: queryParam.value

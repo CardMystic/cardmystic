@@ -41,7 +41,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import { useQuery } from '@tanstack/vue-query'
-import { DefaultLimit, WordSearchSchema } from '~/models/searchModel';
+import { WordSearchSchema } from '~/models/searchModel';
 import type { Card } from '~/models/cardModel';
 const router = useRouter();
 
@@ -52,7 +52,7 @@ let scrollAnimationId: number | null = null;
 const wordSearch = computed(() =>
     WordSearchSchema.parse({
         query: currentQuery.value,
-        limit: DefaultLimit,
+        limit: 15, // Reduced from DefaultLimit for performance
         exclude_card_data: false, // Default to false, can be overridden by query param
     })
 );
@@ -118,10 +118,7 @@ const { data: results, isLoading } = useQuery({
         const response = await fetch('/api/proxy/search/colbert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...wordSearch.value,
-                limit: 15 // Reduce from default to optimize performance
-            }),
+            body: JSON.stringify(wordSearch.value),
         });
         if (!response.ok) {
             throw new Error('Network response was not ok');
