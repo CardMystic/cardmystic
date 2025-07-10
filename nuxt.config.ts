@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     },
   },
   compatibilityDate: '2025-05-15',
+  css: ['vuetify/styles', '@mdi/font/css/materialdesignicons.min.css'],
   devtools: {
     enabled: true,
   },
@@ -46,10 +47,20 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/google-fonts',
     '@vee-validate/nuxt',
-    (_options, nuxt) => {
+    async (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
-        // @ts-expect-error transformAssetUrls is not typed in vite-plugin-vuetify
-        config.plugins.push(vuetify({ autoImport: true }));
+        if (!config.plugins) {
+          config.plugins = [];
+        }
+        config.plugins.push(
+          vuetify({
+            autoImport: true,
+            // styles: {
+            //   // configFile: 'assets/styles/vuetify.scss',
+            // },
+          }),
+        );
+        return;
       });
     },
   ],
@@ -64,6 +75,9 @@ export default defineNuxtConfig({
         usePolling: true,
         interval: 100,
       },
+    },
+    ssr: {
+      noExternal: ['vuetify'],
     },
     plugins: [],
     vue: {

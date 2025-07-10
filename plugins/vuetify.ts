@@ -1,8 +1,5 @@
-import '@mdi/font/css/materialdesignicons.css';
-
-import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
-import * as components from 'vuetify/components';
+import 'vuetify/styles';
 
 export default defineNuxtPlugin((app) => {
   const myDarkTheme = {
@@ -38,35 +35,7 @@ export default defineNuxtPlugin((app) => {
   };
 
   const vuetify = createVuetify({
-    components: {
-      VApp: components.VApp,
-      VCol: components.VCol,
-      VIcon: components.VIcon,
-      VImg: components.VImg,
-      VProgressLinear: components.VProgressLinear,
-      VProgressCircular: components.VProgressCircular,
-      VBtn: components.VBtn,
-      VFooter: components.VFooter,
-      VContainer: components.VContainer,
-      VNavigationDrawer: components.VNavigationDrawer,
-      VList: components.VList,
-      VListItem: components.VListItem,
-      VChip: components.VChip,
-      VExpansionPanels: components.VExpansionPanels,
-      VExpansionPanel: components.VExpansionPanel,
-      VExpansionPanelTitle: components.VExpansionPanelTitle,
-      VSelect: components.VSelect,
-      VRow: components.VRow,
-      VNumberInput: components.VNumberInput,
-      VTextField: components.VTextField,
-      VMain: components.VMain,
-      VCard: components.VCard,
-      VCardTitle: components.VCardTitle,
-      VCardText: components.VCardText,
-      VAlert: components.VAlert,
-      VAlertTitle: components.VAlertTitle,
-      VLazy: components.VLazy,
-    },
+    ssr: true,
     theme: {
       defaultTheme: 'myDarkTheme',
       themes: {
