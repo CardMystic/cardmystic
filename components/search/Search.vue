@@ -49,12 +49,16 @@ const isLoading = ref(true);
 
 // Fetch card names from public directory
 onMounted(async () => {
-  try {
-    const response = await fetch('/card-names.min.json');
-    cardNames.value = await response.json();
-  } catch (error) {
-    console.error('Failed to load card names:', error);
-  } finally {
+  if (props.similarity) {
+    try {
+      const response = await fetch('/card-names.min.json');
+      cardNames.value = await response.json();
+    } catch (error) {
+      console.error('Failed to load card names:', error);
+    } finally {
+      isLoading.value = false;
+    }
+  } else {
     isLoading.value = false;
   }
 });
