@@ -118,7 +118,10 @@ const { data: results, isLoading } = useQuery({
         const response = await fetch('/api/proxy/search/colbert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(wordSearch.value),
+            body: JSON.stringify({
+                ...wordSearch.value,
+                limit: 15 // Reduce from default to optimize performance
+            }),
         });
         if (!response.ok) {
             throw new Error('Network response was not ok');
