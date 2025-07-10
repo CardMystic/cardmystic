@@ -17,10 +17,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: {
     enabled: true,
-
-    timeline: {
-      enabled: true,
-    },
   },
   devServer: {
     port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
@@ -63,6 +59,17 @@ export default defineNuxtConfig({
     vue: {
       template: {
         transformAssetUrls,
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vuetify: ['vuetify'],
+            'vue-vendor': ['vue', '@vue/runtime-core'],
+            tanstack: ['@tanstack/vue-query'],
+          },
+        },
       },
     },
   },

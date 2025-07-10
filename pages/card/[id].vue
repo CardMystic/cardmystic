@@ -27,11 +27,11 @@
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <v-img :src="getCardImageUrl(card)" class="card-image" max-width="300" min-width="300" max-height="420"
-            min-height="420" rounded @error="handleImageError">
+          <v-img :src="getCardImageUrl(card)" class="card-image" width="300" height="420" rounded
+            @error="handleImageError">
             <template v-slot:placeholder>
               <div class="image-placeholder-large">
-                <v-icon size="64" color="grey">mdi-image-off</v-icon>
+                <v-icon size="64" color="grey" icon="mdi-image-off"></v-icon>
                 <p class="placeholder-text-large">Image not available</p>
               </div>
             </template>

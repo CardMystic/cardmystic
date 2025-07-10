@@ -22,7 +22,7 @@
             variant="outlined">
             <div class="btn-left">Support us on Patreon!</div>
             <div class="btn-right">
-              <v-icon size="24" color="black">mdi-patreon</v-icon>
+              <v-icon size="24" color="black" icon="mdi-patreon"></v-icon>
             </div>
           </v-btn>
         </div>

@@ -26,14 +26,13 @@
 
 <script lang="ts" setup>
 defineOptions({ name: 'SearchForm' });
-
-import { useField, useForm } from 'vee-validate';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
+const { useField, useForm } = await import('vee-validate');
+const { toTypedSchema } = await import('@vee-validate/zod');
+
 import { CardSearchFiltersSchema, WordSearchSchema, type CardSearchFilters } from '~/models/searchModel';
-import { toTypedSchema } from '@vee-validate/zod';
 import Filters from './Filters.vue';
-import cardNames from '~/assets/card-names.json';
 
 // Define props
 const props = defineProps<{
@@ -44,6 +43,21 @@ const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || route.query.card_name || ''));
 const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+
+const cardNames = ref<string[]>([]);
+const isLoading = ref(true);
+
+// Fetch card names from public directory
+onMounted(async () => {
+  try {
+    const response = await fetch('/card-names.min.json');
+    cardNames.value = await response.json();
+  } catch (error) {
+    console.error('Failed to load card names:', error);
+  } finally {
+    isLoading.value = false;
+  }
+});
 
 const formSchema = toTypedSchema(WordSearchSchema);
 const form = useForm({

@@ -6,7 +6,7 @@
         <v-img class="card-image" :src="getCardImageUrl(card.card_data)" alt="Card Image" @error="handleImageError">
           <template v-slot:placeholder>
             <div class="image-placeholder">
-              <v-icon size="48" color="grey">mdi-image-off</v-icon>
+              <v-icon size="48" color="grey" icon="mdi-image-off"></v-icon>
               <p class="placeholder-text">Image not available</p>
             </div>
           </template>

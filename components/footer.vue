@@ -4,19 +4,19 @@
       <!-- Social Links -->
       <div class="social-links d-flex justify-center align-center gap-4 mb-3">
         <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
-          <v-icon color="white" size="24">mdi-github</v-icon>
+          <v-icon color="white" size="24" icon="mdi-github"></v-icon>
         </a>
 
         <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
-          <v-img src="@/public/discord-icon.png" width="24" height="24" alt="Discord" contain />
+          <v-img src="@/public/discord-icon.svg" width="24" height="24" alt="Discord" contain />
         </a>
 
         <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
-          <v-icon color="white" size="24">mdi-youtube</v-icon>
+          <v-icon color="white" size="24" icon="mdi-youtube"></v-icon>
         </a>
 
         <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
-          <v-icon color="white" size="24">mdi-patreon</v-icon>
+          <v-icon color="white" size="24" icon="mdi-patreon"></v-icon>
         </a>
       </div>
 

@@ -4,7 +4,7 @@
       <!-- Header with image and title side by side -->
       <div class="header-layout">
         <div class="glow-wrapper">
-          <v-img src="/public/crystall_ball.png" class="image"></v-img>
+          <v-img src="/public/crystall_ball.webp" aspect-ratio="1/1" class="image"></v-img>
         </div>
 
         <div class="title-container">

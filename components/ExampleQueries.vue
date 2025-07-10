@@ -9,7 +9,7 @@
             <!-- Query display and TRY IT button -->
             <div class="query-header">
                 <div class="query-text">
-                    <v-icon class="mr-2" color="primary">mdi-lightbulb-outline</v-icon>
+                    <v-icon class="mr-2" color="primary" icon="mdi-lightbulb-outline"></v-icon>
                     <span class="query-value">"{{ wordSearch.query }}"</span>
                 </div>
                 <div class="button-group">
