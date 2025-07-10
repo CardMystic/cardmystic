@@ -18,3 +18,9 @@ export default {
     }
 };
 </script>
+
+<style scoped>
+.ms {
+    margin: 0 2px;
+}
+</style>
