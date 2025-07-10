@@ -24,11 +24,13 @@
             <!-- Horizontal scrolling results -->
             <div class="results-container">
                 <div class="results-scroll" ref="scrollContainer">
-                    <!-- Cards -->
+                    <!-- Cards with lazy loading -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
                         class="result-card-wrapper">
-                        <Card :card="result" :normalization-context="allScores" size="small"
-                            @click="goToCard(result.card_data.id)" />
+                        <v-lazy :options="{ threshold: 0.5 }" min-height="160" transition="fade-transition">
+                            <Card :card="result" :normalization-context="allScores" size="small"
+                                @click="goToCard(result.card_data.id)" />
+                        </v-lazy>
                     </div>
                 </div>
             </div>
@@ -356,4 +358,13 @@ function goToCard(cardId: string | undefined) {
   &:hover
     transform: translateY(-4px) scale(1.02)
     box-shadow: 0 8px 24px rgba(147, 114, 255, 0.3)
+
+// Lazy loading transition styles
+.fade-transition-enter-active,
+.fade-transition-leave-active
+  transition: opacity 0.3s ease
+
+.fade-transition-enter-from,
+.fade-transition-leave-to
+  opacity: 0
 </style>

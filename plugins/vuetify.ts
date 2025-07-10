@@ -65,6 +65,7 @@ export default defineNuxtPlugin((app) => {
       VCardText: components.VCardText,
       VAlert: components.VAlert,
       VAlertTitle: components.VAlertTitle,
+      VLazy: components.VLazy,
     },
     theme: {
       defaultTheme: 'myDarkTheme',
