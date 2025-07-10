@@ -16,6 +16,5 @@
 </style>
 
 <script setup lang="ts">
-import('~/assets/css/mana.min.css')
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 </script>

@@ -13,7 +13,17 @@ function getCommitHash() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  app: {},
+  app: {
+    head: {
+      link: [
+        {
+          rel: 'stylesheet',
+          type: 'text/css',
+          href: 'https://cdn.jsdelivr.net/npm/mana-font@latest/css/mana.css',
+        },
+      ],
+    },
+  },
   compatibilityDate: '2025-05-15',
   devtools: {
     enabled: true,
