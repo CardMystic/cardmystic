@@ -12,18 +12,14 @@
     </div>
 
     <v-row v-else-if="card" style="max-width: 1400px" class="d-flex justify-center">
-      <!-- Back to Results button aligned with card image -->
-      <v-col cols="12" class="pb-0">
-        <div class="back-button-container">
-          <v-btn color="primary" variant="outlined" rounded="lg" prepend-icon="mdi-arrow-left" class="mr-2"
-            @click="$router.back()">
+      <!-- Left: Card Image -->
+      <v-col md="4" class="d-flex justify-start align-center flex-column mr-6" style="max-width: 300px">
+        <!-- Back to Results button aligned with card image -->
+        <div class="back-button-container-aligned mb-4">
+          <v-btn color="primary" variant="outlined" rounded="lg" prepend-icon="mdi-arrow-left" @click="$router.back()">
             Back to Results
           </v-btn>
         </div>
-      </v-col>
-
-      <!-- Left: Card Image -->
-      <v-col md="4" class="d-flex justify-start align-center flex-column mr-6" style="max-width: 300px">
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
@@ -52,14 +48,15 @@
           {{ isFlipped ? 'Show Front' : 'Show Back' }}
         </v-btn>
 
-        <!-- Similar Cards Button -->
+        <!-- Similar Cards Button - Desktop only -->
         <v-btn color="white" variant="elevated" :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
-          " prepend-icon="mdi-cards" size="large" @click="findSimilarCards">
+          " prepend-icon="mdi-cards" size="large" @click="findSimilarCards"
+          class="d-none d-md-flex similar-cards-btn-desktop">
           Similar Cards
         </v-btn>
 
-        <!-- Price Information -->
-        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4">
+        <!-- Price Information - Desktop only -->
+        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-none d-md-block">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
@@ -97,22 +94,22 @@
           </div>
         </v-card>
 
-        <!-- TCGPlayer Button -->
+        <!-- TCGPlayer Button - Desktop only -->
         <v-btn v-if="card.purchase_uris?.tcgplayer" :href="card.purchase_uris.tcgplayer" target="_blank" color="primary"
-          variant="elevated" class="mt-6 tcgplayer-btn" prepend-icon="mdi-shopping" size="large">
+          variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping" size="large">
           Buy on TCGPlayer
         </v-btn>
 
-        <!-- Fallback button if no direct TCGPlayer link -->
+        <!-- Fallback button if no direct TCGPlayer link - Desktop only -->
         <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" color="primary"
-          variant="outlined" class="mt-4 tcgplayer-btn" prepend-icon="mdi-magnify" size="large">
+          variant="outlined" class="mt-4 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-magnify" size="large">
           Search on TCGPlayer
         </v-btn>
       </v-col>
 
       <!-- Center: Card Details -->
-      <v-col cols="12" md="5">
-        <div class="card-header">
+      <v-col cols="12" md="5" class="d-flex flex-column justify-start">
+        <div class="card-header card-header-aligned">
           <h2 class="card-title">
             {{ currentName }}
             <span v-if="currentManaCost" class="mana-cost">
@@ -152,6 +149,12 @@
           </div>
         </div>
 
+        <!-- Similar Cards Button - Mobile only -->
+        <v-btn color="white" variant="elevated" class="mt-4 mb-7 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
+          size="large" @click="findSimilarCards" block>
+          Similar Cards
+        </v-btn>
+
         <v-card elevation="8" class="legalities-card">
           <div class="legalities-header">
             <v-icon color="primary" class="mr-2">mdi-gavel</v-icon>
@@ -169,6 +172,57 @@
             </v-col>
           </v-row>
         </v-card>
+
+        <!-- Price Information - Mobile only -->
+        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-md-none">
+          <div class="price-header">
+            <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
+            <h4 class="price-title">Current Prices</h4>
+          </div>
+
+          <div class="price-list">
+            <div v-if="card.prices.usd" class="price-item">
+              <span class="currency-label">USD:</span>
+              <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
+                }}</span>
+            </div>
+
+            <div v-if="card.prices.usd_foil" class="price-item">
+              <span class="currency-label">USD Foil:</span>
+              <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{
+                card.prices.usd_foil }}</span>
+            </div>
+
+            <div v-if="card.prices.eur" class="price-item">
+              <span class="currency-label">EUR:</span>
+              <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
+                }}</span>
+            </div>
+
+            <div v-if="card.prices.eur_foil" class="price-item">
+              <span class="currency-label">EUR Foil:</span>
+              <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{
+                card.prices.eur_foil }}</span>
+            </div>
+
+            <div v-if="card.prices.tix" class="price-item">
+              <span class="currency-label">MTGO Tix:</span>
+              <span class="price-value">{{ card.prices.tix }}</span>
+            </div>
+          </div>
+        </v-card>
+
+        <!-- TCGPlayer Button - Mobile only -->
+        <v-btn v-if="card.purchase_uris?.tcgplayer" :href="card.purchase_uris.tcgplayer" target="_blank" color="primary"
+          variant="elevated" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
+          Buy on TCGPlayer
+        </v-btn>
+
+        <!-- Fallback button if no direct TCGPlayer link - Mobile only -->
+        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" color="primary"
+          variant="outlined" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
+          Search on TCGPlayer
+        </v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -552,6 +606,13 @@ function findSimilarCards() {
 .card-header
   margin-bottom: 24px
 
+.card-header-aligned
+  margin-bottom: 24px
+  margin-top: 0
+  
+  @media (min-width: 960px)
+    margin-top: 60px // Align with card image top (button height + margin)
+
 .card-title
   font-size: 2.2rem
   font-weight: 700
@@ -757,6 +818,16 @@ function findSimilarCards() {
     box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
     transform: translateY(-2px)
 
+.similar-cards-btn-desktop
+  width: 100%
+  max-width: 280px
+
+// Price Card Mobile Styling
+@media (max-width: 959px)
+  .price-card
+    max-width: none !important
+    width: 100%
+
 // Legacy styles cleanup
 .chip
   font-size: 10px !important
@@ -811,6 +882,11 @@ em
   &:hover
     box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
     transform: translateY(-2px)
+
+// Mobile responsive styles
+@media (max-width: 959px)
+  .tcgplayer-btn
+    max-width: none !important
 
 // Animations
 @keyframes glowPulse
@@ -877,4 +953,11 @@ em
 
   @media (max-width: 768px)
     padding-left: 0 // Reset on mobile
+
+.back-button-container-aligned
+  display: flex
+  justify-content: center
+  width: 100%
+  max-width: 300px
+  align-self: center
 </style>
