@@ -6,8 +6,7 @@
         <v-img class="card-image" :src="getCardImageUrl(card.card_data)" alt="Card Image" @error="handleImageError">
           <template v-slot:placeholder>
             <div class="image-placeholder">
-              <v-icon size="48" color="grey" icon="mdi-image-off"></v-icon>
-              <p class="placeholder-text">Image not available</p>
+              <p class="placeholder-text">{{ card.card_data.name }}</p>
             </div>
           </template>
         </v-img>
@@ -104,6 +103,11 @@ function getScoreColor(score: number | undefined): string {
 
 function getCardImageUrl(cardData: any): string {
   // Try different image URI options in order of preference
+
+  // Check for small image first, if the size is small
+  if (cardData.image_uris?.small && props.size === 'small') {
+    return cardData.image_uris.small;
+  }
   if (cardData.image_uris?.normal) {
     return cardData.image_uris.normal;
   }
@@ -120,6 +124,7 @@ function getCardImageUrl(cardData: any): string {
   // For double-faced cards, try the first face
   if (cardData.card_faces && cardData.card_faces[0]?.image_uris) {
     const firstFace = cardData.card_faces[0].image_uris;
+    if (firstFace.small && props.size === 'small') return firstFace.small;
     if (firstFace.normal) return firstFace.normal;
     if (firstFace.large) return firstFace.large;
     if (firstFace.small) return firstFace.small;
