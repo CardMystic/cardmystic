@@ -1,48 +1,48 @@
 <template>
-    <div class="top-queries-container">
-        <div v-if="isLoading" class="text-center py-4">
-            <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
-            <p class="mt-2 text-white text-caption">Loading popular queries...</p>
-        </div>
-
-        <div v-else-if="topQueries && topQueries.length > 0" class="top-queries-content">
-            <div class="queries-header">
-                <v-icon class="mr-2" color="primary" size="20">mdi-trending-up</v-icon>
-                <h3 class="queries-title">Top Searches This Week</h3>
-            </div>
-
-            <div class="queries-grid">
-                <!-- Left column: queries 1-5 -->
-                <div class="queries-column">
-                    <div v-for="(queryData, index) in leftColumnQueries" :key="queryData.query" class="query-item">
-                        <div class="query-rank">#{{ index + 1 }}</div>
-                        <div class="query-text">{{ queryData.query }}</div>
-                        <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
-                            prepend-icon="mdi-magnify" class="try-btn">
-                            Try
-                        </v-btn>
-                    </div>
-                </div>
-
-                <!-- Right column: queries 6-10 -->
-                <div class="queries-column">
-                    <div v-for="(queryData, index) in rightColumnQueries" :key="queryData.query" class="query-item">
-                        <div class="query-rank">#{{ index + 6 }}</div>
-                        <div class="query-text">{{ queryData.query }}</div>
-                        <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
-                            prepend-icon="mdi-magnify" class="try-btn">
-                            Try
-                        </v-btn>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div v-else-if="error" class="error-state">
-            <v-icon color="error" class="mr-2">mdi-alert-circle</v-icon>
-            <span class="error-text">Failed to load popular queries</span>
-        </div>
+  <div class="top-queries-container">
+    <div v-if="isLoading" class="text-center py-4">
+      <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
+      <p class="mt-2 text-white text-caption">Loading popular queries...</p>
     </div>
+
+    <div v-else-if="topQueries && topQueries.length > 0" class="top-queries-content">
+      <div class="queries-header">
+        <v-icon class="mr-2" color="primary" size="20">mdi-trending-up</v-icon>
+        <h3 class="queries-title">Top Searches This Week</h3>
+      </div>
+
+      <div class="queries-grid">
+        <!-- Left column: queries 1-5 -->
+        <div class="queries-column">
+          <div v-for="(queryData, index) in leftColumnQueries" :key="queryData.query" class="query-item">
+            <div class="query-rank">#{{ index + 1 }}</div>
+            <div class="query-text">{{ queryData.query }}</div>
+            <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
+              prepend-icon="mdi-magnify" class="try-btn">
+              Try
+            </v-btn>
+          </div>
+        </div>
+
+        <!-- Right column: queries 6-10 -->
+        <div class="queries-column">
+          <div v-for="(queryData, index) in rightColumnQueries" :key="queryData.query" class="query-item">
+            <div class="query-rank">#{{ index + 6 }}</div>
+            <div class="query-text">{{ queryData.query }}</div>
+            <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
+              prepend-icon="mdi-magnify" class="try-btn">
+              Try
+            </v-btn>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="error" class="error-state">
+      <v-icon color="error" class="mr-2">mdi-alert-circle</v-icon>
+      <span class="error-text">Failed to load popular queries</span>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -54,37 +54,37 @@ import type { TopQuery } from '~/models/topQueryModel';
 const router = useRouter();
 
 const { data: topQueries, isLoading, error } = useQuery({
-    queryKey: [
-        'cache',
-        'topQueries',
-    ],
-    queryFn: async () => {
-        const response = await fetch('/api/proxy/cache/top');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json() as Promise<TopQuery[]>;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+  queryKey: [
+    'cache',
+    'topQueries',
+  ],
+  queryFn: async () => {
+    const response = await fetch('/api/cache/top');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json() as Promise<TopQuery[]>;
+  },
+  staleTime: 1000 * 60 * 5, // 5 minutes
 });
 
 // Split queries into left and right columns
 const leftColumnQueries = computed(() => {
-    return topQueries.value?.slice(0, 5) || [];
+  return topQueries.value?.slice(0, 5) || [];
 });
 
 const rightColumnQueries = computed(() => {
-    return topQueries.value?.slice(5, 10) || [];
+  return topQueries.value?.slice(5, 10) || [];
 });
 
 function tryQuery(query: string) {
-    // Navigate to search page with the current query
-    router.push({
-        name: 'search',
-        query: {
-            query,
-        },
-    });
+  // Navigate to search page with the current query
+  router.push({
+    name: 'search',
+    query: {
+      query,
+    },
+  });
 }
 </script>
 

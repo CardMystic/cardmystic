@@ -104,7 +104,7 @@ const { data: searchResults, isLoading } = useQuery({
     similaritySearch,
   ],
   queryFn: async () => {
-    const response = await fetch('/api/proxy/search/similarity', {
+    const response = await fetch('/api/search/similarity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(similaritySearch.value),
