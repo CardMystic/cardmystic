@@ -84,7 +84,7 @@ useHead(() => ({
 
 const similaritySearch = computed(() => {
   if (!cardNameParam.value) {
-    return null;
+    return undefined; // Return undefined if no card name is provided
   }
 
   return SimilaritySearchSchema.parse({
@@ -94,6 +94,8 @@ const similaritySearch = computed(() => {
     exclude_card_data: false, // Default to false, can be overridden by query param
   });
 });
+
+const queryEnabled = computed(() => !!similaritySearch.value?.card_name);
 
 const { data: searchResults, isLoading } = useQuery({
   queryKey: [
@@ -113,7 +115,7 @@ const { data: searchResults, isLoading } = useQuery({
     return response.json() as Promise<Array<Card>>;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: !!similaritySearch.value?.card_name,
+  enabled: queryEnabled,
 });
 
 </script>
