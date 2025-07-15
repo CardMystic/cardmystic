@@ -3,20 +3,12 @@
     {
       "route": "/index.html",
       "redirect": "/"
-    },
-    {
-      "route": "/api/*",
-      "rewrite": "/api/server"
-    },
-    {
-      "route": "/*",
-      "rewrite": "/index.html"
     }
   ],
   "platform": {
     "apiRuntime": "node:20"
   },
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/api/server"
   }
 }
