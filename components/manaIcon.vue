@@ -22,5 +22,6 @@ export default {
 <style scoped>
 #mana-icon {
     margin: 0 2px;
+    vertical-align: unset;
 }
 </style>
