@@ -66,7 +66,7 @@
             <div v-if="card.prices.usd" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.usd_foil" class="price-item">
@@ -78,7 +78,7 @@
             <div v-if="card.prices.eur" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.eur_foil" class="price-item">
@@ -111,8 +111,8 @@
       <v-col cols="12" md="5" class="d-flex flex-column justify-start">
         <div class="card-header card-header-aligned">
           <h2 class="card-title">
-            {{ currentName }}
-            <span v-if="currentManaCost" class="mana-cost">
+            <span class="card-title-text">{{ currentName }}</span>
+            <span v-if="currentManaCost">
               <template v-for="(part, index) in formattedManaCost" :key="index">
                 <template v-if="typeof part === 'string'">{{ part }}</template>
                 <component v-else :is="part" />
@@ -184,7 +184,7 @@
             <div v-if="card.prices.usd" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.usd_foil" class="price-item">
@@ -196,7 +196,7 @@
             <div v-if="card.prices.eur" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-              }}</span>
+                }}</span>
             </div>
 
             <div v-if="card.prices.eur_foil" class="price-item">
@@ -619,6 +619,9 @@ function findSimilarCards() {
   background: linear-gradient(135deg, rgb(147, 114, 255), rgb(255, 114, 147))
   background-clip: text
   margin-bottom: 4px
+
+.card-title-text
+  margin-right: 8px
   text-shadow: 0 4px 8px rgba(147, 114, 255, 0.3)
 
 .set-rarity-info
@@ -633,11 +636,6 @@ function findSimilarCards() {
   font-weight: 400
   margin: 0
   font-style: italic
-
-.mana-cost
-  color: rgb(255, 193, 7)
-  font-weight: 600
-  text-shadow: 0 2px 4px rgba(255, 193, 7, 0.4)
 
 .card-type
   color: rgb(var(--v-theme-primary))

@@ -1,5 +1,5 @@
 <template>
-    <span :class="iconClass" aria-hidden="true"></span>
+    <span :class="iconClass" id="mana-icon" aria-hidden="true"></span>
 </template>
 
 <script>
@@ -20,7 +20,7 @@ export default {
 </script>
 
 <style scoped>
-.ms {
+#mana-icon {
     margin: 0 2px;
 }
 </style>
