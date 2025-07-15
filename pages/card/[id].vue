@@ -63,28 +63,30 @@
           </div>
 
           <div class="price-list">
-            <div v-if="card.prices.usd" class="price-item">
+            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-                }}</span>
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
+                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
             </div>
 
-            <div v-if="card.prices.usd_foil" class="price-item">
-              <span class="currency-label">USD Foil:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{
-                card.prices.usd_foil }}</span>
-            </div>
-
-            <div v-if="card.prices.eur" class="price-item">
+            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-                }}</span>
-            </div>
-
-            <div v-if="card.prices.eur_foil" class="price-item">
-              <span class="currency-label">EUR Foil:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{
-                card.prices.eur_foil }}</span>
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
+                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
             </div>
 
             <div v-if="card.prices.tix" class="price-item">
@@ -181,28 +183,30 @@
           </div>
 
           <div class="price-list">
-            <div v-if="card.prices.usd" class="price-item">
+            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd
-                }}</span>
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
+                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
             </div>
 
-            <div v-if="card.prices.usd_foil" class="price-item">
-              <span class="currency-label">USD Foil:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">$</span>{{
-                card.prices.usd_foil }}</span>
-            </div>
-
-            <div v-if="card.prices.eur" class="price-item">
+            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur
-                }}</span>
-            </div>
-
-            <div v-if="card.prices.eur_foil" class="price-item">
-              <span class="currency-label">EUR Foil:</span>
-              <span class="price-value"><span style="color: rgb(34, 197, 94)">€</span>{{
-                card.prices.eur_foil }}</span>
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
+                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
             </div>
 
             <div v-if="card.prices.tix" class="price-item">
