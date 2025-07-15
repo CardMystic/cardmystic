@@ -861,17 +861,6 @@ em
   text-align: center
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
 
-// Add styles for mana symbols
-:deep(.mana-symbol)
-  display: inline-block
-  vertical-align: -0.1em
-  margin: 0 1px
-
-:deep(.mana-symbol-text)
-  display: inline-block
-  vertical-align: -0.15em
-  margin: 0 1px
-
 // TCGPlayer Button Styling
 .tcgplayer-btn
   width: 100%
