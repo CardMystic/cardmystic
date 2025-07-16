@@ -62,22 +62,21 @@ const allScores = computed(() => results.value?.map((r) => r.score || 0) || []);
 
 // Example queries to choose from
 const exampleQueries = [
-    'creatures that draw cards',
-    'cheap red burn spells',
-    'artifacts that make mana',
-    'blue counterspells',
-    'green ramp spells',
-    'white removal spells',
-    'black creatures with flying',
-    'creatures with enter the battlefield effects',
-    'spells that destroy artifacts',
-    'x spells that are board wipes',
-    'low cost sultai commanders',
-    'finishers for a mono white tokens deck',
-    'golgari elves that draw',
-    'five color dragon commander',
-    'mono red burn spells',
-    'creatures that come back from the graveyard',
+    "creatures that draw cards",
+    "stax pieces",
+    "blue cantrips",
+    "adventure ramp",
+    "orzhov removal",
+    "black creatures with flying",
+    "etb effects",
+    "artifact removal",
+    "x spell board wipes",
+    "low cost sultai commanders",
+    "mono white token finishers",
+    "golgari elves that draw",
+    "five color dragon commander",
+    "red burn",
+    "graveyard recursion",
 ];
 
 onMounted(async () => {
