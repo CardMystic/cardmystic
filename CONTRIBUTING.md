@@ -8,8 +8,8 @@ We're excited you're interested in improving **CardMystic**, an open-source MTG 
 **Fork the repo** and clone your fork:
 
 ```bash
-git clone https://github.com/imdarkmode/cardmystic-frontend.git
-cd cardmystic-frontend
+git clone https://github.com/CardMystic/cardmystic.git
+cd cardmystic
 ```
 
 Install Dependencies

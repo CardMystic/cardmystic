@@ -1,94 +1,43 @@
 <template>
-  <navbar></navbar>
-  <v-container
-    class="container fill-height d-flex align-center justify-center pt-0"
-  >
-    <v-col justify="center" align="center" class="col-container">
-      <div class="glow-wrapper">
-        <v-img src="/public/crystall_ball.png" class="image"></v-img>
+  <v-container class="fill-height d-flex responsive-align" style="padding-top: 0px">
+    <v-col class="col-container px-0">
+      <!-- Header with image and title side by side -->
+      <div class="header-layout">
+        <div class="glow-wrapper">
+          <v-img src="/public/crystall_ball.webp" aspect-ratio="1/1" class="image"></v-img>
+        </div>
+
+        <div class="title-container">
+          <h1 class="title">
+            {{ typedTitle }}
+          </h1>
+          <h2 class="subtitle">
+            <b class="important-text">A.I. Search Engine</b> for Magic: The
+            Gathering
+          </h2>
+        </div>
       </div>
 
-      <!-- Title container -->
-      <v-row class="title-container">
-        <h1 class="title">
-          {{ typedTitle }}
-        </h1>
+      <!-- Search Component -->
+      <SearchForm class="mt-6" style="max-width: 1096px" />
 
-        <h2 class="subtitle mt-2">
-          <b class="important-text">A.I. Search Engine</b> for Magic: The
-          Gathering
-        </h2>
-      </v-row>
+      <!-- Example Queries -->
+      <ExampleQueries class="mt-0" style="max-width: 1096px" />
 
-      <ChipSelector
-        class="chip-selector"
-        :options="chipSelectorOptions"
-        :tooltips="chipSelectorTooltips"
-        :selected-index="chipSelectedIndex"
-        @update:selectedIndex="chipSelectedIndex = $event"
-      />
-
-      <!-- Search bar and filters -->
-      <v-row class="mt-0 pb-0 px-0" justify="center" style="max-width: 705px">
-        <v-col class="py-0 px-0">
-          <v-text-field
-            v-if="chipSelectedIndex !== 2"
-            v-model="searchStore.query"
-            label="Search..."
-            variant="solo"
-            elevation="5"
-            @keyup.enter="search"
-            :loading="searching"
-          ></v-text-field>
-
-          <v-file-input
-            v-else
-            v-model="uploadedFile"
-            label="Upload an image"
-            accept="image/*"
-            variant="solo"
-            prepend-icon="mdi-camera"
-          />
-        </v-col>
-      </v-row>
-
-      <v-row class="mt-0 pb-0 px-0" style="max-width: 705px">
-        <v-col class="d-flex flex-grow-1 align-center py-0 px-0">
-          <filters
-            ref="filterRef"
-            :search-text="searchStore.query"
-            @search="search"
-          ></filters>
-        </v-col>
-      </v-row>
+      <!-- Top Queries -->
+      <TopQueries class="mt-6" style="max-width: 1096px" />
     </v-col>
   </v-container>
-  <Footer></Footer>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useSearchStore } from '~/stores/searchStore';
-const router = useRouter();
+defineOptions({ name: 'HomePage' });
 
-const searchStore = useSearchStore();
+import { onMounted, ref } from 'vue';
+import SearchForm from '~/components/search/Search.vue';
+
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
-
-// Chip Selector component
-const chipSelectorOptions = searchStore.endpoints.map((e: any) => e.name);
-const chipSelectorTooltips = searchStore.endpoints.map((e: any) => e.tooltip);
-const chipSelectedIndex = ref(0);
-
-const uploadedFile = ref<File | null>(null);
-
-watch(uploadedFile, (file) => {
-  if (file) {
-    searchStore.imageFile = file;
-    searchStore.query = '';
-    search();
-  }
-});
 
 useHead({
   title: 'CardMystic',
@@ -113,37 +62,25 @@ onMounted(() => {
   }, 200); // typing speed
 });
 
-const filterRef: any = ref(null);
-const searching = ref(false);
-
-async function search() {
-  filterRef.value?.closePanel();
-  searching.value = true;
-  try {
-    await searchStore.search(chipSelectedIndex.value);
-    if (searchStore.results.length > 0) {
-      router.push('/search');
-    }
-  } catch (error) {
-    console.error('Search failed:', error);
-  }
-  searching.value = false;
-  router.push({ name: 'search' });
-}
 </script>
 
 <style lang="sass" scoped>
+.responsive-align
+  align-items: flex-start
+
+  @media (min-width: 960px)
+    align-items: center
+
 .title::after
   content: '|'
-  animation: blink 1s infinite
+  animation: blink 3s infinite
   margin-left: 5px
   position: relative
   top: -10px
   font-size: 2.6rem
-  @media (max-width: 600px)
+  @media (max-width: 768px)
     top: -10px
     font-size: 2.4rem
-
 
 @keyframes blink
   0%, 100%
@@ -152,45 +89,67 @@ async function search() {
     opacity: 0
 
 .image
-  width: 250px
-  height: 250px
-
-  @media (max-width: 600px)
-    width: 190px
-    height: 190px
+  width: 120px
+  height: 120px
+  position: relative
+  bottom: 10px
+  left: 0px
+  @media (max-width: 768px)
+    width: 100px
+    height: 100px
+    bottom: -15px
+    left: 0px
 
 .col-container
   position: relative
 
+.header-layout
+  display: flex
+  align-items: center
+  justify-content: center
+  gap: 24px
+  margin-bottom: 16px
+  @media (max-width: 768px)
+    flex-direction: column
+    gap: 12px
+
 .title-container
   display: flex
   flex-direction: column
-  align-items: center
+  align-items: flex-start
   justify-content: center
+  min-width: 372px
   position: relative
-  top: -30px
-  @media (max-width: 600px)
-    top: -23px
+  right: 13px
+  @media (max-width: 768px)
+    min-width: 0px
+    align-items: center
+    text-align: center
+    right: 0px
 
 .title
   font-family: "Alfa Slab One", serif
   font-weight: 400
   font-style: normal
-  font-size: 3.2rem
+  font-size: 3.6rem
   color: rgb(var(--v-theme-primary))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
-  margin-top: 6px
-  @media (max-width: 600px)
-    font-size: 3.0rem
+  margin: 0
+  line-height: 1
+  @media (max-width: 768px)
+    font-size: 3.3rem
+    text-align: center
 
 .subtitle
-  font-size: 1.00rem
+  font-size: 1.1rem
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   color: white
-  position: relative
-  top: -20px
-  @media (max-width: 600px)
-    font-size: 0.96rem
+  margin: 4px 0 0 0
+  line-height: 1.2
+  width: 100%
+  @media (max-width: 768px)
+    font-size: 1.0rem
+    text-align: center
 
 .link-btn
   color: white
@@ -207,7 +166,7 @@ async function search() {
 
 .chip-selector
   position: relative
-  top: -20px
+  margin-bottom: 20px
 
 .help-container
   position: relative
@@ -223,19 +182,21 @@ async function search() {
 .glow-wrapper::after
   content: ''
   position: absolute
-  top: 58%
-  left: 49.5%
-  width: 100px
-  height: 100px
+  top: 50%
+  left: 50%
+  width: 50px
+  height: 50px
   background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0) 70%, rgba(147,114,255,0) 100%)
   border-radius: 50%
   transform: translate(-50%, -50%)
   animation: glowPulse 5s ease-in-out infinite
   pointer-events: none
   z-index: 1
-  @media (max-width: 600px)
-    width: 70px
-    height: 70px
+  @media (max-width: 768px)
+    width: 40px
+    height: 40px
+    top: 58%
+    left: 49.5%
 
 @keyframes glowPulse
   0%, 100%
@@ -244,4 +205,10 @@ async function search() {
   50%
     opacity: 1
     transform: translate(-50%, -50%) scale(1.5)
+
+.filters-btn
+  width: 40px
+  height: 56px
+  border-radius: 4px
+  margin-left: 12px
 </style>
