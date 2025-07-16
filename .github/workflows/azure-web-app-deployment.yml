@@ -7,8 +7,6 @@ on:
       - dev
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    branches:
-      - dev
     paths-ignore:
       - 'README.md'
       - '.vscode/**'
