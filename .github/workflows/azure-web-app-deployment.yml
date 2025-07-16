@@ -5,6 +5,7 @@ on:
     branches:
       - 'main'
   pull_request:
+    types: [opened, synchronize, reopened, closed]
     paths-ignore:
       - 'README.md'
       - '.vscode/**'
