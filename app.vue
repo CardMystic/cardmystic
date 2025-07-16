@@ -1,11 +1,11 @@
 <template>
   <div>
-    <Analytics></Analytics>
     <v-app>
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
     </v-app>
+    <VueQueryDevtools />
   </div>
 </template>
 
@@ -16,5 +16,5 @@
 </style>
 
 <script setup lang="ts">
-import { Analytics } from '@vercel/analytics/nuxt';
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 </script>

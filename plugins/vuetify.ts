@@ -1,8 +1,5 @@
-// import this after install `@mdi/font` package
-import '@mdi/font/css/materialdesignicons.css';
-
-import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
+import 'vuetify/styles';
 
 export default defineNuxtPlugin((app) => {
   const myDarkTheme = {
@@ -38,6 +35,7 @@ export default defineNuxtPlugin((app) => {
   };
 
   const vuetify = createVuetify({
+    ssr: true,
     theme: {
       defaultTheme: 'myDarkTheme',
       themes: {

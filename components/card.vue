@@ -3,35 +3,17 @@
     <!-- Left side: image + score -->
     <v-col class="card" cols="3">
       <div class="card-image-wrapper">
-        <v-img
-          class="card-image"
-          :src="getCardImageUrl(card.card_data)"
-          alt="Card Image"
-          @error="handleImageError"
-        >
+        <v-img class="card-image" :src="getCardImageUrl(card.card_data)" alt="Card Image" @error="handleImageError">
           <template v-slot:placeholder>
             <div class="image-placeholder">
-              <v-icon size="48" color="grey">mdi-image-off</v-icon>
-              <p class="placeholder-text">Image not available</p>
+              <p class="placeholder-text">{{ card.card_data.name }}</p>
             </div>
           </template>
         </v-img>
-
-        <!-- Game Changer Badge -->
-        <GameChangerBadge
-          :game-changer="card.card_data.game_changer"
-          size="small"
-        />
       </div>
 
-      <v-progress-linear
-        rounded
-        :color="getScoreColor(card.score)"
-        :model-value="normalizeScore(card.score)"
-        :height="progressHeight"
-        class="confidence-bar"
-        style="border: 1px solid black"
-      >
+      <v-progress-linear rounded :color="getScoreColor(card.score)" :model-value="normalizeScore(card.score)"
+        :height="progressHeight" class="confidence-bar" style="border: 1px solid black">
         <template v-slot:default="{ value }">
           <p class="confidence-text">{{ Math.ceil(value) }}%</p>
         </template>
@@ -41,14 +23,13 @@
 </template>
 
 <script setup lang="ts">
-import type { ICardResult } from '~/types/IColbert';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
-import { useSearchStore } from '~/stores/searchStore';
+import type { Card } from '~/models/cardModel';
 
 const props = defineProps({
   card: {
-    type: Object as PropType<ICardResult>,
+    type: Object as PropType<Card>,
     required: true,
   },
   size: {
@@ -62,7 +43,6 @@ const props = defineProps({
   },
 });
 
-const searchStore = useSearchStore();
 
 const sizeClass = computed(() => `card-${props.size}`);
 const progressHeight = computed(() => {
@@ -78,11 +58,14 @@ const progressHeight = computed(() => {
   }
 });
 
-function normalizeScore(score: number): number {
+function normalizeScore(score: number | undefined): number {
+  if (score === undefined) {
+    return 0; // Default to 0 if score is undefined
+  }
   // Use provided normalization context if available, otherwise fall back to search store
   const allScores =
     props.normalizationContext ||
-    searchStore.results.map((result) => result.score);
+    [props.card.score || 0];
 
   // If no context available, return score as-is (assume it's already normalized)
   if (allScores.length === 0) {
@@ -105,7 +88,7 @@ function normalizeScore(score: number): number {
   return normalizedScore;
 }
 
-function getScoreColor(score: number): string {
+function getScoreColor(score: number | undefined): string {
   const normalizedScore = normalizeScore(score);
   const pct = Math.min(Math.max(normalizedScore / 100, 0), 1);
 
@@ -120,6 +103,11 @@ function getScoreColor(score: number): string {
 
 function getCardImageUrl(cardData: any): string {
   // Try different image URI options in order of preference
+
+  // Check for small image first, if the size is small
+  if (cardData.image_uris?.small && props.size === 'small') {
+    return cardData.image_uris.small;
+  }
   if (cardData.image_uris?.normal) {
     return cardData.image_uris.normal;
   }
@@ -136,6 +124,7 @@ function getCardImageUrl(cardData: any): string {
   // For double-faced cards, try the first face
   if (cardData.card_faces && cardData.card_faces[0]?.image_uris) {
     const firstFace = cardData.card_faces[0].image_uris;
+    if (firstFace.small && props.size === 'small') return firstFace.small;
     if (firstFace.normal) return firstFace.normal;
     if (firstFace.large) return firstFace.large;
     if (firstFace.small) return firstFace.small;
@@ -186,7 +175,8 @@ function handleImageError(value: string | undefined) {
 .card-image {
   width: 100%;
   height: auto;
-  aspect-ratio: 5/7; /* MTG card aspect ratio */
+  aspect-ratio: 5/7;
+  /* MTG card aspect ratio */
   object-fit: cover;
   flex: 1;
 }
@@ -246,11 +236,9 @@ function handleImageError(value: string | undefined) {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(44, 44, 44, 0.9),
-    rgba(66, 66, 66, 0.8)
-  );
+  background: linear-gradient(135deg,
+      rgba(44, 44, 44, 0.9),
+      rgba(66, 66, 66, 0.8));
   border-radius: 10px;
   padding: 20px;
 }

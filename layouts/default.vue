@@ -1,13 +1,12 @@
 <template>
-  <!-- <v-app-bar :elevation="2">
-    <template v-slot:prepend>
-      <v-app-bar-nav-icon></v-app-bar-nav-icon>
-    </template>
-
-    <v-app-bar-title>Application Bar</v-app-bar-title>
-  </v-app-bar> -->
-
-  <v-main>
-    <slot />
-  </v-main>
+  <div class="min-h-screen flex flex-col bg-zinc-900">
+    <navbar />
+    <v-main>
+      <slot />
+    </v-main>
+    <Footer />
+  </div>
 </template>
+
+<script setup lang="ts">
+</script>

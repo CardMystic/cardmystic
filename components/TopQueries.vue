@@ -1,58 +1,36 @@
 <template>
   <div class="top-queries-container">
-    <div v-if="loading" class="text-center py-4">
-      <v-progress-circular
-        indeterminate
-        color="primary"
-        size="24"
-      ></v-progress-circular>
+    <div v-if="isLoading" class="text-center py-4">
+      <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
       <p class="mt-2 text-white text-caption">Loading popular queries...</p>
     </div>
 
-    <div v-else-if="topQueries.length > 0" class="top-queries-content">
+    <div v-else-if="topQueries && topQueries.length > 0" class="top-queries-content">
       <div class="queries-header">
         <v-icon class="mr-2" color="primary" size="20">mdi-trending-up</v-icon>
         <h3 class="queries-title">Top Searches This Week</h3>
       </div>
 
       <div class="queries-grid">
+        <!-- Left column: queries 1-5 -->
         <div class="queries-column">
-          <div
-            v-for="(queryData, index) in leftColumnQueries"
-            :key="queryData.query"
-            class="query-item"
-          >
+          <div v-for="(queryData, index) in leftColumnQueries" :key="queryData.query" class="query-item">
             <div class="query-rank">#{{ index + 1 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
-            <v-btn
-              color="primary"
-              variant="outlined"
-              size="small"
-              @click="tryQuery(queryData.query)"
-              prepend-icon="mdi-magnify"
-              class="try-btn"
-            >
+            <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
+              prepend-icon="mdi-magnify" class="try-btn">
               Try
             </v-btn>
           </div>
         </div>
 
+        <!-- Right column: queries 6-10 -->
         <div class="queries-column">
-          <div
-            v-for="(queryData, index) in rightColumnQueries"
-            :key="queryData.query"
-            class="query-item"
-          >
+          <div v-for="(queryData, index) in rightColumnQueries" :key="queryData.query" class="query-item">
             <div class="query-rank">#{{ index + 6 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
-            <v-btn
-              color="primary"
-              variant="outlined"
-              size="small"
-              @click="tryQuery(queryData.query)"
-              prepend-icon="mdi-magnify"
-              class="try-btn"
-            >
+            <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
+              prepend-icon="mdi-magnify" class="try-btn">
               Try
             </v-btn>
           </div>
@@ -68,80 +46,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-
-interface TopQuery {
-  query: string;
-  hitCount: number;
-  lastAccessed: string;
-  isCached: boolean;
-}
+import { useQuery } from '@tanstack/vue-query';
+import type { TopQuery } from '~/models/topQueryModel';
 
 const router = useRouter();
-const topQueries = ref<TopQuery[]>([]);
-const loading = ref(false);
-const error = ref(false);
 
-onMounted(async () => {
-  await fetchTopQueries();
+const { data: topQueries, isLoading, error } = useQuery({
+  queryKey: [
+    'cache',
+    'topQueries',
+  ],
+  queryFn: async () => {
+    const response = await fetch('/api/cache/top');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json() as Promise<TopQuery[]>;
+  },
+  staleTime: 1000 * 60 * 5, // 5 minutes
 });
 
-async function fetchTopQueries() {
-  loading.value = true;
-  error.value = false;
+// Split queries into left and right columns
+const leftColumnQueries = computed(() => {
+  return topQueries.value?.slice(0, 5) || [];
+});
 
-  try {
-    const response = await fetch('/api/proxy/cache/top');
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch top queries');
-    }
-
-    const data = await response.json();
-    topQueries.value = data.topUserQueries || [];
-  } catch (err) {
-    console.error('Error fetching top queries:', err);
-    error.value = true;
-  } finally {
-    loading.value = false;
-  }
-}
-
-const leftColumnQueries = computed(() => topQueries.value.slice(0, 5));
-const rightColumnQueries = computed(() => topQueries.value.slice(5, 10));
+const rightColumnQueries = computed(() => {
+  return topQueries.value?.slice(5, 10) || [];
+});
 
 function tryQuery(query: string) {
-  // Navigate to search page with the selected query
+  // Navigate to search page with the current query
   router.push({
     name: 'search',
     query: {
-      q: query,
-      endpoint: 0, // A.I. search endpoint
-      filters: JSON.stringify({
-        selectedCardTypes: [],
-        selectedColorFilterOption: 'Contains At Most',
-        selectedColors: {
-          Red: true,
-          Blue: true,
-          Green: true,
-          White: true,
-          Black: true,
-        },
-        selectedRarities: {
-          Common: false,
-          Uncommon: false,
-          Rare: false,
-          Mythic: false,
-        },
-        selectedCMCOption: 'Equal To',
-        selectedPowerOption: 'Equal To',
-        selectedToughnessOption: 'Equal To',
-        selectedCMC: '',
-        selectedPower: '',
-        selectedToughness: '',
-        selectedCardFormats: [],
-      }),
+      query,
     },
   });
 }

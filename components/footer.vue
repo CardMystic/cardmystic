@@ -3,37 +3,20 @@
     <v-container class="footer-content">
       <!-- Social Links -->
       <div class="social-links d-flex justify-center align-center gap-4 mb-3">
-        <a
-          href="https://github.com/imdarkmode"
-          target="_blank"
-          aria-label="GitHub"
-          rel="noopener"
-        >
-          <v-icon color="white" size="24">mdi-github</v-icon>
+        <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
+          <v-icon color="white" size="24" icon="mdi-github"></v-icon>
         </a>
 
-        <a
-          href="https://discord.gg/GmPZ3e7tZH"
-          target="_blank"
-          aria-label="Discord"
-          rel="noopener"
-        >
-          <v-img
-            src="@/public/discord-icon.png"
-            width="24"
-            height="24"
-            alt="Discord"
-            contain
-          />
+        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
+          <v-img src="@/public/discord-icon.svg" width="24" height="24" alt="Discord" contain />
         </a>
 
-        <a
-          href="https://www.youtube.com/@imdarkmode"
-          target="_blank"
-          aria-label="YouTube"
-          rel="noopener"
-        >
-          <v-icon color="white" size="24">mdi-youtube</v-icon>
+        <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
+          <v-icon color="white" size="24" icon="mdi-youtube"></v-icon>
+        </a>
+
+        <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
+          <v-icon color="white" size="24" icon="mdi-patreon"></v-icon>
         </a>
       </div>
 
@@ -51,12 +34,34 @@
           to be accurate. See stores for official prices.
         </p>
         <p class="disclaimer-text mt-2">
-          All other content © 2023 Fiasco Games LLC
+          All other content © 2025 Fiasco Games LLC
+        </p>
+        <p class="disclaimer-text mt-2">
+          <a :href="commitUrl" target="_blank" rel="noopener" class="commit-link">
+            Version: {{ commitHash }}
+          </a>
         </p>
       </div>
     </v-container>
   </v-footer>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+
+// Get commit hash from runtime config
+const { public: { commitHash: fullCommitHash } } = useRuntimeConfig();
+
+const commitHash = computed(() => {
+  // Show only first 7 characters for display
+  return typeof fullCommitHash === 'string' ? fullCommitHash.substring(0, 7) : 'dev';
+});
+
+const commitUrl = computed(() => {
+  const hash = typeof fullCommitHash === 'string' ? fullCommitHash : 'main';
+  return `https://github.com/CardMystic/cardmystic/commit/${hash}`;
+});
+</script>
 
 <style scoped lang="scss">
 .footer {
@@ -92,5 +97,17 @@
   margin: 0;
   max-width: 800px;
   margin: 0 auto;
+}
+
+.commit-link {
+  color: rgba(147, 114, 255, 0.8);
+  text-decoration: none;
+  font-size: 10px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: rgb(147, 114, 255);
+    text-decoration: underline;
+  }
 }
 </style>

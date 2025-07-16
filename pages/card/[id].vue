@@ -1,8 +1,6 @@
 <template>
-  <navbar />
-
   <v-container class="py-4 d-flex justify-center">
-    <div v-if="loading" class="text-center">
+    <div v-if="isLoading" class="text-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
       <p class="mt-4 text-white">Loading card details...</p>
     </div>
@@ -13,140 +11,82 @@
       <v-btn to="/search" color="primary" class="mt-4">Back to Search</v-btn>
     </div>
 
-    <v-row
-      v-else-if="card"
-      style="max-width: 1400px"
-      class="d-flex justify-center"
-    >
-      <!-- Back to Results button aligned with card image -->
-      <v-col cols="12" class="pb-0">
-        <div
-          v-if="searchStore.results.length > 0"
-          class="back-button-container"
-        >
-          <v-btn
-            to="/search"
-            color="primary"
-            variant="outlined"
-            prepend-icon="mdi-arrow-left"
-            class="mb-4"
-          >
+    <v-row v-else-if="card" style="max-width: 1400px" class="d-flex justify-center">
+      <!-- Left: Card Image -->
+      <v-col md="4" class="d-flex justify-start align-center flex-column mr-6" style="max-width: 300px">
+        <!-- Back to Results button aligned with card image -->
+        <div class="back-button-container-aligned mb-4">
+          <v-btn color="primary" variant="outlined" rounded="lg" prepend-icon="mdi-arrow-left" @click="$router.back()">
             Back to Results
           </v-btn>
         </div>
-      </v-col>
-
-      <!-- Left: Card Image -->
-      <v-col
-        md="4"
-        class="d-flex justify-start align-center flex-column mr-6"
-        style="max-width: 300px"
-      >
         <div class="card-image-container">
-          <div
-            class="card-glow"
-            :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"
-          ></div>
+          <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <v-img
-            :src="getCardImageUrl(card)"
-            class="card-image"
-            max-width="300"
-            min-width="300"
-            max-height="420"
-            min-height="420"
-            rounded
-            @error="handleImageError"
-          >
+          <v-img :src="getCardImageUrl(card)" class="card-image" width="300" height="420" rounded
+            @error="handleImageError">
             <template v-slot:placeholder>
               <div class="image-placeholder-large">
-                <v-icon size="64" color="grey">mdi-image-off</v-icon>
+                <v-icon size="64" color="grey" icon="mdi-image-off"></v-icon>
                 <p class="placeholder-text-large">Image not available</p>
               </div>
             </template>
           </v-img>
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
-          <div
-            v-if="card.rarity?.toLowerCase() === 'mythic'"
-            class="card-sheen-container"
-          >
+          <div v-if="card.rarity?.toLowerCase() === 'mythic'" class="card-sheen-container">
             <div class="card-sheen"></div>
           </div>
 
           <!-- Game Changer Badge -->
-          <GameChangerBadge :game-changer="card.game_changer" size="large" />
+          <!-- <GameChangerBadge :game-changer="card.game_changer" size="large" /> -->
         </div>
 
         <!-- Flip Button for Dual-Faced Cards -->
-        <v-btn
-          v-if="isDualFaced"
-          color="info"
-          variant="elevated"
-          class="mt-4 flip-btn"
-          prepend-icon="mdi-rotate-3d-variant"
-          size="large"
-          @click="flipCard"
-        >
+        <v-btn v-if="isDualFaced" color="info" variant="elevated" class="mt-4 flip-btn"
+          prepend-icon="mdi-rotate-3d-variant" size="large" @click="flipCard">
           {{ isFlipped ? 'Show Front' : 'Show Back' }}
         </v-btn>
 
-        <!-- Similar Cards Button -->
-        <v-btn
-          color="white"
-          variant="elevated"
-          :class="
-            isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
-          "
-          prepend-icon="mdi-cards"
-          size="large"
-          @click="findSimilarCards"
-        >
+        <!-- Similar Cards Button - Desktop only -->
+        <v-btn color="white" variant="elevated" :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
+          " prepend-icon="mdi-cards" size="large" @click="findSimilarCards"
+          class="d-none d-md-flex similar-cards-btn-desktop">
           Similar Cards
         </v-btn>
 
-        <!-- Price Information -->
-        <v-card
-          v-if="card.prices && hasPrices"
-          elevation="4"
-          class="price-card mt-4"
-        >
+        <!-- Price Information - Desktop only -->
+        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-none d-md-block">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
-            <div v-if="card.prices.usd" class="price-item">
+            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
-              <span class="price-value"
-                ><span style="color: rgb(34, 197, 94)">$</span
-                >{{ card.prices.usd }}</span
-              >
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
+                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
             </div>
 
-            <div v-if="card.prices.usd_foil" class="price-item">
-              <span class="currency-label">USD Foil:</span>
-              <span class="price-value"
-                ><span style="color: rgb(34, 197, 94)">$</span
-                >{{ card.prices.usd_foil }}</span
-              >
-            </div>
-
-            <div v-if="card.prices.eur" class="price-item">
+            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
-              <span class="price-value"
-                ><span style="color: rgb(34, 197, 94)">€</span
-                >{{ card.prices.eur }}</span
-              >
-            </div>
-
-            <div v-if="card.prices.eur_foil" class="price-item">
-              <span class="currency-label">EUR Foil:</span>
-              <span class="price-value"
-                ><span style="color: rgb(34, 197, 94)">€</span
-                >{{ card.prices.eur_foil }}</span
-              >
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
+                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
             </div>
 
             <div v-if="card.prices.tix" class="price-item">
@@ -156,54 +96,34 @@
           </div>
         </v-card>
 
-        <!-- TCGPlayer Button -->
-        <v-btn
-          v-if="card.purchase_uris?.tcgplayer"
-          :href="card.purchase_uris.tcgplayer"
-          target="_blank"
-          color="primary"
-          variant="elevated"
-          class="mt-6 tcgplayer-btn"
-          prepend-icon="mdi-shopping"
-          size="large"
-        >
+        <!-- TCGPlayer Button - Desktop only -->
+        <v-btn v-if="card.purchase_uris?.tcgplayer" :href="card.purchase_uris.tcgplayer" target="_blank" color="primary"
+          variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping" size="large">
           Buy on TCGPlayer
         </v-btn>
 
-        <!-- Fallback button if no direct TCGPlayer link -->
-        <v-btn
-          v-else-if="card.name"
-          :href="generateTCGPlayerSearchUrl(card.name)"
-          target="_blank"
-          color="primary"
-          variant="outlined"
-          class="mt-4 tcgplayer-btn"
-          prepend-icon="mdi-magnify"
-          size="large"
-        >
+        <!-- Fallback button if no direct TCGPlayer link - Desktop only -->
+        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" color="primary"
+          variant="outlined" class="mt-4 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-magnify" size="large">
           Search on TCGPlayer
         </v-btn>
       </v-col>
 
       <!-- Center: Card Details -->
-      <v-col cols="12" md="5">
-        <div class="card-header">
+      <v-col cols="12" md="5" class="d-flex flex-column justify-start">
+        <div class="card-header card-header-aligned">
           <h2 class="card-title">
-            {{ currentName }}
-            <span v-if="currentManaCost" class="mana-cost">
-              <span
-                v-html="formatSymbols(currentManaCost)"
-                style="white-space: nowrap"
-              ></span>
+            <span class="card-title-text">{{ currentName }}</span>
+            <span v-if="currentManaCost">
+              <template v-for="(part, index) in formattedManaCost" :key="index">
+                <template v-if="typeof part === 'string'">{{ part }}</template>
+                <component v-else :is="part" />
+              </template>
             </span>
           </h2>
           <div class="set-rarity-info">
             <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
-            <RarityBadge
-              v-if="card.rarity"
-              :rarity="card.rarity"
-              size="medium"
-            />
+            <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
           </div>
           <p class="card-type">
             {{ currentTypeLine }}
@@ -211,29 +131,31 @@
         </div>
 
         <div v-if="currentOracleText" class="card-text-container">
-          <div
-            class="oracle-text"
-            v-html="formatSymbols(currentOracleText, 16)"
-          ></div>
-
-          <em v-if="card.flavor_text" class="flavor-text">{{
-            card.flavor_text
-          }}</em>
+          <div class="oracle-text">
+            <template v-for="(part, index) in formattedOracleText" :key="index">
+              <template v-if="typeof part === 'string'">{{ part }}</template>
+              <component v-else :is="part" />
+            </template>
+          </div>
 
           <div class="stats-container" v-if="currentPower && currentToughness">
             <div class="power-toughness">
               Power / Toughness:
-              <span class="stats"
-                >{{ currentPower }}/{{ currentToughness }}</span
-              >
+              <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
             </div>
           </div>
 
           <div v-if="card.artist" class="artist-info">
-            <span class="artist-label">Illustrated by</span>
+            <span class="artist-label">Illustrated by </span>
             <strong class="artist-name">{{ card.artist }}</strong>
           </div>
         </div>
+
+        <!-- Similar Cards Button - Mobile only -->
+        <v-btn color="white" variant="elevated" class="mt-4 mb-7 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
+          size="large" @click="findSimilarCards" block>
+          Similar Cards
+        </v-btn>
 
         <v-card elevation="8" class="legalities-card">
           <div class="legalities-header">
@@ -242,19 +164,9 @@
           </div>
 
           <v-row dense class="pa-2">
-            <v-col
-              v-for="(format, name) in legalities"
-              :key="name"
-              cols="6"
-              class="mb-2"
-            >
+            <v-col v-for="(format, name) in legalities" :key="name" cols="6" class="mb-2">
               <div class="legality-item">
-                <v-chip
-                  class="legality-chip"
-                  :color="getLegalityColor(format)"
-                  variant="elevated"
-                  size="small"
-                >
+                <v-chip class="legality-chip" :color="getLegalityColor(format)" variant="elevated" size="small">
                   {{ format }}
                 </v-chip>
                 <span class="format-name">{{ formatName(name) }}</span>
@@ -262,73 +174,124 @@
             </v-col>
           </v-row>
         </v-card>
+
+        <!-- Price Information - Mobile only -->
+        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-md-none">
+          <div class="price-header">
+            <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
+            <h4 class="price-title">Current Prices</h4>
+          </div>
+
+          <div class="price-list">
+            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
+              <span class="currency-label">USD:</span>
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
+                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
+            </div>
+
+            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
+              <span class="currency-label">EUR:</span>
+              <span class="price-value">
+                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
+                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text"
+                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
+                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                  </span>
+                </span>
+              </span>
+            </div>
+
+            <div v-if="card.prices.tix" class="price-item">
+              <span class="currency-label">MTGO Tix:</span>
+              <span class="price-value">{{ card.prices.tix }}</span>
+            </div>
+          </div>
+        </v-card>
+
+        <!-- TCGPlayer Button - Mobile only -->
+        <v-btn v-if="card.purchase_uris?.tcgplayer" :href="card.purchase_uris.tcgplayer" target="_blank" color="primary"
+          variant="elevated" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
+          Buy on TCGPlayer
+        </v-btn>
+
+        <!-- Fallback button if no direct TCGPlayer link - Mobile only -->
+        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" color="primary"
+          variant="outlined" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
+          Search on TCGPlayer
+        </v-btn>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
-import type { IScryfallCard } from '~/types/IScryfall';
-import { useSearchStore } from '~/stores/searchStore';
+import { useQuery } from '@tanstack/vue-query';
+import { computed, h } from 'vue';
+import { useRoute } from 'vue-router';
+import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
+import { DefaultLimit } from '~/models/searchModel';
+import ManaIcon from '~/components/manaIcon.vue';
 
 const route = useRoute();
-const router = useRouter();
-const searchStore = useSearchStore();
-const cardData = ref<IScryfallCard | null>(null);
-const loading = ref(false);
-const error = ref<string | null>(null);
+
 const isFlipped = ref(false);
 
-onMounted(async () => {
-  const cardId = route.query.id as string;
-  if (!cardId) {
-    error.value = 'No card ID provided';
-    return;
-  }
+const cardIdParam = computed(() => String(route.params.id) || '');
 
-  loading.value = true;
-  try {
-    const response = await fetch(`/api/proxy/cards/${cardId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+const { data: card, isLoading, error } = useQuery({
+  queryKey: [
+    'card',
+    cardIdParam.value,
+  ],
+  queryFn: async () => {
+    const response = await fetch(`/api/cards/${cardIdParam.value}`);
     if (!response.ok) {
-      throw new Error('Failed to fetch card data');
+      throw new Error('Network response was not ok');
     }
-    cardData.value = await response.json();
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error';
-  } finally {
-    loading.value = false;
-  }
+    return response.json() as Promise<ScryfallCard>;
+  },
+  staleTime: 1000 * 60 * 15, // 15 minutes
+  enabled: !!cardIdParam.value,
 });
 
-const card = computed(() => cardData.value as IScryfallCard | null);
+useHead(() => ({
+  title: card.value
+    ? `CardMystic | ${card.value.name}`
+    : 'CardMystic | Card',
+  link: [
+    {
+      rel: 'icon',
+      type: 'image/x-icon',
+      href: '/favicon.ico',
+    },
+  ],
+}));
 
-const formatsToIgnore = [
-  'Oldschool',
-  'Standardbrawl',
+const formatsToIgnore: CardFormatType[] = [
+  'Old School',
+  'Standard Brawl',
   'Explorer',
-  'Historicbrawl',
+  'Historic Brawl',
   'Gladiator',
-  'Premordern',
+  'Premodern',
   'Predh',
-  'Paupercommander',
+  'Pauper Commander',
 ];
-
-useHead({
-  title: computed(() => card.value?.name || 'CardMystic'),
-});
 
 const legalities = computed(() => {
   if (!card.value?.legalities) return {};
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(card.value.legalities)) {
     const format = key.charAt(0).toUpperCase() + key.slice(1);
-    if (!formatsToIgnore.includes(format)) {
+    if (!formatsToIgnore.includes(format as CardFormatType)) {
       result[format] = (value as string).toUpperCase().replaceAll('_', ' '); // normalize casing
     }
   }
@@ -356,55 +319,81 @@ const formatName = (raw: string) => {
 };
 
 /**
- * Convert symbols (mana, tap, etc) in a string to Scryfall SVG images
+ * Convert symbols (mana, tap, etc) in a string to ManaIcon components
  */
-const formatSymbols = (text: string | undefined, size: number = 30): string => {
-  if (!text) return '';
+const formatSymbols = (text: string | undefined) => {
+  if (!text) return [];
 
-  // Use replaceAll or a more explicit approach to ensure all symbols are processed
-  let result = '';
   const symbols = text.match(/\{([^}]+)\}/g);
 
-  if (symbols) {
-    // Replace the original string by processing each symbol
-    let workingString = text;
-    symbols.forEach((symbol) => {
-      let symbolForUrl = symbol.slice(1, -1); // Remove { and }
+  if (!symbols) return [text];
 
-      // Handle hybrid mana (e.g., W/U becomes wu)
-      if (symbolForUrl.includes('/')) {
-        symbolForUrl = symbolForUrl.replace('/', '');
+  // Split text into parts and symbols while preserving newlines
+  const parts: (string | ReturnType<typeof h>)[] = [];
+  let lastIndex = 0;
+
+  symbols.forEach((symbol) => {
+    const symbolIndex = text.indexOf(symbol, lastIndex);
+
+    // Add text before the symbol (preserving newlines)
+    if (symbolIndex > lastIndex) {
+      const textBefore = text.substring(lastIndex, symbolIndex);
+      // Split by newlines and add each part with line breaks
+      const lines = textBefore.split('\n');
+      lines.forEach((line, index) => {
+        if (index > 0) {
+          parts.push(h('br')); // Add line break for newlines
+        }
+        if (line) {
+          parts.push(line);
+        }
+      });
+    }
+
+    let symbolForUrl = symbol.slice(1, -1); // Remove { and }
+
+    // Handle hybrid mana (e.g., W/U becomes wu)
+    if (symbolForUrl.includes('/')) {
+      symbolForUrl = symbolForUrl.replace('/', '').toLowerCase();
+    }
+
+    // Handle special symbols
+    const specialSymbols: Record<string, string> = {
+      t: 'tap',
+      q: 'untap',
+      e: 'energy',
+      s: 'snow',
+      chaos: 'chaos',
+      pw: 'planeswalker',
+      loyalty: 'loyalty',
+      '∞': 'infinity',
+    };
+
+    if (specialSymbols[symbolForUrl]) {
+      symbolForUrl = specialSymbols[symbolForUrl];
+    }
+
+    // Create ManaIcon component
+    parts.push(h(ManaIcon, { type: symbolForUrl }));
+
+    lastIndex = symbolIndex + symbol.length;
+  });
+
+  // Add remaining text (preserving newlines)
+  if (lastIndex < text.length) {
+    const remainingText = text.substring(lastIndex);
+    const lines = remainingText.split('\n');
+    lines.forEach((line, index) => {
+      if (index > 0) {
+        parts.push(h('br')); // Add line break for newlines
       }
-
-      // Handle special symbols
-      const specialSymbols = {
-        t: 'tap',
-        q: 'untap',
-        e: 'energy',
-        s: 'snow',
-        chaos: 'chaos',
-        pw: 'planeswalker',
-        loyalty: 'loyalty',
-        '∞': 'infinity',
-      };
-
-      if (specialSymbols[symbolForUrl as keyof typeof specialSymbols]) {
-        symbolForUrl =
-          specialSymbols[symbolForUrl as keyof typeof specialSymbols];
+      if (line) {
+        parts.push(line);
       }
-
-      let imgTag = `<img src="https://svgs.scryfall.io/card-symbols/${symbolForUrl}.svg" height="${size}" class="mana-symbol"/>`;
-
-      // Replace the first occurrence of this symbol
-      workingString = workingString.replace(symbol, imgTag);
     });
-
-    result = workingString;
-  } else {
-    result = text;
   }
 
-  return result;
+  return parts;
 };
 
 /**
@@ -475,7 +464,16 @@ const currentToughness = computed(() => {
   return currentFace.value.toughness || '';
 });
 
-function getCardImageUrl(cardData: IScryfallCard): string {
+// Computed properties for formatted symbols
+const formattedManaCost = computed(() => {
+  return formatSymbols(currentManaCost.value);
+});
+
+const formattedOracleText = computed(() => {
+  return formatSymbols(currentOracleText.value);
+});
+
+function getCardImageUrl(cardData: ScryfallCard): string {
   // For dual-faced cards, show the appropriate face
   if (isDualFaced.value && cardData.card_faces) {
     const face = isFlipped.value
@@ -531,24 +529,20 @@ function flipCard() {
 
 function findSimilarCards() {
   if (!card.value) return;
-  searchStore.clearFilters();
 
   // Navigate to search page with similarity search endpoint
-  const queryParams: any = {
-    q: card.value.name,
-    endpoint: 1, // Similar Search endpoint
-    filters: JSON.stringify(searchStore.filters),
+  const queryParams = {
+    card_name: card.value.name,
+    limit: DefaultLimit,
+    filters: undefined, // No additional filters for similarity search
   };
 
-  router.push({
-    name: 'search',
-    query: queryParams,
-  });
+  navigateTo({ path: '/search/similarity', query: queryParams });
 }
+
 </script>
 
 <style scoped lang="sass">
-// Card Image Styling
 .card-image-container
   position: relative
   display: inline-block
@@ -612,13 +606,16 @@ function findSimilarCards() {
   z-index: 1
   transition: all 0.3s ease
 
-  &:hover
-    transform: translateY(-2px) scale(1.02)
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3)
-
 // Card Header Styling
 .card-header
   margin-bottom: 24px
+
+.card-header-aligned
+  margin-bottom: 24px
+  margin-top: 0
+  
+  @media (min-width: 960px)
+    margin-top: 60px // Align with card image top (button height + margin)
 
 .card-title
   font-size: 2.2rem
@@ -626,6 +623,9 @@ function findSimilarCards() {
   background: linear-gradient(135deg, rgb(147, 114, 255), rgb(255, 114, 147))
   background-clip: text
   margin-bottom: 4px
+
+.card-title-text
+  margin-right: 8px
   text-shadow: 0 4px 8px rgba(147, 114, 255, 0.3)
 
 .set-rarity-info
@@ -640,11 +640,6 @@ function findSimilarCards() {
   font-weight: 400
   margin: 0
   font-style: italic
-
-.mana-cost
-  color: rgb(255, 193, 7)
-  font-weight: 600
-  text-shadow: 0 2px 4px rgba(255, 193, 7, 0.4)
 
 .card-type
   color: rgb(var(--v-theme-primary))
@@ -664,8 +659,13 @@ function findSimilarCards() {
 .oracle-text
   color: white
   font-size: 1.1rem
-  line-height: 1.6
+  line-height: 1.2
   margin-bottom: 16px
+
+  br
+    display: block
+    content: ""
+    margin-top: 0.5em
 
 .flavor-text
   color: rgba(147, 114, 255, 0.9)
@@ -702,7 +702,6 @@ function findSimilarCards() {
 
 .artist-name
   color: rgb(var(--v-theme-primary))
-  margin-left: 8px
   font-size: 1rem
 
 // Legalities Card
@@ -821,6 +820,16 @@ function findSimilarCards() {
     box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
     transform: translateY(-2px)
 
+.similar-cards-btn-desktop
+  width: 100%
+  max-width: 280px
+
+// Price Card Mobile Styling
+@media (max-width: 959px)
+  .price-card
+    max-width: none !important
+    width: 100%
+
 // Legacy styles cleanup
 .chip
   font-size: 10px !important
@@ -852,17 +861,6 @@ em
   text-align: center
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
 
-// Add styles for mana symbols
-:deep(.mana-symbol)
-  display: inline-block
-  vertical-align: -0.1em
-  margin: 0 1px
-
-:deep(.mana-symbol-text)
-  display: inline-block
-  vertical-align: -0.15em
-  margin: 0 1px
-
 // TCGPlayer Button Styling
 .tcgplayer-btn
   width: 100%
@@ -875,6 +873,11 @@ em
   &:hover
     box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
     transform: translateY(-2px)
+
+// Mobile responsive styles
+@media (max-width: 959px)
+  .tcgplayer-btn
+    max-width: none !important
 
 // Animations
 @keyframes glowPulse
@@ -941,4 +944,11 @@ em
 
   @media (max-width: 768px)
     padding-left: 0 // Reset on mobile
+
+.back-button-container-aligned
+  display: flex
+  justify-content: center
+  width: 100%
+  max-width: 300px
+  align-self: center
 </style>

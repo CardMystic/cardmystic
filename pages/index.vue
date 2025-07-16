@@ -1,14 +1,10 @@
 <template>
-  <navbar></navbar>
-  <v-container
-    class="fill-height d-flex responsive-align"
-    style="padding-top: 0px"
-  >
+  <v-container class="fill-height d-flex responsive-align" style="padding-top: 0px">
     <v-col class="col-container px-0">
       <!-- Header with image and title side by side -->
       <div class="header-layout">
         <div class="glow-wrapper">
-          <v-img src="/public/crystall_ball.png" class="image"></v-img>
+          <v-img src="/public/crystall_ball.webp" aspect-ratio="1/1" class="image"></v-img>
         </div>
 
         <div class="title-container">
@@ -22,30 +18,26 @@
         </div>
       </div>
 
-      <!-- Basic Search Component -->
-      <BasicSearch ref="basicSearchRef" max-width="1096px" @search="search" />
+      <!-- Search Component -->
+      <SearchForm class="mt-6" style="max-width: 1096px" />
 
-      <!-- Example Query -->
-      <ExampleQuery class="mt-0" style="max-width: 1096px" />
+      <!-- Example Queries -->
+      <ExampleQueries class="mt-0" style="max-width: 1096px" />
 
       <!-- Top Queries -->
       <TopQueries class="mt-6" style="max-width: 1096px" />
     </v-col>
   </v-container>
-
-  <Footer></Footer>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useSearchStore } from '~/stores/searchStore';
-const router = useRouter();
+defineOptions({ name: 'HomePage' });
 
-const searchStore = useSearchStore();
+import { onMounted, ref } from 'vue';
+import SearchForm from '~/components/search/Search.vue';
+
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
-const { loading } = storeToRefs(searchStore);
-const basicSearchRef = ref();
 
 useHead({
   title: 'CardMystic',
@@ -70,22 +62,6 @@ onMounted(() => {
   }, 200); // typing speed
 });
 
-async function search(selectedIndex: number) {
-  // Update store with selected index
-  searchStore.selectedChipIndex = selectedIndex;
-
-  // Navigate to search page with query parameters
-  const queryParams: any = {
-    q: searchStore.query,
-    endpoint: selectedIndex,
-    filters: JSON.stringify(searchStore.filters),
-  };
-
-  router.push({
-    name: 'search',
-    query: queryParams,
-  });
-}
 </script>
 
 <style lang="sass" scoped>
