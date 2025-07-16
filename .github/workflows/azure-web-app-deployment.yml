@@ -4,12 +4,9 @@ on:
   push:
     branches:
       - 'main'
-      - 'releases/**'
-      - 'jpinz/frontend-v2' # Remove this before merging to main
   pull_request:
     branches:
       - 'dev/**'
-      - 'jpinz/frontend-v2' # Remove this before merging to main
 
 jobs:
   build_and_deploy_job:
