@@ -5,8 +5,10 @@ on:
     branches:
       - 'main'
   pull_request:
-    branches:
-      - 'dev/**'
+    paths-ignore:
+      - 'README.md'
+      - '.vscode/**'
+      - '.gitignore'
 
 jobs:
   build_and_deploy_job:
