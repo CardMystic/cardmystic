@@ -43,7 +43,7 @@ body:
     attributes:
       label: Filters (optional)
       description: List any filters you applied (if any).
-      placeholder: e.g. Color: Blue, Rarity: Mythic
+      placeholder: 'e.g. Color: Blue, Rarity: Mythic'
     validations:
       required: false
   - type: textarea
