@@ -30,6 +30,14 @@ body:
         - label: AI Search
     validations:
       required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is, what you expected to happen, and any other relevant details.
+      placeholder: Describe the bug, what you expected, and any other context.
+    validations:
+      required: true
   - type: input
     id: query-or-card
     attributes:
@@ -53,14 +61,6 @@ body:
       description: If applicable, attach a screenshot to display your problem.
     validations:
       required: false
-  - type: textarea
-    id: description
-    attributes:
-      label: Description
-      description: A clear and concise description of what the bug is, what you expected to happen, and any other relevant details.
-      placeholder: Describe the bug, what you expected, and any other context.
-    validations:
-      required: true
   - type: input
     id: os
     attributes:
