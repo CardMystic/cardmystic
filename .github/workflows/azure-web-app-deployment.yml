@@ -11,6 +11,9 @@ on:
       - 'README.md'
       - '.vscode/**'
       - '.gitignore'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'CONTRIBUTING.md'
+      - 'FUNDING.yml'
 
 jobs:
   build_and_deploy_job:
