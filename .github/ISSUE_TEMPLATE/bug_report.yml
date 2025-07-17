@@ -1,7 +1,7 @@
 name: Bug Report
 description: Create a bug report to help us improve
-labels:
-	- bug
+labels: ["bug"]
+title: "[Bug]: "
 assignees: []
 body:
 	- type: input
