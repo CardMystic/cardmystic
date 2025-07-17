@@ -18,9 +18,7 @@
 
         <!-- Right side: Patreon button -->
         <div v-if="showActions" class="right-actions">
-          <v-btn
-            :href="`https://github.com/CardMystic/cardmystic/issues/new/choose?title=Issue+Report&body=Please+describe+the+problem+here.%0A%0A---%0ADocument+Details%0A-+PAGE:+${currentPageName}%0A-+URL:+${currentUrl}`"
-            target="_blank" rel="noopener" class="github-issues-btn" variant="outlined"
+          <v-btn :href="issuesUrl" target="_blank" rel="noopener" class="github-issues-btn" variant="outlined"
             style="margin-right: 12px; border-color: #24292f; color: #24292f; background: white;">
             <v-icon size="22" color="#24292f" start>mdi-github</v-icon>
             Report an Issue
@@ -78,6 +76,10 @@ const currentPageName = computed(() => {
 const currentUrl = computed(() => {
   const route = useRoute();
   return encodeURIComponent(route.fullPath);
+});
+
+const issuesUrl = computed(() => {
+  return `https://github.com/CardMystic/cardmystic/issues/new?template=bug_report.yml&title=[BUG] On '${currentPageName.value}' page (${currentUrl.value})`;
 });
 </script>
 
