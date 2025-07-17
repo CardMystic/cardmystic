@@ -1,86 +1,86 @@
 name: Bug Report
 description: Create a bug report to help us improve
-labels: ["bug"]
-title: "[Bug]: "
+labels: ['bug']
+title: '[Bug]: '
 assignees: []
 body:
-	- type: input
-		id: page-url
-		attributes:
-			label: Page URL
-			description: Provide a link to the page where you encountered the issue.
-			placeholder: https://cardmystic.com/search/similarity?card_name=...
-		validations:
-			required: true
-	- type: input
-		id: discord-username
-		attributes:
-			label: Discord Username (optional)
-			description: If you'd like us to follow up on Discord, please provide your Discord username.
-			placeholder: yourusername#1234
-		validations:
-			required: false
-	- type: checkboxes
-		id: search-type
-		attributes:
-			label: Search Type
-			description: Which search did you use?
-			options:
-				- label: Similarity Search
-				- label: AI Search
-		validations:
-			required: true
-	- type: input
-		id: query-or-card
-		attributes:
-			label: Query or Card Name
-			description: What query or card name did you use?
-			placeholder: e.g. Progenitus , White Board Wipes
-		validations:
-			required: true
-	- type: textarea
-		id: filters
-		attributes:
-			label: Filters (optional)
-			description: List any filters you applied (if any).
-			placeholder: e.g. Color: Blue, Rarity: Mythic
-		validations:
-			required: false
-	- type: textarea
-		id: screenshot
-		attributes:
-			label: Screenshot (optional)
-			description: If applicable, attach a screenshot to display your problem.
-		validations:
-			required: false
-	- type: textarea
-		id: description
-		attributes:
-			label: Description
-			description: A clear and concise description of what the bug is, what you expected to happen, and any other relevant details.
-			placeholder: Describe the bug, what you expected, and any other context.
-		validations:
-			required: true
-	- type: input
-		id: os
-		attributes:
-			label: OS
-			description: What operating system are you using?
-			placeholder: e.g. Windows, macOS, Linux
-		validations:
-			required: true
-	- type: input
-		id: browser
-		attributes:
-			label: Browser
-			description: What browser are you using?
-			placeholder: e.g. Chrome, Safari
-		validations:
-			required: true
-	- type: textarea
-		id: additional-context
-		attributes:
-			label: Additional Context
-			description: Add any other context about the problem here.
-		validations:
-			required: false
+  - type: input
+    id: page-url
+    attributes:
+      label: Page URL
+      description: Provide a link to the page where you encountered the issue.
+      placeholder: https://cardmystic.com/search/similarity?card_name=...
+    validations:
+      required: true
+  - type: input
+    id: discord-username
+    attributes:
+      label: Discord Username (optional)
+      description: If you'd like us to follow up on Discord, please provide your Discord username.
+      placeholder: yourusername#1234
+    validations:
+      required: false
+  - type: checkboxes
+    id: search-type
+    attributes:
+      label: Search Type
+      description: Which search did you use?
+      options:
+        - label: Similarity Search
+        - label: AI Search
+    validations:
+      required: true
+  - type: input
+    id: query-or-card
+    attributes:
+      label: Query or Card Name
+      description: What query or card name did you use?
+      placeholder: e.g. Progenitus , White Board Wipes
+    validations:
+      required: true
+  - type: textarea
+    id: filters
+    attributes:
+      label: Filters (optional)
+      description: List any filters you applied (if any).
+      placeholder: e.g. Color: Blue, Rarity: Mythic
+    validations:
+      required: false
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot (optional)
+      description: If applicable, attach a screenshot to display your problem.
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is, what you expected to happen, and any other relevant details.
+      placeholder: Describe the bug, what you expected, and any other context.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      description: What operating system are you using?
+      placeholder: e.g. Windows, macOS, Linux
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: What browser are you using?
+      placeholder: e.g. Chrome, Safari
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here.
+    validations:
+      required: false
