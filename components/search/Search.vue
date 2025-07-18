@@ -1,5 +1,5 @@
 <template>
-  <div class="search-container">
+  <div class="search-container px-0">
     <form @submit.prevent="onSubmit" class="search-form">
       <div class="search-input-row">
         <!-- Regular search input -->
