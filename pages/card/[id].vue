@@ -360,9 +360,13 @@ const formatSymbols = (text: string | undefined) => {
     // Handle special symbols
     const specialSymbols: Record<string, string> = {
       t: 'tap',
+      T: 'tap',
       q: 'untap',
+      Q: 'untap',
       e: 'energy',
+      E: 'energy',
       s: 'snow',
+      S: 'snow',
       chaos: 'chaos',
       pw: 'planeswalker',
       loyalty: 'loyalty',
