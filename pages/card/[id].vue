@@ -110,7 +110,7 @@
       </v-col>
 
       <!-- Center: Card Details -->
-      <v-col cols="12" md="5" class="d-flex flex-column justify-start">
+      <v-col cols="12" md="6" class="d-flex flex-column justify-start">
         <div class="card-header card-header-aligned">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
@@ -152,31 +152,13 @@
         </div>
 
         <!-- Similar Cards Button - Mobile only -->
-        <v-btn color="white" variant="elevated" class="mt-4 mb-7 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
+        <v-btn color="white" variant="elevated" class="mt-0 mb-4 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
           size="large" @click="findSimilarCards" block>
           Similar Cards
         </v-btn>
 
-        <v-card elevation="8" class="legalities-card">
-          <div class="legalities-header">
-            <v-icon color="primary" class="mr-2">mdi-gavel</v-icon>
-            <h3 class="legalities-title">Legalities</h3>
-          </div>
-
-          <v-row dense class="pa-2">
-            <v-col v-for="(format, name) in legalities" :key="name" cols="6" class="mb-2">
-              <div class="legality-item">
-                <v-chip class="legality-chip" :color="getLegalityColor(format)" variant="elevated" size="small">
-                  {{ format }}
-                </v-chip>
-                <span class="format-name">{{ formatName(name) }}</span>
-              </div>
-            </v-col>
-          </v-row>
-        </v-card>
-
         <!-- Price Information - Mobile only -->
-        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-md-none">
+        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mb-4 d-md-none">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
@@ -218,15 +200,33 @@
 
         <!-- TCGPlayer Button - Mobile only -->
         <v-btn v-if="card.purchase_uris?.tcgplayer" :href="card.purchase_uris.tcgplayer" target="_blank" color="primary"
-          variant="elevated" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
+          variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
           Buy on TCGPlayer
         </v-btn>
 
         <!-- Fallback button if no direct TCGPlayer link - Mobile only -->
         <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" color="primary"
-          variant="outlined" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
+          variant="outlined" class="mb-6 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
           Search on TCGPlayer
         </v-btn>
+
+        <v-card elevation="8" class="legalities-card">
+          <div class="legalities-header">
+            <v-icon color="primary" class="mr-2">mdi-gavel</v-icon>
+            <h3 class="legalities-title">Legalities</h3>
+          </div>
+
+          <v-row dense class="pa-2">
+            <v-col v-for="(format, name) in legalities" :key="name" cols="6" class="mb-2">
+              <div class="legality-item">
+                <v-chip class="legality-chip" :color="getLegalityColor(format)" variant="elevated" size="small">
+                  {{ format }}
+                </v-chip>
+                <span class="format-name">{{ formatName(name) }}</span>
+              </div>
+            </v-col>
+          </v-row>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -360,9 +360,13 @@ const formatSymbols = (text: string | undefined) => {
     // Handle special symbols
     const specialSymbols: Record<string, string> = {
       t: 'tap',
+      T: 'tap',
       q: 'untap',
+      Q: 'untap',
       e: 'energy',
+      E: 'energy',
       s: 'snow',
+      S: 'snow',
       chaos: 'chaos',
       pw: 'planeswalker',
       loyalty: 'loyalty',
@@ -608,10 +612,10 @@ function findSimilarCards() {
 
 // Card Header Styling
 .card-header
-  margin-bottom: 24px
+  margin-bottom: 16px
 
 .card-header-aligned
-  margin-bottom: 24px
+  margin-bottom: 16px
   margin-top: 0
   
   @media (min-width: 960px)
@@ -652,7 +656,7 @@ function findSimilarCards() {
   background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
   border-radius: 16px
   padding: 24px
-  margin-bottom: 24px
+  margin-bottom: 16px
   border: 1px solid rgba(147, 114, 255, 0.2)
   backdrop-filter: blur(10px)
 
