@@ -23,14 +23,9 @@
             </div>
             <!-- Horizontal scrolling results -->
             <div class="results-container">
-                <div class="results-scroll" ref="scrollContainer" 
-                     @mousedown="startDrag" 
-                     @mousemove="onDrag"
-                     @mouseup="endDrag" 
-                     @mouseleave="endDrag"
-                     @touchstart="startTouch"
-                     @touchmove="onTouch"
-                     @touchend="endTouch">
+                <div class="results-scroll" ref="scrollContainer" @mousedown="startDrag" @mousemove="onDrag"
+                    @mouseup="endDrag" @mouseleave="endDrag" @touchstart="startTouch" @touchmove="onTouch"
+                    @touchend="endTouch">
                     <!-- Cards with lazy loading -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
                         class="result-card-wrapper">
