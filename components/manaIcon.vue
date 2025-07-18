@@ -23,5 +23,6 @@ export default {
 #mana-icon {
     margin: 0 2px;
     vertical-align: unset;
+    font-size: 0.7em;
 }
 </style>
