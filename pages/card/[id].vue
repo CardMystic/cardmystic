@@ -152,12 +152,12 @@
         </div>
 
         <!-- Similar Cards Button - Mobile only -->
-        <v-btn color="white" variant="elevated" class="mt-4 mb-4 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
+        <v-btn color="white" variant="elevated" class="mt-0 mb-4 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
           size="large" @click="findSimilarCards" block>
           Similar Cards
         </v-btn>
 
-        <!-- Price Information - Mobile only (moved down) -->
+        <!-- Price Information - Mobile only -->
         <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mb-4 d-md-none">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
@@ -198,15 +198,15 @@
           </div>
         </v-card>
 
-        <!-- TCGPlayer Button - Mobile only (moved down) -->
+        <!-- TCGPlayer Button - Mobile only -->
         <v-btn v-if="card.purchase_uris?.tcgplayer" :href="card.purchase_uris.tcgplayer" target="_blank" color="primary"
-          variant="elevated" class="mb-7 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
+          variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
           Buy on TCGPlayer
         </v-btn>
 
-        <!-- Fallback button if no direct TCGPlayer link - Mobile only (moved down) -->
+        <!-- Fallback button if no direct TCGPlayer link - Mobile only -->
         <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" color="primary"
-          variant="outlined" class="mb-7 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
+          variant="outlined" class="mb-6 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
           Search on TCGPlayer
         </v-btn>
 
@@ -608,10 +608,10 @@ function findSimilarCards() {
 
 // Card Header Styling
 .card-header
-  margin-bottom: 24px
+  margin-bottom: 16px
 
 .card-header-aligned
-  margin-bottom: 24px
+  margin-bottom: 16px
   margin-top: 0
   
   @media (min-width: 960px)
@@ -652,7 +652,7 @@ function findSimilarCards() {
   background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
   border-radius: 16px
   padding: 24px
-  margin-bottom: 24px
+  margin-bottom: 16px
   border: 1px solid rgba(147, 114, 255, 0.2)
   backdrop-filter: blur(10px)
 
