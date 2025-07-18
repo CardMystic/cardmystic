@@ -4,8 +4,8 @@
       <div class="navbar-inner">
         <!-- Left side: Hamburger & nav -->
         <div class="left-section">
-          <v-app-bar-nav-icon class="d-sm-none" @click="drawer = !drawer" />
-          <div class="d-none d-sm-flex">
+          <v-app-bar-nav-icon class="d-custom-none" @click="drawer = !drawer" />
+          <div class="d-custom-flex">
             <NuxtLink v-for="item in filteredNavItems" :key="item.to" :to="item.to" class="nav-link"
               :class="{ active: $route.path === item.to }">
               <v-btn>
@@ -18,10 +18,11 @@
 
         <!-- Right side: Patreon button -->
         <div v-if="showActions" class="right-actions">
-          <v-btn :href="issuesUrl" target="_blank" rel="noopener" class="github-issues-btn" variant="outlined"
-            style="margin-right: 12px; border-color: #24292f; color: #24292f; background: white;">
-            <v-icon size="22" color="#24292f" start>mdi-github</v-icon>
-            Report an Issue
+          <v-btn :href="issuesUrl" target="_blank" rel="noopener" class="github-issues-btn" variant="outlined">
+            <div class="github-btn-content">
+              <v-icon size="20" color="#24292f">mdi-github</v-icon>
+              <span class="github-btn-text">Report Issue</span>
+            </div>
           </v-btn>
           <v-btn href="https://www.patreon.com/thecardmystic" target="_blank" rel="noopener" class="patreon-btn"
             variant="outlined">
@@ -36,7 +37,7 @@
 
     <!-- Drawer for mobile -->
     <client-only>
-      <v-navigation-drawer v-model="drawer" temporary app class="d-sm-none">
+      <v-navigation-drawer v-model="drawer" temporary app class="d-custom-none-drawer">
         <v-list nav>
           <v-list-item v-for="item in filteredNavItems" :key="item.to" :to="item.to" @click="drawer = false">
             <template #prepend>
@@ -108,11 +109,13 @@ const issuesUrl = computed(() => {
   .left-section {
     display: flex;
     align-items: center;
+    padding: 0 12px;
   }
 
   .right-actions {
     display: flex;
     align-items: center;
+    padding: 0 12px;
   }
 }
 
@@ -154,6 +157,58 @@ const issuesUrl = computed(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+}
+
+.github-issues-btn {
+  margin-right: 12px !important;
+  border-color: #24292f !important;
+  color: #24292f !important;
+  background: white !important;
+  min-width: 70px !important;
+  height: 36px !important;
+  padding: 2px 8px !important;
+
+  .github-btn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  .github-btn-text {
+    font-size: 9px;
+    line-height: 1;
+    text-transform: none;
+    font-weight: 500;
+    color: #24292f;
+  }
+}
+
+// Custom breakpoint classes
+.d-custom-none {
+  @media (max-width: 801px) {
+    display: flex !important;
+  }
+
+  @media (min-width: 802px) {
+    display: none !important;
+  }
+}
+
+.d-custom-flex {
+  @media (max-width: 801px) {
+    display: none !important;
+  }
+
+  @media (min-width: 802px) {
+    display: flex !important;
+  }
+}
+
+.d-custom-none-drawer {
+  @media (min-width: 802px) {
+    display: none !important;
   }
 }
 </style>
