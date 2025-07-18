@@ -152,31 +152,13 @@
         </div>
 
         <!-- Similar Cards Button - Mobile only -->
-        <v-btn color="white" variant="elevated" class="mt-4 mb-7 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
+        <v-btn color="white" variant="elevated" class="mt-4 mb-4 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
           size="large" @click="findSimilarCards" block>
           Similar Cards
         </v-btn>
 
-        <v-card elevation="8" class="legalities-card">
-          <div class="legalities-header">
-            <v-icon color="primary" class="mr-2">mdi-gavel</v-icon>
-            <h3 class="legalities-title">Legalities</h3>
-          </div>
-
-          <v-row dense class="pa-2">
-            <v-col v-for="(format, name) in legalities" :key="name" cols="6" class="mb-2">
-              <div class="legality-item">
-                <v-chip class="legality-chip" :color="getLegalityColor(format)" variant="elevated" size="small">
-                  {{ format }}
-                </v-chip>
-                <span class="format-name">{{ formatName(name) }}</span>
-              </div>
-            </v-col>
-          </v-row>
-        </v-card>
-
-        <!-- Price Information - Mobile only -->
-        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-md-none">
+        <!-- Price Information - Mobile only (moved down) -->
+        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mb-4 d-md-none">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
@@ -216,17 +198,35 @@
           </div>
         </v-card>
 
-        <!-- TCGPlayer Button - Mobile only -->
+        <!-- TCGPlayer Button - Mobile only (moved down) -->
         <v-btn v-if="card.purchase_uris?.tcgplayer" :href="card.purchase_uris.tcgplayer" target="_blank" color="primary"
-          variant="elevated" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
+          variant="elevated" class="mb-7 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
           Buy on TCGPlayer
         </v-btn>
 
-        <!-- Fallback button if no direct TCGPlayer link - Mobile only -->
+        <!-- Fallback button if no direct TCGPlayer link - Mobile only (moved down) -->
         <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" color="primary"
-          variant="outlined" class="mt-4 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
+          variant="outlined" class="mb-7 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify" size="large" block>
           Search on TCGPlayer
         </v-btn>
+
+        <v-card elevation="8" class="legalities-card">
+          <div class="legalities-header">
+            <v-icon color="primary" class="mr-2">mdi-gavel</v-icon>
+            <h3 class="legalities-title">Legalities</h3>
+          </div>
+
+          <v-row dense class="pa-2">
+            <v-col v-for="(format, name) in legalities" :key="name" cols="6" class="mb-2">
+              <div class="legality-item">
+                <v-chip class="legality-chip" :color="getLegalityColor(format)" variant="elevated" size="small">
+                  {{ format }}
+                </v-chip>
+                <span class="format-name">{{ formatName(name) }}</span>
+              </div>
+            </v-col>
+          </v-row>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
