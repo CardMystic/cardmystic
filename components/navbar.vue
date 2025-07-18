@@ -18,6 +18,11 @@
 
         <!-- Right side: Patreon button -->
         <div v-if="showActions" class="right-actions">
+          <v-btn :href="issuesUrl" target="_blank" rel="noopener" class="github-issues-btn" variant="outlined"
+            style="margin-right: 12px; border-color: #24292f; color: #24292f; background: white;">
+            <v-icon size="22" color="#24292f" start>mdi-github</v-icon>
+            Report an Issue
+          </v-btn>
           <v-btn href="https://www.patreon.com/thecardmystic" target="_blank" rel="noopener" class="patreon-btn"
             variant="outlined">
             <div class="btn-left">Support us on Patreon!</div>
@@ -61,6 +66,20 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+});
+
+const currentPageName = computed(() => {
+  const route = useRoute();
+  return route.meta?.title || route.name || '';
+});
+
+const currentUrl = computed(() => {
+  const route = useRoute();
+  return encodeURIComponent(route.fullPath);
+});
+
+const issuesUrl = computed(() => {
+  return `https://github.com/CardMystic/cardmystic/issues/new?template=bug_report.yml&title=[BUG] On '${currentPageName.value}' page (${currentUrl.value})`;
 });
 </script>
 
