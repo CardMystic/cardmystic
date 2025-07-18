@@ -27,9 +27,10 @@
                     <!-- Cards with lazy loading -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
                         class="result-card-wrapper">
-                        <v-lazy :options="{ threshold: 0.5 }" min-height="160" transition="fade-transition">
+                        <v-lazy :options="{ threshold: 0.5 }" min-height="160" transition="fade-transition"
+                            class="lazy-card-container">
                             <Card :card="result" :normalization-context="allScores" size="small"
-                                @click="goToCard(result.card_data.id)" />
+                                @click="goToCard(result.card_data.id)" class="hoverable-card" />
                         </v-lazy>
                     </div>
                 </div>
@@ -328,11 +329,23 @@ function goToCard(cardId: string | undefined) {
 .result-card-wrapper
   flex: 0 0 auto
   cursor: pointer
+  position: relative
+  z-index: 1
+
+.lazy-card-container
   transition: all 0.3s ease
+  transform-origin: center
+  display: block
+  width: 100%
+  height: 100%
 
   &:hover
-    transform: translateY(-4px) scale(1.02)
-    box-shadow: 0 8px 24px rgba(147, 114, 255, 0.3)
+    transform: scale(1.02)
+    z-index: 10
+
+.hoverable-card
+  transition: all 0.3s ease !important
+  cursor: pointer
 
 // Lazy loading transition styles
 .fade-transition-enter-active,
