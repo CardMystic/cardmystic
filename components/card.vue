@@ -41,6 +41,11 @@ const props = defineProps({
     type: Array as PropType<number[]>,
     default: undefined,
   },
+  // If true, treat score as 0-1 range for similarity search
+  isSimilaritySearch: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 
@@ -62,6 +67,12 @@ function normalizeScore(score: number | undefined): number {
   if (score === undefined) {
     return 0; // Default to 0 if score is undefined
   }
+
+  // For similarity search, treat score as 0-1 range and convert to percentage
+  if (props.isSimilaritySearch) {
+    return Math.min(Math.max(score * 100, 0), 100);
+  }
+
   // Use provided normalization context if available, otherwise fall back to search store
   const allScores =
     props.normalizationContext ||

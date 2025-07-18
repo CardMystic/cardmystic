@@ -23,13 +23,16 @@
             </div>
             <!-- Horizontal scrolling results -->
             <div class="results-container">
-                <div class="results-scroll" ref="scrollContainer">
+                <div class="results-scroll" ref="scrollContainer" @mousedown="startDrag" @mousemove="onDrag"
+                    @mouseup="endDrag" @mouseleave="endDrag" @touchstart="startTouch" @touchmove="onTouch"
+                    @touchend="endTouch">
                     <!-- Cards with lazy loading -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
                         class="result-card-wrapper">
-                        <v-lazy :options="{ threshold: 0.5 }" min-height="160" transition="fade-transition">
+                        <v-lazy :options="{ threshold: 0.5 }" min-height="160" transition="fade-transition"
+                            class="lazy-card-container">
                             <Card :card="result" :normalization-context="allScores" size="small"
-                                @click="goToCard(result.card_data.id)" />
+                                @click="goToCard(result.card_data.id)" class="hoverable-card" />
                         </v-lazy>
                     </div>
                 </div>
@@ -48,6 +51,13 @@ const router = useRouter();
 const currentQuery = ref<string>('creatures that draw cards');
 const scrollContainer = ref<HTMLElement>();
 let scrollAnimationId: number | null = null;
+
+// Drag scrolling variables
+const isDragging = ref(false);
+const dragStart = ref(0);
+const scrollStart = ref(0);
+const hasDragged = ref(false);
+const dragThreshold = 5; // Minimum pixels to consider it a drag
 
 const wordSearch = computed(() =>
     WordSearchSchema.parse({
@@ -139,8 +149,122 @@ watch([results, isLoading], async ([newResults, newIsLoading]) => {
     }
 }, { immediate: true });
 
+// Drag scrolling functions
+function startDrag(event: MouseEvent) {
+    if (!scrollContainer.value) return;
+
+    isDragging.value = true;
+    hasDragged.value = false;
+    dragStart.value = event.clientX;
+    scrollStart.value = scrollContainer.value.scrollLeft;
+
+    // Pause auto-scroll
+    if (scrollAnimationId) {
+        cancelAnimationFrame(scrollAnimationId);
+        scrollAnimationId = null;
+    }
+
+    // Prevent text selection
+    event.preventDefault();
+}
+
+function onDrag(event: MouseEvent) {
+    if (!isDragging.value || !scrollContainer.value) return;
+
+    const deltaX = event.clientX - dragStart.value;
+    const newScrollLeft = scrollStart.value - deltaX;
+
+    // Check if we've dragged enough to consider it a drag
+    if (Math.abs(deltaX) > dragThreshold) {
+        hasDragged.value = true;
+    }
+
+    // Apply scroll
+    scrollContainer.value.scrollLeft = Math.max(0, Math.min(
+        newScrollLeft,
+        scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth
+    ));
+
+    event.preventDefault();
+}
+
+function endDrag() {
+    if (!isDragging.value) return;
+
+    isDragging.value = false;
+
+    // Resume auto-scroll after a delay
+    setTimeout(() => {
+        if (!isDragging.value) {
+            startAutoScroll();
+        }
+    }, 1000); // 1 second delay before resuming auto-scroll
+
+    // Reset drag state after a short delay to prevent immediate clicks
+    setTimeout(() => {
+        hasDragged.value = false;
+    }, 100);
+}
+
+// Touch event handlers for mobile
+function startTouch(event: TouchEvent) {
+    if (!scrollContainer.value || event.touches.length === 0) return;
+
+    isDragging.value = true;
+    hasDragged.value = false;
+    dragStart.value = event.touches[0].clientX;
+    scrollStart.value = scrollContainer.value.scrollLeft;
+
+    // Pause auto-scroll
+    if (scrollAnimationId) {
+        cancelAnimationFrame(scrollAnimationId);
+        scrollAnimationId = null;
+    }
+
+    // Prevent default touch behavior
+    event.preventDefault();
+}
+
+function onTouch(event: TouchEvent) {
+    if (!isDragging.value || !scrollContainer.value || event.touches.length === 0) return;
+
+    const deltaX = event.touches[0].clientX - dragStart.value;
+    const newScrollLeft = scrollStart.value - deltaX;
+
+    // Check if we've dragged enough to consider it a drag
+    if (Math.abs(deltaX) > dragThreshold) {
+        hasDragged.value = true;
+    }
+
+    // Apply scroll
+    scrollContainer.value.scrollLeft = Math.max(0, Math.min(
+        newScrollLeft,
+        scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth
+    ));
+
+    event.preventDefault();
+}
+
+function endTouch() {
+    if (!isDragging.value) return;
+
+    isDragging.value = false;
+
+    // Resume auto-scroll after a delay
+    setTimeout(() => {
+        if (!isDragging.value) {
+            startAutoScroll();
+        }
+    }, 1000); // 1 second delay before resuming auto-scroll
+
+    // Reset drag state after a short delay to prevent immediate clicks
+    setTimeout(() => {
+        hasDragged.value = false;
+    }, 100);
+}
+
 function startAutoScroll() {
-    if (!scrollContainer.value || !results.value || results.value.length === 0) {
+    if (!scrollContainer.value || !results.value || results.value.length === 0 || isDragging.value) {
         return;
     }
 
@@ -167,13 +291,9 @@ function startAutoScroll() {
     const accelerationFrames = 120; // 2 seconds at 60fps to reach full speed
     const initialPauseFrames = 120; // 2 second pause at the beginning
     const endPauseFrames = 180; // 3 second pause at the end
-    const resetDurationFrames = 30; // 0.5 second (30 frames at 60fps) to scroll back
     let isPaused = true; // start with initial pause
     let pauseCounter = 0;
-    let isResetting = false;
-    let resetStartScroll = 0;
-    let resetTargetScroll = 0;
-    let resetFrameCounter = 0;
+    let hasReachedEnd = false;
 
     function animate() {
         if (!scrollContainer.value || !results.value || results.value.length === 0) {
@@ -185,30 +305,20 @@ function startAutoScroll() {
 
         // Only proceed if there's content to scroll
         if (currentMaxScroll > 0) {
-            if (isResetting) {
-                // Smooth scroll back to start
-                resetFrameCounter++;
-                const progress = Math.min(resetFrameCounter / resetDurationFrames, 1);
-                const easedProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-out
-
-                container.scrollLeft = resetStartScroll + (resetTargetScroll - resetStartScroll) * easedProgress;
-
-                if (progress >= 1) {
-                    // Reset complete
-                    container.scrollLeft = 0;
-                    isResetting = false;
-                    isPaused = true;
-                    pauseCounter = 0;
-                    animationFrame = 0;
-                    resetFrameCounter = 0;
-                }
-            } else if (isPaused) {
+            if (isPaused) {
                 pauseCounter++;
-                const currentPauseFrames = animationFrame === 0 ? initialPauseFrames : endPauseFrames;
+                const currentPauseFrames = hasReachedEnd ? endPauseFrames : initialPauseFrames;
+
                 if (pauseCounter >= currentPauseFrames) {
                     isPaused = false;
                     pauseCounter = 0;
-                    animationFrame = 0; // reset animation frame for smooth acceleration
+
+                    // If we just finished the end pause, reset to beginning
+                    if (hasReachedEnd) {
+                        container.scrollLeft = 0;
+                        hasReachedEnd = false;
+                        animationFrame = 0;
+                    }
                 }
             } else {
                 frameCounter++;
@@ -229,25 +339,15 @@ function startAutoScroll() {
                     frameCounter = 0; // reset counter
 
                     if (container.scrollLeft >= currentMaxScroll) {
-                        // Reached the end, start end pause before reset
+                        // Reached the end, start end pause
                         isPaused = true;
                         pauseCounter = 0;
+                        hasReachedEnd = true;
                     } else {
                         // Smooth continuous scroll
                         container.scrollLeft += scrollSpeed;
                     }
                 }
-            }
-
-            // Check if we need to start reset after end pause
-            if (isPaused && pauseCounter >= endPauseFrames && animationFrame > 0 && !isResetting) {
-                // Start smooth reset
-                isResetting = true;
-                resetStartScroll = container.scrollLeft;
-                resetTargetScroll = 0;
-                resetFrameCounter = 0;
-                isPaused = false;
-                pauseCounter = 0;
             }
         }
 
@@ -259,7 +359,7 @@ function startAutoScroll() {
     isPaused = true;
     pauseCounter = 0;
     animationFrame = 0;
-    isResetting = false;
+    hasReachedEnd = false;
     scrollAnimationId = requestAnimationFrame(animate);
 }
 
@@ -274,6 +374,11 @@ function tryQuery() {
 }
 
 function goToCard(cardId: string | undefined) {
+    // Prevent navigation if user just dragged
+    if (hasDragged.value) {
+        return;
+    }
+
     if (!cardId) {
         console.warn('Cannot navigate to card: ID is undefined');
         return;
@@ -342,6 +447,12 @@ function goToCard(cardId: string | undefined) {
   gap: 16px
   overflow-x: auto
   padding: 4px
+  user-select: none
+  cursor: grab
+  touch-action: pan-y pinch-zoom
+
+  &:active
+    cursor: grabbing
 
   // Hide scrollbar but keep functionality
   scrollbar-width: none
@@ -352,11 +463,23 @@ function goToCard(cardId: string | undefined) {
 .result-card-wrapper
   flex: 0 0 auto
   cursor: pointer
+  position: relative
+  z-index: 1
+
+.lazy-card-container
   transition: all 0.3s ease
+  transform-origin: center
+  display: block
+  width: 100%
+  height: 100%
 
   &:hover
-    transform: translateY(-4px) scale(1.02)
-    box-shadow: 0 8px 24px rgba(147, 114, 255, 0.3)
+    transform: scale(1.02)
+    z-index: 10
+
+.hoverable-card
+  transition: all 0.3s ease !important
+  cursor: pointer
 
 // Lazy loading transition styles
 .fade-transition-enter-active,

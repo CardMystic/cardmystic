@@ -18,7 +18,7 @@
         <template v-else-if="searchResults && searchResults.length">
           <v-row>
             <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in searchResults" :key="result.card_data.id">
-              <card :card="result" @click="navigateToCard(result.card_data.id)" />
+              <card :card="result" @click="navigateToCard(result.card_data.id)" :is-similarity-search="true" />
             </v-col>
           </v-row>
         </template>
@@ -112,7 +112,9 @@ const { data: searchResults, isLoading } = useQuery({
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return response.json() as Promise<Array<Card>>;
+    const results = await response.json() as Array<Card>;
+    console.log('Similarity search results:', results);
+    return results;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: queryEnabled,
