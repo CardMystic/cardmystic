@@ -110,7 +110,7 @@
       </v-col>
 
       <!-- Center: Card Details -->
-      <v-col cols="12" md="5" class="d-flex flex-column justify-start">
+      <v-col cols="12" md="6" class="d-flex flex-column justify-start">
         <div class="card-header card-header-aligned">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
