@@ -10,7 +10,7 @@
         <!-- Autocomplete search input for similarity search -->
         <!-- TODO: Clean up this autocomplete component to better highlight why a result is shown, and only show suggestions after typing 3+ characters-->
         <v-autocomplete v-else v-model="query.value.value" :items="cardNames" label="Search for a card..."
-          variant="solo" elevation="5" prepend-inner-icon="mdi-magnify" class="flex-grow-1"
+          hide-details="auto" variant="solo" elevation="5" prepend-inner-icon="mdi-magnify" class="flex-grow-1"
           :clearable="!!query.value.value"></v-autocomplete>
         <v-btn type="submit" color="primary" class="ml-2 search-btn" size="large">
           Search

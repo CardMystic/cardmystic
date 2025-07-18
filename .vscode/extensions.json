@@ -4,6 +4,7 @@
         "vue.volar",
         "github.copilot",
         "github.copilot-chat",
-        "nuxtr.nuxtr-vscode"
+        "nuxtr.nuxtr-vscode",
+        "ms-azuretools.vscode-azurestaticwebapps"
     ]
 }
