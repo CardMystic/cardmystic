@@ -167,13 +167,9 @@ function startAutoScroll() {
     const accelerationFrames = 120; // 2 seconds at 60fps to reach full speed
     const initialPauseFrames = 120; // 2 second pause at the beginning
     const endPauseFrames = 180; // 3 second pause at the end
-    const resetDurationFrames = 30; // 0.5 second (30 frames at 60fps) to scroll back
     let isPaused = true; // start with initial pause
     let pauseCounter = 0;
-    let isResetting = false;
-    let resetStartScroll = 0;
-    let resetTargetScroll = 0;
-    let resetFrameCounter = 0;
+    let hasReachedEnd = false;
 
     function animate() {
         if (!scrollContainer.value || !results.value || results.value.length === 0) {
@@ -185,30 +181,20 @@ function startAutoScroll() {
 
         // Only proceed if there's content to scroll
         if (currentMaxScroll > 0) {
-            if (isResetting) {
-                // Smooth scroll back to start
-                resetFrameCounter++;
-                const progress = Math.min(resetFrameCounter / resetDurationFrames, 1);
-                const easedProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-out
-
-                container.scrollLeft = resetStartScroll + (resetTargetScroll - resetStartScroll) * easedProgress;
-
-                if (progress >= 1) {
-                    // Reset complete
-                    container.scrollLeft = 0;
-                    isResetting = false;
-                    isPaused = true;
-                    pauseCounter = 0;
-                    animationFrame = 0;
-                    resetFrameCounter = 0;
-                }
-            } else if (isPaused) {
+            if (isPaused) {
                 pauseCounter++;
-                const currentPauseFrames = animationFrame === 0 ? initialPauseFrames : endPauseFrames;
+                const currentPauseFrames = hasReachedEnd ? endPauseFrames : initialPauseFrames;
+
                 if (pauseCounter >= currentPauseFrames) {
                     isPaused = false;
                     pauseCounter = 0;
-                    animationFrame = 0; // reset animation frame for smooth acceleration
+
+                    // If we just finished the end pause, reset to beginning
+                    if (hasReachedEnd) {
+                        container.scrollLeft = 0;
+                        hasReachedEnd = false;
+                        animationFrame = 0;
+                    }
                 }
             } else {
                 frameCounter++;
@@ -229,25 +215,15 @@ function startAutoScroll() {
                     frameCounter = 0; // reset counter
 
                     if (container.scrollLeft >= currentMaxScroll) {
-                        // Reached the end, start end pause before reset
+                        // Reached the end, start end pause
                         isPaused = true;
                         pauseCounter = 0;
+                        hasReachedEnd = true;
                     } else {
                         // Smooth continuous scroll
                         container.scrollLeft += scrollSpeed;
                     }
                 }
-            }
-
-            // Check if we need to start reset after end pause
-            if (isPaused && pauseCounter >= endPauseFrames && animationFrame > 0 && !isResetting) {
-                // Start smooth reset
-                isResetting = true;
-                resetStartScroll = container.scrollLeft;
-                resetTargetScroll = 0;
-                resetFrameCounter = 0;
-                isPaused = false;
-                pauseCounter = 0;
             }
         }
 
@@ -259,7 +235,7 @@ function startAutoScroll() {
     isPaused = true;
     pauseCounter = 0;
     animationFrame = 0;
-    isResetting = false;
+    hasReachedEnd = false;
     scrollAnimationId = requestAnimationFrame(animate);
 }
 
