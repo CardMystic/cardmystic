@@ -56,7 +56,6 @@ const drawer = ref(false);
 
 const navItems = [
   { to: '/', label: 'Home', icon: 'mdi-home' },
-  { to: '/search/similarity', label: 'Similarity Search', icon: 'mdi-magnify' },
   { to: '/about', label: 'About', icon: 'mdi-information' },
 ];
 
