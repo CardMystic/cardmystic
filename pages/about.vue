@@ -50,6 +50,15 @@
 
 <script setup lang="ts">
 useHead({ title: 'About - CardMystic' });
+const { setPageInfo } = usePageInfo();
+setPageInfo({
+  page_url: '/about',
+  page_name: 'About',
+  query: '',
+  card_name: '',
+  filters: undefined,
+});
+
 </script>
 
 <style lang="sass" scoped>

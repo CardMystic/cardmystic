@@ -275,6 +275,17 @@ useHead(() => ({
   ],
 }));
 
+const { setPageInfo } = usePageInfo();
+watchEffect(() => {
+  if (card.value) {
+    setPageInfo({
+      page_url: route.fullPath,
+      page_name: card.value?.name || 'Card',
+      card_name: card.value?.name || '',
+    });
+  }
+});
+
 const formatsToIgnore: CardFormatType[] = [
   'Old School',
   'Standard Brawl',

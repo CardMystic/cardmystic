@@ -82,6 +82,15 @@ useHead(() => ({
   ],
 }));
 
+const { setPageInfo } = usePageInfo();
+setPageInfo({
+  page_url: route.fullPath,
+  page_name: `Similarity: ${cardNameParam.value}`,
+  card_name: cardNameParam.value,
+  filters: parsedFilters.value,
+  labels: ['similarity search'],
+});
+
 const similaritySearch = computed(() => {
   if (!cardNameParam.value) {
     return undefined; // Return undefined if no card name is provided
