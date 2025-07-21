@@ -1,0 +1,53 @@
+name: Search Results Feedback
+description: Provide feedback on the search results
+labels: ['feedback', 'search']
+title: '[Feedback]: '
+assignees: []
+body:
+  - type: input
+    id: page-url
+    attributes:
+      label: Page URL
+      description: Provide a link to the search page where you have feedback.
+      placeholder: https://cardmystic.io/search/similarity?card_name=...
+    validations:
+      required: true
+  - type: input
+    id: discord-username
+    attributes:
+      label: Discord Username (optional)
+      description: If you'd like us to follow up on Discord, please provide your Discord username.
+      placeholder: yourusername#1234
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what your feedback is, and any other relevant details.
+      placeholder: Describe your feedback, what you expected, and any other context.
+    validations:
+      required: true
+  - type: input
+    id: query-or-card
+    attributes:
+      label: Query or Card Name
+      description: What query or card name did you use?
+      placeholder: e.g. Progenitus , White Board Wipes
+    validations:
+      required: true
+  - type: textarea
+    id: filters
+    attributes:
+      label: Filters (optional)
+      description: List any filters you applied (if any).
+      placeholder: 'e.g. Color: Blue, Rarity: Mythic'
+    validations:
+      required: false
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot (optional)
+      description: If applicable, attach a screenshot to display your problem.
+    validations:
+      required: false
