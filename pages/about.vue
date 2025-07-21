@@ -53,7 +53,7 @@ useHead({ title: 'About - CardMystic' });
 const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: '/about',
-  page_name: 'About',
+  page_name: 'About Page',
   query: '',
   card_name: '',
   filters: undefined,

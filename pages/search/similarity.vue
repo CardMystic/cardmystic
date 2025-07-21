@@ -85,7 +85,7 @@ useHead(() => ({
 const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
-  page_name: `Similarity: ${cardNameParam.value}`,
+  page_name: `Similarity Search: ${cardNameParam.value}`,
   card_name: cardNameParam.value,
   filters: parsedFilters.value,
   labels: ['similarity search'],

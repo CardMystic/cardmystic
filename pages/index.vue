@@ -53,7 +53,7 @@ useHead({
 const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: '/',
-  page_name: 'Home',
+  page_name: 'Home Page',
   query: '',
   card_name: '',
   filters: undefined,
