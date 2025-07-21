@@ -9,7 +9,7 @@ body:
     attributes:
       label: Page URL
       description: Provide a link to the page where you encountered the issue.
-      placeholder: https://cardmystic.com/search/similarity?card_name=...
+      placeholder: https://cardmystic.io/search/similarity?card_name=...
     validations:
       required: true
   - type: input
