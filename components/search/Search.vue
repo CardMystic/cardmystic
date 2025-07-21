@@ -2,18 +2,16 @@
   <div class="search-container px-0">
     <!-- Search type tabs -->
     <div class="search-tabs-container mb-4">
-      <div class="search-tabs-wrapper">
-        <button type="button" :class="['search-tab-button', { active: searchType === 'ai' }]"
-          @click="setSearchType('ai')">
-          <v-icon start size="18">mdi-robot</v-icon>
-          AI Search
-        </button>
-        <button type="button" :class="['search-tab-button', { active: searchType === 'similarity' }]"
-          @click="setSearchType('similarity')">
-          <v-icon start size="18">mdi-magnify</v-icon>
-          Similarity Search
-        </button>
-      </div>
+      <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
+        @click="setSearchType('ai')">
+        <v-icon start size="18">mdi-magnify</v-icon>
+        AI Search
+      </button>
+      <button type="button" :class="['search-tab-button-new', { active: searchType === 'similarity' }]"
+        @click="setSearchType('similarity')">
+        <v-icon start size="18">mdi-cards-outline</v-icon>
+        Similarity Search
+      </button>
     </div>
 
     <form @submit.prevent="onSubmit" class="search-form">
@@ -51,24 +49,6 @@ const { toTypedSchema } = await import('@vee-validate/zod');
 import { CardSearchFiltersSchema, WordSearchSchema, type CardSearchFilters } from '~/models/searchModel';
 import Filters from './Filters.vue';
 
-// Example queries for animated placeholder
-const exampleQueries = [
-  "creatures that draw cards",
-  "stax pieces",
-  "blue cantrips",
-  "adventure ramp",
-  "orzhov removal",
-  "black creatures with flying",
-  "etb effects",
-  "artifact removal",
-  "x spell board wipes",
-  "low cost sultai commanders",
-  "mono white token finishers",
-  "golgari elves that draw",
-  "five color dragon commander",
-  "red burn",
-  "graveyard recursion",
-];
 
 // Define props
 const props = defineProps<{
@@ -102,10 +82,26 @@ onMounted(async () => {
   }
 });
 
-// Watch for search type changes to load card names when needed
+// Watch for search type changes to load card names, clear query, and remove results only if on a search page
 watch(searchType, async (newType) => {
-  if (newType === 'similarity' && cardNames.value.length === 0) {
-    await loadCardNames();
+  const isOnSearchPage = route.path.startsWith('/search');
+  if (isOnSearchPage) {
+    // Clear the query box
+    query.value.value = '';
+    // Remove results by navigating to the base search page for each type
+    if (newType === 'similarity') {
+      if (cardNames.value.length === 0) {
+        await loadCardNames();
+      }
+      navigateTo({ path: '/search/similarity' });
+    } else {
+      navigateTo({ path: '/search' });
+    }
+  } else {
+    // Only load card names if needed, but don't clear or navigate
+    if (newType === 'similarity' && cardNames.value.length === 0) {
+      await loadCardNames();
+    }
   }
 });
 
@@ -173,46 +169,78 @@ function clearQuery() {
   width: 100%;
 }
 
+
 .search-tabs-container {
   display: flex;
   justify-content: center;
-  width: 100%;
-}
-
-.search-tabs-wrapper {
-  display: flex;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 4px;
-  border-radius: 24px;
-  backdrop-filter: blur(10px);
-}
-
-.search-tab-button {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+
+.search-tab-button-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 18px;
   border: none;
-  border-radius: 20px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 0.98rem;
   cursor: pointer;
-  transition: all 0.3s ease;
   white-space: nowrap;
+  color: #e6e6fa;
+  background: #23223a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  border: 1.2px solid rgba(147, 114, 255, 0.22);
+  backdrop-filter: blur(10px) saturate(160%);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border 0.18s, transform 0.18s;
+  position: relative;
+  z-index: 1;
+  outline: none;
+  line-height: 1.2;
 }
 
-.search-tab-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+.search-tab-button-new .v-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15em !important;
+  vertical-align: middle;
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
 }
 
-.search-tab-button.active {
-  background: rgb(var(--v-theme-primary));
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+.search-tab-button-new.active {
+  background: #a37aff;
+  color: #fff;
+  border-color: #a37aff;
+  box-shadow: 0 6px 24px 0 rgba(147, 114, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.18);
+  transform: translateY(-2px) scale(1.07);
+}
+
+.search-tab-button-new:hover:not(.active),
+.search-tab-button-new:focus-visible:not(.active) {
+  background: #3d375a;
+  color: #fff;
+  border-color: #a37aff;
+  box-shadow: 0 6px 20px rgba(147, 114, 255, 0.13), 0 2px 8px rgba(0, 0, 0, 0.13);
+  transform: translateY(-1px) scale(1.03);
+}
+
+@media (max-width: 768px) {
+  .search-tabs-container {
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+
+  .search-tab-button-new {
+    padding: 6px 10px;
+    font-size: 0.92rem;
+  }
 }
 
 .search-btn {
