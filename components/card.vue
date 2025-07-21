@@ -1,7 +1,7 @@
 <template>
   <div class="card-container" :class="sizeClass">
-    <!-- Left side: image + score -->
-    <v-col class="card" cols="3">
+    <!-- Card content: image + score -->
+    <div class="card">
       <div class="card-image-wrapper">
         <v-img class="card-image" :src="getCardImageUrl(card.card_data)" alt="Card Image" @error="handleImageError">
           <template v-slot:placeholder>
@@ -18,7 +18,7 @@
           <p class="confidence-text">{{ Math.ceil(value) }}%</p>
         </template>
       </v-progress-linear>
-    </v-col>
+    </div>
   </div>
 </template>
 

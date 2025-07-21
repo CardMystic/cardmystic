@@ -4,12 +4,12 @@
     <div class="search-tabs-container mb-4">
       <div class="search-tabs-wrapper">
         <button type="button" :class="['search-tab-button', { active: searchType === 'ai' }]"
-          @click="searchType = 'ai'">
+          @click="setSearchType('ai')">
           <v-icon start size="18">mdi-robot</v-icon>
           AI Search
         </button>
         <button type="button" :class="['search-tab-button', { active: searchType === 'similarity' }]"
-          @click="searchType = 'similarity'">
+          @click="setSearchType('similarity')">
           <v-icon start size="18">mdi-magnify</v-icon>
           Similarity Search
         </button>
@@ -84,7 +84,14 @@ const cardNames = ref<string[]>([]);
 const isLoading = ref(true);
 
 // Initialize search type based on props or route
-const searchType = ref(props.similarity ? 'similarity' : 'ai');
+const { searchType, setSearchType } = useSearchType()
+
+// Set initial search type
+if (props.similarity) {
+  setSearchType('similarity')
+} else {
+  setSearchType('ai')
+}
 
 // Fetch card names from public directory
 onMounted(async () => {
