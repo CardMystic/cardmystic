@@ -56,14 +56,14 @@
             <template #item="{ props, item }">
               <v-list-item v-bind="props" class="printing-item">
                 <template #prepend>
-                  <v-img :src="item.raw.image_url" width="36" height="50" class="printing-thumb" @error="() => { }">
+                  <v-img :src="item.raw.image_url" width="36" height="50" @error="() => { }">
                     <template #placeholder>
-                      <div class="printing-placeholder-large">?</div>
+                      <div>?</div>
                     </template>
                   </v-img>
                 </template>
-                <v-list-item-title class="printing-title">{{ item.raw.label }}</v-list-item-title>
-                <v-list-item-subtitle class="printing-subtitle">{{ item.raw.subtitle }}</v-list-item-subtitle>
+                <v-list-item-title>{{ item.raw.label }}</v-list-item-title>
+                <v-list-item-subtitle>{{ item.raw.subtitle }}</v-list-item-subtitle>
               </v-list-item>
             </template>
           </v-select>
