@@ -8,12 +8,14 @@ export default (pageInfo: PageInfo | undefined, device: Device) => {
     return baseUrl;
   }
 
-  const { page_url, page_name, labels, query, card_name, filters } = pageInfo;
+  const { page_url, page_name, query, card_name, filters, labels } = pageInfo;
   const queryOrCardName = query || card_name || '';
   const filtersString = filters ? JSON.stringify(filters) : '';
+  console.log('Labels:', labels?.join(', '));
+  console.log('Filters String:', filtersString);
   const hostname =
     typeof window !== 'undefined'
       ? window.location.hostname
       : process.env.NUXT_PUBLIC_SITE_DOMAIN || '';
-  return `${baseUrl}&title=[ISSUE] On '${page_name}' page&page-url=${hostname}${page_url}&user-agent=${device.userAgent}&query-or-card=${queryOrCardName}${labels && labels.length > 0 ? `&labels=${labels.join(',')}` : ''}${filtersString ? `&filters=${filtersString}` : ''}`;
+  return `${baseUrl}&title=[ISSUE] ${page_name}&page-url=${hostname}${page_url}&user-agent=${device.userAgent}&query-or-card=${queryOrCardName}${labels && labels.length > 0 ? `&labels=${labels.join(',')}` : ''}${filtersString ? `&filters=${filtersString}` : ''}`;
 };

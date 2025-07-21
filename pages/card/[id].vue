@@ -282,6 +282,7 @@ watchEffect(() => {
       page_url: route.fullPath,
       page_name: card.value?.name || 'Card',
       card_name: card.value?.name || '',
+      labels: ['card details'],
     });
   }
 });

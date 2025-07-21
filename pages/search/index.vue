@@ -82,6 +82,7 @@ setPageInfo({
   page_name: `Search: ${queryParam.value}`,
   query: queryParam.value,
   filters: parsedFilters.value,
+  labels: ['AI search'],
 });
 
 const wordSearch = computed(() =>
