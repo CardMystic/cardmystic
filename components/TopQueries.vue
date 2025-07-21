@@ -95,11 +95,24 @@ function tryQuery(query: string) {
   margin: 0 auto
 
 .top-queries-content
-  border-radius: 16px
-  padding: 20px
-  backdrop-filter: blur(10px)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
-  border: 1px solid rgba(147, 114, 255, 0.2)
+  border-radius: 24px
+  padding: 16px
+  backdrop-filter: blur(20px) saturate(180%)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+  position: relative
+
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+    pointer-events: none
 
 .queries-header
   display: flex
