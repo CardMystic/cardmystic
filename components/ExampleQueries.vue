@@ -1,5 +1,5 @@
 <template>
-    <div v-if="isAiSearch" class="example-query-container">
+    <div class="example-query-container">
         <div v-if="isLoading" class="text-center">
             <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
             <p class="mt-2 text-white text-caption">Loading example...</p>
@@ -47,9 +47,6 @@ import { useQuery } from '@tanstack/vue-query'
 import { WordSearchSchema } from '~/models/searchModel';
 import type { Card } from '~/models/cardModel';
 const router = useRouter();
-
-// Use search type composable to check if AI search is active
-const { isAiSearch } = useSearchType();
 
 const currentQuery = ref<string>('creatures that draw cards');
 const scrollContainer = ref<HTMLElement>();

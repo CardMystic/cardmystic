@@ -22,10 +22,10 @@
       <SearchForm class="mt-6" style="max-width: 1096px" />
 
       <!-- Example Queries -->
-      <ExampleQueries class="mt-0" style="max-width: 1096px" />
+      <ExampleQueries v-if="isAiSearch" class="mt-0" style="max-width: 1096px" />
 
       <!-- Top Queries -->
-      <TopQueries class="mt-6" style="max-width: 1096px" />
+      <TopQueries v-if="isAiSearch" class="mt-6" style="max-width: 1096px" />
     </v-col>
   </v-container>
 </template>
@@ -38,6 +38,9 @@ import SearchForm from '~/components/search/Search.vue';
 
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
+
+// Use search type composable to check if AI search is active
+const { isAiSearch } = useSearchType();
 
 useHead({
   title: 'CardMystic',
