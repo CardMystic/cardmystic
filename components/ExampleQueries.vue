@@ -1,5 +1,5 @@
 <template>
-    <div class="example-query-container">
+    <div v-if="isAiSearch" class="example-query-container">
         <div v-if="isLoading" class="text-center">
             <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
             <p class="mt-2 text-white text-caption">Loading example...</p>
@@ -26,11 +26,11 @@
                 <div class="results-scroll" ref="scrollContainer" @mousedown="startDrag" @mousemove="onDrag"
                     @mouseup="endDrag" @mouseleave="endDrag" @touchstart="startTouch" @touchmove="onTouch"
                     @touchend="endTouch">
-                    <!-- Cards with lazy loading -->
+                    <!-- Cards with lazy loading and scroll fade effects -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
-                        class="result-card-wrapper">
-                        <v-lazy :options="{ threshold: 0.5 }" min-height="160" transition="fade-transition"
-                            class="lazy-card-container">
+                        class="result-card-wrapper" :ref="(el) => setCardRef(el, index)"
+                        :style="{ opacity: cardOpacities[index] || 0.8, transform: `scale(${cardScales[index] || 0.95})` }">
+                        <v-lazy :options="{ threshold: 0.5 }" transition="fade-transition" class="lazy-card-container">
                             <Card :card="result" :normalization-context="allScores" size="small"
                                 @click="goToCard(result.card_data.id)" class="hoverable-card" />
                         </v-lazy>
@@ -42,15 +42,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, nextTick, type ComponentPublicInstance } from 'vue';
 import { useQuery } from '@tanstack/vue-query'
 import { WordSearchSchema } from '~/models/searchModel';
 import type { Card } from '~/models/cardModel';
 const router = useRouter();
 
+// Use search type composable to check if AI search is active
+const { isAiSearch } = useSearchType();
+
 const currentQuery = ref<string>('creatures that draw cards');
 const scrollContainer = ref<HTMLElement>();
 let scrollAnimationId: number | null = null;
+
+// Scroll-based fade effect variables
+const cardRefs = ref<HTMLElement[]>([]);
+const cardOpacities = ref<Record<number, number>>({});
+const cardScales = ref<Record<number, number>>({});
+let fadeObserver: IntersectionObserver | null = null;
+let scrollHandler: (() => void) | null = null;
 
 // Drag scrolling variables
 const isDragging = ref(false);
@@ -89,6 +99,93 @@ const exampleQueries = [
     "graveyard recursion",
 ];
 
+// Function to set card refs and setup fade observer
+function setCardRef(el: Element | ComponentPublicInstance | null, index: number) {
+    if (el && 'getBoundingClientRect' in el) {
+        cardRefs.value[index] = el as HTMLElement;
+        // Initialize opacity and scale
+        cardOpacities.value[index] = 0.8;
+        cardScales.value[index] = 0.95;
+    }
+}
+
+// Setup intersection observer for fade effects
+function setupFadeObserver() {
+    if (!scrollContainer.value) return;
+
+    // Clean up existing observer and scroll handler
+    if (fadeObserver) {
+        fadeObserver.disconnect();
+    }
+    if (scrollHandler && scrollContainer.value) {
+        scrollContainer.value.removeEventListener('scroll', scrollHandler);
+    }
+
+    // Create scroll event handler
+    scrollHandler = () => {
+        updateCardFadeEffects();
+    };
+
+    scrollContainer.value.addEventListener('scroll', scrollHandler, { passive: true });
+
+    fadeObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                const index = cardRefs.value.findIndex(ref => ref === entry.target);
+                if (index !== -1) {
+                    updateCardFadeEffects();
+                }
+            });
+        },
+        {
+            root: scrollContainer.value,
+            threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+            rootMargin: '0px'
+        }
+    );
+
+    // Observe all card elements
+    cardRefs.value.forEach(cardRef => {
+        if (cardRef) {
+            fadeObserver?.observe(cardRef);
+        }
+    });
+
+    // Initial fade effect calculation
+    updateCardFadeEffects();
+}
+
+// Update fade effects based on card positions
+function updateCardFadeEffects() {
+    if (!scrollContainer.value) return;
+
+    const containerRect = scrollContainer.value.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    cardRefs.value.forEach((cardRef, index) => {
+        if (cardRef) {
+            const rect = cardRef.getBoundingClientRect();
+            const cardCenter = rect.left + rect.width / 2;
+
+            // Extend the fade zone beyond the container edges
+            const extendedWidth = containerRect.width * 1.2; // 20% larger fade zone
+            const maxDistance = extendedWidth / 2;
+            const distance = Math.abs(cardCenter - containerCenter);
+
+            // Calculate fade ratio with smooth easing
+            const fadeRatio = Math.max(0, Math.min(1, 1 - (distance / maxDistance)));
+            const easedRatio = fadeRatio * fadeRatio * (3 - 2 * fadeRatio); // Smooth step function
+
+            // Apply opacity and scale with better visibility ranges
+            const opacity = 0.8 + (easedRatio * 0.2); // Range from 0.8 to 1.0 (much more visible)
+            const scale = 0.95 + (easedRatio * 0.05); // Range from 0.95 to 1.0
+
+            cardOpacities.value[index] = opacity;
+            cardScales.value[index] = scale;
+        }
+    });
+}
+
 onMounted(async () => {
     await loadRandomExample();
 });
@@ -96,6 +193,13 @@ onMounted(async () => {
 onUnmounted(() => {
     if (scrollAnimationId) {
         cancelAnimationFrame(scrollAnimationId);
+    }
+    if (fadeObserver) {
+        fadeObserver.disconnect();
+    }
+    // Clean up scroll event listener
+    if (scrollHandler && scrollContainer.value) {
+        scrollContainer.value.removeEventListener('scroll', scrollHandler);
     }
 });
 
@@ -145,6 +249,10 @@ watch([results, isLoading], async ([newResults, newIsLoading]) => {
         // Add a small delay to ensure rendering is complete
         setTimeout(() => {
             startAutoScroll();
+            // Setup fade observer after a short delay to ensure refs are set
+            setTimeout(() => {
+                setupFadeObserver();
+            }, 100);
         }, 100);
     }
 }, { immediate: true });
@@ -394,11 +502,24 @@ function goToCard(cardId: string | undefined) {
   margin: 0 auto
 
 .example-content
-  border-radius: 16px
-  padding: 12px
-  backdrop-filter: blur(10px)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
-  border: 1px solid rgba(147, 114, 255, 0.2)
+  border-radius: 24px
+  padding: 16px
+  backdrop-filter: blur(20px) saturate(180%)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+  position: relative
+
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+    pointer-events: none
 
 .query-header
   display: flex
@@ -440,7 +561,31 @@ function goToCard(cardId: string | undefined) {
 .results-container
   width: 100%
   overflow: hidden
-  border-radius: 12px
+  border-radius: 16px
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0.1) 0%, 
+    transparent 15%, 
+    transparent 85%, 
+    rgba(0, 0, 0, 0.1) 100%)
+  position: relative
+
+  &::before,
+  &::after
+    content: ''
+    position: absolute
+    top: 0
+    bottom: 0
+    width: 32px
+    pointer-events: none
+    z-index: 2
+
+  &::before
+    left: 0
+    background: linear-gradient(90deg, rgba(44, 44, 44, 0.8), transparent)
+
+  &::after
+    right: 0
+    background: linear-gradient(270deg, rgba(44, 44, 44, 0.8), transparent)
 
 .results-scroll
   display: flex
@@ -465,21 +610,33 @@ function goToCard(cardId: string | undefined) {
   cursor: pointer
   position: relative
   z-index: 1
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+  will-change: transform, opacity
+  background: transparent
+  border: none
+  outline: none
 
 .lazy-card-container
-  transition: all 0.3s ease
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
   transform-origin: center
   display: block
   width: 100%
   height: 100%
+  background: transparent
+  border: none
+  outline: none
 
   &:hover
-    transform: scale(1.02)
+    transform: scale(1.05) !important
     z-index: 10
 
 .hoverable-card
-  transition: all 0.3s ease !important
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important
   cursor: pointer
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
+
+  &:hover
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)) saturate(110%) brightness(105%)
 
 // Lazy loading transition styles
 .fade-transition-enter-active,
