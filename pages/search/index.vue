@@ -31,6 +31,7 @@
       </div>
     </v-col>
   </v-container>
+  <IssuesFab />
 </template>
 
 <script setup lang="ts">
@@ -40,6 +41,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
+import IssuesFab from '~/components/search/IssuesFab.vue';
 
 const router = useRouter();
 const route = useRoute();

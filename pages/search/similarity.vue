@@ -42,6 +42,7 @@
       </div>
     </v-col>
   </v-container>
+  <IssuesFab />
 </template>
 
 <script setup lang="ts">
