@@ -212,6 +212,7 @@ function clearQuery() {
   vertical-align: middle;
   margin-bottom: 0 !important;
   margin-top: 0 !important;
+  margin-inline-end: 0 !important;
 }
 
 .search-tab-button-new.active {
@@ -233,7 +234,7 @@ function clearQuery() {
 
 @media (max-width: 768px) {
   .search-tabs-container {
-    gap: 7px;
+    gap: 14px;
     margin-bottom: 10px;
   }
 
