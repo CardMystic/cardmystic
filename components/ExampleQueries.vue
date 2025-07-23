@@ -311,9 +311,12 @@ function endDrag() {
     }, 100);
 }
 
-// Touch event handlers for mobile
+// Touch event handlers for mobile - designed to work with native scrolling
 function startTouch(event: TouchEvent) {
     if (!scrollContainer.value || event.touches.length === 0) return;
+
+    // Only handle single touch
+    if (event.touches.length > 1) return;
 
     isDragging.value = true;
     hasDragged.value = false;
@@ -326,28 +329,24 @@ function startTouch(event: TouchEvent) {
         scrollAnimationId = null;
     }
 
-    // Prevent default touch behavior
-    event.preventDefault();
+    // Don't prevent default - allow native touch handling
 }
 
 function onTouch(event: TouchEvent) {
     if (!isDragging.value || !scrollContainer.value || event.touches.length === 0) return;
 
+    // Only handle single touch
+    if (event.touches.length > 1) return;
+
     const deltaX = event.touches[0].clientX - dragStart.value;
-    const newScrollLeft = scrollStart.value - deltaX;
 
     // Check if we've dragged enough to consider it a drag
     if (Math.abs(deltaX) > dragThreshold) {
         hasDragged.value = true;
     }
 
-    // Apply scroll
-    scrollContainer.value.scrollLeft = Math.max(0, Math.min(
-        newScrollLeft,
-        scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth
-    ));
-
-    event.preventDefault();
+    // Don't prevent default - let native scrolling handle the movement
+    // We're just tracking the drag state for click prevention
 }
 
 function endTouch() {
@@ -591,7 +590,7 @@ function goToCard(cardId: string | undefined) {
   padding: 4px
   user-select: none
   cursor: grab
-  touch-action: pan-y pinch-zoom
+  touch-action: pan-x pinch-zoom
 
   &:active
     cursor: grabbing
