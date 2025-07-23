@@ -176,6 +176,7 @@ export const ScryfallCardSchema = z.object({
   finishes: z.array(z.string()),
   oversized: z.boolean(),
   promo: z.boolean(),
+  promo_types: z.array(z.string()).optional(),
   reprint: z.boolean(),
   variation: z.boolean(),
   set_id: z.string().uuid(),

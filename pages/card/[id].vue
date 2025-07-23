@@ -66,6 +66,9 @@
                   </v-img>
                 </template>
                 <v-list-item-title class="ml-3">{{ item.raw.label }}</v-list-item-title>
+                <v-list-item-subtitle v-if="item.raw.surgefoil" class="surgefoil-text ml-3">Surge
+                  Foil</v-list-item-subtitle>
+                <v-list-item-subtitle class="ml-3">{{ item.raw.frame_effects.join(', ') }}</v-list-item-subtitle>
                 <v-list-item-subtitle class="ml-3">{{ item.raw.subtitle }}</v-list-item-subtitle>
               </v-list-item>
             </template>
@@ -301,6 +304,7 @@ const { data: cardData, isLoading, error } = useQuery({
         if (printingsResponse.ok) {
           const printingsData = await printingsResponse.json();
           printings = printingsData.data || [];
+          console.log(printings)
         } else {
           console.error('Printings fetch failed:', printingsResponse.status);
         }
@@ -503,6 +507,8 @@ const printingOptions = computed(() => {
     label: `${printing.set_name || 'Unknown Set'} (${printing.set?.toUpperCase() || 'UNK'})`,
     subtitle: printing.released_at ? new Date(printing.released_at).getFullYear().toString() : 'Unknown',
     image_url: printing.image_uris?.small || printing.card_faces?.[0]?.image_uris?.small || '',
+    frame_effects: printing.frame_effects?.filter((d) => { return d != 'legendary' }) || [],
+    surgefoil: printing.promo_types?.includes("surgefoil") ? true : false,
   }));
 });
 
@@ -1109,4 +1115,16 @@ em
   font-size: 14px
   font-weight: 500
 
+// Surgefoil badge styling with gold glow animation
+.surgefoil-text
+  display: inline-block
+  background: linear-gradient(135deg, #ffd700, #ffed4e, #ffd700)
+  color: black
+  font-weight: 700
+  font-size: 10px
+  padding: 2px 6px
+  border-radius: 8px
+  text-transform: uppercase
+  letter-spacing: 0.5px
+    
 </style>
