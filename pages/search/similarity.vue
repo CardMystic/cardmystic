@@ -42,7 +42,7 @@
       </div>
     </v-col>
   </v-container>
-  <IssuesFab />
+  <IssuesFab :onClick="handleFabClick" />
 </template>
 
 <script setup lang="ts">
@@ -52,6 +52,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
+import IssuesFab from '~/components/search/IssuesFab.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -68,7 +69,7 @@ function navigateToCard(cardId: string | undefined) {
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 useHead(() => ({
   title: cardNameParam.value
@@ -83,7 +84,7 @@ useHead(() => ({
   ],
 }));
 
-const { setPageInfo } = usePageInfo();
+const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
   page_name: `Similarity Search: ${cardNameParam.value}`,
@@ -91,6 +92,11 @@ setPageInfo({
   filters: parsedFilters.value,
   labels: ['similarity search'],
 });
+
+function handleFabClick() {
+  const url = searchFeedbackUrl(getPageInfo());
+  window.open(url, '_blank');
+}
 
 const similaritySearch = computed(() => {
   if (!cardNameParam.value) {
