@@ -77,42 +77,41 @@
         </v-btn>
 
         <!-- Price Information - Desktop only -->
-        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-none d-md-block">
+        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
+          class="price-card mt-4 d-none d-md-block">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
-            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
+            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
-                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span style="color: rgb(34, 197, 94)">$</span>{{ currentPrinting.prices.usd }}
+                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
+            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
-                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span style="color: rgb(34, 197, 94)">€</span>{{ currentPrinting.prices.eur }}
+                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.tix" class="price-item">
+            <div v-if="currentPrinting.prices.tix" class="price-item">
               <span class="currency-label">MTGO Tix:</span>
-              <span class="price-value">{{ card.prices.tix }}</span>
+              <span class="price-value">{{ currentPrinting.prices.tix }}</span>
             </div>
           </div>
         </v-card>
@@ -181,42 +180,41 @@
         </v-btn>
 
         <!-- Price Information - Mobile only -->
-        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mb-4 d-md-none">
+        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
+          class="price-card mb-4 d-md-none">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
-            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
+            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
-                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span style="color: rgb(34, 197, 94)">$</span>{{ currentPrinting.prices.usd }}
+                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
+            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
-                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span style="color: rgb(34, 197, 94)">€</span>{{ currentPrinting.prices.eur }}
+                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.tix" class="price-item">
+            <div v-if="currentPrinting.prices.tix" class="price-item">
               <span class="currency-label">MTGO Tix:</span>
-              <span class="price-value">{{ card.prices.tix }}</span>
+              <span class="price-value">{{ currentPrinting.prices.tix }}</span>
             </div>
           </div>
         </v-card>
@@ -481,8 +479,8 @@ function getAffiliateLink(tcgUrl: string): string {
 }
 
 const hasPrices = computed(() => {
-  if (!card.value?.prices) return false;
-  const prices = card.value.prices;
+  if (!currentPrinting.value?.prices) return false;
+  const prices = currentPrinting.value.prices;
   return (
     prices.usd || prices.usd_foil || prices.eur || prices.eur_foil || prices.tix
   );
@@ -898,6 +896,10 @@ watch([card, printings], ([newCard, newPrintings]) => {
 .price-value
   color: white
   font-size: 1rem
+  font-weight: 700
+
+.foil-text
+  color: #ffe066
   font-weight: 700
 
 // Flip Button Styling
