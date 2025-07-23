@@ -50,9 +50,12 @@
 
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4">
-          <v-select v-model="selectedPrinting" :items="printingOptions" item-title="label" item-value="id"
-            label="Select Printing" variant="outlined" density="comfortable" class="printing-select" hide-details
-            :menu-props="{ maxHeight: 300 }">
+          <v-select v-model="selectedPrinting" :items="printingOptions" :item-title="() => ''" item-text="raw.label"
+            item-value="id" label="Select Printing" variant="outlined" density="comfortable" class="printing-select"
+            hide-details :menu-props="{ maxHeight: 300 }">
+            <template #selection="{ item }">
+              {{ item.raw.label }}
+            </template>
             <template #item="{ props, item }">
               <v-list-item v-bind="props" class="printing-item">
                 <template #prepend>
@@ -62,7 +65,8 @@
                     </template>
                   </v-img>
                 </template>
-                <v-list-item-subtitle>{{ item.raw.subtitle }}</v-list-item-subtitle>
+                <v-list-item-title class="ml-3">{{ item.raw.label }}</v-list-item-title>
+                <v-list-item-subtitle class="ml-3">{{ item.raw.subtitle }}</v-list-item-subtitle>
               </v-list-item>
             </template>
           </v-select>
@@ -1110,4 +1114,5 @@ em
   color: rgba(255, 255, 255, 0.8)
   font-size: 14px
   font-weight: 500
+
 </style>
