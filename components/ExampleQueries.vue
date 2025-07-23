@@ -24,8 +24,7 @@
             <!-- Horizontal scrolling results -->
             <div class="results-container">
                 <div class="results-scroll" ref="scrollContainer" @mousedown="startDrag" @mousemove="onDrag"
-                    @mouseup="endDrag" @mouseleave="endDrag" @touchstart="startTouch" @touchmove="onTouch"
-                    @touchend="endTouch">
+                    @mouseup="endDrag" @mouseleave="endDrag">
                     <!-- Cards with lazy loading and scroll fade effects -->
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
                         class="result-card-wrapper" :ref="(el) => setCardRef(el, index)"
@@ -311,63 +310,6 @@ function endDrag() {
     }, 100);
 }
 
-// Touch event handlers for mobile
-function startTouch(event: TouchEvent) {
-    if (!scrollContainer.value || event.touches.length === 0) return;
-
-    isDragging.value = true;
-    hasDragged.value = false;
-    dragStart.value = event.touches[0].clientX;
-    scrollStart.value = scrollContainer.value.scrollLeft;
-
-    // Pause auto-scroll
-    if (scrollAnimationId) {
-        cancelAnimationFrame(scrollAnimationId);
-        scrollAnimationId = null;
-    }
-
-    // Prevent default touch behavior
-    event.preventDefault();
-}
-
-function onTouch(event: TouchEvent) {
-    if (!isDragging.value || !scrollContainer.value || event.touches.length === 0) return;
-
-    const deltaX = event.touches[0].clientX - dragStart.value;
-    const newScrollLeft = scrollStart.value - deltaX;
-
-    // Check if we've dragged enough to consider it a drag
-    if (Math.abs(deltaX) > dragThreshold) {
-        hasDragged.value = true;
-    }
-
-    // Apply scroll
-    scrollContainer.value.scrollLeft = Math.max(0, Math.min(
-        newScrollLeft,
-        scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth
-    ));
-
-    event.preventDefault();
-}
-
-function endTouch() {
-    if (!isDragging.value) return;
-
-    isDragging.value = false;
-
-    // Resume auto-scroll after a delay
-    setTimeout(() => {
-        if (!isDragging.value) {
-            startAutoScroll();
-        }
-    }, 1000); // 1 second delay before resuming auto-scroll
-
-    // Reset drag state after a short delay to prevent immediate clicks
-    setTimeout(() => {
-        hasDragged.value = false;
-    }, 100);
-}
-
 function startAutoScroll() {
     if (!scrollContainer.value || !results.value || results.value.length === 0 || isDragging.value) {
         return;
@@ -591,7 +533,6 @@ function goToCard(cardId: string | undefined) {
   padding: 4px
   user-select: none
   cursor: grab
-  touch-action: pan-y pinch-zoom
 
   &:active
     cursor: grabbing
