@@ -292,20 +292,17 @@ const { data: cardData, isLoading, error } = useQuery({
       throw new Error('Failed to fetch card');
     }
     const card = await cardResponse.json() as ScryfallCard;
-    console.log('Card loaded:', card.name, card.id);
 
     // Then, fetch printings if available
     let printings: ScryfallCard[] = [];
     if (card.prints_search_uri) {
       try {
-        console.log('Fetching printings from:', card.prints_search_uri);
         const printingsResponse = await fetch(card.prints_search_uri);
         if (printingsResponse.ok) {
           const printingsData = await printingsResponse.json();
           printings = printingsData.data || [];
-          console.log('Loaded', printings.length, 'printings');
         } else {
-          console.log('Printings fetch failed:', printingsResponse.status);
+          console.error('Printings fetch failed:', printingsResponse.status);
         }
       } catch (error) {
         console.error('Error fetching printings:', error);
@@ -321,9 +318,6 @@ const { data: cardData, isLoading, error } = useQuery({
 // Extract card and printings from combined data
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
-
-// No separate loading states needed
-const printingsLoading = computed(() => false); // Always false since we load together
 
 useHead(() => ({
   title: card.value
