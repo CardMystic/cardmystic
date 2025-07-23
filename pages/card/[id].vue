@@ -88,7 +88,8 @@
             <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">$</span>{{ currentPrinting.prices.usd }}
+                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
+                  currentPrinting.prices.usd }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
                   <span class="foil-text">
                     ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
@@ -100,7 +101,8 @@
             <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">€</span>{{ currentPrinting.prices.eur }}
+                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
+                  currentPrinting.prices.eur }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
                   <span class="foil-text">
                     €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
@@ -117,9 +119,9 @@
         </v-card>
 
         <!-- TCGPlayer Button - Desktop only -->
-        <v-btn v-if="card.tcgplayer_id" :href="getAffiliateLink(card.tcgplayer_id)" target="_blank" rel="noopener"
-          color="primary" variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping"
-          size="large">
+        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
+          variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping" size="large">
           Buy on TCGPlayer
         </v-btn>
 
@@ -191,7 +193,9 @@
             <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">$</span>{{ currentPrinting.prices.usd }}
+                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
+                  currentPrinting.prices.usd
+                }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
                   <span class="foil-text">
                     ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
@@ -203,7 +207,9 @@
             <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">€</span>{{ currentPrinting.prices.eur }}
+                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
+                  currentPrinting.prices.eur
+                }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
                   <span class="foil-text">
                     €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
@@ -220,9 +226,9 @@
         </v-card>
 
         <!-- TCGPlayer Button - Mobile only -->
-        <v-btn v-if="card.tcgplayer_id" :href="getAffiliateLink(card.tcgplayer_id)" target="_blank" rel="noopener"
-          color="primary" variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping"
-          size="large" block>
+        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
+          variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
           Buy on TCGPlayer
         </v-btn>
 
