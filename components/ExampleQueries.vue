@@ -564,54 +564,18 @@ function goToCard(cardId: string | undefined) {
   background: transparent
   border: none
   outline: none
-  border-radius: inherit
-  overflow: hidden
 
   &:hover
     transform: scale(1.05) !important
     z-index: 10
 
-  // Ensure all child elements respect border radius
-  :deep(.v-img),
-  :deep(.card-image),
-  :deep(.v-responsive)
-    border-radius: inherit !important
-
 .hoverable-card
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important
   cursor: pointer
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
-  border-radius: 16px !important
-  overflow: hidden
 
   &:hover
     filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)) saturate(110%) brightness(105%)
-
-  // Ensure border radius is applied on mobile
-  @media (max-width: 768px)
-    border-radius: 12px !important
-
-// Mobile-specific fixes for card styling
-@media (max-width: 768px)
-  .result-card-wrapper
-    // Ensure proper border radius on mobile
-    :deep(.v-card)
-      border-radius: 12px !important
-      
-    // Fix any text sizing issues on mobile
-    :deep(.confidence-text),
-    :deep(.percentage-text)
-      font-size: 12px !important
-      line-height: 1.2 !important
-      
-    // Ensure progress bars are properly sized
-    :deep(.v-progress-linear)
-      height: 4px !important
-      
-    // Fix any image border radius issues
-    :deep(.v-img),
-    :deep(.card-image)
-      border-radius: 12px !important
 
 // Lazy loading transition styles
 .fade-transition-enter-active,
