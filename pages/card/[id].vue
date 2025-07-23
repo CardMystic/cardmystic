@@ -172,9 +172,9 @@
             </div>
           </div>
 
-          <div v-if="card.artist" class="artist-info">
+          <div v-if="currentPrinting && card.artist" class="artist-info">
             <span class="artist-label">Illustrated by </span>
-            <strong class="artist-name">{{ card.artist }}</strong>
+            <strong class="artist-name">{{ currentPrinting.artist }}</strong>
           </div>
         </div>
 
