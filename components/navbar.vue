@@ -26,7 +26,10 @@
           </v-btn>
           <v-btn href="https://www.patreon.com/thecardmystic" target="_blank" rel="noopener" class="patreon-btn"
             variant="outlined">
-            <div class="btn-left">Support us on Patreon!</div>
+            <div class="btn-left">
+              <span class="patreon-text-small">Support Us!</span>
+              <span class="patreon-text-large">Support Us On Patreon!</span>
+            </div>
             <div class="btn-right">
               <v-icon size="24" color="black" icon="mdi-patreon"></v-icon>
             </div>
@@ -56,7 +59,6 @@ const drawer = ref(false);
 
 const navItems = [
   { to: '/', label: 'Home', icon: 'mdi-home' },
-  { to: '/search/similarity', label: 'Similarity Search', icon: 'mdi-magnify' },
   { to: '/about', label: 'About', icon: 'mdi-information' },
 ];
 
@@ -100,13 +102,13 @@ const issuesUrl = computed(() => {
   .left-section {
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding-left: 12px;
   }
 
   .right-actions {
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding-right: 12px;
   }
 }
 
@@ -140,6 +142,18 @@ const issuesUrl = computed(() => {
     align-items: center;
     font-weight: 500;
     flex-grow: 1;
+  }
+
+  .patreon-text-small {
+    @media (min-width: 450px) {
+      display: none;
+    }
+  }
+
+  .patreon-text-large {
+    @media (max-width: 449px) {
+      display: none;
+    }
   }
 
   .btn-right {

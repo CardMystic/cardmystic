@@ -31,6 +31,7 @@
       </div>
     </v-col>
   </v-container>
+  <IssuesFab :onClick="handleFabClick" />
 </template>
 
 <script setup lang="ts">
@@ -40,6 +41,8 @@ import { useRoute, useRouter } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
+import IssuesFab from '~/components/search/IssuesFab.vue';
+import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 
 const router = useRouter();
 const route = useRoute();
@@ -76,7 +79,8 @@ definePageMeta({
   title: 'AI search',
 });
 
-const { setPageInfo } = usePageInfo();
+
+const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
   page_name: `Search: ${queryParam.value}`,
@@ -84,6 +88,11 @@ setPageInfo({
   filters: parsedFilters.value,
   labels: ['AI search'],
 });
+
+function handleFabClick() {
+  const url = searchFeedbackUrl(getPageInfo());
+  window.open(url, '_blank');
+}
 
 const wordSearch = computed(() =>
   WordSearchSchema.parse({
