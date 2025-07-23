@@ -1,14 +1,14 @@
-name: Bug Report
-description: Create a bug report to help us improve
-labels: ['bug']
-title: '[Bug]: '
+name: Search Results Feedback
+description: Provide feedback on the search results
+labels: ['feedback', 'search']
+title: '[Feedback]: '
 assignees: []
 body:
   - type: input
     id: page-url
     attributes:
       label: Page URL
-      description: Provide a link to the page where you encountered the issue.
+      description: Provide a link to the search page where you have feedback.
       placeholder: https://cardmystic.io/search/similarity?card_name=...
     validations:
       required: true
@@ -24,8 +24,8 @@ body:
     id: description
     attributes:
       label: Description
-      description: A clear and concise description of what the bug is, what you expected to happen, and any other relevant details.
-      placeholder: Describe the bug, what you expected, and any other context.
+      description: A clear and concise description of what your feedback is, and any other relevant details.
+      placeholder: Describe your feedback, what you expected, and any other context.
     validations:
       required: true
   - type: input
@@ -44,25 +44,10 @@ body:
       placeholder: 'e.g. Color: Blue, Rarity: Mythic'
     validations:
       required: false
-  - type: input
-    id: user-agent
-    attributes:
-      label: User Agent
-      description: What is your browser's user agent string?
-      placeholder: e.g. Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3
-    validations:
-      required: false
   - type: textarea
     id: screenshot
     attributes:
       label: Screenshot (optional)
       description: If applicable, attach a screenshot to display your problem.
-    validations:
-      required: false
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: Additional Context
-      description: Add any other context about the problem here.
     validations:
       required: false

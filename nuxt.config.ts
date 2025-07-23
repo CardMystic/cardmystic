@@ -47,6 +47,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/google-fonts',
     '@vee-validate/nuxt',
+    '@nuxtjs/device',
     async (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
         if (!config.plugins) {
