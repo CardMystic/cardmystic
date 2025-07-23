@@ -8,7 +8,7 @@ export const usePageInfo = () => {
     pageInfo.value = info;
   };
 
-  const getPageInfo: () => PageInfo | undefined = () => pageInfo.value;
+  const getPageInfo = () => pageInfo.value;
 
   return {
     pageInfo: readonly(pageInfo),
