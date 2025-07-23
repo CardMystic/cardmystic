@@ -318,47 +318,39 @@ function startTouch(event: TouchEvent) {
     // Only handle single touch
     if (event.touches.length > 1) return;
 
-    isDragging.value = true;
-    hasDragged.value = false;
-    dragStart.value = event.touches[0].clientX;
-    scrollStart.value = scrollContainer.value.scrollLeft;
-
-    // Pause auto-scroll
+    // Just pause auto-scroll when user starts touching
     if (scrollAnimationId) {
         cancelAnimationFrame(scrollAnimationId);
         scrollAnimationId = null;
     }
 
-    // Don't prevent default - allow native touch handling
+    // Track initial position for drag detection
+    dragStart.value = event.touches[0].clientX;
+    hasDragged.value = false;
+
+    // Don't set isDragging or prevent default - let native scrolling work
 }
 
 function onTouch(event: TouchEvent) {
-    if (!isDragging.value || !scrollContainer.value || event.touches.length === 0) return;
+    if (!scrollContainer.value || event.touches.length === 0) return;
 
     // Only handle single touch
     if (event.touches.length > 1) return;
 
     const deltaX = event.touches[0].clientX - dragStart.value;
 
-    // Check if we've dragged enough to consider it a drag
+    // Track if user has dragged (for click prevention)
     if (Math.abs(deltaX) > dragThreshold) {
         hasDragged.value = true;
     }
 
-    // Don't prevent default - let native scrolling handle the movement
-    // We're just tracking the drag state for click prevention
+    // Don't prevent default or interfere with scrolling
 }
 
 function endTouch() {
-    if (!isDragging.value) return;
-
-    isDragging.value = false;
-
-    // Resume auto-scroll after a delay
+    // Resume auto-scroll after a delay regardless of drag state
     setTimeout(() => {
-        if (!isDragging.value) {
-            startAutoScroll();
-        }
+        startAutoScroll();
     }, 1000); // 1 second delay before resuming auto-scroll
 
     // Reset drag state after a short delay to prevent immediate clicks
