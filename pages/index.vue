@@ -50,6 +50,15 @@ useHead({
   ],
 });
 
+const { setPageInfo } = usePageInfo();
+setPageInfo({
+  page_url: '/',
+  page_name: 'Home Page',
+  query: '',
+  card_name: '',
+  filters: undefined,
+});
+
 onMounted(() => {
   let i = 0;
   const typingInterval = setInterval(() => {

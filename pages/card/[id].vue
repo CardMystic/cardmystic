@@ -117,16 +117,16 @@
         </v-card>
 
         <!-- TCGPlayer Button - Desktop only -->
-        <v-btn v-if="card.purchase_uris?.tcgplayer" :href="getAffiliateLink(card.purchase_uris.tcgplayer)"
-          target="_blank" rel="noopener" color="primary" variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex"
-          prepend-icon="mdi-shopping" size="large">
+        <v-btn v-if="card.tcgplayer_id" :href="getAffiliateLink(card.tcgplayer_id)" target="_blank" rel="noopener"
+          color="primary" variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping"
+          size="large">
           Buy on TCGPlayer
         </v-btn>
 
-        <!-- Fallback button if no direct TCGPlayer link - Desktop only -->
-        <v-btn v-else-if="card.name" :href="getAffiliateLink(generateTCGPlayerSearchUrl(card.name))" target="_blank"
-          rel="noopener" color="primary" variant="outlined" class="mt-4 tcgplayer-btn d-none d-md-flex"
-          prepend-icon="mdi-magnify" size="large">
+        <!-- Fallback button if no TCGPlayer ID - Desktop only -->
+        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" rel="noopener"
+          color="primary" variant="outlined" class="mt-4 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-magnify"
+          size="large">
           Search on TCGPlayer
         </v-btn>
       </v-col>
@@ -220,16 +220,16 @@
         </v-card>
 
         <!-- TCGPlayer Button - Mobile only -->
-        <v-btn v-if="card.purchase_uris?.tcgplayer" :href="getAffiliateLink(card.purchase_uris.tcgplayer)"
-          target="_blank" rel="noopener" color="primary" variant="elevated" class="mb-4 tcgplayer-btn d-md-none"
-          prepend-icon="mdi-shopping" size="large" block>
+        <v-btn v-if="card.tcgplayer_id" :href="getAffiliateLink(card.tcgplayer_id)" target="_blank" rel="noopener"
+          color="primary" variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping"
+          size="large" block>
           Buy on TCGPlayer
         </v-btn>
 
-        <!-- Fallback button if no direct TCGPlayer link - Mobile only -->
-        <v-btn v-else-if="card.name" :href="getAffiliateLink(generateTCGPlayerSearchUrl(card.name))" target="_blank"
-          rel="noopener" color="primary" variant="outlined" class="mb-6 tcgplayer-btn d-md-none"
-          prepend-icon="mdi-magnify" size="large" block>
+        <!-- Fallback button if no TCGPlayer ID - Mobile only -->
+        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" rel="noopener"
+          color="primary" variant="outlined" class="mb-6 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify"
+          size="large" block>
           Search on TCGPlayer
         </v-btn>
 
@@ -328,6 +328,18 @@ useHead(() => ({
     },
   ],
 }));
+
+const { setPageInfo } = usePageInfo();
+watchEffect(() => {
+  if (card.value) {
+    setPageInfo({
+      page_url: route.fullPath,
+      page_name: card.value?.name || 'Card',
+      card_name: card.value?.name || '',
+      labels: ['card details'],
+    });
+  }
+});
 
 const formatsToIgnore: CardFormatType[] = [
   'Old School',
@@ -462,20 +474,13 @@ const generateTCGPlayerSearchUrl = (cardName: string): string => {
   return `https://www.tcgplayer.com/search/magic/product?q=${encodedName}`;
 };
 
-function cleanScryfallTcgLink(scryfallLink: string): string {
-  const raw = new URL(scryfallLink).searchParams.get("u");
-  return raw ? decodeURIComponent(raw) : "";
-}
-
 /**
- * Generate affiliate link for TCGPlayer URLs
+ * Generate affiliate link for TCGPlayer ID
  */
-function getAffiliateLink(tcgUrl: string): string {
-  const cleanUrl = cleanScryfallTcgLink(tcgUrl); // remove any existing affiliate parameter
-  console.log('Cleaned TCGPlayer URL:', cleanUrl);
-  if (!cleanUrl) return '';
-  console.log('full url', `https://partner.tcgplayer.com/Z6vBoK?u=${encodeURIComponent(cleanUrl)}`)
-  return `https://partner.tcgplayer.com/Z6vBoK?u=${encodeURIComponent(cleanUrl)}`;
+function getAffiliateLink(tcgId: string | number): string {
+  if (!tcgId) return '';
+  const productUrl = `https://www.tcgplayer.com/product/${tcgId}`;
+  return `https://partner.tcgplayer.com/Z6vBoK?u=${encodeURIComponent(productUrl)}`;
 }
 
 const hasPrices = computed(() => {
