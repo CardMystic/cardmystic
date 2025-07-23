@@ -71,6 +71,20 @@ useHead(() => ({
   ],
 }));
 
+// Used for the github issues logic as it can't be dynamic.
+definePageMeta({
+  title: 'AI search',
+});
+
+const { setPageInfo } = usePageInfo();
+setPageInfo({
+  page_url: route.fullPath,
+  page_name: `Search: ${queryParam.value}`,
+  query: queryParam.value,
+  filters: parsedFilters.value,
+  labels: ['AI search'],
+});
+
 const wordSearch = computed(() =>
   WordSearchSchema.parse({
     query: queryParam.value,

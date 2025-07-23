@@ -69,18 +69,9 @@ const props = defineProps({
   },
 });
 
-const currentPageName = computed(() => {
-  const route = useRoute();
-  return route.meta?.title || route.name || '';
-});
-
-const currentUrl = computed(() => {
-  const route = useRoute();
-  return encodeURIComponent(route.fullPath);
-});
-
 const issuesUrl = computed(() => {
-  return `https://github.com/CardMystic/cardmystic/issues/new?template=bug_report.yml&title=[BUG] On '${currentPageName.value}' page (${currentUrl.value})`;
+  const { getPageInfo } = usePageInfo();
+  return githubIssuesUrl(getPageInfo(), useDevice());
 });
 </script>
 
