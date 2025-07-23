@@ -48,6 +48,33 @@
           {{ isFlipped ? 'Show Front' : 'Show Back' }}
         </v-btn>
 
+        <!-- Printing Selection Dropdown -->
+        <div v-if="printings && printings.length > 1" class="mt-4">
+          <v-select v-model="selectedPrinting" :items="printingOptions" :item-title="() => ''" item-text="raw.label"
+            item-value="id" label="Select Printing" variant="outlined" density="comfortable" class="printing-select"
+            hide-details :menu-props="{ maxHeight: 300 }">
+            <template #selection="{ item }">
+              {{ item.raw.label }}
+            </template>
+            <template #item="{ props, item }">
+              <v-list-item v-bind="props" class="printing-item">
+                <template #prepend>
+                  <v-img :src="item.raw.image_url" width="36" height="50" @error="() => { }">
+                    <template #placeholder>
+                      <div>?</div>
+                    </template>
+                  </v-img>
+                </template>
+                <v-list-item-title class="ml-3">{{ item.raw.label }}</v-list-item-title>
+                <v-list-item-subtitle v-if="item.raw.surgefoil" class="surgefoil-text ml-3">Surge
+                  Foil</v-list-item-subtitle>
+                <v-list-item-subtitle class="ml-3">{{ item.raw.frame_effects.join(', ') }}</v-list-item-subtitle>
+                <v-list-item-subtitle class="ml-3">{{ item.raw.subtitle }}</v-list-item-subtitle>
+              </v-list-item>
+            </template>
+          </v-select>
+        </div>
+
         <!-- Similar Cards Button - Desktop only -->
         <v-btn color="white" variant="elevated" :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
           " prepend-icon="mdi-cards" size="large" @click="findSimilarCards"
@@ -56,50 +83,51 @@
         </v-btn>
 
         <!-- Price Information - Desktop only -->
-        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mt-4 d-none d-md-block">
+        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
+          class="price-card mt-4 d-none d-md-block">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
-            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
+            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
-                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
+                  currentPrinting.prices.usd }}
+                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
+            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
-                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
+                  currentPrinting.prices.eur }}
+                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.tix" class="price-item">
+            <div v-if="currentPrinting.prices.tix" class="price-item">
               <span class="currency-label">MTGO Tix:</span>
-              <span class="price-value">{{ card.prices.tix }}</span>
+              <span class="price-value">{{ currentPrinting.prices.tix }}</span>
             </div>
           </div>
         </v-card>
 
         <!-- TCGPlayer Button - Desktop only -->
-        <v-btn v-if="card.tcgplayer_id" :href="getAffiliateLink(card.tcgplayer_id)" target="_blank" rel="noopener"
-          color="primary" variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping"
-          size="large">
+        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
+          variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping" size="large">
           Buy on TCGPlayer
         </v-btn>
 
@@ -147,9 +175,9 @@
             </div>
           </div>
 
-          <div v-if="card.artist" class="artist-info">
+          <div v-if="currentPrinting && card.artist" class="artist-info">
             <span class="artist-label">Illustrated by </span>
-            <strong class="artist-name">{{ card.artist }}</strong>
+            <strong class="artist-name">{{ currentPrinting.artist }}</strong>
           </div>
         </div>
 
@@ -160,50 +188,53 @@
         </v-btn>
 
         <!-- Price Information - Mobile only -->
-        <v-card v-if="card.prices && hasPrices" elevation="4" class="price-card mb-4 d-md-none">
+        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
+          class="price-card mb-4 d-md-none">
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
-            <div v-if="card.prices.usd || card.prices.usd_foil" class="price-item">
+            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">$</span>{{ card.prices.usd }}
-                <span v-if="card.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    ${{ card.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
+                  currentPrinting.prices.usd
+                }}
+                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.eur || card.prices.eur_foil" class="price-item">
+            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span style="color: rgb(34, 197, 94)">€</span>{{ card.prices.eur }}
-                <span v-if="card.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
-                  <span class="foil-text"
-                    style="color: #ffe066; text-shadow: 0 0 1px #fff700, 0 0 2px #ffe066; font-weight: 700;">
-                    €{{ card.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
+                  currentPrinting.prices.eur
+                }}
+                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                  <span class="foil-text">
+                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="card.prices.tix" class="price-item">
+            <div v-if="currentPrinting.prices.tix" class="price-item">
               <span class="currency-label">MTGO Tix:</span>
-              <span class="price-value">{{ card.prices.tix }}</span>
+              <span class="price-value">{{ currentPrinting.prices.tix }}</span>
             </div>
           </div>
         </v-card>
 
         <!-- TCGPlayer Button - Mobile only -->
-        <v-btn v-if="card.tcgplayer_id" :href="getAffiliateLink(card.tcgplayer_id)" target="_blank" rel="noopener"
-          color="primary" variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping"
-          size="large" block>
+        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
+          variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
           Buy on TCGPlayer
         </v-btn>
 
@@ -238,7 +269,7 @@
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import { computed, h } from 'vue';
+import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimit } from '~/models/searchModel';
@@ -247,24 +278,50 @@ import ManaIcon from '~/components/manaIcon.vue';
 const route = useRoute();
 
 const isFlipped = ref(false);
+const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
 
-const { data: card, isLoading, error } = useQuery({
+// Combined query that fetches both card and printings in one go
+const { data: cardData, isLoading, error } = useQuery({
   queryKey: [
-    'card',
+    'card-with-printings',
     cardIdParam.value,
   ],
   queryFn: async () => {
-    const response = await fetch(`/api/cards/${cardIdParam.value}`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
+    // First, fetch the card
+    const cardResponse = await fetch(`/api/cards/${cardIdParam.value}`);
+    if (!cardResponse.ok) {
+      throw new Error('Failed to fetch card');
     }
-    return response.json() as Promise<ScryfallCard>;
+    const card = await cardResponse.json() as ScryfallCard;
+
+    // Then, fetch printings if available
+    let printings: ScryfallCard[] = [];
+    if (card.prints_search_uri) {
+      try {
+        const printingsResponse = await fetch(card.prints_search_uri);
+        if (printingsResponse.ok) {
+          const printingsData = await printingsResponse.json();
+          printings = printingsData.data || [];
+          console.log(printings)
+        } else {
+          console.error('Printings fetch failed:', printingsResponse.status);
+        }
+      } catch (error) {
+        console.error('Error fetching printings:', error);
+      }
+    }
+
+    return { card, printings };
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: !!cardIdParam.value,
 });
+
+// Extract card and printings from combined data
+const card = computed(() => cardData.value?.card);
+const printings = computed(() => cardData.value?.printings || []);
 
 useHead(() => ({
   title: card.value
@@ -434,26 +491,47 @@ function getAffiliateLink(tcgId: string | number): string {
 }
 
 const hasPrices = computed(() => {
-  if (!card.value?.prices) return false;
-  const prices = card.value.prices;
+  if (!currentPrinting.value?.prices) return false;
+  const prices = currentPrinting.value.prices;
   return (
     prices.usd || prices.usd_foil || prices.eur || prices.eur_foil || prices.tix
   );
 });
 
-// Computed properties for current face data
+// Computed property for printing dropdown options
+const printingOptions = computed(() => {
+  if (!printings.value) return [];
+
+  return printings.value.map(printing => ({
+    id: printing.id,
+    label: `${printing.set_name || 'Unknown Set'} (${printing.set?.toUpperCase() || 'UNK'})`,
+    subtitle: printing.released_at ? new Date(printing.released_at).getFullYear().toString() : 'Unknown',
+    image_url: printing.image_uris?.small || printing.card_faces?.[0]?.image_uris?.small || '',
+    frame_effects: printing.frame_effects?.filter((d) => { return d != 'legendary' }) || [],
+    surgefoil: printing.promo_types?.includes("surgefoil") ? true : false,
+  }));
+});
+
+// Get current selected printing data
+const currentPrinting = computed(() => {
+  if (!printings.value || !selectedPrinting.value) return card.value;
+  return printings.value.find(p => p.id === selectedPrinting.value) || card.value;
+});
+
+// Computed properties for current face data using current printing
 const currentFace = computed(() => {
-  if (!card.value) return null;
+  const cardData = currentPrinting.value;
+  if (!cardData) return null;
 
   // If it's a dual-faced card, return the appropriate face
-  if (isDualFaced.value && card.value.card_faces) {
+  if (isDualFaced.value && cardData.card_faces) {
     return isFlipped.value
-      ? card.value.card_faces[1]
-      : card.value.card_faces[0];
+      ? cardData.card_faces[1]
+      : cardData.card_faces[0];
   }
 
   // For single-faced cards, return the card itself
-  return card.value;
+  return cardData;
 });
 
 const currentManaCost = computed(() => {
@@ -480,7 +558,7 @@ const currentName = computed(() => {
   }
 
   // For single-faced cards, show the card name
-  return card.value?.name || '';
+  return currentPrinting.value?.name || '';
 });
 
 const currentPower = computed(() => {
@@ -502,12 +580,21 @@ const formattedOracleText = computed(() => {
   return formatSymbols(currentOracleText.value);
 });
 
+const isDualFaced = computed(() => {
+  const cardData = currentPrinting.value || card.value;
+  const isDualFacedCard = cardData?.card_faces && cardData.card_faces.length >= 2;
+  return isDualFacedCard;
+});
+
 function getCardImageUrl(cardData: ScryfallCard): string {
+  // Use current printing instead of passed cardData
+  const printingData = currentPrinting.value || cardData;
+
   // For dual-faced cards, show the appropriate face
-  if (isDualFaced.value && cardData.card_faces) {
+  if (isDualFaced.value && printingData.card_faces) {
     const face = isFlipped.value
-      ? cardData.card_faces[1]
-      : cardData.card_faces[0];
+      ? printingData.card_faces[1]
+      : printingData.card_faces[0];
     if (face.image_uris) {
       if (face.image_uris.normal) return face.image_uris.normal;
       if (face.image_uris.large) return face.image_uris.large;
@@ -517,22 +604,22 @@ function getCardImageUrl(cardData: ScryfallCard): string {
   }
 
   // For single-faced cards, try different image URI options
-  if (cardData.image_uris?.normal) {
-    return cardData.image_uris.normal;
+  if (printingData.image_uris?.normal) {
+    return printingData.image_uris.normal;
   }
-  if (cardData.image_uris?.large) {
-    return cardData.image_uris.large;
+  if (printingData.image_uris?.large) {
+    return printingData.image_uris.large;
   }
-  if (cardData.image_uris?.small) {
-    return cardData.image_uris.small;
+  if (printingData.image_uris?.small) {
+    return printingData.image_uris.small;
   }
-  if (cardData.image_uris?.png) {
-    return cardData.image_uris.png;
+  if (printingData.image_uris?.png) {
+    return printingData.image_uris.png;
   }
 
   // Fallback to first face if available
-  if (cardData.card_faces && cardData.card_faces[0]?.image_uris) {
-    const firstFace = cardData.card_faces[0].image_uris;
+  if (printingData.card_faces && printingData.card_faces[0]?.image_uris) {
+    const firstFace = printingData.card_faces[0].image_uris;
     if (firstFace.normal) return firstFace.normal;
     if (firstFace.large) return firstFace.large;
     if (firstFace.small) return firstFace.small;
@@ -545,12 +632,6 @@ function getCardImageUrl(cardData: ScryfallCard): string {
 function handleImageError(value: string | undefined) {
   console.warn('Card image failed to load:', value);
 }
-
-const isDualFaced = computed(() => {
-  const isDualFacedCard =
-    card.value?.card_faces && card.value.card_faces.length >= 2;
-  return isDualFacedCard;
-});
 
 function flipCard() {
   isFlipped.value = !isFlipped.value;
@@ -569,6 +650,14 @@ function findSimilarCards() {
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
 
+// Watch for card changes to set initial selected printing
+watch([card, printings], ([newCard, newPrintings]) => {
+  if (newCard && newPrintings && newPrintings.length > 0) {
+    // Always update selected printing to current card or first available
+    const currentPrintingMatch = newPrintings.find(p => p.id === newCard.id);
+    selectedPrinting.value = currentPrintingMatch ? currentPrintingMatch.id : newPrintings[0].id;
+  }
+}, { immediate: true });
 </script>
 
 <style scoped lang="sass">
@@ -823,6 +912,10 @@ function findSimilarCards() {
   font-size: 1rem
   font-weight: 700
 
+.foil-text
+  color: #ffe066
+  font-weight: 700
+
 // Flip Button Styling
 .flip-btn
   width: 100%
@@ -856,6 +949,27 @@ function findSimilarCards() {
 // Price Card Mobile Styling
 @media (max-width: 959px)
   .price-card
+    max-width: none !important
+    width: 100%
+
+// Legacy styles cleanup
+.chip
+  font-size: 10px !important
+  min-width: 76px
+  text-align: center
+  justify-content: center
+  padding: 0px !important
+  margin: 0px !important
+
+h2,
+p,
+em
+  color: white
+
+.v-card
+  background-color: #2c2c2c
+  color: white
+
     max-width: none !important
     width: 100%
 
@@ -980,4 +1094,37 @@ em
   width: 100%
   max-width: 300px
   align-self: center
+
+.printing-select
+  width: 100%
+  min-width: 280px
+
+.printing-loading
+  display: flex
+  align-items: center
+  justify-content: flex-start
+  width: 100%
+  max-width: 280px
+  padding: 12px 16px
+  background: rgba(44, 44, 44, 0.5)
+  border-radius: 8px
+  border: 1px solid rgba(147, 114, 255, 0.2)
+
+.loading-text
+  color: rgba(255, 255, 255, 0.8)
+  font-size: 14px
+  font-weight: 500
+
+// Surgefoil badge styling with gold glow animation
+.surgefoil-text
+  display: inline-block
+  background: linear-gradient(135deg, #ffd700, #ffed4e, #ffd700)
+  color: black
+  font-weight: 700
+  font-size: 10px
+  padding: 2px 6px
+  border-radius: 8px
+  text-transform: uppercase
+  letter-spacing: 0.5px
+    
 </style>
