@@ -11,8 +11,6 @@ export default (pageInfo: PageInfo | undefined, device: Device) => {
   const { page_url, page_name, query, card_name, filters, labels } = pageInfo;
   const queryOrCardName = query || card_name || '';
   const filtersString = filters ? JSON.stringify(filters) : '';
-  console.log('Labels:', labels?.join(', '));
-  console.log('Filters String:', filtersString);
   const hostname =
     typeof window !== 'undefined'
       ? window.location.hostname
