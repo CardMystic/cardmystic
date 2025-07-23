@@ -62,7 +62,6 @@
                     </template>
                   </v-img>
                 </template>
-                <v-list-item-title>{{ item.raw.label }}</v-list-item-title>
                 <v-list-item-subtitle>{{ item.raw.subtitle }}</v-list-item-subtitle>
               </v-list-item>
             </template>
