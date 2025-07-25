@@ -155,17 +155,11 @@ const onSubmit = form.handleSubmit((values) => {
     navigateTo({ path: '/search', query });
   }
 })
-
-function clearQuery() {
-  query.value.value = '';
-}
-
 </script>
 
 <style scoped>
 .search-container {
   width: 100%;
-  max-width: 1096px;
   margin: 0 auto;
 }
 
@@ -180,7 +174,6 @@ function clearQuery() {
   width: 100%;
 }
 
-
 .search-tabs-container {
   display: flex;
   justify-content: center;
@@ -189,7 +182,6 @@ function clearQuery() {
   width: 100%;
   margin-bottom: 18px;
 }
-
 
 .search-tab-button-new {
   display: inline-flex;

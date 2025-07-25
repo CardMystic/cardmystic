@@ -1,11 +1,10 @@
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-start pt-0 mb-6">
+  <UContainer class="mb-6">
     <div class="w-full max-w-7xl px-4 pt-4 flex flex-col items-center">
-
-      <SearchForm similarity class="mt-6 w-full" style="max-width: 1096px" />
+      <SearchForm similarity class="mt-6 w-full" />
 
       <!-- Results -->
-      <div style="max-width: 1072px" class="mt-3 w-full">
+      <div class="mt-3 w-full">
 
         <template v-if="isLoading">
           <div class="flex justify-center items-center py-12">
@@ -39,7 +38,7 @@
         </template>
       </div>
     </div>
-  </div>
+  </UContainer>
   <IssuesFab :onClick="handleFabClick" />
 </template>
 
