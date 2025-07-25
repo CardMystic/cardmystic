@@ -1,10 +1,10 @@
 <template>
-  <v-tooltip text="Report an issue with these results">
-    <template v-slot:activator="{ props }">
-      <v-fab v-bind="props" color="surface-variant" icon="mdi-alert-circle-outline" class="fixed-fab"
-        @click="onClick && onClick()"></v-fab>
+  <UTooltip text="Report an issue with these results">
+    <template #activator="{ open }">
+      <UButton icon="i-mdi-alert-circle-outline" color="surface-variant" class="fixed-fab" size="xl" circle
+        @click="onClick && onClick()" @mouseenter="open" @focus="open" />
     </template>
-  </v-tooltip>
+  </UTooltip>
 </template>
 
 <script lang="ts" setup>

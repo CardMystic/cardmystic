@@ -1,7 +1,8 @@
 <template>
     <div class="example-query-container">
         <div v-if="isLoading" class="text-center">
-            <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
+            <!-- TODO: Fix this skeleton to look nicer -->
+            <USkeleton class="h-12 w-12 rounded-full" />
             <p class="mt-2 text-white text-caption">Loading example...</p>
         </div>
 
@@ -9,16 +10,16 @@
             <!-- Query display and TRY IT button -->
             <div class="query-header">
                 <div class="query-text">
-                    <v-icon class="mr-2" color="primary" icon="mdi-lightbulb-outline"></v-icon>
+                    <UIcon name="i-mdi-lightbulb-outline" class="mr-2" color="primary" />
                     <span class="query-value">"{{ wordSearch.query }}"</span>
                 </div>
                 <div class="button-group">
-                    <v-btn color="white" variant="outlined" icon="mdi-refresh" @click="loadRandomExample"
-                        :loading="isLoading" class="refresh-button" size="small"></v-btn>
-                    <v-btn color="primary" variant="outlined" @click="tryQuery" class="try-button"
-                        prepend-icon="mdi-magnify">
+                    <UButton color="white" variant="outline" icon="i-mdi-refresh" @click="loadRandomExample"
+                        :loading="isLoading" class="refresh-button" size="sm" />
+                    <UButton color="primary" variant="outline" @click="tryQuery" class="try-button"
+                        icon="i-mdi-magnify">
                         TRY
-                    </v-btn>
+                    </UButton>
                 </div>
             </div>
             <!-- Horizontal scrolling results -->
@@ -29,10 +30,8 @@
                     <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
                         class="result-card-wrapper" :ref="(el) => setCardRef(el, index)"
                         :style="{ opacity: cardOpacities[index] || 0.8, transform: `scale(${cardScales[index] || 0.95})` }">
-                        <v-lazy :options="{ threshold: 0.5 }" transition="fade-transition" class="lazy-card-container">
-                            <Card :card="result" :normalization-context="allScores" size="small"
-                                @click="goToCard(result.card_data.id)" class="hoverable-card" />
-                        </v-lazy>
+                        <Card :card="result" :normalization-context="allScores" size="small"
+                            @click="goToCard(result.card_data.id)" class="hoverable-card" />
                     </div>
                 </div>
             </div>

@@ -3,21 +3,28 @@
     <!-- Card content: image + score -->
     <div class="card">
       <div class="card-image-wrapper">
-        <v-img class="card-image" :src="getCardImageUrl(card.card_data)" alt="Card Image" @error="handleImageError">
-          <template v-slot:placeholder>
-            <div class="image-placeholder">
-              <p class="placeholder-text">{{ card.card_data.name }}</p>
-            </div>
-          </template>
-        </v-img>
+        <img class="card-image" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
+          @error="handleImageError" v-if="getCardImageUrl(card.card_data)" />
+        <div v-else class="image-placeholder">
+          <p class="placeholder-text">{{ card.card_data.name }}</p>
+        </div>
       </div>
 
-      <v-progress-linear rounded :color="getScoreColor(card.score)" :model-value="normalizeScore(card.score)"
-        :height="progressHeight" class="confidence-bar" style="border: 1px solid black">
-        <template v-slot:default="{ value }">
-          <p class="confidence-text">{{ Math.ceil(value) }}%</p>
-        </template>
-      </v-progress-linear>
+      <div class="confidence-bar"
+        :style="{ border: '1px solid black', borderRadius: '8px', height: progressHeight + 'px', background: '#222' }">
+        <div :style="{
+          width: normalizeScore(card.score) + '%',
+          background: getScoreColor(card.score),
+          height: '100%',
+          borderRadius: '8px',
+          transition: 'width 0.3s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }">
+          <p class="confidence-text">{{ Math.ceil(normalizeScore(card.score)) }}%</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
