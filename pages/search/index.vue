@@ -1,36 +1,43 @@
 <template>
-  <v-container class="fill-height d-flex align-start justify-center pt-0">
-    <v-col justify="center" align="center" class="col-container pt-4">
+  <div class="min-h-screen flex flex-col items-center justify-start pt-0 mb-6">
+    <div class="w-full max-w-7xl px-4 pt-4 flex flex-col items-center">
 
-      <SearchForm class="mt-6" style="max-width: 1096px" />
+      <SearchForm class="mt-6 w-full" style="max-width: 1096px" />
 
       <!-- Results -->
-      <div style="max-width: 1072px" class="mt-6">
+      <div style="max-width: 1072px" class="mt-3 w-full">
 
         <template v-if="isLoading">
-          <v-row>
-            <v-col cols="12" class="text-center">
-              <v-progress-circular indeterminate color="primary" />
-            </v-col>
-          </v-row>
+          <div class="flex justify-center items-center py-12">
+            <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-3xl" />
+          </div>
         </template>
 
         <template v-else-if="searchResults && searchResults.length">
-          <v-row>
-            <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in searchResults" :key="result.card_data.id">
-              <card :card="result" @click="navigateToCard(result.card_data.id)" />
-            </v-col>
-          </v-row>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div v-for="result in searchResults" :key="result.card_data.id" class="cursor-pointer"
+              @click="navigateToCard(result.card_data.id)">
+              <card :card="result" />
+            </div>
+          </div>
         </template>
 
         <template v-else>
-          <div class="no-results-container">
-            <v-btn to="/" class="mt-4" color="primary">Home</v-btn>
-          </div>
+          <UContainer>
+            <div class="flex flex-col items-center">
+              <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
+              <div class="font-bold text-2xl mb-2">No results found</div>
+              <div class="subtitle2 mb-4">
+                Try adjusting your search terms or filters.<br>
+                If you think this is a mistake, <a :href="searchFeedbackUrl(getPageInfo())" target="_blank"
+                  class="important-text underline">let us know</a>.
+              </div>
+            </div>
+          </UContainer>
         </template>
       </div>
-    </v-col>
-  </v-container>
+    </div>
+  </div>
   <IssuesFab :onClick="handleFabClick" />
 </template>
 
@@ -43,6 +50,7 @@ import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel'
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
+import { UContainer } from '#components';
 
 const router = useRouter();
 const route = useRoute();
@@ -57,9 +65,9 @@ function navigateToCard(cardId: string | undefined) {
 }
 
 // Parse query params into a WordSearch model
-const queryParam = computed(() => String(route.query.query || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
+const queryParam = computed(() => String(route.query?.query || ''));
+const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
+const parsedFilters = computed(() => route.query?.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 useHead(() => ({
   title: queryParam.value
@@ -94,14 +102,19 @@ function handleFabClick() {
   window.open(url, '_blank');
 }
 
-const wordSearch = computed(() =>
-  WordSearchSchema.parse({
+const wordSearch = computed(() => {
+  if (!queryParam.value) {
+    return undefined; // Return undefined if no query is provided
+  }
+  return WordSearchSchema.parse({
     query: queryParam.value,
     limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false, // Default to false, can be overridden by query param
-  })
-);
+  });
+});
+
+const queryEnabled = computed(() => !!wordSearch.value?.query);
 
 const { data: searchResults, isLoading } = useQuery({
   queryKey: [
@@ -121,7 +134,7 @@ const { data: searchResults, isLoading } = useQuery({
     return response.json() as Promise<Array<Card>>;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: !!wordSearch.value.query,
+  enabled: queryEnabled,
 });
 
 </script>
@@ -142,9 +155,6 @@ const { data: searchResults, isLoading } = useQuery({
   position: relative
   bottom: -35px
 
-.col-container
-  position: relative
-
 .title-container
   display: flex
   flex-direction: column
@@ -157,7 +167,7 @@ const { data: searchResults, isLoading } = useQuery({
 
 .title
   font-size: 3.5rem
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
 
 .subtitle
@@ -172,9 +182,8 @@ const { data: searchResults, isLoading } = useQuery({
   position: relative
   top: -14px
 
-
 .important-text
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   font-style: italic
 
 .chip
@@ -184,7 +193,7 @@ const { data: searchResults, isLoading } = useQuery({
   background-color: black
 
 .primary
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
 
 .glow-wrapper
   position: relative
@@ -223,12 +232,6 @@ const { data: searchResults, isLoading } = useQuery({
   display: flex
   flex-direction: column
 
-.filters-btn
-  width: 40px
-  height: 56px
-  border-radius: 4px
-  margin-left: 12px
-
 .cache-stats-card
   background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
   border: 1px solid rgba(33, 150, 243, 0.3) !important
@@ -260,6 +263,6 @@ const { data: searchResults, isLoading } = useQuery({
   font-size: 0.9rem
 
 .stat-value
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   font-weight: 600
 </style>
