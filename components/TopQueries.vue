@@ -1,13 +1,13 @@
 <template>
   <div class="top-queries-container">
     <div v-if="isLoading" class="text-center py-4">
-      <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
-      <p class="mt-2 text-white text-caption">Loading popular queries...</p>
+      <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
+      <p class="mt-2 text-white text-sm">Loading popular queries...</p>
     </div>
 
     <div v-else-if="topQueries && topQueries.length > 0" class="top-queries-content">
       <div class="queries-header">
-        <v-icon class="mr-2" color="primary" size="20">mdi-trending-up</v-icon>
+        <UIcon name="i-lucide-trending-up" class="mr-2 text-primary text-xl" />
         <h3 class="queries-title">Top Searches This Week</h3>
       </div>
 
@@ -17,10 +17,10 @@
           <div v-for="(queryData, index) in leftColumnQueries" :key="queryData.query" class="query-item">
             <div class="query-rank">#{{ index + 1 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
-            <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
-              prepend-icon="mdi-magnify" class="try-btn">
+            <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
+              icon="i-lucide-search" class="try-btn">
               Try
-            </v-btn>
+            </UButton>
           </div>
         </div>
 
@@ -29,17 +29,17 @@
           <div v-for="(queryData, index) in rightColumnQueries" :key="queryData.query" class="query-item">
             <div class="query-rank">#{{ index + 6 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
-            <v-btn color="primary" variant="outlined" size="small" @click="tryQuery(queryData.query)"
-              prepend-icon="mdi-magnify" class="try-btn">
+            <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
+              icon="i-lucide-search" class="try-btn">
               Try
-            </v-btn>
+            </UButton>
           </div>
         </div>
       </div>
     </div>
 
     <div v-else-if="error" class="error-state">
-      <v-icon color="error" class="mr-2">mdi-alert-circle</v-icon>
+      <UIcon name="i-lucide-alert-circle" class="mr-2 text-red-500" />
       <span class="error-text">Failed to load popular queries</span>
     </div>
   </div>
@@ -80,7 +80,7 @@ const rightColumnQueries = computed(() => {
 function tryQuery(query: string) {
   // Navigate to search page with the current query
   router.push({
-    name: 'search',
+    path: '/search',
     query: {
       query,
     },
@@ -91,8 +91,7 @@ function tryQuery(query: string) {
 <style scoped lang="sass">
 .top-queries-container
   width: 100%
-  max-width: 768px
-  margin: 0 auto
+  margin: 6pt auto 0 auto
 
 .top-queries-content
   border-radius: 24px

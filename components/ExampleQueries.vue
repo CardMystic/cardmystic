@@ -1,8 +1,7 @@
 <template>
     <div class="example-query-container">
         <div v-if="isLoading" class="text-center">
-            <!-- TODO: Fix this skeleton to look nicer -->
-            <USkeleton class="h-12 w-12 rounded-full" />
+            <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
             <p class="mt-2 text-white text-caption">Loading example...</p>
         </div>
 
@@ -126,7 +125,6 @@ function goToCard(cardId: string | undefined) {
 <style scoped lang="sass">
 .example-query-container
   width: 100%
-  max-width: 1072px
   margin: 0 auto
 
 .example-content
