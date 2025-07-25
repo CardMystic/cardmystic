@@ -94,6 +94,45 @@ watch(searchType, async (newType) => {
   }
 });
 
+// Function to load card names
+async function loadCardNames() {
+  try {
+    const response = await fetch('/card-names.min.json');
+    cardNames.value = await response.json();
+  } catch (error) {
+    console.error('Failed to load card names:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+const formSchema = toTypedSchema(WordSearchSchema);
+const form = useForm({
+  validationSchema: formSchema,
+  initialValues: {
+    query: queryParam.value || '',
+    filters: parsedFilters.value || {}
+  }
+});
+
+const query = useField<string>('query');
+const filters = useField<CardSearchFilters>('filters');
+
+const onSubmit = form.handleSubmit((values) => {
+  if (searchType.value === 'similarity') {
+    const query: Record<string, any> = {
+      card_name: values.query,
+      filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
+    };
+    navigateTo({ path: '/search/similarity', query });
+  } else {
+    const query: Record<string, any> = {
+      query: values.query,
+      filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
+    };
+    navigateTo({ path: '/search', query });
+  }
+})
 </script>
 
 <style scoped>

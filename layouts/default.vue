@@ -1,6 +1,6 @@
 <template>
   <navbar />
-  <UContainer>
+  <UContainer class="min-h-screen flex responsive-align" style="padding-top: 0px">
     <slot />
   </UContainer>
   <Footer />
@@ -10,14 +10,9 @@
 </script>
 
 <style scoped lang="sass">
-.layout-container
-  min-height: 100vh
-  display: flex
-  flex-direction: column
-
-.main-content
-  flex: 1
-
 .responsive-align
   align-items: flex-start
+
+  @media (min-width: 960px)
+    align-items: center
 </style>

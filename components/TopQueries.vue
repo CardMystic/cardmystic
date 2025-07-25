@@ -1,30 +1,8 @@
 <template>
-  <div class="top-queries-container mt-2 mb-2">
-    <div v-if="isLoading" class="top-queries-content">
-      <div class="queries-header">
-        <USkeleton class="h-6 w-6 mr-2" :ui="{ rounded: 'rounded-full' }" />
-        <USkeleton class="h-6 w-48" />
-      </div>
-
-      <div class="queries-grid">
-        <!-- Left column skeleton -->
-        <div class="queries-column">
-          <div v-for="index in 5" :key="`left-${index}`" class="query-item-skeleton">
-            <USkeleton class="h-6 w-6" :ui="{ rounded: 'rounded-full' }" />
-            <USkeleton class="h-4 flex-1" />
-            <USkeleton class="h-8 w-12" />
-          </div>
-        </div>
-
-        <!-- Right column skeleton -->
-        <div class="queries-column">
-          <div v-for="index in 5" :key="`right-${index}`" class="query-item-skeleton">
-            <USkeleton class="h-6 w-6" :ui="{ rounded: 'rounded-full' }" />
-            <USkeleton class="h-4 flex-1" />
-            <USkeleton class="h-8 w-12" />
-          </div>
-        </div>
-      </div>
+  <div class="top-queries-container">
+    <div v-if="isLoading" class="text-center py-4">
+      <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
+      <p class="mt-2 text-white text-sm">Loading popular queries...</p>
     </div>
 
     <div v-else-if="topQueries && topQueries.length > 0" class="top-queries-content">
@@ -40,7 +18,7 @@
             <div class="query-rank">#{{ index + 1 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
             <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
-              icon="i-lucide-search" class="try-btn cursor-pointer">
+              icon="i-lucide-search" class="try-btn">
               Try
             </UButton>
           </div>
@@ -52,7 +30,7 @@
             <div class="query-rank">#{{ index + 6 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
             <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
-              icon="i-lucide-search" class="try-btn cursor-pointer">
+              icon="i-lucide-search" class="try-btn">
               Try
             </UButton>
           </div>
@@ -115,6 +93,7 @@ function tryQuery(query: string) {
 <style scoped lang="sass">
 .top-queries-container
   width: 100%
+  margin: 6pt auto 0 auto
 
 .top-queries-content
   border-radius: 24px
