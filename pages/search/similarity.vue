@@ -1,13 +1,15 @@
 <template>
-  <UContainer class="mb-6">
+  <div class="min-h-screen flex flex-col items-center justify-start pt-0 mb-6">
     <div class="w-full max-w-7xl px-4 pt-4 flex flex-col items-center">
-      <SearchForm similarity class="mt-6 w-full" />
+
+      <SearchForm similarity class="mt-6 w-full" style="max-width: 1096px" />
 
       <!-- Results -->
-      <div class="mt-3 w-full">
+      <div style="max-width: 1072px" class="mt-3 w-full">
+
         <template v-if="isLoading">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
+          <div class="flex justify-center items-center py-12">
+            <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-3xl" />
           </div>
         </template>
 
@@ -15,34 +17,29 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div v-for="result in searchResults" :key="result.card_data.id" class="cursor-pointer"
               @click="navigateToCard(result.card_data.id)">
-              <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true" />
+              <card :card="result" :is-similarity-search="true" />
             </div>
           </div>
         </template>
 
         <template v-else-if="!cardNameParam">
           <div class="no-results-container">
-            <UAlert color="info" icon="i-lucide-info" title="Enter a card name"
+            <UAlert color="blue" icon="i-lucide-info" title="Enter a card name"
               description="Please enter a card name to search for similar cards." class="mb-4" />
           </div>
         </template>
 
         <template v-else>
-          <UContainer>
-            <div class="flex flex-col items-center">
-              <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
-              <div class="font-bold text-2xl mb-2">No cards found</div>
-              <div class="subtitle2 mt-2 mb-4">
-                Try adjusting your search terms or filters.<br>
-                If you think this is a mistake, <NuxtLink :to="searchFeedbackUrl(getPageInfo())" target="_blank"
-                  class="important-text underline">let us know</NuxtLink>.
-              </div>
-            </div>
-          </UContainer>
+          <div class="no-results-container">
+            <UAlert color="blue" icon="i-lucide-info" title="No results found"
+              :description="`No results found for '${cardNameParam}'. Try a different search term or check your filters.`"
+              class="mb-4" />
+            <UButton to="/" class="mt-4" color="primary">Home</UButton>
+          </div>
         </template>
       </div>
     </div>
-  </UContainer>
+  </div>
   <IssuesFab :onClick="handleFabClick" />
 </template>
 
@@ -55,9 +52,7 @@ import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
-import CardSkeleton from '~/components/CardSkeleton.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
-import CardComponent from '~/components/card.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -217,6 +212,43 @@ const { data: searchResults, isLoading } = useQuery({
   50%
     opacity: 1
     transform: translate(-50%, -50%) scale(1.4)
+
+.no-results-container
+  margin-top: 40px
+  display: flex
+  align-items: center
+  justify-content: center
+  text-align: center
+  color: white
+  font-size: 1.5rem
+  display: flex
+  flex-direction: column
+
+.cache-stats-card
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
+  border: 1px solid rgba(33, 150, 243, 0.3) !important
+  border-radius: 12px !important
+  padding: 16px !important
+
+.cache-stats-header
+  display: flex
+  align-items: center
+  margin-bottom: 12px
+
+.cache-stats-title
+  color: white
+  font-size: 1.1rem
+  font-weight: 600
+
+.cache-stats-content
+  display: flex
+  flex-direction: column
+  gap: 8px
+
+.cache-stat
+  display: flex
+  justify-content: space-between
+  align-items: center
 
 .stat-label
   color: rgba(255, 255, 255, 0.8)
