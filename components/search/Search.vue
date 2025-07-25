@@ -4,12 +4,12 @@
     <div class="search-tabs-container mb-4">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
-        <v-icon start size="18">mdi-magnify</v-icon>
+        <UIcon name="i-mdi-magnify" class="icon" size="18" />
         AI Search
       </button>
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'similarity' }]"
         @click="setSearchType('similarity')">
-        <v-icon start size="18">mdi-cards-outline</v-icon>
+        <UIcon name="i-mdi-cards-outline" class="icon" size="18" />
         Similarity Search
       </button>
     </div>
@@ -17,19 +17,14 @@
     <form @submit.prevent="onSubmit" class="search-form">
       <div class="search-input-row">
         <!-- Regular search input -->
-        <v-text-field v-if="searchType === 'ai'" v-model="query.value.value"
-          placeholder="Describe the cards you want..." variant="solo" hide-details="auto"
-          :error-messages="query.errorMessage.value" prepend-inner-icon="mdi-magnify" class="flex-grow-1"
-          :clearable="!!query.value.value" v-on:click:clear="clearQuery" />
+        <UInput v-if="searchType === 'ai'" v-model="query.value.value" placeholder="Describe the cards you want..."
+          :error="query.errorMessage.value" icon="i-mdi-magnify" class="flex-grow-1" clearable @clear="clearQuery" />
 
-        <!-- Autocomplete search input for similarity search -->
-        <!-- TODO: Clean up this autocomplete component to better highlight why a result is shown, and only show suggestions after typing 3+ characters-->
-        <v-autocomplete v-else v-model="query.value.value" :items="cardNames" label="Enter a card name..."
-          hide-details="auto" variant="solo" elevation="5" prepend-inner-icon="mdi-magnify" class="flex-grow-1"
-          :clearable="!!query.value.value"></v-autocomplete>
-        <v-btn type="submit" color="primary" class="ml-2 search-btn" size="large">
+        <USelect v-else v-model="query.value.value" :options="cardNames" placeholder="Enter a card name..."
+          icon="i-mdi-magnify" class="flex-grow-1" clearable />
+        <UButton type="submit" color="primary" class="ml-2 search-btn" size="lg">
           Search
-        </v-btn>
+        </UButton>
       </div>
 
       <div class="filters-section mt-4">

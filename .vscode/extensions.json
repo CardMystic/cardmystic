@@ -5,6 +5,7 @@
         "github.copilot",
         "github.copilot-chat",
         "nuxtr.nuxtr-vscode",
-        "ms-azuretools.vscode-azurestaticwebapps"
+        "ms-azuretools.vscode-azurestaticwebapps",
+        "bradlc.vscode-tailwindcss"
     ]
 }

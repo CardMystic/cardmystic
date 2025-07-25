@@ -1,22 +1,22 @@
 <template>
-  <v-footer color="black" class="footer">
-    <v-container class="footer-content">
+  <div class="footer">
+    <UContainer class="footer-content">
       <!-- Social Links -->
-      <div class="social-links d-flex justify-center align-center gap-4 mb-3">
+      <div class="social-links mb-3">
         <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
-          <v-icon color="white" size="24" icon="mdi-github"></v-icon>
+          <UIcon name="i-mdi-github" class="icon" size="24" color="white" />
         </a>
 
         <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
-          <v-img src="@/public/discord-icon.svg" width="24" height="24" alt="Discord" contain />
+          <img src="/discord-icon.svg" width="24" height="24" alt="Discord" style="vertical-align: middle;" />
         </a>
 
         <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
-          <v-icon color="white" size="24" icon="mdi-youtube"></v-icon>
+          <UIcon name="i-mdi-youtube" class="icon" size="24" color="white" />
         </a>
 
         <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
-          <v-icon color="white" size="24" icon="mdi-patreon"></v-icon>
+          <UIcon name="i-mdi-patreon" class="icon" size="24" color="white" />
         </a>
       </div>
 
@@ -42,18 +42,17 @@
           </a>
         </p>
       </div>
-    </v-container>
-  </v-footer>
+    </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+// Nuxt UI icons and container
 
-// Get commit hash from runtime config
 const { public: { commitHash: fullCommitHash } } = useRuntimeConfig();
 
 const commitHash = computed(() => {
-  // Show only first 7 characters for display
   return typeof fullCommitHash === 'string' ? fullCommitHash.substring(0, 7) : 'dev';
 });
 
@@ -75,6 +74,14 @@ const commitUrl = computed(() => {
   text-align: center;
 }
 
+.social-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
 .social-links a {
   display: flex;
   align-items: center;
@@ -82,8 +89,6 @@ const commitUrl = computed(() => {
   opacity: 1;
   transition: transform 0.2s;
   text-decoration: none;
-  margin-left: 10px;
-  margin-right: 10px;
 
   &:hover {
     transform: scale(1.15);

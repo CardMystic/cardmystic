@@ -23,7 +23,8 @@
 				"humao.rest-client",
 				"christian-kohler.npm-intellisense",
 				"vivaxy.vscode-conventional-commits",
-				"Nuxtr.nuxtr-vscode"
+				"Nuxtr.nuxtr-vscode",
+				"bradlc.vscode-tailwindcss"
 			]
 		}
 	}
