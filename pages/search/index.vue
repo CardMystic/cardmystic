@@ -20,6 +20,13 @@
           </div>
         </template>
 
+        <template v-else-if="!queryParam">
+          <div class="no-results-container">
+            <UAlert color="blue" icon="i-lucide-info" title="Enter a search query"
+              description="Please enter a search query to find cards." class="mb-4" />
+          </div>
+        </template>
+
         <template v-else>
           <UContainer>
             <div class="flex flex-col items-center">
@@ -210,17 +217,6 @@ const { data: searchResults, isLoading } = useQuery({
   50%
     opacity: 1
     transform: translate(-50%, -50%) scale(1.4)
-
-.no-results-container
-  margin-top: 40px
-  display: flex
-  align-items: center
-  justify-content: center
-  text-align: center
-  color: white
-  font-size: 1.5rem
-  display: flex
-  flex-direction: column
 
 .cache-stats-card
   background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
