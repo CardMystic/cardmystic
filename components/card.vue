@@ -11,19 +11,23 @@
       </div>
 
       <div class="confidence-bar"
-        :style="{ border: '1px solid black', borderRadius: '8px', height: progressHeight + 'px', background: '#222' }">
+        :style="{ border: '1px solid black', borderRadius: '8px', height: progressHeight + 'px', background: '#222', position: 'relative' }">
         <div :style="{
           width: normalizeScore(card.score) + '%',
           background: getScoreColor(card.score),
           height: '100%',
           borderRadius: '8px',
           transition: 'width 0.3s',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
         }">
-          <p class="confidence-text">{{ Math.ceil(normalizeScore(card.score)) }}%</p>
         </div>
+        <p class="confidence-text" :style="{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          margin: 0,
+          zIndex: 10
+        }">{{ Math.ceil(normalizeScore(card.score)) }}%</p>
       </div>
     </div>
   </div>
