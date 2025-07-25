@@ -17,8 +17,17 @@
     <form @submit.prevent="onSubmit" class="search-form">
       <div class="search-input-row">
         <!-- Regular search input -->
-        <UInput v-if="searchType === 'ai'" v-model="query.value.value" placeholder="Describe the cards you want..."
-          :error="query.errorMessage.value" icon="i-mdi-magnify" class="flex-grow-1" clearable @clear="clearQuery" />
+        <UInput ref="input" v-if="searchType === 'ai'" v-model="query.value.value"
+          placeholder="Describe the cards you want..." :error="query.errorMessage.value" icon="i-mdi-magnify"
+          class="flex-grow-1" :ui="{ trailing: 'pe-1' }">
+          <template v-if="query.value.value?.length" #trailing>
+            <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
+              @click="query.value.value = ''" />
+          </template>
+          <template #trailing>
+            <UKbd value="/" class="me-1" />
+          </template>
+        </UInput>
 
         <USelect v-else v-model="query.value.value" :options="cardNames" placeholder="Enter a card name..."
           icon="i-mdi-magnify" class="flex-grow-1" clearable />
@@ -49,6 +58,19 @@ const props = defineProps<{
 
 const route = useRoute();
 
+const queryParam = computed(() => String(route.query.query || route.query.card_name || ''));
+const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+
+const cardNames = ref<string[]>([]);
+const isLoading = ref(true);
+
+const input = ref();
+
+defineShortcuts({
+  '/': () => {
+    input.value?.inputRef?.focus()
+  }
+})
 // Initialize search type based on props or route
 const { searchType, setSearchType } = useSearchType();
 
@@ -154,7 +176,7 @@ watch(searchType, async (newType) => {
 .search-btn {
   margin-top: 0;
   align-self: flex-start;
-  cursor: pointer;
+  /* Match the height of the v-text-field input */
 }
 
 .filters-section {
