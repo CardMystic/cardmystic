@@ -29,12 +29,17 @@
         </template>
 
         <template v-else>
-          <div class="no-results-container">
-            <UAlert color="blue" icon="i-lucide-info" title="No results found"
-              :description="`No results found for '${cardNameParam}'. Try a different search term or check your filters.`"
-              class="mb-4" />
-            <UButton to="/" class="mt-4" color="primary">Home</UButton>
-          </div>
+          <UContainer>
+            <div class="flex flex-col items-center">
+              <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
+              <div class="font-bold text-2xl mb-2">No cards found</div>
+              <div class="subtitle2 mb-4">
+                Try adjusting your search terms or filters.<br>
+                If you think this is a mistake, <a :href="searchFeedbackUrl(getPageInfo())" target="_blank"
+                  class="important-text underline">let us know</a>.
+              </div>
+            </div>
+          </UContainer>
         </template>
       </div>
     </div>
@@ -217,17 +222,6 @@ const { data: searchResults, isLoading } = useQuery({
   50%
     opacity: 1
     transform: translate(-50%, -50%) scale(1.4)
-
-.no-results-container
-  margin-top: 40px
-  display: flex
-  align-items: center
-  justify-content: center
-  text-align: center
-  color: white
-  font-size: 1.5rem
-  display: flex
-  flex-direction: column
 
 .cache-stats-card
   background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
