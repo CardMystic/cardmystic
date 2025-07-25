@@ -1,21 +1,23 @@
 <template>
-  <footer
-    class="w-full bg-white/75 dark:bg-gray-950/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 z-50">
-    <UContainer class="py-6 text-left">
+  <div class="footer">
+    <UContainer class="footer-content">
       <!-- Social Links -->
-      <div class="flex justify-center items-start gap-4 mb-4">
-        <NuxtLink to="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
-          <UIcon name="i-simple-icons-github" size="24" class="text-white" />
-        </NuxtLink>
-        <NuxtLink to="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
-          <img src="/discord-icon.svg" width="24" height="24" alt="Discord" class="inline-block" />
-        </NuxtLink>
-        <NuxtLink to="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
-          <UIcon name="i-simple-icons-youtube" size="24" class="text-white" />
-        </NuxtLink>
-        <NuxtLink to="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
-          <UIcon name="i-simple-icons-patreon" size="24" class="text-white" />
-        </NuxtLink>
+      <div class="social-links mb-3">
+        <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
+          <UIcon name="i-mdi-github" class="icon" size="24" color="white" />
+        </a>
+
+        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
+          <img src="/discord-icon.svg" width="24" height="24" alt="Discord" style="vertical-align: middle;" />
+        </a>
+
+        <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
+          <UIcon name="i-mdi-youtube" class="icon" size="24" color="white" />
+        </a>
+
+        <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
+          <UIcon name="i-mdi-patreon" class="icon" size="24" color="white" />
+        </a>
       </div>
 
       <!-- Disclaimer -->
@@ -38,20 +40,76 @@
         </p>
       </div>
     </UContainer>
-  </footer>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+// Nuxt UI icons and container
 
 const { public: { commitHash: fullCommitHash } } = useRuntimeConfig();
 
-const commitHash = computed(() =>
-  typeof fullCommitHash === 'string' ? fullCommitHash.substring(0, 7) : 'dev'
-);
+const commitHash = computed(() => {
+  return typeof fullCommitHash === 'string' ? fullCommitHash.substring(0, 7) : 'dev';
+});
 
 const commitUrl = computed(() => {
   const hash = typeof fullCommitHash === 'string' ? fullCommitHash : 'main';
   return `https://github.com/CardMystic/cardmystic/commit/${hash}`;
 });
 </script>
+
+<style scoped lang="scss">
+.footer {
+  padding: 16px 0;
+  background-color: #161616;
+  height: auto;
+  position: relative; // Remove app positioning
+}
+
+.footer-content {
+  text-align: center;
+}
+
+.social-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.social-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: transform 0.2s;
+  text-decoration: none;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+}
+
+.disclaimer-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.commit-link {
+  color: rgba(147, 114, 255, 0.8);
+  text-decoration: none;
+  font-size: 10px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: rgb(147, 114, 255);
+    text-decoration: underline;
+  }
+}
+</style>

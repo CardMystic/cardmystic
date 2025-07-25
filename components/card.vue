@@ -1,10 +1,30 @@
 <template>
   <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
     <!-- Card content: image + score -->
-    <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
-      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}" />
-    <div v-else class="image-placeholder">
-      <p class="placeholder-text">{{ card.card_data.name }}</p>
+    <div class="card">
+      <div class="card-image-wrapper">
+        <img class="card-image" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
+          @error="handleImageError" v-if="getCardImageUrl(card.card_data)" />
+        <div v-else class="image-placeholder">
+          <p class="placeholder-text">{{ card.card_data.name }}</p>
+        </div>
+      </div>
+
+      <div class="confidence-bar"
+        :style="{ border: '1px solid black', borderRadius: '8px', height: progressHeight + 'px', background: '#222' }">
+        <div :style="{
+          width: normalizeScore(card.score) + '%',
+          background: getScoreColor(card.score),
+          height: '100%',
+          borderRadius: '8px',
+          transition: 'width 0.3s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }">
+          <p class="confidence-text">{{ Math.ceil(normalizeScore(card.score)) }}%</p>
+        </div>
+      </div>
     </div>
 
     <!-- Card Name and mana cost -->

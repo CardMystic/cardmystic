@@ -1,12 +1,10 @@
 <template>
-  <div class="fixed-fab">
-    <UTooltip :content="{
-      side: 'left',
-      sideOffset: 8
-    }" text="Report an issue with these results">
-      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft" @click="onClick && onClick()" />
-    </UTooltip>
-  </div>
+  <UTooltip text="Report an issue with these results">
+    <template #activator="{ open }">
+      <UButton icon="i-mdi-alert-circle-outline" color="surface-variant" class="fixed-fab" size="xl" circle
+        @click="onClick && onClick()" @mouseenter="open" @focus="open" />
+    </template>
+  </UTooltip>
 </template>
 
 <script lang="ts" setup>

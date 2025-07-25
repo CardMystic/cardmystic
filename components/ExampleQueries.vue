@@ -1,11 +1,9 @@
 <template>
-  <div class="mb-2">
-    <div v-if="isLoading" class="example-content">
-      <!-- Skeleton for query header -->
-      <div class="query-header">
-        <div class="flex items-center">
-          <USkeleton class="h-5 w-5 mr-2" />
-          <USkeleton class="h-6 w-48" />
+    <div class="example-query-container">
+        <div v-if="isLoading" class="text-center">
+            <!-- TODO: Fix this skeleton to look nicer -->
+            <USkeleton class="h-12 w-12 rounded-full" />
+            <p class="mt-2 text-white text-caption">Loading example...</p>
         </div>
         <div class="button-group">
           <USkeleton class="h-8 w-8" :ui="{ rounded: 'rounded-md' }" />
@@ -13,12 +11,35 @@
         </div>
       </div>
 
-      <!-- Skeleton for carousel cards -->
-      <div class="skeleton-carousel">
-        <div v-for="index in 6" :key="`skeleton-${index}`" class="skeleton-card">
-          <USkeleton class="h-32 w-full mb-2" :ui="{ rounded: 'rounded-lg' }" />
-          <USkeleton class="h-3 w-3/4 mb-1" />
-          <USkeleton class="h-3 w-1/2" />
+        <div v-else-if="results && results.length > 0" class="example-content">
+            <!-- Query display and TRY IT button -->
+            <div class="query-header">
+                <div class="query-text">
+                    <UIcon name="i-mdi-lightbulb-outline" class="mr-2" color="primary" />
+                    <span class="query-value">"{{ wordSearch.query }}"</span>
+                </div>
+                <div class="button-group">
+                    <UButton color="white" variant="outline" icon="i-mdi-refresh" @click="loadRandomExample"
+                        :loading="isLoading" class="refresh-button" size="sm" />
+                    <UButton color="primary" variant="outline" @click="tryQuery" class="try-button"
+                        icon="i-mdi-magnify">
+                        TRY
+                    </UButton>
+                </div>
+            </div>
+            <!-- Horizontal scrolling results -->
+            <div class="results-container">
+                <div class="results-scroll" ref="scrollContainer" @mousedown="startDrag" @mousemove="onDrag"
+                    @mouseup="endDrag" @mouseleave="endDrag">
+                    <!-- Cards with lazy loading and scroll fade effects -->
+                    <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
+                        class="result-card-wrapper" :ref="(el) => setCardRef(el, index)"
+                        :style="{ opacity: cardOpacities[index] || 0.8, transform: `scale(${cardScales[index] || 0.95})` }">
+                        <Card :card="result" :normalization-context="allScores" size="small"
+                            @click="goToCard(result.card_data.id)" class="hoverable-card" />
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
     </div>

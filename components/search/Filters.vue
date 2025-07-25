@@ -1,179 +1,152 @@
 <template>
   <div class="filters-container">
-    <!-- Active Filters Chips -->
-    <div v-if="hasActiveFilters" class="active-filters-section mb-4">
-      <div class="active-filters-chips">
-
-        <!-- Card Types Chips -->
-        <div v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`">
-          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="removeCardType(cardType)">{{ cardType }}
-          </UButton>
-        </div>
-
-        <!-- Colors Chips -->
-        <div v-for="color in selectedColors || []" :key="`color-${color}`">
-          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="removeColor(color)">
-            <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />{{ color }}
-          </UButton>
-        </div>
-
-        <!-- Rarities Chips -->
-        <div v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`">
-          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="removeRarity(rarity)">{{ rarity }}
-          </UButton>
-        </div>
-
-        <!-- Stats Chips -->
-        <div v-if="selectedCMC">
-          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="clearCMC()">CMC {{ selectedCMCOption || 'Equal To' }} {{
-              selectedCMC }}
-          </UButton>
-        </div>
-
-        <div v-if="selectedPower">
-          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="clearPower()">Power {{ selectedPowerOption || 'Equal To' }} {{
-              selectedPower }}
-          </UButton>
-        </div>
-
-        <div v-if="selectedToughness">
-          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="clearToughness()">Toughness {{ selectedToughnessOption || 'Equal To' }} {{
-              selectedToughness }}
-          </UButton>
-        </div>
-
-        <!-- Color Filter Option Chip -->
-        <div v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'">
-          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="clearColorFilterOption()">Color: {{ selectedColorFilterOption }}
-          </UButton>
-        </div>
-
-        <!-- Formats Chips -->
-        <template v-for="(formatItem, index) in selectedCardFormats || []" :key="`format-${index}`">
-          <div v-if="formatItem.format || formatItem.status">
-            <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-              icon="i-lucide-circle-x" @click="removeFormat(index)">{{ formatItem.format || 'Any' }} - {{
-                formatItem.status || 'Any Status' }}
-            </UButton>
-          </div>
-        </template>
-
-        <!-- Clear All Button -->
-        <UButton v-if="hasActiveFilters" color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters"
-          icon="i-lucide-circle-x">
-          Clear All
-        </UButton>
-      </div>
+    <div v-if="!modelValue" style="color: red; margin-bottom: 1rem;">
+      Warning: Filters component requires a <code>modelValue</code> prop.
     </div>
-    <UCollapsible class="flex flex-col gap-2 mb-4">
-      <UButton class="filters-toggle-btn mb-3 cursor-pointer" label="Filters" color="primary" variant="subtle"
-        trailing-icon="i-lucide-chevron-down" :ui="{
-          trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
-        }" block />
+    <template v-else>
+      <!-- Active Filters Chips -->
+      <div v-if="hasActiveFilters" class="active-filters-section mb-4">
+        <div class="active-filters-chips">
+          <!-- Card Types Chips -->
+          <UChip v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`" color="primary" size="sm"
+            class="ma-1" closable @close="removeCardType(cardType)">
+            {{ cardType }}
+          </UChip>
 
-      <!-- Filters Content -->
-      <template #content class="filters-content mb-4">
-        <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
-          <!-- Types Filter -->
-          <template #types>
-            <div class="accordion-item">
-              <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
-                class="w-full" />
-            </div>
+          <!-- Colors Chips -->
+          <UChip v-for="color in selectedColors || []" :key="`color-${color}`" color="primary" size="sm" class="ma-1"
+            closable @close="removeColor(color)">
+            <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />
+            {{ color }}
+          </UChip>
+
+          <!-- Rarities Chips -->
+          <UChip v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`" color="accent" size="sm"
+            class="ma-1" closable @close="removeRarity(rarity)">
+            {{ rarity }}
+          </UChip>
+
+          <!-- Stats Chips -->
+          <UChip v-if="selectedCMC" color="info" size="sm" class="ma-1" closable @close="clearCMC">
+            CMC {{ selectedCMCOption || 'Equal To' }} {{ selectedCMC }}
+          </UChip>
+
+          <UChip v-if="selectedPower" color="info" size="sm" class="ma-1" closable @close="clearPower">
+            Power {{ selectedPowerOption || 'Equal To' }} {{ selectedPower }}
+          </UChip>
+
+          <UChip v-if="selectedToughness" color="info" size="sm" class="ma-1" closable @close="clearToughness">
+            Toughness {{ selectedToughnessOption || 'Equal To' }} {{ selectedToughness }}
+          </UChip>
+
+          <!-- Color Filter Option Chip -->
+          <UChip v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'" color="warning"
+            size="sm" class="ma-1" closable @close="clearColorFilterOption">
+            Color: {{ selectedColorFilterOption }}
+          </UChip>
+
+          <!-- Formats Chips -->
+          <template v-for="(formatItem, index) in selectedCardFormats || []" :key="`format-${index}`">
+            <UChip v-if="formatItem.format || formatItem.status" color="success" size="sm" class="ma-1" closable
+              @close="removeFormat(index)">
+              {{ formatItem.format || 'Any' }} - {{ formatItem.status || 'Any Status' }}
+            </UChip>
           </template>
-          <!-- Colors Filter -->
-          <template #colors>
-            <div class="accordion-item">
-              <!-- Replace the non-functioning clearable USelect with a select + clear button -->
-              <div class="flex gap-2">
-                <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions"
-                  placeholder="Select How To Match Colors" class="w-full" />
 
-                <UButton v-if="selectedColorFilterOption" icon="i-lucide-x" color="neutral" variant="ghost"
-                  @click="clearColorFilterOption()" size="sm" class="flex-shrink-0" aria-label="Clear color filter">
+          <!-- Clear All Button -->
+          <UButton v-if="hasActiveFilters" color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters"
+            icon="i-lucide-close">
+            Clear All
+          </UButton>
+        </div>
+      </div>
+      <UCollapsible class="flex flex-col gap-2">
+        <UButton class="filters-toggle-btn mb-3" label="Filters" color="primary" variant="subtle"
+          trailing-icon="i-lucide-chevron-down" :ui="{
+            trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
+          }" block />
+
+        <!-- Filters Content -->
+        <template #content class="filters-content mb-4">
+          <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
+            <!-- Types Filter -->
+            <template #types>
+              <div class="accordion-item">
+                <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
+                  class="w-full" />
+              </div>
+            </template>
+
+            <!-- Colors Filter -->
+            <template #colors>
+              <div class="accordion-item">
+                <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions" placeholder="Color matching"
+                  clearable class="w-full" />
+                <div class="color-checkboxes">
+                  <UCheckboxGroup :items="cardColors" orientation="horizontal" variant="card" v-model="selectedColors"
+                    class="w-full">
+                    <template #label="{ item }">
+                      <ManaIcon :type="cardColorToSymbol(item.value)" class="mr-1" />
+                      {{ item.label }}
+                    </template>
+                  </UCheckboxGroup>
+                </div>
+              </div>
+            </template>
+
+            <!-- Rarities Filter -->
+            <template #rarities>
+              <div class="accordion-item">
+                <UCheckboxGroup :items="cardRarities" orientation="horizontal" variant="card"
+                  v-model="selectedRarities" />
+              </div>
+            </template>
+
+            <!-- Stats Filter -->
+            <template #stats>
+              <div class="accordion-item">
+                <div class="stats-grid">
+                  <div class="stat-group">
+                    <label class="stat-label">Mana Cost</label>
+                    <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption"
+                      :items="comparisonOperators" />
+                    <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number" />
+                  </div>
+                  <div class="stat-group">
+                    <label class="stat-label">Power</label>
+                    <USelect placeholder="Power Comparison" v-model="selectedPowerOption"
+                      :items="comparisonOperators" />
+                    <UInput v-model="selectedPower" placeholder="Any value, e.g. '2'" type="number" />
+                  </div>
+                  <div class="stat-group">
+                    <label class="stat-label">Toughness</label>
+                    <USelect placeholder="Toughness Comparison" v-model="selectedToughnessOption"
+                      :items="comparisonOperators" />
+                    <UInput v-model="selectedToughness" placeholder="Any value, e.g. '2'" type="number" />
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Formats Filter -->
+            <template #formats>
+              <div class="accordion-item">
+                <div v-if="selectedCardFormats && selectedCardFormats.length > 0">
+                  <div v-for="(format, i) in selectedCardFormats" :key="i" class="mb-3"
+                    style="display: flex; gap: 8px;">
+                    <USelect v-model="format.format" :items="cardFormats" label="Format" clearable />
+                    <USelect v-model="format.status" :items="cardFormatStatuses" label="Status" clearable />
+                  </div>
+                </div>
+                <UButton @click="addFormatRow" color="primary" size="sm" icon="i-lucide-plus">
+                  Add Format
                 </UButton>
               </div>
-
-              <!-- Warning if no color filter option is selected -->
-              <div v-if="!selectedColorFilterOption" class="mt-2 text-yellow-500 text-xs">
-                Please Select How To Match Colors before using Color Checkboxes
-              </div>
-
-              <!-- Disable checkboxes when a filter option is selected -->
-              <div class="color-checkboxes flex flex-wrap">
-                <UCheckboxGroup :disabled="!selectedColorFilterOption" :items="cardColors" :orientation="orientation"
-                  variant="card" v-model="selectedColors" class="w-full flex flex-wrap">
-                  <template #label="{ item }">
-                    <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
-                    <!-- Typescript gets confused with the CheckboxGroupItem type so we have to help it out a bit -->
-                    {{ (item as { value: string }).value }}
-                  </template>
-                </UCheckboxGroup>
-              </div>
-
-              <!-- Notification moved here and styled red -->
-              <div v-if="showNotification" class="mt-2 text-red-500 text-sm fade-out">
-                {{ notificationMessage }}
-              </div>
-            </div>
-          </template>
-          <!-- Rarities Filter -->
-          <template #rarities>
-            <div class="accordion-item flex flex-wrap">
-              <UCheckboxGroup :items="cardRarities" :orientation="orientation" variant="card"
-                v-model="selectedRarities" />
-            </div>
-          </template>
-          <!-- Stats Filter -->
-          <template #stats>
-            <div class="accordion-item">
-              <div class="stats-grid">
-                <div class="stat-group">
-                  <label class="stat-label">Mana Cost</label>
-                  <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption"
-                    :items="comparisonOperators" />
-                  <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number" />
-                </div>
-                <div class="stat-group">
-                  <label class="stat-label">Power</label>
-                  <USelect placeholder="Power Comparison" v-model="selectedPowerOption" :items="comparisonOperators" />
-                  <UInput v-model="selectedPower" placeholder="Any value, e.g. '2'" type="number" />
-                </div>
-                <div class="stat-group">
-                  <label class="stat-label">Toughness</label>
-                  <USelect placeholder="Toughness Comparison" v-model="selectedToughnessOption"
-                    :items="comparisonOperators" />
-                  <UInput v-model="selectedToughness" placeholder="Any value, e.g. '2'" type="number" />
-                </div>
-              </div>
-            </div>
-          </template>
-          <!-- Formats Filter -->
-          <template #formats>
-            <div class="accordion-item">
-              <div v-if="selectedCardFormats && selectedCardFormats.length > 0">
-                <div v-for="(format, i) in selectedCardFormats" :key="i" class="mb-3" style="display: flex; gap: 8px;">
-                  <USelect class="min-w-[160px]" v-model="format.format" :items="cardFormats" label="Format"
-                    clearable />
-                  <USelect class="min-w-[160px]" v-model="format.status" :items="cardFormatStatuses" label="Status"
-                    clearable />
-                </div>
-              </div>
-              <UButton @click="addFormatRow" color="primary" size="sm" icon="i-lucide-plus">
-                Add Format
-              </UButton>
-            </div>
-          </template>
-        </UAccordion>
-      </template>
-    </UCollapsible>
+            </template>
+          </UAccordion>
+        </template>
+      </UCollapsible>
+    </template>
   </div>
 </template>
 <script lang="ts" setup>
@@ -187,26 +160,12 @@ import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
 
-const screenWidth = ref(0)
-
-onMounted(() => {
-  screenWidth.value = window.innerWidth
-  window.addEventListener('resize', () => {
-    if (window && window.innerWidth) {
-      screenWidth.value = window.innerWidth;
-    }
-  })
-})
-
-const orientation: Ref<'vertical' | 'horizontal'> = computed(() =>
-  screenWidth.value < 768 ? 'vertical' : 'horizontal'
-)
-
 const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: CardSearchFilters]
 }>();
+
 
 const items = [
   {
@@ -252,9 +211,8 @@ const comparisonOperators = [
 ];
 
 function updateFilters(updates: Partial<CardSearchFilters>) {
-  const current = modelValue || {} as CardSearchFilters;
-  const newValue = { ...current, ...updates };
-  emit('update:modelValue', newValue);
+  const current = modelValue ?? {} as CardSearchFilters;
+  emit('update:modelValue', { ...current, ...updates });
 }
 
 // Computed property to check if there are any active filters
@@ -318,51 +276,9 @@ const cardColors = CardColor.options.map(color => ({
   value: color
 })) as CheckboxGroupItem[];
 
-const showNotification = ref(false);
-const notificationMessage = ref('');
-
 const selectedColors = computed({
   get: () => modelValue?.selectedColors || [],
-  set: (value) => {
-    const colorOption = modelValue?.selectedColorFilterOption;
-
-    // Only apply validation for these specific filter options
-    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least') {
-      const hasColorless = value.includes('Colorless');
-      const hasOtherColors = value.some(color => color !== 'Colorless');
-
-      // If we have both colorless and other colors, decide which to keep
-      if (hasColorless && hasOtherColors) {
-        // Get the previous selection
-        const previousSelection = modelValue?.selectedColors || [];
-
-        // Determine what changed by comparing previous and current selection
-        if (!previousSelection.includes('Colorless')) {
-          // Colorless was just added, remove all other colors
-          value = ['Colorless'];
-          notificationMessage.value = 'Colorless cards cannot have other colors. Other color selections have been removed.';
-          showNotification.value = true;
-
-          // Auto-hide the notification after 3 seconds
-          setTimeout(() => {
-            showNotification.value = false;
-          }, 3000);
-        } else {
-          // Another color was added, remove Colorless
-          value = value.filter(color => color !== 'Colorless');
-          notificationMessage.value = 'Colored cards cannot also be colorless. Colorless has been removed from your selection.';
-          showNotification.value = true;
-
-          // Auto-hide the notification after 3 seconds
-          setTimeout(() => {
-            showNotification.value = false;
-          }, 3000);
-        }
-      }
-    }
-
-    updateFilters({ selectedColors: value });
-  }
+  set: (value) => updateFilters({ selectedColors: value })
 });
 
 const cardRarities = CardRarity.options.map(rarity => ({
@@ -391,17 +307,17 @@ const selectedToughnessOption = computed({
 });
 
 const selectedCMC = computed({
-  get: () => modelValue?.selectedCMC ? Number(modelValue.selectedCMC) : undefined,
+  get: () => Number(modelValue?.selectedCMC),
   set: (value) => updateFilters({ selectedCMC: value ? String(value) : undefined })
 });
 
 const selectedPower = computed({
-  get: () => modelValue?.selectedPower ? Number(modelValue.selectedPower) : undefined,
+  get: () => Number(modelValue?.selectedPower),
   set: (value) => updateFilters({ selectedPower: value ? String(value) : undefined })
 });
 
 const selectedToughness = computed({
-  get: () => modelValue?.selectedToughness ? Number(modelValue.selectedToughness) : undefined,
+  get: () => Number(modelValue?.selectedToughness),
   set: (value) => updateFilters({ selectedToughness: value ? String(value) : undefined })
 });
 
@@ -531,6 +447,13 @@ function clearAllFilters() {
   width: 100%;
 }
 
+.color-checkboxes>div {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -561,17 +484,7 @@ function clearAllFilters() {
   animation: fadeOut 3s forwards;
 }
 
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-  }
-
-  80% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
+.v-expansion-panel-text {
+  padding-top: 16px;
 }
 </style>

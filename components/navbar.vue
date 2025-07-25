@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-const mainItems: NavigationMenuItem[] = [
-  {
-    label: 'Home',
-    icon: 'i-lucide-home',
-    to: '/'
-  },
+const items = ref<NavigationMenuItem[]>([
   {
     label: 'Search',
     icon: 'i-lucide-search',
@@ -20,44 +15,16 @@ const mainItems: NavigationMenuItem[] = [
       {
         label: 'Similarity Search',
         description: 'Search for similar cards by name',
-        icon: 'i-mdi-cards-outline',
+        icon: 'i-lucide-magnifying-glass',
         to: '/search/similarity',
-      }
+      },
     ]
   },
   {
     label: 'About',
     icon: 'i-lucide-info',
     to: '/about'
-  }
-]
-
-const mainItemsMobile: NavigationMenuItem[] = [
-  {
-    label: 'Home',
-    icon: 'i-lucide-home',
-    to: '/'
   },
-  {
-    label: 'AI Search',
-    description: 'Search for cards using AI',
-    icon: 'i-lucide-brain',
-    to: '/search',
-  },
-  {
-    label: 'Similarity Search',
-    description: 'Search for similar cards by name',
-    icon: 'i-mdi-cards-outline',
-    to: '/search/similarity',
-  },
-  {
-    label: 'About',
-    icon: 'i-lucide-info',
-    to: '/about'
-  }
-]
-
-const externalItems: NavigationMenuItem[] = [
   {
     label: 'GitHub',
     icon: 'i-simple-icons-github',
@@ -65,47 +32,13 @@ const externalItems: NavigationMenuItem[] = [
     target: '_blank'
   },
   {
-    label: 'Patreon',
-    icon: 'i-simple-icons-patreon',
-    to: 'https://www.patreon.com/thecardmystic',
-    target: '_blank'
+    label: 'Help',
+    icon: 'i-lucide-circle-help',
+    disabled: true
   }
-]
+])
 </script>
 
 <template>
-  <header
-    class="sticky top-0 z-50 bg-white/75 dark:bg-gray-950/75 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
-
-    <!-- Mobile -->
-    <UPopover class="md:hidden">
-      <UButton color="neutral" variant="subtle" icon="i-lucide-menu" />
-
-      <template #content>
-        <div class="p-4 w-64 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2">
-          <NuxtLink v-for="item in mainItemsMobile" :to="item.to" class="flex items-center gap-2">
-            <UIcon :name="item.icon!" class="w-5 h-5" />
-            <div class="flex flex-col">
-              <span>{{ item.label }}</span>
-              <span class="text-sm text-gray-500" v-if="item.description">{{ item.description }}</span>
-            </div>
-          </NuxtLink>
-        </div>
-      </template>
-    </UPopover>
-
-    <!-- Desktop -->
-    <div class="hidden md:flex justify-center flex-1">
-      <UNavigationMenu :items="[...mainItems, ...externalItems]" :ui="{
-        viewport: 'w-auto min-w-[12rem] max-w-sm',
-        childList: 'w-auto flex flex-col items-start p-2 gap-2',
-        content: 'w-auto'
-      }" />
-    </div>
-
-    <!-- Mobile: GitHub & Patreon -->
-    <div class="flex md:hidden items-center gap-4">
-      <UNavigationMenu :items="externalItems" />
-    </div>
-  </header>
+  <UNavigationMenu :items="items" class="w-full justify-center" />
 </template>

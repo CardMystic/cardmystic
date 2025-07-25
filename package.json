@@ -34,10 +34,6 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.26.0",
-		"@iconify-json/heroicons": "^1.2.2",
-		"@iconify-json/lucide": "^1.2.60",
-		"@iconify-json/mdi": "^1.2.3",
-		"@iconify-json/simple-icons": "^1.2.46",
 		"eslint": "^9.26.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prettier": "^5.4.0",
@@ -45,7 +41,6 @@
 		"globals": "^16.1.0",
 		"prettier": "^3.5.3",
 		"sass-embedded": "^1.83.4",
-		"typescript-eslint": "^8.32.1",
-		"vite-plugin-devtools-json": "^0.4.1"
+		"typescript-eslint": "^8.32.1"
 	}
 }

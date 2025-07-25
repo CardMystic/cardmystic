@@ -4,7 +4,7 @@
     <div class="search-tabs-container mb-4">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
-        <UIcon name="i-lucide-search" class="icon" size="18" />
+        <UIcon name="i-mdi-magnify" class="icon" size="18" />
         AI Search
       </button>
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'similarity' }]"
@@ -14,14 +14,23 @@
       </button>
     </div>
 
-    <!-- <UForm class="search-form" @submit="onSubmit"> -->
-    <div class="search-input-row">
-      <!-- Regular search input -->
-      <AISearch v-if="searchType === 'ai'" />
+    <form @submit.prevent="onSubmit" class="search-form">
+      <div class="search-input-row">
+        <!-- Regular search input -->
+        <UInput v-if="searchType === 'ai'" v-model="query.value.value" placeholder="Describe the cards you want..."
+          :error="query.errorMessage.value" icon="i-mdi-magnify" class="flex-grow-1" clearable @clear="clearQuery" />
 
-      <!-- Select Menu for similarity search -->
-      <SimilaritySearch v-else-if="searchType === 'similarity'" />
-    </div>
+        <USelect v-else v-model="query.value.value" :options="cardNames" placeholder="Enter a card name..."
+          icon="i-mdi-magnify" class="flex-grow-1" clearable />
+        <UButton type="submit" color="primary" class="ml-2 search-btn" size="lg">
+          Search
+        </UButton>
+      </div>
+
+      <div class="filters-section mt-4">
+        <Filters v-model="filters.value.value" />
+      </div>
+    </form>
   </div>
 </template>
 

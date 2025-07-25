@@ -13,15 +13,7 @@ function getCommitHash() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  app: {
-    head: {
-      title: 'CardMystic', // default fallback title
-      htmlAttrs: {
-        lang: 'en',
-      },
-      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
-    },
-  },
+  app: {},
   compatibilityDate: '2025-05-15',
   css: ['~/assets/css/main.css'],
   devtools: {
@@ -40,19 +32,9 @@ export default defineNuxtConfig({
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
-  modules: [
-    '@nuxt/ui',
-    '@vee-validate/nuxt',
-    '@nuxtjs/device',
-    'nuxt-vitalizer',
-  ],
+  modules: ['@nuxt/ui', '@vee-validate/nuxt', '@nuxtjs/device'],
   fonts: {
     families: [{ name: 'Alfa Slab One', provider: 'google' }],
-  },
-  routeRules: {
-    '/': {
-      prerender: true,
-    },
   },
   vite: {
     server: {
@@ -62,9 +44,7 @@ export default defineNuxtConfig({
       },
     },
     ssr: {},
-    plugins: [
-      ...(process.env.NODE_ENV === 'development' ? [devtoolsJson()] : []),
-    ],
+    plugins: [],
     css: {
       preprocessorOptions: {
         sass: {

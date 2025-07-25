@@ -1,13 +1,9 @@
 <template>
-  <div class="layout-container">
-    <navbar />
-    <main class="main-content">
-      <UContainer class="flex responsive-align" style="padding-top: 0px">
-        <slot />
-      </UContainer>
-    </main>
-    <Footer />
-  </div>
+  <navbar />
+  <UContainer>
+    <slot />
+  </UContainer>
+  <Footer />
 </template>
 
 <script setup lang="ts">
