@@ -29,16 +29,11 @@
             </div>
             <!-- Horizontal scrolling results -->
             <div class="results-container">
-                <div class="results-scroll" ref="scrollContainer" @mousedown="startDrag" @mousemove="onDrag"
-                    @mouseup="endDrag" @mouseleave="endDrag">
-                    <!-- Cards with lazy loading and scroll fade effects -->
-                    <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
-                        class="result-card-wrapper" :ref="(el) => setCardRef(el, index)"
-                        :style="{ opacity: cardOpacities[index] || 0.8, transform: `scale(${cardScales[index] || 0.95})` }">
-                        <Card :card="result" :normalization-context="allScores" size="small"
-                            @click="goToCard(result.card_data.id)" class="hoverable-card" />
-                    </div>
-                </div>
+                <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results"
+                    :ui="{ item: 'basis-1/6' }">
+                    <Card :card="item" :normalization-context="allScores" size="small"
+                        @click="goToCard(item.card_data.id)" class="hoverable-card" />
+                </UCarousel>
             </div>
         </div>
       </div>
@@ -71,37 +66,73 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useQuery } from '@tanstack/vue-query'
 import { type ExampleQueryResponse } from '~/models/searchModel';
 const router = useRouter();
 
+const currentQuery = ref<string>('creatures that draw cards');
+
+const wordSearch = computed(() =>
+    WordSearchSchema.parse({
+        query: currentQuery.value,
+        limit: 15, // Reduced from DefaultLimit for performance
+        exclude_card_data: false, // Default to false, can be overridden by query param
+    })
+);
+
 // Computed property to get all scores for normalization context
 const allScores = computed(() => results.value?.cards.map((r) => r.score || 0) || []);
 
-const { data: results, isLoading, refetch } = useQuery({
-  queryKey: [
-    'search',
-    'example',
-  ],
-  queryFn: async () => {
-    const response = await fetch('/api/search/example', {
-      method: 'GET',
-    });
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json() as Promise<ExampleQueryResponse>;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: true, // Enable lazy loading
-  refetchOnWindowFocus: false,
+// Example queries to choose from
+const exampleQueries = [
+    "creatures that draw cards",
+    "stax pieces",
+    "blue cantrips",
+    "adventure ramp",
+    "orzhov removal",
+    "black creatures with flying",
+    "etb effects",
+    "artifact removal",
+    "x spell board wipes",
+    "low cost sultai commanders",
+    "mono white token finishers",
+    "golgari elves that draw",
+    "five color dragon commander",
+    "red burn",
+    "graveyard recursion",
+];
+
+onMounted(async () => {
+    await loadRandomExample();
 });
 
-// Call refetch() to manually trigger the query again
-function loadRandomExample() {
-  refetch();
+
+async function loadRandomExample() {
+    const randomIndex = Math.floor(Math.random() * exampleQueries.length);
+    currentQuery.value = exampleQueries[randomIndex];
 }
+
+const { data: results, isLoading } = useQuery({
+    queryKey: [
+        'search',
+        'colbert',
+        wordSearch,
+    ],
+    queryFn: async () => {
+        const response = await fetch('/api/search/colbert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(wordSearch.value),
+        });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json() as Promise<Array<Card>>;
+    },
+    staleTime: 1000 * 60 * 15, // 15 minutes
+});
+
 
 function tryQuery() {
   // Navigate to search page with the current query
@@ -114,11 +145,11 @@ function tryQuery() {
 }
 
 function goToCard(cardId: string | undefined) {
-  if (!cardId) {
-    console.warn('Cannot navigate to card: ID is undefined');
-    return;
-  }
-  router.push(`/card/${cardId}`);
+    if (!cardId) {
+        console.warn('Cannot navigate to card: ID is undefined');
+        return;
+    }
+    router.push(`/card/${cardId}`);
 }
 </script>
 
@@ -182,5 +213,5 @@ function goToCard(cardId: string | undefined) {
 .hoverable-card
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important
   &:hover
-    transform: scale(1.02)
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)) saturate(110%) brightness(105%)
 </style>
