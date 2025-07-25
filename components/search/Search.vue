@@ -17,8 +17,17 @@
     <form @submit.prevent="onSubmit" class="search-form">
       <div class="search-input-row">
         <!-- Regular search input -->
-        <UInput v-if="searchType === 'ai'" v-model="query.value.value" placeholder="Describe the cards you want..."
-          :error="query.errorMessage.value" icon="i-mdi-magnify" class="flex-grow-1" clearable @clear="clearQuery" />
+        <UInput ref="input" v-if="searchType === 'ai'" v-model="query.value.value"
+          placeholder="Describe the cards you want..." :error="query.errorMessage.value" icon="i-mdi-magnify"
+          class="flex-grow-1" :ui="{ trailing: 'pe-1' }">
+          <template v-if="query.value.value?.length" #trailing>
+            <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
+              @click="query.value.value = ''" />
+          </template>
+          <template #trailing>
+            <UKbd value="/" class="me-1" />
+          </template>
+        </UInput>
 
         <USelect v-else v-model="query.value.value" :options="cardNames" placeholder="Enter a card name..."
           icon="i-mdi-magnify" class="flex-grow-1" clearable />
@@ -58,6 +67,13 @@ const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSche
 const cardNames = ref<string[]>([]);
 const isLoading = ref(true);
 
+const input = ref();
+
+defineShortcuts({
+  '/': () => {
+    input.value?.inputRef?.focus()
+  }
+})
 // Initialize search type based on props or route
 const { searchType, setSearchType } = useSearchType()
 
@@ -242,7 +258,6 @@ function clearQuery() {
 .search-btn {
   margin-top: 0;
   align-self: flex-start;
-  height: 56px;
   /* Match the height of the v-text-field input */
 }
 
@@ -271,7 +286,6 @@ function clearQuery() {
     width: 100%;
     margin-left: 0 !important;
     align-self: flex-start;
-    height: 56px !important;
     font-size: 18px;
     font-weight: 500;
   }
