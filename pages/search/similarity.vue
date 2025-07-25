@@ -1,47 +1,45 @@
 <template>
-  <v-container class="fill-height d-flex align-start justify-center pt-0">
-    <v-col justify="center" align="center" class="col-container pt-4">
+  <div class="min-h-screen flex flex-col items-center justify-start pt-0 mb-6">
+    <div class="w-full max-w-7xl px-4 pt-4 flex flex-col items-center">
 
-      <SearchForm similarity class="mt-6" style="max-width: 1096px" />
+      <SearchForm similarity class="mt-6 w-full" style="max-width: 1096px" />
 
       <!-- Results -->
-      <div style="max-width: 1072px" class="mt-6">
+      <div style="max-width: 1072px" class="mt-3 w-full">
 
         <template v-if="isLoading">
-          <v-row>
-            <v-col cols="12" class="text-center">
-              <v-progress-circular indeterminate color="primary" />
-            </v-col>
-          </v-row>
+          <div class="flex justify-center items-center py-12">
+            <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-3xl" />
+          </div>
         </template>
 
         <template v-else-if="searchResults && searchResults.length">
-          <v-row>
-            <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in searchResults" :key="result.card_data.id">
-              <card :card="result" @click="navigateToCard(result.card_data.id)" :is-similarity-search="true" />
-            </v-col>
-          </v-row>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div v-for="result in searchResults" :key="result.card_data.id" class="cursor-pointer"
+              @click="navigateToCard(result.card_data.id)">
+              <card :card="result" :is-similarity-search="true" />
+            </div>
+          </div>
         </template>
 
         <template v-else-if="!cardNameParam">
           <div class="no-results-container">
-            <v-alert type="info" class="mb-4">
-              Please enter a card name to search for similar cards.
-            </v-alert>
+            <UAlert color="blue" icon="i-lucide-info" title="Enter a card name"
+              description="Please enter a card name to search for similar cards." class="mb-4" />
           </div>
         </template>
 
         <template v-else>
           <div class="no-results-container">
-            <v-alert type="info" class="mb-4">
-              No results found for "{{ cardNameParam }}". Try a different search term or check your filters.
-            </v-alert>
-            <v-btn to="/" class="mt-4" color="primary">Home</v-btn>
+            <UAlert color="blue" icon="i-lucide-info" title="No results found"
+              :description="`No results found for '${cardNameParam}'. Try a different search term or check your filters.`"
+              class="mb-4" />
+            <UButton to="/" class="mt-4" color="primary">Home</UButton>
           </div>
         </template>
       </div>
-    </v-col>
-  </v-container>
+    </div>
+  </div>
   <IssuesFab :onClick="handleFabClick" />
 </template>
 
@@ -53,6 +51,7 @@ import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
+import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 
 const router = useRouter();
 const route = useRoute();
@@ -154,9 +153,6 @@ const { data: searchResults, isLoading } = useQuery({
   position: relative
   bottom: -35px
 
-.col-container
-  position: relative
-
 .title-container
   display: flex
   flex-direction: column
@@ -169,7 +165,7 @@ const { data: searchResults, isLoading } = useQuery({
 
 .title
   font-size: 3.5rem
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
 
 .subtitle
@@ -184,9 +180,8 @@ const { data: searchResults, isLoading } = useQuery({
   position: relative
   top: -14px
 
-
 .important-text
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   font-style: italic
 
 .chip
@@ -196,7 +191,7 @@ const { data: searchResults, isLoading } = useQuery({
   background-color: black
 
 .primary
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
 
 .glow-wrapper
   position: relative
@@ -235,12 +230,6 @@ const { data: searchResults, isLoading } = useQuery({
   display: flex
   flex-direction: column
 
-.filters-btn
-  width: 40px
-  height: 56px
-  border-radius: 4px
-  margin-left: 12px
-
 .cache-stats-card
   background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
   border: 1px solid rgba(33, 150, 243, 0.3) !important
@@ -272,6 +261,6 @@ const { data: searchResults, isLoading } = useQuery({
   font-size: 0.9rem
 
 .stat-value
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   font-weight: 600
 </style>
