@@ -32,9 +32,10 @@ const items = ref<NavigationMenuItem[]>([
     target: '_blank'
   },
   {
-    label: 'Help',
-    icon: 'i-lucide-circle-help',
-    disabled: true
+    label: 'Patreon',
+    icon: 'i-simple-icons-patreon',
+    to: 'https://www.patreon.com/thecardmystic',
+    target: '_blank'
   }
 ])
 </script>
