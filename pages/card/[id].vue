@@ -46,7 +46,20 @@
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-[300px]">
           <USelect v-model="selectedPrinting" :items="printingOptions" option-attribute="label" value-attribute="id"
-            placeholder="Select Printing" class="printing-select" />
+            placeholder="Select Printing" class="printing-select w-[300px]">
+            <template #item="{ item }">
+              <div class="flex items-center gap-3 py-2">
+                <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
+                <div class="flex flex-col">
+                  <span class="font-semibold">{{ item.label }}</span>
+                  <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
+                  <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
+                    }}</span>
+                  <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
+                </div>
+              </div>
+            </template>
+          </USelect>
         </div>
 
         <!-- Similar Cards Button - Desktop only -->
