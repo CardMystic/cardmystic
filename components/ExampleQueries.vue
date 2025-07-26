@@ -1,65 +1,33 @@
 <template>
-    <div class="example-query-container">
-        <div v-if="isLoading" class="text-center">
-            <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
-            <p class="mt-2 text-white text-caption">Loading example...</p>
-        </div>
-        <div class="button-group">
-          <USkeleton class="h-8 w-8" :ui="{ rounded: 'rounded-md' }" />
-          <USkeleton class="h-8 w-12" :ui="{ rounded: 'rounded-md' }" />
-        </div>
-      </div>
-
-        <div v-else-if="results && results.length > 0" class="example-content">
-            <!-- Query display and TRY IT button -->
-            <div class="query-header">
-                <div class="query-text">
-                    <UIcon name="i-mdi-lightbulb-outline" class="mr-2" color="primary" />
-                    <span class="query-value">"{{ wordSearch.query }}"</span>
-                </div>
-                <div class="button-group">
-                    <UButton color="white" variant="outline" icon="i-mdi-refresh" @click="loadRandomExample"
-                        :loading="isLoading" class="refresh-button" size="sm" />
-                    <UButton color="primary" variant="outline" @click="tryQuery" class="try-button"
-                        icon="i-mdi-magnify">
-                        TRY
-                    </UButton>
-                </div>
-            </div>
-            <!-- Horizontal scrolling results -->
-            <div class="results-container">
-                <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results"
-                    :ui="{ item: 'basis-1/6' }">
-                    <Card :card="item" :normalization-context="allScores" size="small"
-                        @click="goToCard(item.card_data.id)" class="hoverable-card" />
-                </UCarousel>
-            </div>
-        </div>
-      </div>
+  <div class="example-query-container mb-2">
+    <div v-if="isLoading" class="text-center">
+      <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
+      <p class="mt-2 text-white text-caption">Loading example...</p>
     </div>
 
-    <div v-else-if="results && results.cards.length > 0" class="example-content">
+    <div v-else-if="results && results.length > 0" class="example-content">
       <!-- Query display and TRY IT button -->
       <div class="query-header">
-        <div>
-          <UIcon name="i-lucide-lightbulb" class="mr-2" color="primary" />
-          <span class="query-value">"{{ results.query }}"</span>
+        <div class="query-text">
+          <UIcon name="i-mdi-lightbulb-outline" class="mr-2" color="primary" />
+          <span class="query-value">"{{ wordSearch.query }}"</span>
         </div>
         <div class="button-group">
-          <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
-            :loading="isLoading" size="sm" class="cursor-pointer" />
-          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search" class="cursor-pointer">
+          <UButton color="neutral" variant="outline" icon="i-mdi-refresh" @click="loadRandomExample"
+            :loading="isLoading" class="refresh-button" size="sm" />
+          <UButton color="primary" variant="outline" @click="tryQuery" class="try-button" icon="i-lucide-search">
             TRY
           </UButton>
         </div>
       </div>
       <!-- Horizontal scrolling results -->
-      <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results.cards" :ui="{
-        item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
-      }">
-        <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
-          class="hoverable-card my-1 cursor-pointer" />
-      </UCarousel>
+      <div class="results-container">
+        <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results"
+          :ui="{ item: 'basis-1/6' }">
+          <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
+            class="hoverable-card" />
+        </UCarousel>
+      </div>
     </div>
   </div>
 </template>
@@ -73,11 +41,11 @@ const router = useRouter();
 const currentQuery = ref<string>('creatures that draw cards');
 
 const wordSearch = computed(() =>
-    WordSearchSchema.parse({
-        query: currentQuery.value,
-        limit: 15, // Reduced from DefaultLimit for performance
-        exclude_card_data: false, // Default to false, can be overridden by query param
-    })
+  WordSearchSchema.parse({
+    query: currentQuery.value,
+    limit: 15, // Reduced from DefaultLimit for performance
+    exclude_card_data: false, // Default to false, can be overridden by query param
+  })
 );
 
 // Computed property to get all scores for normalization context
@@ -85,51 +53,51 @@ const allScores = computed(() => results.value?.cards.map((r) => r.score || 0) |
 
 // Example queries to choose from
 const exampleQueries = [
-    "creatures that draw cards",
-    "stax pieces",
-    "blue cantrips",
-    "adventure ramp",
-    "orzhov removal",
-    "black creatures with flying",
-    "etb effects",
-    "artifact removal",
-    "x spell board wipes",
-    "low cost sultai commanders",
-    "mono white token finishers",
-    "golgari elves that draw",
-    "five color dragon commander",
-    "red burn",
-    "graveyard recursion",
+  "creatures that draw cards",
+  "stax pieces",
+  "blue cantrips",
+  "adventure ramp",
+  "orzhov removal",
+  "black creatures with flying",
+  "etb effects",
+  "artifact removal",
+  "x spell board wipes",
+  "low cost sultai commanders",
+  "mono white token finishers",
+  "golgari elves that draw",
+  "five color dragon commander",
+  "red burn",
+  "graveyard recursion",
 ];
 
 onMounted(async () => {
-    await loadRandomExample();
+  await loadRandomExample();
 });
 
 
 async function loadRandomExample() {
-    const randomIndex = Math.floor(Math.random() * exampleQueries.length);
-    currentQuery.value = exampleQueries[randomIndex];
+  const randomIndex = Math.floor(Math.random() * exampleQueries.length);
+  currentQuery.value = exampleQueries[randomIndex];
 }
 
 const { data: results, isLoading } = useQuery({
-    queryKey: [
-        'search',
-        'colbert',
-        wordSearch,
-    ],
-    queryFn: async () => {
-        const response = await fetch('/api/search/colbert', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(wordSearch.value),
-        });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json() as Promise<Array<Card>>;
-    },
-    staleTime: 1000 * 60 * 15, // 15 minutes
+  queryKey: [
+    'search',
+    'colbert',
+    wordSearch,
+  ],
+  queryFn: async () => {
+    const response = await fetch('/api/search/colbert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(wordSearch.value),
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json() as Promise<Array<Card>>;
+  },
+  staleTime: 1000 * 60 * 15, // 15 minutes
 });
 
 
@@ -138,17 +106,17 @@ function tryQuery() {
   router.push({
     name: 'search',
     query: {
-      query: results.value?.query,
+      query: wordSearch.value.query,
     },
   });
 }
 
 function goToCard(cardId: string | undefined) {
-    if (!cardId) {
-        console.warn('Cannot navigate to card: ID is undefined');
-        return;
-    }
-    router.push(`/card/${cardId}`);
+  if (!cardId) {
+    console.warn('Cannot navigate to card: ID is undefined');
+    return;
+  }
+  router.push(`/card/${cardId}`);
 }
 </script>
 

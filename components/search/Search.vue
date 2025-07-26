@@ -4,7 +4,7 @@
     <div class="search-tabs-container mb-4">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
-        <UIcon name="i-mdi-magnify" class="icon" size="18" />
+        <UIcon name="i-lucide-search" class="icon" size="18" />
         AI Search
       </button>
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'similarity' }]"
@@ -14,32 +14,14 @@
       </button>
     </div>
 
-    <form @submit.prevent="onSubmit" class="search-form">
-      <div class="search-input-row">
-        <!-- Regular search input -->
-        <UInput ref="input" v-if="searchType === 'ai'" v-model="query.value.value"
-          placeholder="Describe the cards you want..." :error="query.errorMessage.value" icon="i-mdi-magnify"
-          class="flex-grow-1" :ui="{ trailing: 'pe-1' }">
-          <template v-if="query.value.value?.length" #trailing>
-            <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
-              @click="query.value.value = ''" />
-          </template>
-          <template #trailing>
-            <UKbd value="/" class="me-1" />
-          </template>
-        </UInput>
+    <!-- <UForm class="search-form" @submit="onSubmit"> -->
+    <div class="search-input-row">
+      <!-- Regular search input -->
+      <AISearch v-if="searchType === 'ai'" />
 
-        <USelect v-else v-model="query.value.value" :options="cardNames" placeholder="Enter a card name..."
-          icon="i-mdi-magnify" class="flex-grow-1" clearable />
-        <UButton type="submit" color="primary" class="ml-2 search-btn" size="lg">
-          Search
-        </UButton>
-      </div>
-
-      <div class="filters-section mt-4">
-        <Filters v-model="filters.value.value" />
-      </div>
-    </form>
+      <!-- Select Menu for similarity search -->
+      <SimilaritySearch v-else-if="searchType === 'similarity'" />
+    </div>
   </div>
 </template>
 
@@ -58,19 +40,6 @@ const props = defineProps<{
 
 const route = useRoute();
 
-const queryParam = computed(() => String(route.query.query || route.query.card_name || ''));
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
-
-const cardNames = ref<string[]>([]);
-const isLoading = ref(true);
-
-const input = ref();
-
-defineShortcuts({
-  '/': () => {
-    input.value?.inputRef?.focus()
-  }
-})
 // Initialize search type based on props or route
 const { searchType, setSearchType } = useSearchType();
 
@@ -94,45 +63,6 @@ watch(searchType, async (newType) => {
   }
 });
 
-// Function to load card names
-async function loadCardNames() {
-  try {
-    const response = await fetch('/card-names.min.json');
-    cardNames.value = await response.json();
-  } catch (error) {
-    console.error('Failed to load card names:', error);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-const formSchema = toTypedSchema(WordSearchSchema);
-const form = useForm({
-  validationSchema: formSchema,
-  initialValues: {
-    query: queryParam.value || '',
-    filters: parsedFilters.value || {}
-  }
-});
-
-const query = useField<string>('query');
-const filters = useField<CardSearchFilters>('filters');
-
-const onSubmit = form.handleSubmit((values) => {
-  if (searchType.value === 'similarity') {
-    const query: Record<string, any> = {
-      card_name: values.query,
-      filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
-    };
-    navigateTo({ path: '/search/similarity', query });
-  } else {
-    const query: Record<string, any> = {
-      query: values.query,
-      filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
-    };
-    navigateTo({ path: '/search', query });
-  }
-})
 </script>
 
 <style scoped>
@@ -215,7 +145,6 @@ const onSubmit = form.handleSubmit((values) => {
 .search-btn {
   margin-top: 0;
   align-self: flex-start;
-  /* Match the height of the v-text-field input */
 }
 
 .filters-section {
@@ -238,7 +167,7 @@ const onSubmit = form.handleSubmit((values) => {
   }
 
   .search-container {
-    padding: 0 0px;
+    padding: 0 16px;
   }
 }
 </style>

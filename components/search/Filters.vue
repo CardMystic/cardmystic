@@ -1,152 +1,140 @@
 <template>
   <div class="filters-container">
-    <div v-if="!modelValue" style="color: red; margin-bottom: 1rem;">
-      Warning: Filters component requires a <code>modelValue</code> prop.
-    </div>
-    <template v-else>
-      <!-- Active Filters Chips -->
-      <div v-if="hasActiveFilters" class="active-filters-section mb-4">
-        <div class="active-filters-chips">
-          <!-- Card Types Chips -->
-          <UChip v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`" color="primary" size="sm"
-            class="ma-1" closable @close="removeCardType(cardType)">
-            {{ cardType }}
+    <!-- Active Filters Chips -->
+    <div v-if="hasActiveFilters" class="active-filters-section mb-4">
+      <div class="active-filters-chips">
+        <!-- Card Types Chips -->
+        <UChip v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`" color="primary" size="sm"
+          class="ma-1" closable @close="removeCardType(cardType)">
+          {{ cardType }}
+        </UChip>
+
+        <!-- Colors Chips -->
+        <UChip v-for="color in selectedColors || []" :key="`color-${color}`" color="primary" size="sm" class="ma-1"
+          closable @close="removeColor(color)">
+          <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />
+          {{ color }}
+        </UChip>
+
+        <!-- Rarities Chips -->
+        <UChip v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`" color="accent" size="sm" class="ma-1"
+          closable @close="removeRarity(rarity)">
+          {{ rarity }}
+        </UChip>
+
+        <!-- Stats Chips -->
+        <UChip v-if="selectedCMC" color="info" size="sm" class="ma-1" closable @close="clearCMC">
+          CMC {{ selectedCMCOption || 'Equal To' }} {{ selectedCMC }}
+        </UChip>
+
+        <UChip v-if="selectedPower" color="info" size="sm" class="ma-1" closable @close="clearPower">
+          Power {{ selectedPowerOption || 'Equal To' }} {{ selectedPower }}
+        </UChip>
+
+        <UChip v-if="selectedToughness" color="info" size="sm" class="ma-1" closable @close="clearToughness">
+          Toughness {{ selectedToughnessOption || 'Equal To' }} {{ selectedToughness }}
+        </UChip>
+
+        <!-- Color Filter Option Chip -->
+        <UChip v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'" color="warning"
+          size="sm" class="ma-1" closable @close="clearColorFilterOption">
+          Color: {{ selectedColorFilterOption }}
+        </UChip>
+
+        <!-- Formats Chips -->
+        <template v-for="(formatItem, index) in selectedCardFormats || []" :key="`format-${index}`">
+          <UChip v-if="formatItem.format || formatItem.status" color="success" size="sm" class="ma-1" closable
+            @close="removeFormat(index)">
+            {{ formatItem.format || 'Any' }} - {{ formatItem.status || 'Any Status' }}
           </UChip>
-
-          <!-- Colors Chips -->
-          <UChip v-for="color in selectedColors || []" :key="`color-${color}`" color="primary" size="sm" class="ma-1"
-            closable @close="removeColor(color)">
-            <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />
-            {{ color }}
-          </UChip>
-
-          <!-- Rarities Chips -->
-          <UChip v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`" color="accent" size="sm"
-            class="ma-1" closable @close="removeRarity(rarity)">
-            {{ rarity }}
-          </UChip>
-
-          <!-- Stats Chips -->
-          <UChip v-if="selectedCMC" color="info" size="sm" class="ma-1" closable @close="clearCMC">
-            CMC {{ selectedCMCOption || 'Equal To' }} {{ selectedCMC }}
-          </UChip>
-
-          <UChip v-if="selectedPower" color="info" size="sm" class="ma-1" closable @close="clearPower">
-            Power {{ selectedPowerOption || 'Equal To' }} {{ selectedPower }}
-          </UChip>
-
-          <UChip v-if="selectedToughness" color="info" size="sm" class="ma-1" closable @close="clearToughness">
-            Toughness {{ selectedToughnessOption || 'Equal To' }} {{ selectedToughness }}
-          </UChip>
-
-          <!-- Color Filter Option Chip -->
-          <UChip v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'" color="warning"
-            size="sm" class="ma-1" closable @close="clearColorFilterOption">
-            Color: {{ selectedColorFilterOption }}
-          </UChip>
-
-          <!-- Formats Chips -->
-          <template v-for="(formatItem, index) in selectedCardFormats || []" :key="`format-${index}`">
-            <UChip v-if="formatItem.format || formatItem.status" color="success" size="sm" class="ma-1" closable
-              @close="removeFormat(index)">
-              {{ formatItem.format || 'Any' }} - {{ formatItem.status || 'Any Status' }}
-            </UChip>
-          </template>
-
-          <!-- Clear All Button -->
-          <UButton v-if="hasActiveFilters" color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters"
-            icon="i-lucide-close">
-            Clear All
-          </UButton>
-        </div>
-      </div>
-      <UCollapsible class="flex flex-col gap-2 mb-4">
-        <UButton class="filters-toggle-btn mb-3" label="Filters" color="primary" variant="subtle"
-          trailing-icon="i-lucide-chevron-down" :ui="{
-            trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
-          }" block />
-
-        <!-- Filters Content -->
-        <template #content class="filters-content mb-4">
-          <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
-            <!-- Types Filter -->
-            <template #types>
-              <div class="accordion-item">
-                <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
-                  class="w-full" />
-              </div>
-            </template>
-
-            <!-- Colors Filter -->
-            <template #colors>
-              <div class="accordion-item">
-                <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions" placeholder="Color matching"
-                  clearable class="w-full" />
-                <div class="color-checkboxes">
-                  <UCheckboxGroup :items="cardColors" orientation="horizontal" variant="card" v-model="selectedColors"
-                    class="w-full">
-                    <template #label="{ item }">
-                      <ManaIcon :type="cardColorToSymbol(item.value)" class="mr-1" />
-                      {{ item.label }}
-                    </template>
-                  </UCheckboxGroup>
-                </div>
-              </div>
-            </template>
-
-            <!-- Rarities Filter -->
-            <template #rarities>
-              <div class="accordion-item">
-                <UCheckboxGroup :items="cardRarities" orientation="horizontal" variant="card"
-                  v-model="selectedRarities" />
-              </div>
-            </template>
-
-            <!-- Stats Filter -->
-            <template #stats>
-              <div class="accordion-item">
-                <div class="stats-grid">
-                  <div class="stat-group">
-                    <label class="stat-label">Mana Cost</label>
-                    <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption"
-                      :items="comparisonOperators" />
-                    <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number" />
-                  </div>
-                  <div class="stat-group">
-                    <label class="stat-label">Power</label>
-                    <USelect placeholder="Power Comparison" v-model="selectedPowerOption"
-                      :items="comparisonOperators" />
-                    <UInput v-model="selectedPower" placeholder="Any value, e.g. '2'" type="number" />
-                  </div>
-                  <div class="stat-group">
-                    <label class="stat-label">Toughness</label>
-                    <USelect placeholder="Toughness Comparison" v-model="selectedToughnessOption"
-                      :items="comparisonOperators" />
-                    <UInput v-model="selectedToughness" placeholder="Any value, e.g. '2'" type="number" />
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Formats Filter -->
-            <template #formats>
-              <div class="accordion-item">
-                <div v-if="selectedCardFormats && selectedCardFormats.length > 0">
-                  <div v-for="(format, i) in selectedCardFormats" :key="i" class="mb-3"
-                    style="display: flex; gap: 8px;">
-                    <USelect v-model="format.format" :items="cardFormats" label="Format" clearable />
-                    <USelect v-model="format.status" :items="cardFormatStatuses" label="Status" clearable />
-                  </div>
-                </div>
-                <UButton @click="addFormatRow" color="primary" size="sm" icon="i-lucide-plus">
-                  Add Format
-                </UButton>
-              </div>
-            </template>
-          </UAccordion>
         </template>
-      </UCollapsible>
-    </template>
+
+        <!-- Clear All Button -->
+        <UButton v-if="hasActiveFilters" color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters"
+          icon="i-lucide-circle-x">
+          Clear All
+        </UButton>
+      </div>
+    </div>
+    <UCollapsible class="flex flex-col gap-2 mb-4">
+      <UButton class="filters-toggle-btn mb-3" label="Filters" color="primary" variant="subtle"
+        trailing-icon="i-lucide-chevron-down" :ui="{
+          trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
+        }" block />
+
+      <!-- Filters Content -->
+      <template #content class="filters-content mb-4">
+        <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
+          <!-- Types Filter -->
+          <template #types>
+            <div class="accordion-item">
+              <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
+                class="w-full" />
+            </div>
+          </template> <!-- Colors Filter -->
+          <!-- Colors Filter -->
+          <template #colors>
+            <div class="accordion-item">
+              <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions" placeholder="Color matching"
+                clearable class="w-full" />
+              <div class="color-checkboxes">
+                <UCheckboxGroup :items="cardColors" orientation="horizontal" variant="card" v-model="selectedColors"
+                  class="w-full">
+                  <template #label="{ item }">
+                    <ManaIcon :type="cardColorToSymbol(item.value)" class="mr-1" />
+                    {{ item.label }}
+                  </template>
+                </UCheckboxGroup>
+              </div>
+            </div>
+          </template> <!-- Rarities Filter -->
+          <!-- Rarities Filter -->
+          <template #rarities>
+            <div class="accordion-item">
+              <UCheckboxGroup :items="cardRarities" orientation="horizontal" variant="card"
+                v-model="selectedRarities" />
+            </div>
+          </template> <!-- Stats Filter -->
+          <!-- Stats Filter -->
+          <template #stats>
+            <div class="accordion-item">
+              <div class="stats-grid">
+                <div class="stat-group">
+                  <label class="stat-label">Mana Cost</label>
+                  <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption"
+                    :items="comparisonOperators" />
+                  <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number" />
+                </div>
+                <div class="stat-group">
+                  <label class="stat-label">Power</label>
+                  <USelect placeholder="Power Comparison" v-model="selectedPowerOption" :items="comparisonOperators" />
+                  <UInput v-model="selectedPower" placeholder="Any value, e.g. '2'" type="number" />
+                </div>
+                <div class="stat-group">
+                  <label class="stat-label">Toughness</label>
+                  <USelect placeholder="Toughness Comparison" v-model="selectedToughnessOption"
+                    :items="comparisonOperators" />
+                  <UInput v-model="selectedToughness" placeholder="Any value, e.g. '2'" type="number" />
+                </div>
+              </div>
+            </div>
+          </template> <!-- Formats Filter -->
+          <template #formats>
+            <div class="accordion-item">
+              <div v-if="selectedCardFormats && selectedCardFormats.length > 0">
+                <div v-for="(format, i) in selectedCardFormats" :key="i" class="mb-3" style="display: flex; gap: 8px;">
+                  <USelect v-model="format.format" :items="cardFormats" label="Format" clearable />
+                  <USelect v-model="format.status" :items="cardFormatStatuses" label="Status" clearable />
+                </div>
+              </div>
+              <UButton @click="addFormatRow" color="primary" size="sm" icon="i-lucide-plus">
+                Add Format
+              </UButton>
+            </div>
+          </template>
+        </UAccordion>
+      </template>
+    </UCollapsible>
   </div>
 </template>
 <script lang="ts" setup>
@@ -165,7 +153,6 @@ const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
 const emit = defineEmits<{
   'update:modelValue': [value: CardSearchFilters]
 }>();
-
 
 const items = [
   {
@@ -211,8 +198,9 @@ const comparisonOperators = [
 ];
 
 function updateFilters(updates: Partial<CardSearchFilters>) {
-  const current = modelValue ?? {} as CardSearchFilters;
-  emit('update:modelValue', { ...current, ...updates });
+  const current = modelValue || {} as CardSearchFilters;
+  const newValue = { ...current, ...updates };
+  emit('update:modelValue', newValue);
 }
 
 // Computed property to check if there are any active filters
@@ -307,17 +295,17 @@ const selectedToughnessOption = computed({
 });
 
 const selectedCMC = computed({
-  get: () => Number(modelValue?.selectedCMC),
+  get: () => modelValue?.selectedCMC ? Number(modelValue.selectedCMC) : undefined,
   set: (value) => updateFilters({ selectedCMC: value ? String(value) : undefined })
 });
 
 const selectedPower = computed({
-  get: () => Number(modelValue?.selectedPower),
+  get: () => modelValue?.selectedPower ? Number(modelValue.selectedPower) : undefined,
   set: (value) => updateFilters({ selectedPower: value ? String(value) : undefined })
 });
 
 const selectedToughness = computed({
-  get: () => Number(modelValue?.selectedToughness),
+  get: () => modelValue?.selectedToughness ? Number(modelValue.selectedToughness) : undefined,
   set: (value) => updateFilters({ selectedToughness: value ? String(value) : undefined })
 });
 

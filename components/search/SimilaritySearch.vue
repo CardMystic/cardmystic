@@ -4,8 +4,16 @@
       <div class="flex gap-2">
         <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
           :loading="status === 'pending'" :items="filteredCards" placeholder="Enter a card name..."
-          icon="i-lucide-search" class="flex-1 h-10" />
-        <UButton type="submit" class="h-10 cursor-pointer">
+          icon="i-lucide-search" class="flex-1" :ui="{
+            input: {
+              base: 'h-10',
+              placeholder: 'text-gray-400 dark:text-gray-500'
+            },
+            list: {
+              height: 'max-h-64'
+            }
+          }" />
+        <UButton type="submit" class="h-10">
           Submit
         </UButton>
       </div>
@@ -41,16 +49,11 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const parsedFilters = computed(() => {
-  if (route.query.filters) {
-    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
-  }
-  return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
-});
+const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
 
 const state = reactive<Schema>({
   card_name: cardNameParam.value || '',
-  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
+  filters: parsedFilters.value || undefined
 })
 
 const searchTerm = ref("");
@@ -89,6 +92,8 @@ const filteredCards = computed(() => {
   return filtered;
 });
 
+const toast = useToast()
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     // Ensure we have valid data
@@ -96,13 +101,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       card_name: event.data.card_name,
       filters: event.data.filters || {}
     }
-    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters (its the equivalent but more intuitive)
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
-      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
-        formData.filters = {};
-      }
-    }
-    // Construct query parameters
     const query: Record<string, any> = {
       card_name: formData.card_name,
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined
@@ -110,6 +108,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     navigateTo({ path: '/search/similarity', query });
   } catch (error) {
     console.error('Form submission error:', error)
+    toast.add({
+      title: 'Error',
+      description: 'Failed to submit form',
+      color: 'error'
+    })
   }
 }
 </script>
