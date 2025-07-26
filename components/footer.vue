@@ -4,7 +4,7 @@
       <!-- Social Links -->
       <div class="social-links mb-3">
         <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
-          <UIcon name="i-mdi-github" class="icon" size="24" color="white" />
+          <UIcon name="i-simple-icons-github" class="icon" size="24" color="white" />
         </a>
 
         <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
@@ -12,11 +12,11 @@
         </a>
 
         <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
-          <UIcon name="i-mdi-youtube" class="icon" size="24" color="white" />
+          <UIcon name="i-simple-icons-youtube" class="icon" size="24" color="white" />
         </a>
 
         <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
-          <UIcon name="i-mdi-patreon" class="icon" size="24" color="white" />
+          <UIcon name="i-simple-icons-patreon" class="icon" size="24" color="white" />
         </a>
       </div>
 
@@ -64,7 +64,7 @@ const commitUrl = computed(() => {
   padding: 16px 0;
   background-color: #161616;
   height: auto;
-  position: relative; // Remove app positioning
+  margin-top: auto; // This ensures the footer pushes to the bottom
 }
 
 .footer-content {

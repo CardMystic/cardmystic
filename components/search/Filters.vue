@@ -17,7 +17,7 @@
         </UChip>
 
         <!-- Rarities Chips -->
-        <UChip v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`" color="accent" size="sm" class="ma-1"
+        <UChip v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`" color="primary" size="sm" class="ma-1"
           closable @close="removeRarity(rarity)">
           {{ rarity }}
         </UChip>
@@ -71,7 +71,7 @@
               <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
                 class="w-full" />
             </div>
-          </template> <!-- Colors Filter -->
+          </template>
           <!-- Colors Filter -->
           <template #colors>
             <div class="accordion-item">
@@ -82,19 +82,19 @@
                   class="w-full">
                   <template #label="{ item }">
                     <ManaIcon :type="cardColorToSymbol(item.value)" class="mr-1" />
-                    {{ item.label }}
+                    {{ item.value }}
                   </template>
                 </UCheckboxGroup>
               </div>
             </div>
-          </template> <!-- Rarities Filter -->
+          </template>
           <!-- Rarities Filter -->
           <template #rarities>
             <div class="accordion-item">
               <UCheckboxGroup :items="cardRarities" orientation="horizontal" variant="card"
                 v-model="selectedRarities" />
             </div>
-          </template> <!-- Stats Filter -->
+          </template>
           <!-- Stats Filter -->
           <template #stats>
             <div class="accordion-item">
@@ -118,7 +118,8 @@
                 </div>
               </div>
             </div>
-          </template> <!-- Formats Filter -->
+          </template>
+          <!-- Formats Filter -->
           <template #formats>
             <div class="accordion-item">
               <div v-if="selectedCardFormats && selectedCardFormats.length > 0">

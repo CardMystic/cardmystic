@@ -20,7 +20,7 @@ const items = ref<NavigationMenuItem[]>([
       {
         label: 'Similarity Search',
         description: 'Search for similar cards by name',
-        icon: 'i-lucide-search',
+        icon: 'i-mdi-cards-outline',
         to: '/search/similarity',
       },
     ]
