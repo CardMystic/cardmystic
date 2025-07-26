@@ -1,32 +1,31 @@
 <template>
   <div class="py-4 flex justify-center">
-    <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
-      <div class="flex justify-center items-center mb-4">
-        <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
+    <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[400px]">
+      <div class="flex justify-center items-center mb-4 w-full">
+        <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary" />
       </div>
-      <p class="text-white text-center">Loading card details...</p>
+      <p class="mt-4 text-white text-center w-full">Loading card details...</p>
     </div>
 
     <div v-else-if="error" class="text-center">
-      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4 cursor-pointer" />
+      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4" />
       <p class="mt-4 text-white">{{ error }}</p>
       <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
     </div>
 
     <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto px-4">
       <!-- Left: Card Image -->
-      <div class="lg:col-span-3 flex flex-col items-center">
+      <div class="lg:col-span-3 flex flex-col items-center lg:items-start">
         <!-- Back to Results button aligned with card image -->
         <div class="back-button-container-aligned mb-4">
-          <UButton class="cursor-pointer" color="primary" variant="outline" @click="$router.back()"
-            icon="i-heroicons-arrow-left">
+          <UButton color="primary" variant="outline" @click="$router.back()" icon="i-heroicons-arrow-left">
             Back to Results
           </UButton>
         </div>
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <img :src="getCardImageUrl(card)" class="card-image w-[300px] h-[420px] rounded-2xl object-contain"
+          <img :src="getCardImageUrl(card)" class="card-image w-[300px] h-[420px] rounded-2xl object-cover"
             @error="handleImageError" alt="Card image" />
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
@@ -46,28 +45,14 @@
 
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-[300px]">
-          <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
-            class="printing-select w-[300px] cursor-pointer">
-            <template #item="{ item }">
-              <div class="flex items-center gap-3 py-2">
-                <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
-                <div class="flex flex-col">
-                  <span class="font-semibold">{{ item.label }}</span>
-                  <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
-                  <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                  }}</span>
-                  <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
-                </div>
-              </div>
-            </template>
-          </USelect>
+          <USelect v-model="selectedPrinting" :items="printingOptions" option-attribute="label" value-attribute="id"
+            placeholder="Select Printing" class="printing-select" />
         </div>
 
         <!-- Similar Cards Button - Desktop only -->
         <UButton color="neutral" variant="solid"
-          :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-mdi-cards-outline"
-          size="lg" @click="findSimilarCards"
-          class="hidden lg:flex similar-cards-btn-desktop w-full max-w-[300px] cursor-pointer">
+          :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-heroicons-squares-2x2"
+          size="lg" @click="findSimilarCards" class="hidden lg:flex similar-cards-btn-desktop w-full max-w-[300px]">
           Similar Cards
         </UButton>
 
@@ -76,7 +61,7 @@
           class="price-card mt-4 hidden lg:block w-full max-w-[300px]">
           <div class="price-header">
             <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
-            <h3 class="price-title">Current Prices</h3>
+            <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
@@ -86,10 +71,8 @@
                 <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                   currentPrinting.prices.usd }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
-                    <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
-                      currentPrinting.prices.usd_foil }}
-                    <span class="text-sm">(Foil)</span>
+                  <span class="foil-text">
+                    ${{ currentPrinting.prices.usd_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -101,10 +84,8 @@
                 <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
                   currentPrinting.prices.eur }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
-                    <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
-                      currentPrinting.prices.eur_foil }}
-                    <span class="text-sm">(Foil)</span>
+                  <span class="foil-text">
+                    €{{ currentPrinting.prices.eur_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -120,8 +101,7 @@
         <!-- TCGPlayer Button - Desktop only -->
         <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
           :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
-          class="mt-0 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg"
-          target="_blank" rel="noopener noreferrer">
+          class="mt-6 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg">
           Buy on TCGPlayer
         </UButton>
 
@@ -134,7 +114,7 @@
       </div>
 
       <!-- Center: Card Details -->
-      <div class="lg:col-span-7 flex flex-col max-w-[732px]">
+      <div class="lg:col-span-7 flex flex-col">
         <div class="card-header card-header-aligned">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
@@ -174,7 +154,7 @@
 
         <!-- Similar Cards Button - Mobile only -->
         <UButton color="neutral" variant="solid" class="mt-0 mb-4 similar-cards-btn lg:hidden"
-          icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards" block>
+          icon="i-heroicons-squares-2x2" size="lg" @click="findSimilarCards" block>
           Similar Cards
         </UButton>
 
@@ -193,10 +173,8 @@
                   currentPrinting.prices.usd
                 }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
-                    <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
-                      currentPrinting.prices.usd_foil
-                    }} <span class="text-sm">(Foil)</span>
+                  <span class="foil-text">
+                    ${{ currentPrinting.prices.usd_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -209,10 +187,8 @@
                   currentPrinting.prices.eur
                 }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
-                    <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
-                      currentPrinting.prices.eur_foil
-                    }} <span class="text-sm">(Foil)</span>
+                  <span class="foil-text">
+                    €{{ currentPrinting.prices.eur_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -839,6 +815,10 @@ function findSimilarCards() {
   font-size: 1rem
   font-weight: 700
 
+.foil-text
+  @apply text-yellow-300
+  font-weight: 700
+
 // Flip Button Styling
 .flip-btn
   width: 100%
@@ -875,6 +855,10 @@ function findSimilarCards() {
     max-width: none !important
     width: 100%
 
+h2,
+p,
+em
+  color: white
 
 .back-button-container-aligned
   display: flex
