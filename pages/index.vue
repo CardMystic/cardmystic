@@ -113,6 +113,7 @@ onMounted(() => {
   justify-content: center
   gap: 24px
   margin-bottom: 16px
+  margin-top: 16px
   @media (max-width: 768px)
     flex-direction: column
     gap: 12px
