@@ -1,37 +1,32 @@
 <template>
-  <v-container class="py-4 d-flex justify-center">
-    <div v-if="isLoading" class="text-center">
-      <v-progress-circular indeterminate color="primary"></v-progress-circular>
-      <p class="mt-4 text-white">Loading card details...</p>
+  <div class="py-4 flex justify-center">
+    <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[400px]">
+      <div class="flex justify-center items-center mb-4 w-full">
+        <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary" />
+      </div>
+      <p class="mt-4 text-white text-center w-full">Loading card details...</p>
     </div>
 
     <div v-else-if="error" class="text-center">
-      <v-icon color="error" size="48">mdi-alert-circle</v-icon>
+      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4" />
       <p class="mt-4 text-white">{{ error }}</p>
-      <v-btn to="/search" color="primary" class="mt-4">Back to Search</v-btn>
+      <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
     </div>
 
-    <v-row v-else-if="card" style="max-width: 1400px" class="d-flex justify-center">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto px-4">
       <!-- Left: Card Image -->
-      <v-col md="4" class="d-flex justify-start align-center flex-column mr-6" style="max-width: 300px">
+      <div class="lg:col-span-3 flex flex-col items-center lg:items-start">
         <!-- Back to Results button aligned with card image -->
         <div class="back-button-container-aligned mb-4">
-          <v-btn color="primary" variant="outlined" rounded="lg" prepend-icon="mdi-arrow-left" @click="$router.back()">
+          <UButton color="primary" variant="outline" @click="$router.back()" icon="i-heroicons-arrow-left">
             Back to Results
-          </v-btn>
+          </UButton>
         </div>
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <v-img :src="getCardImageUrl(card)" class="card-image" width="300" height="420" rounded
-            @error="handleImageError">
-            <template v-slot:placeholder>
-              <div class="image-placeholder-large">
-                <v-icon size="64" color="grey" icon="mdi-image-off"></v-icon>
-                <p class="placeholder-text-large">Image not available</p>
-              </div>
-            </template>
-          </v-img>
+          <img :src="getCardImageUrl(card)" class="card-image w-[300px] h-[420px] rounded-2xl object-cover"
+            @error="handleImageError" alt="Card image" />
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
           <div v-if="card.rarity?.toLowerCase() === 'mythic'" class="card-sheen-container">
@@ -43,50 +38,29 @@
         </div>
 
         <!-- Flip Button for Dual-Faced Cards -->
-        <v-btn v-if="isDualFaced" color="info" variant="elevated" class="mt-4 flip-btn"
-          prepend-icon="mdi-rotate-3d-variant" size="large" @click="flipCard">
+        <UButton v-if="isDualFaced" color="info" variant="solid" class="mt-4 flip-btn" icon="i-heroicons-arrow-path"
+          size="lg" @click="flipCard">
           {{ isFlipped ? 'Show Front' : 'Show Back' }}
-        </v-btn>
+        </UButton>
 
         <!-- Printing Selection Dropdown -->
-        <div v-if="printings && printings.length > 1" class="mt-4">
-          <v-select v-model="selectedPrinting" :items="printingOptions" :item-title="() => ''" item-text="raw.label"
-            item-value="id" label="Select Printing" variant="outlined" density="comfortable" class="printing-select"
-            hide-details :menu-props="{ maxHeight: 300 }">
-            <template #selection="{ item }">
-              {{ item.raw.label }}
-            </template>
-            <template #item="{ props, item }">
-              <v-list-item v-bind="props" class="printing-item">
-                <template #prepend>
-                  <v-img :src="item.raw.image_url" width="36" height="50" @error="() => { }">
-                    <template #placeholder>
-                      <div>?</div>
-                    </template>
-                  </v-img>
-                </template>
-                <v-list-item-title class="ml-3">{{ item.raw.label }}</v-list-item-title>
-                <v-list-item-subtitle v-if="item.raw.surgefoil" class="surgefoil-text ml-3">Surge
-                  Foil</v-list-item-subtitle>
-                <v-list-item-subtitle class="ml-3">{{ item.raw.frame_effects.join(', ') }}</v-list-item-subtitle>
-                <v-list-item-subtitle class="ml-3">{{ item.raw.subtitle }}</v-list-item-subtitle>
-              </v-list-item>
-            </template>
-          </v-select>
+        <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-[300px]">
+          <USelect v-model="selectedPrinting" :items="printingOptions" option-attribute="label" value-attribute="id"
+            placeholder="Select Printing" class="printing-select" />
         </div>
 
         <!-- Similar Cards Button - Desktop only -->
-        <v-btn color="white" variant="elevated" :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
-          " prepend-icon="mdi-cards" size="large" @click="findSimilarCards"
-          class="d-none d-md-flex similar-cards-btn-desktop">
+        <UButton color="neutral" variant="solid"
+          :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-heroicons-squares-2x2"
+          size="lg" @click="findSimilarCards" class="hidden lg:flex similar-cards-btn-desktop w-full max-w-[300px]">
           Similar Cards
-        </v-btn>
+        </UButton>
 
         <!-- Price Information - Desktop only -->
-        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
-          class="price-card mt-4 d-none d-md-block">
+        <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)"
+          class="price-card mt-4 hidden lg:block w-full max-w-[300px]">
           <div class="price-header">
-            <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
+            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
             <h4 class="price-title">Current Prices</h4>
           </div>
 
@@ -94,11 +68,11 @@
             <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
+                <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                   currentPrinting.prices.usd }}
-                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    ${{ currentPrinting.prices.usd_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -107,11 +81,11 @@
             <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
+                <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
                   currentPrinting.prices.eur }}
-                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    €{{ currentPrinting.prices.eur_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -122,25 +96,25 @@
               <span class="price-value">{{ currentPrinting.prices.tix }}</span>
             </div>
           </div>
-        </v-card>
+        </UCard>
 
         <!-- TCGPlayer Button - Desktop only -->
-        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
-          variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping" size="large">
+        <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
+          class="mt-6 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg">
           Buy on TCGPlayer
-        </v-btn>
+        </UButton>
 
         <!-- Fallback button if no TCGPlayer ID - Desktop only -->
-        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" rel="noopener"
-          color="primary" variant="outlined" class="mt-4 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-magnify"
-          size="large">
+        <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
+          variant="outline" class="mt-4 tcgplayer-btn hidden lg:flex w-full max-w-[300px]"
+          icon="i-heroicons-magnifying-glass" size="lg">
           Search on TCGPlayer
-        </v-btn>
-      </v-col>
+        </UButton>
+      </div>
 
       <!-- Center: Card Details -->
-      <v-col cols="12" md="6" class="d-flex flex-column justify-start">
+      <div class="lg:col-span-7 flex flex-col">
         <div class="card-header card-header-aligned">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
@@ -182,16 +156,15 @@
         </div>
 
         <!-- Similar Cards Button - Mobile only -->
-        <v-btn color="white" variant="elevated" class="mt-0 mb-4 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
-          size="large" @click="findSimilarCards" block>
+        <UButton color="neutral" variant="solid" class="mt-0 mb-4 similar-cards-btn lg:hidden"
+          icon="i-heroicons-squares-2x2" size="lg" @click="findSimilarCards" block>
           Similar Cards
-        </v-btn>
+        </UButton>
 
         <!-- Price Information - Mobile only -->
-        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
-          class="price-card mb-4 d-md-none">
+        <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card mb-4 lg:hidden">
           <div class="price-header">
-            <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
+            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
             <h4 class="price-title">Current Prices</h4>
           </div>
 
@@ -199,12 +172,12 @@
             <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
+                <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                   currentPrinting.prices.usd
                 }}
-                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    ${{ currentPrinting.prices.usd_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -213,12 +186,12 @@
             <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
+                <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
                   currentPrinting.prices.eur
                 }}
-                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    €{{ currentPrinting.prices.eur_foil }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -229,42 +202,41 @@
               <span class="price-value">{{ currentPrinting.prices.tix }}</span>
             </div>
           </div>
-        </v-card>
+        </UCard>
 
         <!-- TCGPlayer Button - Mobile only -->
-        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
-          variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
+        <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
+          class="mb-4 tcgplayer-btn lg:hidden" icon="i-heroicons-shopping-cart" size="lg" block>
           Buy on TCGPlayer
-        </v-btn>
+        </UButton>
 
         <!-- Fallback button if no TCGPlayer ID - Mobile only -->
-        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" rel="noopener"
-          color="primary" variant="outlined" class="mb-6 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify"
-          size="large" block>
+        <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
+          variant="outline" class="mb-6 tcgplayer-btn lg:hidden" icon="i-heroicons-magnifying-glass" size="lg" block>
           Search on TCGPlayer
-        </v-btn>
+        </UButton>
 
-        <v-card elevation="8" class="legalities-card">
+        <UCard class="legalities-card">
           <div class="legalities-header">
-            <v-icon color="primary" class="mr-2">mdi-gavel</v-icon>
+            <UIcon name="i-heroicons-scale" class="w-6 h-6 text-primary mr-2" />
             <h3 class="legalities-title">Legalities</h3>
           </div>
 
-          <v-row dense class="pa-2">
-            <v-col v-for="(format, name) in legalities" :key="name" cols="6" class="mb-2">
+          <div class="grid grid-cols-2 gap-2 p-2">
+            <div v-for="(format, name) in legalities" :key="name" class="mb-2">
               <div class="legality-item">
-                <v-chip class="legality-chip" :color="getLegalityColor(format)" variant="elevated" size="small">
+                <UBadge class="legality-chip" :color="getLegalityColor(format)" variant="solid" size="xs">
                   {{ format }}
-                </v-chip>
+                </UBadge>
                 <span class="format-name">{{ formatName(name) }}</span>
               </div>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+            </div>
+          </div>
+        </UCard>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -379,7 +351,7 @@ const getLegalityColor = (status: string) => {
     case 'BANNED':
       return 'error';
     case 'NOT LEGAL':
-      return 'surface-variant';
+      return 'neutral';
     case 'RESTRICTED':
       return 'warning';
     default:
@@ -629,8 +601,8 @@ function getCardImageUrl(cardData: ScryfallCard): string {
   return '';
 }
 
-function handleImageError(value: string | undefined) {
-  console.warn('Card image failed to load:', value);
+function handleImageError(event: Event) {
+  console.warn('Card image failed to load:', event);
 }
 
 function flipCard() {
@@ -732,14 +704,13 @@ watch([card, printings], ([newCard, newPrintings]) => {
   margin-bottom: 16px
   margin-top: 0
   
-  @media (min-width: 960px)
+  @media (min-width: 1024px)
     margin-top: 60px // Align with card image top (button height + margin)
 
 .card-title
   font-size: 2.2rem
   font-weight: 700
-  background: linear-gradient(135deg, rgb(147, 114, 255), rgb(255, 114, 147))
-  background-clip: text
+  @apply bg-gradient-to-br from-purple-400 to-pink-400 bg-clip-text text-transparent
   margin-bottom: 4px
 
 .card-title-text
@@ -753,14 +724,14 @@ watch([card, printings], ([newCard, newPrintings]) => {
   margin-bottom: 8px
 
 .set-name
-  color: rgba(255, 255, 255, 0.7)
+  @apply text-gray-300
   font-size: 0.9rem
   font-weight: 400
   margin: 0
   font-style: italic
 
 .card-type
-  color: rgb(var(--v-theme-primary))
+  @apply text-primary-400
   font-size: 1.1rem
   font-weight: 500
   margin: 0
@@ -805,7 +776,7 @@ watch([card, printings], ([newCard, newPrintings]) => {
   font-weight: 600
 
 .stats
-  color: rgb(255, 193, 7)
+  @apply text-yellow-400
   font-weight: 700
   font-size: 1.2rem
 
@@ -815,11 +786,11 @@ watch([card, printings], ([newCard, newPrintings]) => {
   border-top: 1px solid rgba(147, 114, 255, 0.2)
 
 .artist-label
-  color: rgba(255, 255, 255, 0.7)
+  @apply text-gray-300
   font-size: 0.9rem
 
 .artist-name
-  color: rgb(var(--v-theme-primary))
+  @apply text-primary-400
   font-size: 1rem
 
 // Legalities Card
@@ -861,7 +832,7 @@ watch([card, printings], ([newCard, newPrintings]) => {
     min-width: 71.2px
 
 .format-name
-  color: rgba(255, 255, 255, 0.9)
+  @apply text-gray-100
   font-size: 11px
   font-weight: bold
   text-align: center
@@ -903,7 +874,7 @@ watch([card, printings], ([newCard, newPrintings]) => {
   padding: 4px 0
 
 .currency-label
-  color: rgba(255, 255, 255, 0.8)
+  @apply text-gray-200
   font-size: 0.9rem
   font-weight: 500
 
@@ -913,7 +884,7 @@ watch([card, printings], ([newCard, newPrintings]) => {
   font-weight: 700
 
 .foil-text
-  color: #ffe066
+  @apply text-yellow-300
   font-weight: 700
 
 // Flip Button Styling
@@ -947,62 +918,26 @@ watch([card, printings], ([newCard, newPrintings]) => {
   max-width: 280px
 
 // Price Card Mobile Styling
-@media (max-width: 959px)
+@media (max-width: 1023px)
   .price-card
     max-width: none !important
     width: 100%
 
-// Legacy styles cleanup
-.chip
-  font-size: 10px !important
-  min-width: 76px
-  text-align: center
-  justify-content: center
-  padding: 0px !important
-  margin: 0px !important
-
 h2,
 p,
 em
   color: white
 
-.v-card
-  background-color: #2c2c2c
-  color: white
-
-    max-width: none !important
-    width: 100%
-
-// Legacy styles cleanup
-.chip
-  font-size: 10px !important
-  min-width: 76px
-  text-align: center
+.back-button-container-aligned
+  display: flex
   justify-content: center
-  padding: 0px !important
-  margin: 0px !important
+  width: 100%
+  max-width: 300px
+  align-self: center
 
-h2,
-p,
-em
-  color: white
-
-.v-card
-  background-color: #2c2c2c
-  color: white
-
-.confidence-text
-  color: white
-  font-size: 14px
-  font-weight: bold
-  text-align: center
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
-
-.format-text
-  color: white
-  font-size: 12px
-  text-align: center
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1)
+.printing-select
+  width: 100%
+  min-width: 280px
 
 // TCGPlayer Button Styling
 .tcgplayer-btn
@@ -1018,7 +953,7 @@ em
     transform: translateY(-2px)
 
 // Mobile responsive styles
-@media (max-width: 959px)
+@media (max-width: 1023px)
   .tcgplayer-btn
     max-width: none !important
 
@@ -1061,70 +996,4 @@ em
   100%
     left: 200%
     opacity: 0
-
-.image-placeholder-large
-  display: flex
-  flex-direction: column
-  align-items: center
-  justify-content: center
-  height: 100%
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
-  border-radius: 20px
-  padding: 40px
-
-.placeholder-text-large
-  color: rgba(255, 255, 255, 0.7)
-  font-size: 16px
-  margin-top: 16px
-  text-align: center
-
-.back-button-container
-  display: flex
-  justify-content: flex-start
-  max-width: 1400px
-  margin: 0 auto
-  padding-left: calc((100% - 300px) / 2 - 24px) // Align with left edge of card image column
-
-  @media (max-width: 768px)
-    padding-left: 0 // Reset on mobile
-
-.back-button-container-aligned
-  display: flex
-  justify-content: center
-  width: 100%
-  max-width: 300px
-  align-self: center
-
-.printing-select
-  width: 100%
-  min-width: 280px
-
-.printing-loading
-  display: flex
-  align-items: center
-  justify-content: flex-start
-  width: 100%
-  max-width: 280px
-  padding: 12px 16px
-  background: rgba(44, 44, 44, 0.5)
-  border-radius: 8px
-  border: 1px solid rgba(147, 114, 255, 0.2)
-
-.loading-text
-  color: rgba(255, 255, 255, 0.8)
-  font-size: 14px
-  font-weight: 500
-
-// Surgefoil badge styling with gold glow animation
-.surgefoil-text
-  display: inline-block
-  background: linear-gradient(135deg, #ffd700, #ffed4e, #ffd700)
-  color: black
-  font-weight: 700
-  font-size: 10px
-  padding: 2px 6px
-  border-radius: 8px
-  text-transform: uppercase
-  letter-spacing: 0.5px
-    
 </style>
