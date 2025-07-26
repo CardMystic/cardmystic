@@ -92,8 +92,6 @@ const filteredCards = computed(() => {
   return filtered;
 });
 
-const toast = useToast()
-
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     // Ensure we have valid data
@@ -108,11 +106,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     navigateTo({ path: '/search/similarity', query });
   } catch (error) {
     console.error('Form submission error:', error)
-    toast.add({
-      title: 'Error',
-      description: 'Failed to submit form',
-      color: 'error'
-    })
   }
 }
 </script>
