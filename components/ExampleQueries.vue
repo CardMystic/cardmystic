@@ -9,11 +9,11 @@
       <!-- Query display and TRY IT button -->
       <div class="query-header">
         <div class="query-text">
-          <UIcon name="i-mdi-lightbulb-outline" class="mr-2" color="primary" />
+          <UIcon name="i-lucide-lightbulb" class="mr-2" color="primary" />
           <span class="query-value">"{{ wordSearch.query }}"</span>
         </div>
         <div class="button-group">
-          <UButton color="neutral" variant="outline" icon="i-mdi-refresh" @click="loadRandomExample"
+          <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
             :loading="isLoading" class="refresh-button" size="sm" />
           <UButton color="primary" variant="outline" @click="tryQuery" class="try-button" icon="i-lucide-search">
             TRY
