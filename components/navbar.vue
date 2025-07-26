@@ -3,6 +3,11 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const items = ref<NavigationMenuItem[]>([
   {
+    label: 'Home',
+    icon: 'i-lucide-home',
+    to: '/'
+  },
+  {
     label: 'Search',
     icon: 'i-lucide-search',
     children: [
@@ -15,7 +20,7 @@ const items = ref<NavigationMenuItem[]>([
       {
         label: 'Similarity Search',
         description: 'Search for similar cards by name',
-        icon: 'i-lucide-magnifying-glass',
+        icon: 'i-lucide-search',
         to: '/search/similarity',
       },
     ]

@@ -5,7 +5,6 @@
 
       <!-- Results -->
       <div class="mt-3 w-full">
-
         <template v-if="isLoading">
           <div class="flex justify-center items-center py-12">
             <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-3xl" />

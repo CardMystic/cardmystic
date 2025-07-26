@@ -1,5 +1,5 @@
 <template>
-  <div class="top-queries-container">
+  <div class="top-queries-container mt-2 mb-2">
     <div v-if="isLoading" class="text-center py-4">
       <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
       <p class="mt-2 text-white text-sm">Loading popular queries...</p>
@@ -91,7 +91,6 @@ function tryQuery(query: string) {
 <style scoped lang="sass">
 .top-queries-container
   width: 100%
-  margin: 6pt auto 0 auto
 
 .top-queries-content
   border-radius: 24px
