@@ -45,8 +45,8 @@
 
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-[300px]">
-          <USelect v-model="selectedPrinting" :items="printingOptions" option-attribute="label" value-attribute="id"
-            placeholder="Select Printing" class="printing-select w-[300px]">
+          <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
+            class="printing-select w-[300px]">
             <template #item="{ item }">
               <div class="flex items-center gap-3 py-2">
                 <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
@@ -308,15 +308,6 @@ const { data: cardData, isLoading, error } = useQuery({
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
-// Watch for card changes to set initial selected printing
-watch([card, printings], ([newCard, newPrintings]) => {
-  if (newCard && newPrintings && newPrintings.length > 0) {
-    // Always update selected printing to current card or first available
-    const currentPrintingMatch = newPrintings.find(p => p.id === newCard.id);
-    selectedPrinting.value = currentPrintingMatch ? currentPrintingMatch.id : newPrintings[0].id;
-  }
-}, { immediate: true });
-
 // Computed property for printing dropdown options
 const printingOptions = computed(() => {
   if (!printings.value) return [];
@@ -333,6 +324,8 @@ const printingOptions = computed(() => {
 
 // Get current selected printing data
 const currentPrinting = computed(() => {
+  console.log('Current printing:', selectedPrinting.value);
+  console.log('Available printings:', printingOptions.value);
   if (!printings.value || !selectedPrinting.value) return card.value;
   return printings.value.find(p => p.id === selectedPrinting.value) || card.value;
 });
