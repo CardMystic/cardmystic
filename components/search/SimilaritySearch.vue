@@ -4,15 +4,7 @@
       <div class="flex gap-2">
         <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
           :loading="status === 'pending'" :items="filteredCards" placeholder="Enter a card name..."
-          icon="i-lucide-search" class="flex-1" :ui="{
-            input: {
-              base: 'h-10',
-              placeholder: 'text-gray-400 dark:text-gray-500'
-            },
-            list: {
-              height: 'max-h-64'
-            }
-          }" />
+          icon="i-lucide-search" class="flex-1 h-10" />
         <UButton type="submit" class="h-10">
           Submit
         </UButton>
