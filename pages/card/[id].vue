@@ -54,7 +54,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -74,7 +74,7 @@
           class="price-card mt-4 hidden lg:block w-full max-w-[300px]">
           <div class="price-header">
             <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
-            <h4 class="price-title">Current Prices</h4>
+            <h3 class="price-title">Current Prices</h3>
           </div>
 
           <div class="price-list">
@@ -85,7 +85,9 @@
                   currentPrinting.prices.usd }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    ${{ currentPrinting.prices.usd_foil }} <span class="text-sm">(Foil)</span>
+                    <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
+                      currentPrinting.prices.usd_foil }}
+                    <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -98,7 +100,9 @@
                   currentPrinting.prices.eur }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    €{{ currentPrinting.prices.eur_foil }} <span class="text-sm">(Foil)</span>
+                    <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
+                      currentPrinting.prices.eur_foil }}
+                    <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
