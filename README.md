@@ -33,10 +33,9 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 
 ## 🛣️ Roadmap
 
-- Increasing loading speeds
+- Image-based search
+- User database integration
 - Deck recommendation system
-- Keyword & Image-based search
-- Browser Extension
 
 ## 🤝 Contributing
 
@@ -129,7 +128,7 @@ yarn preview
 bun run preview
 ```
 
-Check out the [Nuxt deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
 ## 🙏 Acknowledgements
 
