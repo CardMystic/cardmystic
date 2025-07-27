@@ -45,8 +45,8 @@
 
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-[300px]">
-          <USelect v-model="selectedPrinting" :items="printingOptions" option-attribute="label" value-attribute="id"
-            placeholder="Select Printing" class="printing-select w-[300px]">
+          <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
+            class="printing-select w-[300px]">
             <template #item="{ item }">
               <div class="flex items-center gap-3 py-2">
                 <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
@@ -312,6 +312,29 @@ const { data: cardData, isLoading, error } = useQuery({
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
+// Computed property for printing dropdown options
+const printingOptions = computed(() => {
+  if (!printings.value) return [];
+
+  return printings.value.map(printing => ({
+    value: printing.id,
+    label: `${printing.set_name || 'Unknown Set'} (${printing.set?.toUpperCase() || 'UNK'})`,
+    subtitle: printing.released_at ? new Date(printing.released_at).getFullYear().toString() : 'Unknown',
+    image_url: printing.image_uris?.small || printing.card_faces?.[0]?.image_uris?.small || '',
+    frame_effects: printing.frame_effects?.filter((d) => { return d != 'legendary' }) || [],
+    surgefoil: printing.promo_types?.includes("surgefoil") ? true : false,
+  }));
+});
+
+// Get current selected printing data
+const currentPrinting = computed(() => {
+  console.log('Current printing:', selectedPrinting.value);
+  console.log('Available printings:', printingOptions.value);
+  if (!printings.value || !selectedPrinting.value) return card.value;
+  return printings.value.find(p => p.id === selectedPrinting.value) || card.value;
+});
+
+
 useHead(() => ({
   title: card.value
     ? `CardMystic | ${card.value.name}`
@@ -485,26 +508,6 @@ const hasPrices = computed(() => {
   return (
     prices.usd || prices.usd_foil || prices.eur || prices.eur_foil || prices.tix
   );
-});
-
-// Computed property for printing dropdown options
-const printingOptions = computed(() => {
-  if (!printings.value) return [];
-
-  return printings.value.map(printing => ({
-    id: printing.id,
-    label: `${printing.set_name || 'Unknown Set'} (${printing.set?.toUpperCase() || 'UNK'})`,
-    subtitle: printing.released_at ? new Date(printing.released_at).getFullYear().toString() : 'Unknown',
-    image_url: printing.image_uris?.small || printing.card_faces?.[0]?.image_uris?.small || '',
-    frame_effects: printing.frame_effects?.filter((d) => { return d != 'legendary' }) || [],
-    surgefoil: printing.promo_types?.includes("surgefoil") ? true : false,
-  }));
-});
-
-// Get current selected printing data
-const currentPrinting = computed(() => {
-  if (!printings.value || !selectedPrinting.value) return card.value;
-  return printings.value.find(p => p.id === selectedPrinting.value) || card.value;
 });
 
 // Computed properties for current face data using current printing
