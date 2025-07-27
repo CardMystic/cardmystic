@@ -54,7 +54,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -74,7 +74,7 @@
           class="price-card mt-4 hidden lg:block w-full max-w-[300px]">
           <div class="price-header">
             <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
-            <h4 class="price-title">Current Prices</h4>
+            <h3 class="price-title">Current Prices</h3>
           </div>
 
           <div class="price-list">
@@ -85,7 +85,9 @@
                   currentPrinting.prices.usd }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    ${{ currentPrinting.prices.usd_foil }} <span class="text-sm">(Foil)</span>
+                    <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
+                      currentPrinting.prices.usd_foil }}
+                    <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -98,7 +100,9 @@
                   currentPrinting.prices.eur }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
                   <span class="foil-text">
-                    €{{ currentPrinting.prices.eur_foil }} <span class="text-sm">(Foil)</span>
+                    <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
+                      currentPrinting.prices.eur_foil }}
+                    <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -751,12 +755,25 @@ watch([card, printings], ([newCard, newPrintings]) => {
 
 // Card Text Container
 .card-text-container
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.9), rgba(66, 66, 66, 0.8))
-  border-radius: 16px
-  padding: 24px
+  border-radius: 24px
+  padding: 16px
+  backdrop-filter: blur(20px) saturate(180%)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+  position: relative
   margin-bottom: 16px
-  border: 1px solid rgba(147, 114, 255, 0.2)
-  backdrop-filter: blur(10px)
+
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+    pointer-events: none
 
 .oracle-text
   color: white
@@ -808,12 +825,24 @@ watch([card, printings], ([newCard, newPrintings]) => {
 
 // Legalities Card
 .legalities-card
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
-  border: 1px solid rgba(147, 114, 255, 0.3) !important
-  border-radius: 16px !important
-  padding: 20px !important
-  @media (max-width: 768px)
-    padding: 12px !important
+  border-radius: 24px
+  backdrop-filter: blur(20px) saturate(180%)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+  position: relative
+  margin-bottom: 16px
+  
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+    pointer-events: none
 
 .legalities-header
   display: flex
@@ -855,12 +884,24 @@ watch([card, printings], ([newCard, newPrintings]) => {
 
 // Price Card Styling
 .price-card
-  width: 100%
-  max-width: 280px
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
-  border: 1px solid rgba(34, 197, 94, 0.3) !important
-  border-radius: 12px !important
-  padding: 16px !important
+  border-radius: 24px
+  backdrop-filter: blur(20px) saturate(180%)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+  position: relative
+  margin-bottom: 16px
+
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+    pointer-events: none
 
 .price-header
   display: flex
@@ -871,9 +912,6 @@ watch([card, printings], ([newCard, newPrintings]) => {
   color: white
   font-size: 1.3rem
   font-weight: 600
-  margin: 0
-  position: relative
-  top: 4px
 
 .price-list
   display: flex

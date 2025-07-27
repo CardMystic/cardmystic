@@ -22,7 +22,7 @@
 
         <template v-else-if="!queryParam">
           <div class="no-results-container">
-            <UAlert color="blue" icon="i-lucide-info" title="Enter a search query"
+            <UAlert color="info" icon="i-lucide-info" title="Enter a search query"
               description="Please enter a search query to find cards." class="mb-4" />
           </div>
         </template>
