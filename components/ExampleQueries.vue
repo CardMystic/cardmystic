@@ -22,8 +22,9 @@
       </div>
       <!-- Horizontal scrolling results -->
       <div class="results-container">
-        <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results"
-          :ui="{ item: 'basis-1/6' }">
+        <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results" :ui="{
+          item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
+        }">
           <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
             class="hoverable-card" />
         </UCarousel>
