@@ -167,7 +167,7 @@ watch(searchType, async (newType) => {
   }
 
   .search-container {
-    padding: 0 16px;
+    padding: 0 0px;
   }
 }
 </style>
