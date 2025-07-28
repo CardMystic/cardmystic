@@ -48,6 +48,12 @@ const items = ref<NavigationMenuItem[]>([
 <template>
   <div
     class="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white/75 dark:bg-gray-950/75 backdrop-blur">
-    <UNavigationMenu :items="items" class="w-full justify-center py-4" />
+    <UNavigationMenu :items="items" class="w-full justify-center py-4" :ui="{
+      viewport: 'w-auto min-w-[12rem] max-w-sm',
+      childList: 'w-auto flex flex-col items-start p-2 gap-2',
+      content: 'w-auto'
+    }" />
   </div>
 </template>
+
+<style lang="css" scoped></style>
