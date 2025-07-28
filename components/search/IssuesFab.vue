@@ -1,11 +1,12 @@
 <template>
-  <UTooltip :content="{
-    side: 'left',
-    sideOffset: 8
-  }" text="Report an issue with these results">
-    <UButton icon="i-lucide-circle-alert" color="neutral" class="fixed-fab" size="xl" variant="soft"
-      @click="onClick && onClick()" />
-  </UTooltip>
+  <div class="fixed-fab">
+    <UTooltip :content="{
+      side: 'left',
+      sideOffset: 8
+    }" text="Report an issue with these results">
+      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft" @click="onClick && onClick()" />
+    </UTooltip>
+  </div>
 </template>
 
 <script lang="ts" setup>
