@@ -1,5 +1,5 @@
 <template>
-  <div class="search-container px-0">
+  <div class="search-container">
     <!-- Search type tabs -->
     <div class="search-tabs-container mb-4">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
@@ -167,7 +167,7 @@ watch(searchType, async (newType) => {
   }
 
   .search-container {
-    padding: 0 16px;
+    padding: 0 0px;
   }
 }
 </style>
