@@ -21,10 +21,10 @@
     <SearchForm />
 
     <!-- Example Queries -->
-    <ExampleQueries v-if="isAiSearch" />
+    <ExampleQueries />
 
     <!-- Top Queries -->
-    <TopQueries v-if="isAiSearch" />
+    <TopQueries />
   </div>
 </template>
 
