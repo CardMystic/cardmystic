@@ -157,8 +157,8 @@ function getCardImageUrl(cardData: any): string {
   return '';
 }
 
-function handleImageError(value: string | undefined) {
-  console.warn('Card image failed to load:', value);
+function handleImageError(event: Event) {
+  console.warn('Card image failed to load:', event);
 }
 </script>
 
