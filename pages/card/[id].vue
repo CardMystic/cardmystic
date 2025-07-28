@@ -84,7 +84,7 @@
                 <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                   currentPrinting.prices.usd }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="foil-text">
+                  <span class="text-yellow-300">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                       currentPrinting.prices.usd_foil }}
                     <span class="text-sm">(Foil)</span>
@@ -99,7 +99,7 @@
                 <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
                   currentPrinting.prices.eur }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="foil-text">
+                  <span class="text-yellow-300">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
                       currentPrinting.prices.eur_foil }}
                     <span class="text-sm">(Foil)</span>
@@ -193,8 +193,10 @@
                   currentPrinting.prices.usd
                 }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="foil-text">
-                    ${{ currentPrinting.prices.usd_foil }} <span class="text-sm">(Foil)</span>
+                  <span class="text-yellow-300">
+                    <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
+                      currentPrinting.prices.usd_foil
+                    }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -207,8 +209,10 @@
                   currentPrinting.prices.eur
                 }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="foil-text">
-                    €{{ currentPrinting.prices.eur_foil }} <span class="text-sm">(Foil)</span>
+                  <span class="text-yellow-300">
+                    <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
+                      currentPrinting.prices.eur_foil
+                    }} <span class="text-sm">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -935,10 +939,6 @@ watch([card, printings], ([newCard, newPrintings]) => {
 .price-value
   color: white
   font-size: 1rem
-  font-weight: 700
-
-.foil-text
-  @apply text-yellow-300
   font-weight: 700
 
 // Flip Button Styling
