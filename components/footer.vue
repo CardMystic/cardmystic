@@ -3,7 +3,7 @@
     class="w-full bg-white/75 dark:bg-gray-950/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 z-50">
     <UContainer class="py-6 text-left">
       <!-- Social Links -->
-      <div class="flex justify-center items-center gap-4 mb-4">
+      <div class="flex justify-center items-start gap-4 mb-4">
         <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
           <UIcon name="i-simple-icons-github" size="24" class="text-white" />
         </a>
