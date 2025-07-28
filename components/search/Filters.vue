@@ -81,8 +81,11 @@
                 <UCheckboxGroup :items="cardColors" orientation="horizontal" variant="card" v-model="selectedColors"
                   class="w-full">
                   <template #label="{ item }">
-                    <ManaIcon :type="cardColorToSymbol(item.value)" class="mr-1" />
-                    {{ item.value }}
+                    <ManaIcon
+                      :type="cardColorToSymbol((item as { value: 'White' | 'Blue' | 'Black' | 'Red' | 'Green' }).value)"
+                      class="mr-1" />
+                    <!-- Typescript gets confused with the CheckboxGroupItem type so we have to help it out a bit -->
+                    {{ (item as { value: string }).value }}
                   </template>
                 </UCheckboxGroup>
               </div>
