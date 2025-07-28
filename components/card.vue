@@ -10,25 +10,7 @@
         </div>
       </div>
 
-      <div class="confidence-bar"
-        :style="{ border: '1px solid black', borderRadius: '8px', height: progressHeight + 'px', background: '#222', position: 'relative' }">
-        <div :style="{
-          width: normalizeScore(card.score) + '%',
-          background: getScoreColor(card.score),
-          height: '100%',
-          borderRadius: '8px',
-          transition: 'width 0.3s',
-        }">
-        </div>
-        <p class="confidence-text" :style="{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          margin: 0,
-          zIndex: 10
-        }">{{ Math.ceil(normalizeScore(card.score)) }}%</p>
-      </div>
+      <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
     </div>
   </div>
 </template>
@@ -61,18 +43,6 @@ const props = defineProps({
 
 
 const sizeClass = computed(() => `card-${props.size}`);
-const progressHeight = computed(() => {
-  switch (props.size) {
-    case 'small':
-      return 12;
-    case 'medium':
-      return 16;
-    case 'large':
-      return 20;
-    default:
-      return 20;
-  }
-});
 
 function normalizeScore(score: number | undefined): number {
   if (score === undefined) {
@@ -109,6 +79,8 @@ function normalizeScore(score: number | undefined): number {
 
   return normalizedScore;
 }
+
+const normalizedScore = computed(() => normalizeScore(props.card.score));
 
 function getScoreColor(score: number | undefined): string {
   const normalizedScore = normalizeScore(score);
@@ -165,9 +137,7 @@ function handleImageError(event: Event) {
 <style scoped>
 .confidence-text {
   color: white;
-  font-weight: bold;
   text-align: center;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1);
 }
 
 .card-container {
