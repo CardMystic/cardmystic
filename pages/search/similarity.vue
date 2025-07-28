@@ -22,7 +22,7 @@
 
         <template v-else-if="!cardNameParam">
           <div class="no-results-container">
-            <UAlert color="blue" icon="i-lucide-info" title="Enter a card name"
+            <UAlert color="info" icon="i-lucide-info" title="Enter a card name"
               description="Please enter a card name to search for similar cards." class="mb-4" />
           </div>
         </template>
