@@ -136,10 +136,8 @@
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
             <span v-if="currentManaCost">
-              <template v-for="(part, index) in formattedManaCost" :key="index">
-                <template v-if="typeof part === 'string'">{{ part }}</template>
-                <component v-else :is="part" />
-              </template>
+              <!-- TODO: add mana cost back -->
+              <mana-cost :manaCost="currentManaCost" class="ml-2" />
             </span>
           </h2>
           <div class="set-rarity-info">
@@ -266,7 +264,7 @@ import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimit } from '~/models/searchModel';
-import ManaIcon from '~/components/manaIcon.vue';
+import manaCost from '~/components/manaCost.vue';
 
 const route = useRoute();
 
@@ -315,6 +313,15 @@ const { data: cardData, isLoading, error } = useQuery({
 // Extract card and printings from combined data
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
+
+// Watch for card changes to set initial selected printing
+watch([card, printings], ([newCard, newPrintings]) => {
+  if (newCard && newPrintings && newPrintings.length > 0) {
+    // Always update selected printing to current card or first available
+    const currentPrintingMatch = newPrintings.find(p => p.id === newCard.id);
+    selectedPrinting.value = currentPrintingMatch ? currentPrintingMatch.id : newPrintings[0].id;
+  }
+}, { immediate: true });
 
 // Computed property for printing dropdown options
 const printingOptions = computed(() => {
@@ -408,88 +415,6 @@ const formatName = (raw: string) => {
 };
 
 /**
- * Convert symbols (mana, tap, etc) in a string to ManaIcon components
- */
-const formatSymbols = (text: string | undefined) => {
-  if (!text) return [];
-
-  const symbols = text.match(/\{([^}]+)\}/g);
-
-  if (!symbols) return [text];
-
-  // Split text into parts and symbols while preserving newlines
-  const parts: (string | ReturnType<typeof h>)[] = [];
-  let lastIndex = 0;
-
-  symbols.forEach((symbol) => {
-    const symbolIndex = text.indexOf(symbol, lastIndex);
-
-    // Add text before the symbol (preserving newlines)
-    if (symbolIndex > lastIndex) {
-      const textBefore = text.substring(lastIndex, symbolIndex);
-      // Split by newlines and add each part with line breaks
-      const lines = textBefore.split('\n');
-      lines.forEach((line, index) => {
-        if (index > 0) {
-          parts.push(h('br')); // Add line break for newlines
-        }
-        if (line) {
-          parts.push(line);
-        }
-      });
-    }
-
-    let symbolForUrl = symbol.slice(1, -1); // Remove { and }
-
-    // Handle hybrid mana (e.g., W/U becomes wu)
-    if (symbolForUrl.includes('/')) {
-      symbolForUrl = symbolForUrl.replace('/', '').toLowerCase();
-    }
-
-    // Handle special symbols
-    const specialSymbols: Record<string, string> = {
-      t: 'tap',
-      T: 'tap',
-      q: 'untap',
-      Q: 'untap',
-      e: 'energy',
-      E: 'energy',
-      s: 'snow',
-      S: 'snow',
-      chaos: 'chaos',
-      pw: 'planeswalker',
-      loyalty: 'loyalty',
-      '∞': 'infinity',
-    };
-
-    if (specialSymbols[symbolForUrl]) {
-      symbolForUrl = specialSymbols[symbolForUrl];
-    }
-
-    // Create ManaIcon component
-    parts.push(h(ManaIcon, { type: symbolForUrl }));
-
-    lastIndex = symbolIndex + symbol.length;
-  });
-
-  // Add remaining text (preserving newlines)
-  if (lastIndex < text.length) {
-    const remainingText = text.substring(lastIndex);
-    const lines = remainingText.split('\n');
-    lines.forEach((line, index) => {
-      if (index > 0) {
-        parts.push(h('br')); // Add line break for newlines
-      }
-      if (line) {
-        parts.push(line);
-      }
-    });
-  }
-
-  return parts;
-};
-
-/**
  * Generate a TCGPlayer search URL for a card name
  */
 const generateTCGPlayerSearchUrl = (cardName: string): string => {
@@ -567,11 +492,6 @@ const currentToughness = computed(() => {
   return currentFace.value.toughness || '';
 });
 
-// Computed properties for formatted symbols
-const formattedManaCost = computed(() => {
-  return formatSymbols(currentManaCost.value);
-});
-
 const formattedOracleText = computed(() => {
   return formatSymbols(currentOracleText.value);
 });
@@ -645,15 +565,6 @@ function findSimilarCards() {
 
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
-
-// Watch for card changes to set initial selected printing
-watch([card, printings], ([newCard, newPrintings]) => {
-  if (newCard && newPrintings && newPrintings.length > 0) {
-    // Always update selected printing to current card or first available
-    const currentPrintingMatch = newPrintings.find(p => p.id === newCard.id);
-    selectedPrinting.value = currentPrintingMatch ? currentPrintingMatch.id : newPrintings[0].id;
-  }
-}, { immediate: true });
 </script>
 
 <style scoped lang="sass">
