@@ -1,18 +1,22 @@
 <template>
-  <div class="card-container" :class="sizeClass">
+  <UCard variant="subtle">
     <!-- Card content: image + score -->
-    <div class="card">
-      <div class="card-image-wrapper">
-        <img class="card-image" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
-          @error="handleImageError" v-if="getCardImageUrl(card.card_data)" />
-        <div v-else class="image-placeholder">
-          <p class="placeholder-text">{{ card.card_data.name }}</p>
-        </div>
-      </div>
+    <div class="card-image-wrapper">
+      <img class="card-image" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
+        @error="handleImageError" v-if="getCardImageUrl(card.card_data)" />
+      <div v-else class="image-placeholder">
+        <p class="placeholder-text">{{ card.card_data.name }}</p>
 
-      <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
+      </div>
     </div>
-  </div>
+    <!-- Card Name and mana cost -->
+    <div class="flex flex-row justify-between items-center">
+      {{ card.card_data.name }}
+      <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost" class="manacost-text" />
+    </div>
+
+    <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
+  </UCard>
 </template>
 
 <script setup lang="ts">
@@ -40,7 +44,6 @@ const props = defineProps({
     default: false,
   },
 });
-
 
 const sizeClass = computed(() => `card-${props.size}`);
 
@@ -149,14 +152,7 @@ function handleImageError(event: Event) {
   transition: all 0.3s ease;
   cursor: pointer;
   overflow: visible;
-}
-
-.card {
-  flex-shrink: 0;
-  padding: 0px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  padding: 12px;
 }
 
 .card-image-wrapper {
@@ -165,18 +161,12 @@ function handleImageError(event: Event) {
 }
 
 .card-image {
-  width: 100%;
+  width: 95%;
   height: auto;
   aspect-ratio: 5/7;
   /* MTG card aspect ratio */
   object-fit: cover;
   flex: 1;
-}
-
-/* Remove the old GC badge styles since they're now in the component */
-
-.confidence-bar {
-  margin-top: 2px;
 }
 
 /* Size variants */
@@ -237,8 +227,12 @@ function handleImageError(event: Event) {
 
 .placeholder-text {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
+  font-size: 16px;
   margin-top: 8px;
   text-align: center;
+}
+
+.manacost-text {
+  font-size: 14px;
 }
 </style>
