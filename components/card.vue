@@ -1,46 +1,21 @@
 <template>
-  <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
+  <UCard variant="subtle">
     <!-- Card content: image + score -->
-    <div class="card">
-      <div class="card-image-wrapper">
-        <img class="card-image" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
-          @error="handleImageError" v-if="getCardImageUrl(card.card_data)" />
-        <div v-else class="image-placeholder">
-          <p class="placeholder-text">{{ card.card_data.name }}</p>
-        </div>
+    <div class="card-image-wrapper">
+      <img class="card-image" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
+        @error="handleImageError" v-if="getCardImageUrl(card.card_data)" />
+      <div v-else class="image-placeholder">
+        <p class="placeholder-text">{{ card.card_data.name }}</p>
+
       </div>
-
-      <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
     </div>
-
     <!-- Card Name and mana cost -->
-    <div class="flex flex-col items-center justify-center text-center">
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-        <p class="whitespace-nowrap overflow-hidden truncate">
-          {{ card.card_data.name.split(' // ')[0] }}
-        </p>
-        <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
-          class="manacost-text whitespace-nowrap" />
-      </div>
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
-        <p class="whitespace-nowrap overflow-hidden truncate">
-          <span
-            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: orange;' : ''">
-            {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
-          </span>
-        </p>
-      </div>
-      <div class="flex flex-row items-center justify-center text-center w-full">
-        <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" />
-        <p class="text-xs">
-          {{ props.card.score !== undefined
-            ? props.isSimilaritySearch
-              ? `${normalizedScore.toFixed(2)}%`
-              : normalizedScore.toFixed(2) + '%'
-            : 'N/A' }}
-        </p>
-      </div>
+    <div class="flex flex-row justify-between items-center">
+      {{ card.card_data.name }}
+      <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost" class="manacost-text" />
     </div>
+
+    <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
   </UCard>
 </template>
 
@@ -177,23 +152,68 @@ function handleImageError(event: Event) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: visible;
+  padding: 12px;
 }
 
-/* Small Size Variant */
+.card-image-wrapper {
+  position: relative;
+  width: 100%;
+}
 
-.card-small {
+.card-image {
+  width: 95%;
+  height: auto;
   aspect-ratio: 5/7;
   width: 100%;
   object-fit: cover;
   border-radius: 8px;
 }
 
-/* Large Size Variant */
-.card-large {
-  aspect-ratio: 5/7;
-  width: 100%;
-  object-fit: cover;
-  border-radius: 14px;
+/* Size variants */
+.card-small .card {
+  min-width: 150px;
+  max-width: 150px;
+}
+
+.card-small .card-image {
+  max-height: 210px;
+  border-radius: 10px;
+}
+
+.card-small .confidence-text {
+  font-size: 11px;
+}
+
+.card-medium .card {
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.card-medium .card-image {
+  max-height: 280px;
+  border-radius: 16px;
+}
+
+.card-medium .confidence-text {
+  font-size: 12px;
+}
+
+.card-large .card {
+  min-width: 268px;
+  max-width: 268px;
+}
+
+.card-large .card-image {
+  max-height: 375px;
+  border-radius: 20px;
+}
+
+.card-large .confidence-text {
+  font-size: 14px;
 }
 
 .image-placeholder {
