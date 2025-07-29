@@ -136,7 +136,8 @@
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
             <span v-if="currentManaCost">
-              <ManaCost :manaCost="currentManaCost" class="ml-2" />
+              <!-- TODO: add mana cost back -->
+              <mana-cost :manaCost="currentManaCost" class="ml-2" />
             </span>
           </h2>
           <div class="set-rarity-info">
@@ -311,6 +312,15 @@ const { data: cardData, isLoading, error } = useQuery({
 // Extract card and printings from combined data
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
+
+// Watch for card changes to set initial selected printing
+watch([card, printings], ([newCard, newPrintings]) => {
+  if (newCard && newPrintings && newPrintings.length > 0) {
+    // Always update selected printing to current card or first available
+    const currentPrintingMatch = newPrintings.find(p => p.id === newCard.id);
+    selectedPrinting.value = currentPrintingMatch ? currentPrintingMatch.id : newPrintings[0].id;
+  }
+}, { immediate: true });
 
 // Computed property for printing dropdown options
 const printingOptions = computed(() => {
