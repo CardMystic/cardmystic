@@ -1,5 +1,5 @@
 <template>
-  <div class="example-query-container mb-2">
+  <div class="mb-2">
     <div v-if="isLoading" class="text-center">
       <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
       <p class="mt-2 text-white text-caption">Loading example...</p>
@@ -8,27 +8,25 @@
     <div v-else-if="results && results.length > 0" class="example-content">
       <!-- Query display and TRY IT button -->
       <div class="query-header">
-        <div class="query-text">
+        <div>
           <UIcon name="i-lucide-lightbulb" class="mr-2" color="primary" />
           <span class="query-value">"{{ wordSearch.query }}"</span>
         </div>
         <div class="button-group">
           <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
-            :loading="isLoading" class="refresh-button" size="sm" />
-          <UButton color="primary" variant="outline" @click="tryQuery" class="try-button" icon="i-lucide-search">
+            :loading="isLoading" size="sm" />
+          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search">
             TRY
           </UButton>
         </div>
       </div>
       <!-- Horizontal scrolling results -->
-      <div class="results-container">
-        <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results" :ui="{
-          item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
-        }">
-          <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
-            class="hoverable-card" />
-        </UCarousel>
-      </div>
+      <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results" :ui="{
+        item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
+      }">
+        <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
+          class="hoverable-card my-1" />
+      </UCarousel>
     </div>
   </div>
 </template>
@@ -122,10 +120,6 @@ function goToCard(cardId: string | undefined) {
 </script>
 
 <style scoped lang="sass">
-.example-query-container
-  width: 100%
-  margin: 0 auto
-
 .example-content
   border-radius: 24px
   padding: 16px
@@ -153,21 +147,6 @@ function goToCard(cardId: string | undefined) {
   margin-bottom: 6px
   flex-wrap: wrap
 
-.skeleton-carousel
-  display: flex
-  gap: 12px
-  overflow-x: hidden
-  padding: 4px 0
-
-.skeleton-card
-  flex: 0 0 155px
-  min-width: 155px
-  max-width: 180px
-  padding: 8px
-  border-radius: 8px
-  background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(147, 114, 255, 0.02))
-  border: 1px solid rgba(147, 114, 255, 0.1)
-
 .button-group
   display: flex
   align-items: center
@@ -185,5 +164,5 @@ function goToCard(cardId: string | undefined) {
 .hoverable-card
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important
   &:hover
-    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)) saturate(110%) brightness(105%)
+    transform: scale(1.02)
 </style>
