@@ -16,7 +16,7 @@
         <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
           class="manacost-text whitespace-nowrap" />
       </div>
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-sm">
+      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
         <!-- <p class="whitespace-nowrap overflow-hidden truncate"><span v-if="card.card_data.prices.usd"
             class="text-green-500">$</span>{{
               card.card_data.prices.usd ?? "N/A"
