@@ -120,7 +120,8 @@
         <!-- TCGPlayer Button - Desktop only -->
         <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
           :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
-          class="mt-6 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg">
+          class="mt-6 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg"
+          target="_blank" rel="noopener noreferrer">
           Buy on TCGPlayer
         </UButton>
 
