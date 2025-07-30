@@ -59,7 +59,7 @@
         <template v-for="(formatItem, index) in selectedCardFormats || []" :key="`format-${index}`">
           <div v-if="formatItem.format || formatItem.status">
             <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-              icon="i-lucide-circle-x" @close="removeFormat(index)">{{ formatItem.format || 'Any' }} - {{
+              icon="i-lucide-circle-x" @click="removeFormat(index)">{{ formatItem.format || 'Any' }} - {{
                 formatItem.status || 'Any Status' }}
             </UButton>
           </div>
