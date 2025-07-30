@@ -154,7 +154,7 @@ function handleImageError(event: Event) {
 /* Small Size Variant */
 
 .card-small {
-  border-radius: 5px;
+  border-radius: 8px;
 }
 
 /* Large Size Variant */

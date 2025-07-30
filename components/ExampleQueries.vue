@@ -1,5 +1,5 @@
 <template>
-  <div class="example-query-container mb-2">
+  <div class="mb-2">
     <div v-if="isLoading" class="text-center">
       <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
       <p class="mt-2 text-white text-caption">Loading example...</p>
@@ -8,27 +8,25 @@
     <div v-else-if="results && results.length > 0" class="example-content">
       <!-- Query display and TRY IT button -->
       <div class="query-header">
-        <div class="query-text">
+        <div>
           <UIcon name="i-lucide-lightbulb" class="mr-2" color="primary" />
           <span class="query-value">"{{ wordSearch.query }}"</span>
         </div>
         <div class="button-group">
           <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
-            :loading="isLoading" class="refresh-button" size="sm" />
-          <UButton color="primary" variant="outline" @click="tryQuery" class="try-button" icon="i-lucide-search">
+            :loading="isLoading" size="sm" />
+          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search">
             TRY
           </UButton>
         </div>
       </div>
       <!-- Horizontal scrolling results -->
-      <div class="results-container">
-        <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results" :ui="{
-          item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
-        }">
-          <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
-            class="hoverable-card" />
-        </UCarousel>
-      </div>
+      <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results" :ui="{
+        item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
+      }">
+        <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
+          class="hoverable-card my-1" />
+      </UCarousel>
     </div>
   </div>
 </template>
@@ -123,10 +121,6 @@ function goToCard(cardId: string | undefined) {
 </script>
 
 <style scoped lang="sass">
-.example-query-container
-  width: 100%
-  margin: 0 auto
-
 .example-content
   border-radius: 24px
   padding: 16px
@@ -153,28 +147,12 @@ function goToCard(cardId: string | undefined) {
   align-items: center
   margin-bottom: 6px
   flex-wrap: wrap
-  gap: 8px
 
 .button-group
   display: flex
   align-items: center
   gap: 12px
   flex-shrink: 0
-
-.refresh-button
-  min-width: 30px
-  width: 30px
-  height: 30px
-  border-radius: 50%
-
-.try-button
-  flex-shrink: 0
-
-.query-text
-  display: flex
-  align-items: center
-  flex: 1
-  min-width: 0
 
 .query-value
   color: rgb(var(--v-theme-primary))
@@ -184,82 +162,8 @@ function goToCard(cardId: string | undefined) {
   @media (max-width: 768px)
     font-size: 12px
 
-.results-container
-  width: 100%
-  overflow: hidden
-  border-radius: 16px
-  background: linear-gradient(90deg, 
-    rgba(0, 0, 0, 0.1) 0%, 
-    transparent 15%, 
-    transparent 85%, 
-    rgba(0, 0, 0, 0.1) 100%)
-  position: relative
-
-  &::before,
-  &::after
-    content: ''
-    position: absolute
-    top: 0
-    bottom: 0
-    width: 32px
-    pointer-events: none
-    z-index: 2
-
-  &::before
-    left: 0
-    background: linear-gradient(90deg, rgba(44, 44, 44, 0.8), transparent)
-
-  &::after
-    right: 0
-    background: linear-gradient(270deg, rgba(44, 44, 44, 0.8), transparent)
-
-.results-scroll
-  display: flex
-  gap: 16px
-  overflow-x: auto
-  padding: 4px
-  user-select: none
-  cursor: grab
-
-  &:active
-    cursor: grabbing
-
-  // Hide scrollbar but keep functionality
-  scrollbar-width: none
-  -ms-overflow-style: none
-  &::-webkit-scrollbar
-    display: none
-
-.result-card-wrapper
-  flex: 0 0 auto
-  cursor: pointer
-  position: relative
-  z-index: 1
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
-  will-change: transform, opacity
-  background: transparent
-  border: none
-  outline: none
-
-.lazy-card-container
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
-  transform-origin: center
-  display: block
-  width: 100%
-  height: 100%
-  background: transparent
-  border: none
-  outline: none
-
-  &:hover
-    transform: scale(1.05) !important
-    z-index: 10
-
 .hoverable-card
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important
-  cursor: pointer
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
-
   &:hover
-    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)) saturate(110%) brightness(105%)
+    transform: scale(1.02)
 </style>
