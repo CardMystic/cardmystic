@@ -12,10 +12,10 @@
         </template>
 
         <template v-else-if="searchResults && searchResults.length">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             <div v-for="result in searchResults" :key="result.card_data.id" class="cursor-pointer"
               @click="navigateToCard(result.card_data.id)">
-              <card :card="result" />
+              <card :card="result" :showCardInfo="true" />
             </div>
           </div>
         </template>

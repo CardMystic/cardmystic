@@ -1,21 +1,23 @@
 <template>
-  <UCard variant="subtle">
+  <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
     <!-- Card content: image + score -->
-    <div class="card-image-wrapper">
-      <img class="card-image" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
-        @error="handleImageError" v-if="getCardImageUrl(card.card_data)" />
-      <div v-else class="image-placeholder">
-        <p class="placeholder-text">{{ card.card_data.name }}</p>
-
-      </div>
+    <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
+      v-if="getCardImageUrl(card.card_data)" :ui="{}" />
+    <div v-else class="image-placeholder">
+      <p class="placeholder-text">{{ card.card_data.name }}</p>
     </div>
+
     <!-- Card Name and mana cost -->
-    <div class="flex flex-row justify-between items-center">
-      {{ card.card_data.name }}
-      <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost" class="manacost-text" />
+    <div class="flex flex-col items-center justify-center text-center">
+      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
+        <p class="whitespace-nowrap overflow-hidden truncate">{{ card.card_data.name.split(' // ')[0]
+        }}
+        </p>
+        <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
+          class="manacost-text whitespace-nowrap" />
+      </div>
+      <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
     </div>
-
-    <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
   </UCard>
 </template>
 
@@ -142,78 +144,22 @@ function handleImageError(event: Event) {
 </script>
 
 <style scoped>
-.confidence-text {
-  color: white;
-  text-align: center;
-}
-
 .card-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  overflow: visible;
-  padding: 12px;
 }
 
-.card-image-wrapper {
-  position: relative;
-  width: 100%;
+/* Small Size Variant */
+
+.card-small {
+  border-radius: 5px;
 }
 
-.card-image {
-  width: 95%;
-  height: auto;
-  aspect-ratio: 5/7;
-  width: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-/* Size variants */
-.card-small .card {
-  min-width: 150px;
-  max-width: 150px;
-}
-
-.card-small .card-image {
-  max-height: 210px;
-  border-radius: 10px;
-}
-
-.card-small .confidence-text {
-  font-size: 11px;
-}
-
-.card-medium .card {
-  min-width: 200px;
-  max-width: 200px;
-}
-
-.card-medium .card-image {
-  max-height: 280px;
-  border-radius: 16px;
-}
-
-.card-medium .confidence-text {
-  font-size: 12px;
-}
-
-.card-large .card {
-  min-width: 268px;
-  max-width: 268px;
-}
-
-.card-large .card-image {
-  max-height: 375px;
-  border-radius: 20px;
-}
-
-.card-large .confidence-text {
-  font-size: 14px;
+/* Large Size Variant */
+.card-large {
+  border-radius: 14px;
 }
 
 .image-placeholder {
