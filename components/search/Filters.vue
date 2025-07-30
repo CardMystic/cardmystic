@@ -94,7 +94,7 @@
               <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions" placeholder="Color matching"
                 clearable class="w-full" />
               <div class="color-checkboxes flex flex-wrap">
-                <UCheckboxGroup :items="cardColors" orientation="vertical" variant="card" v-model="selectedColors"
+                <UCheckboxGroup :items="cardColors" :orientation="orientation" variant="card" v-model="selectedColors"
                   class="w-full flex flex-wrap">
                   <template #label="{ item }">
                     <ManaIcon
@@ -110,7 +110,8 @@
           <!-- Rarities Filter -->
           <template #rarities>
             <div class="accordion-item flex flex-wrap">
-              <UCheckboxGroup :items="cardRarities" orientation="vertical" variant="card" v-model="selectedRarities" />
+              <UCheckboxGroup :items="cardRarities" :orientation="orientation" variant="card"
+                v-model="selectedRarities" />
             </div>
           </template>
           <!-- Stats Filter -->
@@ -166,6 +167,19 @@ import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt
 
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
+
+const screenWidth = ref(window.innerWidth)
+
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    screenWidth.value = window.innerWidth
+    console.log(screenWidth.value)
+  })
+})
+
+const orientation: Ref<'vertical' | 'horizontal'> = computed(() =>
+  screenWidth.value < 768 ? 'vertical' : 'horizontal'
+)
 
 const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
 
