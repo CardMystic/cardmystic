@@ -25,7 +25,7 @@
         <RarityBadge v-if="card.card_data.rarity" :rarity="card.card_data.rarity" size="small" :isTextOnly="true" />
       </div>
       <div class="flex flex-row items-center justify-center text-center w-full">
-        <UProgress v-model="normalizedScore" class="my-0 pt-2 mr-2" size="md" />
+        <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" />
         <p class="text-xs">
           {{ props.card.score !== undefined
             ? props.isSimilaritySearch
