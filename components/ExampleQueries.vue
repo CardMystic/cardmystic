@@ -25,7 +25,7 @@
         item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
       }">
         <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
-          class="hoverable-card my-1" />
+          class="hoverable-card my-1 cursor-pointer" />
       </UCarousel>
     </div>
   </div>
