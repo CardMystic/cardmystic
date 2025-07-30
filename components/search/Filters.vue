@@ -143,8 +143,10 @@
             <div class="accordion-item">
               <div v-if="selectedCardFormats && selectedCardFormats.length > 0">
                 <div v-for="(format, i) in selectedCardFormats" :key="i" class="mb-3" style="display: flex; gap: 8px;">
-                  <USelect v-model="format.format" :items="cardFormats" label="Format" clearable />
-                  <USelect v-model="format.status" :items="cardFormatStatuses" label="Status" clearable />
+                  <USelect class="min-w-[160px]" v-model="format.format" :items="cardFormats" label="Format"
+                    clearable />
+                  <USelect class="min-w-[160px]" v-model="format.status" :items="cardFormatStatuses" label="Status"
+                    clearable />
                 </div>
               </div>
               <UButton @click="addFormatRow" color="primary" size="sm" icon="i-lucide-plus">
@@ -168,12 +170,13 @@ import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
 
-const screenWidth = ref(window.innerWidth)
+const screenWidth = ref(0)
 
 onMounted(() => {
   window.addEventListener('resize', () => {
-    screenWidth.value = window.innerWidth
-    console.log(screenWidth.value)
+    if (window && window.innerWidth) {
+      screenWidth.value = window.innerWidth;
+    }
   })
 })
 
@@ -232,7 +235,9 @@ const comparisonOperators = [
 
 function updateFilters(updates: Partial<CardSearchFilters>) {
   const current = modelValue || {} as CardSearchFilters;
+  console.log('Current filters:', current);
   const newValue = { ...current, ...updates };
+  console.log('Updating filters:', newValue);
   emit('update:modelValue', newValue);
 }
 
