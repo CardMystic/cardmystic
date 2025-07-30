@@ -6,11 +6,9 @@
       </UCardTitle>
 
       <UCardContent class="mt-2 text-base">
-        <p>
-          CardMystic is an Open Source Vector Search engine for Magic: The
-          Gathering cards. We are dedicated to providing powerful tools to the
-          amazing MTG community.
-        </p>
+        CardMystic is an Open Source Vector Search engine for Magic: The
+        Gathering cards. We are dedicated to providing powerful tools to the
+        amazing MTG community.
       </UCardContent>
     </UCard>
 
@@ -48,8 +46,8 @@
         </p>
         <p class="mt-4">
           👾 Discord:
-          <NuxtLink to="https://discord.gg/GmPZ3e7tZH" target="_blank" class="text-primary hover:underline">Join our
-            server</NuxtLink>
+          <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" class="text-primary hover:underline">Join our
+            server</a>
         </p>
         <p>
           📧 Email:
