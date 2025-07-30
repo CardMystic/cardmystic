@@ -16,7 +16,24 @@
         <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
           class="manacost-text whitespace-nowrap" />
       </div>
-      <UProgress v-model="normalizedScore" class="my-0 pt-2" size="md" />
+      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-sm">
+        <p class="whitespace-nowrap overflow-hidden truncate"><span v-if="card.card_data.prices.usd"
+            class="text-green-500">$</span>{{
+              card.card_data.prices.usd ?? "N/A"
+            }}
+        </p>
+        <RarityBadge v-if="card.card_data.rarity" :rarity="card.card_data.rarity" size="small" :isTextOnly="true" />
+      </div>
+      <div class="flex flex-row items-center justify-center text-center w-full">
+        <UProgress v-model="normalizedScore" class="my-0 pt-2 mr-2" size="md" />
+        <p class="text-sm">
+          {{ props.card.score !== undefined
+            ? props.isSimilaritySearch
+              ? `${normalizedScore.toFixed(2)}%`
+              : normalizedScore.toFixed(2) + '%'
+            : 'N/A' }}
+        </p>
+      </div>
     </div>
   </UCard>
 </template>
