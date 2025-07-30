@@ -131,7 +131,6 @@ const { data: searchResults, isLoading } = useQuery({
       throw new Error('Network response was not ok');
     }
     const results = await response.json() as Array<Card>;
-    console.log('Similarity search results:', results);
     return results;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
