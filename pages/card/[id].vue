@@ -8,7 +8,7 @@
     </div>
 
     <div v-else-if="error" class="text-center">
-      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4" />
+      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4 cursor-pointer" />
       <p class="mt-4 text-white">{{ error }}</p>
       <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
     </div>
@@ -18,7 +18,8 @@
       <div class="lg:col-span-3 flex flex-col items-center lg:items-start">
         <!-- Back to Results button aligned with card image -->
         <div class="back-button-container-aligned mb-4">
-          <UButton color="primary" variant="outline" @click="$router.back()" icon="i-heroicons-arrow-left">
+          <UButton class="cursor-pointer" color="primary" variant="outline" @click="$router.back()"
+            icon="i-heroicons-arrow-left">
             Back to Results
           </UButton>
         </div>
@@ -46,7 +47,7 @@
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-[300px]">
           <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
-            class="printing-select w-[300px]">
+            class="printing-select w-[300px] cursor-pointer">
             <template #item="{ item }">
               <div class="flex items-center gap-3 py-2">
                 <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
@@ -65,7 +66,8 @@
         <!-- Similar Cards Button - Desktop only -->
         <UButton color="neutral" variant="solid"
           :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-heroicons-squares-2x2"
-          size="lg" @click="findSimilarCards" class="hidden lg:flex similar-cards-btn-desktop w-full max-w-[300px]">
+          size="lg" @click="findSimilarCards"
+          class="hidden lg:flex similar-cards-btn-desktop w-full max-w-[300px] cursor-pointer">
           Similar Cards
         </UButton>
 
