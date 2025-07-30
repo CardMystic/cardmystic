@@ -298,7 +298,6 @@ const { data: cardData, isLoading, error } = useQuery({
         if (printingsResponse.ok) {
           const printingsData = await printingsResponse.json();
           printings = printingsData.data || [];
-          console.log(printings)
         } else {
           console.error('Printings fetch failed:', printingsResponse.status);
         }
@@ -342,8 +341,6 @@ const printingOptions = computed(() => {
 
 // Get current selected printing data
 const currentPrinting = computed(() => {
-  console.log('Current printing:', selectedPrinting.value);
-  console.log('Available printings:', printingOptions.value);
   if (!printings.value || !selectedPrinting.value) return card.value;
   return printings.value.find(p => p.id === selectedPrinting.value) || card.value;
 });
