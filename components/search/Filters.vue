@@ -3,50 +3,66 @@
     <!-- Active Filters Chips -->
     <div v-if="hasActiveFilters" class="active-filters-section mb-4">
       <div class="active-filters-chips">
+
         <!-- Card Types Chips -->
-        <UChip v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`" color="primary" size="sm"
-          class="ma-1" closable @close="removeCardType(cardType)">
-          {{ cardType }}
-        </UChip>
+        <div v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="removeCardType(cardType)">{{ cardType }}
+          </UButton>
+        </div>
 
         <!-- Colors Chips -->
-        <UChip v-for="color in selectedColors || []" :key="`color-${color}`" color="primary" size="sm" class="ma-1"
-          closable @close="removeColor(color)">
-          <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />
-          {{ color }}
-        </UChip>
+        <div v-for="color in selectedColors || []" :key="`color-${color}`">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="removeColor(color)">
+            <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />{{ color }}
+          </UButton>
+        </div>
 
         <!-- Rarities Chips -->
-        <UChip v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`" color="primary" size="sm" class="ma-1"
-          closable @close="removeRarity(rarity)">
-          {{ rarity }}
-        </UChip>
+        <div v-for="rarity in selectedRarities || []" :key="`rarity-${rarity}`">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="removeRarity(rarity)">{{ rarity }}
+          </UButton>
+        </div>
 
         <!-- Stats Chips -->
-        <UChip v-if="selectedCMC" color="info" size="sm" class="ma-1" closable @close="clearCMC">
-          CMC {{ selectedCMCOption || 'Equal To' }} {{ selectedCMC }}
-        </UChip>
+        <div v-if="selectedCMC">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="clearCMC()">CMC {{ selectedCMCOption || 'Equal To' }} {{
+              selectedCMC }}
+          </UButton>
+        </div>
 
-        <UChip v-if="selectedPower" color="info" size="sm" class="ma-1" closable @close="clearPower">
-          Power {{ selectedPowerOption || 'Equal To' }} {{ selectedPower }}
-        </UChip>
+        <div v-if="selectedPower">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="clearPower()">Power {{ selectedPowerOption || 'Equal To' }} {{
+              selectedPower }}
+          </UButton>
+        </div>
 
-        <UChip v-if="selectedToughness" color="info" size="sm" class="ma-1" closable @close="clearToughness">
-          Toughness {{ selectedToughnessOption || 'Equal To' }} {{ selectedToughness }}
-        </UChip>
+        <div v-if="selectedToughness">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="clearToughness()">Toughness {{ selectedToughnessOption || 'Equal To' }} {{
+              selectedToughness }}
+          </UButton>
+        </div>
 
         <!-- Color Filter Option Chip -->
-        <UChip v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'" color="warning"
-          size="sm" class="ma-1" closable @close="clearColorFilterOption">
-          Color: {{ selectedColorFilterOption }}
-        </UChip>
+        <div v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="clearColorFilterOption()">Color: {{ selectedColorFilterOption }}
+          </UButton>
+        </div>
 
         <!-- Formats Chips -->
         <template v-for="(formatItem, index) in selectedCardFormats || []" :key="`format-${index}`">
-          <UChip v-if="formatItem.format || formatItem.status" color="success" size="sm" class="ma-1" closable
-            @close="removeFormat(index)">
-            {{ formatItem.format || 'Any' }} - {{ formatItem.status || 'Any Status' }}
-          </UChip>
+          <div v-if="formatItem.format || formatItem.status">
+            <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+              icon="i-lucide-circle-x" @close="removeFormat(index)">{{ formatItem.format || 'Any' }} - {{
+                formatItem.status || 'Any Status' }}
+            </UButton>
+          </div>
         </template>
 
         <!-- Clear All Button -->
@@ -77,9 +93,9 @@
             <div class="accordion-item">
               <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions" placeholder="Color matching"
                 clearable class="w-full" />
-              <div class="color-checkboxes">
-                <UCheckboxGroup :items="cardColors" orientation="horizontal" variant="card" v-model="selectedColors"
-                  class="w-full">
+              <div class="color-checkboxes flex flex-wrap">
+                <UCheckboxGroup :items="cardColors" orientation="vertical" variant="card" v-model="selectedColors"
+                  class="w-full flex flex-wrap">
                   <template #label="{ item }">
                     <ManaIcon
                       :type="cardColorToSymbol((item as { value: 'White' | 'Blue' | 'Black' | 'Red' | 'Green' }).value)"
@@ -93,9 +109,8 @@
           </template>
           <!-- Rarities Filter -->
           <template #rarities>
-            <div class="accordion-item">
-              <UCheckboxGroup :items="cardRarities" orientation="horizontal" variant="card"
-                v-model="selectedRarities" />
+            <div class="accordion-item flex flex-wrap">
+              <UCheckboxGroup :items="cardRarities" orientation="vertical" variant="card" v-model="selectedRarities" />
             </div>
           </template>
           <!-- Stats Filter -->
@@ -408,13 +423,6 @@ function clearAllFilters() {
   width: 100%;
 }
 
-.color-checkboxes>div {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -439,13 +447,5 @@ function clearAllFilters() {
   color: rgba(255, 255, 255, 0.87);
   margin-bottom: 0;
   display: block;
-}
-
-.v-expansion-panel-title {
-  font-weight: 500;
-}
-
-.v-expansion-panel-text {
-  padding-top: 16px;
 }
 </style>
