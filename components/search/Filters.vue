@@ -173,6 +173,7 @@ type CardRarityType = z.infer<typeof CardRarity>;
 const screenWidth = ref(0)
 
 onMounted(() => {
+  screenWidth.value = window.innerWidth
   window.addEventListener('resize', () => {
     if (window && window.innerWidth) {
       screenWidth.value = window.innerWidth;
