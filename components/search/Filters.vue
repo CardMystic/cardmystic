@@ -235,9 +235,7 @@ const comparisonOperators = [
 
 function updateFilters(updates: Partial<CardSearchFilters>) {
   const current = modelValue || {} as CardSearchFilters;
-  console.log('Current filters:', current);
   const newValue = { ...current, ...updates };
-  console.log('Updating filters:', newValue);
   emit('update:modelValue', newValue);
 }
 
