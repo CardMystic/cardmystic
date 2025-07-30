@@ -17,10 +17,14 @@
           class="manacost-text whitespace-nowrap" />
       </div>
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-sm">
-        <p class="whitespace-nowrap overflow-hidden truncate"><span v-if="card.card_data.prices.usd"
+        <!-- <p class="whitespace-nowrap overflow-hidden truncate"><span v-if="card.card_data.prices.usd"
             class="text-green-500">$</span>{{
               card.card_data.prices.usd ?? "N/A"
             }}
+        </p> -->
+        <p class="whitespace-nowrap overflow-hidden truncate">{{
+          card.card_data.set_name ?? "N/A"
+        }}
         </p>
         <RarityBadge v-if="card.card_data.rarity" :rarity="card.card_data.rarity" size="small" :isTextOnly="true" />
       </div>
