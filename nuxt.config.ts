@@ -31,7 +31,12 @@ export default defineNuxtConfig({
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
-  modules: ['@nuxt/ui', '@vee-validate/nuxt', '@nuxtjs/device'],
+  modules: [
+    '@nuxt/ui',
+    '@vee-validate/nuxt',
+    '@nuxtjs/device',
+    'nuxt-vitalizer',
+  ],
   fonts: {
     families: [{ name: 'Alfa Slab One', provider: 'google' }],
   },
