@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -686,7 +686,6 @@ function findSimilarCards() {
     pointer-events: none
 
 .oracle-text
-  color: white
   font-size: 1.1rem
   line-height: 1.2
   margin-bottom: 16px
@@ -711,7 +710,6 @@ function findSimilarCards() {
   margin-top: 20px
 
 .power-toughness
-  color: white
   font-size: 1.1rem
   font-weight: 600
 
@@ -760,7 +758,6 @@ function findSimilarCards() {
   margin-bottom: 16px
 
 .legalities-title
-  color: white
   font-size: 1.3rem
   font-weight: 600
   margin: 0
@@ -819,7 +816,6 @@ function findSimilarCards() {
   margin-bottom: 12px
 
 .price-title
-  color: white
   font-size: 1.3rem
   font-weight: 600
 
@@ -840,7 +836,6 @@ function findSimilarCards() {
   font-weight: 500
 
 .price-value
-  color: white
   font-size: 1rem
   font-weight: 700
 
@@ -880,10 +875,6 @@ function findSimilarCards() {
     max-width: none !important
     width: 100%
 
-h2,
-p,
-em
-  color: white
 
 .back-button-container-aligned
   display: flex
