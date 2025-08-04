@@ -11,7 +11,7 @@
     <div class="flex flex-col items-center justify-center text-center">
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
         <p class="whitespace-nowrap overflow-hidden truncate">{{ card.card_data.name.split(' // ')[0]
-        }}
+          }}
         </p>
         <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
           class="manacost-text whitespace-nowrap" />
@@ -22,11 +22,7 @@
               card.card_data.prices.usd ?? "N/A"
             }}
         </p> -->
-        <p class="whitespace-nowrap overflow-hidden truncate">{{
-          card.card_data.set_name ?? "N/A"
-        }}
-        </p>
-        <RarityBadge v-if="card.card_data.rarity" :rarity="card.card_data.rarity" size="small" :isTextOnly="true" />
+        <p class="whitespace-nowrap overflow-hidden truncate">{{ card.card_data.type_line ?? "N/A" }}</p>
       </div>
       <div class="flex flex-row items-center justify-center text-center w-full">
         <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" />
