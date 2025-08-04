@@ -34,8 +34,8 @@
               <div class="font-bold text-2xl mb-2">No cards found</div>
               <div class="subtitle2 mb-4">
                 Try adjusting your search terms or filters.<br>
-                If you think this is a mistake, <a :href="searchFeedbackUrl(getPageInfo())" target="_blank"
-                  class="important-text underline">let us know</a>.
+                If you think this is a mistake, <NuxtLink :to="searchFeedbackUrl(getPageInfo())" target="_blank"
+                  class="important-text underline">let us know</NuxtLink>.
               </div>
             </div>
           </UContainer>
