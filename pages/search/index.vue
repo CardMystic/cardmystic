@@ -170,13 +170,11 @@ const { data: searchResults, isLoading } = useQuery({
 
 .subtitle
   font-size: 1.05rem
-  color: white
   position: relative
   top: -14px
 
 .subtitle2
   font-size: 1.01rem
-  color: white
   position: relative
   top: -14px
 
@@ -218,32 +216,6 @@ const { data: searchResults, isLoading } = useQuery({
   50%
     opacity: 1
     transform: translate(-50%, -50%) scale(1.4)
-
-.cache-stats-card
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
-  border: 1px solid rgba(33, 150, 243, 0.3) !important
-  border-radius: 12px !important
-  padding: 16px !important
-
-.cache-stats-header
-  display: flex
-  align-items: center
-  margin-bottom: 12px
-
-.cache-stats-title
-  color: white
-  font-size: 1.1rem
-  font-weight: 600
-
-.cache-stats-content
-  display: flex
-  flex-direction: column
-  gap: 8px
-
-.cache-stat
-  display: flex
-  justify-content: space-between
-  align-items: center
 
 .stat-label
   color: rgba(255, 255, 255, 0.8)

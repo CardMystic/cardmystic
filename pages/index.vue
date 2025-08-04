@@ -132,6 +132,8 @@ onMounted(() => {
   font-size: 3.6rem
   color: rgb(var(--color-primary-500))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
+  html.light & 
+    text-shadow: none
   margin: 0
   line-height: 1
   @media (max-width: 768px)
@@ -141,22 +143,14 @@ onMounted(() => {
 .subtitle
   font-size: 1.1rem
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
-  color: white
+  html.light & 
+    text-shadow: none
   margin: 4px 0 0 0
   line-height: 1.2
   width: 100%
   @media (max-width: 768px)
     font-size: 1.0rem
     text-align: center
-
-.link-btn
-  color: white
-  background-color: black
-  border-radius: 50%
-  padding: 0px
-  min-width: 0px
-  width: 40px
-  height: 40px
 
 .important-text
   color: rgb(var(--color-primary-500))

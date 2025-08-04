@@ -142,7 +142,6 @@ function tryQuery(query: string) {
   margin-bottom: 16px
 
 .queries-title
-  color: white
   font-size: 1.3rem
   font-weight: 600
   margin: 0
@@ -201,7 +200,6 @@ function tryQuery(query: string) {
   flex-shrink: 0
 
 .query-text
-  color: white
   font-size: 0.95rem
   font-weight: 500
   flex: 1
