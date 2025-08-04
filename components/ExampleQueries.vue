@@ -1,8 +1,26 @@
 <template>
   <div class="mb-2">
-    <div v-if="isLoading" class="text-center">
-      <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-2xl" />
-      <p class="mt-2 text-white text-caption">Loading example...</p>
+    <div v-if="isLoading" class="example-content">
+      <!-- Skeleton for query header -->
+      <div class="query-header">
+        <div class="flex items-center">
+          <USkeleton class="h-5 w-5 mr-2" />
+          <USkeleton class="h-6 w-48" />
+        </div>
+        <div class="button-group">
+          <USkeleton class="h-8 w-8" :ui="{ rounded: 'rounded-md' }" />
+          <USkeleton class="h-8 w-12" :ui="{ rounded: 'rounded-md' }" />
+        </div>
+      </div>
+
+      <!-- Skeleton for carousel cards -->
+      <div class="skeleton-carousel">
+        <div v-for="index in 6" :key="`skeleton-${index}`" class="skeleton-card">
+          <USkeleton class="h-32 w-full mb-2" :ui="{ rounded: 'rounded-lg' }" />
+          <USkeleton class="h-3 w-3/4 mb-1" />
+          <USkeleton class="h-3 w-1/2" />
+        </div>
+      </div>
     </div>
 
     <div v-else-if="results && results.length > 0" class="example-content">
@@ -98,6 +116,8 @@ const { data: results, isLoading } = useQuery({
     return response.json() as Promise<Array<Card>>;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
+  enabled: true, // Enable lazy loading
+  refetchOnWindowFocus: false,
 });
 
 
@@ -147,6 +167,21 @@ function goToCard(cardId: string | undefined) {
   align-items: center
   margin-bottom: 6px
   flex-wrap: wrap
+
+.skeleton-carousel
+  display: flex
+  gap: 12px
+  overflow-x: hidden
+  padding: 4px 0
+
+.skeleton-card
+  flex: 0 0 155px
+  min-width: 155px
+  max-width: 180px
+  padding: 8px
+  border-radius: 8px
+  background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(147, 114, 255, 0.02))
+  border: 1px solid rgba(147, 114, 255, 0.1)
 
 .button-group
   display: flex
