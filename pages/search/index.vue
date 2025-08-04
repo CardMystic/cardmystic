@@ -78,13 +78,6 @@ useHead(() => ({
   title: queryParam.value
     ? `CardMystic | ${queryParam.value}`
     : 'CardMystic | Search',
-  link: [
-    {
-      rel: 'icon',
-      type: 'image/x-icon',
-      href: '/favicon.ico',
-    },
-  ],
 }));
 
 // Used for the github issues logic as it can't be dynamic.

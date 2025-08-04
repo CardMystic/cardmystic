@@ -42,13 +42,6 @@ const { isAiSearch } = useSearchType();
 
 useHead({
   title: 'CardMystic',
-  link: [
-    {
-      rel: 'icon',
-      type: 'image/x-icon',
-      href: '/favicon.ico',
-    },
-  ],
 });
 
 const { setPageInfo } = usePageInfo();
