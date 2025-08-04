@@ -2,7 +2,7 @@
   <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
     <!-- Card content: image + score -->
     <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
-      v-if="getCardImageUrl(card.card_data)" :ui="{}" />
+      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}" />
     <div v-else class="image-placeholder">
       <p class="placeholder-text">{{ card.card_data.name }}</p>
     </div>
