@@ -32,7 +32,7 @@
             <div class="flex flex-col items-center">
               <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
               <div class="font-bold text-2xl mb-2">No cards found</div>
-              <div class="subtitle2 mb-4">
+              <div class="subtitle2 mt-2 mb-4">
                 Try adjusting your search terms or filters.<br>
                 If you think this is a mistake, <NuxtLink :to="searchFeedbackUrl(getPageInfo())" target="_blank"
                   class="important-text underline">let us know</NuxtLink>.
@@ -215,32 +215,6 @@ const { data: searchResults, isLoading } = useQuery({
   50%
     opacity: 1
     transform: translate(-50%, -50%) scale(1.4)
-
-.cache-stats-card
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(66, 66, 66, 0.9)) !important
-  border: 1px solid rgba(33, 150, 243, 0.3) !important
-  border-radius: 12px !important
-  padding: 16px !important
-
-.cache-stats-header
-  display: flex
-  align-items: center
-  margin-bottom: 12px
-
-.cache-stats-title
-  color: white
-  font-size: 1.1rem
-  font-weight: 600
-
-.cache-stats-content
-  display: flex
-  flex-direction: column
-  gap: 8px
-
-.cache-stat
-  display: flex
-  justify-content: space-between
-  align-items: center
 
 .stat-label
   color: rgba(255, 255, 255, 0.8)
