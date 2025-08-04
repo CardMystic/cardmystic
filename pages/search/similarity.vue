@@ -77,13 +77,6 @@ useHead(() => ({
   title: cardNameParam.value
     ? `CardMystic | ${cardNameParam.value}`
     : 'CardMystic | Similarity Search',
-  link: [
-    {
-      rel: 'icon',
-      type: 'image/x-icon',
-      href: '/favicon.ico',
-    },
-  ],
 }));
 
 const { setPageInfo, getPageInfo } = usePageInfo();
