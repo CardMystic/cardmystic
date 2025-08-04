@@ -91,7 +91,6 @@ onMounted(async () => {
   await loadRandomExample();
 });
 
-
 async function loadRandomExample() {
   const randomIndex = Math.floor(Math.random() * exampleQueries.length);
   currentQuery.value = exampleQueries[randomIndex];
@@ -118,7 +117,6 @@ const { data: results, isLoading } = useQuery({
   enabled: true, // Enable lazy loading
   refetchOnWindowFocus: false,
 });
-
 
 function tryQuery() {
   // Navigate to search page with the current query
