@@ -26,7 +26,7 @@
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <img :src="getCardImageUrl(card)" class="card-image w-[300px] h-[420px] rounded-2xl object-cover"
+          <img :src="getCardImageUrl(card)" class="card-image w-[300px] h-[420px] rounded-2xl object-contain"
             @error="handleImageError" alt="Card image" />
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
