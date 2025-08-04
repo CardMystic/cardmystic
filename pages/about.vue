@@ -6,9 +6,11 @@
       </UCardTitle>
 
       <UCardContent class="mt-2 text-base">
-        CardMystic is an Open Source Vector Search engine for Magic: The
-        Gathering cards. We are dedicated to providing powerful tools to the
-        amazing MTG community.
+        <p>
+          CardMystic is an Open Source Vector Search engine for Magic: The
+          Gathering cards. We are dedicated to providing powerful tools to the
+          amazing MTG community.
+        </p>
       </UCardContent>
     </UCard>
 
