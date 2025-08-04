@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import devtoolsJson from 'vite-plugin-devtools-json';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -53,7 +54,9 @@ export default defineNuxtConfig({
       },
     },
     ssr: {},
-    plugins: [],
+    plugins: [
+      ...(process.env.NODE_ENV === 'development' ? [devtoolsJson()] : []),
+    ],
     css: {
       preprocessorOptions: {
         sass: {
