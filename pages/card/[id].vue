@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -65,7 +65,7 @@
 
         <!-- Similar Cards Button - Desktop only -->
         <UButton color="neutral" variant="solid"
-          :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-heroicons-squares-2x2"
+          :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-mdi-cards-outline"
           size="lg" @click="findSimilarCards"
           class="hidden lg:flex similar-cards-btn-desktop w-full max-w-[300px] cursor-pointer">
           Similar Cards
@@ -174,7 +174,7 @@
 
         <!-- Similar Cards Button - Mobile only -->
         <UButton color="neutral" variant="solid" class="mt-0 mb-4 similar-cards-btn lg:hidden"
-          icon="i-heroicons-squares-2x2" size="lg" @click="findSimilarCards" block>
+          icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards" block>
           Similar Cards
         </UButton>
 
