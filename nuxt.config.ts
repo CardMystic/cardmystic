@@ -13,7 +13,15 @@ function getCommitHash() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  app: {},
+  app: {
+    head: {
+      title: 'CardMystic', // default fallback title
+      htmlAttrs: {
+        lang: 'en',
+      },
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    },
+  },
   compatibilityDate: '2025-05-15',
   css: ['~/assets/css/main.css'],
   devtools: {
