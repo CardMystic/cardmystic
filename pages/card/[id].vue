@@ -1,10 +1,10 @@
 <template>
   <div class="py-4 flex justify-center">
-    <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[400px]">
-      <div class="flex justify-center items-center mb-4 w-full">
-        <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary" />
+    <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
+      <div class="flex justify-center items-center mb-4">
+        <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
       </div>
-      <p class="mt-4 text-white text-center w-full">Loading card details...</p>
+      <p class="text-white text-center">Loading card details...</p>
     </div>
 
     <div v-else-if="error" class="text-center">
@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -139,8 +139,7 @@
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
             <span v-if="currentManaCost">
-              <!-- TODO: add mana cost back -->
-              <mana-cost :manaCost="currentManaCost" class="ml-2" />
+              <ManaCost :manaCost="currentManaCost" class="ml-2" />
             </span>
           </h2>
           <div class="set-rarity-info">
