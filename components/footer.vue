@@ -4,18 +4,18 @@
     <UContainer class="py-6 text-left">
       <!-- Social Links -->
       <div class="flex justify-center items-start gap-4 mb-4">
-        <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
+        <NuxtLink to="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
           <UIcon name="i-simple-icons-github" size="24" class="text-white" />
-        </a>
-        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
+        </NuxtLink>
+        <NuxtLink to="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
           <img src="/discord-icon.svg" width="24" height="24" alt="Discord" class="inline-block" />
-        </a>
-        <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
+        </NuxtLink>
+        <NuxtLink to="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
           <UIcon name="i-simple-icons-youtube" size="24" class="text-white" />
-        </a>
-        <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
+        </NuxtLink>
+        <NuxtLink to="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
           <UIcon name="i-simple-icons-patreon" size="24" class="text-white" />
-        </a>
+        </NuxtLink>
       </div>
 
       <!-- Disclaimer -->
@@ -31,10 +31,10 @@
         </p>
         <p>All other content © 2025 Fiasco Games LLC</p>
         <p>
-          <a :href="commitUrl" target="_blank" rel="noopener"
+          <NuxtLink :to="commitUrl" target="_blank" rel="noopener"
             class="text-purple-400 hover:text-purple-300 underline text-[10px]">
             Version: {{ commitHash }}
-          </a>
+          </NuxtLink>
         </p>
       </div>
     </UContainer>

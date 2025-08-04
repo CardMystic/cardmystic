@@ -46,8 +46,8 @@
         </p>
         <p class="mt-4">
           👾 Discord:
-          <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" class="text-primary hover:underline">Join our
-            server</a>
+          <NuxtLink to="https://discord.gg/GmPZ3e7tZH" target="_blank" class="text-primary hover:underline">Join our
+            server</NuxtLink>
         </p>
         <p>
           📧 Email:
