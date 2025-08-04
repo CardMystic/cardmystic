@@ -54,7 +54,9 @@ export default defineNuxtConfig({
       },
     },
     ssr: {},
-    plugins: [],
+    plugins: [
+      ...(process.env.NODE_ENV === 'development' ? [devtoolsJson()] : []),
+    ],
     css: {
       preprocessorOptions: {
         sass: {
