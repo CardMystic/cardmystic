@@ -17,13 +17,11 @@
           class="manacost-text whitespace-nowrap" />
       </div>
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
-        <!-- <p class="whitespace-nowrap overflow-hidden truncate"><span v-if="card.card_data.prices.usd"
-            class="text-green-500">$</span>{{
-              card.card_data.prices.usd ?? "N/A"
-            }}
-        </p> -->
         <p class="whitespace-nowrap overflow-hidden truncate">
-          {{ card.card_data.card_type ?? card.card_data.type_line ?? "N/A" }}
+          <span
+            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: orange;' : ''">
+            {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
+          </span>
         </p>
       </div>
       <div class="flex flex-row items-center justify-center text-center w-full">
@@ -72,6 +70,21 @@ const props = defineProps({
 
 const sizeClass = computed(() => `card-${props.size}`);
 
+function getSimpleCardType(type_line: string): string {
+  if (!type_line) return 'Unknown';
+  const faces = type_line.split('//');
+
+  if (faces.length === 1) {
+    // Single-faced card: get type before em-dash
+    return faces[0].split(' — ')[0].trim();
+  } else {
+    // Double-faced card: get type before em-dash for both faces
+    const frontType = faces[0].split(' — ')[0].trim();
+    const backType = faces[1].split(' — ')[0].trim();
+    return `${frontType} // ${backType}`;
+  }
+}
+
 function normalizeScore(score: number | undefined): number {
   if (score === undefined) {
     return 0; // Default to 0 if score is undefined
@@ -109,19 +122,6 @@ function normalizeScore(score: number | undefined): number {
 }
 
 const normalizedScore = computed(() => normalizeScore(props.card.score));
-
-function getScoreColor(score: number | undefined): string {
-  const normalizedScore = normalizeScore(score);
-  const pct = Math.min(Math.max(normalizedScore / 100, 0), 1);
-
-  const r = pct < 0.5 ? 200 : Math.floor(200 - (pct - 0.5) * 2 * 200); // red from 200 → 0
-  const g =
-    pct < 0.5
-      ? Math.floor(pct * 2 * 160) // green from 0 → 160
-      : 160;
-
-  return `rgb(${r},${g},40)`; // add some darkness with fixed low blue
-}
 
 function getCardImageUrl(cardData: any): string {
   // Try different image URI options in order of preference
