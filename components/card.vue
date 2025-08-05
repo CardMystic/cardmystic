@@ -173,11 +173,17 @@ function handleImageError(event: Event) {
 /* Small Size Variant */
 
 .card-small {
+  aspect-ratio: 5/7;
+  width: 100%;
+  object-fit: cover;
   border-radius: 8px;
 }
 
 /* Large Size Variant */
 .card-large {
+  aspect-ratio: 5/7;
+  width: 100%;
+  object-fit: cover;
   border-radius: 14px;
 }
 
@@ -186,7 +192,8 @@ function handleImageError(event: Event) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  aspect-ratio: 5/7;
+  width: 100%;
   background: linear-gradient(135deg,
       rgba(44, 44, 44, 0.9),
       rgba(66, 66, 66, 0.8));
