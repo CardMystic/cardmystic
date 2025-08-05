@@ -6,8 +6,8 @@
       <!-- Results -->
       <div class="mt-3 w-full">
         <template v-if="isLoading">
-          <div class="flex justify-center items-center py-12">
-            <UIcon name="i-lucide-loader-2" class="animate-spin text-primary text-3xl" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
           </div>
         </template>
 
@@ -15,7 +15,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             <div v-for="result in searchResults" :key="result.card_data.id" class="cursor-pointer"
               @click="navigateToCard(result.card_data.id)">
-              <card :card="result" :showCardInfo="true" />
+              <CardComponent :card="result" :showCardInfo="true" />
             </div>
           </div>
         </template>
@@ -57,6 +57,7 @@ import IssuesFab from '~/components/search/IssuesFab.vue';
 import CardSkeleton from '~/components/CardSkeleton.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { UContainer } from '#components';
+import CardComponent from '~/components/card.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -114,6 +115,9 @@ const wordSearch = computed(() => {
 });
 
 const queryEnabled = computed(() => !!wordSearch.value?.query);
+
+// Number of skeleton cards to show while loading (matches typical search result count)
+const skeletonCount = computed(() => limitParam.value || 20);
 
 const { data: searchResults, isLoading } = useQuery({
   queryKey: [

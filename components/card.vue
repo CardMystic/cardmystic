@@ -173,11 +173,17 @@ function handleImageError(event: Event) {
 /* Small Size Variant */
 
 .card-small {
+  aspect-ratio: 5/7;
+  width: 100%;
+  object-fit: cover;
   border-radius: 8px;
 }
 
 /* Large Size Variant */
 .card-large {
+  aspect-ratio: 5/7;
+  width: 100%;
+  object-fit: cover;
   border-radius: 14px;
 }
 
