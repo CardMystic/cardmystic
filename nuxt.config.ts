@@ -32,11 +32,6 @@ export default defineNuxtConfig({
   },
   build: {},
   runtimeConfig: {
-    applicationinsights: {
-      connectionString:
-        process.env.NUXT_APPLICATION_INSIGHTS_CONNECTION_STRING || '',
-      autoCollectRequests: false,
-    },
     // The private keys which are only available server-side
     backendUrl: 'http://localhost:3000',
     // Keys within public are also exposed client-side
@@ -50,15 +45,6 @@ export default defineNuxtConfig({
     '@vee-validate/nuxt',
     '@nuxtjs/device',
     'nuxt-vitalizer',
-    [
-      'nuxt-applicationinsights',
-      {
-        // Disable server-side auto instrumentation
-        disableServerInstrumentation: true,
-        // Keep client-side tracking enabled
-        enableClientSideTracking: true,
-      },
-    ],
   ],
   fonts: {
     families: [{ name: 'Alfa Slab One', provider: 'google' }],
