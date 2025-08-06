@@ -1,18 +1,14 @@
 <template>
-  <div>
-    <v-app>
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
-    </v-app>
+  <UApp>
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
     <VueQueryDevtools />
-  </div>
+  </UApp>
 </template>
 
 <style lang="sass">
-// Override Vuetify's default v-main padding
-.v-main
-  padding-top: 64px !important
+
 </style>
 
 <script setup lang="ts">

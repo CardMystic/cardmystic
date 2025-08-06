@@ -1,25 +1,41 @@
 <template>
-  <div class="card-container" :class="sizeClass">
+  <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
     <!-- Card content: image + score -->
-    <div class="card">
-      <div class="card-image-wrapper">
-        <v-img class="card-image" :src="getCardImageUrl(card.card_data)" alt="Card Image" @error="handleImageError">
-          <template v-slot:placeholder>
-            <div class="image-placeholder">
-              <p class="placeholder-text">{{ card.card_data.name }}</p>
-            </div>
-          </template>
-        </v-img>
-      </div>
-
-      <v-progress-linear rounded :color="getScoreColor(card.score)" :model-value="normalizeScore(card.score)"
-        :height="progressHeight" class="confidence-bar" style="border: 1px solid black">
-        <template v-slot:default="{ value }">
-          <p class="confidence-text">{{ Math.ceil(value) }}%</p>
-        </template>
-      </v-progress-linear>
+    <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
+      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}" />
+    <div v-else class="image-placeholder">
+      <p class="placeholder-text">{{ card.card_data.name }}</p>
     </div>
-  </div>
+
+    <!-- Card Name and mana cost -->
+    <div class="flex flex-col items-center justify-center text-center">
+      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
+        <p class="whitespace-nowrap overflow-hidden truncate">
+          {{ card.card_data.name.split(' // ')[0] }}
+        </p>
+        <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
+          class="manacost-text whitespace-nowrap" />
+      </div>
+      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
+        <p class="whitespace-nowrap overflow-hidden truncate">
+          <span
+            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: orange;' : ''">
+            {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
+          </span>
+        </p>
+      </div>
+      <div class="flex flex-row items-center justify-center text-center w-full">
+        <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" />
+        <p class="text-xs">
+          {{ props.card.score !== undefined
+            ? props.isSimilaritySearch
+              ? `${normalizedScore.toFixed(2)}%`
+              : normalizedScore.toFixed(2) + '%'
+            : 'N/A' }}
+        </p>
+      </div>
+    </div>
+  </UCard>
 </template>
 
 <script setup lang="ts">
@@ -33,7 +49,7 @@ const props = defineProps({
     required: true,
   },
   size: {
-    type: String as PropType<'small' | 'medium' | 'large'>,
+    type: String as PropType<'small' | 'large'>,
     default: 'large',
   },
   // Optional normalization context - if provided, use this instead of search store
@@ -46,22 +62,28 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showCardInfo: {
+    type: Boolean,
+    default: false,
+  },
 });
-
 
 const sizeClass = computed(() => `card-${props.size}`);
-const progressHeight = computed(() => {
-  switch (props.size) {
-    case 'small':
-      return 12;
-    case 'medium':
-      return 16;
-    case 'large':
-      return 20;
-    default:
-      return 20;
+
+function getSimpleCardType(type_line: string): string {
+  if (!type_line) return 'Unknown';
+  const faces = type_line.split('//');
+
+  if (faces.length === 1) {
+    // Single-faced card: get type before em-dash
+    return faces[0].split(' — ')[0].trim();
+  } else {
+    // Double-faced card: get type before em-dash for both faces
+    const frontType = faces[0].split(' — ')[0].trim();
+    const backType = faces[1].split(' — ')[0].trim();
+    return `${frontType} // ${backType}`;
   }
-});
+}
 
 function normalizeScore(score: number | undefined): number {
   if (score === undefined) {
@@ -99,18 +121,7 @@ function normalizeScore(score: number | undefined): number {
   return normalizedScore;
 }
 
-function getScoreColor(score: number | undefined): string {
-  const normalizedScore = normalizeScore(score);
-  const pct = Math.min(Math.max(normalizedScore / 100, 0), 1);
-
-  const r = pct < 0.5 ? 200 : Math.floor(200 - (pct - 0.5) * 2 * 200); // red from 200 → 0
-  const g =
-    pct < 0.5
-      ? Math.floor(pct * 2 * 160) // green from 0 → 160
-      : 160;
-
-  return `rgb(${r},${g},40)`; // add some darkness with fixed low blue
-}
+const normalizedScore = computed(() => normalizeScore(props.card.score));
 
 function getCardImageUrl(cardData: any): string {
   // Try different image URI options in order of preference
@@ -146,99 +157,34 @@ function getCardImageUrl(cardData: any): string {
   return '';
 }
 
-function handleImageError(value: string | undefined) {
-  console.warn('Card image failed to load:', value);
+function handleImageError(event: Event) {
+  console.warn('Card image failed to load:', event);
 }
 </script>
 
 <style scoped>
-.confidence-text {
-  color: white;
-  font-weight: bold;
-  text-align: center;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1);
-}
-
 .card-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  overflow: visible;
 }
 
-.card {
-  flex-shrink: 0;
-  padding: 0px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* Small Size Variant */
 
-.card-image-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.card-image {
-  width: 100%;
-  height: auto;
+.card-small {
   aspect-ratio: 5/7;
-  /* MTG card aspect ratio */
+  width: 100%;
   object-fit: cover;
-  flex: 1;
+  border-radius: 8px;
 }
 
-/* Remove the old GC badge styles since they're now in the component */
-
-.confidence-bar {
-  margin-top: 2px;
-}
-
-/* Size variants */
-.card-small .card {
-  min-width: 150px;
-  max-width: 150px;
-}
-
-.card-small .card-image {
-  max-height: 210px;
-  border-radius: 10px;
-}
-
-.card-small .confidence-text {
-  font-size: 11px;
-}
-
-.card-medium .card {
-  min-width: 200px;
-  max-width: 200px;
-}
-
-.card-medium .card-image {
-  max-height: 280px;
-  border-radius: 16px;
-}
-
-.card-medium .confidence-text {
-  font-size: 12px;
-}
-
-.card-large .card {
-  min-width: 268px;
-  max-width: 268px;
-}
-
-.card-large .card-image {
-  max-height: 375px;
-  border-radius: 20px;
-}
-
-.card-large .confidence-text {
-  font-size: 14px;
+/* Large Size Variant */
+.card-large {
+  aspect-ratio: 5/7;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 14px;
 }
 
 .image-placeholder {
@@ -246,7 +192,8 @@ function handleImageError(value: string | undefined) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  aspect-ratio: 5/7;
+  width: 100%;
   background: linear-gradient(135deg,
       rgba(44, 44, 44, 0.9),
       rgba(66, 66, 66, 0.8));
@@ -256,8 +203,12 @@ function handleImageError(value: string | undefined) {
 
 .placeholder-text {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
+  font-size: 16px;
   margin-top: 8px;
   text-align: center;
+}
+
+.manacost-text {
+  font-size: 14px;
 }
 </style>

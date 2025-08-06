@@ -15,11 +15,13 @@ export default {
         iconClass() {
             return `ms ms-${this.type.toLowerCase()} ms-cost`;
         }
-    }
+    },
 };
 </script>
 
 <style scoped>
+@import url("mana-font");
+
 #mana-icon {
     margin: 0 2px 0 0;
     margin-inline-start: 0 !important;

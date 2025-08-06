@@ -1,33 +1,31 @@
 <template>
-  <v-container class="fill-height d-flex responsive-align" style="padding-top: 0px">
-    <v-col class="col-container px-0">
-      <!-- Header with image and title side by side -->
-      <div class="header-layout">
-        <div class="glow-wrapper">
-          <v-img src="/public/crystall_ball.webp" aspect-ratio="1/1" class="image"></v-img>
-        </div>
-
-        <div class="title-container">
-          <h1 class="title">
-            {{ typedTitle }}
-          </h1>
-          <h2 class="subtitle">
-            <b class="important-text">A.I. Search Engine</b> for Magic: The
-            Gathering
-          </h2>
-        </div>
+  <div class="col-container px-0 w-full">
+    <!-- Header with image and title side by side -->
+    <div class="header-layout">
+      <div class="glow-wrapper">
+        <img src="/crystall_ball.webp" class="image w-[120px] h-[120px] object-cover" alt="Crystal Ball" />
       </div>
 
-      <!-- Search Component -->
-      <SearchForm class="mt-6" style="max-width: 1096px" />
+      <div class="title-container">
+        <h1 class="title">
+          {{ typedTitle }}
+        </h1>
+        <h2 class="subtitle">
+          <b class="important-text">A.I. Search Engine</b> for Magic: The
+          Gathering
+        </h2>
+      </div>
+    </div>
 
-      <!-- Example Queries -->
-      <ExampleQueries v-if="isAiSearch" class="mt-0" style="max-width: 1096px" />
+    <!-- Search Component -->
+    <SearchForm />
 
-      <!-- Top Queries -->
-      <TopQueries v-if="isAiSearch" class="mt-6" style="max-width: 1096px" />
-    </v-col>
-  </v-container>
+    <!-- Example Queries -->
+    <ExampleQueries />
+
+    <!-- Top Queries -->
+    <TopQueries />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -44,13 +42,6 @@ const { isAiSearch } = useSearchType();
 
 useHead({
   title: 'CardMystic',
-  link: [
-    {
-      rel: 'icon',
-      type: 'image/x-icon',
-      href: '/favicon.ico',
-    },
-  ],
 });
 
 const { setPageInfo } = usePageInfo();
@@ -77,12 +68,6 @@ onMounted(() => {
 </script>
 
 <style lang="sass" scoped>
-.responsive-align
-  align-items: flex-start
-
-  @media (min-width: 960px)
-    align-items: center
-
 .title::after
   content: '|'
   animation: blink 3s infinite
@@ -107,8 +92,8 @@ onMounted(() => {
   bottom: 10px
   left: 0px
   @media (max-width: 768px)
-    width: 100px
-    height: 100px
+    width: 100px !important
+    height: 100px !important
     bottom: -15px
     left: 0px
 
@@ -121,6 +106,7 @@ onMounted(() => {
   justify-content: center
   gap: 24px
   margin-bottom: 16px
+  margin-top: 16px
   @media (max-width: 768px)
     flex-direction: column
     gap: 12px
@@ -144,8 +130,10 @@ onMounted(() => {
   font-weight: 400
   font-style: normal
   font-size: 3.6rem
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
+  html.light & 
+    text-shadow: none
   margin: 0
   line-height: 1
   @media (max-width: 768px)
@@ -155,7 +143,8 @@ onMounted(() => {
 .subtitle
   font-size: 1.1rem
   text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
-  color: white
+  html.light & 
+    text-shadow: none
   margin: 4px 0 0 0
   line-height: 1.2
   width: 100%
@@ -163,17 +152,8 @@ onMounted(() => {
     font-size: 1.0rem
     text-align: center
 
-.link-btn
-  color: white
-  background-color: black
-  border-radius: 50%
-  padding: 0px
-  min-width: 0px
-  width: 40px
-  height: 40px
-
 .important-text
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
   font-style: italic
 
 .chip-selector
@@ -185,7 +165,7 @@ onMounted(() => {
   top: -20px
 
 .primary
-  color: rgb(var(--v-theme-primary))
+  color: rgb(var(--color-primary-500))
 
 .glow-wrapper
   position: relative

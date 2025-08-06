@@ -111,7 +111,7 @@ const purchaseUrisSchema = z.object({
 const previewSchema = z
   .object({
     source: z.string(),
-    source_uri: z.string().url(),
+    source_uri: z.union([z.literal(''), z.string().url()]),
     previewed_at: z.string(),
   })
   .optional();
