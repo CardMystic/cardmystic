@@ -75,8 +75,13 @@
         <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)"
           class="price-card mt-4 hidden lg:block w-full max-w-[300px]">
           <div class="price-header">
-            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
-            <h3 class="price-title">Current Prices</h3>
+            <div class="flex items-center">
+              <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
+              <h3 class="price-title">Current Prices</h3>
+            </div>
+            <UTooltip text="The pricing information may be out of date, please refer to TCG Player directly to get the latest prices">
+              <UIcon name="i-heroicons-question-mark-circle" class="w-5 h-5 text-gray-400 hover:text-gray-200 cursor-help transition-colors" />
+            </UTooltip>
           </div>
 
           <div class="price-list">
@@ -181,8 +186,13 @@
         <!-- Price Information - Mobile only -->
         <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card mb-4 lg:hidden">
           <div class="price-header">
-            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
-            <h4 class="price-title">Current Prices</h4>
+            <div class="flex items-center">
+              <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
+              <h4 class="price-title">Current Prices</h4>
+            </div>
+            <UTooltip text="The pricing information may be out of date, please refer to TCG Player directly to get the latest prices">
+              <UIcon name="i-heroicons-question-mark-circle" class="w-5 h-5 text-gray-400 hover:text-gray-200 cursor-help transition-colors" />
+            </UTooltip>
           </div>
 
           <div class="price-list">
@@ -813,6 +823,7 @@ function findSimilarCards() {
 .price-header
   display: flex
   align-items: center
+  justify-content: space-between
   margin-bottom: 12px
 
 .price-title
