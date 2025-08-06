@@ -91,9 +91,18 @@
           <!-- Colors Filter -->
           <template #colors>
             <div class="accordion-item">
-              <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions" placeholder="Color matching"
-                clearable class="w-full" />
-              <div class="color-checkboxes flex flex-wrap">
+              <!-- Replace the non-functioning clearable USelect with a select + clear button -->
+              <div class="flex gap-2">
+                <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions"
+                  placeholder="Select How To Match Colors" class="w-full" />
+
+                <UButton v-if="selectedColorFilterOption" icon="i-lucide-x" color="neutral" variant="ghost"
+                  @click="clearColorFilterOption()" size="sm" class="flex-shrink-0" aria-label="Clear color filter">
+                </UButton>
+              </div>
+
+              <!-- Only show color checkboxes when a filter option is selected -->
+              <div v-if="selectedColorFilterOption" class="color-checkboxes flex flex-wrap">
                 <UCheckboxGroup :items="cardColors" :orientation="orientation" variant="card" v-model="selectedColors"
                   class="w-full flex flex-wrap">
                   <template #label="{ item }">
@@ -104,6 +113,11 @@
                     {{ (item as { value: string }).value }}
                   </template>
                 </UCheckboxGroup>
+              </div>
+
+              <!-- Notification moved here and styled red -->
+              <div v-if="showNotification" class="mt-2 text-red-500 text-sm fade-out">
+                {{ notificationMessage }}
               </div>
             </div>
           </template>
@@ -265,7 +279,34 @@ const selectedCardTypes = computed({
 const selectedColorFilterOption = computed({
   get: () => modelValue?.selectedColorFilterOption,
   set: (value) => {
-    updateFilters({ selectedColorFilterOption: value })
+    updateFilters({ selectedColorFilterOption: value });
+
+    // If color filter option is cleared, clear all selected colors
+    if (value === undefined && modelValue?.selectedColors && modelValue.selectedColors.length > 0) {
+      updateFilters({ selectedColors: undefined });
+      return;
+    }
+
+    // When changing to Match Exactly or Contains At Least, validate existing color selections
+    if ((value === 'Match Exactly' || value === 'Contains At Least') && modelValue?.selectedColors) {
+      const colors = [...modelValue.selectedColors];
+      const hasColorless = colors.includes('Colorless');
+      const hasOtherColors = colors.some(color => color !== 'Colorless');
+
+      // If both colorless and other colors are selected, remove colorless
+      if (hasColorless && hasOtherColors) {
+        const updatedColors = colors.filter(color => color !== 'Colorless');
+        updateFilters({ selectedColors: updatedColors });
+
+        // Show notification
+        notificationMessage.value = 'Colored cards cannot also be colorless. Colorless has been removed from your selection.';
+        showNotification.value = true;
+
+        setTimeout(() => {
+          showNotification.value = false;
+        }, 5000);
+      }
+    }
   }
 });
 
@@ -274,9 +315,51 @@ const cardColors = CardColor.options.map(color => ({
   value: color
 })) as CheckboxGroupItem[];
 
+const showNotification = ref(false);
+const notificationMessage = ref('');
+
 const selectedColors = computed({
   get: () => modelValue?.selectedColors || [],
-  set: (value) => updateFilters({ selectedColors: value })
+  set: (value) => {
+    const colorOption = modelValue?.selectedColorFilterOption;
+
+    // Only apply validation for these specific filter options
+    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least') {
+      const hasColorless = value.includes('Colorless');
+      const hasOtherColors = value.some(color => color !== 'Colorless');
+
+      // If we have both colorless and other colors, decide which to keep
+      if (hasColorless && hasOtherColors) {
+        // Get the previous selection
+        const previousSelection = modelValue?.selectedColors || [];
+
+        // Determine what changed by comparing previous and current selection
+        if (!previousSelection.includes('Colorless')) {
+          // Colorless was just added, remove all other colors
+          value = ['Colorless'];
+          notificationMessage.value = 'Colorless cards cannot have other colors. Other color selections have been removed.';
+          showNotification.value = true;
+
+          // Auto-hide the notification after 3 seconds
+          setTimeout(() => {
+            showNotification.value = false;
+          }, 3000);
+        } else {
+          // Another color was added, remove Colorless
+          value = value.filter(color => color !== 'Colorless');
+          notificationMessage.value = 'Colored cards cannot also be colorless. Colorless has been removed from your selection.';
+          showNotification.value = true;
+
+          // Auto-hide the notification after 3 seconds
+          setTimeout(() => {
+            showNotification.value = false;
+          }, 3000);
+        }
+      }
+    }
+
+    updateFilters({ selectedColors: value });
+  }
 });
 
 const cardRarities = CardRarity.options.map(rarity => ({
@@ -371,7 +454,11 @@ function clearToughness() {
 }
 
 function clearColorFilterOption() {
-  updateFilters({ selectedColorFilterOption: undefined });
+  // Clear both color filter option and selected colors simultaneously
+  updateFilters({
+    selectedColorFilterOption: undefined,
+    selectedColors: undefined
+  });
 }
 
 function removeFormat(index: number) {
@@ -465,5 +552,23 @@ function clearAllFilters() {
   color: rgba(255, 255, 255, 0.87);
   margin-bottom: 0;
   display: block;
+}
+
+.fade-out {
+  animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 </style>
