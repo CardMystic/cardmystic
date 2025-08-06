@@ -3,7 +3,12 @@
     <!-- Card content: image + score -->
     <div class="card">
       <div class="card-image-wrapper">
-        <v-img class="card-image" :src="getCardImageUrl(card.card_data)" alt="Card Image" @error="handleImageError">
+        <v-img
+          class="card-image"
+          :src="getCardImageUrl(card.card_data)"
+          alt="Card Image"
+          @error="handleImageError"
+        >
           <template v-slot:placeholder>
             <div class="image-placeholder">
               <p class="placeholder-text">{{ card.card_data.name }}</p>
@@ -12,8 +17,14 @@
         </v-img>
       </div>
 
-      <v-progress-linear rounded :color="getScoreColor(card.score)" :model-value="normalizeScore(card.score)"
-        :height="progressHeight" class="confidence-bar" style="border: 1px solid black">
+      <v-progress-linear
+        rounded
+        :color="getScoreColor(card.score)"
+        :model-value="normalizeScore(card.score)"
+        :height="progressHeight"
+        class="confidence-bar"
+        style="border: 1px solid black"
+      >
         <template v-slot:default="{ value }">
           <p class="confidence-text">{{ Math.ceil(value) }}%</p>
         </template>
@@ -48,7 +59,6 @@ const props = defineProps({
   },
 });
 
-
 const sizeClass = computed(() => `card-${props.size}`);
 const progressHeight = computed(() => {
   switch (props.size) {
@@ -74,9 +84,7 @@ function normalizeScore(score: number | undefined): number {
   }
 
   // Use provided normalization context if available, otherwise fall back to search store
-  const allScores =
-    props.normalizationContext ||
-    [props.card.score || 0];
+  const allScores = props.normalizationContext || [props.card.score || 0];
 
   // If no context available, return score as-is (assume it's already normalized)
   if (allScores.length === 0) {
@@ -247,9 +255,11 @@ function handleImageError(value: string | undefined) {
   align-items: center;
   justify-content: center;
   height: 100%;
-  background: linear-gradient(135deg,
-      rgba(44, 44, 44, 0.9),
-      rgba(66, 66, 66, 0.8));
+  background: linear-gradient(
+    135deg,
+    rgba(44, 44, 44, 0.9),
+    rgba(66, 66, 66, 0.8)
+  );
   border-radius: 10px;
   padding: 20px;
 }

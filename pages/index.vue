@@ -1,10 +1,17 @@
 <template>
-  <v-container class="fill-height d-flex responsive-align" style="padding-top: 0px">
+  <v-container
+    class="fill-height d-flex responsive-align"
+    style="padding-top: 0px"
+  >
     <v-col class="col-container px-0">
       <!-- Header with image and title side by side -->
       <div class="header-layout">
         <div class="glow-wrapper">
-          <v-img src="/public/crystall_ball.webp" aspect-ratio="1/1" class="image"></v-img>
+          <v-img
+            src="/public/crystall_ball.webp"
+            aspect-ratio="1/1"
+            class="image"
+          ></v-img>
         </div>
 
         <div class="title-container">
@@ -22,7 +29,11 @@
       <SearchForm class="mt-6" style="max-width: 1096px" />
 
       <!-- Example Queries -->
-      <ExampleQueries v-if="isAiSearch" class="mt-0" style="max-width: 1096px" />
+      <ExampleQueries
+        v-if="isAiSearch"
+        class="mt-0"
+        style="max-width: 1096px"
+      />
 
       <!-- Top Queries -->
       <TopQueries v-if="isAiSearch" class="mt-6" style="max-width: 1096px" />
@@ -73,7 +84,6 @@ onMounted(() => {
     }
   }, 200); // typing speed
 });
-
 </script>
 
 <style lang="sass" scoped>

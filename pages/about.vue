@@ -1,6 +1,13 @@
 <template>
-  <v-container class="fill-height d-flex align-center justify-center d-flex flex-column">
-    <v-card class="pa-2 mb-6 text-card" max-width="600" elevation="10" rounded="xl">
+  <v-container
+    class="fill-height d-flex align-center justify-center d-flex flex-column"
+  >
+    <v-card
+      class="pa-2 mb-6 text-card"
+      max-width="600"
+      elevation="10"
+      rounded="xl"
+    >
       <v-card-title class="text-h5 font-weight-bold">
         🔮 What is <b class="title">CardMystic</b>?
       </v-card-title>
@@ -11,7 +18,12 @@
         amazing MTG community.
       </v-card-text>
     </v-card>
-    <v-card class="pa-2 mb-6 text-card" max-width="600" elevation="10" rounded="xl">
+    <v-card
+      class="pa-2 mb-6 text-card"
+      max-width="600"
+      elevation="10"
+      rounded="xl"
+    >
       <v-card-title class="text-h5 font-weight-bold">
         🧙‍♂️ Why <b class="title">CardMystic</b>?
       </v-card-title>
@@ -39,7 +51,9 @@
         from you!
         <br /><br />
         👾 Discord:
-        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank">Join our server</a>
+        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank"
+          >Join our server</a
+        >
         <br />
         📧 Email:
         <a href="mailto:thecardmystic@gmail.com"> thecardmystic@gmail.com </a>
@@ -58,7 +72,6 @@ setPageInfo({
   card_name: '',
   filters: undefined,
 });
-
 </script>
 
 <style lang="sass" scoped>

@@ -2,13 +2,22 @@
   <div class="search-container px-0">
     <!-- Search type tabs -->
     <div class="search-tabs-container mb-4">
-      <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
-        @click="setSearchType('ai')">
+      <button
+        type="button"
+        :class="['search-tab-button-new', { active: searchType === 'ai' }]"
+        @click="setSearchType('ai')"
+      >
         <v-icon start size="18">mdi-magnify</v-icon>
         AI Search
       </button>
-      <button type="button" :class="['search-tab-button-new', { active: searchType === 'similarity' }]"
-        @click="setSearchType('similarity')">
+      <button
+        type="button"
+        :class="[
+          'search-tab-button-new',
+          { active: searchType === 'similarity' },
+        ]"
+        @click="setSearchType('similarity')"
+      >
         <v-icon start size="18">mdi-cards-outline</v-icon>
         Similarity Search
       </button>
@@ -17,17 +26,39 @@
     <form @submit.prevent="onSubmit" class="search-form">
       <div class="search-input-row">
         <!-- Regular search input -->
-        <v-text-field v-if="searchType === 'ai'" v-model="query.value.value"
-          placeholder="Describe the cards you want..." variant="solo" hide-details="auto"
-          :error-messages="query.errorMessage.value" prepend-inner-icon="mdi-magnify" class="flex-grow-1"
-          :clearable="!!query.value.value" v-on:click:clear="clearQuery" />
+        <v-text-field
+          v-if="searchType === 'ai'"
+          v-model="query.value.value"
+          placeholder="Describe the cards you want..."
+          variant="solo"
+          hide-details="auto"
+          :error-messages="query.errorMessage.value"
+          prepend-inner-icon="mdi-magnify"
+          class="flex-grow-1"
+          :clearable="!!query.value.value"
+          v-on:click:clear="clearQuery"
+        />
 
         <!-- Autocomplete search input for similarity search -->
         <!-- TODO: Clean up this autocomplete component to better highlight why a result is shown, and only show suggestions after typing 3+ characters-->
-        <v-autocomplete v-else v-model="query.value.value" :items="cardNames" label="Enter a card name..."
-          hide-details="auto" variant="solo" elevation="5" prepend-inner-icon="mdi-magnify" class="flex-grow-1"
-          :clearable="!!query.value.value"></v-autocomplete>
-        <v-btn type="submit" color="primary" class="ml-2 search-btn" size="large">
+        <v-autocomplete
+          v-else
+          v-model="query.value.value"
+          :items="cardNames"
+          label="Enter a card name..."
+          hide-details="auto"
+          variant="solo"
+          elevation="5"
+          prepend-inner-icon="mdi-magnify"
+          class="flex-grow-1"
+          :clearable="!!query.value.value"
+        ></v-autocomplete>
+        <v-btn
+          type="submit"
+          color="primary"
+          class="ml-2 search-btn"
+          size="large"
+        >
           Search
         </v-btn>
       </div>
@@ -46,9 +77,12 @@ import { useRoute } from 'vue-router';
 const { useField, useForm } = await import('vee-validate');
 const { toTypedSchema } = await import('@vee-validate/zod');
 
-import { CardSearchFiltersSchema, WordSearchSchema, type CardSearchFilters } from '~/models/searchModel';
+import {
+  CardSearchFiltersSchema,
+  WordSearchSchema,
+  type CardSearchFilters,
+} from '~/models/searchModel';
 import Filters from './Filters.vue';
-
 
 // Define props
 const props = defineProps<{
@@ -57,20 +91,26 @@ const props = defineProps<{
 
 const route = useRoute();
 
-const queryParam = computed(() => String(route.query.query || route.query.card_name || ''));
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+const queryParam = computed(() =>
+  String(route.query.query || route.query.card_name || ''),
+);
+const parsedFilters = computed(() =>
+  route.query.filters
+    ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
+    : {},
+);
 
 const cardNames = ref<string[]>([]);
 const isLoading = ref(true);
 
 // Initialize search type based on props or route
-const { searchType, setSearchType } = useSearchType()
+const { searchType, setSearchType } = useSearchType();
 
 // Set initial search type
 if (props.similarity) {
-  setSearchType('similarity')
+  setSearchType('similarity');
 } else {
-  setSearchType('ai')
+  setSearchType('ai');
 }
 
 // Fetch card names from public directory
@@ -122,8 +162,8 @@ const form = useForm({
   validationSchema: formSchema,
   initialValues: {
     query: queryParam.value || '',
-    filters: parsedFilters.value || {}
-  }
+    filters: parsedFilters.value || {},
+  },
 });
 
 const query = useField<string>('query');
@@ -133,22 +173,27 @@ const onSubmit = form.handleSubmit((values) => {
   if (searchType.value === 'similarity') {
     const query: Record<string, any> = {
       card_name: values.query,
-      filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
+      filters:
+        values.filters && Object.keys(values.filters).length > 0
+          ? JSON.stringify(values.filters)
+          : undefined,
     };
     navigateTo({ path: '/search/similarity', query });
   } else {
     const query: Record<string, any> = {
       query: values.query,
-      filters: values.filters && Object.keys(values.filters).length > 0 ? JSON.stringify(values.filters) : undefined
+      filters:
+        values.filters && Object.keys(values.filters).length > 0
+          ? JSON.stringify(values.filters)
+          : undefined,
     };
     navigateTo({ path: '/search', query });
   }
-})
+});
 
 function clearQuery() {
   query.value.value = '';
 }
-
 </script>
 
 <style scoped>
@@ -169,7 +214,6 @@ function clearQuery() {
   width: 100%;
 }
 
-
 .search-tabs-container {
   display: flex;
   justify-content: center;
@@ -178,7 +222,6 @@ function clearQuery() {
   width: 100%;
   margin-bottom: 18px;
 }
-
 
 .search-tab-button-new {
   display: inline-flex;
@@ -194,10 +237,17 @@ function clearQuery() {
   white-space: nowrap;
   color: #e6e6fa;
   background: #23223a;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.13),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
   border: 1.2px solid rgba(147, 114, 255, 0.22);
   backdrop-filter: blur(10px) saturate(160%);
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border 0.18s, transform 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s,
+    border 0.18s,
+    transform 0.18s;
   position: relative;
   z-index: 1;
   outline: none;
@@ -219,7 +269,9 @@ function clearQuery() {
   background: #a37aff;
   color: #fff;
   border-color: #a37aff;
-  box-shadow: 0 6px 24px 0 rgba(147, 114, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 6px 24px 0 rgba(147, 114, 255, 0.22),
+    0 2px 8px rgba(0, 0, 0, 0.18);
   transform: translateY(-2px) scale(1.07);
 }
 
@@ -228,7 +280,9 @@ function clearQuery() {
   background: #3d375a;
   color: #fff;
   border-color: #a37aff;
-  box-shadow: 0 6px 20px rgba(147, 114, 255, 0.13), 0 2px 8px rgba(0, 0, 0, 0.13);
+  box-shadow:
+    0 6px 20px rgba(147, 114, 255, 0.13),
+    0 2px 8px rgba(0, 0, 0, 0.13);
   transform: translateY(-1px) scale(1.03);
 }
 

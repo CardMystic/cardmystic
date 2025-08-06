@@ -3,19 +3,45 @@
     <v-container class="footer-content">
       <!-- Social Links -->
       <div class="social-links d-flex justify-center align-center gap-4 mb-3">
-        <a href="https://github.com/CardMystic" target="_blank" aria-label="GitHub" rel="noopener">
+        <a
+          href="https://github.com/CardMystic"
+          target="_blank"
+          aria-label="GitHub"
+          rel="noopener"
+        >
           <v-icon color="white" size="24" icon="mdi-github"></v-icon>
         </a>
 
-        <a href="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
-          <v-img src="@/public/discord-icon.svg" width="24" height="24" alt="Discord" contain />
+        <a
+          href="https://discord.gg/GmPZ3e7tZH"
+          target="_blank"
+          aria-label="Discord"
+          rel="noopener"
+        >
+          <v-img
+            src="@/public/discord-icon.svg"
+            width="24"
+            height="24"
+            alt="Discord"
+            contain
+          />
         </a>
 
-        <a href="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
+        <a
+          href="https://www.youtube.com/@imdarkmode"
+          target="_blank"
+          aria-label="YouTube"
+          rel="noopener"
+        >
           <v-icon color="white" size="24" icon="mdi-youtube"></v-icon>
         </a>
 
-        <a href="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
+        <a
+          href="https://www.patreon.com/thecardmystic"
+          target="_blank"
+          aria-label="Patreon"
+          rel="noopener"
+        >
           <v-icon color="white" size="24" icon="mdi-patreon"></v-icon>
         </a>
       </div>
@@ -37,7 +63,12 @@
           All other content © 2025 Fiasco Games LLC
         </p>
         <p class="disclaimer-text mt-2">
-          <a :href="commitUrl" target="_blank" rel="noopener" class="commit-link">
+          <a
+            :href="commitUrl"
+            target="_blank"
+            rel="noopener"
+            class="commit-link"
+          >
             Version: {{ commitHash }}
           </a>
         </p>
@@ -50,11 +81,15 @@
 import { computed } from 'vue';
 
 // Get commit hash from runtime config
-const { public: { commitHash: fullCommitHash } } = useRuntimeConfig();
+const {
+  public: { commitHash: fullCommitHash },
+} = useRuntimeConfig();
 
 const commitHash = computed(() => {
   // Show only first 7 characters for display
-  return typeof fullCommitHash === 'string' ? fullCommitHash.substring(0, 7) : 'dev';
+  return typeof fullCommitHash === 'string'
+    ? fullCommitHash.substring(0, 7)
+    : 'dev';
 });
 
 const commitUrl = computed(() => {

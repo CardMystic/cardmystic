@@ -1,12 +1,10 @@
 <template>
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
-
       <SearchForm similarity class="mt-6" style="max-width: 1096px" />
 
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
-
         <template v-if="isLoading">
           <v-row>
             <v-col cols="12" class="text-center">
@@ -17,8 +15,16 @@
 
         <template v-else-if="searchResults && searchResults.length">
           <v-row>
-            <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in searchResults" :key="result.card_data.id">
-              <card :card="result" @click="navigateToCard(result.card_data.id)" :is-similarity-search="true" />
+            <v-col
+              class="px-0 py-0 flex-grow-1 mb-2"
+              v-for="result in searchResults"
+              :key="result.card_data.id"
+            >
+              <card
+                :card="result"
+                @click="navigateToCard(result.card_data.id)"
+                :is-similarity-search="true"
+              />
             </v-col>
           </v-row>
         </template>
@@ -34,7 +40,8 @@
         <template v-else>
           <div class="no-results-container">
             <v-alert type="info" class="mb-4">
-              No results found for "{{ cardNameParam }}". Try a different search term or check your filters.
+              No results found for "{{ cardNameParam }}". Try a different search
+              term or check your filters.
             </v-alert>
             <v-btn to="/" class="mt-4" color="primary">Home</v-btn>
           </div>
@@ -50,7 +57,10 @@ import { useQuery } from '@tanstack/vue-query';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Card } from '~/models/cardModel';
-import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
+import {
+  CardSearchFiltersSchema,
+  SimilaritySearchSchema,
+} from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 
@@ -68,8 +78,14 @@ function navigateToCard(cardId: string | undefined) {
 
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
+const limitParam = computed(() =>
+  route.query.limit ? Number(route.query.limit) : undefined,
+);
+const parsedFilters = computed(() =>
+  route.query.filters
+    ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
+    : undefined,
+);
 
 useHead(() => ({
   title: cardNameParam.value
@@ -114,11 +130,7 @@ const similaritySearch = computed(() => {
 const queryEnabled = computed(() => !!similaritySearch.value?.card_name);
 
 const { data: searchResults, isLoading } = useQuery({
-  queryKey: [
-    'search',
-    'similarity',
-    similaritySearch,
-  ],
+  queryKey: ['search', 'similarity', similaritySearch],
   queryFn: async () => {
     const response = await fetch('/api/search/similarity', {
       method: 'POST',
@@ -128,14 +140,13 @@ const { data: searchResults, isLoading } = useQuery({
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    const results = await response.json() as Array<Card>;
+    const results = (await response.json()) as Array<Card>;
     console.log('Similarity search results:', results);
     return results;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: queryEnabled,
 });
-
 </script>
 
 <style lang="sass" scoped>

@@ -1,10 +1,10 @@
 {
-    "recommendations": [
-        "ms-vscode-remote.vscode-remote-extensionpack",
-        "vue.volar",
-        "github.copilot",
-        "github.copilot-chat",
-        "nuxtr.nuxtr-vscode",
-        "ms-azuretools.vscode-azurestaticwebapps"
-    ]
+  "recommendations": [
+    "ms-vscode-remote.vscode-remote-extensionpack",
+    "vue.volar",
+    "github.copilot",
+    "github.copilot-chat",
+    "nuxtr.nuxtr-vscode",
+    "ms-azuretools.vscode-azurestaticwebapps"
+  ]
 }

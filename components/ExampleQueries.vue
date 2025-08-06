@@ -1,48 +1,98 @@
 <template>
-    <div class="example-query-container">
-        <div v-if="isLoading" class="text-center">
-            <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
-            <p class="mt-2 text-white text-caption">Loading example...</p>
-        </div>
-
-        <div v-else-if="results && results.length > 0" class="example-content">
-            <!-- Query display and TRY IT button -->
-            <div class="query-header">
-                <div class="query-text">
-                    <v-icon class="mr-2" color="primary" icon="mdi-lightbulb-outline"></v-icon>
-                    <span class="query-value">"{{ wordSearch.query }}"</span>
-                </div>
-                <div class="button-group">
-                    <v-btn color="white" variant="outlined" icon="mdi-refresh" @click="loadRandomExample"
-                        :loading="isLoading" class="refresh-button" size="small"></v-btn>
-                    <v-btn color="primary" variant="outlined" @click="tryQuery" class="try-button"
-                        prepend-icon="mdi-magnify">
-                        TRY
-                    </v-btn>
-                </div>
-            </div>
-            <!-- Horizontal scrolling results -->
-            <div class="results-container">
-                <div class="results-scroll" ref="scrollContainer" @mousedown="startDrag" @mousemove="onDrag"
-                    @mouseup="endDrag" @mouseleave="endDrag">
-                    <!-- Cards with lazy loading and scroll fade effects -->
-                    <div v-for="(result, index) in results" :key="`${result.card_data.id}-${index}`"
-                        class="result-card-wrapper" :ref="(el) => setCardRef(el, index)"
-                        :style="{ opacity: cardOpacities[index] || 0.8, transform: `scale(${cardScales[index] || 0.95})` }">
-                        <v-lazy :options="{ threshold: 0.5 }" transition="fade-transition" class="lazy-card-container">
-                            <Card :card="result" :normalization-context="allScores" size="small"
-                                @click="goToCard(result.card_data.id)" class="hoverable-card" />
-                        </v-lazy>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="example-query-container">
+    <div v-if="isLoading" class="text-center">
+      <v-progress-circular
+        indeterminate
+        color="primary"
+        size="32"
+      ></v-progress-circular>
+      <p class="mt-2 text-white text-caption">Loading example...</p>
     </div>
+
+    <div v-else-if="results && results.length > 0" class="example-content">
+      <!-- Query display and TRY IT button -->
+      <div class="query-header">
+        <div class="query-text">
+          <v-icon
+            class="mr-2"
+            color="primary"
+            icon="mdi-lightbulb-outline"
+          ></v-icon>
+          <span class="query-value">"{{ wordSearch.query }}"</span>
+        </div>
+        <div class="button-group">
+          <v-btn
+            color="white"
+            variant="outlined"
+            icon="mdi-refresh"
+            @click="loadRandomExample"
+            :loading="isLoading"
+            class="refresh-button"
+            size="small"
+          ></v-btn>
+          <v-btn
+            color="primary"
+            variant="outlined"
+            @click="tryQuery"
+            class="try-button"
+            prepend-icon="mdi-magnify"
+          >
+            TRY
+          </v-btn>
+        </div>
+      </div>
+      <!-- Horizontal scrolling results -->
+      <div class="results-container">
+        <div
+          class="results-scroll"
+          ref="scrollContainer"
+          @mousedown="startDrag"
+          @mousemove="onDrag"
+          @mouseup="endDrag"
+          @mouseleave="endDrag"
+        >
+          <!-- Cards with lazy loading and scroll fade effects -->
+          <div
+            v-for="(result, index) in results"
+            :key="`${result.card_data.id}-${index}`"
+            class="result-card-wrapper"
+            :ref="(el) => setCardRef(el, index)"
+            :style="{
+              opacity: cardOpacities[index] || 0.8,
+              transform: `scale(${cardScales[index] || 0.95})`,
+            }"
+          >
+            <v-lazy
+              :options="{ threshold: 0.5 }"
+              transition="fade-transition"
+              class="lazy-card-container"
+            >
+              <Card
+                :card="result"
+                :normalization-context="allScores"
+                size="small"
+                @click="goToCard(result.card_data.id)"
+                class="hoverable-card"
+              />
+            </v-lazy>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch, nextTick, type ComponentPublicInstance } from 'vue';
-import { useQuery } from '@tanstack/vue-query'
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  computed,
+  watch,
+  nextTick,
+  type ComponentPublicInstance,
+} from 'vue';
+import { useQuery } from '@tanstack/vue-query';
 import { WordSearchSchema } from '~/models/searchModel';
 import type { Card } from '~/models/cardModel';
 const router = useRouter();
@@ -66,11 +116,11 @@ const hasDragged = ref(false);
 const dragThreshold = 5; // Minimum pixels to consider it a drag
 
 const wordSearch = computed(() =>
-    WordSearchSchema.parse({
-        query: currentQuery.value,
-        limit: 15, // Reduced from DefaultLimit for performance
-        exclude_card_data: false, // Default to false, can be overridden by query param
-    })
+  WordSearchSchema.parse({
+    query: currentQuery.value,
+    limit: 15, // Reduced from DefaultLimit for performance
+    exclude_card_data: false, // Default to false, can be overridden by query param
+  }),
 );
 
 // Computed property to get all scores for normalization context
@@ -78,359 +128,378 @@ const allScores = computed(() => results.value?.map((r) => r.score || 0) || []);
 
 // Example queries to choose from
 const exampleQueries = [
-    "creatures that draw cards",
-    "stax pieces",
-    "blue cantrips",
-    "adventure ramp",
-    "orzhov removal",
-    "black creatures with flying",
-    "etb effects",
-    "artifact removal",
-    "x spell board wipes",
-    "low cost sultai commanders",
-    "mono white token finishers",
-    "golgari elves that draw",
-    "five color dragon commander",
-    "red burn",
-    "graveyard recursion",
+  'creatures that draw cards',
+  'stax pieces',
+  'blue cantrips',
+  'adventure ramp',
+  'orzhov removal',
+  'black creatures with flying',
+  'etb effects',
+  'artifact removal',
+  'x spell board wipes',
+  'low cost sultai commanders',
+  'mono white token finishers',
+  'golgari elves that draw',
+  'five color dragon commander',
+  'red burn',
+  'graveyard recursion',
 ];
 
 // Function to set card refs and setup fade observer
-function setCardRef(el: Element | ComponentPublicInstance | null, index: number) {
-    if (el && 'getBoundingClientRect' in el) {
-        cardRefs.value[index] = el as HTMLElement;
-        // Initialize opacity and scale
-        cardOpacities.value[index] = 0.8;
-        cardScales.value[index] = 0.95;
-    }
+function setCardRef(
+  el: Element | ComponentPublicInstance | null,
+  index: number,
+) {
+  if (el && 'getBoundingClientRect' in el) {
+    cardRefs.value[index] = el as HTMLElement;
+    // Initialize opacity and scale
+    cardOpacities.value[index] = 0.8;
+    cardScales.value[index] = 0.95;
+  }
 }
 
 // Setup intersection observer for fade effects
 function setupFadeObserver() {
-    if (!scrollContainer.value) return;
+  if (!scrollContainer.value) return;
 
-    // Clean up existing observer and scroll handler
-    if (fadeObserver) {
-        fadeObserver.disconnect();
-    }
-    if (scrollHandler && scrollContainer.value) {
-        scrollContainer.value.removeEventListener('scroll', scrollHandler);
-    }
+  // Clean up existing observer and scroll handler
+  if (fadeObserver) {
+    fadeObserver.disconnect();
+  }
+  if (scrollHandler && scrollContainer.value) {
+    scrollContainer.value.removeEventListener('scroll', scrollHandler);
+  }
 
-    // Create scroll event handler
-    scrollHandler = () => {
-        updateCardFadeEffects();
-    };
-
-    scrollContainer.value.addEventListener('scroll', scrollHandler, { passive: true });
-
-    fadeObserver = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                const index = cardRefs.value.findIndex(ref => ref === entry.target);
-                if (index !== -1) {
-                    updateCardFadeEffects();
-                }
-            });
-        },
-        {
-            root: scrollContainer.value,
-            threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-            rootMargin: '0px'
-        }
-    );
-
-    // Observe all card elements
-    cardRefs.value.forEach(cardRef => {
-        if (cardRef) {
-            fadeObserver?.observe(cardRef);
-        }
-    });
-
-    // Initial fade effect calculation
+  // Create scroll event handler
+  scrollHandler = () => {
     updateCardFadeEffects();
+  };
+
+  scrollContainer.value.addEventListener('scroll', scrollHandler, {
+    passive: true,
+  });
+
+  fadeObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const index = cardRefs.value.findIndex((ref) => ref === entry.target);
+        if (index !== -1) {
+          updateCardFadeEffects();
+        }
+      });
+    },
+    {
+      root: scrollContainer.value,
+      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+      rootMargin: '0px',
+    },
+  );
+
+  // Observe all card elements
+  cardRefs.value.forEach((cardRef) => {
+    if (cardRef) {
+      fadeObserver?.observe(cardRef);
+    }
+  });
+
+  // Initial fade effect calculation
+  updateCardFadeEffects();
 }
 
 // Update fade effects based on card positions
 function updateCardFadeEffects() {
-    if (!scrollContainer.value) return;
+  if (!scrollContainer.value) return;
 
-    const containerRect = scrollContainer.value.getBoundingClientRect();
-    const containerCenter = containerRect.left + containerRect.width / 2;
+  const containerRect = scrollContainer.value.getBoundingClientRect();
+  const containerCenter = containerRect.left + containerRect.width / 2;
 
-    cardRefs.value.forEach((cardRef, index) => {
-        if (cardRef) {
-            const rect = cardRef.getBoundingClientRect();
-            const cardCenter = rect.left + rect.width / 2;
+  cardRefs.value.forEach((cardRef, index) => {
+    if (cardRef) {
+      const rect = cardRef.getBoundingClientRect();
+      const cardCenter = rect.left + rect.width / 2;
 
-            // Extend the fade zone beyond the container edges
-            const extendedWidth = containerRect.width * 1.2; // 20% larger fade zone
-            const maxDistance = extendedWidth / 2;
-            const distance = Math.abs(cardCenter - containerCenter);
+      // Extend the fade zone beyond the container edges
+      const extendedWidth = containerRect.width * 1.2; // 20% larger fade zone
+      const maxDistance = extendedWidth / 2;
+      const distance = Math.abs(cardCenter - containerCenter);
 
-            // Calculate fade ratio with smooth easing
-            const fadeRatio = Math.max(0, Math.min(1, 1 - (distance / maxDistance)));
-            const easedRatio = fadeRatio * fadeRatio * (3 - 2 * fadeRatio); // Smooth step function
+      // Calculate fade ratio with smooth easing
+      const fadeRatio = Math.max(0, Math.min(1, 1 - distance / maxDistance));
+      const easedRatio = fadeRatio * fadeRatio * (3 - 2 * fadeRatio); // Smooth step function
 
-            // Apply opacity and scale with better visibility ranges
-            const opacity = 0.8 + (easedRatio * 0.2); // Range from 0.8 to 1.0 (much more visible)
-            const scale = 0.95 + (easedRatio * 0.05); // Range from 0.95 to 1.0
+      // Apply opacity and scale with better visibility ranges
+      const opacity = 0.8 + easedRatio * 0.2; // Range from 0.8 to 1.0 (much more visible)
+      const scale = 0.95 + easedRatio * 0.05; // Range from 0.95 to 1.0
 
-            cardOpacities.value[index] = opacity;
-            cardScales.value[index] = scale;
-        }
-    });
+      cardOpacities.value[index] = opacity;
+      cardScales.value[index] = scale;
+    }
+  });
 }
 
 onMounted(async () => {
-    await loadRandomExample();
+  await loadRandomExample();
 });
 
 onUnmounted(() => {
-    if (scrollAnimationId) {
-        cancelAnimationFrame(scrollAnimationId);
-    }
-    if (fadeObserver) {
-        fadeObserver.disconnect();
-    }
-    // Clean up scroll event listener
-    if (scrollHandler && scrollContainer.value) {
-        scrollContainer.value.removeEventListener('scroll', scrollHandler);
-    }
+  if (scrollAnimationId) {
+    cancelAnimationFrame(scrollAnimationId);
+  }
+  if (fadeObserver) {
+    fadeObserver.disconnect();
+  }
+  // Clean up scroll event listener
+  if (scrollHandler && scrollContainer.value) {
+    scrollContainer.value.removeEventListener('scroll', scrollHandler);
+  }
 });
 
 async function loadRandomExample() {
-    // Stop current animation
-    if (scrollAnimationId) {
-        cancelAnimationFrame(scrollAnimationId);
-        scrollAnimationId = null;
-    }
+  // Stop current animation
+  if (scrollAnimationId) {
+    cancelAnimationFrame(scrollAnimationId);
+    scrollAnimationId = null;
+  }
 
-    const randomIndex = Math.floor(Math.random() * exampleQueries.length);
-    currentQuery.value = exampleQueries[randomIndex];
+  const randomIndex = Math.floor(Math.random() * exampleQueries.length);
+  currentQuery.value = exampleQueries[randomIndex];
 
-    // Reset scroll position
-    if (scrollContainer.value) {
-        scrollContainer.value.scrollLeft = 0;
-    }
+  // Reset scroll position
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollLeft = 0;
+  }
 
-    // The watcher will handle starting the animation when results load
+  // The watcher will handle starting the animation when results load
 }
 
 const { data: results, isLoading } = useQuery({
-    queryKey: [
-        'search',
-        'colbert',
-        wordSearch,
-    ],
-    queryFn: async () => {
-        const response = await fetch('/api/search/colbert', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(wordSearch.value),
-        });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json() as Promise<Array<Card>>;
-    },
-    staleTime: 1000 * 60 * 15, // 15 minutes
+  queryKey: ['search', 'colbert', wordSearch],
+  queryFn: async () => {
+    const response = await fetch('/api/search/colbert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(wordSearch.value),
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json() as Promise<Array<Card>>;
+  },
+  staleTime: 1000 * 60 * 15, // 15 minutes
 });
 
 // Watch for results to change and start auto-scroll when ready
-watch([results, isLoading], async ([newResults, newIsLoading]) => {
+watch(
+  [results, isLoading],
+  async ([newResults, newIsLoading]) => {
     if (!newIsLoading && newResults && newResults.length > 0) {
-        // Wait for DOM to update
-        await nextTick();
-        // Add a small delay to ensure rendering is complete
+      // Wait for DOM to update
+      await nextTick();
+      // Add a small delay to ensure rendering is complete
+      setTimeout(() => {
+        startAutoScroll();
+        // Setup fade observer after a short delay to ensure refs are set
         setTimeout(() => {
-            startAutoScroll();
-            // Setup fade observer after a short delay to ensure refs are set
-            setTimeout(() => {
-                setupFadeObserver();
-            }, 100);
+          setupFadeObserver();
         }, 100);
+      }, 100);
     }
-}, { immediate: true });
+  },
+  { immediate: true },
+);
 
 // Drag scrolling functions
 function startDrag(event: MouseEvent) {
-    if (!scrollContainer.value) return;
+  if (!scrollContainer.value) return;
 
-    isDragging.value = true;
-    hasDragged.value = false;
-    dragStart.value = event.clientX;
-    scrollStart.value = scrollContainer.value.scrollLeft;
+  isDragging.value = true;
+  hasDragged.value = false;
+  dragStart.value = event.clientX;
+  scrollStart.value = scrollContainer.value.scrollLeft;
 
-    // Pause auto-scroll
-    if (scrollAnimationId) {
-        cancelAnimationFrame(scrollAnimationId);
-        scrollAnimationId = null;
-    }
+  // Pause auto-scroll
+  if (scrollAnimationId) {
+    cancelAnimationFrame(scrollAnimationId);
+    scrollAnimationId = null;
+  }
 
-    // Prevent text selection
-    event.preventDefault();
+  // Prevent text selection
+  event.preventDefault();
 }
 
 function onDrag(event: MouseEvent) {
-    if (!isDragging.value || !scrollContainer.value) return;
+  if (!isDragging.value || !scrollContainer.value) return;
 
-    const deltaX = event.clientX - dragStart.value;
-    const newScrollLeft = scrollStart.value - deltaX;
+  const deltaX = event.clientX - dragStart.value;
+  const newScrollLeft = scrollStart.value - deltaX;
 
-    // Check if we've dragged enough to consider it a drag
-    if (Math.abs(deltaX) > dragThreshold) {
-        hasDragged.value = true;
-    }
+  // Check if we've dragged enough to consider it a drag
+  if (Math.abs(deltaX) > dragThreshold) {
+    hasDragged.value = true;
+  }
 
-    // Apply scroll
-    scrollContainer.value.scrollLeft = Math.max(0, Math.min(
-        newScrollLeft,
-        scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth
-    ));
+  // Apply scroll
+  scrollContainer.value.scrollLeft = Math.max(
+    0,
+    Math.min(
+      newScrollLeft,
+      scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth,
+    ),
+  );
 
-    event.preventDefault();
+  event.preventDefault();
 }
 
 function endDrag() {
-    if (!isDragging.value) return;
+  if (!isDragging.value) return;
 
-    isDragging.value = false;
+  isDragging.value = false;
 
-    // Resume auto-scroll after a delay
-    setTimeout(() => {
-        if (!isDragging.value) {
-            startAutoScroll();
-        }
-    }, 1000); // 1 second delay before resuming auto-scroll
+  // Resume auto-scroll after a delay
+  setTimeout(() => {
+    if (!isDragging.value) {
+      startAutoScroll();
+    }
+  }, 1000); // 1 second delay before resuming auto-scroll
 
-    // Reset drag state after a short delay to prevent immediate clicks
-    setTimeout(() => {
-        hasDragged.value = false;
-    }, 100);
+  // Reset drag state after a short delay to prevent immediate clicks
+  setTimeout(() => {
+    hasDragged.value = false;
+  }, 100);
 }
 
 function startAutoScroll() {
-    if (!scrollContainer.value || !results.value || results.value.length === 0 || isDragging.value) {
-        return;
+  if (
+    !scrollContainer.value ||
+    !results.value ||
+    results.value.length === 0 ||
+    isDragging.value
+  ) {
+    return;
+  }
+
+  // Clear any existing animation
+  if (scrollAnimationId) {
+    cancelAnimationFrame(scrollAnimationId);
+    scrollAnimationId = null;
+  }
+
+  // Ensure container has content to scroll
+  const container = scrollContainer.value;
+  const maxScroll = container.scrollWidth - container.clientWidth;
+
+  if (maxScroll <= 0) {
+    // Not enough content to scroll, try again later
+    setTimeout(() => startAutoScroll(), 200);
+    return;
+  }
+
+  const scrollSpeed = 1; // pixels per movement
+  const baseFrameSkip = 3; // target speed (move every 3 frames)
+  let frameCounter = 0;
+  let animationFrame = 0; // total frames since start/reset
+  const accelerationFrames = 120; // 2 seconds at 60fps to reach full speed
+  const initialPauseFrames = 120; // 2 second pause at the beginning
+  const endPauseFrames = 180; // 3 second pause at the end
+  let isPaused = true; // start with initial pause
+  let pauseCounter = 0;
+  let hasReachedEnd = false;
+
+  function animate() {
+    if (
+      !scrollContainer.value ||
+      !results.value ||
+      results.value.length === 0
+    ) {
+      return;
     }
 
-    // Clear any existing animation
-    if (scrollAnimationId) {
-        cancelAnimationFrame(scrollAnimationId);
-        scrollAnimationId = null;
-    }
-
-    // Ensure container has content to scroll
     const container = scrollContainer.value;
-    const maxScroll = container.scrollWidth - container.clientWidth;
+    const currentMaxScroll = container.scrollWidth - container.clientWidth;
 
-    if (maxScroll <= 0) {
-        // Not enough content to scroll, try again later
-        setTimeout(() => startAutoScroll(), 200);
-        return;
-    }
+    // Only proceed if there's content to scroll
+    if (currentMaxScroll > 0) {
+      if (isPaused) {
+        pauseCounter++;
+        const currentPauseFrames = hasReachedEnd
+          ? endPauseFrames
+          : initialPauseFrames;
 
-    const scrollSpeed = 1; // pixels per movement
-    const baseFrameSkip = 3; // target speed (move every 3 frames)
-    let frameCounter = 0;
-    let animationFrame = 0; // total frames since start/reset
-    const accelerationFrames = 120; // 2 seconds at 60fps to reach full speed
-    const initialPauseFrames = 120; // 2 second pause at the beginning
-    const endPauseFrames = 180; // 3 second pause at the end
-    let isPaused = true; // start with initial pause
-    let pauseCounter = 0;
-    let hasReachedEnd = false;
+        if (pauseCounter >= currentPauseFrames) {
+          isPaused = false;
+          pauseCounter = 0;
 
-    function animate() {
-        if (!scrollContainer.value || !results.value || results.value.length === 0) {
-            return;
+          // If we just finished the end pause, reset to beginning
+          if (hasReachedEnd) {
+            container.scrollLeft = 0;
+            hasReachedEnd = false;
+            animationFrame = 0;
+          }
+        }
+      } else {
+        frameCounter++;
+        animationFrame++;
+
+        // Calculate current speed based on acceleration curve
+        let currentFrameSkip = baseFrameSkip;
+        if (animationFrame < accelerationFrames) {
+          // Ease-in: start slow and accelerate
+          const progress = animationFrame / accelerationFrames;
+          const easedProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-in
+          currentFrameSkip =
+            baseFrameSkip + baseFrameSkip * 3 * (1 - easedProgress); // start 4x slower
         }
 
-        const container = scrollContainer.value;
-        const currentMaxScroll = container.scrollWidth - container.clientWidth;
+        // Only move when frameCounter reaches currentFrameSkip
+        if (frameCounter >= currentFrameSkip) {
+          frameCounter = 0; // reset counter
 
-        // Only proceed if there's content to scroll
-        if (currentMaxScroll > 0) {
-            if (isPaused) {
-                pauseCounter++;
-                const currentPauseFrames = hasReachedEnd ? endPauseFrames : initialPauseFrames;
-
-                if (pauseCounter >= currentPauseFrames) {
-                    isPaused = false;
-                    pauseCounter = 0;
-
-                    // If we just finished the end pause, reset to beginning
-                    if (hasReachedEnd) {
-                        container.scrollLeft = 0;
-                        hasReachedEnd = false;
-                        animationFrame = 0;
-                    }
-                }
-            } else {
-                frameCounter++;
-                animationFrame++;
-
-                // Calculate current speed based on acceleration curve
-                let currentFrameSkip = baseFrameSkip;
-                if (animationFrame < accelerationFrames) {
-                    // Ease-in: start slow and accelerate
-                    const progress = animationFrame / accelerationFrames;
-                    const easedProgress = 1 - Math.pow(1 - progress, 3); // cubic ease-in
-                    currentFrameSkip =
-                        baseFrameSkip + baseFrameSkip * 3 * (1 - easedProgress); // start 4x slower
-                }
-
-                // Only move when frameCounter reaches currentFrameSkip
-                if (frameCounter >= currentFrameSkip) {
-                    frameCounter = 0; // reset counter
-
-                    if (container.scrollLeft >= currentMaxScroll) {
-                        // Reached the end, start end pause
-                        isPaused = true;
-                        pauseCounter = 0;
-                        hasReachedEnd = true;
-                    } else {
-                        // Smooth continuous scroll
-                        container.scrollLeft += scrollSpeed;
-                    }
-                }
-            }
+          if (container.scrollLeft >= currentMaxScroll) {
+            // Reached the end, start end pause
+            isPaused = true;
+            pauseCounter = 0;
+            hasReachedEnd = true;
+          } else {
+            // Smooth continuous scroll
+            container.scrollLeft += scrollSpeed;
+          }
         }
-
-        // Schedule next frame
-        scrollAnimationId = requestAnimationFrame(animate);
+      }
     }
 
-    // Start the animation with initial pause
-    isPaused = true;
-    pauseCounter = 0;
-    animationFrame = 0;
-    hasReachedEnd = false;
+    // Schedule next frame
     scrollAnimationId = requestAnimationFrame(animate);
+  }
+
+  // Start the animation with initial pause
+  isPaused = true;
+  pauseCounter = 0;
+  animationFrame = 0;
+  hasReachedEnd = false;
+  scrollAnimationId = requestAnimationFrame(animate);
 }
 
 function tryQuery() {
-    // Navigate to search page with the current query
-    router.push({
-        name: 'search',
-        query: {
-            query: wordSearch.value.query,
-        },
-    });
+  // Navigate to search page with the current query
+  router.push({
+    name: 'search',
+    query: {
+      query: wordSearch.value.query,
+    },
+  });
 }
 
 function goToCard(cardId: string | undefined) {
-    // Prevent navigation if user just dragged
-    if (hasDragged.value) {
-        return;
-    }
+  // Prevent navigation if user just dragged
+  if (hasDragged.value) {
+    return;
+  }
 
-    if (!cardId) {
-        console.warn('Cannot navigate to card: ID is undefined');
-        return;
-    }
-    router.push(`/card/${cardId}`);
+  if (!cardId) {
+    console.warn('Cannot navigate to card: ID is undefined');
+    return;
+  }
+  router.push(`/card/${cardId}`);
 }
 </script>
 
@@ -501,10 +570,10 @@ function goToCard(cardId: string | undefined) {
   width: 100%
   overflow: hidden
   border-radius: 16px
-  background: linear-gradient(90deg, 
-    rgba(0, 0, 0, 0.1) 0%, 
-    transparent 15%, 
-    transparent 85%, 
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    transparent 15%,
+    transparent 85%,
     rgba(0, 0, 0, 0.1) 100%)
   position: relative
 

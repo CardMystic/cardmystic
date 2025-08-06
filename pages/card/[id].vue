@@ -11,20 +11,43 @@
       <v-btn to="/search" color="primary" class="mt-4">Back to Search</v-btn>
     </div>
 
-    <v-row v-else-if="card" style="max-width: 1400px" class="d-flex justify-center">
+    <v-row
+      v-else-if="card"
+      style="max-width: 1400px"
+      class="d-flex justify-center"
+    >
       <!-- Left: Card Image -->
-      <v-col md="4" class="d-flex justify-start align-center flex-column mr-6" style="max-width: 300px">
+      <v-col
+        md="4"
+        class="d-flex justify-start align-center flex-column mr-6"
+        style="max-width: 300px"
+      >
         <!-- Back to Results button aligned with card image -->
         <div class="back-button-container-aligned mb-4">
-          <v-btn color="primary" variant="outlined" rounded="lg" prepend-icon="mdi-arrow-left" @click="$router.back()">
+          <v-btn
+            color="primary"
+            variant="outlined"
+            rounded="lg"
+            prepend-icon="mdi-arrow-left"
+            @click="$router.back()"
+          >
             Back to Results
           </v-btn>
         </div>
         <div class="card-image-container">
-          <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
+          <div
+            class="card-glow"
+            :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"
+          ></div>
           <!-- Single image that changes based on flip state -->
-          <v-img :src="getCardImageUrl(card)" class="card-image" width="300" height="420" rounded
-            @error="handleImageError">
+          <v-img
+            :src="getCardImageUrl(card)"
+            class="card-image"
+            width="300"
+            height="420"
+            rounded
+            @error="handleImageError"
+          >
             <template v-slot:placeholder>
               <div class="image-placeholder-large">
                 <v-icon size="64" color="grey" icon="mdi-image-off"></v-icon>
@@ -34,7 +57,10 @@
           </v-img>
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
-          <div v-if="card.rarity?.toLowerCase() === 'mythic'" class="card-sheen-container">
+          <div
+            v-if="card.rarity?.toLowerCase() === 'mythic'"
+            class="card-sheen-container"
+          >
             <div class="card-sheen"></div>
           </div>
 
@@ -43,75 +69,143 @@
         </div>
 
         <!-- Flip Button for Dual-Faced Cards -->
-        <v-btn v-if="isDualFaced" color="info" variant="elevated" class="mt-4 flip-btn"
-          prepend-icon="mdi-rotate-3d-variant" size="large" @click="flipCard">
+        <v-btn
+          v-if="isDualFaced"
+          color="info"
+          variant="elevated"
+          class="mt-4 flip-btn"
+          prepend-icon="mdi-rotate-3d-variant"
+          size="large"
+          @click="flipCard"
+        >
           {{ isFlipped ? 'Show Front' : 'Show Back' }}
         </v-btn>
 
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4">
-          <v-select v-model="selectedPrinting" :items="printingOptions" :item-title="() => ''" item-text="raw.label"
-            item-value="id" label="Select Printing" variant="outlined" density="comfortable" class="printing-select"
-            hide-details :menu-props="{ maxHeight: 300 }">
+          <v-select
+            v-model="selectedPrinting"
+            :items="printingOptions"
+            :item-title="() => ''"
+            item-text="raw.label"
+            item-value="id"
+            label="Select Printing"
+            variant="outlined"
+            density="comfortable"
+            class="printing-select"
+            hide-details
+            :menu-props="{ maxHeight: 300 }"
+          >
             <template #selection="{ item }">
               {{ item.raw.label }}
             </template>
             <template #item="{ props, item }">
               <v-list-item v-bind="props" class="printing-item">
                 <template #prepend>
-                  <v-img :src="item.raw.image_url" width="36" height="50" @error="() => { }">
+                  <v-img
+                    :src="item.raw.image_url"
+                    width="36"
+                    height="50"
+                    @error="() => {}"
+                  >
                     <template #placeholder>
                       <div>?</div>
                     </template>
                   </v-img>
                 </template>
-                <v-list-item-title class="ml-3">{{ item.raw.label }}</v-list-item-title>
-                <v-list-item-subtitle v-if="item.raw.surgefoil" class="surgefoil-text ml-3">Surge
-                  Foil</v-list-item-subtitle>
-                <v-list-item-subtitle class="ml-3">{{ item.raw.frame_effects.join(', ') }}</v-list-item-subtitle>
-                <v-list-item-subtitle class="ml-3">{{ item.raw.subtitle }}</v-list-item-subtitle>
+                <v-list-item-title class="ml-3">{{
+                  item.raw.label
+                }}</v-list-item-title>
+                <v-list-item-subtitle
+                  v-if="item.raw.surgefoil"
+                  class="surgefoil-text ml-3"
+                  >Surge Foil</v-list-item-subtitle
+                >
+                <v-list-item-subtitle class="ml-3">{{
+                  item.raw.frame_effects.join(', ')
+                }}</v-list-item-subtitle>
+                <v-list-item-subtitle class="ml-3">{{
+                  item.raw.subtitle
+                }}</v-list-item-subtitle>
               </v-list-item>
             </template>
           </v-select>
         </div>
 
         <!-- Similar Cards Button - Desktop only -->
-        <v-btn color="white" variant="elevated" :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
-          " prepend-icon="mdi-cards" size="large" @click="findSimilarCards"
-          class="d-none d-md-flex similar-cards-btn-desktop">
+        <v-btn
+          color="white"
+          variant="elevated"
+          :class="
+            isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'
+          "
+          prepend-icon="mdi-cards"
+          size="large"
+          @click="findSimilarCards"
+          class="d-none d-md-flex similar-cards-btn-desktop"
+        >
           Similar Cards
         </v-btn>
 
         <!-- Price Information - Desktop only -->
-        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
-          class="price-card mt-4 d-none d-md-block">
+        <v-card
+          v-if="currentPrinting && currentPrinting.prices && hasPrices"
+          elevation="4"
+          class="price-card mt-4 d-none d-md-block"
+        >
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
-            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
+            <div
+              v-if="
+                currentPrinting.prices.usd || currentPrinting.prices.usd_foil
+              "
+              class="price-item"
+            >
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
-                  currentPrinting.prices.usd }}
-                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                <span
+                  v-if="currentPrinting.prices.usd"
+                  style="color: rgb(34, 197, 94)"
+                  >$</span
+                >{{ currentPrinting.prices.usd }}
+                <span
+                  v-if="currentPrinting.prices.usd_foil"
+                  class="foil-value"
+                  style="margin-left: 8px"
+                >
                   <span class="foil-text">
-                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    ${{ currentPrinting.prices.usd_foil }}
+                    <span style="font-size: 0.9em">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
+            <div
+              v-if="
+                currentPrinting.prices.eur || currentPrinting.prices.eur_foil
+              "
+              class="price-item"
+            >
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
-                  currentPrinting.prices.eur }}
-                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                <span
+                  v-if="currentPrinting.prices.eur"
+                  style="color: rgb(34, 197, 94)"
+                  >€</span
+                >{{ currentPrinting.prices.eur }}
+                <span
+                  v-if="currentPrinting.prices.eur_foil"
+                  class="foil-value"
+                  style="margin-left: 8px"
+                >
                   <span class="foil-text">
-                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    €{{ currentPrinting.prices.eur_foil }}
+                    <span style="font-size: 0.9em">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -125,16 +219,32 @@
         </v-card>
 
         <!-- TCGPlayer Button - Desktop only -->
-        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
-          variant="elevated" class="mt-6 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-shopping" size="large">
+        <v-btn
+          v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :href="getAffiliateLink(currentPrinting.tcgplayer_id)"
+          target="_blank"
+          rel="noopener"
+          color="primary"
+          variant="elevated"
+          class="mt-6 tcgplayer-btn d-none d-md-flex"
+          prepend-icon="mdi-shopping"
+          size="large"
+        >
           Buy on TCGPlayer
         </v-btn>
 
         <!-- Fallback button if no TCGPlayer ID - Desktop only -->
-        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" rel="noopener"
-          color="primary" variant="outlined" class="mt-4 tcgplayer-btn d-none d-md-flex" prepend-icon="mdi-magnify"
-          size="large">
+        <v-btn
+          v-else-if="card.name"
+          :href="generateTCGPlayerSearchUrl(card.name)"
+          target="_blank"
+          rel="noopener"
+          color="primary"
+          variant="outlined"
+          class="mt-4 tcgplayer-btn d-none d-md-flex"
+          prepend-icon="mdi-magnify"
+          size="large"
+        >
           Search on TCGPlayer
         </v-btn>
       </v-col>
@@ -153,7 +263,11 @@
           </h2>
           <div class="set-rarity-info">
             <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
-            <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
+            <RarityBadge
+              v-if="card.rarity"
+              :rarity="card.rarity"
+              size="medium"
+            />
           </div>
           <p class="card-type">
             {{ currentTypeLine }}
@@ -171,7 +285,9 @@
           <div class="stats-container" v-if="currentPower && currentToughness">
             <div class="power-toughness">
               Power / Toughness:
-              <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
+              <span class="stats"
+                >{{ currentPower }}/{{ currentToughness }}</span
+              >
             </div>
           </div>
 
@@ -182,43 +298,77 @@
         </div>
 
         <!-- Similar Cards Button - Mobile only -->
-        <v-btn color="white" variant="elevated" class="mt-0 mb-4 similar-cards-btn d-md-none" prepend-icon="mdi-cards"
-          size="large" @click="findSimilarCards" block>
+        <v-btn
+          color="white"
+          variant="elevated"
+          class="mt-0 mb-4 similar-cards-btn d-md-none"
+          prepend-icon="mdi-cards"
+          size="large"
+          @click="findSimilarCards"
+          block
+        >
           Similar Cards
         </v-btn>
 
         <!-- Price Information - Mobile only -->
-        <v-card v-if="currentPrinting && (currentPrinting.prices && hasPrices)" elevation="4"
-          class="price-card mb-4 d-md-none">
+        <v-card
+          v-if="currentPrinting && currentPrinting.prices && hasPrices"
+          elevation="4"
+          class="price-card mb-4 d-md-none"
+        >
           <div class="price-header">
             <v-icon color="success" class="mr-2" size="26">mdi-gold</v-icon>
             <h4 class="price-title">Current Prices</h4>
           </div>
 
           <div class="price-list">
-            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
+            <div
+              v-if="
+                currentPrinting.prices.usd || currentPrinting.prices.usd_foil
+              "
+              class="price-item"
+            >
               <span class="currency-label">USD:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.usd" style="color: rgb(34, 197, 94)">$</span>{{
-                  currentPrinting.prices.usd
-                }}
-                <span v-if="currentPrinting.prices.usd_foil" class="foil-value" style="margin-left: 8px;">
+                <span
+                  v-if="currentPrinting.prices.usd"
+                  style="color: rgb(34, 197, 94)"
+                  >$</span
+                >{{ currentPrinting.prices.usd }}
+                <span
+                  v-if="currentPrinting.prices.usd_foil"
+                  class="foil-value"
+                  style="margin-left: 8px"
+                >
                   <span class="foil-text">
-                    ${{ currentPrinting.prices.usd_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    ${{ currentPrinting.prices.usd_foil }}
+                    <span style="font-size: 0.9em">(Foil)</span>
                   </span>
                 </span>
               </span>
             </div>
 
-            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
+            <div
+              v-if="
+                currentPrinting.prices.eur || currentPrinting.prices.eur_foil
+              "
+              class="price-item"
+            >
               <span class="currency-label">EUR:</span>
               <span class="price-value">
-                <span v-if="currentPrinting.prices.eur" style="color: rgb(34, 197, 94)">€</span>{{
-                  currentPrinting.prices.eur
-                }}
-                <span v-if="currentPrinting.prices.eur_foil" class="foil-value" style="margin-left: 8px;">
+                <span
+                  v-if="currentPrinting.prices.eur"
+                  style="color: rgb(34, 197, 94)"
+                  >€</span
+                >{{ currentPrinting.prices.eur }}
+                <span
+                  v-if="currentPrinting.prices.eur_foil"
+                  class="foil-value"
+                  style="margin-left: 8px"
+                >
                   <span class="foil-text">
-                    €{{ currentPrinting.prices.eur_foil }} <span style="font-size: 0.9em;">(Foil)</span>
+                    €{{ currentPrinting.prices.eur_foil }}
+                    <span style="font-size: 0.9em">(Foil)</span>
                   </span>
                 </span>
               </span>
@@ -232,16 +382,34 @@
         </v-card>
 
         <!-- TCGPlayer Button - Mobile only -->
-        <v-btn v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :href="getAffiliateLink(currentPrinting.tcgplayer_id)" target="_blank" rel="noopener" color="primary"
-          variant="elevated" class="mb-4 tcgplayer-btn d-md-none" prepend-icon="mdi-shopping" size="large" block>
+        <v-btn
+          v-if="currentPrinting && currentPrinting.tcgplayer_id"
+          :href="getAffiliateLink(currentPrinting.tcgplayer_id)"
+          target="_blank"
+          rel="noopener"
+          color="primary"
+          variant="elevated"
+          class="mb-4 tcgplayer-btn d-md-none"
+          prepend-icon="mdi-shopping"
+          size="large"
+          block
+        >
           Buy on TCGPlayer
         </v-btn>
 
         <!-- Fallback button if no TCGPlayer ID - Mobile only -->
-        <v-btn v-else-if="card.name" :href="generateTCGPlayerSearchUrl(card.name)" target="_blank" rel="noopener"
-          color="primary" variant="outlined" class="mb-6 tcgplayer-btn d-md-none" prepend-icon="mdi-magnify"
-          size="large" block>
+        <v-btn
+          v-else-if="card.name"
+          :href="generateTCGPlayerSearchUrl(card.name)"
+          target="_blank"
+          rel="noopener"
+          color="primary"
+          variant="outlined"
+          class="mb-6 tcgplayer-btn d-md-none"
+          prepend-icon="mdi-magnify"
+          size="large"
+          block
+        >
           Search on TCGPlayer
         </v-btn>
 
@@ -252,9 +420,19 @@
           </div>
 
           <v-row dense class="pa-2">
-            <v-col v-for="(format, name) in legalities" :key="name" cols="6" class="mb-2">
+            <v-col
+              v-for="(format, name) in legalities"
+              :key="name"
+              cols="6"
+              class="mb-2"
+            >
               <div class="legality-item">
-                <v-chip class="legality-chip" :color="getLegalityColor(format)" variant="elevated" size="small">
+                <v-chip
+                  class="legality-chip"
+                  :color="getLegalityColor(format)"
+                  variant="elevated"
+                  size="small"
+                >
                   {{ format }}
                 </v-chip>
                 <span class="format-name">{{ formatName(name) }}</span>
@@ -283,18 +461,19 @@ const selectedPrinting = ref<string>('');
 const cardIdParam = computed(() => String(route.params.id) || '');
 
 // Combined query that fetches both card and printings in one go
-const { data: cardData, isLoading, error } = useQuery({
-  queryKey: [
-    'card-with-printings',
-    cardIdParam.value,
-  ],
+const {
+  data: cardData,
+  isLoading,
+  error,
+} = useQuery({
+  queryKey: ['card-with-printings', cardIdParam.value],
   queryFn: async () => {
     // First, fetch the card
     const cardResponse = await fetch(`/api/cards/${cardIdParam.value}`);
     if (!cardResponse.ok) {
       throw new Error('Failed to fetch card');
     }
-    const card = await cardResponse.json() as ScryfallCard;
+    const card = (await cardResponse.json()) as ScryfallCard;
 
     // Then, fetch printings if available
     let printings: ScryfallCard[] = [];
@@ -304,7 +483,7 @@ const { data: cardData, isLoading, error } = useQuery({
         if (printingsResponse.ok) {
           const printingsData = await printingsResponse.json();
           printings = printingsData.data || [];
-          console.log(printings)
+          console.log(printings);
         } else {
           console.error('Printings fetch failed:', printingsResponse.status);
         }
@@ -324,9 +503,7 @@ const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
 useHead(() => ({
-  title: card.value
-    ? `CardMystic | ${card.value.name}`
-    : 'CardMystic | Card',
+  title: card.value ? `CardMystic | ${card.value.name}` : 'CardMystic | Card',
   link: [
     {
       rel: 'icon',
@@ -502,20 +679,30 @@ const hasPrices = computed(() => {
 const printingOptions = computed(() => {
   if (!printings.value) return [];
 
-  return printings.value.map(printing => ({
+  return printings.value.map((printing) => ({
     id: printing.id,
     label: `${printing.set_name || 'Unknown Set'} (${printing.set?.toUpperCase() || 'UNK'})`,
-    subtitle: printing.released_at ? new Date(printing.released_at).getFullYear().toString() : 'Unknown',
-    image_url: printing.image_uris?.small || printing.card_faces?.[0]?.image_uris?.small || '',
-    frame_effects: printing.frame_effects?.filter((d) => { return d != 'legendary' }) || [],
-    surgefoil: printing.promo_types?.includes("surgefoil") ? true : false,
+    subtitle: printing.released_at
+      ? new Date(printing.released_at).getFullYear().toString()
+      : 'Unknown',
+    image_url:
+      printing.image_uris?.small ||
+      printing.card_faces?.[0]?.image_uris?.small ||
+      '',
+    frame_effects:
+      printing.frame_effects?.filter((d) => {
+        return d != 'legendary';
+      }) || [],
+    surgefoil: printing.promo_types?.includes('surgefoil') ? true : false,
   }));
 });
 
 // Get current selected printing data
 const currentPrinting = computed(() => {
   if (!printings.value || !selectedPrinting.value) return card.value;
-  return printings.value.find(p => p.id === selectedPrinting.value) || card.value;
+  return (
+    printings.value.find((p) => p.id === selectedPrinting.value) || card.value
+  );
 });
 
 // Computed properties for current face data using current printing
@@ -525,9 +712,7 @@ const currentFace = computed(() => {
 
   // If it's a dual-faced card, return the appropriate face
   if (isDualFaced.value && cardData.card_faces) {
-    return isFlipped.value
-      ? cardData.card_faces[1]
-      : cardData.card_faces[0];
+    return isFlipped.value ? cardData.card_faces[1] : cardData.card_faces[0];
   }
 
   // For single-faced cards, return the card itself
@@ -582,7 +767,8 @@ const formattedOracleText = computed(() => {
 
 const isDualFaced = computed(() => {
   const cardData = currentPrinting.value || card.value;
-  const isDualFacedCard = cardData?.card_faces && cardData.card_faces.length >= 2;
+  const isDualFacedCard =
+    cardData?.card_faces && cardData.card_faces.length >= 2;
   return isDualFacedCard;
 });
 
@@ -651,13 +837,21 @@ function findSimilarCards() {
 }
 
 // Watch for card changes to set initial selected printing
-watch([card, printings], ([newCard, newPrintings]) => {
-  if (newCard && newPrintings && newPrintings.length > 0) {
-    // Always update selected printing to current card or first available
-    const currentPrintingMatch = newPrintings.find(p => p.id === newCard.id);
-    selectedPrinting.value = currentPrintingMatch ? currentPrintingMatch.id : newPrintings[0].id;
-  }
-}, { immediate: true });
+watch(
+  [card, printings],
+  ([newCard, newPrintings]) => {
+    if (newCard && newPrintings && newPrintings.length > 0) {
+      // Always update selected printing to current card or first available
+      const currentPrintingMatch = newPrintings.find(
+        (p) => p.id === newCard.id,
+      );
+      selectedPrinting.value = currentPrintingMatch
+        ? currentPrintingMatch.id
+        : newPrintings[0].id;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped lang="sass">
@@ -731,7 +925,7 @@ watch([card, printings], ([newCard, newPrintings]) => {
 .card-header-aligned
   margin-bottom: 16px
   margin-top: 0
-  
+
   @media (min-width: 960px)
     margin-top: 60px // Align with card image top (button height + margin)
 
@@ -1126,5 +1320,4 @@ em
   border-radius: 8px
   text-transform: uppercase
   letter-spacing: 0.5px
-    
 </style>

@@ -1,12 +1,10 @@
 <template>
   <v-container class="fill-height d-flex align-start justify-center pt-0">
     <v-col justify="center" align="center" class="col-container pt-4">
-
       <SearchForm class="mt-6" style="max-width: 1096px" />
 
       <!-- Results -->
       <div style="max-width: 1072px" class="mt-6">
-
         <template v-if="isLoading">
           <v-row>
             <v-col cols="12" class="text-center">
@@ -17,8 +15,15 @@
 
         <template v-else-if="searchResults && searchResults.length">
           <v-row>
-            <v-col class="px-0 py-0 flex-grow-1 mb-2" v-for="result in searchResults" :key="result.card_data.id">
-              <card :card="result" @click="navigateToCard(result.card_data.id)" />
+            <v-col
+              class="px-0 py-0 flex-grow-1 mb-2"
+              v-for="result in searchResults"
+              :key="result.card_data.id"
+            >
+              <card
+                :card="result"
+                @click="navigateToCard(result.card_data.id)"
+              />
             </v-col>
           </v-row>
         </template>
@@ -39,7 +44,10 @@ import { useQuery } from '@tanstack/vue-query';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Card } from '~/models/cardModel';
-import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
+import {
+  CardSearchFiltersSchema,
+  WordSearchSchema,
+} from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
@@ -58,8 +66,14 @@ function navigateToCard(cardId: string | undefined) {
 
 // Parse query params into a WordSearch model
 const queryParam = computed(() => String(route.query.query || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
+const limitParam = computed(() =>
+  route.query.limit ? Number(route.query.limit) : undefined,
+);
+const parsedFilters = computed(() =>
+  route.query.filters
+    ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
+    : undefined,
+);
 
 useHead(() => ({
   title: queryParam.value
@@ -78,7 +92,6 @@ useHead(() => ({
 definePageMeta({
   title: 'AI search',
 });
-
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
@@ -100,15 +113,11 @@ const wordSearch = computed(() =>
     limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false, // Default to false, can be overridden by query param
-  })
+  }),
 );
 
 const { data: searchResults, isLoading } = useQuery({
-  queryKey: [
-    'search',
-    'colbert',
-    wordSearch,
-  ],
+  queryKey: ['search', 'colbert', wordSearch],
   queryFn: async () => {
     const response = await fetch('/api/search/colbert', {
       method: 'POST',
@@ -123,7 +132,6 @@ const { data: searchResults, isLoading } = useQuery({
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: !!wordSearch.value.query,
 });
-
 </script>
 
 <style lang="sass" scoped>

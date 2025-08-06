@@ -6,8 +6,13 @@
         <div class="left-section">
           <v-app-bar-nav-icon class="d-custom-none" @click="drawer = !drawer" />
           <div class="d-custom-flex">
-            <NuxtLink v-for="item in filteredNavItems" :key="item.to" :to="item.to" class="nav-link"
-              :class="{ active: $route.path === item.to }">
+            <NuxtLink
+              v-for="item in filteredNavItems"
+              :key="item.to"
+              :to="item.to"
+              class="nav-link"
+              :class="{ active: $route.path === item.to }"
+            >
               <v-btn>
                 <v-icon start size="20">{{ item.icon }}</v-icon>
                 {{ item.label }}
@@ -18,14 +23,25 @@
 
         <!-- Right side: Patreon button -->
         <div v-if="showActions" class="right-actions">
-          <v-btn :href="issuesUrl" target="_blank" rel="noopener" class="github-issues-btn" variant="outlined">
+          <v-btn
+            :href="issuesUrl"
+            target="_blank"
+            rel="noopener"
+            class="github-issues-btn"
+            variant="outlined"
+          >
             <div class="github-btn-content">
               <v-icon size="20" color="#24292f">mdi-github</v-icon>
               <span class="github-btn-text">Report Issue</span>
             </div>
           </v-btn>
-          <v-btn href="https://www.patreon.com/thecardmystic" target="_blank" rel="noopener" class="patreon-btn"
-            variant="outlined">
+          <v-btn
+            href="https://www.patreon.com/thecardmystic"
+            target="_blank"
+            rel="noopener"
+            class="patreon-btn"
+            variant="outlined"
+          >
             <div class="btn-left">
               <span class="patreon-text-small">Support Us!</span>
               <span class="patreon-text-large">Support Us On Patreon!</span>
@@ -40,9 +56,19 @@
 
     <!-- Drawer for mobile -->
     <client-only>
-      <v-navigation-drawer v-model="drawer" temporary app class="d-custom-none-drawer">
+      <v-navigation-drawer
+        v-model="drawer"
+        temporary
+        app
+        class="d-custom-none-drawer"
+      >
         <v-list nav>
-          <v-list-item v-for="item in filteredNavItems" :key="item.to" :to="item.to" @click="drawer = false">
+          <v-list-item
+            v-for="item in filteredNavItems"
+            :key="item.to"
+            :to="item.to"
+            @click="drawer = false"
+          >
             <template #prepend>
               <v-icon>{{ item.icon }}</v-icon>
             </template>
