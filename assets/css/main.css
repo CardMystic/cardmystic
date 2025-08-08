@@ -2,13 +2,13 @@
 @import '@nuxt/ui';
 
 :root {
-  --ui-primary: #8f6edf;
-  --ui-secondary: #383d7a;
+  --ui-primary: #af0b98;
+  --ui-secondary: #2c1266;
 }
 
 .dark {
-  --ui-primary: #8f6edf;
-  --ui-secondary: #383d7a;
+  --ui-primary: #af0b98;
+  --ui-secondary: #2c1266;
 }
 
 /* Ensure proper layout for sticky footer */

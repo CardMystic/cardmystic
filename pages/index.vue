@@ -2,8 +2,8 @@
   <div class="col-container px-0 w-full">
     <!-- Header with image and title side by side -->
     <div class="header-layout">
-      <div class="glow-wrapper">
-        <img src="/crystall_ball.webp" class="image w-[120px] h-[120px] object-cover" alt="Crystal Ball" />
+      <div>
+        <img src="/CardMystic.webp" class="image w-[240px] h-[264px] object-cover" alt="CardMystic Logo" />
       </div>
 
       <div class="title-container">
@@ -166,37 +166,6 @@ onMounted(() => {
 
 .primary
   color: rgb(var(--color-primary-500))
-
-.glow-wrapper
-  position: relative
-  display: inline-block
-
-.glow-wrapper::after
-  content: ''
-  position: absolute
-  top: 50%
-  left: 50%
-  width: 50px
-  height: 50px
-  background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0) 70%, rgba(147,114,255,0) 100%)
-  border-radius: 50%
-  transform: translate(-50%, -50%)
-  animation: glowPulse 5s ease-in-out infinite
-  pointer-events: none
-  z-index: 1
-  @media (max-width: 768px)
-    width: 40px
-    height: 40px
-    top: 58%
-    left: 49.5%
-
-@keyframes glowPulse
-  0%, 100%
-    opacity: 0.6
-    transform: translate(-50%, -50%) scale(1)
-  50%
-    opacity: 1
-    transform: translate(-50%, -50%) scale(1.5)
 
 .filters-btn
   width: 40px
