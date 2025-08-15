@@ -33,9 +33,10 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 
 ## 🛣️ Roadmap
 
-- Image-based search
-- User database integration
+- Increasing loading speeds
 - Deck recommendation system
+- Keyword & Image-based search
+- Browser Extension
 
 ## 🤝 Contributing
 
