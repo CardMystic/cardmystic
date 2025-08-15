@@ -15,7 +15,7 @@
 
     <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto px-4">
       <!-- Left: Card Image -->
-      <div class="lg:col-span-3 flex flex-col items-center lg:items-start">
+      <div class="lg:col-span-3 flex flex-col items-center">
         <!-- Back to Results button aligned with card image -->
         <div class="back-button-container-aligned mb-4">
           <UButton class="cursor-pointer" color="primary" variant="outline" @click="$router.back()"
@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -134,7 +134,7 @@
       </div>
 
       <!-- Center: Card Details -->
-      <div class="lg:col-span-7 flex flex-col">
+      <div class="lg:col-span-7 flex flex-col max-w-[732px]">
         <div class="card-header card-header-aligned">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
