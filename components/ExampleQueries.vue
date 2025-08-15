@@ -23,12 +23,12 @@
       </div>
     </div>
 
-    <div v-else-if="results && results.length > 0" class="example-content">
+    <div v-else-if="results && results.cards.length > 0" class="example-content">
       <!-- Query display and TRY IT button -->
       <div class="query-header">
         <div>
           <UIcon name="i-lucide-lightbulb" class="mr-2" color="primary" />
-          <span class="query-value">"{{ wordSearch.query }}"</span>
+          <span class="query-value">"{{ results.query }}"</span>
         </div>
         <div class="button-group">
           <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
@@ -39,7 +39,7 @@
         </div>
       </div>
       <!-- Horizontal scrolling results -->
-      <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results" :ui="{
+      <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results.cards" :ui="{
         item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
       }">
         <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
@@ -50,80 +50,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { computed } from 'vue';
 import { useQuery } from '@tanstack/vue-query'
 import { type ExampleQueryResponse } from '~/models/searchModel';
 const router = useRouter();
 
-const currentQuery = ref<string>('creatures that draw cards');
-
-const wordSearch = computed(() =>
-  WordSearchSchema.parse({
-    query: currentQuery.value,
-    limit: 15, // Reduced from DefaultLimit for performance
-    exclude_card_data: false, // Default to false, can be overridden by query param
-  })
-);
-
 // Computed property to get all scores for normalization context
 const allScores = computed(() => results.value?.cards.map((r) => r.score || 0) || []);
 
-// Example queries to choose from
-const exampleQueries = [
-  "creatures that draw cards",
-  "stax pieces",
-  "blue cantrips",
-  "adventure ramp",
-  "orzhov removal",
-  "black creatures with flying",
-  "etb effects",
-  "artifact removal",
-  "x spell board wipes",
-  "low cost sultai commanders",
-  "mono white token finishers",
-  "golgari elves that draw",
-  "five color dragon commander",
-  "red burn",
-  "graveyard recursion",
-];
-
-onMounted(async () => {
-  await loadRandomExample();
-});
-
-async function loadRandomExample() {
-  const randomIndex = Math.floor(Math.random() * exampleQueries.length);
-  currentQuery.value = exampleQueries[randomIndex];
-}
-
-const { data: results, isLoading } = useQuery({
+const { data: results, isLoading, refetch } = useQuery({
   queryKey: [
     'search',
-    'colbert',
-    wordSearch,
+    'example',
   ],
   queryFn: async () => {
-    const response = await fetch('/api/search/colbert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(wordSearch.value),
+    const response = await fetch('/api/search/example', {
+      method: 'GET',
     });
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return response.json() as Promise<Array<Card>>;
+    return response.json() as Promise<ExampleQueryResponse>;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: true, // Enable lazy loading
   refetchOnWindowFocus: false,
 });
 
+// Call refetch() to manually trigger the query again
+function loadRandomExample() {
+  refetch();
+}
+
 function tryQuery() {
   // Navigate to search page with the current query
   router.push({
     name: 'search',
     query: {
-      query: wordSearch.value.query,
+      query: results.value?.query,
     },
   });
 }
