@@ -106,7 +106,7 @@
                 Please Select How To Match Colors before using Color Checkboxes
               </div>
 
-              <!-- Only show color checkboxes when a filter option is selected -->
+              <!-- Disable checkboxes when a filter option is selected -->
               <div class="color-checkboxes flex flex-wrap">
                 <UCheckboxGroup :disabled="!selectedColorFilterOption" :items="cardColors" :orientation="orientation"
                   variant="card" v-model="selectedColors" class="w-full flex flex-wrap">
