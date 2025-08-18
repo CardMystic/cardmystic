@@ -490,6 +490,7 @@ function clearAllFilters() {
 <style scoped>
 .filters-container {
   width: 100%;
+  cursor: pointer;
 }
 
 .filters-toggle-btn {

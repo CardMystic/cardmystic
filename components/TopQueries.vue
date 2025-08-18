@@ -211,6 +211,7 @@ function tryQuery(query: string) {
 .try-btn
   min-width: 50px !important
   font-size: 0.8rem !important
+  cursor: pointer
 
 .error-state
   display: flex
