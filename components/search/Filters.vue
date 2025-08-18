@@ -73,7 +73,7 @@
       </div>
     </div>
     <UCollapsible class="flex flex-col gap-2 mb-4">
-      <UButton class="filters-toggle-btn mb-3" label="Filters" color="primary" variant="subtle"
+      <UButton class="filters-toggle-btn mb-3 cursor-pointer" label="Filters" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down" :ui="{
           trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
         }" block />
@@ -83,14 +83,14 @@
         <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
           <!-- Types Filter -->
           <template #types>
-            <div class="accordion-item">
+            <div class="accordion-item cursor-pointer">
               <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
                 class="w-full" />
             </div>
           </template>
           <!-- Colors Filter -->
           <template #colors>
-            <div class="accordion-item">
+            <div class="accordion-item cursor-pointer">
               <!-- Replace the non-functioning clearable USelect with a select + clear button -->
               <div class="flex gap-2">
                 <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions"
@@ -109,7 +109,7 @@
               <!-- Disable checkboxes when a filter option is selected -->
               <div class="color-checkboxes flex flex-wrap">
                 <UCheckboxGroup :disabled="!selectedColorFilterOption" :items="cardColors" :orientation="orientation"
-                  variant="card" v-model="selectedColors" class="w-full flex flex-wrap">
+                  variant="card" v-model="selectedColors" class="w-full flex flex-wrap cursor-pointer">
                   <template #label="{ item }">
                     <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
                     <!-- Typescript gets confused with the CheckboxGroupItem type so we have to help it out a bit -->
@@ -490,7 +490,6 @@ function clearAllFilters() {
 <style scoped>
 .filters-container {
   width: 100%;
-  cursor: pointer;
 }
 
 .filters-toggle-btn {

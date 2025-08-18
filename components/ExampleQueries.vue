@@ -32,8 +32,8 @@
         </div>
         <div class="button-group">
           <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
-            :loading="isLoading" size="sm" class="button-pointer" />
-          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search" class="button-pointer">
+            :loading="isLoading" size="sm" class="cursor-pointer" />
+          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search" class="cursor-pointer">
             TRY
           </UButton>
         </div>
@@ -149,9 +149,6 @@ function goToCard(cardId: string | undefined) {
   align-items: center
   gap: 12px
   flex-shrink: 0
-
-.button-pointer
-  cursor: pointer
 
 .query-value
   color: rgb(var(--v-theme-primary))
