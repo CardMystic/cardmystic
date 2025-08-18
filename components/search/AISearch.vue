@@ -47,11 +47,15 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || ''));
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+const parsedFilters = computed(() =>
+  route.query.filters
+    ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
+    : { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' }
+);
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
-  filters: parsedFilters.value || undefined
+  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
 })
 
 const toast = useToast()
