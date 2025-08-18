@@ -101,10 +101,15 @@
                 </UButton>
               </div>
 
+              <!-- Warning if no color filter option is selected -->
+              <div v-if="!selectedColorFilterOption" class="mt-2 text-yellow-500 text-xs">
+                Please Select How To Match Colors before using Color Checkboxes
+              </div>
+
               <!-- Only show color checkboxes when a filter option is selected -->
-              <div v-if="selectedColorFilterOption" class="color-checkboxes flex flex-wrap">
-                <UCheckboxGroup :items="cardColors" :orientation="orientation" variant="card" v-model="selectedColors"
-                  class="w-full flex flex-wrap">
+              <div class="color-checkboxes flex flex-wrap">
+                <UCheckboxGroup :disabled="!selectedColorFilterOption" :items="cardColors" :orientation="orientation"
+                  variant="card" v-model="selectedColors" class="w-full flex flex-wrap">
                   <template #label="{ item }">
                     <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
                     <!-- Typescript gets confused with the CheckboxGroupItem type so we have to help it out a bit -->
