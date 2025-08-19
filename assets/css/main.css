@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+:root {
+  --ui-primary: #8f6edf;
+  --ui-secondary: #383d7a;
+}
+
+.dark {
+  --ui-primary: #8f6edf;
+  --ui-secondary: #383d7a;
+}
+
+/* Ensure proper layout for sticky footer */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#__nuxt {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}

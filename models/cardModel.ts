@@ -12,7 +12,14 @@ export const CardType = z.enum([
 
 export const CardRarity = z.enum(['Common', 'Uncommon', 'Rare', 'Mythic']);
 
-export const CardColor = z.enum(['White', 'Blue', 'Black', 'Red', 'Green']);
+export const CardColor = z.enum([
+  'White',
+  'Blue',
+  'Black',
+  'Red',
+  'Green',
+  'Colorless',
+]);
 export type CardColorType = z.infer<typeof CardColor>;
 
 export function cardColorToSymbol(color: CardColorType): string {
@@ -27,6 +34,8 @@ export function cardColorToSymbol(color: CardColorType): string {
       return 'r';
     case 'Green':
       return 'g';
+    case 'Colorless':
+      return 'c';
     default:
       return '';
   }
@@ -111,7 +120,7 @@ const purchaseUrisSchema = z.object({
 const previewSchema = z
   .object({
     source: z.string(),
-    source_uri: z.string().url(),
+    source_uri: z.union([z.literal(''), z.string().url()]),
     previewed_at: z.string(),
   })
   .optional();

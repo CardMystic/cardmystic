@@ -1,5 +1,5 @@
-import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 import { execSync } from 'child_process';
+import devtoolsJson from 'vite-plugin-devtools-json';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -15,26 +15,22 @@ function getCommitHash() {
 export default defineNuxtConfig({
   app: {
     head: {
-      link: [
-        {
-          rel: 'stylesheet',
-          type: 'text/css',
-          href: 'https://cdn.jsdelivr.net/npm/mana-font@latest/css/mana.css',
-        },
-      ],
+      title: 'CardMystic', // default fallback title
+      htmlAttrs: {
+        lang: 'en',
+      },
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     },
   },
   compatibilityDate: '2025-05-15',
-  css: ['vuetify/styles', '@mdi/font/css/materialdesignicons.min.css'],
+  css: ['~/assets/css/main.css'],
   devtools: {
     enabled: true,
   },
   devServer: {
     port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
   },
-  build: {
-    transpile: ['vuetify'],
-  },
+  build: {},
   runtimeConfig: {
     // The private keys which are only available server-side
     backendUrl: 'http://localhost:3000',
@@ -45,29 +41,17 @@ export default defineNuxtConfig({
   },
   plugins: ['~/plugins/vue-query.ts'],
   modules: [
-    '@nuxtjs/google-fonts',
+    '@nuxt/ui',
     '@vee-validate/nuxt',
     '@nuxtjs/device',
-    async (_options, nuxt) => {
-      nuxt.hooks.hook('vite:extendConfig', (config) => {
-        if (!config.plugins) {
-          config.plugins = [];
-        }
-        config.plugins.push(
-          vuetify({
-            autoImport: true,
-            // styles: {
-            //   // configFile: 'assets/styles/vuetify.scss',
-            // },
-          }),
-        );
-        return;
-      });
-    },
+    'nuxt-vitalizer',
   ],
-  googleFonts: {
-    families: {
-      'Alfa+Slab+One': true,
+  fonts: {
+    families: [{ name: 'Alfa Slab One', provider: 'google' }],
+  },
+  routeRules: {
+    '/': {
+      prerender: true,
     },
   },
   vite: {
@@ -77,15 +61,10 @@ export default defineNuxtConfig({
         interval: 100,
       },
     },
-    ssr: {
-      noExternal: ['vuetify'],
-    },
-    plugins: [],
-    vue: {
-      template: {
-        transformAssetUrls,
-      },
-    },
+    ssr: {},
+    plugins: [
+      ...(process.env.NODE_ENV === 'development' ? [devtoolsJson()] : []),
+    ],
     css: {
       preprocessorOptions: {
         sass: {
@@ -97,7 +76,6 @@ export default defineNuxtConfig({
       rollupOptions: {
         output: {
           manualChunks: {
-            vuetify: ['vuetify'],
             'vue-vendor': ['vue', '@vue/runtime-core'],
             tanstack: ['@tanstack/vue-query'],
           },

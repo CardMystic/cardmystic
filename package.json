@@ -16,15 +16,17 @@
 		"format": "prettier --write ."
 	},
 	"dependencies": {
+		"@nuxt/ui": "^3.3.0",
 		"@nuxtjs/device": "^3.2.4",
-		"@nuxtjs/google-fonts": "^3.2.0",
 		"@tanstack/query-persist-client-core": "^5.81.5",
 		"@tanstack/vue-query": "^5.81.5",
 		"@tanstack/vue-query-devtools": "^5.81.5",
 		"@vee-validate/nuxt": "^4.15.1",
 		"@vee-validate/zod": "^4.15.1",
 		"dotenv": "^16.6.1",
+		"mana-font": "^1.18.0",
 		"nuxt": "^3.15.4",
+		"nuxt-vitalizer": "^0.10.0",
 		"vee-validate": "^4.15.1",
 		"vue": "^3.5.17",
 		"vue-router": "^4.5.1",
@@ -32,7 +34,10 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.26.0",
-		"@mdi/font": "^7.4.47",
+		"@iconify-json/heroicons": "^1.2.2",
+		"@iconify-json/lucide": "^1.2.60",
+		"@iconify-json/mdi": "^1.2.3",
+		"@iconify-json/simple-icons": "^1.2.46",
 		"eslint": "^9.26.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prettier": "^5.4.0",
@@ -41,7 +46,6 @@
 		"prettier": "^3.5.3",
 		"sass-embedded": "^1.83.4",
 		"typescript-eslint": "^8.32.1",
-		"vite-plugin-vuetify": "^2.1.1",
-		"vuetify": "^3.8.12"
+		"vite-plugin-devtools-json": "^0.4.1"
 	}
 }

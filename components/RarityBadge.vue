@@ -1,5 +1,6 @@
 <template>
-  <div v-if="rarity" class="rarity-badge" :class="[sizeClass, rarityClass]">
+  <div v-if="rarity"
+    :class="{ 'rarity-badge': !isTextOnly, [sizeClass]: !isTextOnly, [rarityClass]: !isTextOnly, [rarityTextOnlyClass]: isTextOnly }">
     <span class="rarity-text">{{ formatRarity(rarity) }}</span>
   </div>
 </template>
@@ -16,10 +17,15 @@ const props = defineProps({
     type: String as PropType<'small' | 'medium' | 'large'>,
     default: 'medium',
   },
+  isTextOnly: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const sizeClass = computed(() => `rarity-badge-${props.size}`);
 const rarityClass = computed(() => `rarity-${props.rarity.toLowerCase()}`);
+const rarityTextOnlyClass = computed(() => `rarity-text-only-${props.rarity.toLowerCase()}`);
 
 function formatRarity(rarity: string): string {
   return rarity.charAt(0).toUpperCase() + rarity.slice(1);
@@ -68,9 +74,17 @@ function formatRarity(rarity: string): string {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.rarity-text-only-common {
+  color: white
+}
+
 .rarity-uncommon {
   background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
   border-color: rgba(192, 192, 192, 0.4);
+}
+
+.rarity-text-only-uncommon {
+  color: white
 }
 
 .rarity-rare {
@@ -79,10 +93,19 @@ function formatRarity(rarity: string): string {
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
+.rarity-text-only-rare {
+  color: gold;
+}
+
+
 .rarity-mythic {
   background: linear-gradient(135deg, #ff8c00, #ff6b35, #ff4500);
   border-color: rgba(255, 140, 0, 0.6);
   box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
+}
+
+.rarity-text-only-mythic {
+  color: orangered
 }
 
 /* Size-specific animations for rare */
@@ -95,6 +118,7 @@ function formatRarity(rarity: string): string {
     transform: scale(1);
     box-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
   }
+
   100% {
     transform: scale(1.05);
     box-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
@@ -117,6 +141,7 @@ function formatRarity(rarity: string): string {
       0 0 8px rgba(255, 140, 0, 0.5),
       0 0 12px rgba(255, 107, 53, 0.3);
   }
+
   100% {
     transform: scale(1.1);
     box-shadow:
@@ -132,6 +157,7 @@ function formatRarity(rarity: string): string {
       0 0 18px rgba(255, 140, 0, 0.5),
       0 0 30px rgba(255, 107, 53, 0.3);
   }
+
   100% {
     transform: scale(1.1);
     box-shadow:
