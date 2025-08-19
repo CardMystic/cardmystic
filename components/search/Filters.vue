@@ -83,14 +83,14 @@
         <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
           <!-- Types Filter -->
           <template #types>
-            <div class="accordion-item cursor-pointer">
+            <div class="accordion-item">
               <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
                 class="w-full" />
             </div>
           </template>
           <!-- Colors Filter -->
           <template #colors>
-            <div class="accordion-item cursor-pointer">
+            <div class="accordion-item">
               <!-- Replace the non-functioning clearable USelect with a select + clear button -->
               <div class="flex gap-2">
                 <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions"
@@ -109,7 +109,7 @@
               <!-- Disable checkboxes when a filter option is selected -->
               <div class="color-checkboxes flex flex-wrap">
                 <UCheckboxGroup :disabled="!selectedColorFilterOption" :items="cardColors" :orientation="orientation"
-                  variant="card" v-model="selectedColors" class="w-full flex flex-wrap cursor-pointer">
+                  variant="card" v-model="selectedColors" class="w-full flex flex-wrap">
                   <template #label="{ item }">
                     <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
                     <!-- Typescript gets confused with the CheckboxGroupItem type so we have to help it out a bit -->
