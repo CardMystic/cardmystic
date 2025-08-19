@@ -32,8 +32,8 @@
         </div>
         <div class="button-group">
           <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
-            :loading="isLoading" size="sm" />
-          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search">
+            :loading="isLoading" size="sm" class="cursor-pointer" />
+          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search" class="cursor-pointer">
             TRY
           </UButton>
         </div>

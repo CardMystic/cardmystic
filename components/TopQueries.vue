@@ -40,7 +40,7 @@
             <div class="query-rank">#{{ index + 1 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
             <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
-              icon="i-lucide-search" class="try-btn">
+              icon="i-lucide-search" class="try-btn cursor-pointer">
               Try
             </UButton>
           </div>
@@ -52,7 +52,7 @@
             <div class="query-rank">#{{ index + 6 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
             <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
-              icon="i-lucide-search" class="try-btn">
+              icon="i-lucide-search" class="try-btn cursor-pointer">
               Try
             </UButton>
           </div>
