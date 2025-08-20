@@ -9,10 +9,10 @@
               @click="state.query = ''" />
           </template>
           <template #trailing>
-            <UKbd value="/" class="me-1" />
+            <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>
-        <UButton type="submit" class="h-10">
+        <UButton type="submit" class="cursor-pointer h-10">
           Submit
         </UButton>
       </div>

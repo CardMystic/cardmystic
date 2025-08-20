@@ -145,6 +145,7 @@ watch(searchType, async (newType) => {
 .search-btn {
   margin-top: 0;
   align-self: flex-start;
+  cursor: pointer;
 }
 
 .filters-section {
