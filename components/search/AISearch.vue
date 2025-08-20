@@ -62,6 +62,12 @@ const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
+    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters (its the equivalent but more intuitive)
+    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
+      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
+        delete event.data.filters.selectedColorFilterOption;
+      }
+    }
     const query: Record<string, any> = {
       query: event.data.query,
       filters: event.data.filters && Object.keys(event.data.filters).length > 0 ? JSON.stringify(event.data.filters) : undefined
