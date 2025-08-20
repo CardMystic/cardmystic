@@ -21,10 +21,10 @@
     <SearchForm />
 
     <!-- Example Queries -->
-    <ExampleQueries />
+    <ExampleQueries class="mb-0" />
 
     <!-- Top Queries -->
-    <TopQueries />
+    <TopQueries class="mb-8" />
   </div>
 </template>
 

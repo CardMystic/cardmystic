@@ -47,11 +47,12 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || ''));
-const parsedFilters = computed(() =>
-  route.query.filters
-    ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
-    : { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' }
-);
+const parsedFilters = computed(() => {
+  if (route.query.filters) {
+    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+  }
+  return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+});
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
@@ -62,9 +63,21 @@ const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
+    // Ensure we have valid data
+    const formData = {
+      query: event.data.query,
+      filters: event.data.filters || {}
+    };
+    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters (its the equivalent but more intuitive)
+    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
+      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
+        formData.filters = {};
+      }
+    }
+    // Construct query parameters
     const query: Record<string, any> = {
       query: event.data.query,
-      filters: event.data.filters && Object.keys(event.data.filters).length > 0 ? JSON.stringify(event.data.filters) : undefined
+      filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined
     };
     navigateTo({ path: '/search', query });
   } catch (error) {
