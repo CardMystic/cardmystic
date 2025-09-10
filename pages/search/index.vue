@@ -13,8 +13,7 @@
 
         <template v-else-if="searchResults && searchResults.length">
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            <div v-for="result in searchResults" :key="result.card_data.id" class="cursor-pointer"
-              @click="navigateToCard(result.card_data.id)">
+            <div v-for="result in searchResults" :key="result.card_data.id">
               <CardComponent :card="result" :showCardInfo="true" />
             </div>
           </div>
@@ -59,17 +58,7 @@ import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { UContainer } from '#components';
 import CardComponent from '~/components/card.vue';
 
-const router = useRouter();
 const route = useRoute();
-
-// Navigation helper
-function navigateToCard(cardId: string | undefined) {
-  if (!cardId) {
-    console.warn('Cannot navigate to card: ID is undefined');
-    return;
-  }
-  router.push(`/card/${cardId}`);
-}
 
 // Parse query params into a WordSearch model
 const queryParam = computed(() => String(route.query?.query || ''));
