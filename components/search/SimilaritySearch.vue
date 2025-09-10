@@ -96,7 +96,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       card_name: event.data.card_name,
       filters: event.data.filters || {}
     }
-    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters (its the equivalent but more intuitive)
+    // If no colors are selected, and the colorFilterOption is Contains At Least, remove color filters (its the equivalent but more intuitive)
     if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
       if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
         formData.filters = {};
@@ -112,6 +112,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     console.error('Form submission error:', error)
   }
 }
+
+watch(cardNameParam, (newVal) => {
+  if (newVal !== state.card_name) {
+    state.card_name = newVal;
+  }
+});
 </script>
 
 <style></style>
