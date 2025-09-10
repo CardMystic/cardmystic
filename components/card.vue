@@ -209,7 +209,7 @@ function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
 }
 
-const isDev = Boolean(import.meta.env.VITE_IS_DEV || import.meta.env.IS_DEV || false);
+const isDev = import.meta.env.VITE_IS_DEV === "true";
 const showAllData = ref(false);
 function toggleShowAllData() {
   showAllData.value = !showAllData.value;
