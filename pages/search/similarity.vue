@@ -13,8 +13,7 @@
 
         <template v-else-if="searchResults && searchResults.length">
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div v-for="result in searchResults" :key="result.card_data.id" class="cursor-pointer"
-              @click="navigateToCard(result.card_data.id)">
+            <div v-for="result in searchResults" :key="result.card_data.id">
               <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true" />
             </div>
           </div>
@@ -48,8 +47,8 @@
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 
 import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
@@ -59,17 +58,7 @@ import CardSkeleton from '~/components/CardSkeleton.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import CardComponent from '~/components/card.vue';
 
-const router = useRouter();
 const route = useRoute();
-
-// Navigation helper
-function navigateToCard(cardId: string | undefined) {
-  if (!cardId) {
-    console.warn('Cannot navigate to card: ID is undefined');
-    return;
-  }
-  router.push(`/card/${cardId}`);
-}
 
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
@@ -83,13 +72,17 @@ useHead(() => ({
 }));
 
 const { setPageInfo, getPageInfo } = usePageInfo();
-setPageInfo({
-  page_url: route.fullPath,
-  page_name: `Similarity Search: ${cardNameParam.value}`,
-  card_name: cardNameParam.value,
-  filters: parsedFilters.value,
-  labels: ['similarity search'],
-});
+
+// Update page info whenever cardNameParam or filters change
+watch([cardNameParam, parsedFilters], ([newCardName, newFilters]) => {
+  setPageInfo({
+    page_url: route.fullPath,
+    page_name: `Similarity Search: ${newCardName}`,
+    card_name: newCardName,
+    filters: newFilters,
+    labels: ['similarity search'],
+  });
+}, { immediate: true });
 
 function handleFabClick() {
   const url = searchFeedbackUrl(getPageInfo());

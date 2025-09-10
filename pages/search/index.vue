@@ -48,7 +48,7 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
 import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';

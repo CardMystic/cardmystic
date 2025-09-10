@@ -54,11 +54,11 @@ if (props.similarity) {
 watch(searchType, async (newType) => {
   const isOnSearchPage = route.path.startsWith('/search');
   if (isOnSearchPage) {
-    // Navigate to appropriate search page
-    if (newType === 'similarity') {
-      navigateTo({ path: '/search/similarity' });
-    } else {
-      navigateTo({ path: '/search' });
+    // Only navigate if not already on the target page
+    if (newType === 'similarity' && route.path !== '/search/similarity') {
+      navigateTo({ path: '/search/similarity', query: route.query });
+    } else if (newType === 'ai' && route.path !== '/search') {
+      navigateTo({ path: '/search', query: route.query });
     }
   }
 });
