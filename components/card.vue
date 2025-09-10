@@ -11,13 +11,6 @@
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-        <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
-          color="primary" variant="solid" class="mt-1" icon="i-heroicons-shopping-cart" size="sm" target="_blank"
-          rel="noopener noreferrer">
-          Buy
-        </UButton>
-        <UButton color="neutral" variant="solid" class="mt-1 cursor-pointer" icon="i-mdi-cards-outline" size="sm"
-          @click="findSimilarCards">Similar Cards</UButton>
       </div>
 
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
@@ -36,6 +29,13 @@
         </p>
       </div>
       <div class="flex flex-row items-center justify-center text-center w-full">
+        <UButton v-if="showCardInfo && card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)"
+          external color="success" variant="solid" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm"
+          target="_blank" rel="noopener noreferrer">{{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
+            'Buy' }}
+        </UButton>
+        <UButton v-if="showCardInfo" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
+          icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
         <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" />
         <p class="text-xs">
           {{ props.card.score !== undefined
