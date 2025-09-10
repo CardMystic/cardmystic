@@ -21,13 +21,13 @@
     <SearchForm />
 
     <!-- Example Queries -->
-    <ExampleQueries class="mb-0" />
+    <ExampleQueries class="mb-2" />
 
     <!-- Top Queries -->
-    <TopQueries class="mb-8" />
+    <TopQueries class="mb-4" />
 
     <!-- Marketplace Button -->
-    <ProductPromotionButtons class="mb-6" />
+    <ProductPromotionButtons class="mb-2" />
   </div>
 </template>
 

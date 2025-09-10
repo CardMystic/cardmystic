@@ -42,6 +42,8 @@ onMounted(async () => {
 @media (max-width: 600px) {
   .product-promotion-btns-row {
     gap: 8px;
+    flex-direction: column;
+    align-items: center;
   }
 }
 </style>
