@@ -266,6 +266,7 @@ import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimit } from '~/models/searchModel';
+import { getAffiliateLink } from '#imports';
 
 const route = useRoute();
 const isFlipped = ref(false);
@@ -411,15 +412,6 @@ const generateTCGPlayerSearchUrl = (cardName: string): string => {
   const encodedName = encodeURIComponent(cardName);
   return `https://www.tcgplayer.com/search/magic/product?q=${encodedName}`;
 };
-
-/**
- * Generate affiliate link for TCGPlayer ID
- */
-function getAffiliateLink(tcgId: string | number): string {
-  if (!tcgId) return '';
-  const productUrl = `https://www.tcgplayer.com/product/${tcgId}`;
-  return `https://partner.tcgplayer.com/Z6vBoK?u=${encodeURIComponent(productUrl)}`;
-}
 
 const hasPrices = computed(() => {
   if (!currentPrinting.value?.prices) return false;
