@@ -1,5 +1,6 @@
 <template>
-  <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
+  <UCard variant="subtle" :class="['card-container px-0', isSearched ? 'searched-card-bg' : '']"
+    :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
     <!-- Card content: image + score -->
     <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
       v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
@@ -34,10 +35,10 @@
           target="_blank" rel="noopener noreferrer">{{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
             'Buy' }}
         </UButton>
-        <UButton v-if="showCardInfo" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
+        <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
           icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
-        <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" />
-        <p class="text-xs">
+        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
+        <p v-if="!isSearched" class="text-xs">
           {{ props.card.score !== undefined
             ? props.isSimilaritySearch
               ? `${normalizedScore.toFixed(2)}%`
@@ -64,7 +65,7 @@ import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
-import { DefaultLimit } from '~/models/searchModel';
+import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '#imports';
 
 const router = useRouter();
@@ -89,6 +90,10 @@ const props = defineProps({
     default: false,
   },
   showCardInfo: {
+    type: Boolean,
+    default: false,
+  },
+  isSearched: {
     type: Boolean,
     default: false,
   },
@@ -198,7 +203,7 @@ function findSimilarCards() {
   // Navigate to search page with similarity search endpoint
   const queryParams = {
     card_name: props.card.card_name,
-    limit: DefaultLimit,
+    limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
   };
   console.log('Navigating to similarity search with params:', queryParams);
@@ -264,5 +269,9 @@ function toggleShowAllData() {
 
 .manacost-text {
   font-size: 14px;
+}
+
+.searched-card-bg {
+  background: #353a75 !important;
 }
 </style>

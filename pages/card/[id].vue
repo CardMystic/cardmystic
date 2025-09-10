@@ -265,7 +265,7 @@ import { useQuery } from '@tanstack/vue-query';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
-import { DefaultLimit } from '~/models/searchModel';
+import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '#imports';
 
 const route = useRoute();
@@ -541,7 +541,7 @@ function findSimilarCards() {
   // Navigate to search page with similarity search endpoint
   const queryParams = {
     card_name: card.value.name,
-    limit: DefaultLimit,
+    limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
   };
 

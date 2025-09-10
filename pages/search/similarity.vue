@@ -12,9 +12,13 @@
         </template>
 
         <template v-else-if="searchResults && searchResults.length">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div v-for="result in searchResults" :key="result.card_data.id">
-              <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true" />
+          <div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <CardComponent :card="{ card_name: searchedCardData.name, card_data: searchedCardData }"
+                :showCardInfo="true" :isSearched="true" />
+              <div v-for="result in searchResults" :key="result.card_data.id">
+                <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true" />
+              </div>
             </div>
           </div>
         </template>
@@ -47,7 +51,7 @@
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import { computed, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 
@@ -62,7 +66,7 @@ const route = useRoute();
 
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
+const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : "39");
 const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 useHead(() => ({
@@ -114,6 +118,7 @@ const { data: searchResults, isLoading } = useQuery({
     similaritySearch,
   ],
   queryFn: async () => {
+    console.log('Fetching similarity search results with params:', similaritySearch.value);
     const response = await fetch('/api/search/similarity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -127,6 +132,26 @@ const { data: searchResults, isLoading } = useQuery({
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: queryEnabled,
+});
+
+// Fetch the searched card data
+const {
+  data: searchedCardData,
+  isLoading: isLoadingSearchedCard,
+  error: searchedCardError
+} = useQuery({
+  queryKey: [
+    'similarity-searched-card',
+    cardNameParam
+  ],
+  queryFn: async () => {
+    if (!cardNameParam.value) return null;
+    const res = await fetch(`/api/cards/name/${encodeURIComponent(cardNameParam.value)}`);
+    if (!res.ok) throw new Error('Failed to fetch card');
+    return await res.json();
+  },
+  enabled: computed(() => !!cardNameParam.value),
+  staleTime: 1000 * 60 * 15,
 });
 
 </script>
@@ -218,4 +243,19 @@ const { data: searchResults, isLoading } = useQuery({
 .stat-value
   color: rgb(var(--color-primary-500))
   font-weight: 600
+
+.searched-card-highlight
+  background: #f7f3e7
+  border-radius: 18px
+  padding: 18px 12px 12px 12px
+  box-shadow: 0 2px 12px rgba(147, 114, 255, 0.08)
+  margin-bottom: 18px
+  display: flex
+  justify-content: center
+  align-items: center
+
+  // Limit the card size to match grid
+  & > *
+    width: 100%
+    max-width: 320px
 </style>
