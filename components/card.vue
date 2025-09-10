@@ -44,6 +44,15 @@
               : normalizedScore.toFixed(2) + '%'
             : 'N/A' }}
         </p>
+        <UButton v-if="isDev" color="warning" variant="outline" class="ml-2" size="xs" @click="toggleShowAllData">
+          {{ showAllData ? 'Hide Data' : 'Show Data' }}
+        </UButton>
+      </div>
+      <div v-if="isDev && showAllData" class="dev-card-json mt-2">
+        <pre
+          style="max-width:100%;overflow-x:auto;font-size:12px;background:#181818;color:#fff;padding:8px;border-radius:6px;">
+          {{ JSON.stringify(card.card_data, null, 2) }}
+        </pre>
       </div>
     </div>
   </UCard>
@@ -51,7 +60,7 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimit } from '~/models/searchModel';
@@ -197,6 +206,12 @@ function findSimilarCards() {
 
 function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
+}
+
+const isDev = Boolean(import.meta.env.VITE_IS_DEV || import.meta.env.IS_DEV || false);
+const showAllData = ref(false);
+function toggleShowAllData() {
+  showAllData.value = !showAllData.value;
 }
 </script>
 
