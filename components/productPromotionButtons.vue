@@ -7,21 +7,25 @@
 
 <script setup lang="ts">
 import productPromotionButton from './productPromotionButton.vue';
-import { computed } from 'vue';
+import { ref, onMounted } from 'vue';
 
-// Read from env: VITE_MARKETPLACE_BUTTONS as JSON string
-const raw = import.meta.env.VITE_MARKETPLACE_BUTTONS || '[]';
-let parsed: any[] = [];
-try {
-  parsed = JSON.parse(raw);
-} catch {
-  parsed = [];
-}
-const buttons = computed(() =>
-  parsed.filter(
-    btn => btn && btn.link && btn.image && btn.text
-  )
-);
+type PromotionButton = { link: string; image: string; text: string };
+const buttons = ref<PromotionButton[]>([]);
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/config.json');
+    const data = await res.json();
+    if (Array.isArray(data.marketplaceButtons)) {
+      buttons.value = data.marketplaceButtons.filter(
+        (btn: any) => btn && btn.link && btn.image && btn.text
+      );
+    }
+  } catch (e) {
+    console.error('Failed to load marketplace buttons config:', e);
+    buttons.value = [];
+  }
+});
 </script>
 
 <style scoped>
