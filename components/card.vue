@@ -11,8 +11,9 @@
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-        <UButton color="neutral" variant="solid" class="mt-0" icon="i-mdi-cards-outline" size="sm" @click="">
-        </UButton>
+
+        <UButton color="neutral" variant="solid" class="mt-1 cursor-pointer" icon="i-mdi-cards-outline" size="sm"
+          @click="findSimilarCards">Similar Cards</UButton>
       </div>
 
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
@@ -49,6 +50,7 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
+import { DefaultLimit } from '~/models/searchModel';
 
 const router = useRouter();
 
@@ -173,6 +175,19 @@ function getCardImageUrl(cardData: any): string {
 
   // Fallback to a placeholder or empty string
   return '';
+}
+
+function findSimilarCards() {
+  if (!props.card) return;
+
+  // Navigate to search page with similarity search endpoint
+  const queryParams = {
+    card_name: props.card.card_name,
+    limit: DefaultLimit,
+    filters: undefined, // No additional filters for similarity search
+  };
+  console.log('Navigating to similarity search with params:', queryParams);
+  navigateTo({ path: '/search/similarity', query: queryParams });
 }
 
 function handleImageError(event: Event) {
