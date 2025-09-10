@@ -11,7 +11,11 @@
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-
+        <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
+          color="primary" variant="solid" class="mt-1" icon="i-heroicons-shopping-cart" size="sm" target="_blank"
+          rel="noopener noreferrer">
+          Buy
+        </UButton>
         <UButton color="neutral" variant="solid" class="mt-1 cursor-pointer" icon="i-mdi-cards-outline" size="sm"
           @click="findSimilarCards">Similar Cards</UButton>
       </div>
@@ -51,6 +55,7 @@ import { computed } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimit } from '~/models/searchModel';
+import { getAffiliateLink } from '#imports';
 
 const router = useRouter();
 
