@@ -27,7 +27,7 @@
     <TopQueries class="mb-4" />
 
     <!-- Marketplace Button -->
-    <ProductPromotionButtons class="mb-2" />
+    <ProductPromotionButtons class="mb-0" />
   </div>
 </template>
 
