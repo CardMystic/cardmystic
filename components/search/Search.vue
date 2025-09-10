@@ -54,11 +54,42 @@ if (props.similarity) {
 watch(searchType, async (newType) => {
   const isOnSearchPage = route.path.startsWith('/search');
   if (isOnSearchPage) {
-    // Only navigate if not already on the target page
+    // Save the entire query object to sessionStorage
+    if (route.query.query) {
+      sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
+    }
+    if (route.query.card_name) {
+      sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
+    }
+
     if (newType === 'similarity' && route.path !== '/search/similarity') {
-      navigateTo({ path: '/search/similarity', query: route.query });
+      let query: any = undefined;
+      if (route.query.card_name) {
+        query = { ...route.query };
+      } else {
+        const stored = sessionStorage.getItem('similarity_search_card_name');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed.card_name) query = parsed;
+          } catch { }
+        }
+      }
+      navigateTo({ path: '/search/similarity', query });
     } else if (newType === 'ai' && route.path !== '/search') {
-      navigateTo({ path: '/search', query: route.query });
+      let query: any = undefined;
+      if (route.query.query) {
+        query = { ...route.query };
+      } else {
+        const stored = sessionStorage.getItem('ai_search_query');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed.query) query = parsed;
+          } catch { }
+        }
+      }
+      navigateTo({ path: '/search', query });
     }
   }
 });
