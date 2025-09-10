@@ -44,7 +44,8 @@
               : normalizedScore.toFixed(2) + '%'
             : 'N/A' }}
         </p>
-        <UButton v-if="isDev" color="warning" variant="outline" class="ml-2" size="xs" @click="toggleShowAllData">
+        <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
+          @click="toggleShowAllData">
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
         </UButton>
       </div>
