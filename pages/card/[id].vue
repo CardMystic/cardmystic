@@ -119,7 +119,7 @@
 
         <!-- TCGPlayer Button - Desktop only -->
         <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
+          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
           class="mt-0 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg"
           target="_blank" rel="noopener noreferrer">
           Buy on TCGPlayer
@@ -227,7 +227,7 @@
 
         <!-- TCGPlayer Button - Mobile only -->
         <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
+          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
           class="mb-4 tcgplayer-btn lg:hidden" icon="i-heroicons-shopping-cart" size="lg" block>
           Buy on TCGPlayer
         </UButton>
@@ -389,7 +389,7 @@ const getLegalityColor = (status: string) => {
   const s = status.toUpperCase();
   switch (s) {
     case 'LEGAL':
-      return 'success';
+      return 'info';
     case 'BANNED':
       return 'error';
     case 'NOT LEGAL':
