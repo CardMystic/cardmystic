@@ -266,10 +266,8 @@ import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimit } from '~/models/searchModel';
-import manaCost from '~/components/manaCost.vue';
 
 const route = useRoute();
-
 const isFlipped = ref(false);
 const selectedPrinting = ref<string>('');
 

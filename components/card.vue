@@ -2,13 +2,19 @@
   <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
     <!-- Card content: image + score -->
     <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
-      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}" />
+      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
+      @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
     <div v-else class="image-placeholder">
       <p class="placeholder-text">{{ card.card_data.name }}</p>
     </div>
 
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
+      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
+        <UButton color="neutral" variant="solid" class="mt-0" icon="i-mdi-cards-outline" size="sm" @click="">
+        </UButton>
+      </div>
+
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
         <p class="whitespace-nowrap overflow-hidden truncate">
           {{ card.card_data.name.split(' // ')[0] }}
@@ -42,6 +48,9 @@
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 import type { Card } from '~/models/cardModel';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const props = defineProps({
   card: {
@@ -69,6 +78,15 @@ const props = defineProps({
 });
 
 const sizeClass = computed(() => `card-${props.size}`);
+
+// Navigation helper
+function navigateToCard(cardId: string | undefined) {
+  if (!cardId) {
+    console.warn('Cannot navigate to card: ID is undefined');
+    return;
+  }
+  router.push(`/card/${cardId}`);
+}
 
 function getSimpleCardType(type_line: string): string {
   if (!type_line) return 'Unknown';
