@@ -9,7 +9,7 @@
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
       <div class="searched-plus-btn">
-        <UButton tabindex="0" aria-label="Searched Card" color="primary" variant="solid" size="lg" square>
+        <UButton tabindex="0" aria-label="Searched Card" color="neutral" variant="solid" size="lg" square>
           <UIcon name="i-heroicons-plus" class="searched-plus-icon" />
         </UButton>
       </div>
@@ -288,7 +288,7 @@ function toggleShowAllData() {
 }
 
 .searched-plus-btn {
-  position: absolute !important;
+  position: absolute;
   right: 32px;
   top: 38px;
   opacity: 0;
