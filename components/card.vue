@@ -308,6 +308,13 @@ function toggleShowAllData() {
   pointer-events: auto;
 }
 
+@media (max-width: 767px) {
+  .searched-plus-btn {
+    opacity: 0.5 !important;
+    pointer-events: auto !important;
+  }
+}
+
 .searched-plus-icon {
   font-size: 2rem;
   color: #353a75;
