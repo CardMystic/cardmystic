@@ -1,12 +1,18 @@
 <template>
-  <UCard variant="subtle" :class="['card-container px-0', isSearched ? 'searched-card-bg' : '']"
-    :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
-    <!-- Card content: image + score -->
-    <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
-      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
-      @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
-    <div v-else class="image-placeholder">
-      <p class="placeholder-text">{{ card.card_data.name }}</p>
+  <UCard variant="subtle" :class="['card-container px-0', isSearched ? 'searched-card-bg' : '']">
+    <div class="card-image-wrapper">
+      <!-- Card content: image + score -->
+      <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
+        @error="handleImageError" v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
+        @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
+      <div v-else class="image-placeholder">
+        <p class="placeholder-text">{{ card.card_data.name }}</p>
+      </div>
+      <div class="searched-plus-btn">
+        <UButton tabindex="0" aria-label="Searched Card" color="primary" variant="solid" size="lg" square>
+          <UIcon name="i-heroicons-plus" class="searched-plus-icon" />
+        </UButton>
+      </div>
     </div>
 
     <!-- Card Name and mana cost -->
@@ -229,6 +235,12 @@ function toggleShowAllData() {
   justify-content: center;
 }
 
+.card-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 /* Small Size Variant */
 
 .card-small {
@@ -273,5 +285,31 @@ function toggleShowAllData() {
 
 .searched-card-bg {
   background: #353a75 !important;
+}
+
+.searched-plus-btn {
+  position: absolute !important;
+  right: 32px;
+  top: 38px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  transition: opacity 0.2s;
+}
+
+.card-image-wrapper:hover .searched-plus-btn {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+.searched-plus-icon {
+  font-size: 2rem;
+  color: #353a75;
 }
 </style>
