@@ -1,7 +1,7 @@
 <template>
   <div class="filters-container">
     <!-- Active Filters Chips -->
-    <div v-if="hasActiveFilters" class="active-filters-section mb-4">
+    <div v-if="hasActiveFilters" class="active-filters-section">
       <div class="active-filters-chips">
 
         <!-- Card Types Chips -->
@@ -72,14 +72,14 @@
         </UButton>
       </div>
     </div>
-    <UCollapsible class="flex flex-col gap-2 mb-4">
+    <UCollapsible class="flex flex-col gap-2">
       <UButton class="filters-toggle-btn mb-3 cursor-pointer" label="Filters" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down" :ui="{
           trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
         }" block />
 
       <!-- Filters Content -->
-      <template #content class="filters-content mb-4">
+      <template #content class="filters-content">
         <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
           <!-- Types Filter -->
           <template #types>
