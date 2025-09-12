@@ -330,7 +330,8 @@ function toggleShowAllData() {
   right: 30px;
   top: 44px;
   opacity: 0;
-  pointer-events: none;
+  pointer-events: auto;
+  /* Always allow pointer events */
   z-index: 2;
   width: 36px;
   height: 36px;
@@ -344,7 +345,6 @@ function toggleShowAllData() {
 /* Only show the plus button on hover, unless clipboard-added */
 .card-image-wrapper:hover .searched-plus-btn:not(.clipboard-added) {
   opacity: 0.7;
-  pointer-events: auto;
 }
 
 .searched-plus-btn.clipboard-added {
