@@ -1,5 +1,5 @@
 <template>
-  <UCard variant="subtle" :class="['card-container px-0', isSearched ? 'searched-card-bg' : '']">
+  <UCard variant="subtle" :class="[isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
     <div class="card-image-wrapper">
       <!-- Card content: image + score -->
       <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
@@ -59,7 +59,7 @@
           <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
             icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
         </div>
-        <div class="flex flex-row items-center gap-2">
+        <div v-if="!isSearched" class="flex flex-row items-center gap-2">
           <UTooltip text="I agree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up" />
@@ -247,13 +247,6 @@ function toggleShowAllData() {
 </script>
 
 <style scoped>
-.card-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
 .card-image-wrapper {
   position: relative;
   width: 100%;
