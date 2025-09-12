@@ -345,8 +345,7 @@ function toggleShowAllData() {
 }
 
 .searched-plus-btn.clipboard-added {
-  opacity: 1 !important;
-  pointer-events: auto !important;
+  opacity: 0.5;
 }
 
 @media (max-width: 767px) {
@@ -354,17 +353,10 @@ function toggleShowAllData() {
   .searched-plus-btn,
   .searched-plus-btn.clipboard-added {
     opacity: 0.5 !important;
-    pointer-events: auto !important;
   }
 }
 
 .searched-plus-icon {
   font-size: 2rem;
-  color: #353a75;
-}
-
-.searched-plus-btn.clipboard-added .searched-plus-icon {
-  color: #22c55e;
-  /* green-500 */
 }
 </style>
