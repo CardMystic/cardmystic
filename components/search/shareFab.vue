@@ -1,7 +1,8 @@
 <template>
   <div>
     <div class="share-fab">
-      <UButton :loading="loading" icon="i-lucide-share-2" variant="soft" @click="onShare" aria-label="Share this page">
+      <UButton class="cursor-pointer" :loading="loading" icon="i-lucide-share-2" variant="soft" @click="onShare"
+        aria-label="Share this page">
         Share Results
       </UButton>
     </div>

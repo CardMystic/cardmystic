@@ -1,5 +1,6 @@
 <template>
-  <UButton icon="i-lucide-circle-alert" variant="soft" @click="onClick && onClick()" aria-label="Report an issue">
+  <UButton class="cursor-pointer" icon="i-lucide-circle-alert" variant="soft" @click="onClick && onClick()"
+    aria-label="Report an issue">
     Report Results
   </UButton>
 </template>
