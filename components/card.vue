@@ -13,6 +13,17 @@
           <UIcon name="i-heroicons-plus" class="searched-plus-icon" />
         </UButton>
       </div>
+      <!-- Score Bar -->
+      <div class="flex flex-row items-center justify-center text-center w-full">
+        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
+        <p v-if="!isSearched" class="text-xs">
+          {{ props.card.score !== undefined
+            ? props.isSimilaritySearch
+              ? `${normalizedScore.toFixed(2)}%`
+              : normalizedScore.toFixed(2) + '%'
+            : 'N/A' }}
+        </p>
+      </div>
     </div>
 
     <!-- Card Name and mana cost -->
@@ -35,26 +46,23 @@
           </span>
         </p>
       </div>
-      <div class="flex flex-row items-center justify-center text-center w-full">
-        <UButton v-if="showCardInfo && card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)"
-          external color="success" variant="solid" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm"
-          target="_blank" rel="noopener noreferrer">{{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
+
+      <!-- Action Buttons -->
+      <div class="flex flex-row items-center justify-between text-center w-full">
+        <div class="flex flex-row items-center">
+          <UButton v-if="showCardInfo && card.card_data.tcgplayer_id"
+            :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
+            class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer">{{
+              card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
             'Buy' }}
-        </UButton>
-        <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
-          icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
-        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
-        <p v-if="!isSearched" class="text-xs">
-          {{ props.card.score !== undefined
-            ? props.isSimilaritySearch
-              ? `${normalizedScore.toFixed(2)}%`
-              : normalizedScore.toFixed(2) + '%'
-            : 'N/A' }}
-        </p>
-        <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
-          @click="toggleShowAllData">
-          {{ showAllData ? 'Hide Data' : 'Show Data' }}
-        </UButton>
+          </UButton>
+          <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
+            icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
+        </div>
+        <div class="flex flex-row items-center gap-2">
+          <UButton color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up" />
+          <UButton color="primary" variant="soft" icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down" />
+        </div>
       </div>
       <div v-if="isDev && showAllData" class="dev-card-json mt-2">
         <pre
@@ -63,6 +71,8 @@
         </pre>
       </div>
     </div>
+
+
   </UCard>
 </template>
 
