@@ -15,21 +15,21 @@
           <li v-for="card in clipboard.list.value" :key="card.id"
             class="flex items-center justify-between py-1 px-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
             <span class="truncate">{{ card.name }}</span>
-            <UButton icon="i-lucide-x" size="xs" color="error" variant="ghost" @click.stop="clipboard.remove(card.id)"
-              aria-label="Remove" />
+            <UButton class="cursor-pointer" icon="i-lucide-x" size="xs" color="error" variant="ghost"
+              @click.stop="clipboard.remove(card.id)" aria-label="Remove" />
           </li>
         </ul>
         <div class="flex flex-col gap-2 mt-2">
-          <UButton icon="i-lucide-copy" color="primary" variant="solid" size="sm" block @click="copyNames"
-            :disabled="clipboard.list.value.length === 0">
+          <UButton class="cursor-pointer" icon="i-lucide-copy" color="primary" variant="solid" size="sm" block
+            @click="copyNames" :disabled="clipboard.list.value.length === 0">
             Copy
           </UButton>
-          <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid" size="sm" block class="mt-1"
-            :disabled="clipboard.list.value.length === 0" @click="openMassEntry">
+          <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid" size="sm" block
+            class="cursor-pointer" :disabled="clipboard.list.value.length === 0" @click="openMassEntry">
             Buy (${{ clipboard.totalPrice.value.toFixed(2) }})
           </UButton>
-          <UButton icon="i-lucide-trash" color="error" variant="soft" size="sm" block @click="clipboard.clear"
-            :disabled="clipboard.list.value.length === 0">
+          <UButton class="cursor-pointer" icon="i-lucide-trash" color="error" variant="soft" size="sm" block
+            @click="clipboard.clear" :disabled="clipboard.list.value.length === 0">
             Clear
           </UButton>
         </div>
@@ -42,14 +42,20 @@
 import { useClipboard as useClipboardStore } from '~/composables/useClipboard'
 import { useClipboard as useCopyToClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
+import { useToast } from '#imports'
 
 const clipboard = useClipboardStore()
 const { copy } = useCopyToClipboard()
+const toast = useToast()
 
 function copyNames() {
   if (clipboard.list.value.length === 0) return
   const names = clipboard.list.value.map(card => card.name).join('\n')
   copy(names)
+  toast.add({
+    title: 'Card names copied!',
+    icon: 'i-lucide-clipboard-check'
+  })
 }
 
 function openMassEntry() {

@@ -9,7 +9,7 @@
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
       <div v-if="showCardInfo" class="searched-plus-btn" :class="{ 'clipboard-added': isInClipboard }">
-        <UButton tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
+        <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
           :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
           @click.stop="handleClipboardClick">
           <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
@@ -64,13 +64,15 @@
         <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
           <UTooltip text="I agree with this result!" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up" />
+              <UButton class="cursor-pointer" color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm"
+                aria-label="Thumbs Up" />
             </template>
           </UTooltip>
 
           <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton color="primary" variant="soft" icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down" />
+              <UButton class="cursor-pointer" color="primary" variant="soft" icon="i-lucide-thumbs-down" size="sm"
+                aria-label="Thumbs Down" />
             </template>
           </UTooltip>
         </div>

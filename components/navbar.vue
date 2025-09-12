@@ -103,10 +103,8 @@ const externalItems: NavigationMenuItem[] = [
         content: 'w-auto'
       }" />
       <!-- Clipboard Button (always visible, right side) -->
-      <ClipboardMenu class="ml-1" />
+      <ClipboardMenu class="ml-1 cursor-pointer" />
     </div>
-
-
 
     <!-- Mobile: GitHub & Patreon -->
     <div class="flex md:hidden items-center gap-4">
