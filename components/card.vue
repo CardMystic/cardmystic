@@ -8,9 +8,11 @@
       <div v-else class="image-placeholder">
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
-      <div class="searched-plus-btn">
-        <UButton tabindex="0" aria-label="Searched Card" color="neutral" variant="solid" size="lg" square>
-          <UIcon name="i-heroicons-plus" class="searched-plus-icon" />
+      <div v-if="showCardInfo" class="searched-plus-btn" :class="{ 'clipboard-added': isInClipboard }">
+        <UButton tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
+          :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
+          @click.stop="handleClipboardClick">
+          <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
         </UButton>
       </div>
       <!-- Score Bar -->
@@ -72,6 +74,10 @@
             </template>
           </UTooltip>
         </div>
+        <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
+          @click="toggleShowAllData">
+          {{ showAllData ? 'Hide Data' : 'Show Data' }}
+        </UButton>
       </div>
       <div v-if="isDev && showAllData" class="dev-card-json mt-2">
         <pre
@@ -80,8 +86,6 @@
   </pre>
       </div>
     </div>
-
-
   </UCard>
 </template>
 
@@ -92,6 +96,7 @@ import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '#imports';
+import { useClipboard } from '~/composables/useClipboard';
 
 const router = useRouter();
 
@@ -125,6 +130,16 @@ const props = defineProps({
 });
 
 const sizeClass = computed(() => `card-${props.size}`);
+const clipboard = useClipboard();
+
+const cardClip = computed(() => ({
+  id: props.card.card_data.id,
+  name: props.card.card_data.name,
+  set: props.card.card_data.set,
+  imageUrl: getCardImageUrl(props.card.card_data),
+}));
+
+const isInClipboard = computed(() => clipboard.has(cardClip.value.id));
 
 // Navigation helper
 function navigateToCard(cardId: string | undefined) {
@@ -239,6 +254,14 @@ function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
 }
 
+function handleClipboardClick() {
+  if (isInClipboard.value) {
+    clipboard.remove(cardClip.value.id);
+  } else {
+    clipboard.add(cardClip.value);
+  }
+}
+
 const isDev = import.meta.env.VITE_IS_DEV === "true";
 const showAllData = ref(false);
 function toggleShowAllData() {
@@ -315,13 +338,21 @@ function toggleShowAllData() {
   transition: opacity 0.2s;
 }
 
-.card-image-wrapper:hover .searched-plus-btn {
+/* Only show the plus button on hover, unless clipboard-added */
+.card-image-wrapper:hover .searched-plus-btn:not(.clipboard-added) {
   opacity: 0.5;
   pointer-events: auto;
 }
 
+.searched-plus-btn.clipboard-added {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
 @media (max-width: 767px) {
-  .searched-plus-btn {
+
+  .searched-plus-btn,
+  .searched-plus-btn.clipboard-added {
     opacity: 0.5 !important;
     pointer-events: auto !important;
   }
@@ -330,5 +361,10 @@ function toggleShowAllData() {
 .searched-plus-icon {
   font-size: 2rem;
   color: #353a75;
+}
+
+.searched-plus-btn.clipboard-added .searched-plus-icon {
+  color: #22c55e;
+  /* green-500 */
 }
 </style>
