@@ -137,6 +137,7 @@ const cardClip = computed(() => ({
   name: props.card.card_data.name,
   set: props.card.card_data.set,
   imageUrl: getCardImageUrl(props.card.card_data),
+  price: props.card.card_data.prices.usd || '0',
 }));
 
 const isInClipboard = computed(() => clipboard.has(cardClip.value.id));
@@ -324,8 +325,8 @@ function toggleShowAllData() {
 
 .searched-plus-btn {
   position: absolute;
-  right: 32px;
-  top: 38px;
+  right: 30px;
+  top: 44px;
   opacity: 0;
   pointer-events: none;
   z-index: 2;
@@ -340,23 +341,23 @@ function toggleShowAllData() {
 
 /* Only show the plus button on hover, unless clipboard-added */
 .card-image-wrapper:hover .searched-plus-btn:not(.clipboard-added) {
-  opacity: 0.5;
+  opacity: 0.7;
   pointer-events: auto;
 }
 
 .searched-plus-btn.clipboard-added {
-  opacity: 0.5;
+  opacity: 0.7;
 }
 
 @media (max-width: 767px) {
 
   .searched-plus-btn,
   .searched-plus-btn.clipboard-added {
-    opacity: 0.5 !important;
+    opacity: 0.7 !important;
   }
 }
 
 .searched-plus-icon {
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 </style>

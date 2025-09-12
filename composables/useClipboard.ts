@@ -6,6 +6,7 @@ export type CardClip = {
   name: string;
   set?: string;
   imageUrl?: string;
+  price: string;
 };
 
 const STORAGE_KEY = 'cm.clipboard.v1';
@@ -34,6 +35,13 @@ export function useClipboard() {
     order.value.map((id) => items.value[id]).filter(Boolean),
   );
   const has = (id: string) => !!items.value[id];
+
+  const totalPrice = computed(() =>
+    list.value.reduce((sum, card) => {
+      const price = parseFloat(card.price);
+      return sum + (isNaN(price) ? 0 : price);
+    }, 0),
+  );
 
   // Persistence
   function persist() {
@@ -125,15 +133,13 @@ export function useClipboard() {
   });
 
   return {
-    // state
     items,
     order,
     capacity,
-    // derived
     count,
     list,
     has,
-    // actions
+    totalPrice,
     add,
     remove,
     toggle,

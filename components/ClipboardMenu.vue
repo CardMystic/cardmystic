@@ -1,7 +1,7 @@
 <template>
   <UPopover>
     <UButton icon="i-lucide-clipboard-list" color="primary" variant="soft"
-      :label="clipboard.count.value > 0 ? clipboard.count.value + '' : '0'" />
+      :label="'Clipboard ' + '(' + (clipboard.count.value > 0 ? clipboard.count.value + '' : '0') + ')'"></UButton>
     <template #content>
       <div class="p-3 w-72 max-w-xs">
         <div class="font-semibold mb-2 flex items-center gap-2">
@@ -24,6 +24,10 @@
             :disabled="clipboard.list.value.length === 0">
             Copy
           </UButton>
+          <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid" size="sm" block class="mt-1"
+            :disabled="clipboard.list.value.length === 0" @click="openMassEntry">
+            Buy (${{ clipboard.totalPrice.value.toFixed(2) }})
+          </UButton>
           <UButton icon="i-lucide-trash" color="error" variant="soft" size="sm" block @click="clipboard.clear"
             :disabled="clipboard.list.value.length === 0">
             Clear
@@ -37,6 +41,7 @@
 <script setup lang="ts">
 import { useClipboard as useClipboardStore } from '~/composables/useClipboard'
 import { useClipboard as useCopyToClipboard } from '@vueuse/core'
+import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 
 const clipboard = useClipboardStore()
 const { copy } = useCopyToClipboard()
@@ -45,5 +50,15 @@ function copyNames() {
   if (clipboard.list.value.length === 0) return
   const names = clipboard.list.value.map(card => card.name).join('\n')
   copy(names)
+}
+
+function openMassEntry() {
+  if (!clipboard.list.value.length) return
+  const names = clipboard.list.value.map(c => c.name)
+  const bare = getMassEntryAffiliateLink(names)
+  const url = bare
+
+  // IMPORTANT: open the raw string; don't rebuild the query anywhere
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 </script>
