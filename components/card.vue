@@ -59,7 +59,7 @@
           <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
             icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
         </div>
-        <div v-if="!isSearched" class="flex flex-row items-center gap-2">
+        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
           <UTooltip text="I agree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up" />
