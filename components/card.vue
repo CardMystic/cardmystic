@@ -14,7 +14,7 @@
         </UButton>
       </div>
       <!-- Score Bar -->
-      <div class="flex flex-row items-center justify-center text-center w-full">
+      <div class="mt-1 flex flex-row items-center justify-center text-center w-full">
         <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
         <p v-if="!isSearched" class="text-xs">
           {{ props.card.score !== undefined
@@ -54,21 +54,30 @@
             :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
             class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer">{{
               card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
-            'Buy' }}
+                'Buy' }}
           </UButton>
           <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
             icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
         </div>
         <div class="flex flex-row items-center gap-2">
-          <UButton color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up" />
-          <UButton color="primary" variant="soft" icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down" />
+          <UTooltip text="I agree with this result!" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up" />
+            </template>
+          </UTooltip>
+
+          <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton color="primary" variant="soft" icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down" />
+            </template>
+          </UTooltip>
         </div>
       </div>
       <div v-if="isDev && showAllData" class="dev-card-json mt-2">
         <pre
           style="max-width:100%;overflow-x:auto;font-size:12px;background:#181818;color:#fff;padding:8px;border-radius:6px;">
-          {{ JSON.stringify(card.card_data, null, 2) }}
-        </pre>
+    {{ JSON.stringify(card.card_data, null, 2) }}
+  </pre>
       </div>
     </div>
 
