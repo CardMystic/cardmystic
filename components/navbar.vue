@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import ClipboardMenu from '~/components/ClipboardMenu.vue'
 
 const mainItems: NavigationMenuItem[] = [
   {
@@ -101,11 +102,17 @@ const externalItems: NavigationMenuItem[] = [
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
         content: 'w-auto'
       }" />
+      <!-- Clipboard Button (always visible, right side) -->
+      <ClipboardMenu />
     </div>
+
+
 
     <!-- Mobile: GitHub & Patreon -->
     <div class="flex md:hidden items-center gap-4">
       <UNavigationMenu :items="externalItems" />
+      <!-- Clipboard Button (always visible, right side) -->
+      <ClipboardMenu />
     </div>
   </header>
 </template>
