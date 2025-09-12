@@ -4,9 +4,9 @@
       <SearchForm class="mt-6 w-full" />
 
       <div class="w-full flex justify-end min-h-[32px]">
-        <ShareFab v-if="searchResults && searchResults.length"></ShareFab>
+        <ShareFab class="mr-2" v-if="searchResults && searchResults.length"></ShareFab>
+        <IssuesFab :onClick="handleFabClick" />
       </div>
-
 
       <!-- Results -->
       <div class="mt-3 w-full">
@@ -47,7 +47,6 @@
       </div>
     </div>
   </UContainer>
-  <IssuesFab :onClick="handleFabClick" />
 </template>
 
 <script setup lang="ts">
