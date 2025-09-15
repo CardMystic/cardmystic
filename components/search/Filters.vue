@@ -1,7 +1,7 @@
 <template>
   <div class="filters-container">
     <!-- Active Filters Chips -->
-    <div v-if="hasActiveFilters" class="active-filters-section">
+    <div v-if="hasActiveFilters" class="active-filters-section mb-2">
       <div class="active-filters-chips">
 
         <!-- Card Types Chips -->
