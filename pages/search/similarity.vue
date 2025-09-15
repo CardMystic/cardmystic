@@ -5,7 +5,7 @@
 
       <div class="w-full flex justify-end min-h-[32px]">
         <ShareFab class="mr-2" v-if="searchResults && searchResults.length"></ShareFab>
-        <IssuesFab :onClick="handleFabClick" />
+        <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
       </div>
 
       <!-- Results -->
