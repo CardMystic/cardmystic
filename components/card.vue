@@ -64,15 +64,17 @@
         <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
           <UTooltip text="I agree with this result!" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton class="cursor-pointer" color="primary" variant="soft" icon="i-lucide-thumbs-up" size="sm"
-                aria-label="Thumbs Up" />
+              <UButton class="cursor-pointer" :color="isThumbsUpClicked ? 'success' : 'primary'" variant="soft"
+                icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up"
+                @click="isThumbsUpClicked = !isThumbsUpClicked" :disabled="isThumbsDownClicked" />
             </template>
           </UTooltip>
 
           <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton class="cursor-pointer" color="primary" variant="soft" icon="i-lucide-thumbs-down" size="sm"
-                aria-label="Thumbs Down" />
+              <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
+                icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down"
+                @click="isThumbsDownClicked = !isThumbsDownClicked" :disabled="isThumbsUpClicked" />
             </template>
           </UTooltip>
         </div>
@@ -133,6 +135,9 @@ const props = defineProps({
 
 const sizeClass = computed(() => `card-${props.size}`);
 const clipboard = useClipboard();
+
+const isThumbsUpClicked = ref(false);
+const isThumbsDownClicked = ref(false);
 
 const cardClip = computed(() => ({
   id: props.card.card_data.id,
