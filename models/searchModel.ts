@@ -49,6 +49,7 @@ export const CardSearchFiltersSchema = z.object({
   selectedPower: z.string().optional(),
   selectedToughness: z.string().optional(),
   selectedCardFormats: SelectedCardFormatsSchema,
+  isCommander: z.boolean().optional(),
 });
 
 export type WordSearch = z.infer<typeof WordSearchSchema>;

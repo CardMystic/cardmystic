@@ -252,8 +252,8 @@ function findSimilarCards() {
     card_name: props.card.card_name,
     limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
+    searchType: 'similarity'
   };
-  console.log('Navigating to similarity search with params:', queryParams);
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
 

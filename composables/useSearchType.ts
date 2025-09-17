@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 
-type SearchType = 'ai' | 'similarity';
+type SearchType = 'ai' | 'similarity' | 'commander';
 
 const searchType = ref<SearchType>('ai');
 
@@ -13,6 +13,7 @@ export const useSearchType = () => {
 
   const isAiSearch = computed(() => searchType.value === 'ai');
   const isSimilaritySearch = computed(() => searchType.value === 'similarity');
+  const isCommanderSearch = computed(() => searchType.value === 'commander');
 
   return {
     searchType: readonly(searchType),
@@ -20,5 +21,6 @@ export const useSearchType = () => {
     getSearchType,
     isAiSearch,
     isSimilaritySearch,
+    isCommanderSearch,
   };
 };

@@ -12,6 +12,11 @@
         <UIcon name="i-mdi-cards-outline" class="icon" size="18" />
         Similarity Search
       </button>
+      <button type="button" :class="['search-tab-button-new', { active: searchType === 'commander' }]"
+        @click="setSearchType('commander')">
+        <UIcon name="i-mdi-crown" class="icon" size="18" />
+        Commander Search
+      </button>
     </div>
 
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
@@ -21,6 +26,9 @@
 
       <!-- Select Menu for similarity search -->
       <SimilaritySearch v-else-if="searchType === 'similarity'" />
+
+      <!-- Commander Search -->
+      <CommanderSearch v-else-if="searchType === 'commander'" />
     </div>
   </div>
 </template>
@@ -32,6 +40,7 @@ import { useRoute } from 'vue-router';
 
 import AISearch from './AISearch.vue';
 import SimilaritySearch from './SimilaritySearch.vue';
+import CommanderSearch from './CommanderSearch.vue';
 
 // Define props
 const props = defineProps<{
@@ -46,6 +55,8 @@ const { searchType, setSearchType } = useSearchType();
 // Set initial search type
 if (props.similarity) {
   setSearchType('similarity');
+} else if (route.path === '/search/commander') {
+  setSearchType('commander');
 } else {
   setSearchType('ai');
 }
@@ -53,14 +64,17 @@ if (props.similarity) {
 // Watch for search type changes
 watch(searchType, async (newType) => {
   // Save the entire query object to sessionStorage
-  if (route.query.query) {
+  if (route.query.searchType == 'ai') {
     sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
   }
-  if (route.query.card_name) {
+  if (route.query.searchType == 'commander') {
+    sessionStorage.setItem('commander_search_query', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'similarity') {
     sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
   }
 
-  if (newType === 'similarity' && route.path !== '/search/similarity') {
+  if (newType === 'similarity' && route.path !== '/search/similarity' && route.path !== '/') {
     let query: any = undefined;
     if (route.query.card_name) {
       query = { ...route.query };
@@ -74,7 +88,7 @@ watch(searchType, async (newType) => {
       }
     }
     navigateTo({ path: '/search/similarity', query });
-  } else if (newType === 'ai' && route.path !== '/search') {
+  } else if (newType === 'ai' && route.path !== '/search' && route.path !== '/') {
     let query: any = undefined;
     if (route.query.query) {
       query = { ...route.query };
@@ -88,6 +102,22 @@ watch(searchType, async (newType) => {
       }
     }
     navigateTo({ path: '/search', query });
+  }
+  else if (newType === 'commander' && route.path !== '/search/commander' && route.path !== '/') {
+    console.log("Switching to commander search");
+    let query: any = undefined;
+    if (route.query.query) {
+      query = { ...route.query };
+    } else {
+      const stored = sessionStorage.getItem('commander_search_query');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.query) query = parsed;
+        } catch { }
+      }
+    }
+    navigateTo({ path: '/search/commander', query });
   }
 });
 
@@ -111,10 +141,11 @@ watch(searchType, async (newType) => {
 
 .search-tabs-container {
   display: flex;
-  justify-content: center;
+  justify-content: center !important;
   gap: 14px;
   width: 100%;
   margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
 .search-tab-button-new {
@@ -162,11 +193,17 @@ watch(searchType, async (newType) => {
   .search-tabs-container {
     gap: 14px;
     margin-bottom: 10px;
+    flex-wrap: wrap;
+    /* Ensure wrapping on mobile */
+    justify-content: flex-start;
   }
 
   .search-tab-button-new {
     padding: 6px 10px;
     font-size: 0.92rem;
+    min-width: 120px;
+    /* Optional: ensure buttons are readable */
+    flex: 0 0 auto;
   }
 }
 

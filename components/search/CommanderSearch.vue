@@ -17,10 +17,7 @@
         </UButton>
       </div>
     </UFormField>
-
-    <UFormField name="filters">
-      <Filters v-model="state.filters" />
-    </UFormField>
+    <ColorPairingSelector v-model="selectedPairing" class="mt-4" />
   </UForm>
 </template>
 
@@ -29,7 +26,7 @@ import * as z from 'zod'
 import { useRoute } from 'vue-router';
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
-import Filters from './Filters.vue'
+import ColorPairingSelector from '~/components/search/ColorPairingSelector.vue'
 
 const input = ref();
 defineShortcuts({
@@ -54,6 +51,11 @@ const parsedFilters = computed(() => {
   return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
 });
 
+const selectedPairing = ref<{
+  name: string;
+  colors: ("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[];
+}>({ name: '', colors: [] });
+
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
   filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
@@ -63,24 +65,32 @@ const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    // Ensure we have valid data
     const formData = {
       query: event.data.query,
       filters: event.data.filters || {}
     };
+
+    // Use selectedPairing.colors directly
+    if (selectedPairing.value.name.length > 0) {
+      formData.filters.selectedColors = selectedPairing.value.colors;
+      formData.filters.selectedColorFilterOption = 'Match Exactly';
+    }
+
     // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters (its the equivalent but more intuitive)
     if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
       if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
         formData.filters = {};
       }
     }
+
     // Construct query parameters
     const query: Record<string, any> = {
       query: event.data.query,
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
-      searchType: 'ai'
+      searchType: 'commander'
     };
-    navigateTo({ path: '/search', query });
+    console.log("Navigating to /search/commander with query:", query);
+    navigateTo({ path: '/search/commander', query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({
