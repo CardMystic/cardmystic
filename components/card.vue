@@ -83,14 +83,14 @@
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
         </UButton>
       </div>
-      <div v-if="isDev && showAllData" class="dev-card-json mt-2">
-        <pre
-          style="max-width:100%;overflow-x:auto;font-size:12px;background:#181818;color:#fff;padding:8px;border-radius:6px;">
-    {{ JSON.stringify(card.card_data, null, 2) }}
-  </pre>
-      </div>
     </div>
   </UCard>
+  <div v-if="isDev && showAllData" class="mt-2">
+    <pre
+      style="max-width:100%;max-height:600px;overflow-y:scroll;font-size:12px;background:#181818;color:#fff;padding:8px;border-radius:6px;">
+    {{ JSON.stringify(card.card_data, null, 2) }}
+  </pre>
+  </div>
 </template>
 
 <script setup lang="ts">
