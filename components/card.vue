@@ -85,9 +85,8 @@
       </div>
     </div>
   </UCard>
-  <div v-if="isDev && showAllData" class="mt-2">
-    <pre
-      style="max-width:100%;max-height:600px;overflow-y:scroll;font-size:12px;background:#181818;color:#fff;padding:8px;border-radius:6px;">
+  <div v-if="isDev && showAllData" class="card-data mt-2">
+    <pre>
     {{ JSON.stringify(card.card_data, null, 2) }}
   </pre>
   </div>
@@ -278,6 +277,23 @@ function toggleShowAllData() {
 </script>
 
 <style scoped>
+.card-data {
+  position: fixed;
+  z-index: 1;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  max-width: 100%;
+  text-overflow: wrap;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .card-image-wrapper {
   position: relative;
   width: 100%;
