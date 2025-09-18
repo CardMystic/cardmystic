@@ -74,6 +74,7 @@ watch(searchType, async (newType) => {
     sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
   }
 
+  // Navigate to the appropriate route based on the selected search type, and reload saved session query if available
   if (newType === 'similarity' && route.path !== '/search/similarity' && route.path !== '/') {
     let query: any = undefined;
     if (route.query.card_name) {
@@ -90,7 +91,7 @@ watch(searchType, async (newType) => {
     navigateTo({ path: '/search/similarity', query });
   } else if (newType === 'ai' && route.path !== '/search' && route.path !== '/') {
     let query: any = undefined;
-    if (route.query.query) {
+    if (route.query.query && route.query.searchType === 'ai') {
       query = { ...route.query };
     } else {
       const stored = sessionStorage.getItem('ai_search_query');
@@ -104,9 +105,8 @@ watch(searchType, async (newType) => {
     navigateTo({ path: '/search', query });
   }
   else if (newType === 'commander' && route.path !== '/search/commander' && route.path !== '/') {
-    console.log("Switching to commander search");
     let query: any = undefined;
-    if (route.query.query) {
+    if (route.query.query && route.query.searchType === 'commander') {
       query = { ...route.query };
     } else {
       const stored = sessionStorage.getItem('commander_search_query');

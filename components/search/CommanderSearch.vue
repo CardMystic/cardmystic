@@ -83,6 +83,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     }
 
+    // For commander search, always set isCommander to true
+    formData.filters.isCommander = true;
+
     // Construct query parameters
     const query: Record<string, any> = {
       query: event.data.query,
