@@ -65,7 +65,7 @@ const route = useRoute();
 
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : "40");
+const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 useHead(() => ({
