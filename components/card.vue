@@ -206,7 +206,6 @@ function findSimilarCards() {
     limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
   };
-  console.log('Navigating to similarity search with params:', queryParams);
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
 
