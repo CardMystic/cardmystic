@@ -9,7 +9,7 @@ import {
 } from './cardModel';
 
 export const DefaultLimitAI = 40;
-export const DefaultLimitSimilarity = 39;
+export const DefaultLimitSimilarity = 40;
 
 const colorFilterOptionEnum = z.enum([
   'Match Exactly',
