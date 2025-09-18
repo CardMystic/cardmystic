@@ -383,4 +383,12 @@ function toggleShowAllData() {
 .searched-plus-icon {
   font-size: 1.5rem;
 }
+
+.card-image-wrapper img {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-image-wrapper:hover img {
+  transform: scale(1.03);
+}
 </style>
