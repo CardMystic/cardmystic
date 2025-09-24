@@ -11,7 +11,7 @@
       </UButton>
     </div>
     <UCollapsible class="flex flex-col gap-2">
-      <UButton class="mb-3 cursor-pointer" label="Color Pairings" color="primary" variant="subtle"
+      <UButton class="mb-3 cursor-pointer" label="Select Color Identity" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down"
         :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }" block />
       <template #content>
