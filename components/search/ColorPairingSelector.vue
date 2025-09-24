@@ -11,8 +11,8 @@
       </UButton>
     </div>
     <UCollapsible class="flex flex-col gap-2">
-      <UButton class="mb-3 cursor-pointer" label="Select Color Identity" color="primary" variant="subtle"
-        trailing-icon="i-lucide-chevron-down"
+      <UButton class="cursor-pointer" label="Select Color Identity" color="primary" variant="subtle"
+        trailing-icon="i-lucide-chevron-down" icon="i-lucide-palette"
         :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }" block />
       <template #content>
         <UAccordion type="multiple" :unmount-on-hide="false" :items="accordionItems">

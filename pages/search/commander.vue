@@ -3,7 +3,7 @@
     <div class="w-full max-w-7xl px-4 pt-4 flex flex-col items-center">
       <SearchForm class="mt-6 w-full" />
 
-      <div class="w-full flex justify-end min-h-[32px]">
+      <div class="w-full flex justify-end min-h-[32px] mt-2">
         <ShareFab class="mr-2" v-if="searchResults && searchResults.length"></ShareFab>
         <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
       </div>
