@@ -2,8 +2,8 @@
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
     <UFormField name="query">
       <div class="flex gap-2">
-        <UInput ref="input" v-model="state.query" placeholder="Describe the cards you want..." icon="i-lucide-search"
-          class="flex-1" :ui="{ trailing: 'pe-1', base: 'h-10' }">
+        <UInput ref="input" v-model="state.query" placeholder="Describe the commander you want..."
+          icon="i-lucide-search" class="flex-1" :ui="{ trailing: 'pe-1', base: 'h-10' }">
           <template v-if="state.query?.length" #trailing>
             <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
               @click="state.query = ''" />
@@ -80,13 +80,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (selectedColors.value.length > 0) {
       formData.filters.selectedColors = [...selectedColors.value];
       formData.filters.selectedColorFilterOption = 'Match Exactly';
-    }
-
-    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters (its the equivalent but more intuitive)
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
-      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
-        formData.filters = {};
-      }
+    } else {
+      formData.filters = {};
     }
 
     // For commander search, always set isCommander to true
@@ -98,7 +93,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
       searchType: 'commander'
     };
-    console.log("Navigating to /search/commander with query:", query);
     navigateTo({ path: '/search/commander', query });
   } catch (error) {
     console.error('Form submission error:', error)
