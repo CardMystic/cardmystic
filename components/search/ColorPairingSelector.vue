@@ -68,10 +68,10 @@ const pairings: Pairing[] = [
   { name: 'Mardu', colors: ['Red', 'White', 'Black'] },
   { name: 'Temur', colors: ['Green', 'Blue', 'Red'] },
   { name: 'Yore-Tiller', colors: ['White', 'Blue', 'Black', 'Red'] },
-  { name: 'Glint', colors: ['Blue', 'Black', 'Red', 'Green'] },
-  { name: 'Dune', colors: ['Black', 'Red', 'Green', 'White'] },
+  { name: 'Glint-Eye', colors: ['Blue', 'Black', 'Red', 'Green'] },
+  { name: 'Dune-Brood', colors: ['Black', 'Red', 'Green', 'White'] },
   { name: 'Ink-Treader', colors: ['Red', 'Green', 'White', 'Blue'] },
-  { name: 'Witch', colors: ['Green', 'White', 'Blue', 'Black'] },
+  { name: 'Witch-Maw', colors: ['Green', 'White', 'Blue', 'Black'] },
   { name: 'Five-Color', colors: ['White', 'Blue', 'Black', 'Red', 'Green'] },
 ];
 
