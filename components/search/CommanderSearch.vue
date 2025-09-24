@@ -17,7 +17,7 @@
         </UButton>
       </div>
     </UFormField>
-    <ColorPairingSelector v-model="selectedPairing" class="mt-4" />
+    <ColorPairingSelector :colors="selectedColors" @update:colors="selectedColors = $event" class="mt-4" />
   </UForm>
 </template>
 
@@ -46,15 +46,21 @@ const route = useRoute();
 const queryParam = computed(() => String(route.query.query || ''));
 const parsedFilters = computed(() => {
   if (route.query.filters) {
-    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    const filters = CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    // Set selectedColors if present
+    if (filters?.selectedColors && Array.isArray(filters.selectedColors)) {
+      selectedColors.value = [...filters.selectedColors];
+    } else {
+      selectedColors.value = [];
+    }
+    return filters;
   }
+  selectedColors.value = [];
   return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  // Set selected pairing if colors are present
 });
 
-const selectedPairing = ref<{
-  name: string;
-  colors: ("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[];
-}>({ name: '', colors: [] });
+const selectedColors = ref<("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[]>([]);
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
@@ -70,9 +76,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: event.data.filters || {}
     };
 
-    // Use selectedPairing.colors directly
-    if (selectedPairing.value.name.length > 0) {
-      formData.filters.selectedColors = selectedPairing.value.colors;
+    // Use selectedColors directly
+    if (selectedColors.value.length > 0) {
+      formData.filters.selectedColors = [...selectedColors.value];
       formData.filters.selectedColorFilterOption = 'Match Exactly';
     }
 

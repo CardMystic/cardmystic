@@ -36,52 +36,7 @@
 
 <script setup lang="ts">
 import ManaIcon from '~/components/manaIcon.vue';
-
-// Use CardColor values for colors
-type CardColor = "White" | "Blue" | "Black" | "Red" | "Green" | "Colorless";
-type Pairing = { name: string; colors: CardColor[] };
-
-const pairings: Pairing[] = [
-  { name: 'White', colors: ['White'] },
-  { name: 'Blue', colors: ['Blue'] },
-  { name: 'Black', colors: ['Black'] },
-  { name: 'Red', colors: ['Red'] },
-  { name: 'Green', colors: ['Green'] },
-  { name: 'Azorius', colors: ['White', 'Blue'] },
-  { name: 'Dimir', colors: ['Blue', 'Black'] },
-  { name: 'Rakdos', colors: ['Black', 'Red'] },
-  { name: 'Gruul', colors: ['Red', 'Green'] },
-  { name: 'Selesnya', colors: ['Green', 'White'] },
-  { name: 'Orzhov', colors: ['White', 'Black'] },
-  { name: 'Izzet', colors: ['Blue', 'Red'] },
-  { name: 'Golgari', colors: ['Black', 'Green'] },
-  { name: 'Boros', colors: ['Red', 'White'] },
-  { name: 'Simic', colors: ['Green', 'Blue'] },
-  { name: 'Esper', colors: ['White', 'Blue', 'Black'] },
-  { name: 'Grixis', colors: ['Blue', 'Black', 'Red'] },
-  { name: 'Jund', colors: ['Black', 'Red', 'Green'] },
-  { name: 'Naya', colors: ['Red', 'Green', 'White'] },
-  { name: 'Bant', colors: ['Green', 'White', 'Blue'] },
-  { name: 'Abzan', colors: ['White', 'Black', 'Green'] },
-  { name: 'Jeskai', colors: ['Blue', 'Red', 'White'] },
-  { name: 'Sultai', colors: ['Black', 'Green', 'Blue'] },
-  { name: 'Mardu', colors: ['Red', 'White', 'Black'] },
-  { name: 'Temur', colors: ['Green', 'Blue', 'Red'] },
-  { name: 'Yore-Tiller', colors: ['White', 'Blue', 'Black', 'Red'] },
-  { name: 'Glint-Eye', colors: ['Blue', 'Black', 'Red', 'Green'] },
-  { name: 'Dune-Brood', colors: ['Black', 'Red', 'Green', 'White'] },
-  { name: 'Ink-Treader', colors: ['Red', 'Green', 'White', 'Blue'] },
-  { name: 'Witch-Maw', colors: ['Green', 'White', 'Blue', 'Black'] },
-  { name: 'Five-Color', colors: ['White', 'Blue', 'Black', 'Red', 'Green'] },
-];
-
-const groupedPairings = [
-  { label: 'Mono-color', slot: 'mono', pairings: pairings.filter(p => p.colors.length === 1) },
-  { label: 'Two-color', slot: 'two', pairings: pairings.filter(p => p.colors.length === 2) },
-  { label: 'Three-color', slot: 'three', pairings: pairings.filter(p => p.colors.length === 3) },
-  { label: 'Four-color', slot: 'four', pairings: pairings.filter(p => p.colors.length === 4) },
-  { label: 'Five-color', slot: 'five', pairings: pairings.filter(p => p.colors.length === 5) },
-];
+import { groupedPairings, pairings, type Pairing } from '@/utils/colorPairings';
 
 const accordionItems = groupedPairings.map(group => ({
   label: group.label,
@@ -89,27 +44,34 @@ const accordionItems = groupedPairings.map(group => ({
 }));
 
 const props = defineProps<{
-  modelValue: {
-    name: string;
-    colors: ("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[];
-  }
+  colors: ("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[];
 }>();
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:colors']);
 
-// For chip display
-const selectedPairingName = computed(() => props.modelValue?.name ?? []);
-const selectedPairingColors = computed(() => props.modelValue?.colors ?? []);
+// Compute pairing name from colors prop
+const selectedPairingName = computed(() => {
+  if (!props.colors || props.colors.length === 0) return [];
+  const match = pairings.find(
+    p =>
+      p.colors.length === props.colors.length &&
+      p.colors.every(c => props.colors.includes(c)) &&
+      props.colors.every(c => p.colors.includes(c))
+  );
+  return match ? [match.name] : [];
+});
+
+const selectedPairingColors = computed(() => props.colors ?? []);
 
 function togglePairing(pairing: Pairing) {
   if (selectedPairingName.value.includes(pairing.name)) {
-    emit('update:modelValue', { name: [], colors: [] });
+    emit('update:colors', []);
   } else {
-    emit('update:modelValue', { name: [pairing.name], colors: pairing.colors });
+    emit('update:colors', pairing.colors);
   }
 }
 
 function clearPairing() {
-  emit('update:modelValue', { name: [], colors: [] });
+  emit('update:colors', []);
 }
 
 // Helper for ManaIcon
