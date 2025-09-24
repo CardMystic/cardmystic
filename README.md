@@ -7,7 +7,7 @@
   <img src="public/crystall_ball.webp" alt="CardMystic" width="150"/>
 </div>
 
-🧙‍♂️ Check it out: [https://cardmystic.com](https://cardmystic.com)
+🧙‍♂️ Check it out: [https://cardmystic.io](https://cardmystic.io)
 
 Magic: The Gathering is a complex and intricate game, but finding cards shouldn't be. Our developers decided that traditional keyword search engines fall short. They require exact wording and an intimate knowledge of Magic terms.
 

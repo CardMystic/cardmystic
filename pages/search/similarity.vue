@@ -19,10 +19,9 @@
         <template v-else-if="searchResults && searchResults.length">
           <div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <CardComponent :card="{ card_name: searchedCardData.name, card_data: searchedCardData }"
-                :showCardInfo="true" :isSearched="true" />
-              <div v-for="result in searchResults" :key="result.card_data.id">
-                <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true" />
+              <div v-for="(result, index) in searchResults" :key="result.card_data.id">
+                <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true"
+                  :is-searched="index == 0" />
               </div>
             </div>
           </div>
@@ -70,7 +69,7 @@ const route = useRoute();
 
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : "39");
+const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 useHead(() => ({
@@ -122,7 +121,6 @@ const { data: searchResults, isLoading } = useQuery({
     similaritySearch,
   ],
   queryFn: async () => {
-    console.log('Fetching similarity search results with params:', similaritySearch.value);
     const response = await fetch('/api/search/similarity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -136,26 +134,6 @@ const { data: searchResults, isLoading } = useQuery({
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: queryEnabled,
-});
-
-// Fetch the searched card data
-const {
-  data: searchedCardData,
-  isLoading: isLoadingSearchedCard,
-  error: searchedCardError
-} = useQuery({
-  queryKey: [
-    'similarity-searched-card',
-    cardNameParam
-  ],
-  queryFn: async () => {
-    if (!cardNameParam.value) return null;
-    const res = await fetch(`/api/cards/name/${encodeURIComponent(cardNameParam.value)}`);
-    if (!res.ok) throw new Error('Failed to fetch card');
-    return await res.json();
-  },
-  enabled: computed(() => !!cardNameParam.value),
-  staleTime: 1000 * 60 * 15,
 });
 
 </script>
