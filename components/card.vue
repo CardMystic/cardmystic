@@ -100,8 +100,10 @@ import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '#imports';
 import { useClipboard } from '~/composables/useClipboard';
+import { useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 
 const props = defineProps({
   card: {
@@ -150,6 +152,17 @@ const isInClipboard = computed(() => clipboard.has(cardClip.value.id));
 
 // Navigation helper
 function navigateToCard(cardId: string | undefined) {
+  // Save current search query to sessionStorage
+  if (route.query.searchType == 'ai') {
+    sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'commander') {
+    sessionStorage.setItem('commander_search_query', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'similarity') {
+    sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
+  }
+
   if (!cardId) {
     console.warn('Cannot navigate to card: ID is undefined');
     return;
@@ -246,6 +259,17 @@ function getCardImageUrl(cardData: any): string {
 
 function findSimilarCards() {
   if (!props.card) return;
+
+  // Save current search query to sessionStorage
+  if (route.query.searchType == 'ai') {
+    sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'commander') {
+    sessionStorage.setItem('commander_search_query', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'similarity') {
+    sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
+  }
 
   // Navigate to search page with similarity search endpoint
   const queryParams = {
