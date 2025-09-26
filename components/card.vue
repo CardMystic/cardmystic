@@ -1,12 +1,31 @@
 <template>
-  <UCard variant="subtle" :class="['card-container px-0', isSearched ? 'searched-card-bg' : '']"
-    :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
-    <!-- Card content: image + score -->
-    <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
-      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
-      @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
-    <div v-else class="image-placeholder">
-      <p class="placeholder-text">{{ card.card_data.name }}</p>
+  <UCard variant="subtle" :class="[isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
+    <div class="card-image-wrapper">
+      <!-- Card content: image + score -->
+      <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
+        @error="handleImageError" v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
+        @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
+      <div v-else class="image-placeholder">
+        <p class="placeholder-text">{{ card.card_data.name }}</p>
+      </div>
+      <div v-if="showCardInfo" class="searched-plus-btn" :class="{ 'clipboard-added': isInClipboard }">
+        <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
+          :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
+          @click.stop="handleClipboardClick">
+          <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
+        </UButton>
+      </div>
+      <!-- Score Bar -->
+      <div class="mt-1 flex flex-row items-center justify-center text-center w-full">
+        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
+        <p v-if="!isSearched" class="text-xs">
+          {{ props.card.score !== undefined
+            ? props.isSimilaritySearch
+              ? `${normalizedScore.toFixed(2)}%`
+              : normalizedScore.toFixed(2) + '%'
+            : 'N/A' }}
+        </p>
+      </div>
     </div>
 
     <!-- Card Name and mana cost -->
@@ -29,35 +48,48 @@
           </span>
         </p>
       </div>
-      <div class="flex flex-row items-center justify-center text-center w-full">
-        <UButton v-if="showCardInfo && card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)"
-          external color="success" variant="solid" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm"
-          target="_blank" rel="noopener noreferrer">{{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
-            'Buy' }}
-        </UButton>
-        <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
-          icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
-        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
-        <p v-if="!isSearched" class="text-xs">
-          {{ props.card.score !== undefined
-            ? props.isSimilaritySearch
-              ? `${normalizedScore.toFixed(2)}%`
-              : normalizedScore.toFixed(2) + '%'
-            : 'N/A' }}
-        </p>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-row items-center justify-between text-center w-full">
+        <div class="flex flex-row items-center">
+          <UButton v-if="showCardInfo && card.card_data.tcgplayer_id"
+            :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
+            class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer">{{
+              card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
+                'Buy' }}
+          </UButton>
+          <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
+            icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
+        </div>
+        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
+          <UTooltip text="I agree with this result!" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton class="cursor-pointer" :color="isThumbsUpClicked ? 'success' : 'primary'" variant="soft"
+                icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up"
+                @click="isThumbsUpClicked = !isThumbsUpClicked" :disabled="isThumbsDownClicked" />
+            </template>
+          </UTooltip>
+
+          <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
+                icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down"
+                @click="isThumbsDownClicked = !isThumbsDownClicked" :disabled="isThumbsUpClicked" />
+            </template>
+          </UTooltip>
+        </div>
         <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
           @click="toggleShowAllData">
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
         </UButton>
       </div>
-      <div v-if="isDev && showAllData" class="dev-card-json mt-2">
-        <pre
-          style="max-width:100%;overflow-x:auto;font-size:12px;background:#181818;color:#fff;padding:8px;border-radius:6px;">
-          {{ JSON.stringify(card.card_data, null, 2) }}
-        </pre>
-      </div>
     </div>
   </UCard>
+  <div v-if="isDev && showAllData" class="card-data mt-2">
+    <pre>
+    {{ JSON.stringify(card.card_data, null, 2) }}
+  </pre>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -67,6 +99,7 @@ import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '#imports';
+import { useClipboard } from '~/composables/useClipboard';
 
 const router = useRouter();
 
@@ -100,6 +133,20 @@ const props = defineProps({
 });
 
 const sizeClass = computed(() => `card-${props.size}`);
+const clipboard = useClipboard();
+
+const isThumbsUpClicked = ref(false);
+const isThumbsDownClicked = ref(false);
+
+const cardClip = computed(() => ({
+  id: props.card.card_data.id,
+  name: props.card.card_data.name,
+  set: props.card.card_data.set,
+  imageUrl: getCardImageUrl(props.card.card_data),
+  price: props.card.card_data.prices.usd || '0',
+}));
+
+const isInClipboard = computed(() => clipboard.has(cardClip.value.id));
 
 // Navigation helper
 function navigateToCard(cardId: string | undefined) {
@@ -213,6 +260,14 @@ function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
 }
 
+function handleClipboardClick() {
+  if (isInClipboard.value) {
+    clipboard.remove(cardClip.value.id);
+  } else {
+    clipboard.add(cardClip.value);
+  }
+}
+
 const isDev = import.meta.env.VITE_IS_DEV === "true";
 const showAllData = ref(false);
 function toggleShowAllData() {
@@ -221,11 +276,27 @@ function toggleShowAllData() {
 </script>
 
 <style scoped>
-.card-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.card-data {
+  position: fixed;
+  z-index: 1;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  max-width: 100%;
+  text-overflow: wrap;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.card-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 /* Small Size Variant */
@@ -272,5 +343,43 @@ function toggleShowAllData() {
 
 .searched-card-bg {
   background: #353a75 !important;
+}
+
+.searched-plus-btn {
+  position: absolute;
+  right: 30px;
+  top: 44px;
+  opacity: 0;
+  pointer-events: auto;
+  /* Always allow pointer events */
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  transition: opacity 0.2s;
+}
+
+/* Only show the plus button on hover, unless clipboard-added */
+.card-image-wrapper:hover .searched-plus-btn:not(.clipboard-added) {
+  opacity: 0.7;
+}
+
+.searched-plus-btn.clipboard-added {
+  opacity: 0.7;
+}
+
+@media (max-width: 767px) {
+
+  .searched-plus-btn,
+  .searched-plus-btn.clipboard-added {
+    opacity: 0.7 !important;
+  }
+}
+
+.searched-plus-icon {
+  font-size: 1.5rem;
 }
 </style>
