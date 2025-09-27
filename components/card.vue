@@ -30,8 +30,6 @@
 
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-      </div>
 
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
         <p class="whitespace-nowrap overflow-hidden truncate">
