@@ -415,7 +415,6 @@ function toggleShowAllData() {
 }
 
 @media (max-width: 767px) {
-
   .searched-plus-btn,
   .searched-plus-btn.clipboard-added {
     opacity: 0.7 !important;
