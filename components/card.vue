@@ -299,7 +299,7 @@ function handleClipboardClick() {
   if (isInClipboard.value) {
     toast.add({
       title: 'Card removed from clipboard',
-      icon: 'i-lucide-clipboard-check'
+      icon: 'i-lucide-clipboard-minus'
     })
     clipboard.remove(cardClip.value.id);
   } else {

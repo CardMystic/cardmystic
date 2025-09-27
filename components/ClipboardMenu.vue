@@ -29,7 +29,7 @@
             Buy (${{ clipboard.totalPrice.value.toFixed(2) }})
           </UButton>
           <UButton class="cursor-pointer" icon="i-lucide-trash" color="error" variant="soft" size="sm" block
-            @click="clipboard.clear" :disabled="clipboard.list.value.length === 0">
+            @click="clear" :disabled="clipboard.list.value.length === 0">
             Clear
           </UButton>
         </div>
@@ -66,5 +66,13 @@ function openMassEntry() {
 
   // IMPORTANT: open the raw string; don't rebuild the query anywhere
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+function clear() {
+  toast.add({
+    title: 'Clipboard cleared',
+    icon: 'i-lucide-clipboard-x'
+  })
+  clipboard.clear()
 }
 </script>
