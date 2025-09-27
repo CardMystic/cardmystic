@@ -58,7 +58,7 @@ import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import CardSkeleton from '~/components/CardSkeleton.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
-import CardComponent from '~/components/card.vue';
+import CardComponent from '~/components/Card.vue';
 
 const route = useRoute();
 
