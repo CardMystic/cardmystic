@@ -1,7 +1,6 @@
 <template>
   <UPopover>
-    <UButton icon="i-lucide-clipboard-list" color="primary" variant="soft"
-      :label="'Clipboard ' + '(' + (clipboard.count.value > 0 ? clipboard.count.value + '' : '0') + ')'"></UButton>
+    <UButton icon="i-lucide-clipboard-list" color="primary" variant="soft" :label="clipboardLabel"></UButton>
     <template #content>
       <div class="p-3 w-72 max-w-xs">
         <div class="font-semibold mb-2 flex items-center gap-2">
@@ -47,6 +46,10 @@ import { useToast } from '#imports'
 const clipboard = useClipboardStore()
 const { copy } = useCopyToClipboard()
 const toast = useToast()
+
+const clipboardLabel = computed(() => {
+  return 'Clipboard ' + '(' + (clipboard.count.value > 0 ? clipboard.count.value + '' : '0') + ')'
+})
 
 function copyNames() {
   if (clipboard.list.value.length === 0) return
