@@ -21,10 +21,13 @@
     <SearchForm />
 
     <!-- Example Queries -->
-    <ExampleQueries class="mb-0" />
+    <ExampleQueries class="mb-2" />
 
     <!-- Top Queries -->
-    <TopQueries class="mb-8" />
+    <TopQueries class="mb-4" />
+
+    <!-- Marketplace Button -->
+    <ProductPromotionButtons class="mb-0" />
   </div>
 </template>
 
@@ -33,6 +36,7 @@ defineOptions({ name: 'HomePage' });
 
 import { onMounted, ref } from 'vue';
 import SearchForm from '~/components/search/Search.vue';
+import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
 
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');
