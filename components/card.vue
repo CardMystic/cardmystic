@@ -83,7 +83,7 @@
           <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
-                icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down"
+                icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result"
                 @click="isThumbsDownClicked = !isThumbsDownClicked" />
             </template>
           </UTooltip>
