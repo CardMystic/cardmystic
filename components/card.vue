@@ -49,30 +49,42 @@
 
       <!-- Action Buttons -->
       <div class="flex flex-row items-center justify-between text-center w-full">
+
+        <!-- Left side buttons-->
         <div class="flex flex-row items-center">
-          <UButton v-if="showCardInfo && card.card_data.tcgplayer_id"
-            :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-            class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer">{{
-              card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
-                'Buy' }}
-          </UButton>
-          <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer"
-            icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"></UButton>
-        </div>
-        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
-          <UTooltip text="I agree with this result!" :popper="{ placement: 'top' }">
+          <!-- Buy on TCGPlayer button -->
+          <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton class="cursor-pointer" :color="isThumbsUpClicked ? 'success' : 'primary'" variant="soft"
-                icon="i-lucide-thumbs-up" size="sm" aria-label="Thumbs Up"
-                @click="isThumbsUpClicked = !isThumbsUpClicked" :disabled="isThumbsDownClicked" />
+              <UButton v-if="showCardInfo && card.card_data.tcgplayer_id"
+                :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
+                class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
+                aria-label="Buy on TCGPlayer">
+                {{
+                  card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
+                    'Buy' }}
+              </UButton>
             </template>
           </UTooltip>
+          <!-- Similarity search button -->
+          <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid"
+                class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"
+                aria-label="Find Similar Cards">
+              </UButton>
+            </template>
+          </UTooltip>
+        </div>
 
+        <!-- Right side buttons -->
+        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
+
+          <!-- Thumbs down button -->
           <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
                 icon="i-lucide-thumbs-down" size="sm" aria-label="Thumbs Down"
-                @click="isThumbsDownClicked = !isThumbsDownClicked" :disabled="isThumbsUpClicked" />
+                @click="isThumbsDownClicked = !isThumbsDownClicked" />
             </template>
           </UTooltip>
         </div>
@@ -135,7 +147,6 @@ const props = defineProps({
 const sizeClass = computed(() => `card-${props.size}`);
 const clipboard = useClipboard();
 
-const isThumbsUpClicked = ref(false);
 const isThumbsDownClicked = ref(false);
 
 const cardClip = computed(() => ({
