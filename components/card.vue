@@ -111,9 +111,11 @@ import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '#imports';
 import { useClipboard } from '~/composables/useClipboard';
 import { useRoute } from 'vue-router';
+import { useToast } from '#imports'
 
 const router = useRouter();
 const route = useRoute();
+const toast = useToast()
 
 const props = defineProps({
   card: {
@@ -295,8 +297,16 @@ function handleImageError(event: Event) {
 
 function handleClipboardClick() {
   if (isInClipboard.value) {
+    toast.add({
+      title: 'Card removed from clipboard',
+      icon: 'i-lucide-clipboard-check'
+    })
     clipboard.remove(cardClip.value.id);
   } else {
+    toast.add({
+      title: 'Card added to clipboard',
+      icon: 'i-lucide-clipboard-check'
+    })
     clipboard.add(cardClip.value);
   }
 }
