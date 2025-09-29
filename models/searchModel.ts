@@ -8,7 +8,8 @@ import {
   CardType,
 } from './cardModel';
 
-export const DefaultLimit = 40;
+export const DefaultLimitAI = 40;
+export const DefaultLimitSimilarity = 40;
 
 const colorFilterOptionEnum = z.enum([
   'Match Exactly',
@@ -53,7 +54,7 @@ export const CardSearchFiltersSchema = z.object({
 export type WordSearch = z.infer<typeof WordSearchSchema>;
 export const WordSearchSchema = z.object({
   query: z.string().min(1, 'Query must not be empty'),
-  limit: z.number().min(1).max(80).optional().default(DefaultLimit),
+  limit: z.number().min(1).max(80).optional().default(DefaultLimitAI),
   filters: CardSearchFiltersSchema.optional(),
   exclude_card_data: z.boolean().optional().default(false),
 });
@@ -61,7 +62,7 @@ export const WordSearchSchema = z.object({
 export type SimilaritySearch = z.infer<typeof SimilaritySearchSchema>;
 export const SimilaritySearchSchema = z.object({
   card_name: z.string().min(1, 'Card name must not be empty'),
-  limit: z.number().min(1).max(120).optional().default(DefaultLimit),
+  limit: z.number().min(1).max(120).optional().default(DefaultLimitSimilarity),
   filters: CardSearchFiltersSchema.optional(),
   exclude_card_data: z.boolean().optional().default(false),
 });

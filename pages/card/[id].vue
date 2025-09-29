@@ -119,7 +119,7 @@
 
         <!-- TCGPlayer Button - Desktop only -->
         <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
+          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
           class="mt-0 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg"
           target="_blank" rel="noopener noreferrer">
           Buy on TCGPlayer
@@ -227,7 +227,7 @@
 
         <!-- TCGPlayer Button - Mobile only -->
         <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="primary" variant="solid"
+          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
           class="mb-4 tcgplayer-btn lg:hidden" icon="i-heroicons-shopping-cart" size="lg" block>
           Buy on TCGPlayer
         </UButton>
@@ -265,11 +265,10 @@ import { useQuery } from '@tanstack/vue-query';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
-import { DefaultLimit } from '~/models/searchModel';
-import manaCost from '~/components/manaCost.vue';
+import { DefaultLimitSimilarity } from '~/models/searchModel';
+import { getAffiliateLink } from '#imports';
 
 const route = useRoute();
-
 const isFlipped = ref(false);
 const selectedPrinting = ref<string>('');
 
@@ -390,7 +389,7 @@ const getLegalityColor = (status: string) => {
   const s = status.toUpperCase();
   switch (s) {
     case 'LEGAL':
-      return 'success';
+      return 'info';
     case 'BANNED':
       return 'error';
     case 'NOT LEGAL':
@@ -413,15 +412,6 @@ const generateTCGPlayerSearchUrl = (cardName: string): string => {
   const encodedName = encodeURIComponent(cardName);
   return `https://www.tcgplayer.com/search/magic/product?q=${encodedName}`;
 };
-
-/**
- * Generate affiliate link for TCGPlayer ID
- */
-function getAffiliateLink(tcgId: string | number): string {
-  if (!tcgId) return '';
-  const productUrl = `https://www.tcgplayer.com/product/${tcgId}`;
-  return `https://partner.tcgplayer.com/Z6vBoK?u=${encodeURIComponent(productUrl)}`;
-}
 
 const hasPrices = computed(() => {
   if (!currentPrinting.value?.prices) return false;
@@ -551,7 +541,7 @@ function findSimilarCards() {
   // Navigate to search page with similarity search endpoint
   const queryParams = {
     card_name: card.value.name,
-    limit: DefaultLimit,
+    limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
   };
 
