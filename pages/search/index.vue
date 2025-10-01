@@ -3,6 +3,11 @@
     <div class="w-full max-w-7xl px-4 pt-4 flex flex-col items-center">
       <SearchForm class="mt-6 w-full" />
 
+      <div class="w-full flex justify-end min-h-[32px] mt-2">
+        <ShareFab class="mr-2" v-if="searchResults && searchResults.length"></ShareFab>
+        <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
+      </div>
+
       <!-- Results -->
       <div class="mt-3 w-full">
         <template v-if="isLoading">
@@ -42,7 +47,6 @@
       </div>
     </div>
   </UContainer>
-  <IssuesFab :onClick="handleFabClick" />
 </template>
 
 <script setup lang="ts">
@@ -53,6 +57,7 @@ import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
+import ShareFab from '~/components/search/shareFab.vue';
 import CardSkeleton from '~/components/CardSkeleton.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { UContainer } from '#components';
