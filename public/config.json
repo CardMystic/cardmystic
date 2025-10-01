@@ -1,17 +1,17 @@
 {
   "marketplaceButtons": [
     {
-      "link": "partner.tcgplayer.com/bOJNPB",
+      "link": "https://partner.tcgplayer.com/bOJNPB",
       "image": "https://tcgplayer-cdn.tcgplayer.com/product/621115_in_1000x1000.jpg",
       "text": "NEW: Preorder Spiderman!"
     },
     {
-      "link": "partner.tcgplayer.com/vPkjQA",
+      "link": "https://partner.tcgplayer.com/vPkjQA",
       "image": "https://tcgplayer-cdn.tcgplayer.com/product/619673_in_1000x1000.jpg",
       "text": "Edge Of Eternities"
     },
     {
-      "link": "partner.tcgplayer.com/yqAbjD",
+      "link": "https://partner.tcgplayer.com/yqAbjD",
       "image": "https://tcgplayer-cdn.tcgplayer.com/product/618901_in_1000x1000.jpg",
       "text": "Final Fantasy"
     }
