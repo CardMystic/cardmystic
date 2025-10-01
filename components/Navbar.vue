@@ -122,9 +122,6 @@ const externalItems: NavigationMenuItem[] = [
 
     <!-- Mobile: GitHub & Patreon -->
     <div class="flex md:hidden items-center gap-4">
-      <<<<<<< HEAD <UNavigationMenu :items="externalItems" />
-      =======
-      >>>>>>> andrew/results-and-similarity-small-fixes
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu />
     </div>
