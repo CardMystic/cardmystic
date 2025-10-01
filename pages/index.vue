@@ -36,7 +36,7 @@ defineOptions({ name: 'HomePage' });
 
 import { onMounted, ref } from 'vue';
 import SearchForm from '~/components/search/Search.vue';
-import ProductPromotionButtons from '~/components/productPromotionButtons.vue';
+import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
 
 const fullTitle = 'CardMystic';
 const typedTitle = ref('');

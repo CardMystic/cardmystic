@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import ManaIcon from '~/components/manaIcon.vue';
+import ManaIcon from '~/components/ManaIcon.vue';
 import { groupedPairings, pairings, type Pairing } from '@/utils/colorPairings';
 
 const accordionItems = groupedPairings.map(group => ({
