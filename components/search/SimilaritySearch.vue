@@ -114,6 +114,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 }
 
+// If similarity button is clicked on the similarity page, this will update the card name in the search field
 watch(cardNameParam, (newVal) => {
   if (newVal !== state.card_name) {
     state.card_name = newVal;

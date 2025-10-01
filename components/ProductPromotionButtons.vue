@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import productPromotionButton from './ProductPromotionButton.vue';
+import productPromotionButton from '~/components/ProductPromotionButton.vue';
 import { ref, onMounted } from 'vue';
 
 type PromotionButton = { link: string; image: string; text: string };

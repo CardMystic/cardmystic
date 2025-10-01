@@ -152,7 +152,6 @@ function goToCard(cardId: string | undefined) {
   flex-shrink: 0
 
 .query-value
-  color: rgb(var(--v-theme-primary))
   font-size: 16px
   font-weight: bold
   font-style: italic

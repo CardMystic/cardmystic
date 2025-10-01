@@ -21,10 +21,10 @@
     <SearchForm />
 
     <!-- Example Queries -->
-    <ExampleQueries class="mb-2 mt-4" />
+    <ExampleQueries class="mb-2" />
 
     <!-- Top Queries -->
-    <TopQueries class="mb-2" />
+    <TopQueries class="mb-4" />
 
     <!-- Marketplace Button -->
     <ProductPromotionButtons class="mb-0" />
