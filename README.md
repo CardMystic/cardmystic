@@ -47,7 +47,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 The CardMystic server code is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
 
-[API Documentation](http://api.cardmystic.io/docs/)
+[API Documentation](https://api.cardmystic.io/documentation)
 
 ## 🤖 Models
 
@@ -129,7 +129,7 @@ yarn preview
 bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Check out the [Nuxt deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
 ## 🙏 Acknowledgements
 

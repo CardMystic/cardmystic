@@ -41,11 +41,16 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : {});
+const parsedFilters = computed(() => {
+  if (route.query.filters) {
+    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+  }
+  return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+});
 
 const state = reactive<Schema>({
   card_name: cardNameParam.value || '',
-  filters: parsedFilters.value || undefined
+  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
 })
 
 const searchTerm = ref("");
@@ -91,6 +96,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       card_name: event.data.card_name,
       filters: event.data.filters || {}
     }
+    // If no colors are selected, and the colorFilterOption is Contains At Least, remove color filters (its the equivalent but more intuitive)
+    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
+      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
+        formData.filters = {};
+      }
+    }
+    // Construct query parameters
     const query: Record<string, any> = {
       card_name: formData.card_name,
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined
@@ -100,6 +112,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     console.error('Form submission error:', error)
   }
 }
+
+// If similarity button is clicked on the similarity page, this will update the card name in the search field
+watch(cardNameParam, (newVal) => {
+  if (newVal !== state.card_name) {
+    state.card_name = newVal;
+  }
+});
 </script>
 
 <style></style>
