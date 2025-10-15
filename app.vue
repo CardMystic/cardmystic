@@ -3,7 +3,7 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <VueQueryDevtools />
+    <VueQueryDevtools v-if="isDev" />
   </UApp>
 </template>
 
@@ -13,4 +13,5 @@
 
 <script setup lang="ts">
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
+const isDev = import.meta.env.VITE_IS_DEV === "true";
 </script>
