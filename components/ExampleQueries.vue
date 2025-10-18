@@ -42,8 +42,9 @@
       <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results.cards" :ui="{
         item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
       }">
-        <Card :card="item" :normalization-context="allScores" size="small" @click="goToCard(item.card_data.id)"
-          class="hoverable-card my-1 cursor-pointer" />
+        <div class="hoverable-card my-1 cursor-pointer">
+          <Card :card="item" :normalization-context="allScores" size="small" />
+        </div>
       </UCarousel>
     </div>
   </div>
@@ -90,14 +91,6 @@ function tryQuery() {
       query: results.value?.query,
     },
   });
-}
-
-function goToCard(cardId: string | undefined) {
-  if (!cardId) {
-    console.warn('Cannot navigate to card: ID is undefined');
-    return;
-  }
-  router.push(`/card/${cardId}`);
 }
 </script>
 

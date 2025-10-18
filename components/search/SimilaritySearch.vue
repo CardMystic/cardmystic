@@ -105,7 +105,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     // Construct query parameters
     const query: Record<string, any> = {
       card_name: formData.card_name,
-      filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined
+      filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
+      searchType: 'similarity'
     };
     navigateTo({ path: '/search/similarity', query });
   } catch (error) {

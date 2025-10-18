@@ -42,7 +42,7 @@
       </div>
     </div>
   </UContainer>
-  <IssuesFab :onClick="handleFabClick" />
+  <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
 </template>
 
 <script setup lang="ts">

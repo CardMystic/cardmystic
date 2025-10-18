@@ -2,8 +2,8 @@
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
     <UFormField name="query">
       <div class="flex gap-2">
-        <UInput ref="input" v-model="state.query" placeholder="Describe the cards you want..." icon="i-lucide-search"
-          class="flex-1" :ui="{ trailing: 'pe-1', base: 'h-10' }">
+        <UInput ref="input" v-model="state.query" placeholder="Describe the commander you want..."
+          icon="i-lucide-search" class="flex-1" :ui="{ trailing: 'pe-1', base: 'h-10' }">
           <template v-if="state.query?.length" #trailing>
             <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
               @click="state.query = ''" />
@@ -17,10 +17,7 @@
         </UButton>
       </div>
     </UFormField>
-
-    <UFormField name="filters">
-      <Filters v-model="state.filters" />
-    </UFormField>
+    <ColorPairingSelector :colors="selectedColors" @update:colors="selectedColors = $event" class="mt-4" />
   </UForm>
 </template>
 
@@ -29,7 +26,7 @@ import * as z from 'zod'
 import { useRoute } from 'vue-router';
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
-import Filters from './Filters.vue'
+import ColorPairingSelector from '~/components/search/ColorPairingSelector.vue'
 
 const input = ref();
 defineShortcuts({
@@ -49,10 +46,21 @@ const route = useRoute();
 const queryParam = computed(() => String(route.query.query || ''));
 const parsedFilters = computed(() => {
   if (route.query.filters) {
-    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    const filters = CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    // Set selectedColors if present
+    if (filters?.selectedColors && Array.isArray(filters.selectedColors)) {
+      selectedColors.value = [...filters.selectedColors];
+    } else {
+      selectedColors.value = [];
+    }
+    return filters;
   }
+  selectedColors.value = [];
   return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  // Set selected pairing if colors are present
 });
+
+const selectedColors = ref<("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[]>([]);
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
@@ -63,24 +71,29 @@ const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    // Ensure we have valid data
     const formData = {
       query: event.data.query,
       filters: event.data.filters || {}
     };
-    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters (its the equivalent but more intuitive)
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
-      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
-        formData.filters = {};
-      }
+
+    // Use selectedColors directly
+    if (selectedColors.value.length > 0) {
+      formData.filters.selectedColors = [...selectedColors.value];
+      formData.filters.selectedColorFilterOption = 'Match Exactly';
+    } else {
+      formData.filters = {};
     }
+
+    // For commander search, always set isCommander to true
+    formData.filters.isCommander = true;
+
     // Construct query parameters
     const query: Record<string, any> = {
       query: event.data.query,
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
-      searchType: 'ai'
+      searchType: 'commander'
     };
-    navigateTo({ path: '/search', query });
+    navigateTo({ path: '/search/commander', query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({
