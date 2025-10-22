@@ -12,7 +12,7 @@
             <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>
-        <UButton type="submit" class="cursor-pointer h-10">
+        <UButton :disabled="state.query?.length == 0" type="submit" class="cursor-pointer h-10">
           Submit
         </UButton>
       </div>
@@ -38,7 +38,7 @@ defineShortcuts({
   }
 });
 const schema = z.object({
-  query: z.string().min(1, "Must enter a search term"),
+  query: z.string().min(1, ""),
   filters: CardSearchFiltersSchema.optional(),
 })
 
