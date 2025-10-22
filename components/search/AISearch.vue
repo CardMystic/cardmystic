@@ -1,6 +1,6 @@
 <template>
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
-    <UFormField name="query">
+    <UFormField name="query" class="mb-2">
       <div class="flex gap-2">
         <UInput ref="input" v-model="state.query" placeholder="Describe the cards you want..." icon="i-lucide-search"
           class="flex-1" :ui="{ trailing: 'pe-1', base: 'h-10' }">

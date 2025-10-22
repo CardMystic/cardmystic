@@ -1,6 +1,6 @@
 <template>
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
-    <UFormField name="card_name">
+    <UFormField name="card_name" class="mb-2">
       <div class="flex gap-2">
         <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
           :loading="status === 'pending'" :items="filteredCards" placeholder="Enter a card name..."
