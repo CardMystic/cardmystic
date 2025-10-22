@@ -1,8 +1,8 @@
 <template>
   <div class="filters-container">
-    <!-- Active Filters Chips -->
-    <div v-if="hasActiveFilters" class="active-filters-section mb-2">
-      <div class="active-filters-chips">
+    <!-- Active Filters Chips or a No Filters Selected chip -->
+    <div class="active-filters-section mb-2">
+      <div v-if="hasActiveFilters" class="active-filters-chips">
 
         <!-- Card Types Chips -->
         <div v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`">
@@ -66,12 +66,17 @@
         </template>
 
         <!-- Clear All Button -->
-        <UButton v-if="hasActiveFilters" color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters"
-          icon="i-lucide-circle-x">
-          Clear All
+        <UButton color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
+          Clear Filters
+        </UButton>
+      </div>
+      <div v-else class="active-filters-chips">
+        <UButton class="cursor-default ma-1 rounded-pill" size="sm" color="neutral" variant="outline" disabled>
+          No Filters Selected
         </UButton>
       </div>
     </div>
+
     <UCollapsible class="flex flex-col gap-2">
       <UButton class="filters-toggle-btn mb-3 cursor-pointer" label="Select Filters" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down" icon="i-lucide-list-filter" :ui="{
@@ -115,11 +120,6 @@
                     {{ (item as { value: string }).value }}
                   </template>
                 </UCheckboxGroup>
-              </div>
-
-              <!-- Notification moved here and styled red -->
-              <div v-if="showNotification" class="mt-2 text-red-500 text-sm fade-out">
-                {{ notificationMessage }}
               </div>
             </div>
           </template>
@@ -299,14 +299,6 @@ const selectedColorFilterOption = computed({
       if (hasColorless && hasOtherColors) {
         const updatedColors = colors.filter(color => color !== 'Colorless');
         updateFilters({ selectedColors: updatedColors });
-
-        // Show notification
-        notificationMessage.value = 'Colored cards cannot also be colorless. Colorless has been removed from your selection.';
-        showNotification.value = true;
-
-        setTimeout(() => {
-          showNotification.value = false;
-        }, 5000);
       }
     }
   }
@@ -339,23 +331,9 @@ const selectedColors = computed({
         if (!previousSelection.includes('Colorless')) {
           // Colorless was just added, remove all other colors
           value = ['Colorless'];
-          notificationMessage.value = 'Colorless cards cannot have other colors. Other color selections have been removed.';
-          showNotification.value = true;
-
-          // Auto-hide the notification after 3 seconds
-          setTimeout(() => {
-            showNotification.value = false;
-          }, 3000);
         } else {
           // Another color was added, remove Colorless
           value = value.filter(color => color !== 'Colorless');
-          notificationMessage.value = 'Colored cards cannot also be colorless. Colorless has been removed from your selection.';
-          showNotification.value = true;
-
-          // Auto-hide the notification after 3 seconds
-          setTimeout(() => {
-            showNotification.value = false;
-          }, 3000);
         }
       }
     }
