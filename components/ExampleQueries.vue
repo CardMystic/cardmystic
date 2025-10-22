@@ -42,9 +42,7 @@
       <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results.cards" :ui="{
         item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
       }">
-        <div class="hoverable-card my-1 cursor-pointer">
-          <Card :card="item" :normalization-context="allScores" size="small" />
-        </div>
+        <Card :card="item" :normalization-context="allScores" size="small" />
       </UCarousel>
     </div>
   </div>
@@ -149,9 +147,4 @@ function tryQuery() {
   font-style: italic
   @media (max-width: 768px)
     font-size: 12px
-
-.hoverable-card
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important
-  &:hover
-    transform: scale(1.02)
 </style>
