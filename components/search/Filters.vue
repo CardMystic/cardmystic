@@ -91,7 +91,6 @@
           <!-- Colors Filter -->
           <template #colors>
             <div class="accordion-item">
-              <!-- Replace the non-functioning clearable USelect with a select + clear button -->
               <div class="flex gap-2">
                 <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions"
                   placeholder="Select How To Match Colors" class="w-full" />
