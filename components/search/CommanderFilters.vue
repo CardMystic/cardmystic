@@ -17,7 +17,7 @@
       </UButton>
     </div>
 
-    <!-- Colors selector (no accordion/collapsible) -->
+    <!-- Colors selector -->
     <div class="accordion-item">
       <div class="color-checkboxes">
         <UCheckboxGroup :items="cardColors" :orientation="orientation" variant="card" v-model="selectedColors"
