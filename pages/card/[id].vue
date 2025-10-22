@@ -611,7 +611,12 @@ function findSimilarCards() {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2)
   position: relative
   z-index: 1
-  transition: all 0.3s ease
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) // <-- added transition
+  transform-origin: center center // <-- ensure smooth centered scaling
+
+// Scale image slightly on hover of the container
+.card-image-container:hover .card-image
+  transform: scale(1.03)
 
 // Card Header Styling
 .card-header
