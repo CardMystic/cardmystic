@@ -1,5 +1,5 @@
 <template>
-  <UCard variant="subtle" :class="[isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
+  <UCard variant="subtle" :class="['card-root', isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
     <div class="card-image-wrapper">
       <!-- Card content: image + score -->
       <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
@@ -336,5 +336,14 @@ function toggleShowAllData() {
 
 .card-image-wrapper:hover img {
   transform: scale(1.03);
+}
+
+.card-root {
+  max-width: 330px;
+  width: 100%;
+  margin: 0 auto;
+  /* center horizontally within container */
+  display: block;
+  box-sizing: border-box;
 }
 </style>
