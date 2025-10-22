@@ -26,7 +26,7 @@
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <img :src="getCardImageUrl(card)" class="card-image w-[300px] h-[420px] rounded-2xl object-contain"
+          <img :src="cardImageUrl" class="card-image w-[300px] h-[420px] rounded-2xl object-contain"
             @error="handleImageError" alt="Card image" />
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
@@ -34,8 +34,8 @@
             <div class="card-sheen"></div>
           </div>
 
-          <!-- Game Changer Badge -->
-          <!-- <GameChangerBadge :game-changer="card.game_changer" size="large" /> -->
+          <!-- use ClipboardButton component -->
+          <ClipboardButton v-if="card" :card="card" />
         </div>
 
         <!-- Flip Button for Dual-Faced Cards -->
@@ -250,7 +250,7 @@
                 <UBadge class="legality-chip" :color="getLegalityColor(format)" variant="solid" size="xs">
                   {{ format }}
                 </UBadge>
-                <span class="format-name">{{ formatName(name) }}</span>
+                <span class="format-name">{{ standardizeFormatName(name) }}</span>
               </div>
             </div>
           </div>
@@ -261,12 +261,14 @@
 </template>
 
 <script setup lang="ts">
+import ClipboardButton from '~/components/ClipboardButton.vue';
 import { useQuery } from '@tanstack/vue-query';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
-import { getAffiliateLink } from '#imports';
+import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
+import { getCardImageUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
 const route = useRoute();
 const isFlipped = ref(false);
@@ -343,6 +345,12 @@ const currentPrinting = computed(() => {
   return printings.value.find(p => p.id === selectedPrinting.value) || card.value;
 });
 
+// image URL that updates when currentPrinting or isFlipped change
+const cardImageUrl = computed(() => {
+  const printingData = currentPrinting.value;
+  if (!printingData) return '';
+  return getCardImageUrl(printingData as ScryfallCard, isFlipped.value);
+});
 
 useHead(() => ({
   title: card.value
@@ -362,17 +370,6 @@ watchEffect(() => {
   }
 });
 
-const formatsToIgnore: CardFormatType[] = [
-  'Old School',
-  'Standard Brawl',
-  'Explorer',
-  'Historic Brawl',
-  'Gladiator',
-  'Premodern',
-  'Predh',
-  'Pauper Commander',
-];
-
 const legalities = computed(() => {
   if (!card.value?.legalities) return {};
   const result: Record<string, string> = {};
@@ -384,34 +381,6 @@ const legalities = computed(() => {
   }
   return result;
 });
-
-const getLegalityColor = (status: string) => {
-  const s = status.toUpperCase();
-  switch (s) {
-    case 'LEGAL':
-      return 'info';
-    case 'BANNED':
-      return 'error';
-    case 'NOT LEGAL':
-      return 'neutral';
-    case 'RESTRICTED':
-      return 'warning';
-    default:
-      return 'primary';
-  }
-};
-
-const formatName = (raw: string) => {
-  return raw.replace(/([A-Z])/g, ' $1').trim();
-};
-
-/**
- * Generate a TCGPlayer search URL for a card name
- */
-const generateTCGPlayerSearchUrl = (cardName: string): string => {
-  const encodedName = encodeURIComponent(cardName);
-  return `https://www.tcgplayer.com/search/magic/product?q=${encodedName}`;
-};
 
 const hasPrices = computed(() => {
   if (!currentPrinting.value?.prices) return false;
@@ -483,49 +452,6 @@ const isDualFaced = computed(() => {
   const isDualFacedCard = cardData?.card_faces && cardData.card_faces.length >= 2;
   return isDualFacedCard;
 });
-
-function getCardImageUrl(cardData: ScryfallCard): string {
-  // Use current printing instead of passed cardData
-  const printingData = currentPrinting.value || cardData;
-
-  // For dual-faced cards, show the appropriate face
-  if (isDualFaced.value && printingData.card_faces) {
-    const face = isFlipped.value
-      ? printingData.card_faces[1]
-      : printingData.card_faces[0];
-    if (face.image_uris) {
-      if (face.image_uris.normal) return face.image_uris.normal;
-      if (face.image_uris.large) return face.image_uris.large;
-      if (face.image_uris.small) return face.image_uris.small;
-      if (face.image_uris.png) return face.image_uris.png;
-    }
-  }
-
-  // For single-faced cards, try different image URI options
-  if (printingData.image_uris?.normal) {
-    return printingData.image_uris.normal;
-  }
-  if (printingData.image_uris?.large) {
-    return printingData.image_uris.large;
-  }
-  if (printingData.image_uris?.small) {
-    return printingData.image_uris.small;
-  }
-  if (printingData.image_uris?.png) {
-    return printingData.image_uris.png;
-  }
-
-  // Fallback to first face if available
-  if (printingData.card_faces && printingData.card_faces[0]?.image_uris) {
-    const firstFace = printingData.card_faces[0].image_uris;
-    if (firstFace.normal) return firstFace.normal;
-    if (firstFace.large) return firstFace.large;
-    if (firstFace.small) return firstFace.small;
-    if (firstFace.png) return firstFace.png;
-  }
-
-  return '';
-}
 
 function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
@@ -870,7 +796,6 @@ function findSimilarCards() {
     max-width: none !important
     width: 100%
 
-
 .back-button-container-aligned
   display: flex
   justify-content: center
@@ -895,12 +820,10 @@ function findSimilarCards() {
     box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
     transform: translateY(-2px)
 
-// Mobile responsive styles
 @media (max-width: 1023px)
   .tcgplayer-btn
     max-width: none !important
 
-// Animations
 @keyframes glowPulse
   0%
     opacity: 0.7
