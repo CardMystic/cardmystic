@@ -17,7 +17,7 @@
         </UButton>
       </div>
     </UFormField>
-    <CommanderFilters :colors="selectedColors" @update:colors="selectedColors = $event" class="mt-4" />
+    <CommanderFilters v-model="state.filters" />
   </UForm>
 </template>
 
@@ -47,24 +47,14 @@ const queryParam = computed(() => String(route.query.query || ''));
 const parsedFilters = computed(() => {
   if (route.query.filters) {
     const filters = CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
-    // Set selectedColors if present
-    if (filters?.selectedColors && Array.isArray(filters.selectedColors)) {
-      selectedColors.value = [...filters.selectedColors];
-    } else {
-      selectedColors.value = [];
-    }
     return filters;
   }
-  selectedColors.value = [];
   return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
-  // Set selected pairing if colors are present
 });
-
-const selectedColors = ref<("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[]>([]);
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
-  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
+  filters: parsedFilters.value || { selectedColorFilterOption: 'Contains At Least' }
 })
 
 const toast = useToast()
@@ -76,9 +66,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: event.data.filters || {}
     };
 
-    // Use selectedColors directly
-    if (selectedColors.value.length > 0) {
-      formData.filters.selectedColors = [...selectedColors.value];
+    // Use state.filters.selectedColors directly
+    const selColors = state.filters?.selectedColors;
+    if (selColors && selColors.length > 0) {
+      formData.filters.selectedColors = [...selColors];
       formData.filters.selectedColorFilterOption = 'Match Exactly';
     } else {
       formData.filters = {};

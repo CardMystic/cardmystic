@@ -1,95 +1,135 @@
 <template>
   <div>
-    <!-- Chip for selected pairing -->
-    <div v-if="selectedPairingName.length > 0" class="mb-2 flex flex-wrap gap-2">
+    <!-- Selected colors chips or No Filters chip -->
+    <div v-if="modelValue?.selectedColors && modelValue.selectedColors.length > 0" class="mb-2 flex flex-wrap gap-2">
       <UButton class="cursor-pointer rounded-pill" size="sm" color="neutral" variant="outline" icon="i-lucide-circle-x"
-        @click="clearPairing">
+        @click="clearColors">
         <span class="flex items-center gap-1">
-          <ManaIcon v-for="color in selectedPairingColors" :type="colorToSymbol(color)" size="16" />
-          {{ selectedPairingName[0] }}
+          <ManaIcon v-for="color in modelValue.selectedColors" :key="color" :type="cardColorToSymbol(color)"
+            size="16" />
+          {{ modelValue.selectedColors.join(', ') }}
         </span>
       </UButton>
     </div>
-    <UCollapsible class="flex flex-col gap-2">
-      <UButton class="cursor-pointer mb-3" label="Select Color Identity" color="primary" variant="subtle"
-        trailing-icon="i-lucide-chevron-down" icon="i-lucide-palette"
-        :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }" block />
-      <template #content>
-        <UAccordion type="multiple" :unmount-on-hide="false" :items="accordionItems">
-          <template v-for="group in groupedPairings" #[group.slot]>
-            <div class="accordion-item flex flex-wrap gap-2">
-              <UButton v-for="pairing in group.pairings" :key="pairing.name" variant="outline"
-                :color="selectedPairingName.includes(pairing.name) ? 'primary' : 'neutral'"
-                @click="togglePairing(pairing)" size="sm" class="mb-2">
-                <span class="flex items-center gap-1">
-                  <ManaIcon v-for="color in pairing.colors" :type="colorToSymbol(color)" size="16" />
-                  {{ pairing.name }}
-                </span>
-              </UButton>
-            </div>
+    <div v-else class="mb-2">
+      <UButton class="cursor-default rounded-pill" size="sm" color="neutral" variant="outline" disabled>
+        No Filters Selected
+      </UButton>
+    </div>
+
+    <!-- Colors selector (no accordion/collapsible) -->
+    <div class="accordion-item">
+      <div class="color-checkboxes">
+        <UCheckboxGroup :items="cardColors" :orientation="orientation" variant="card" v-model="selectedColors"
+          class="w-full">v
+          <template #label="{ item }">
+            <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
+            {{ (item as { value: CardColorType }).value }}
           </template>
-        </UAccordion>
-      </template>
-    </UCollapsible>
+        </UCheckboxGroup>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import ManaIcon from '~/components/ManaIcon.vue';
-import { groupedPairings, pairings, type Pairing } from '@/utils/colorPairings';
+import { CardColor, cardColorToSymbol, type CardColorType } from '~/models/cardModel';
+import type { CheckboxGroupItem } from '@nuxt/ui';
+import type { CardSearchFilters } from '~/models/searchModel';
 
-const accordionItems = groupedPairings.map(group => ({
-  label: group.label,
-  slot: group.slot
-}));
+const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
+const emit = defineEmits(['update:modelValue']);
 
-const props = defineProps<{
-  colors: ("White" | "Blue" | "Black" | "Red" | "Green" | "Colorless")[];
-}>();
-const emit = defineEmits(['update:colors']);
+// Map card colors to CheckboxGroup items
+const cardColors = CardColor.options.map(color => ({
+  label: color,
+  value: color
+})) as CheckboxGroupItem[];
 
-// Compute pairing name from colors prop
-const selectedPairingName = computed(() => {
-  if (!props.colors || props.colors.length === 0) return [];
-  const match = pairings.find(
-    p =>
-      p.colors.length === props.colors.length &&
-      p.colors.every(c => props.colors.includes(c)) &&
-      props.colors.every(c => p.colors.includes(c))
-  );
-  return match ? [match.name] : [];
+// Response orientation
+const screenWidth = ref(0);
+onMounted(() => {
+  screenWidth.value = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window && window.innerWidth) {
+      screenWidth.value = window.innerWidth;
+    }
+  });
+});
+const orientation = computed<'vertical' | 'horizontal'>(() =>
+  screenWidth.value < 768 ? 'vertical' : 'horizontal'
+);
+
+const selectedColors = computed({
+  get: () => modelValue?.selectedColors || [],
+  set: (value) => {
+    const colorOption = modelValue?.selectedColorFilterOption;
+
+    // Only apply validation for these specific filter options
+    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least') {
+      const hasColorless = value.includes('Colorless');
+      const hasOtherColors = value.some(color => color !== 'Colorless');
+
+      // If we have both colorless and other colors, decide which to keep
+      if (hasColorless && hasOtherColors) {
+        // Get the previous selection
+        const previousSelection = modelValue?.selectedColors || [];
+
+        // Determine what changed by comparing previous and current selection
+        if (!previousSelection.includes('Colorless')) {
+          // Colorless was just added, remove all other colors
+          value = ['Colorless'];
+        } else {
+          // Another color was added, remove Colorless
+          value = value.filter(color => color !== 'Colorless');
+        }
+      }
+    }
+
+    updateFilters({ selectedColors: value });
+  }
 });
 
-const selectedPairingColors = computed(() => props.colors ?? []);
-
-function togglePairing(pairing: Pairing) {
-  if (selectedPairingName.value.includes(pairing.name)) {
-    emit('update:colors', []);
-  } else {
-    emit('update:colors', pairing.colors);
-  }
+function clearColors() {
+  const newValue = { ...(modelValue ?? {}), selectedColors: undefined };
+  emit('update:modelValue', newValue);
 }
 
-function clearPairing() {
-  emit('update:colors', []);
+function updateFilters(updates: Partial<CardSearchFilters>) {
+  const current = modelValue || {} as CardSearchFilters;
+  const newValue = { ...current, ...updates };
+  emit('update:modelValue', newValue);
 }
 
-// Helper for ManaIcon
-function colorToSymbol(color: string) {
-  switch (color) {
-    case 'White': return 'W';
-    case 'Blue': return 'U';
-    case 'Black': return 'B';
-    case 'Red': return 'R';
-    case 'Green': return 'G';
-    case 'Colorless': return 'C';
-    default: return color;
-  }
-}
 </script>
 
 <style scoped>
 .accordion-item {
   margin-bottom: 8px;
+}
+
+.color-checkboxes {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.fade-out {
+  animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 </style>
