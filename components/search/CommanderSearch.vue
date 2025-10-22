@@ -26,7 +26,7 @@ import * as z from 'zod'
 import { useRoute } from 'vue-router';
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
-import ColorPairingSelector from '~/components/search/ColorPairingSelector.vue'
+import ColorPairingSelector from '~/components/search/CommanderFilters.vue'
 
 const input = ref();
 defineShortcuts({
