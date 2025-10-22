@@ -1,3 +1,5 @@
+import type { CardColorType } from '~/models/cardModel';
+
 // Use CardColor values for colors
 export type CardColor =
   | 'White'
@@ -69,3 +71,38 @@ export const groupedPairings = [
     pairings: pairings.filter((p) => p.colors.length === 5),
   },
 ];
+
+// Helper: map a set of colors to a known pairing name (order-agnostic), or fallback to initials
+export function getColorIdentityName(colors: CardColorType[] | undefined) {
+  if (!colors || colors.length === 0) return '';
+  const normalized = [...new Set(colors)];
+  const match = pairings.find((p) => {
+    if (p.colors.length !== normalized.length) return false;
+    return (
+      p.colors.every((c) => normalized.includes(c as CardColorType)) &&
+      normalized.every((c) => p.colors.includes(c as CardColorType))
+    );
+  });
+  if (match) return match.name;
+  const initials = normalized
+    .map((c) => {
+      switch (c) {
+        case 'White':
+          return 'W';
+        case 'Blue':
+          return 'U';
+        case 'Black':
+          return 'B';
+        case 'Red':
+          return 'R';
+        case 'Green':
+          return 'G';
+        case 'Colorless':
+          return 'Colorless';
+        default:
+          return String(c)[0];
+      }
+    })
+    .join('');
+  return initials;
+}

@@ -7,7 +7,7 @@
         <span class="flex items-center gap-1">
           <ManaIcon v-for="color in modelValue.selectedColors" :key="color" :type="cardColorToSymbol(color)"
             size="16" />
-          {{ modelValue.selectedColors.join(', ') }}
+          {{ getColorIdentityName(modelValue.selectedColors) }}
         </span>
       </UButton>
     </div>
@@ -38,6 +38,7 @@ import ManaIcon from '~/components/ManaIcon.vue';
 import { CardColor, cardColorToSymbol, type CardColorType } from '~/models/cardModel';
 import type { CheckboxGroupItem } from '@nuxt/ui';
 import type { CardSearchFilters } from '~/models/searchModel';
+import { getColorIdentityName } from '~/utils/colorPairings';
 
 const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
 const emit = defineEmits(['update:modelValue']);
