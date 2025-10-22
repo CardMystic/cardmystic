@@ -20,20 +20,28 @@
     <!-- Colors selector -->
     <div class="accordion-item">
       <div class="color-checkboxes">
-        <UCheckboxGroup :items="cardColors" :orientation="orientation" variant="card" v-model="selectedColors"
-          class="w-full">v
-          <template #label="{ item }">
-            <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
-            {{ (item as { value: CardColorType }).value }}
-          </template>
-        </UCheckboxGroup>
+        <!-- 2 cols (3 rows) on xs, 3 cols (2 rows) on sm, 6 cols on md+ -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 w-full">
+          <UCheckbox v-for="item in cardColors" :key="(item as { value: CardColorType }).value"
+            :name="`color-${(item as { value: CardColorType }).value}`"
+            :model-value="selectedColors.includes((item as { value: CardColorType }).value)"
+            @update:model-value="(value) => onToggle((item as { value: CardColorType }).value, value === true)"
+            variant="card" class="w-full">
+            <template #label>
+              <span class="flex items-center gap-1">
+                <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
+                {{ (item as { value: CardColorType }).value }}
+              </span>
+            </template>
+          </UCheckbox>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed } from 'vue';
 import ManaIcon from '~/components/ManaIcon.vue';
 import { CardColor, cardColorToSymbol, type CardColorType } from '~/models/cardModel';
 import type { CheckboxGroupItem } from '@nuxt/ui';
@@ -49,20 +57,16 @@ const cardColors = CardColor.options.map(color => ({
   value: color
 })) as CheckboxGroupItem[];
 
-// Response orientation
-const screenWidth = ref(0);
-onMounted(() => {
-  screenWidth.value = window.innerWidth;
-  window.addEventListener('resize', () => {
-    if (window && window.innerWidth) {
-      screenWidth.value = window.innerWidth;
-    }
-  });
-});
-const orientation = computed<'vertical' | 'horizontal'>(() =>
-  screenWidth.value < 768 ? 'vertical' : 'horizontal'
-);
+// Handle color checkbox toggles
+function onToggle(val: CardColorType, checked: boolean) {
+  const next = new Set(selectedColors.value);
+  if (checked) next.add(val);
+  else next.delete(val);
+  // Triggers setter (and the Colorless validation)
+  selectedColors.value = Array.from(next);
+}
 
+// Selected colors with Colorless validation
 const selectedColors = computed({
   get: () => modelValue?.selectedColors || [],
   set: (value) => {
