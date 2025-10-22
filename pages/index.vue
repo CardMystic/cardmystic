@@ -11,8 +11,7 @@
           {{ typedTitle }}
         </h1>
         <h2 class="subtitle">
-          <b class="important-text">A.I. Search Engine</b> for Magic: The
-          Gathering
+          Finding Magic Cards Has Never Been Easier
         </h2>
       </div>
     </div>
@@ -118,8 +117,9 @@ onMounted(() => {
 .title-container
   display: flex
   flex-direction: column
-  align-items: flex-start
+  align-items: center
   justify-content: center
+  text-align: center
   min-width: 372px
   position: relative
   right: 13px
@@ -135,7 +135,6 @@ onMounted(() => {
   font-style: normal
   font-size: 3.6rem
   color: rgb(var(--color-primary-500))
-  text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   html.light & 
     text-shadow: none
   margin: 0
@@ -145,13 +144,14 @@ onMounted(() => {
     text-align: center
 
 .subtitle
+  opacity: 0.8
   font-size: 1.1rem
-  text-shadow: 2px 2px 2px rgba(0, 0, 0, 1.0)
   html.light & 
     text-shadow: none
   margin: 4px 0 0 0
   line-height: 1.2
   width: 100%
+  font-style: italic
   @media (max-width: 768px)
     font-size: 1.0rem
     text-align: center

@@ -39,3 +39,11 @@ export function getMassEntryAffiliateLink(cardNames: string[]): string {
   // Wrap with partner redirect
   return `https://partner.tcgplayer.com/Z6vBoK?u=${encodeURIComponent(massEntryUrl)}`;
 }
+
+/**
+ * Generate a TCGPlayer search URL for a card name
+ */
+export const generateTCGPlayerSearchUrl = (cardName: string): string => {
+  const encodedName = encodeURIComponent(cardName);
+  return `https://www.tcgplayer.com/search/magic/product?q=${encodedName}`;
+};

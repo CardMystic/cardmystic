@@ -1,11 +1,11 @@
 <template>
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
-    <UFormField name="card_name">
+    <UFormField name="card_name" class="mb-2">
       <div class="flex gap-2">
         <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
           :loading="status === 'pending'" :items="filteredCards" placeholder="Enter a card name..."
           icon="i-lucide-search" class="flex-1 h-10" />
-        <UButton type="submit" class="h-10 cursor-pointer">
+        <UButton :disabled="state.card_name?.length == 0" type="submit" class="h-10 cursor-pointer">
           Submit
         </UButton>
       </div>
@@ -33,7 +33,7 @@ defineShortcuts({
 });
 
 const schema = z.object({
-  card_name: z.string().min(1, "Must select a card"),
+  card_name: z.string().min(1, ""),
   filters: CardSearchFiltersSchema.optional(),
 })
 
@@ -105,7 +105,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     // Construct query parameters
     const query: Record<string, any> = {
       card_name: formData.card_name,
-      filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined
+      filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
+      searchType: 'similarity'
     };
     navigateTo({ path: '/search/similarity', query });
   } catch (error) {
