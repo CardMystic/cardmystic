@@ -1,5 +1,5 @@
 <template>
-  <div class="py-4 flex justify-center">
+  <div class="py-4 flex justify-center w-full">
     <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
       <div class="flex justify-center items-center mb-4">
         <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
