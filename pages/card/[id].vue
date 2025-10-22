@@ -13,7 +13,7 @@
       <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto px-4">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto">
       <!-- Left: Card Image -->
       <div class="lg:col-span-3 flex flex-col items-center">
         <!-- Back to Results button aligned with card image -->
