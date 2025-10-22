@@ -132,9 +132,8 @@ const externalItems: NavigationMenuItem[] = [
       <ClipboardMenu class="ml-1 cursor-pointer" />
     </div>
 
-    <!-- Mobile: GitHub & Patreon -->
+    <!-- Mobile -->
     <div class="flex md:hidden items-center gap-4">
-      <UNavigationMenu :items="externalItems" />
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu />
     </div>
