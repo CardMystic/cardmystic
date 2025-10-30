@@ -1,7 +1,7 @@
 <template>
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <SearchForm similarity class="mt-6 w-full" />
+      <SearchForm class="mt-6 w-full" />
 
       <!-- Results -->
       <div class="mt-3 w-full">
@@ -12,20 +12,17 @@
         </template>
 
         <template v-else-if="searchResults && searchResults.length">
-          <div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div v-for="(result, index) in searchResults" :key="result.card_data.id">
-                <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true"
-                  :is-searched="index == 0" />
-              </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            <div v-for="result in searchResults" :key="result.card_data.id">
+              <CardComponent :card="result" :showCardInfo="true" />
             </div>
           </div>
         </template>
 
-        <template v-else-if="!cardNameParam">
+        <template v-else-if="!queryParam">
           <div class="no-results-container">
-            <UAlert color="info" icon="i-lucide-info" title="Enter a card name"
-              description="Please enter a card name to search for similar cards." class="mb-4" />
+            <UAlert color="info" icon="i-lucide-info" title="Enter a search query"
+              description="Please describe the commander you're looking for." class="mb-4" />
           </div>
         </template>
 
@@ -33,8 +30,8 @@
           <UContainer>
             <div class="flex flex-col items-center">
               <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
-              <div class="font-bold text-2xl mb-2">No cards found</div>
-              <div class="subtitle2 mt-2 mb-4">
+              <div class="font-bold text-2xl mb-2">No results found</div>
+              <div class="subtitle2 mb-4">
                 Try adjusting your search terms or filters.<br>
                 If you think this is a mistake, <NuxtLink :to="searchFeedbackUrl(getPageInfo())" target="_blank"
                   class="important-text underline">let us know</NuxtLink>.
@@ -50,61 +47,63 @@
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import { ref, watch, computed } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Card } from '~/models/cardModel';
-import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import CardSkeleton from '~/components/CardSkeleton.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
+import { UContainer } from '#components';
 import CardComponent from '~/components/Card.vue';
 
 const route = useRoute();
 
-// Parse query params into a SimilaritySearch model
-const cardNameParam = computed(() => String(route.query.card_name || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
-const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
+// Parse query params into a WordSearch model
+const queryParam = computed(() => String(route.query?.query || ''));
+const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
+const parsedFilters = computed(() => route.query?.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 useHead(() => ({
-  title: cardNameParam.value
-    ? `CardMystic | ${cardNameParam.value}`
-    : 'CardMystic | Similarity Search',
+  title: queryParam.value
+    ? `CardMystic | ${queryParam.value}`
+    : 'CardMystic | Commander Search',
 }));
 
-const { setPageInfo, getPageInfo } = usePageInfo();
+// Used for the github issues logic as it can't be dynamic.
+definePageMeta({
+  title: 'Commander Search',
+});
 
-// Update page info whenever cardNameParam or filters change
-watch([cardNameParam, parsedFilters], ([newCardName, newFilters]) => {
-  setPageInfo({
-    page_url: route.fullPath,
-    page_name: `Similarity Search: ${newCardName}`,
-    card_name: newCardName,
-    filters: newFilters,
-    labels: ['similarity search'],
-  });
-}, { immediate: true });
+
+const { setPageInfo, getPageInfo } = usePageInfo();
+setPageInfo({
+  page_url: route.fullPath,
+  page_name: `Search: ${queryParam.value}`,
+  query: queryParam.value,
+  filters: parsedFilters.value,
+  labels: ['Commander Search'],
+});
 
 function handleFabClick() {
   const url = searchFeedbackUrl(getPageInfo());
   window.open(url, '_blank');
 }
 
-const similaritySearch = computed(() => {
-  if (!cardNameParam.value) {
-    return undefined; // Return undefined if no card name is provided
+const wordSearch = computed(() => {
+  if (!queryParam.value) {
+    return undefined; // Return undefined if no query is provided
   }
-
-  return SimilaritySearchSchema.parse({
-    card_name: cardNameParam.value,
+  return WordSearchSchema.parse({
+    query: queryParam.value,
     limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false, // Default to false, can be overridden by query param
   });
 });
 
-const queryEnabled = computed(() => !!similaritySearch.value?.card_name);
+const queryEnabled = computed(() => !!wordSearch.value?.query);
 
 // Number of skeleton cards to show while loading (matches typical search result count)
 const skeletonCount = computed(() => limitParam.value || 20);
@@ -112,20 +111,19 @@ const skeletonCount = computed(() => limitParam.value || 20);
 const { data: searchResults, isLoading } = useQuery({
   queryKey: [
     'search',
-    'similarity',
-    similaritySearch,
+    'colbert',
+    wordSearch,
   ],
   queryFn: async () => {
-    const response = await fetch('/api/search/similarity', {
+    const response = await fetch('/api/search/colbert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(similaritySearch.value),
+      body: JSON.stringify(wordSearch.value),
     });
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    const results = await response.json() as Array<Card>;
-    return results;
+    return response.json() as Promise<Array<Card>>;
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: queryEnabled,
@@ -220,19 +218,4 @@ const { data: searchResults, isLoading } = useQuery({
 .stat-value
   color: rgb(var(--color-primary-500))
   font-weight: 600
-
-.searched-card-highlight
-  background: #f7f3e7
-  border-radius: 18px
-  padding: 18px 12px 12px 12px
-  box-shadow: 0 2px 12px rgba(147, 114, 255, 0.08)
-  margin-bottom: 18px
-  display: flex
-  justify-content: center
-  align-items: center
-
-  // Limit the card size to match grid
-  & > *
-    width: 100%
-    max-width: 320px
 </style>

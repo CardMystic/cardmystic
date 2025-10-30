@@ -1,9 +1,8 @@
 <template>
   <div class="filters-container">
-    <!-- Active Filters Chips -->
-    <div v-if="hasActiveFilters" class="active-filters-section mb-2">
-      <div class="active-filters-chips">
-
+    <!-- Active Filters Chips or a No Filters Selected chip -->
+    <div class="active-filters-section mb-2">
+      <div v-if="hasActiveFilters" class="active-filters-chips">
         <!-- Card Types Chips -->
         <div v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`">
           <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
@@ -11,11 +10,14 @@
           </UButton>
         </div>
 
-        <!-- Colors Chips -->
-        <div v-for="color in selectedColors || []" :key="`color-${color}`">
+        <!-- Colors: single identity chip -->
+        <div v-if="(selectedColors || []).length > 0">
           <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
-            icon="i-lucide-circle-x" @click="removeColor(color)">
-            <ManaIcon :type="cardColorToSymbol(color)" class="mr-1" />{{ color }}
+            icon="i-lucide-circle-x" @click="clearColorChip">
+            <span class="flex items-center gap-1">
+              <ManaIcon v-for="color in selectedColors" :key="color" :type="cardColorToSymbol(color)" class="mr-1" />
+              {{ getColorIdentityName(selectedColors) }}
+            </span>
           </UButton>
         </div>
 
@@ -66,15 +68,20 @@
         </template>
 
         <!-- Clear All Button -->
-        <UButton v-if="hasActiveFilters" color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters"
-          icon="i-lucide-circle-x">
-          Clear All
+        <UButton color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
+          Clear Filters
+        </UButton>
+      </div>
+      <div v-else class="active-filters-chips">
+        <UButton class="cursor-default ma-1 rounded-pill" size="sm" color="neutral" variant="outline" disabled>
+          No Filters Selected
         </UButton>
       </div>
     </div>
+
     <UCollapsible class="flex flex-col gap-2">
-      <UButton class="filters-toggle-btn mb-3 cursor-pointer" label="Filters" color="primary" variant="subtle"
-        trailing-icon="i-lucide-chevron-down" :ui="{
+      <UButton class="filters-toggle-btn mb-3 cursor-pointer" label="Select Filters" color="primary" variant="subtle"
+        trailing-icon="i-lucide-chevron-down" icon="i-lucide-list-filter" :ui="{
           trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
         }" block />
 
@@ -91,7 +98,6 @@
           <!-- Colors Filter -->
           <template #colors>
             <div class="accordion-item">
-              <!-- Replace the non-functioning clearable USelect with a select + clear button -->
               <div class="flex gap-2">
                 <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions"
                   placeholder="Select How To Match Colors" class="w-full" />
@@ -116,11 +122,6 @@
                     {{ (item as { value: string }).value }}
                   </template>
                 </UCheckboxGroup>
-              </div>
-
-              <!-- Notification moved here and styled red -->
-              <div v-if="showNotification" class="mt-2 text-red-500 text-sm fade-out">
-                {{ notificationMessage }}
               </div>
             </div>
           </template>
@@ -183,6 +184,7 @@ import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus, cardColo
 import type { CardSearchFilters } from '~/models/searchModel';
 import ManaIcon from '../ManaIcon.vue';
 import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt/ui';
+import { getColorIdentityName } from '~/utils/colorPairings';
 
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
@@ -300,14 +302,6 @@ const selectedColorFilterOption = computed({
       if (hasColorless && hasOtherColors) {
         const updatedColors = colors.filter(color => color !== 'Colorless');
         updateFilters({ selectedColors: updatedColors });
-
-        // Show notification
-        notificationMessage.value = 'Colored cards cannot also be colorless. Colorless has been removed from your selection.';
-        showNotification.value = true;
-
-        setTimeout(() => {
-          showNotification.value = false;
-        }, 5000);
       }
     }
   }
@@ -340,23 +334,9 @@ const selectedColors = computed({
         if (!previousSelection.includes('Colorless')) {
           // Colorless was just added, remove all other colors
           value = ['Colorless'];
-          notificationMessage.value = 'Colorless cards cannot have other colors. Other color selections have been removed.';
-          showNotification.value = true;
-
-          // Auto-hide the notification after 3 seconds
-          setTimeout(() => {
-            showNotification.value = false;
-          }, 3000);
         } else {
           // Another color was added, remove Colorless
           value = value.filter(color => color !== 'Colorless');
-          notificationMessage.value = 'Colored cards cannot also be colorless. Colorless has been removed from your selection.';
-          showNotification.value = true;
-
-          // Auto-hide the notification after 3 seconds
-          setTimeout(() => {
-            showNotification.value = false;
-          }, 3000);
         }
       }
     }
@@ -481,9 +461,14 @@ function clearAllFilters() {
     selectedCMCOption: undefined,
     selectedPowerOption: undefined,
     selectedToughnessOption: undefined,
-    selectedColorFilterOption: undefined,
+    selectedColorFilterOption: "Contains At Least",
     selectedCardFormats: undefined
   });
+}
+
+// Clear the single color identity chip
+function clearColorChip() {
+  updateFilters({ selectedColors: undefined });
 }
 </script>
 
