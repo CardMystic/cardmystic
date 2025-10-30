@@ -461,7 +461,7 @@ function clearAllFilters() {
     selectedCMCOption: undefined,
     selectedPowerOption: undefined,
     selectedToughnessOption: undefined,
-    selectedColorFilterOption: undefined,
+    selectedColorFilterOption: "Contains At Least",
     selectedCardFormats: undefined
   });
 }
