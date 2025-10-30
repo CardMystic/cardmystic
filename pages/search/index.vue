@@ -1,6 +1,6 @@
 <template>
-  <UContainer class="mb-6">
-    <div class="w-full max-w-7xl px-4 pt-4 flex flex-col items-center">
+  <UContainer class="mb-6 px-0">
+    <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
       <SearchForm class="mt-6 w-full" />
 
       <!-- Results -->
@@ -42,7 +42,7 @@
       </div>
     </div>
   </UContainer>
-  <IssuesFab :onClick="handleFabClick" />
+  <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
 </template>
 
 <script setup lang="ts">

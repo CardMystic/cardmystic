@@ -29,6 +29,12 @@ const mainItems: NavigationMenuItem[] = [
         description: 'Search for similar cards by name',
         icon: 'i-mdi-cards-outline',
         to: '/search/similarity',
+      },
+      {
+        label: 'Commander Search',
+        description: 'Search for commanders using AI',
+        icon: 'i-mdi-crown',
+        to: '/search/commander',
       }
     ]
   },
@@ -56,6 +62,12 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Search for similar cards by name',
     icon: 'i-mdi-cards-outline',
     to: '/search/similarity',
+  },
+  {
+    label: 'Commander Search',
+    description: 'Search for commanders using AI',
+    icon: 'i-mdi-crown',
+    to: '/search/commander',
   },
   {
     label: 'About',
@@ -120,7 +132,7 @@ const externalItems: NavigationMenuItem[] = [
       <ClipboardMenu class="ml-1 cursor-pointer" />
     </div>
 
-    <!-- Mobile: GitHub & Patreon -->
+    <!-- Mobile -->
     <div class="flex md:hidden items-center gap-4">
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu />

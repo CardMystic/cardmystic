@@ -1,5 +1,5 @@
 <template>
-  <UCard variant="subtle" :class="[isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
+  <UCard variant="subtle" :class="['card-root', isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
     <div class="card-image-wrapper">
       <!-- Card content: image + score -->
       <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
@@ -8,13 +8,9 @@
       <div v-else class="image-placeholder">
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
-      <div v-if="showCardInfo" class="searched-plus-btn" :class="{ 'clipboard-added': isInClipboard }">
-        <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
-          :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
-          @click.stop="handleClipboardClick">
-          <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
-        </UButton>
-      </div>
+
+      <ClipboardButton v-if="showCardInfo" :card="card" />
+
       <!-- Score Bar -->
       <div class="mt-1 flex flex-row items-center justify-center text-center w-full">
         <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
@@ -109,13 +105,11 @@ import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
-import { useClipboard } from '~/composables/useClipboard';
-import { useRoute } from 'vue-router';
-import { useToast } from '#imports'
+import { getCardImageUrl } from '~/utils/scryfall';
+import ClipboardButton from '~/components/ClipboardButton.vue';
 
 const router = useRouter();
 const route = useRoute();
-const toast = useToast()
 
 const props = defineProps({
   card: {
@@ -147,19 +141,8 @@ const props = defineProps({
 });
 
 const sizeClass = computed(() => `card-${props.size}`);
-const clipboard = useClipboard();
 
 const isThumbsDownClicked = ref(false);
-
-const cardClip = computed(() => ({
-  id: props.card.card_data.id,
-  name: props.card.card_data.name,
-  set: props.card.card_data.set,
-  imageUrl: getCardImageUrl(props.card.card_data),
-  price: props.card.card_data.prices.usd || '0',
-}));
-
-const isInClipboard = computed(() => clipboard.has(cardClip.value.id));
 
 // Navigation helper
 function navigateToCard(cardId: string | undefined) {
@@ -234,40 +217,6 @@ function normalizeScore(score: number | undefined): number {
 
 const normalizedScore = computed(() => normalizeScore(props.card.score));
 
-function getCardImageUrl(cardData: any): string {
-  // Try different image URI options in order of preference
-
-  // Check for small image first, if the size is small
-  if (cardData.image_uris?.small && props.size === 'small') {
-    return cardData.image_uris.small;
-  }
-  if (cardData.image_uris?.normal) {
-    return cardData.image_uris.normal;
-  }
-  if (cardData.image_uris?.large) {
-    return cardData.image_uris.large;
-  }
-  if (cardData.image_uris?.small) {
-    return cardData.image_uris.small;
-  }
-  if (cardData.image_uris?.png) {
-    return cardData.image_uris.png;
-  }
-
-  // For double-faced cards, try the first face
-  if (cardData.card_faces && cardData.card_faces[0]?.image_uris) {
-    const firstFace = cardData.card_faces[0].image_uris;
-    if (firstFace.small && props.size === 'small') return firstFace.small;
-    if (firstFace.normal) return firstFace.normal;
-    if (firstFace.large) return firstFace.large;
-    if (firstFace.small) return firstFace.small;
-    if (firstFace.png) return firstFace.png;
-  }
-
-  // Fallback to a placeholder or empty string
-  return '';
-}
-
 function findSimilarCards() {
   if (!props.card) return;
 
@@ -287,28 +236,13 @@ function findSimilarCards() {
     card_name: props.card.card_name,
     limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
+    searchType: 'similarity'
   };
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
 
 function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
-}
-
-function handleClipboardClick() {
-  if (isInClipboard.value) {
-    toast.add({
-      title: 'Card removed from clipboard',
-      icon: 'i-lucide-clipboard-minus'
-    })
-    clipboard.remove(cardClip.value.id);
-  } else {
-    toast.add({
-      title: 'Card added to clipboard',
-      icon: 'i-lucide-clipboard-check'
-    })
-    clipboard.add(cardClip.value);
-  }
 }
 
 const isDev = import.meta.env.VITE_IS_DEV === "true";
@@ -388,32 +322,6 @@ function toggleShowAllData() {
   background: #353a75 !important;
 }
 
-.searched-plus-btn {
-  position: absolute;
-  right: 30px;
-  top: 44px;
-  opacity: 0;
-  pointer-events: auto;
-  /* Always allow pointer events */
-  z-index: 2;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  max-width: 36px;
-  max-height: 36px;
-  transition: opacity 0.2s;
-}
-
-/* Only show the plus button on hover, unless clipboard-added */
-.card-image-wrapper:hover .searched-plus-btn:not(.clipboard-added) {
-  opacity: 0.7;
-}
-
-.searched-plus-btn.clipboard-added {
-  opacity: 0.7;
-}
-
 @media (max-width: 767px) {
 
   .searched-plus-btn,
@@ -422,7 +330,20 @@ function toggleShowAllData() {
   }
 }
 
-.searched-plus-icon {
-  font-size: 1.5rem;
+.card-image-wrapper img {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-image-wrapper:hover img {
+  transform: scale(1.03);
+}
+
+.card-root {
+  max-width: 330px;
+  width: 100%;
+  margin: 0 auto;
+  /* center horizontally within container */
+  display: block;
+  box-sizing: border-box;
 }
 </style>
