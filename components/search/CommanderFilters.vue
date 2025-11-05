@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="filters-container">
     <!-- Selected colors chips or No Filters chip -->
     <div v-if="modelValue?.selectedColors && modelValue.selectedColors.length > 0" class="mb-2 flex flex-wrap gap-2">
       <UButton class="cursor-pointer rounded-pill" size="sm" color="neutral" variant="outline" icon="i-lucide-circle-x"
@@ -26,7 +26,7 @@
             :name="`color-${(item as { value: CardColorType }).value}`"
             :model-value="selectedColors.includes((item as { value: CardColorType }).value)"
             @update:model-value="(value) => onToggle((item as { value: CardColorType }).value, value === true)"
-            variant="card" class="w-full">
+            variant="card" class="w-full" :ui="{ root: 'p-2' }">
             <template #label>
               <span class="flex items-center gap-1">
                 <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
@@ -111,6 +111,10 @@ function updateFilters(updates: Partial<CardSearchFilters>) {
 </script>
 
 <style scoped>
+.filters-container {
+  height: 80px;
+}
+
 .accordion-item {
   margin-bottom: 8px;
 }
