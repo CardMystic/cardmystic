@@ -68,6 +68,13 @@ export const SimilaritySearchSchema = z.object({
   exclude_card_data: z.boolean().optional().default(false),
 });
 
+export type KeywordSearch = z.infer<typeof KeywordSearchSchema>;
+export const KeywordSearchSchema = z.object({
+	query: z.string().min(1, "Query must not be empty"),
+	limit: z.number().int().positive().max(500).default(100),
+	filters: CardSearchFiltersSchema.optional(),
+});
+
 export type ExampleQueryResponse = z.infer<typeof ExampleQueryResponseSchema>;
 export const ExampleQueryResponseSchema = z.object({
   query: z.string().min(1).max(100),

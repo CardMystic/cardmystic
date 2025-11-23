@@ -17,6 +17,14 @@
         <UIcon name="i-mdi-crown" class="icon" size="18" />
         Commander Search
       </button>
+      <button
+        type="button"
+        :class="['search-tab-button-new', { active: searchType === 'keyword' }]"
+        @click="setSearchType('keyword')"
+      >
+        <UIcon name="i-lucide-filter" class="icon" size="18" />
+        Keyword Search
+      </button>
     </div>
 
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
@@ -29,6 +37,9 @@
 
       <!-- Commander Search -->
       <CommanderSearch v-else-if="searchType === 'commander'" />
+
+      <!-- Keyword Search -->
+      <KeywordSearch v-else-if="searchType === 'keyword'" />
     </div>
   </div>
 </template>
@@ -41,6 +52,7 @@ import { useRoute } from 'vue-router';
 import AISearch from './AISearch.vue';
 import SimilaritySearch from './SimilaritySearch.vue';
 import CommanderSearch from './CommanderSearch.vue';
+import KeywordSearch from './KeywordSearch.vue';
 
 // Define props
 const props = defineProps<{
@@ -57,8 +69,10 @@ if (props.similarity) {
   setSearchType('similarity');
 } else if (route.path === '/search/commander') {
   setSearchType('commander');
-} else {
+} else if (route.path === '/search') {
   setSearchType('ai');
+} else if (route.path === '/search/keyword') {
+  setSearchType('keyword');
 }
 
 // Watch for search type changes
@@ -72,6 +86,9 @@ watch(searchType, async (newType) => {
   }
   if (route.query.searchType == 'similarity') {
     sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'keyword') {
+    sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
   }
 
   // Navigate to the appropriate route based on the selected search type, and reload saved session query if available
@@ -118,6 +135,21 @@ watch(searchType, async (newType) => {
       }
     }
     navigateTo({ path: '/search/commander', query });
+  }
+  else if (newType === 'keyword' && route.path !== '/search/keyword' && route.path !== '/') {
+    let query: any = undefined;
+    if (route.query.query && route.query.searchType === 'keyword') {
+      query = { ...route.query };
+    } else {
+      const stored = sessionStorage.getItem('keyword_search_query');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.query) query = parsed;
+        } catch { }
+      }
+    }
+    navigateTo({ path: '/search/keyword', query });
   }
 });
 
