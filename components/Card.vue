@@ -76,7 +76,7 @@
         <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
 
           <!-- Thumbs down button -->
-          <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
+          <UTooltip v-if="!hideThumbsDownButton" text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
                 icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result"
@@ -131,6 +131,10 @@ const props = defineProps({
     default: false,
   },
   showCardInfo: {
+    type: Boolean,
+    default: false,
+  },
+  hideThumbsDownButton: {
     type: Boolean,
     default: false,
   },
