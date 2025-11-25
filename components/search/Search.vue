@@ -17,12 +17,9 @@
         <UIcon name="i-mdi-crown" class="icon" size="18" />
         Commander Search
       </button>
-      <button
-        type="button"
-        :class="['search-tab-button-new', { active: searchType === 'keyword' }]"
-        @click="setSearchType('keyword')"
-      >
-        <UIcon name="i-lucide-filter" class="icon" size="18" />
+      <button type="button" :class="['search-tab-button-new', { active: searchType === 'keyword' }]"
+        @click="setSearchType('keyword')">
+        <UIcon name="i-lucide-whole-word" class="icon" size="18" />
         Keyword Search
       </button>
     </div>

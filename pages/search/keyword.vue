@@ -17,7 +17,7 @@
         <template v-else-if="searchResults && searchResults.length">
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div v-for="card in searchResults" :key="card.card_data.id">
-              <CardComponent :card="card" :showCardInfo="true" :hideProgressBar="true" />
+              <CardComponent :card="card" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true" />
             </div>
           </div>
         </template>
@@ -25,13 +25,8 @@
         <!-- No query entered -->
         <template v-else-if="!queryParam">
           <div class="no-results-container">
-            <UAlert
-              color="info"
-              icon="i-lucide-info"
-              title="Enter keywords to search"
-              description="Try describing what the card does or listing mechanics or types."
-              class="mb-4"
-            />
+            <UAlert color="info" icon="i-lucide-info" title="Enter keywords to search"
+              description="Try describing what the card does or listing mechanics or types." class="mb-4" />
           </div>
         </template>
 
@@ -147,11 +142,13 @@ function handleFabClick() {
 .no-results-container {
   margin-top: 48px;
 }
+
 .subtitle2 {
   font-size: 1.01rem;
   position: relative;
   top: -14px;
 }
+
 .important-text {
   color: rgb(var(--color-primary-500));
   font-style: italic;
