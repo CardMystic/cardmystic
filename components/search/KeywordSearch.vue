@@ -2,23 +2,11 @@
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
     <UFormField name="query" class="mb-2">
       <div class="flex gap-2">
-        <UInput
-          ref="input"
-          v-model="state.query"
-          placeholder="Search cards by keywords…"
-          icon="i-lucide-search"
-          class="flex-1"
-          :ui="{ trailing: 'pe-1', base: 'h-10' }"
-        >
+        <UInput ref="input" v-model="state.query" placeholder="Search cards by keywords…" icon="i-lucide-search"
+          class="flex-1" :ui="{ trailing: 'pe-1', base: 'h-10' }">
           <template v-if="state.query?.length" #trailing>
-            <UButton
-              color="neutral"
-              variant="link"
-              size="sm"
-              icon="i-lucide-circle-x"
-              aria-label="Clear input"
-              @click="state.query = ''"
-            />
+            <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
+              @click="state.query = ''" />
           </template>
           <template #trailing>
             <UKbd value="/" class="me-1 cursor-default" />
@@ -81,16 +69,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: event.data.filters || {}
     }
 
-    // If no colors are selected & using default color rule, drop filters
-    if (
-      !event.data.filters?.selectedColors ||
-      event.data.filters.selectedColors.length === 0
-    ) {
-      if (event.data.filters?.selectedColorFilterOption === 'Contains At Least') {
-        formData.filters = {}
+    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters
+    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
+      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
+        delete formData.filters.selectedColors;
+        delete formData.filters.selectedColorFilterOption;
       }
     }
-
     // Construct URL query parameters for keyword search
     const query: Record<string, any> = {
       query: formData.query,
