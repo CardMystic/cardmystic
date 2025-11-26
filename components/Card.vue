@@ -12,7 +12,7 @@
       <ClipboardButton v-if="showCardInfo" :card="card" />
 
       <!-- Score Bar -->
-      <div class="mt-1 flex flex-row items-center justify-center text-center w-full">
+      <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full">
         <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
         <p v-if="!isSearched" class="text-xs">
           {{ props.card.score !== undefined
@@ -76,7 +76,7 @@
         <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
 
           <!-- Thumbs down button -->
-          <UTooltip text="I disagree with this result!" :popper="{ placement: 'top' }">
+          <UTooltip v-if="!hideThumbsDownButton" text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
                 icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result"
@@ -134,6 +134,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  hideThumbsDownButton: {
+    type: Boolean,
+    default: false,
+  },
+  hideProgressBar: {
+    type: Boolean,
+    default: false,
+  },
   isSearched: {
     type: Boolean,
     default: false,
@@ -155,6 +163,9 @@ function navigateToCard(cardId: string | undefined) {
   }
   if (route.query.searchType == 'similarity') {
     sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'keyword') {
+    sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
   }
 
   if (!cardId) {
@@ -229,6 +240,9 @@ function findSimilarCards() {
   }
   if (route.query.searchType == 'similarity') {
     sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'keyword') {
+    sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
   }
 
   // Navigate to search page with similarity search endpoint
