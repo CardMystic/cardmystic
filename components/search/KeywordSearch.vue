@@ -64,30 +64,25 @@ const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    const formData = {
-      query: event.data.query,
-      filters: event.data.filters || {}
-    }
+    const requestFilters = { ...event.data.filters } // shallow copy
 
-    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
-      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
-        delete formData.filters.selectedColors;
-        delete formData.filters.selectedColorFilterOption;
+    // Only modify the copy, NEVER the form state
+    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
+      if (requestFilters.selectedColorFilterOption === 'Contains At Least') {
+        delete requestFilters.selectedColors
+        delete requestFilters.selectedColorFilterOption
       }
     }
-    // Construct URL query parameters for keyword search
+
     const query: Record<string, any> = {
-      query: formData.query,
-      filters:
-        formData.filters && Object.keys(formData.filters).length > 0
-          ? JSON.stringify(formData.filters)
-          : undefined,
-      searchType: 'keyword',     // <-- KEY UPDATE
-      limit: 100                 // optional, backend defaults to 100
+      query: event.data.query,
+      filters: Object.keys(requestFilters).length > 0
+        ? JSON.stringify(requestFilters)
+        : undefined,
+      searchType: 'keyword',
+      limit: 100
     }
 
-    // Navigate to keyword search results page
     navigateTo({ path: '/search/keyword', query })
   } catch (error) {
     console.error('Form submission error:', error)
