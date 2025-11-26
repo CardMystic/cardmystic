@@ -91,22 +91,19 @@ const filteredCards = computed(() => {
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
-    // Ensure we have valid data
-    const formData = {
-      card_name: event.data.card_name,
-      filters: event.data.filters || {}
-    }
-    // If no colors are selected, and the colorFilterOption is Contains At least, remove color filters
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length == 0) {
-      if (event.data.filters?.selectedColorFilterOption == 'Contains At Least') {
-        delete formData.filters.selectedColors;
-        delete formData.filters.selectedColorFilterOption;
+    const requestFilters = { ...event.data.filters } // shallow copy
+
+    // Only modify the copy, NEVER the form state
+    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
+      if (requestFilters.selectedColorFilterOption === 'Contains At Least') {
+        delete requestFilters.selectedColors
+        delete requestFilters.selectedColorFilterOption
       }
     }
     // Construct query parameters
     const query: Record<string, any> = {
-      card_name: formData.card_name,
-      filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
+      card_name: event.data.card_name,
+      filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'similarity'
     };
     navigateTo({ path: '/search/similarity', query });
