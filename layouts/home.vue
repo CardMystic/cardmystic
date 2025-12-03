@@ -1,6 +1,6 @@
 <template>
   <div class="layout-container">
-    <navbar />
+    <navbar :is-fixed="true" />
     <main class="main-content">
       <slot />
     </main>
