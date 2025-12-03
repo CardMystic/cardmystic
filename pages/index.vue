@@ -73,8 +73,8 @@ const handleMouseMove = (e: MouseEvent) => {
 
   const newDot: Dot = {
     id: dotId++,
-    x: e.pageX + randomOffsetX,
-    y: e.pageY + randomOffsetY,
+    x: e.clientX + randomOffsetX,
+    y: e.clientY + randomOffsetY,
     opacity: 0.4,
     size: randomSize
   };
