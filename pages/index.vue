@@ -69,13 +69,13 @@ const handleMouseMove = (e: MouseEvent) => {
   const randomOffsetY = (Math.random() - 0.5) * 60;
 
   // Random size between 4 and 10 pixels
-  const randomSize = 4 + Math.random() * 6;
+  const randomSize = 6 + Math.random() * 6;
 
   const newDot: Dot = {
     id: dotId++,
     x: e.clientX + randomOffsetX,
     y: e.clientY + randomOffsetY,
-    opacity: 0.4,
+    opacity: 0.5,
     size: randomSize
   };
 
@@ -183,10 +183,10 @@ setPageInfo({
   width: 8px
   height: 8px
   background-color: white
-  border-radius: 50%
   pointer-events: none
   z-index: 5
   transform: translate(-50%, -50%)
   transition: opacity 0.5s ease-out
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.8)
+  clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%)
 </style>
