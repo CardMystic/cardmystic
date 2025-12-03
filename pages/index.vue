@@ -7,7 +7,7 @@
     <UContainer class="flex flex-col items-center justify-center text-center max-w-[1000px] h-full relative z-10">
       <div class="header-layout">
         <div class="title-container">
-          <img src="/wizard2.png" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
+          <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h2 class="subtitle">
             Bringing The <b class="text-primary">Power Of AI</b> To <b class="text-primary">Magic</b>
           </h2>
@@ -136,7 +136,7 @@ setPageInfo({
   left: 0
   width: 100%
   height: 100%
-  background-image: url('/space.jpg')
+  background-image: url('/space.webp')
   opacity: 0.10
   z-index: 0
 
