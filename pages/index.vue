@@ -1,44 +1,43 @@
 <template>
-  <div class="col-container px-0 w-full">
-    <!-- Header with image and title side by side -->
-    <div class="header-layout">
-      <div class="glow-wrapper">
-        <img src="/crystall_ball.webp" class="image w-[120px] h-[120px] object-cover" alt="Crystal Ball" />
+  <div class="hero px-0 h-full w-full justify-center flex flex-col items-center">
+    <div class="hero-bg"></div>
+    <UContainer class="flex flex-col items-center justify-center text-center max-w-[1000px] h-full">
+      <div class="header-layout">
+        <div class="title-container">
+          <img src="/wizard2.png" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
+          <h2 class="subtitle">
+            Bringing The <b class="text-primary">Power Of AI</b> To <b class="text-primary">Magic</b>
+          </h2>
+        </div>
       </div>
 
-      <div class="title-container">
-        <h1 class="title">
-          {{ typedTitle }}
-        </h1>
-        <h2 class="subtitle">
-          Finding Magic Cards Has Never Been Easier
-        </h2>
+      <!-- Search -->
+      <SearchForm />
+
+      <!-- Explore text + icon -->
+      <div class="explore mt-6 mb-2 flex flex-col items-center gap-1">
+        <span class="text-md opacity-100">Explore More</span>
+        <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
       </div>
-    </div>
 
-    <!-- Search Component -->
-    <SearchForm />
-
-    <!-- Example Queries -->
-    <ExampleQueries class="mb-2" />
-
-    <!-- Top Queries -->
-    <TopQueries class="mb-4" />
-
-    <!-- Marketplace Button -->
-    <ProductPromotionButtons class="mb-0" />
+    </UContainer>
   </div>
+
+  <!-- Everything below the fold -->
+  <UContainer class="mt-6">
+    <ExampleQueries class="mb-2" />
+    <TopQueries class="mb-4" />
+    <ProductPromotionButtons class="mb-0" />
+  </UContainer>
 </template>
 
 <script setup lang="ts">
 defineOptions({ name: 'HomePage' });
-
-import { onMounted, ref } from 'vue';
+definePageMeta({
+  layout: 'home'
+});
 import SearchForm from '~/components/search/Search.vue';
 import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
-
-const fullTitle = 'CardMystic';
-const typedTitle = ref('');
 
 // Use search type composable to check if AI search is active
 const { isAiSearch } = useSearchType();
@@ -56,61 +55,50 @@ setPageInfo({
   filters: undefined,
 });
 
-onMounted(() => {
-  let i = 0;
-  const typingInterval = setInterval(() => {
-    if (i < fullTitle.length) {
-      typedTitle.value += fullTitle[i];
-      i++;
-    } else {
-      clearInterval(typingInterval);
-    }
-  }, 200); // typing speed
-});
-
 </script>
 
 <style lang="sass" scoped>
-.title::after
-  content: '|'
-  animation: blink 3s infinite
-  margin-left: 5px
-  position: relative
-  top: -10px
-  font-size: 2.6rem
-  @media (max-width: 768px)
-    top: -10px
-    font-size: 2.4rem
+.secondary
+  color: rgb(var(--color-secondary-500))
 
-@keyframes blink
-  0%, 100%
-    opacity: 1
-  50%
-    opacity: 0
+.hero
+  position: relative
+  min-height:  100vh
+  padding-top: 0px
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  border-bottom: 3px solid white
+  background-color: black
+
+.hero-bg
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  background-image: url('/space.jpg')
+  opacity: 0.10
 
 .image
-  width: 120px
-  height: 120px
+  width: 200px
+  height: 200px
   position: relative
   bottom: 10px
   left: 0px
   @media (max-width: 768px)
-    width: 100px !important
-    height: 100px !important
-    bottom: -15px
-    left: 0px
-
-.col-container
-  position: relative
+    width: 120px
+    height: 120px
 
 .header-layout
   display: flex
   align-items: center
   justify-content: center
   gap: 24px
-  margin-bottom: 16px
-  margin-top: 16px
+  margin-bottom: 48px
   @media (max-width: 768px)
+    margin-bottom: 24px
     flex-direction: column
     gap: 12px
 
@@ -122,89 +110,12 @@ onMounted(() => {
   text-align: center
   min-width: 372px
   position: relative
-  right: 13px
-  @media (max-width: 768px)
-    min-width: 0px
-    align-items: center
-    text-align: center
-    right: 0px
-
-.title
-  font-family: "Alfa Slab One", serif
-  font-weight: 400
-  font-style: normal
-  font-size: 3.6rem
-  color: rgb(var(--color-primary-500))
-  html.light & 
-    text-shadow: none
-  margin: 0
-  line-height: 1
-  @media (max-width: 768px)
-    font-size: 3.3rem
-    text-align: center
 
 .subtitle
-  opacity: 0.8
-  font-size: 1.1rem
-  html.light & 
-    text-shadow: none
-  margin: 4px 0 0 0
+  font-size: 2.0rem
+  font-style: italic
   line-height: 1.2
-  width: 100%
-  font-style: italic
   @media (max-width: 768px)
-    font-size: 1.0rem
+    font-size: 1.2rem
     text-align: center
-
-.important-text
-  color: rgb(var(--color-primary-500))
-  font-style: italic
-
-.chip-selector
-  position: relative
-  margin-bottom: 20px
-
-.help-container
-  position: relative
-  top: -20px
-
-.primary
-  color: rgb(var(--color-primary-500))
-
-.glow-wrapper
-  position: relative
-  display: inline-block
-
-.glow-wrapper::after
-  content: ''
-  position: absolute
-  top: 50%
-  left: 50%
-  width: 50px
-  height: 50px
-  background: radial-gradient(circle at center, rgba(147,114,255,0.6) 0%, rgba(147,114,255,0.3) 40%, rgba(147,114,255,0) 70%, rgba(147,114,255,0) 100%)
-  border-radius: 50%
-  transform: translate(-50%, -50%)
-  animation: glowPulse 5s ease-in-out infinite
-  pointer-events: none
-  z-index: 1
-  @media (max-width: 768px)
-    width: 40px
-    height: 40px
-    top: 58%
-    left: 49.5%
-
-@keyframes glowPulse
-  0%, 100%
-    opacity: 0.6
-    transform: translate(-50%, -50%) scale(1)
-  50%
-    opacity: 1
-    transform: translate(-50%, -50%) scale(1.5)
-
-.filters-btn
-  width: 40px
-  height: 56px
-  border-radius: 4px
-  margin-left: 12px
 </style>
