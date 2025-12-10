@@ -30,7 +30,9 @@
   <!-- Everything below the fold -->
   <UContainer class="mt-6">
     <ExampleQueries class="mb-2" />
-    <TopQueries class="mb-4" />
+    <TopQueries class="mb-10" />
+    <MeetTheDevs class="mb-10" />
+    <Sponsorships class="mb-10" />
     <ProductPromotionButtons class="mb-0" />
   </UContainer>
 </template>
