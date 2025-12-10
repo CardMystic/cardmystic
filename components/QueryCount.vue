@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center mb-4">
+  <div class="flex flex-col items-center mb-6">
     <div class="text-5xl md:text-6xl font-bold overflow-hidden inline-flex">
       <span v-for="(char, index) in formattedCount" :key="`pos-${index}`"
         class="inline-block bg-gradient-to-br from-orange-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent"
@@ -7,7 +7,8 @@
         {{ char }}
       </span>
     </div>
-    <div class="text-sm md:text-base text-gray-400 uppercase tracking-wider font-medium mt-2">
+    <div class="text-sm md:text-base text-gray-400 uppercase tracking-wider font-medium flex items-center gap-2">
+      <UIcon name="i-lucide-wand-sparkles" class="text-lg" />
       Searches Resolved
     </div>
   </div>
