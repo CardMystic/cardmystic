@@ -10,7 +10,7 @@
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h2 class="subtitle">
-            Bringing The <b class="text-primary">Power Of AI</b> To <b class="text-primary">Magic</b>
+            The <b class="text-primary">A.I. Powered Search Engine</b> For <b class="text-primary">MTG</b>
           </h2>
         </div>
       </div>
