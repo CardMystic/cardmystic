@@ -10,7 +10,7 @@
         <NuxtLink to="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
           <img src="/discord-icon.svg" width="24" height="24" alt="Discord" class="inline-block" />
         </NuxtLink>
-        <NuxtLink to="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
+        <NuxtLink to="https://www.youtube.com/@cardmystic" target="_blank" aria-label="YouTube" rel="noopener">
           <UIcon name="i-simple-icons-youtube" size="24" class="text-white" />
         </NuxtLink>
         <NuxtLink to="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
