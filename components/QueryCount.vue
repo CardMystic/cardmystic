@@ -8,7 +8,7 @@
       </span>
     </div>
     <div class="text-sm md:text-base text-gray-400 uppercase tracking-wider font-medium mt-2">
-      Total Queries Processed
+      Searches Resolved
     </div>
   </div>
 </template>
