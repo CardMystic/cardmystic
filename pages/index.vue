@@ -10,7 +10,7 @@
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h2 class="subtitle">
-            Bringing The <b class="text-primary">Power Of AI</b> To <b class="text-primary">Magic</b>
+            The <b class="text-primary">A.I. Powered Search Engine</b> For <b class="text-primary">MTG</b>
           </h2>
         </div>
       </div>
@@ -28,11 +28,48 @@
   </div>
 
   <!-- Everything below the fold -->
-  <UContainer class="mt-6">
-    <QueryCount></QueryCount>
-    <ExampleQueries class="mb-2" />
-    <TopQueries class="mb-4" />
-    <ProductPromotionButtons class="mb-0" />
+  <UContainer class="mt-14 mb-10">
+    <QueryCount class="mb-14"></QueryCount>
+    <!-- How To Use & How It Works Section -->
+    <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- How To Use -->
+      <div
+        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+        <div class="flex items-start gap-4">
+          <UIcon name="i-lucide-book-open" class="text-3xl text-primary flex-shrink-0 mt-1" />
+          <div>
+            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h3>
+            <p class="text-base md:text-lg text-gray-300 leading-relaxed">
+              Simply describe the cards you want in plain English, and let our
+              intelligent search engine do the rest. Still not sure? Try the
+              example query below!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- How It Works -->
+      <div
+        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+        <div class="flex items-start gap-4">
+          <UIcon name="i-lucide-sparkles" class="text-3xl text-primary flex-shrink-0 mt-1" />
+          <div>
+            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h3>
+            <p class="text-base md:text-lg text-gray-300 leading-relaxed">
+              Our A.I. experts custom trained state-of-the-art models to understand the nuances of Magic including
+              slang, synergies, and game mechanics.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ExampleQueries class="mb-10" />
+    <TopQueries class="mb-10" />
+    <MeetTheDevs class="mb-10" />
+    <Sponsorships class="mb-10" />
+    <JoinUs class="mb-10" />
+    <ProductPromotionButtons />
   </UContainer>
 </template>
 

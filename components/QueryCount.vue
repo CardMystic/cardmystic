@@ -9,7 +9,7 @@
     </div>
     <div class="text-sm md:text-base text-gray-400 uppercase tracking-wider font-medium flex items-center gap-2">
       <UIcon name="i-lucide-wand-sparkles" class="text-lg" />
-      Searches Resolved
+      Total Searches Resolved
     </div>
   </div>
 </template>
