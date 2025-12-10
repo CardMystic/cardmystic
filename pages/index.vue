@@ -1,5 +1,6 @@
 <template>
-  <div class="hero px-0 h-full w-full justify-center flex flex-col items-center" @mousemove="handleMouseMove">
+  <div class="hero px-0 h-full w-full justify-center flex flex-col items-center" @mousemove="handleMouseMove"
+    @mousedown="handleMouseDown" @mouseup="handleMouseUp">
     <div class="hero-bg"></div>
     <div v-for="dot in dots" :key="dot.id" class="mouse-dot"
       :style="{ left: dot.x + 'px', top: dot.y + 'px', opacity: dot.opacity, width: dot.size + 'px', height: dot.size + 'px' }">
@@ -58,11 +59,21 @@ interface Dot {
 const dots = ref<Dot[]>([]);
 let dotId = 0;
 let lastDotTime = 0;
+const isDragging = ref(false);
+
+const handleMouseDown = () => {
+  isDragging.value = true;
+};
+
+const handleMouseUp = () => {
+  isDragging.value = false;
+};
 
 const handleMouseMove = (e: MouseEvent) => {
   const now = Date.now();
-  // Only create a dot every 150ms to reduce frequency
-  if (now - lastDotTime < 120) return;
+  // When dragging, create dots more frequently (30ms), otherwise 120ms
+  const threshold = isDragging.value ? 30 : 120;
+  if (now - lastDotTime < threshold) return;
   lastDotTime = now;
 
   // Add random offset between -30 and 30 pixels for scatter effect
@@ -82,22 +93,15 @@ const handleMouseMove = (e: MouseEvent) => {
 
   dots.value.push(newDot);
 
-  // Start fading immediately
-  setTimeout(() => {
-    const dot = dots.value.find(d => d.id === newDot.id);
-    if (dot) {
-      dot.opacity = 0;
-    }
-  }, 50);
-
-  // Remove after fade completes
+  // Remove after animation completes (CSS handles the animation)
   setTimeout(() => {
     dots.value = dots.value.filter(d => d.id !== newDot.id);
   }, 600);
 
-  // Limit the number of dots to 3
-  if (dots.value.length > 3) {
-    dots.value = dots.value.slice(-3);
+  // When dragging, allow more dots (10), otherwise limit to 3
+  const maxDots = isDragging.value ? 10 : 3;
+  if (dots.value.length > maxDots) {
+    dots.value = dots.value.slice(-maxDots);
   }
 };
 
@@ -138,6 +142,8 @@ setPageInfo({
   width: 100%
   height: 100%
   background-image: url('/space.webp')
+  background-position: center
+  background-attachment: fixed  // <-- the parallax magic
   opacity: 0.10
   z-index: 0
 
@@ -187,7 +193,15 @@ setPageInfo({
   pointer-events: none
   z-index: 5
   transform: translate(-50%, -50%)
-  transition: opacity 0.5s ease-out
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.8)
   clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%)
+  animation: starFall 0.6s ease-out forwards
+
+@keyframes starFall
+  0%
+    opacity: 0.5
+    transform: translate(-50%, -50%)
+  100%
+    opacity: 0
+    transform: translate(-50%, calc(-50% + 3px))
 </style>
