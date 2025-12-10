@@ -28,12 +28,31 @@
   </div>
 
   <!-- Everything below the fold -->
-  <UContainer class="mt-6">
-    <ExampleQueries class="mb-2" />
+  <UContainer class="mt-10 mb-10">
+    <!-- How It Works Section -->
+    <div
+      class="mb-10 p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+      <div class="flex items-start gap-4">
+        <UIcon name="i-lucide-sparkles" class="text-3xl text-primary flex-shrink-0 mt-1" />
+        <div>
+          <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h3>
+          <p class="text-base md:text-lg text-gray-300 leading-relaxed">
+            CardMystic uses advanced AI to understand your natural language queries and find exactly the Magic: The
+            Gathering cards you're looking for.
+            Simply describe what you want in plain English, and our
+            intelligent search engine
+            will analyze thousands of cards to deliver the most relevant results instantly.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <ExampleQueries class="mb-10" />
     <TopQueries class="mb-10" />
     <MeetTheDevs class="mb-10" />
     <Sponsorships class="mb-10" />
-    <ProductPromotionButtons class="mb-0" />
+    <JoinUs class="mb-10" />
+    <ProductPromotionButtons />
   </UContainer>
 </template>
 

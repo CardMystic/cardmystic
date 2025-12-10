@@ -1,7 +1,7 @@
 <template>
   <UContainer class="py-12">
     <div class="text-center mb-8">
-      <h2 class="text-3xl md:text-4xl font-bold mb-2">Proud Sponsors Of</h2>
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">Proud Sponsors Of MTG Creators</h2>
       <p class="text-gray-400">Supporting The Community</p>
     </div>
 
