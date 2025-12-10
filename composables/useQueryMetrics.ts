@@ -3,6 +3,7 @@ import { useRuntimeConfig } from '#imports';
 
 export function useQueryMetrics() {
   const config = useRuntimeConfig();
+  const REFETCH_INTERVAL = 1000;
 
   const query = useQuery({
     queryKey: ['totalQueries'],
@@ -10,12 +11,11 @@ export function useQueryMetrics() {
       const response = await $fetch<{ totalQueries: number }>(
         `/api/metrics/query_count`,
       );
-      console.log('Fetched total queries:', response);
       return response.totalQueries;
     },
-    refetchInterval: 5000, // near-live updates every 5 seconds
+    refetchInterval: REFETCH_INTERVAL, // near-live updates every 5 seconds
     refetchIntervalInBackground: true,
-    staleTime: 4000, // avoids unnecessary requests between intervals
+    staleTime: 500, // avoids unnecessary requests between intervals
   });
 
   return {
