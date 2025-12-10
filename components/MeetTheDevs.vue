@@ -27,7 +27,7 @@ interface Developer {
 const developers: Developer[] = [
   {
     name: 'Andrew Morrison',
-    role: 'Lead Developer',
+    role: 'Founder / Software Engineer',
     profilePicture: '/andrew.webp'
   },
 ];
