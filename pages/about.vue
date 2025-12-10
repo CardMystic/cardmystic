@@ -7,9 +7,10 @@
 
       <UCardContent class="mt-2 text-base">
         <p>
-          CardMystic is an Open Source Vector Search engine for Magic: The
-          Gathering cards. We are dedicated to providing powerful tools to the
-          amazing MTG community.
+          CardMystic is a powerful Open Source AI Search engine for Magic: The
+          Gathering cards. We trained custom models on MTG data to provide the best possible search results. We
+          are dedicated to providing only the best tools for the
+          amazing MTG community!
         </p>
       </UCardContent>
     </UCard>
@@ -32,6 +33,11 @@
           cheap red burn spell" and let CardMystic handle the rest. Whether you're
           a seasoned deckbuilder or brand new to the game, CardMystic helps you
           find the perfect card without the guesswork.
+        </p>
+        <p class="mt-4">
+          We aren't another website using generic AI models, our team's AI experts have meticulously trained custom
+          models specifically on Magic: The Gathering data to ensure the most accurate and relevant search results
+          possible.
         </p>
       </UCardContent>
     </UCard>
