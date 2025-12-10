@@ -11,6 +11,9 @@
           <h2 class="subtitle">
             Bringing The <b class="text-primary">Power Of AI</b> To <b class="text-primary">Magic</b>
           </h2>
+          <div>
+            <span v-if="totalQueries">Total Queries: {{ totalQueries }}</span>
+          </div>
         </div>
       </div>
 
@@ -41,6 +44,7 @@ definePageMeta({
 });
 import SearchForm from '~/components/search/Search.vue';
 import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
+const { totalQueries, isLoading } = useQueryMetrics()
 
 // Use search type composable to check if AI search is active
 const { isAiSearch } = useSearchType();
