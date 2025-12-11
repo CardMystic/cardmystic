@@ -18,13 +18,13 @@
       <!-- Search -->
       <SearchForm />
 
-      <!-- Explore text + icon -->
-      <div class="explore mt-6 mb-2 flex flex-col items-center gap-1">
-        <span class="text-md opacity-100">Explore More</span>
-        <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
-      </div>
-
     </UContainer>
+
+    <!-- Explore text + icon -->
+    <div class="explore mb-2 flex flex-col items-center gap-1">
+      <span class="text-md opacity-100">Explore More</span>
+      <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
+    </div>
   </div>
 
   <!-- Everything below the fold -->
@@ -193,6 +193,10 @@ setPageInfo({
   @media (max-width: 768px)
     width: 150px
     height: 150px
+
+.explore
+  position: absolute
+  bottom: 20px
 
 .header-layout
   margin-bottom: 20px
