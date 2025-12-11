@@ -191,17 +191,13 @@ setPageInfo({
   bottom: 10px
   left: 0px
   @media (max-width: 768px)
-    width: 120px
-    height: 120px
+    width: 150px
+    height: 150px
 
 .header-layout
-  display: flex
-  align-items: center
-  justify-content: center
   margin-bottom: 20px
   @media (max-width: 768px)
-    margin-bottom: 12px
-    flex-direction: column
+    margin-bottom: 4px
 
 .title-container
   display: flex
@@ -217,8 +213,10 @@ setPageInfo({
   font-style: italic
   line-height: 1.2
   @media (max-width: 768px)
-    font-size: 1.2rem
+    font-size: 1.5rem
     text-align: center
+    position: relative
+    top: -15px
 
 .mouse-dot
   position: fixed
