@@ -41,7 +41,7 @@
             <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h3>
             <p class="text-base md:text-lg text-gray-300 leading-relaxed">
               Simply describe the cards you want in plain English, and let our
-              intelligent search engine do the rest. Still not sure? Try the
+              intelligent search engine do the rest. Still not sure? Try an
               example query below!
             </p>
           </div>
@@ -56,7 +56,8 @@
           <div>
             <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h3>
             <p class="text-base md:text-lg text-gray-300 leading-relaxed">
-              Our A.I. experts custom trained state-of-the-art models to understand the nuances of Magic including
+              Our A.I. experts meticulously train custom, state-of-the-art models to understand the nuances of Magic
+              including
               slang, synergies, and game mechanics.
             </p>
           </div>
