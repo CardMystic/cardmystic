@@ -10,7 +10,7 @@
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h2 class="subtitle">
-            The <b class="text-primary">A.I. Powered Search Engine</b> For <b class="text-primary">MTG</b>
+            <b class="text-primary">A.I. Search Engine</b> For <b class="text-primary">MTG</b>
           </h2>
         </div>
       </div>
@@ -198,12 +198,10 @@ setPageInfo({
   display: flex
   align-items: center
   justify-content: center
-  gap: 24px
-  margin-bottom: 48px
+  margin-bottom: 20px
   @media (max-width: 768px)
-    margin-bottom: 24px
+    margin-bottom: 12px
     flex-direction: column
-    gap: 12px
 
 .title-container
   display: flex
