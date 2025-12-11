@@ -19,7 +19,15 @@
     </UFormField>
 
     <UFormField name="filters">
-      <Filters v-model="state.filters" />
+      <div class="mt-2">
+        <UTooltip v-if="!showFilters" text="Filter results by colors, types, rarities, and more">
+          <UButton @click="showFilters = true" variant="ghost" color="neutral" size="sm"
+            icon="i-lucide-sliders-horizontal" class="mt-2 mb-1" aria-label="Show advanced search filters">
+            Show Advanced Filters
+          </UButton>
+        </UTooltip>
+        <Filters v-if="showFilters" v-model="state.filters" />
+      </div>
     </UFormField>
   </UForm>
 </template>
@@ -32,6 +40,7 @@ import { CardSearchFiltersSchema } from '~/models/searchModel'
 import Filters from './Filters.vue'
 
 const input = ref();
+const showFilters = ref(false);
 defineShortcuts({
   '/': () => {
     input.value?.inputRef?.focus();

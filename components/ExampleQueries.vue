@@ -1,6 +1,6 @@
 <template>
   <div class="mb-2">
-    <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">Try An Example Query</h2>
+    <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">Try An Example Query:</h2>
     <div v-if="isLoading" class="example-content">
       <!-- Skeleton for query header -->
       <div class="query-header">

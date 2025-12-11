@@ -10,7 +10,7 @@
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h2 class="subtitle">
-            The <b class="text-primary">A.I. Powered Search Engine</b> For <b class="text-primary">MTG</b>
+            <b class="text-primary">A.I. Search Engine</b> For <b class="text-primary">MTG</b>
           </h2>
         </div>
       </div>
@@ -18,19 +18,20 @@
       <!-- Search -->
       <SearchForm />
 
-      <!-- Explore text + icon -->
-      <div class="explore mt-6 mb-2 flex flex-col items-center gap-1">
-        <span class="text-md opacity-100">Explore More</span>
-        <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
-      </div>
-
     </UContainer>
+
+    <!-- Explore text + icon -->
+    <div class="explore mb-2 flex flex-col items-center gap-1">
+      <span class="text-md opacity-100">Explore More</span>
+      <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
+    </div>
   </div>
 
   <!-- Everything below the fold -->
-  <UContainer class="mt-10 mb-10">
+  <UContainer class="mt-14 mb-10">
+    <QueryCount class="mb-14"></QueryCount>
     <!-- How To Use & How It Works Section -->
-    <div class="mb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
       <div
         class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
@@ -190,19 +191,17 @@ setPageInfo({
   bottom: 10px
   left: 0px
   @media (max-width: 768px)
-    width: 120px
-    height: 120px
+    width: 150px
+    height: 150px
+
+.explore
+  position: absolute
+  bottom: 20px
 
 .header-layout
-  display: flex
-  align-items: center
-  justify-content: center
-  gap: 24px
-  margin-bottom: 48px
+  margin-bottom: 20px
   @media (max-width: 768px)
-    margin-bottom: 24px
-    flex-direction: column
-    gap: 12px
+    margin-bottom: 4px
 
 .title-container
   display: flex
@@ -218,8 +217,10 @@ setPageInfo({
   font-style: italic
   line-height: 1.2
   @media (max-width: 768px)
-    font-size: 1.2rem
+    font-size: 1.5rem
     text-align: center
+    position: relative
+    top: -15px
 
 .mouse-dot
   position: fixed

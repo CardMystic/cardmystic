@@ -25,8 +25,10 @@
     </div>
 
     <!-- Mobile dropdown -->
-    <div class="mb-4 md:hidden">
-      <USelect label="select" class="min-w-[150px]" :modelValue="searchType"
+    <div class="mb-6 md:hidden">
+      <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
+      <USelect label="select" class="min-w-[180px]" :modelValue="searchType" placeholder="Select status"
+        :icon="searchIcon" variant="soft"
         @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword')"
         :items="items" />
     </div>
@@ -80,23 +82,38 @@ if (props.similarity) {
   setSearchType('keyword');
 }
 
+// Compute icon based on search type
+const searchIcon = computed(() => {
+  const iconMap: Record<string, string> = {
+    ai: 'i-lucide-search',
+    similarity: 'i-mdi-cards-outline',
+    commander: 'i-mdi-crown',
+    keyword: 'i-lucide-whole-word'
+  };
+  return iconMap[searchType.value] || 'i-lucide-search';
+});
+
 // Items for mobile dropdown
 const items = ref<SelectItem[]>([
   {
     label: 'AI Search',
-    value: 'ai'
+    value: 'ai',
+    icon: 'i-lucide-search'
   },
   {
     label: 'Similarity Search',
-    value: 'similarity'
+    value: 'similarity',
+    icon: 'i-mdi-cards-outline'
   },
   {
     label: 'Commander Search',
-    value: 'commander'
+    value: 'commander',
+    icon: 'i-mdi-crown'
   },
   {
     label: 'Keyword Search',
-    value: 'keyword'
+    value: 'keyword',
+    icon: 'i-lucide-whole-word'
   }
 ])
 
