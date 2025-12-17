@@ -40,7 +40,7 @@ interface Sponsor {
 const sponsors: Sponsor[] = [
   {
     name: 'Modular Cocoon',
-    profileIcon: '/modularcocoon.png',
+    profileIcon: '/modularcocoon.webp',
     socialLinks: {
       youtube: 'https://www.youtube.com/@modularcocoon',
     }
