@@ -35,6 +35,12 @@ const mainItems: NavigationMenuItem[] = [
         description: 'Search for commanders using AI',
         icon: 'i-mdi-crown',
         to: '/search/commander',
+      },
+      {
+        label: 'Keyword Search',
+        description: 'Search for cards by keywords and filters',
+        icon: 'i-lucide-whole-word',
+        to: '/search/keyword',
       }
     ]
   },
@@ -68,6 +74,12 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Search for commanders using AI',
     icon: 'i-mdi-crown',
     to: '/search/commander',
+  },
+  {
+    label: 'Keyword Search',
+    description: 'Search for cards by keywords and filters',
+    icon: 'i-lucide-whole-word',
+    to: '/search/keyword',
   },
   {
     label: 'About',
