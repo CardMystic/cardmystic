@@ -10,7 +10,7 @@
         <NuxtLink to="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
           <img src="/discord-icon.svg" width="24" height="24" alt="Discord" class="inline-block" />
         </NuxtLink>
-        <NuxtLink to="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
+        <NuxtLink to="https://www.youtube.com/@cardmystic" target="_blank" aria-label="YouTube" rel="noopener">
           <UIcon name="i-simple-icons-youtube" size="24" class="text-white" />
         </NuxtLink>
         <NuxtLink to="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
@@ -34,6 +34,9 @@
           <NuxtLink :to="commitUrl" target="_blank" rel="noopener"
             class="text-purple-400 hover:text-purple-300 underline text-[10px]">
             Version: {{ commitHash }}
+          </NuxtLink>
+          <NuxtLink to="/privacyPolicy" rel="noopener"
+            class="ml-2 text-purple-400 hover:text-purple-300 underline text-[10px]">Privacy Policy
           </NuxtLink>
         </p>
       </div>
