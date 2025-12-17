@@ -182,7 +182,7 @@ setPageInfo({
   background-image: url('/space.webp')
   background-position: center
   background-attachment: fixed  // <-- the parallax magic
-  opacity: 0.10
+  opacity: 0.25
   z-index: 0
 
 .image
