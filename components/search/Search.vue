@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <div class="search-tabs-container mb-4">
+    <div class="flex gap-4 max-md:hidden mb-4 justify-center">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
         <UIcon name="i-lucide-search" class="icon" size="18" />
@@ -24,6 +24,15 @@
       </button>
     </div>
 
+    <!-- Mobile dropdown -->
+    <div class="mb-6 md:hidden">
+      <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
+      <USelect label="select" class="min-w-[180px]" :modelValue="searchType" placeholder="Select status"
+        :icon="searchIcon" variant="outline"
+        @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword')"
+        :items="items" />
+    </div>
+
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
       <!-- Regular search input -->
@@ -43,7 +52,7 @@
 
 <script lang="ts" setup>
 defineOptions({ name: 'SearchForm' });
-import { watch } from 'vue';
+import type { SelectItem } from '@nuxt/ui'
 import { useRoute } from 'vue-router';
 
 import AISearch from './AISearch.vue';
@@ -55,6 +64,7 @@ import KeywordSearch from './KeywordSearch.vue';
 const props = defineProps<{
   similarity?: boolean;
 }>();
+
 
 const route = useRoute();
 
@@ -71,6 +81,41 @@ if (props.similarity) {
 } else if (route.path === '/search/keyword') {
   setSearchType('keyword');
 }
+
+// Compute icon based on search type
+const searchIcon = computed(() => {
+  const iconMap: Record<string, string> = {
+    ai: 'i-lucide-search',
+    similarity: 'i-mdi-cards-outline',
+    commander: 'i-mdi-crown',
+    keyword: 'i-lucide-whole-word'
+  };
+  return iconMap[searchType.value] || 'i-lucide-search';
+});
+
+// Items for mobile dropdown
+const items = ref<SelectItem[]>([
+  {
+    label: 'AI Search',
+    value: 'ai',
+    icon: 'i-lucide-search'
+  },
+  {
+    label: 'Similarity Search',
+    value: 'similarity',
+    icon: 'i-mdi-cards-outline'
+  },
+  {
+    label: 'Commander Search',
+    value: 'commander',
+    icon: 'i-mdi-crown'
+  },
+  {
+    label: 'Keyword Search',
+    value: 'keyword',
+    icon: 'i-lucide-whole-word'
+  }
+])
 
 // Watch for search type changes
 watch(searchType, async (newType) => {
@@ -166,15 +211,6 @@ watch(searchType, async (newType) => {
   display: flex;
   gap: 8px;
   width: 100%;
-}
-
-.search-tabs-container {
-  display: flex;
-  justify-content: center !important;
-  gap: 14px;
-  width: 100%;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
 }
 
 .search-tab-button-new {
