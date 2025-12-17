@@ -20,7 +20,7 @@
         </template>
 
         <template v-else-if="!queryParam">
-          <div class="no-results-container">
+          <div>
             <UAlert color="info" icon="i-lucide-info" title="Enter a search query"
               description="Please describe the commander you're looking for." class="mb-4" />
           </div>
