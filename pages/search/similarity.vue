@@ -143,9 +143,20 @@ function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortDirection.value = direction;
 }
 
-// Computed sorted results
+// Computed sorted results - keep first result (searched card) at the top
 const sortedResults = computed(() => {
-  return sortSearchResults(searchResults.value, sortBy.value, sortDirection.value);
+  if (!searchResults.value || searchResults.value.length === 0) {
+    return searchResults.value;
+  }
+
+  // Keep the first card (the searched card) separate
+  const [firstCard, ...restCards] = searchResults.value;
+
+  // Sort only the remaining cards
+  const sortedRest = sortSearchResults(restCards, sortBy.value, sortDirection.value);
+
+  // Return with first card at the top
+  return sortedRest ? [firstCard, ...sortedRest] : [firstCard];
 });
 
 </script>
