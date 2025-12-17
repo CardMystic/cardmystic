@@ -1,5 +1,5 @@
 <template>
-  <div class="filters-container pb-20">
+  <div class="filters-container">
     <!-- Active Filters Chips or a No Filters Selected chip -->
     <div class="active-filters-section mb-2">
       <div v-if="hasActiveFilters" class="active-filters-chips">
