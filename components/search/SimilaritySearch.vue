@@ -11,14 +11,17 @@
       </div>
     </UFormField>
 
-    <UFormField name="filters">
-      <UTooltip v-if="!showFilters" text="Filter results by colors, types, rarities, and more">
+    <div v-if="!showFilters" class="flex justify-center">
+      <UTooltip text="Filter results by colors, types, rarities, and more">
         <UButton @click="showFilters = true" variant="ghost" color="neutral" size="sm"
           icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
           Show Advanced Filters
         </UButton>
       </UTooltip>
-      <Filters v-if="showFilters" v-model="state.filters" />
+    </div>
+
+    <UFormField v-if="showFilters" name="filters">
+      <Filters v-model="state.filters" />
     </UFormField>
   </UForm>
 </template>
