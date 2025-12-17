@@ -15,8 +15,9 @@
 
         <!-- Results found -->
         <template v-else-if="searchResults && searchResults.length">
+          <SortComponent @sort="handleSort" class="mb-3" />
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div v-for="card in searchResults" :key="card.card_data.id">
+            <div v-for="card in sortedResults" :key="card.card_data.id">
               <CardComponent :card="card" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true" />
             </div>
           </div>
@@ -55,7 +56,7 @@
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, KeywordSearchSchema } from '~/models/searchModel';
@@ -64,6 +65,7 @@ import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import CardSkeleton from '~/components/CardSkeleton.vue';
 import CardComponent from '~/components/Card.vue';
+import SortComponent from '~/components/search/Sort.vue';
 
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePageInfo } from '~/composables/usePageInfo';
@@ -130,6 +132,21 @@ const { data: searchResults, isLoading } = useQuery({
   },
   staleTime: 1000 * 60 * 5, // 5 min cache in UI
   enabled: queryEnabled,
+});
+
+// Sorting state
+const sortBy = ref<string | undefined>(undefined);
+const sortDirection = ref<'asc' | 'desc'>('asc');
+
+// Handle sort changes
+function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
+  sortBy.value = sortOption;
+  sortDirection.value = direction;
+}
+
+// Computed sorted results
+const sortedResults = computed(() => {
+  return sortSearchResults(searchResults.value, sortBy.value, sortDirection.value);
 });
 
 function handleFabClick() {

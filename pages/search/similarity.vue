@@ -13,8 +13,9 @@
 
         <template v-else-if="searchResults && searchResults.length">
           <div>
+            <SortComponent @sort="handleSort" class="mb-3" />
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div v-for="(result, index) in searchResults" :key="result.card_data.id">
+              <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
                 <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="true"
                   :is-searched="index == 0" />
               </div>
@@ -59,6 +60,7 @@ import IssuesFab from '~/components/search/IssuesFab.vue';
 import CardSkeleton from '~/components/CardSkeleton.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import CardComponent from '~/components/Card.vue';
+import SortComponent from '~/components/search/Sort.vue';
 
 const route = useRoute();
 
@@ -129,6 +131,32 @@ const { data: searchResults, isLoading } = useQuery({
   },
   staleTime: 1000 * 60 * 15, // 15 minutes
   enabled: queryEnabled,
+});
+
+// Sorting state
+const sortBy = ref<string | undefined>(undefined);
+const sortDirection = ref<'asc' | 'desc'>('asc');
+
+// Handle sort changes
+function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
+  sortBy.value = sortOption;
+  sortDirection.value = direction;
+}
+
+// Computed sorted results - keep first result (searched card) at the top
+const sortedResults = computed(() => {
+  if (!searchResults.value || searchResults.value.length === 0) {
+    return searchResults.value;
+  }
+
+  // Keep the first card (the searched card) separate
+  const [firstCard, ...restCards] = searchResults.value;
+
+  // Sort only the remaining cards
+  const sortedRest = sortSearchResults(restCards, sortBy.value, sortDirection.value);
+
+  // Return with first card at the top
+  return sortedRest ? [firstCard, ...sortedRest] : [firstCard];
 });
 
 </script>
