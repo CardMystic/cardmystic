@@ -1,6 +1,7 @@
 <template>
   <UPopover>
-    <UButton icon="i-lucide-clipboard-list" color="primary" variant="soft" :label="clipboardLabel"></UButton>
+    <UButton class="cursor-pointer" icon="i-lucide-clipboard-list" color="primary" variant="solid"
+      :label="clipboardLabel"></UButton>
     <template #content>
       <div class="p-3 w-72 max-w-xs">
         <div class="font-semibold mb-2 flex items-center gap-2">
