@@ -4,11 +4,13 @@
 :root {
   --ui-primary: #8f6edf;
   --ui-secondary: #383d7a;
+  --ui-text-highlighted: #831eff;
 }
 
 .dark {
   --ui-primary: #8f6edf;
   --ui-secondary: #383d7a;
+  --ui-text-highlighted: #e4842a;
 }
 
 /* Ensure proper layout for sticky footer */

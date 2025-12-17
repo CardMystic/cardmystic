@@ -1,40 +1,37 @@
 <template>
-  <div class="filters-container">
-    <!-- Selected colors chips or No Filters chip -->
-    <div v-if="modelValue?.selectedColors && modelValue.selectedColors.length > 0" class="mb-2 flex flex-wrap gap-2">
-      <UButton class="cursor-pointer rounded-pill" size="sm" color="neutral" variant="outline" icon="i-lucide-circle-x"
-        @click="clearColors">
-        <span class="flex items-center gap-1">
-          <ManaIcon v-for="color in modelValue.selectedColors" :key="color" :type="cardColorToSymbol(color)"
-            size="16" />
-          {{ getColorIdentityName(modelValue.selectedColors) }}
-        </span>
-      </UButton>
-    </div>
-    <div v-else class="mb-2">
-      <UButton class="cursor-default rounded-pill" size="sm" color="neutral" variant="outline" disabled>
-        No Filters Selected
-      </UButton>
-    </div>
+  <!-- Selected colors chips or No Filters chip -->
+  <div v-if="modelValue?.selectedColors && modelValue.selectedColors.length > 0" class="mb-2 flex flex-wrap gap-2">
+    <UButton class="cursor-pointer rounded-pill" size="sm" color="neutral" variant="outline" icon="i-lucide-circle-x"
+      @click="clearColors">
+      <span class="flex items-center gap-1">
+        <ManaIcon v-for="color in modelValue.selectedColors" :key="color" :type="cardColorToSymbol(color)" size="16" />
+        {{ getColorIdentityName(modelValue.selectedColors) }}
+      </span>
+    </UButton>
+  </div>
+  <div v-else class="mb-2 flex">
+    <UButton class="cursor-default rounded-pill" size="sm" color="neutral" variant="outline" disabled>
+      No Filters Selected
+    </UButton>
+  </div>
 
-    <!-- Colors selector -->
-    <div class="accordion-item">
-      <div class="color-checkboxes">
-        <!-- 2 cols (3 rows) on xs, 3 cols (2 rows) on sm, 6 cols on md+ -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 w-full">
-          <UCheckbox v-for="item in cardColors" :key="(item as { value: CardColorType }).value"
-            :name="`color-${(item as { value: CardColorType }).value}`"
-            :model-value="selectedColors.includes((item as { value: CardColorType }).value)"
-            @update:model-value="(value) => onToggle((item as { value: CardColorType }).value, value === true)"
-            variant="card" class="w-full" :ui="{ root: 'p-2' }">
-            <template #label>
-              <span class="flex items-center gap-1">
-                <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
-                {{ (item as { value: CardColorType }).value }}
-              </span>
-            </template>
-          </UCheckbox>
-        </div>
+  <!-- Colors selector -->
+  <div class="accordion-item">
+    <div class="color-checkboxes">
+      <!-- 2 cols (3 rows) on xs, 3 cols (2 rows) on sm, 6 cols on md+ -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 w-full">
+        <UCheckbox v-for="item in cardColors" :key="(item as { value: CardColorType }).value"
+          :name="`color-${(item as { value: CardColorType }).value}`"
+          :model-value="selectedColors.includes((item as { value: CardColorType }).value)"
+          @update:model-value="(value) => onToggle((item as { value: CardColorType }).value, value === true)"
+          variant="card" class="w-full" :ui="{ root: 'p-2' }">
+          <template #label>
+            <span class="flex items-center gap-1">
+              <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
+              {{ (item as { value: CardColorType }).value }}
+            </span>
+          </template>
+        </UCheckbox>
       </div>
     </div>
   </div>
@@ -111,10 +108,6 @@ function updateFilters(updates: Partial<CardSearchFilters>) {
 </script>
 
 <style scoped>
-.filters-container {
-  height: 80px;
-}
-
 .accordion-item {
   margin-bottom: 8px;
 }
