@@ -35,6 +35,9 @@
             class="text-purple-400 hover:text-purple-300 underline text-[10px]">
             Version: {{ commitHash }}
           </NuxtLink>
+          <NuxtLink to="/privacyPolicy" rel="noopener"
+            class="ml-2 text-purple-400 hover:text-purple-300 underline text-[10px]">Privacy Policy
+          </NuxtLink>
         </p>
       </div>
     </UContainer>
