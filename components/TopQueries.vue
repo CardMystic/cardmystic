@@ -120,10 +120,16 @@ function tryQuery(query: string) {
   border-radius: 24px
   padding: 16px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -133,8 +139,13 @@ function tryQuery(query: string) {
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .queries-header
   display: flex

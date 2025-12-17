@@ -4,6 +4,10 @@ import ClipboardMenu from '~/components/ClipboardMenu.vue'
 
 const isOpen = ref(false)
 
+const props = defineProps<{
+  isFixed?: boolean
+}>();
+
 function closePopover() {
   isOpen.value = false
 }
@@ -35,6 +39,12 @@ const mainItems: NavigationMenuItem[] = [
         description: 'Search for commanders using AI',
         icon: 'i-mdi-crown',
         to: '/search/commander',
+      },
+      {
+        label: 'Keyword Search',
+        description: 'Search for cards by keywords and filters',
+        icon: 'i-lucide-whole-word',
+        to: '/search/keyword',
       }
     ]
   },
@@ -70,6 +80,12 @@ const mainItemsMobile: NavigationMenuItem[] = [
     to: '/search/commander',
   },
   {
+    label: 'Keyword Search',
+    description: 'Search for cards by keywords and filters',
+    icon: 'i-lucide-whole-word',
+    to: '/search/keyword',
+  },
+  {
     label: 'About',
     icon: 'i-lucide-info',
     to: '/about'
@@ -94,7 +110,7 @@ const externalItems: NavigationMenuItem[] = [
 
 <template>
   <header
-    class="sticky top-0 z-50 bg-white/75 dark:bg-gray-950/75 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
+    :class="[props.isFixed ? 'fixed' : 'sticky', 'left-0 right-0 top-0 z-50 px-4 py-4 flex items-center justify-between bg-white/100 dark:bg-gray-950/75 backdrop-blur border-b border-gray-200 dark:border-gray-800']">
 
     <!-- Mobile -->
     <UPopover class="md:hidden" v-model:open="isOpen" @close="closePopover">

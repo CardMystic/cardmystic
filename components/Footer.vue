@@ -1,6 +1,6 @@
 <template>
   <footer
-    class="w-full bg-white/75 dark:bg-gray-950/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 z-50">
+    class="w-full bg-secondary dark:bg-gray-950/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 z-50">
     <UContainer class="py-6 text-left">
       <!-- Social Links -->
       <div class="flex justify-center items-start gap-4 mb-4">
@@ -10,7 +10,7 @@
         <NuxtLink to="https://discord.gg/GmPZ3e7tZH" target="_blank" aria-label="Discord" rel="noopener">
           <img src="/discord-icon.svg" width="24" height="24" alt="Discord" class="inline-block" />
         </NuxtLink>
-        <NuxtLink to="https://www.youtube.com/@imdarkmode" target="_blank" aria-label="YouTube" rel="noopener">
+        <NuxtLink to="https://www.youtube.com/@cardmystic" target="_blank" aria-label="YouTube" rel="noopener">
           <UIcon name="i-simple-icons-youtube" size="24" class="text-white" />
         </NuxtLink>
         <NuxtLink to="https://www.patreon.com/thecardmystic" target="_blank" aria-label="Patreon" rel="noopener">
@@ -19,7 +19,7 @@
       </div>
 
       <!-- Disclaimer -->
-      <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1 max-w-6xl mx-auto leading-relaxed">
+      <div class="text-xs text-white dark:text-gray-400 space-y-1 max-w-6xl mx-auto leading-relaxed">
         <p>
           CardMystic uses fan-created content under the Wizards of the Coast Fan Content Policy. Magic: The Gathering
           cards, images, and mana symbols shown here are copyrighted by Wizards of the Coast, LLC. CardMystic is an
@@ -34,6 +34,9 @@
           <NuxtLink :to="commitUrl" target="_blank" rel="noopener"
             class="text-purple-400 hover:text-purple-300 underline text-[10px]">
             Version: {{ commitHash }}
+          </NuxtLink>
+          <NuxtLink to="/privacyPolicy" rel="noopener"
+            class="ml-2 text-purple-400 hover:text-purple-300 underline text-[10px]">Privacy Policy
           </NuxtLink>
         </p>
       </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <div class="search-tabs-container mb-4">
+    <div class="flex gap-4 max-md:hidden mb-4 justify-center">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
         <UIcon name="i-lucide-search" class="icon" size="18" />
@@ -17,6 +17,20 @@
         <UIcon name="i-mdi-crown" class="icon" size="18" />
         Commander Search
       </button>
+      <button type="button" :class="['search-tab-button-new', { active: searchType === 'keyword' }]"
+        @click="setSearchType('keyword')">
+        <UIcon name="i-lucide-whole-word" class="icon" size="18" />
+        Keyword Search
+      </button>
+    </div>
+
+    <!-- Mobile dropdown -->
+    <div class="mb-6 md:hidden">
+      <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
+      <USelect label="select" class="min-w-[180px]" :modelValue="searchType" placeholder="Select status"
+        :icon="searchIcon" variant="outline"
+        @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword')"
+        :items="items" />
     </div>
 
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
@@ -29,23 +43,28 @@
 
       <!-- Commander Search -->
       <CommanderSearch v-else-if="searchType === 'commander'" />
+
+      <!-- Keyword Search -->
+      <KeywordSearch v-else-if="searchType === 'keyword'" />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 defineOptions({ name: 'SearchForm' });
-import { watch } from 'vue';
+import type { SelectItem } from '@nuxt/ui'
 import { useRoute } from 'vue-router';
 
 import AISearch from './AISearch.vue';
 import SimilaritySearch from './SimilaritySearch.vue';
 import CommanderSearch from './CommanderSearch.vue';
+import KeywordSearch from './KeywordSearch.vue';
 
 // Define props
 const props = defineProps<{
   similarity?: boolean;
 }>();
+
 
 const route = useRoute();
 
@@ -57,9 +76,46 @@ if (props.similarity) {
   setSearchType('similarity');
 } else if (route.path === '/search/commander') {
   setSearchType('commander');
-} else {
+} else if (route.path === '/search') {
   setSearchType('ai');
+} else if (route.path === '/search/keyword') {
+  setSearchType('keyword');
 }
+
+// Compute icon based on search type
+const searchIcon = computed(() => {
+  const iconMap: Record<string, string> = {
+    ai: 'i-lucide-search',
+    similarity: 'i-mdi-cards-outline',
+    commander: 'i-mdi-crown',
+    keyword: 'i-lucide-whole-word'
+  };
+  return iconMap[searchType.value] || 'i-lucide-search';
+});
+
+// Items for mobile dropdown
+const items = ref<SelectItem[]>([
+  {
+    label: 'AI Search',
+    value: 'ai',
+    icon: 'i-lucide-search'
+  },
+  {
+    label: 'Similarity Search',
+    value: 'similarity',
+    icon: 'i-mdi-cards-outline'
+  },
+  {
+    label: 'Commander Search',
+    value: 'commander',
+    icon: 'i-mdi-crown'
+  },
+  {
+    label: 'Keyword Search',
+    value: 'keyword',
+    icon: 'i-lucide-whole-word'
+  }
+])
 
 // Watch for search type changes
 watch(searchType, async (newType) => {
@@ -72,6 +128,9 @@ watch(searchType, async (newType) => {
   }
   if (route.query.searchType == 'similarity') {
     sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'keyword') {
+    sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
   }
 
   // Navigate to the appropriate route based on the selected search type, and reload saved session query if available
@@ -119,6 +178,21 @@ watch(searchType, async (newType) => {
     }
     navigateTo({ path: '/search/commander', query });
   }
+  else if (newType === 'keyword' && route.path !== '/search/keyword' && route.path !== '/') {
+    let query: any = undefined;
+    if (route.query.query && route.query.searchType === 'keyword') {
+      query = { ...route.query };
+    } else {
+      const stored = sessionStorage.getItem('keyword_search_query');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.query) query = parsed;
+        } catch { }
+      }
+    }
+    navigateTo({ path: '/search/keyword', query });
+  }
 });
 
 </script>
@@ -137,15 +211,6 @@ watch(searchType, async (newType) => {
   display: flex;
   gap: 8px;
   width: 100%;
-}
-
-.search-tabs-container {
-  display: flex;
-  justify-content: center !important;
-  gap: 14px;
-  width: 100%;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
 }
 
 .search-tab-button-new {
