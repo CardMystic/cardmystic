@@ -24,7 +24,7 @@
 
         <!-- No query entered -->
         <template v-else-if="!queryParam">
-          <div class="no-results-container">
+          <div>
             <UAlert color="info" icon="i-lucide-info" title="Enter keywords to search"
               description="Try describing what the card does or listing mechanics or types." class="mb-4" />
           </div>
@@ -139,10 +139,6 @@ function handleFabClick() {
 </script>
 
 <style scoped>
-.no-results-container {
-  margin-top: 48px;
-}
-
 .subtitle2 {
   font-size: 1.01rem;
   position: relative;

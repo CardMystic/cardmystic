@@ -20,7 +20,7 @@
         </template>
 
         <template v-else-if="!queryParam">
-          <div class="no-results-container">
+          <div>
             <UAlert color="info" icon="i-lucide-info" title="Enter a search query"
               description="Please enter a search query to find cards." class="mb-4" />
           </div>
