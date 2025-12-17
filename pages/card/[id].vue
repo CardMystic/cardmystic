@@ -1,5 +1,8 @@
 <template>
-  <div class="py-4 flex justify-center w-full">
+  <div class="page-wrapper py-4 flex justify-center w-full">
+    <!-- Background art layer -->
+    <div v-if="card && cardArtUrl" class="page-background-art" :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
+
     <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
       <div class="flex justify-center items-center mb-4">
         <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
@@ -13,7 +16,7 @@
       <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto relative z-10">
       <!-- Left: Card Image -->
       <div class="lg:col-span-3 flex flex-col items-center">
         <!-- Back to Results button aligned with card image -->
@@ -55,7 +58,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -268,7 +271,7 @@ import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
-import { getCardImageUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
+import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
 const route = useRoute();
 const isFlipped = ref(false);
@@ -350,6 +353,13 @@ const cardImageUrl = computed(() => {
   const printingData = currentPrinting.value;
   if (!printingData) return '';
   return getCardImageUrl(printingData as ScryfallCard, isFlipped.value);
+});
+
+// Art URL for background
+const cardArtUrl = computed(() => {
+  const printingData = currentPrinting.value;
+  if (!printingData) return '';
+  return getCardArtUrl(printingData as ScryfallCard, isFlipped.value);
 });
 
 useHead(() => ({
@@ -862,4 +872,24 @@ function findSimilarCards() {
   100%
     left: 200%
     opacity: 0
+
+// Page wrapper with background
+.page-wrapper
+  position: relative
+  min-height: 100vh
+
+.page-background-art
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background-size: cover
+  background-position: center
+  background-repeat: no-repeat
+  opacity: 0.08
+  pointer-events: none
+  z-index: 0
+  filter: blur(8px)
+  transform: scale(1.1)
 </style>

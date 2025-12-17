@@ -77,3 +77,30 @@ export const getLegalityColor = (status: string) => {
 export const standardizeFormatName = (raw: string) => {
   return raw.replace(/([A-Z])/g, ' $1').trim();
 };
+
+export function getCardArtUrl(
+  cardData: ScryfallCard,
+  isFlipped: boolean = false,
+): string {
+  const isDualFaced = cardData?.card_faces && cardData.card_faces.length >= 2;
+
+  // For dual-faced cards, show the appropriate face
+  if (isDualFaced && cardData.card_faces) {
+    const face = isFlipped ? cardData.card_faces[1] : cardData.card_faces[0];
+    if (face.image_uris?.art_crop) {
+      return face.image_uris.art_crop;
+    }
+  }
+
+  // For single-faced cards, try art_crop
+  if (cardData.image_uris?.art_crop) {
+    return cardData.image_uris.art_crop;
+  }
+
+  // Fallback to first face if available
+  if (cardData.card_faces && cardData.card_faces[0]?.image_uris?.art_crop) {
+    return cardData.card_faces[0].image_uris.art_crop;
+  }
+
+  return '';
+}
