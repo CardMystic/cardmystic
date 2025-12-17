@@ -80,7 +80,7 @@
     </div>
 
     <UCollapsible class="flex flex-col gap-2">
-      <UButton class="filters-toggle-btn mb-3 cursor-pointer" label="Select Filters" color="primary" variant="subtle"
+      <UButton class="filters-toggle-btn cursor-pointer" label="Select Filters" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down" icon="i-lucide-list-filter" :ui="{
           trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
         }" block />
