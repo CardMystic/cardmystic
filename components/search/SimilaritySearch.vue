@@ -16,7 +16,7 @@
         <UTooltip v-if="!showFilters" text="Filter results by colors, types, rarities, and more">
           <UButton @click="showFilters = true" variant="ghost" color="neutral" size="sm"
             icon="i-lucide-sliders-horizontal" class="mt-2 mb-2" aria-label="Show advanced search filters">
-            Show Filters
+            Show Advanced Filters
           </UButton>
         </UTooltip>
         <Filters v-if="showFilters" v-model="state.filters" />
