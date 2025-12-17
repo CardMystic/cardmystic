@@ -6,11 +6,11 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div v-for="(dev, index) in developers" :key="index"
-        class="flex flex-col items-center p-6 rounded-lg border border-gray-700 bg-gray-800/50 hover:bg-gray-800 transition-colors">
+        class="flex flex-col items-center p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-primary/25 dark:bg-gray-800/50 hover:bg-primary/50 dark:hover:bg-gray-800 transition-colors">
         <img :src="dev.profilePicture" :alt="dev.name"
           class="w-24 h-24 rounded-full object-cover mb-4 border-2 border-primary" />
         <h3 class="text-xl font-semibold mb-1">{{ dev.name }}</h3>
-        <p class="text-gray-400 text-sm mb-3">{{ dev.role }}</p>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">{{ dev.role }}</p>
 
         <div v-if="dev.socialLinks" class="flex gap-3">
           <UButton v-for="(link, platform) in dev.socialLinks" :key="platform" :to="link" target="_blank"

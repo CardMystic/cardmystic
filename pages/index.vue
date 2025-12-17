@@ -21,7 +21,7 @@
     </UContainer>
 
     <!-- Explore text + icon -->
-    <div class="explore mb-2 flex flex-col items-center gap-1">
+    <div class="explore mb-2 flex flex-col items-center gap-1 text-white">
       <span class="text-md opacity-100">Explore More</span>
       <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
     </div>
@@ -39,7 +39,7 @@
           <UIcon name="i-lucide-book-open" class="text-3xl text-primary flex-shrink-0 mt-1" />
           <div>
             <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h3>
-            <p class="text-base md:text-lg text-gray-300 leading-relaxed">
+            <p class="text-base md:text-lg leading-relaxed">
               Simply describe the cards you want in plain English, and let our
               intelligent search engine do the rest. Still not sure? Try an
               example query below!
@@ -55,7 +55,7 @@
           <UIcon name="i-lucide-sparkles" class="text-3xl text-primary flex-shrink-0 mt-1" />
           <div>
             <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h3>
-            <p class="text-base md:text-lg text-gray-300 leading-relaxed">
+            <p class="text-base md:text-lg leading-relaxed">
               Our A.I. experts meticulously train custom, state-of-the-art models to understand the nuances of Magic
               including
               slang, synergies, and game mechanics.

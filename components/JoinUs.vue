@@ -2,7 +2,7 @@
   <UContainer class="py-12">
     <div class="text-center mb-8">
       <h2 class="text-3xl md:text-4xl font-bold mb-2">Join Our Community</h2>
-      <p class="text-gray-400">Connect with us and support our mission</p>
+      <p class="text-gray-600 dark:text-gray-400">Connect with us and support our mission</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

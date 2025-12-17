@@ -28,7 +28,7 @@
     <div class="mb-6 md:hidden">
       <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
       <USelect label="select" class="min-w-[180px]" :modelValue="searchType" placeholder="Select status"
-        :icon="searchIcon" variant="soft"
+        :icon="searchIcon" variant="outline"
         @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword')"
         :items="items" />
     </div>

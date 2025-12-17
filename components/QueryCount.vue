@@ -7,7 +7,7 @@
         {{ char }}
       </span>
     </div>
-    <div class="text-sm md:text-base text-gray-400 uppercase tracking-wider font-medium flex items-center gap-2">
+    <div class="text-sm md:text-base uppercase tracking-wider font-medium flex items-center gap-2">
       <UIcon name="i-lucide-wand-sparkles" class="text-lg" />
       Total Searches Resolved
     </div>
