@@ -21,7 +21,7 @@
       <div class="lg:col-span-3 flex flex-col items-center">
         <!-- Back to Results button aligned with card image -->
         <div class="back-button-container-aligned mb-4">
-          <UButton class="cursor-pointer" color="primary" variant="outline" @click="$router.back()"
+          <UButton class="cursor-pointer" color="primary" variant="solid" @click="$router.back()"
             icon="i-heroicons-arrow-left">
             Back to Results
           </UButton>
@@ -138,7 +138,7 @@
 
       <!-- Center: Card Details -->
       <div class="lg:col-span-7 flex flex-col max-w-[732px]">
-        <div class="card-header card-header-aligned">
+        <UCard class="card-header-card">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
             <span v-if="currentManaCost">
@@ -152,7 +152,7 @@
           <p class="card-type">
             {{ currentTypeLine }}
           </p>
-        </div>
+        </UCard>
 
         <div v-if="currentOracleText" class="card-text-container">
           <div class="oracle-text">
@@ -554,16 +554,26 @@ function findSimilarCards() {
 .card-image-container:hover .card-image
   transform: scale(1.03)
 
-// Card Header Styling
-.card-header
+// Card Header Card Styling
+.card-header-card
+  border-radius: 24px
+  backdrop-filter: blur(20px) saturate(180%)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+  position: relative
   margin-bottom: 16px
 
-.card-header-aligned
-  margin-bottom: 16px
-  margin-top: 0
-  
-  @media (min-width: 1024px)
-    margin-top: 60px // Align with card image top (button height + margin)
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+    pointer-events: none
 
 .card-title
   font-size: 2.2rem
@@ -887,7 +897,7 @@ function findSimilarCards() {
   background-size: cover
   background-position: center
   background-repeat: no-repeat
-  opacity: 0.08
+  opacity: 0.2
   pointer-events: none
   z-index: 0
   filter: blur(8px)

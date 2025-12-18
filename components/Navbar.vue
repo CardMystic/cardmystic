@@ -163,7 +163,7 @@ const externalItems: NavigationMenuItem[] = [
         content: 'w-auto'
       }" />
       <!-- Clipboard Button (always visible, right side) -->
-      <ClipboardMenu class="ml-1" />
+      <ClipboardMenu class="ml-4" />
     </div>
 
   </header>
