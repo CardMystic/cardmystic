@@ -25,10 +25,10 @@
     </div>
 
     <!-- Mobile dropdown -->
-    <div class="mb-6 md:hidden">
+    <div class="mb-2 md:hidden flex flex-col justify-center items-center">
       <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
-      <USelect label="select" class="min-w-[180px]" :modelValue="searchType" placeholder="Select status"
-        :icon="searchIcon" variant="outline"
+      <USelect label="select" class="w-[200px]" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
+        variant="outline"
         @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword')"
         :items="items" />
     </div>
