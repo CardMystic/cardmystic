@@ -29,13 +29,13 @@ const communityItems: CommunityItem[] = [
     title: 'Support Us On Patreon!',
     icon: 'i-lucide-heart',
     bgColor: '#FF424D',
-    link: 'https://patreon.com/cardmystic'
+    link: 'https://patreon.com/thecardmystic'
   },
   {
     title: 'Chat With Us On Discord!',
     icon: 'i-lucide-message-circle',
     bgColor: '#5865F2',
-    link: 'https://discord.gg/example'
+    link: 'https://discord.gg/GmPZ3e7tZH'
   }
 ];
 </script>
