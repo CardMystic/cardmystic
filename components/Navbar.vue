@@ -145,7 +145,7 @@ const externalItems: NavigationMenuItem[] = [
 
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
-        <img src="/wizard.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+        <img src="/wizard_outline.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
       </NuxtLink>
     </div>
 
@@ -153,7 +153,7 @@ const externalItems: NavigationMenuItem[] = [
     <div class="flex-row hidden md:flex">
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity mr-6">
-        <img src="/wizard.webp" alt="CardMystic Logo" class="w-12 h-12 object-contain" />
+        <img src="/wizard_outline.webp" alt="CardMystic Logo" class="w-12 h-12 object-contain" />
       </NuxtLink>
 
       <!-- Desktop Navigation -->
