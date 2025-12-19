@@ -47,6 +47,15 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: () => queryParam.value
+    ? `${queryParam.value} - Commander Search | CardMystic`
+    : 'Commander Search - CardMystic',
+  description: () => queryParam.value
+    ? `Find MTG commanders matching "${queryParam.value}" using AI search. Discover legendary creatures for your EDH deck.`
+    : 'Search for Magic: The Gathering commanders using natural language AI. Find the perfect legendary creature for your EDH deck.'
+})
+
 import { useQuery } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
@@ -67,11 +76,6 @@ const queryParam = computed(() => String(route.query?.query || ''));
 const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
 const parsedFilters = computed(() => route.query?.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
-useHead(() => ({
-  title: queryParam.value
-    ? `CardMystic | ${queryParam.value}`
-    : 'CardMystic | Commander Search',
-}));
 
 // Used for the github issues logic as it can't be dynamic.
 definePageMeta({

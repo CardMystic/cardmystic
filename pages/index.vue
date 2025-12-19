@@ -79,6 +79,17 @@ defineOptions({ name: 'HomePage' });
 definePageMeta({
   layout: 'home'
 });
+useSeoMeta({
+  title: 'CardMystic - AI Search Engine for Magic: The Gathering',
+  description: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English. Fast, accurate, and free.',
+  ogTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
+  ogDescription: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
+  twitterDescription: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.'
+})
+
 import SearchForm from '~/components/search/Search.vue';
 import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
 
@@ -142,10 +153,6 @@ const handleMouseMove = (e: MouseEvent) => {
     dots.value = dots.value.slice(-maxDots);
   }
 };
-
-useHead({
-  title: 'CardMystic',
-});
 
 const { setPageInfo } = usePageInfo();
 setPageInfo({

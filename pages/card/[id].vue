@@ -319,6 +319,21 @@ const { data: cardData, isLoading, error } = useQuery({
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
+// Dynamic SEO meta based on card data
+useSeoMeta({
+  title: () => card.value ? `${card.value.name} - CardMystic` : 'Card Details - CardMystic',
+  description: () => {
+    if (!card.value) return 'View Magic: The Gathering card details on CardMystic';
+    const oracle = card.value.oracle_text || card.value.card_faces?.[0]?.oracle_text || '';
+    const type = card.value.type_line || '';
+    return `${card.value.name} - ${type}. ${oracle.slice(0, 120)}${oracle.length > 120 ? '...' : ''}`;
+  },
+  ogTitle: () => card.value ? `${card.value.name} - CardMystic` : 'Card Details - CardMystic',
+  ogDescription: () => card.value ? `View ${card.value.name}, a ${card.value.type_line || 'Magic: The Gathering card'} on CardMystic` : 'View MTG card details',
+  ogType: 'website',
+  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || ''
+})
+
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {
   if (newCard && newPrintings && newPrintings.length > 0) {
