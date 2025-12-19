@@ -5,6 +5,8 @@
     <div v-for="dot in dots" :key="dot.id" class="mouse-dot"
       :style="{ left: dot.x + 'px', top: dot.y + 'px', opacity: dot.opacity, width: dot.size + 'px', height: dot.size + 'px' }">
     </div>
+    <div class="explore-spacer">
+    </div>
     <UContainer class="flex flex-col items-center justify-center text-center max-w-[1000px] h-full relative z-10">
       <div class="header-layout">
         <div class="title-container">
@@ -21,7 +23,7 @@
     </UContainer>
 
     <!-- Explore text + icon -->
-    <div class="explore mb-2 flex flex-col items-center gap-1 text-white">
+    <div class="explore-spacer mb-2 flex flex-col items-center gap-1 text-white">
       <span class="text-md opacity-100">Explore More</span>
       <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
     </div>
@@ -188,7 +190,7 @@ setPageInfo({
   height: 100%
   background-image: url('/space.webp')
   background-position: center
-  background-attachment: fixed  // <-- the parallax magic
+  background-attachment: fixed
   opacity: 0.25
   z-index: 0
 
@@ -202,9 +204,12 @@ setPageInfo({
     width: 150px
     height: 150px
 
-.explore
-  position: absolute
-  bottom: 20px
+.explore-spacer
+  flex-grow: 1
+  justify-content: flex-end
+
+.stopExploreOverlap
+  padding-bottom: 60px
 
 .header-layout
   margin-bottom: 20px
