@@ -50,15 +50,6 @@
 </template>
 
 <script setup lang="ts">
-useSeoMeta({
-  title: () => cardNameParam.value
-    ? `Cards Similar to ${cardNameParam.value} | CardMystic`
-    : 'Similarity Search - CardMystic',
-  description: () => cardNameParam.value
-    ? `Find Magic: The Gathering cards similar to ${cardNameParam.value}. Discover alternatives and similar effects for your MTG deck.`
-    : 'Find similar Magic: The Gathering cards. Search for alternatives and cards with similar effects using AI-powered similarity search.'
-})
-
 import { useQuery } from '@tanstack/vue-query';
 import { ref, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
@@ -75,6 +66,15 @@ const route = useRoute();
 
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
+
+useSeoMeta({
+  title: () => cardNameParam.value
+    ? `Cards Similar to ${cardNameParam.value} | CardMystic`
+    : 'Similarity Search - CardMystic',
+  description: () => cardNameParam.value
+    ? `Find Magic: The Gathering cards similar to ${cardNameParam.value}. Discover alternatives and similar effects for your MTG deck.`
+    : 'Find similar Magic: The Gathering cards. Search for alternatives and cards with similar effects using AI-powered similarity search.'
+})
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 

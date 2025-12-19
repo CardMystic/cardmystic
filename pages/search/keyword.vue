@@ -55,15 +55,6 @@
 </template>
 
 <script setup lang="ts">
-useSeoMeta({
-  title: () => queryParam.value
-    ? `${queryParam.value} - Keyword Search | CardMystic`
-    : 'Keyword Search - CardMystic',
-  description: () => queryParam.value
-    ? `Keyword search results for "${queryParam.value}" - find Magic: The Gathering cards by mechanics, types, and keywords.`
-    : 'Search MTG cards by keywords, mechanics, and card types. Fast and accurate Magic: The Gathering card keyword search.'
-})
-
 import { useQuery } from '@tanstack/vue-query';
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -83,6 +74,15 @@ const route = useRoute();
 
 // Extract keyword search params
 const queryParam = computed(() => String(route.query.query || ''));
+
+useSeoMeta({
+  title: () => queryParam.value
+    ? `${queryParam.value} - Keyword Search | CardMystic`
+    : 'Keyword Search - CardMystic',
+  description: () => queryParam.value
+    ? `Keyword search results for "${queryParam.value}" - find Magic: The Gathering cards by mechanics, types, and keywords.`
+    : 'Search MTG cards by keywords, mechanics, and card types. Fast and accurate Magic: The Gathering card keyword search.'
+})
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 
 const parsedFilters = computed(() => {
