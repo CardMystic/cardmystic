@@ -50,15 +50,6 @@
 </template>
 
 <script setup lang="ts">
-useSeoMeta({
-  title: () => cardNameParam.value
-    ? `Cards Similar to ${cardNameParam.value} | CardMystic`
-    : 'Similarity Search - CardMystic',
-  description: () => cardNameParam.value
-    ? `Find Magic: The Gathering cards similar to ${cardNameParam.value}. Discover alternatives and similar effects for your MTG deck.`
-    : 'Find similar Magic: The Gathering cards. Search for alternatives and cards with similar effects using AI-powered similarity search.'
-})
-
 import { useQuery } from '@tanstack/vue-query';
 import { ref, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
@@ -75,6 +66,50 @@ const route = useRoute();
 
 // Parse query params into a SimilaritySearch model
 const cardNameParam = computed(() => String(route.query.card_name || ''));
+
+useSeoMeta({
+  robots: () =>
+    cardNameParam.value
+      ? 'noindex, follow'
+      : 'index, follow',
+  title: () => cardNameParam.value
+    ? `${cardNameParam.value} - Similarity Search | CardMystic`
+    : 'Similarity Search | CardMystic',
+  description: () => cardNameParam.value
+    ? `Find Magic: The Gathering cards similar to ${cardNameParam.value}. Discover alternatives and similar effects for your MTG deck.`
+    : 'Find similar Magic: The Gathering cards. Search for alternatives and cards with similar effects using similarity search.',
+  ogType: 'website',
+
+  ogTitle: () =>
+    cardNameParam.value
+      ? `"${cardNameParam.value}" - Similarity Search | CardMystic`
+      : 'Similarity Search | CardMystic',
+
+  ogDescription: () =>
+    cardNameParam.value
+      ? `Explore MTG cards related to "${cardNameParam.value}" with Similarity search on CardMystic.`
+      : 'Similarity search for Magic: The Gathering on CardMystic.',
+
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImageAlt: () => 'Similarity Card Search',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () =>
+    cardNameParam.value
+      ? `"${cardNameParam.value}" - Similarity Search | CardMystic`
+      : 'Similarity Search | CardMystic',
+
+  twitterDescription: () =>
+    cardNameParam.value
+      ? `Explore cards related to "${cardNameParam.value}" with Similarity search on CardMystic.`
+      : 'Similarity search for Magic: The Gathering on CardMystic.',
+
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+})
+// Used for the github issues logic as it can't be dynamic.
+definePageMeta({
+  title: 'Keyword Search',
+});
+
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 const parsedFilters = computed(() => route.query.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 

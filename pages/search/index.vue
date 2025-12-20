@@ -48,15 +48,6 @@
 </template>
 
 <script setup lang="ts">
-useSeoMeta({
-  title: () => queryParam.value
-    ? `${queryParam.value} - AI MTG Card Search | CardMystic`
-    : 'AI Search - CardMystic',
-  description: () => queryParam.value
-    ? `Search results for "${queryParam.value}" using AI-powered natural language search for Magic: The Gathering cards.`
-    : 'Search Magic: The Gathering cards using AI-powered natural language search. Describe what you want in plain English.'
-})
-
 import { useQuery } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
@@ -74,14 +65,52 @@ const route = useRoute();
 
 // Parse query params into a WordSearch model
 const queryParam = computed(() => String(route.query?.query || ''));
-const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query?.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
+useSeoMeta({
+  robots: () =>
+    queryParam.value
+      ? 'noindex, follow'
+      : 'index, follow',
+  title: () => queryParam.value
+    ? `${queryParam.value} - AI Search | CardMystic`
+    : 'AI Search | CardMystic',
+  description: () => queryParam.value
+    ? `Find MTG cards matching "${queryParam.value}" using AI search. Discover the perfect cards for your deck!`
+    : 'Search for Magic: The Gathering cards using natural language AI. Discover the perfect cards for your deck.',
+  ogType: 'website',
+
+  ogTitle: () =>
+    queryParam.value
+      ? `"${queryParam.value}" - AI Search | CardMystic`
+      : 'AI Search | CardMystic',
+
+  ogDescription: () =>
+    queryParam.value
+      ? `Explore MTG cards related to "${queryParam.value}" with AI-powered search on CardMystic.`
+      : 'AI-powered card search for Magic: The Gathering on CardMystic.',
+
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImageAlt: () => 'AI Card Search',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () =>
+    queryParam.value
+      ? `"${queryParam.value}" - AI Search | CardMystic`
+      : 'AI Search | CardMystic',
+
+  twitterDescription: () =>
+    queryParam.value
+      ? `Explore cards related to "${queryParam.value}" with AI-powered search on CardMystic.`
+      : 'AI-powered card search for Magic: The Gathering on CardMystic.',
+
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+})
 // Used for the github issues logic as it can't be dynamic.
 definePageMeta({
-  title: 'AI search',
+  title: 'AI Search',
 });
 
+const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
+const parsedFilters = computed(() => route.query?.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({

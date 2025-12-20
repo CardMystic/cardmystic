@@ -83,10 +83,12 @@ definePageMeta({
 });
 useSeoMeta({
   title: 'CardMystic - AI Search Engine for Magic: The Gathering',
-  description: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English. Fast, accurate, and free.',
+  description: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
   ogTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
   ogDescription: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
   ogType: 'website',
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImageAlt: () => 'CardMystic - AI Search Engine for Magic: The Gathering',
   twitterCard: 'summary_large_image',
   twitterTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
   twitterDescription: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.'
