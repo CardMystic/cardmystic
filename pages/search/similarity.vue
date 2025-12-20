@@ -68,6 +68,10 @@ const route = useRoute();
 const cardNameParam = computed(() => String(route.query.card_name || ''));
 
 useSeoMeta({
+  robots: () =>
+    cardNameParam.value
+      ? 'noindex, follow'
+      : 'index, follow',
   title: () => cardNameParam.value
     ? `${cardNameParam.value} - Similarity Search | CardMystic`
     : 'Similarity Search | CardMystic',

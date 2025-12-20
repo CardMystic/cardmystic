@@ -67,6 +67,10 @@ const route = useRoute();
 const queryParam = computed(() => String(route.query?.query || ''));
 
 useSeoMeta({
+  robots: () =>
+    queryParam.value
+      ? 'noindex, follow'
+      : 'index, follow',
   title: () => queryParam.value
     ? `${queryParam.value} - AI Search | CardMystic`
     : 'AI Search | CardMystic',
