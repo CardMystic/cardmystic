@@ -3,7 +3,8 @@
     <!-- Background art layer -->
     <div v-if="card && cardArtUrl" class="page-background-art" :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
 
-    <div v-if="isLoading" class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
+    <div v-if="!card && !error"
+      class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
       <div class="flex justify-center items-center mb-4">
         <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
       </div>
@@ -58,7 +59,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -265,7 +266,6 @@
 
 <script setup lang="ts">
 import ClipboardButton from '~/components/ClipboardButton.vue';
-import { useQuery } from '@tanstack/vue-query';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
@@ -279,45 +279,81 @@ const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
 
-// Combined query that fetches both card and printings in one go
-const { data: cardData, isLoading, error } = useQuery({
-  queryKey: [
-    'card-with-printings',
-    cardIdParam.value,
-  ],
-  queryFn: async () => {
-    // First, fetch the card
-    const cardResponse = await fetch(`/api/cards/${cardIdParam.value}`);
-    if (!cardResponse.ok) {
-      throw new Error('Failed to fetch card');
-    }
-    const card = await cardResponse.json() as ScryfallCard;
+const { data: cardData, error } = await useAsyncData(
+  `card-with-printings-${cardIdParam.value}`,
+  async () => {
+    const card = await $fetch<ScryfallCard>(`/api/cards/${cardIdParam.value}`);
 
-    // Then, fetch printings if available
     let printings: ScryfallCard[] = [];
     if (card.prints_search_uri) {
       try {
-        const printingsResponse = await fetch(card.prints_search_uri);
-        if (printingsResponse.ok) {
-          const printingsData = await printingsResponse.json();
-          printings = printingsData.data || [];
-        } else {
-          console.error('Printings fetch failed:', printingsResponse.status);
-        }
-      } catch (error) {
-        console.error('Error fetching printings:', error);
+        const result = await $fetch<{ data: ScryfallCard[] }>(card.prints_search_uri);
+        printings = result.data || [];
+      } catch (err) {
+        console.error('Printings fetch failed', err);
       }
     }
 
     return { card, printings };
   },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: !!cardIdParam.value,
-});
+  {
+    server: true,
+    lazy: false,
+  }
+);
 
 // Extract card and printings from combined data
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
+
+const canonicalUrl = computed(() =>
+  `https://cardmystic.com/card/${cardData.value?.card.oracle_id ?? cardIdParam.value}`
+);
+// Canonical prevents duplicate content issues
+useHead({
+  link: [
+    {
+      rel: 'canonical',
+      href: canonicalUrl.value,
+    },
+  ],
+});
+// Dynamic SEO meta based on card data
+useSeoMeta({
+  title: () => card.value ? `${card.value.name} | MTG Card Details | CardMystic` : 'MTG Card Details | CardMystic',
+  description: () => {
+    if (!card.value) return 'Explore Magic: The Gathering cards on CardMystic';
+    const oracle = card.value.oracle_text || card.value.card_faces?.[0]?.oracle_text || '';
+    const type = card.value.type_line || '';
+    return `${card.value.name} | ${type} | ${oracle.slice(0, 120)}${oracle.length > 120 ? '...' : ''}`;
+  },
+  ogTitle: () => card.value ? `${card.value.name} | MTG Card Details | CardMystic` : 'MTG Card Details | CardMystic',
+  ogDescription: () =>
+    card.value
+      ? `View ${card.value.name}, a ${card.value.type_line || 'Magic: The Gathering card'}, with oracle text, rulings, and deckbuilding tools on CardMystic.`
+      : 'View Magic: The Gathering card details with oracle text and deckbuilding tools on CardMystic.',
+  ogType: 'article',
+  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || '',
+  ogImageAlt: () =>
+    card.value
+      ? `${card.value.name} MTG card artwork`
+      : 'CardMystic Magic: The Gathering card search',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () =>
+    card.value
+      ? `${card.value.name} | MTG Card`
+      : 'MTG Card Details | CardMystic',
+
+  twitterDescription: () =>
+    card.value
+      ? `View ${card.value.name} and explore oracle text, rulings, and deckbuilding tools on CardMystic.`
+      : 'Search and explore Magic: The Gathering cards on CardMystic.',
+
+  twitterImage: () =>
+    card.value?.image_uris?.normal ||
+    card.value?.card_faces?.[0]?.image_uris?.normal ||
+    'https://cardmystic.com/og-default.png'
+})
 
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {
@@ -361,12 +397,6 @@ const cardArtUrl = computed(() => {
   if (!printingData) return '';
   return getCardArtUrl(printingData as ScryfallCard, isFlipped.value);
 });
-
-useHead(() => ({
-  title: card.value
-    ? `CardMystic | ${card.value.name}`
-    : 'CardMystic | Card',
-}));
 
 const { setPageInfo } = usePageInfo();
 watchEffect(() => {

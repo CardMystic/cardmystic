@@ -11,6 +11,7 @@
       <UIcon name="i-lucide-wand-sparkles" class="text-lg" />
       Total Searches Resolved
     </div>
+    <div class="text-xs text-gray-600">Since 12/17/25</div>
   </div>
 </template>
 

@@ -74,6 +74,50 @@ const route = useRoute();
 
 // Extract keyword search params
 const queryParam = computed(() => String(route.query.query || ''));
+
+useSeoMeta({
+  robots: () =>
+    queryParam.value
+      ? 'noindex, follow'
+      : 'index, follow',
+  title: () => queryParam.value
+    ? `${queryParam.value} - Keyword Search | CardMystic`
+    : 'Keyword Search | CardMystic',
+  description: () => queryParam.value
+    ? `Find MTG cards matching "${queryParam.value}" using Keyword search. Discover the perfect cards for your deck!`
+    : 'Search for Magic: The Gathering cards. Discover the perfect cards for your deck.',
+  ogType: 'website',
+
+  ogTitle: () =>
+    queryParam.value
+      ? `"${queryParam.value}" - Keyword Search | CardMystic`
+      : 'Keyword Search | CardMystic',
+
+  ogDescription: () =>
+    queryParam.value
+      ? `Explore MTG cards related to "${queryParam.value}" with Keyword search on CardMystic.`
+      : 'Keyword search for Magic: The Gathering on CardMystic.',
+
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImageAlt: () => 'Keyword Card Search',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () =>
+    queryParam.value
+      ? `"${queryParam.value}" - Keyword Search | CardMystic`
+      : 'Keyword Search | CardMystic',
+
+  twitterDescription: () =>
+    queryParam.value
+      ? `Explore cards related to "${queryParam.value}" with Keyword search on CardMystic.`
+      : 'Keyword search for Magic: The Gathering on CardMystic.',
+
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+})
+// Used for the github issues logic as it can't be dynamic.
+definePageMeta({
+  title: 'Keyword Search',
+});
+
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 
 const parsedFilters = computed(() => {
@@ -82,12 +126,6 @@ const parsedFilters = computed(() => {
   }
   return undefined;
 });
-
-useHead(() => ({
-  title: queryParam.value
-    ? `CardMystic | "${queryParam.value}"`
-    : 'CardMystic | Keyword Search',
-}));
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 

@@ -67,7 +67,14 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'About - CardMystic' });
+useSeoMeta({
+  title: 'About CardMystic - AI Magic: The Gathering Search Engine',
+  description: 'Learn about CardMystic, an AI search engine for Magic: The Gathering cards. Custom trained models for accurate MTG card search using natural language.',
+  ogTitle: 'About CardMystic - AI Magic: The Gathering Search Engine',
+  ogDescription: 'Learn about CardMystic, an AI search engine for Magic: The Gathering cards.',
+  ogType: 'website'
+})
+
 const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: '/about',
