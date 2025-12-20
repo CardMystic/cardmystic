@@ -321,17 +321,36 @@ const printings = computed(() => cardData.value?.printings || []);
 
 // Dynamic SEO meta based on card data
 useSeoMeta({
-  title: () => card.value ? `${card.value.name} - CardMystic` : 'Card Details - CardMystic',
+  title: () => card.value ? `${card.value.name} | MTG Card Details | CardMystic` : 'MTG Card Details | CardMystic',
   description: () => {
-    if (!card.value) return 'View Magic: The Gathering card details on CardMystic';
+    if (!card.value) return 'Explore Magic: The Gathering cards on CardMystic';
     const oracle = card.value.oracle_text || card.value.card_faces?.[0]?.oracle_text || '';
     const type = card.value.type_line || '';
-    return `${card.value.name} - ${type}. ${oracle.slice(0, 120)}${oracle.length > 120 ? '...' : ''}`;
+    return `${card.value.name} | ${type} | ${oracle.slice(0, 120)}${oracle.length > 120 ? '...' : ''}`;
   },
-  ogTitle: () => card.value ? `${card.value.name} - CardMystic` : 'Card Details - CardMystic',
-  ogDescription: () => card.value ? `View ${card.value.name}, a ${card.value.type_line || 'Magic: The Gathering card'} on CardMystic` : 'View MTG card details',
-  ogType: 'website',
-  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || ''
+  ogTitle: () => card.value ? `${card.value.name} | MTG Card Details | CardMystic` : 'MTG Card Details | CardMystic',
+  ogDescription: () => card.value ? `View ${card.value.name} on CardMystic` : 'View MTG card details',
+  ogType: 'article',
+  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || '',
+  ogImageAlt: () =>
+    card.value
+      ? `${card.value.name} MTG card artwork`
+      : 'CardMystic Magic: The Gathering card search',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () =>
+    card.value
+      ? `${card.value.name} | MTG Card`
+      : 'MTG Card Details | CardMystic',
+
+  twitterDescription: () =>
+    card.value
+      ? `View ${card.value.name} and explore oracle text, rulings, and deckbuilding tools on CardMystic.`
+      : 'Search and explore Magic: The Gathering cards on CardMystic.',
+
+  twitterImage: () =>
+    card.value?.image_uris?.normal ||
+    card.value?.card_faces?.[0]?.image_uris?.normal ||
+    'https://cardmystic.com/og-default.png'
 })
 
 // Watch for card changes to set initial selected printing

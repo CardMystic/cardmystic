@@ -69,9 +69,9 @@
 <script setup lang="ts">
 useSeoMeta({
   title: 'About CardMystic - AI Magic: The Gathering Search Engine',
-  description: 'Learn about CardMystic, an open source AI search engine for Magic: The Gathering cards. Custom trained models for accurate MTG card search using natural language.',
+  description: 'Learn about CardMystic, an AI search engine for Magic: The Gathering cards. Custom trained models for accurate MTG card search using natural language.',
   ogTitle: 'About CardMystic - AI Magic: The Gathering Search Engine',
-  ogDescription: 'Learn about CardMystic, an open source AI search engine for Magic: The Gathering cards.',
+  ogDescription: 'Learn about CardMystic, an AI search engine for Magic: The Gathering cards.',
   ogType: 'website'
 })
 

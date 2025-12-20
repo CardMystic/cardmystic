@@ -68,20 +68,45 @@ const queryParam = computed(() => String(route.query?.query || ''));
 useSeoMeta({
   title: () => queryParam.value
     ? `${queryParam.value} - Commander Search | CardMystic`
-    : 'Commander Search - CardMystic',
+    : 'Commander Search | CardMystic',
   description: () => queryParam.value
     ? `Find MTG commanders matching "${queryParam.value}" using AI search. Discover legendary creatures for your EDH deck.`
-    : 'Search for Magic: The Gathering commanders using natural language AI. Find the perfect legendary creature for your EDH deck.'
+    : 'Search for Magic: The Gathering commanders using natural language AI. Find the perfect legendary creature for your EDH deck.',
+  ogType: 'website',
+
+  ogTitle: () =>
+    queryParam.value
+      ? `"${queryParam.value}" - Commander Search | CardMystic`
+      : 'Commander Search | CardMystic',
+
+  ogDescription: () =>
+    queryParam.value
+      ? `Explore MTG commanders related to "${queryParam.value}" with AI-powered search on CardMystic.`
+      : 'AI-powered commander search for Magic: The Gathering on CardMystic.',
+
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImageAlt: () => 'AI Commander Search',
+
+  twitterCard: 'summary_large_image',
+  twitterTitle: () =>
+    queryParam.value
+      ? `"${queryParam.value}" - Commander Search | CardMystic`
+      : 'Commander Search | CardMystic',
+
+  twitterDescription: () =>
+    queryParam.value
+      ? `Explore commanders related to "${queryParam.value}" with AI-powered search on CardMystic.`
+      : 'AI-powered commander search for Magic: The Gathering on CardMystic.',
+
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 })
-const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
-const parsedFilters = computed(() => route.query?.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
-
-
 // Used for the github issues logic as it can't be dynamic.
 definePageMeta({
   title: 'Commander Search',
 });
 
+const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
+const parsedFilters = computed(() => route.query?.filters ? CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters))) : undefined);
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
