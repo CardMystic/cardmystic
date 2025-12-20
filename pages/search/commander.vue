@@ -6,6 +6,7 @@
       <!-- Results -->
       <div class="mt-3 w-full">
         <template v-if="isLoading">
+          <div style="height: 32px"></div> <!-- Sort spacer to prevent layout shift -->
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
           </div>
