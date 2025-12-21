@@ -1,6 +1,6 @@
 <template>
   <UPopover>
-    <UButton class="cursor-pointer" icon="i-lucide-clipboard-list" color="primary" variant="solid"
+    <UButton class="cursor-pointer" icon="i-lucide-clipboard-list" color="primary" variant="subtle"
       :label="clipboardLabel"></UButton>
     <template #content>
       <div class="p-3 w-72 max-w-xs">

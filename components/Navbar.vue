@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ClipboardMenu from '~/components/ClipboardMenu.vue'
+import UserLogin from '~/components/user/login.vue'
 
 const isOpen = ref(false)
+const isLoginModalOpen = ref(false)
 
 const props = defineProps<{
   isFixed?: boolean
@@ -143,6 +145,19 @@ const externalItems: NavigationMenuItem[] = [
       <!-- Clipboard Button -->
       <ClipboardMenu class="cursor-pointer" />
 
+      <!-- Login Modal -->
+      <UModal label="Open" color="neutral" variant="subtle">
+        <!-- Login Button -->
+        <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
+          @click="isLoginModalOpen = true" />
+        <template #content>
+          <div>
+            <UModalHeader title="Sign in to CardMystic" description="Login to access your account" />
+            <UserLogin />
+          </div>
+        </template>
+      </UModal>
+
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
         <img src="/wizard_outline.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
@@ -164,7 +179,23 @@ const externalItems: NavigationMenuItem[] = [
       }" />
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu class="ml-4" />
+
+      <!-- Login Modal -->
+      <UModal label="Open" color="neutral" variant="subtle">
+        <!-- Login Button -->
+        <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
+          @click="isLoginModalOpen = true" />
+        <template #content>
+          <div>
+            <UModalHeader title="Sign in to CardMystic" description="Login to access your account" />
+            <UserLogin />
+          </div>
+        </template>
+      </UModal>
+
     </div>
 
   </header>
+
+
 </template>
