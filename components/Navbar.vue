@@ -3,10 +3,17 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import ClipboardMenu from '~/components/ClipboardMenu.vue'
 import UserLogin from '~/components/user/login.vue'
 import UserRegister from '~/components/user/register.vue'
+import { useUserProfile } from '~/composables/useUserProfile'
 
 const isOpen = ref(false)
 const isLoginModalOpen = ref(false)
 const authMode = ref<'login' | 'register'>('login')
+const { userProfile, initAuthListener } = useUserProfile()
+
+// Initialize auth listener on component mount
+onMounted(() => {
+  initAuthListener()
+})
 
 const props = defineProps<{
   isFixed?: boolean
@@ -147,9 +154,9 @@ const externalItems: NavigationMenuItem[] = [
       <!-- Clipboard Button -->
       <ClipboardMenu class="cursor-pointer" />
 
-      <!-- Login Modal -->
-      <UModal label="Open" color="neutral" variant="subtle">
-        <!-- Login Button -->
+      <!-- Auth Button - Login/Register Modal or Profile Link -->
+      <UModal v-if="!userProfile" label="Open" color="neutral" variant="subtle">
+        <!-- Login/Register Button -->
         <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
           :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
         <template #content>
@@ -161,6 +168,8 @@ const externalItems: NavigationMenuItem[] = [
           </div>
         </template>
       </UModal>
+      <UButton v-else class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Profile"
+        @click="navigateTo('/profile')" />
 
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
@@ -184,9 +193,9 @@ const externalItems: NavigationMenuItem[] = [
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu class="ml-4" />
 
-      <!-- Login Modal -->
-      <UModal label="Open" color="neutral" variant="subtle">
-        <!-- Login Button -->
+      <!-- Auth Button - Login/Register Modal or Profile Link -->
+      <UModal v-if="!userProfile" label="Open" color="neutral" variant="subtle">
+        <!-- Login/Register Button -->
         <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
           :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
         <template #content>
@@ -198,6 +207,8 @@ const externalItems: NavigationMenuItem[] = [
           </div>
         </template>
       </UModal>
+      <UButton v-else class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Profile"
+        @click="navigateTo('/profile')" />
 
     </div>
 
