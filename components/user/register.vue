@@ -5,25 +5,32 @@ const supabase = useSupabase()
 
 const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 
-const signInWithGoogle = async () => {
+const signUpWithGoogle = async () => {
   errorMessage.value = null
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
   })
 
   if (!error) {
-    console.log('Login successful with Google:', data)
+    console.log('Registration successful with Google:', data)
   }
 }
 
-const signInWithEmail = async () => {
+const signUpWithEmail = async () => {
   loading.value = true
   errorMessage.value = null
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = 'Passwords do not match'
+    loading.value = false
+    return
+  }
+
+  const { data, error } = await supabase.auth.signUp({
     email: email.value,
     password: password.value
   })
@@ -33,7 +40,7 @@ const signInWithEmail = async () => {
   if (error) {
     errorMessage.value = error.message
   } else {
-    console.log('Login successful:', {
+    console.log('Registration successful:', {
       user: data.user,
       session: data.session
     })
@@ -46,11 +53,11 @@ const signInWithEmail = async () => {
   <div class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
 
     <h1 class="text-xl font-bold text-white text-center">
-      Sign in to CardMystic
+      Create your CardMystic account
     </h1>
 
     <UButton class="w-full" color="neutral" variant="solid" icon="i-simple-icons-google" label="Continue with Google"
-      @click="signInWithGoogle" />
+      @click="signUpWithGoogle" />
 
     <div class="text-center text-zinc-400 text-sm">or</div>
 
@@ -58,8 +65,10 @@ const signInWithEmail = async () => {
 
     <UInput class="w-full" v-model="password" type="password" placeholder="Password" size="lg" />
 
-    <UButton color="primary" variant="solid" size="md" :loading="loading" :disabled="loading" @click="signInWithEmail">
-      {{ loading ? 'Signing in…' : 'Sign in' }}
+    <UInput class="w-full" v-model="confirmPassword" type="password" placeholder="Confirm Password" size="lg" />
+
+    <UButton color="primary" variant="solid" size="md" :loading="loading" :disabled="loading" @click="signUpWithEmail">
+      {{ loading ? 'Creating account…' : 'Create account' }}
     </UButton>
 
     <p v-if="errorMessage" class="text-red-400 text-sm text-center">
@@ -67,9 +76,9 @@ const signInWithEmail = async () => {
     </p>
 
     <div class="text-center text-zinc-400 text-sm">
-      Don't have an account?
-      <UButton variant="link" color="primary" size="sm" :padded="false" @click="$emit('switch-to-register')">
-        Register Instead
+      Already have an account?
+      <UButton variant="link" color="primary" size="sm" :padded="false" @click="$emit('switch-to-login')">
+        Login Instead
       </UButton>
     </div>
 
