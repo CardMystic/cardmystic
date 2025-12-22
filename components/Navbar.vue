@@ -155,14 +155,14 @@ const externalItems: NavigationMenuItem[] = [
       <ClipboardMenu class="cursor-pointer" />
 
       <!-- Auth Button - Login/Register Modal or Profile Link -->
-      <UModal v-if="!userProfile" label="Open" color="neutral" variant="subtle">
+      <UModal v-if="!userProfile" v-model:open="isLoginModalOpen"
+        :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
+        :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'">
         <!-- Login/Register Button -->
         <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
           :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
         <template #content>
           <div>
-            <UModalHeader :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
-              :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'" />
             <UserLogin v-if="authMode === 'login'" @switch-to-register="authMode = 'register'" />
             <UserRegister v-else @switch-to-login="authMode = 'login'" />
           </div>
@@ -194,14 +194,14 @@ const externalItems: NavigationMenuItem[] = [
       <ClipboardMenu class="ml-4" />
 
       <!-- Auth Button - Login/Register Modal or Profile Link -->
-      <UModal v-if="!userProfile" label="Open" color="neutral" variant="subtle">
+      <UModal v-if="!userProfile" v-model:open="isLoginModalOpen"
+        :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
+        :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'">
         <!-- Login/Register Button -->
         <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
           :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
         <template #content>
           <div>
-            <UModalHeader :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
-              :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'" />
             <UserLogin v-if="authMode === 'login'" @switch-to-register="authMode = 'register'" />
             <UserRegister v-else @switch-to-login="authMode = 'login'" />
           </div>
