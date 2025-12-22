@@ -2,7 +2,7 @@
 import UserProfile from '~/components/user/profile.vue'
 import { useUserProfile } from '~/composables/useUserProfile'
 
-const { userProfile, fetchUser } = useUserProfile()
+const { userProfile, loading, fetchUser } = useUserProfile()
 
 // Fetch user on page load
 onMounted(async () => {
@@ -17,9 +17,6 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-950">
-    <UserProfile v-if="userProfile" />
-    <div v-else class="flex items-center justify-center min-h-screen">
-      <p class="text-white">Loading...</p>
-    </div>
+    <UserProfile />
   </div>
 </template>
