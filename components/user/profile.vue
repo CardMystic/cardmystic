@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { useUserProfile } from '~/composables/useUserProfile'
-import { useSupabase } from '~/composables/useSupabase'
+import { refDebounced } from '@vueuse/core'
 
-const supabase = useSupabase()
-const { userProfile, loading, signOut } = useUserProfile()
+const {
+  userProfile,
+  profileData,
+  loading,
+  username: computedUsername,
+  profileIconUrl,
+  signOut,
+  fetchProfileData,
+  updateProfileAvatar,
+  updateUsername: updateUsernameFn,
+  updatePassword: updatePasswordFn
+} = useUserProfile()
 
-const username = ref('')
+const username = ref(computedUsername.value)
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
@@ -13,26 +23,79 @@ const updateLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 
-// Initialize username from user metadata or email
-watchEffect(() => {
-  if (userProfile.value) {
-    username.value = userProfile.value.user_metadata?.username || userProfile.value.email?.split('@')[0] || ''
-  }
+// Profile icon card selection
+const selectedProfileCard = ref(profileData.value?.avatar_card_name || '')
+const searchTerm = ref('')
+const debouncedSearchTerm = refDebounced(searchTerm, 150)
+const profileIconLoading = ref(false)
+
+// Sync username when user profile changes
+watch(computedUsername, (newVal) => {
+  username.value = newVal
 })
 
-const updateUsername = async () => {
-  if (!username.value.trim()) {
-    errorMessage.value = 'Username cannot be empty'
-    return
+// Sync selected card when profile data changes
+watch(() => profileData.value?.avatar_card_name, (newVal) => {
+  if (newVal) selectedProfileCard.value = newVal
+})
+
+// Load card names
+const { data: rawCards, status: cardsStatus } = await useFetch('/card-names.min.json', {
+  key: 'profile-card-names',
+  lazy: true,
+  server: false,
+  transform: (data: string[]) => data || [],
+  default: () => []
+})
+
+// Filter cards based on search
+const filteredCards = computed(() => {
+  if (!debouncedSearchTerm.value || debouncedSearchTerm.value.length < 2) {
+    if (selectedProfileCard.value) {
+      return [selectedProfileCard.value]
+    }
+    return []
   }
 
-  updateLoading.value = true
+  const searchLower = debouncedSearchTerm.value.toLowerCase()
+  const filtered = [selectedProfileCard.value]
+
+  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
+    const card = rawCards.value[i]
+    if (card.toLowerCase().includes(searchLower)) {
+      filtered.push(card)
+    }
+  }
+
+  return filtered
+})
+
+const updateProfileCard = async (cardName: string) => {
+  if (!cardName) return
+
+  profileIconLoading.value = true
   errorMessage.value = null
   successMessage.value = null
 
-  const { error } = await supabase.auth.updateUser({
-    data: { username: username.value }
-  })
+  const { error } = await updateProfileAvatar(cardName)
+
+  profileIconLoading.value = false
+
+  if (error) {
+    errorMessage.value = error.message
+  } else {
+    selectedProfileCard.value = cardName
+    successMessage.value = 'Profile icon updated successfully!'
+  }
+}
+
+const updateUsername = async () => {
+  errorMessage.value = null
+  successMessage.value = null
+
+  updateLoading.value = true
+
+  const { error } = await updateUsernameFn(username.value)
 
   updateLoading.value = false
 
@@ -57,16 +120,9 @@ const updatePassword = async () => {
     return
   }
 
-  if (newPassword.value.length < 6) {
-    errorMessage.value = 'Password must be at least 6 characters'
-    return
-  }
-
   updateLoading.value = true
 
-  const { error } = await supabase.auth.updateUser({
-    password: newPassword.value
-  })
+  const { error } = await updatePasswordFn(newPassword.value)
 
   updateLoading.value = false
 
@@ -87,7 +143,11 @@ const handleSignOut = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col space-y-6 max-w-2xl mx-auto p-6">
+  <div class="page-wrapper py-4 flex justify-center w-full">
+    <!-- Background art layer -->
+    <div v-if="profileIconUrl" class="page-background-art" :style="{ backgroundImage: `url(${profileIconUrl})` }"></div>
+
+    <div class="flex flex-col space-y-6 max-w-2xl mx-auto p-6 relative z-10">
     <!-- Skeleton Loading State -->
     <div v-if="loading" class="rounded-xl bg-zinc-900 p-6 shadow-xl">
       <!-- Profile Header Skeleton -->
@@ -128,12 +188,38 @@ const handleSignOut = async () => {
 
       <!-- Profile Image and Basic Info -->
       <div class="flex items-center space-x-4 mb-6">
-        <div
-          class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-          <UIcon name="i-lucide-user" class="w-12 h-12 text-white" />
+        <div class="relative w-24 h-24 group">
+          <!-- Profile Icon/Image -->
+          <div v-if="profileIconUrl"
+            class="w-24 h-24 rounded-full overflow-hidden border-2 border-purple-500 shadow-lg">
+            <img :src="profileIconUrl" :alt="profileData?.avatar_card_name || ''" class="w-full h-full object-cover" />
+          </div>
+          <div v-else
+            class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+            <UIcon name="i-lucide-user" class="w-12 h-12 text-white" />
+          </div>
+
+          <!-- Edit Button Overlay -->
+          <UPopover>
+            <div
+              class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <UIcon name="i-lucide-pencil" class="w-6 h-6 text-white" />
+            </div>
+
+            <template #content>
+              <div class="p-4 w-80">
+                <h3 class="text-sm font-semibold mb-2">Choose Profile Icon</h3>
+                <USelectMenu v-model="selectedProfileCard" v-model:search-term="searchTerm"
+                  :loading="cardsStatus === 'pending' || profileIconLoading" :items="filteredCards"
+                  placeholder="Search for a card..." icon="i-lucide-search" class="w-full"
+                  @update:model-value="updateProfileCard" />
+                <p class="text-xs text-zinc-400 mt-2">Search for an MTG card to use as your profile icon</p>
+              </div>
+            </template>
+          </UPopover>
         </div>
         <div class="flex flex-col">
-          <p class="text-lg font-semibold text-white">{{ username }}</p>
+          <p class="text-lg font-semibold text-white">{{ computedUsername }}</p>
           <p class="text-sm text-zinc-400">{{ userProfile?.email }}</p>
         </div>
       </div>
@@ -173,5 +259,29 @@ const handleSignOut = async () => {
         Sign Out
       </UButton>
     </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.page-wrapper {
+  position: relative;
+  min-height: 100vh;
+}
+
+.page-background-art {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(8px);
+  transform: scale(1.1);
+}
+</style>

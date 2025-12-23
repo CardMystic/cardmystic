@@ -1,8 +1,12 @@
 import type { User } from '@supabase/supabase-js';
+import type { Database } from '~/database.types';
 import { useSupabase } from './useSupabase';
 
 const userProfile = ref<User | null>(null);
 const loading = ref(true);
+const profileData = ref<Database['public']['Tables']['profiles']['Row'] | null>(
+  null,
+);
 
 export const useUserProfile = () => {
   const supabase = useSupabase();
@@ -19,6 +23,10 @@ export const useUserProfile = () => {
       userProfile.value = null;
     } else {
       userProfile.value = user;
+      // Automatically fetch profile data when user is loaded
+      if (user) {
+        await fetchProfileData();
+      }
     }
 
     loading.value = false;
@@ -33,6 +41,82 @@ export const useUserProfile = () => {
     }
   };
 
+  const fetchProfileData = async () => {
+    if (!userProfile.value?.id) return;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userProfile.value.id)
+      .single();
+
+    if (!error && data) {
+      profileData.value = data;
+    }
+  };
+
+  const updateProfileAvatar = async (cardName: string) => {
+    if (!cardName || !userProfile.value?.id) {
+      return { error: new Error('Invalid card name or user not logged in') };
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        avatar_card_name: cardName,
+      })
+      .eq('id', userProfile.value.id);
+
+    if (!error && profileData.value) {
+      profileData.value.avatar_card_name = cardName;
+    }
+
+    return { error };
+  };
+
+  const updateUsername = async (username: string) => {
+    if (!username.trim()) {
+      return { error: new Error('Username cannot be empty') };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      data: { username },
+    });
+
+    return { error };
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    if (newPassword.length < 6) {
+      return { error: new Error('Password must be at least 6 characters') };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    return { error };
+  };
+
+  // Initialize user and profile data on first use
+  if (userProfile.value && !profileData.value) {
+    fetchProfileData();
+  }
+
+  // Computed properties
+  const username = computed(() => {
+    return (
+      userProfile.value?.user_metadata?.username ||
+      userProfile.value?.email?.split('@')[0] ||
+      ''
+    );
+  });
+
+  const profileIconUrl = computed(() => {
+    if (!profileData.value?.avatar_card_name) return null;
+    return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(profileData.value.avatar_card_name)}&format=image&version=art_crop`;
+  });
+
   // Listen to auth state changes
   const initAuthListener = () => {
     supabase.auth.onAuthStateChange((event, session) => {
@@ -40,16 +124,25 @@ export const useUserProfile = () => {
 
       if (event === 'SIGNED_IN') {
         console.log('User signed in:', session?.user);
+        fetchProfileData();
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out');
+        profileData.value = null;
       }
     });
   };
 
   return {
     userProfile: readonly(userProfile),
+    profileData: readonly(profileData),
     loading: readonly(loading),
+    username: readonly(username),
+    profileIconUrl: readonly(profileIconUrl),
     fetchUser,
+    fetchProfileData,
+    updateProfileAvatar,
+    updateUsername,
+    updatePassword,
     signOut,
     initAuthListener,
   };

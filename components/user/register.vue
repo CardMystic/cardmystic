@@ -8,6 +8,7 @@ const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null
@@ -23,6 +24,7 @@ const signUpWithGoogle = async () => {
 const signUpWithEmail = async () => {
   loading.value = true
   errorMessage.value = null
+  successMessage.value = null
 
   if (password.value !== confirmPassword.value) {
     errorMessage.value = 'Passwords do not match'
@@ -44,7 +46,10 @@ const signUpWithEmail = async () => {
       user: data.user,
       session: data.session
     })
-    navigateTo('/')
+    successMessage.value = 'Account created! Please check your email to verify your account before logging in.'
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
   }
 }
 </script>
@@ -73,6 +78,10 @@ const signUpWithEmail = async () => {
 
     <p v-if="errorMessage" class="text-red-400 text-sm text-center">
       {{ errorMessage }}
+    </p>
+
+    <p v-if="successMessage" class="text-green-400 text-sm text-center">
+      {{ successMessage }}
     </p>
 
     <div class="text-center text-zinc-400 text-sm">
