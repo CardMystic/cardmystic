@@ -42,7 +42,6 @@ import { CardSearchFiltersSchema } from '~/models/searchModel'
 import Filters from './Filters.vue'
 
 const input = ref();
-const showFilters = ref(false);
 
 defineShortcuts({
   '/': () => input.value?.inputRef?.focus()
@@ -58,6 +57,7 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || ''));
+const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
 const parsedFilters = computed(() => {
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
@@ -83,6 +83,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         delete requestFilters.selectedColorFilterOption
       }
     }
+
+    // Remove undefined/null/empty values from filters
+    Object.keys(requestFilters).forEach(key => {
+      const value = requestFilters[key as keyof typeof requestFilters];
+      if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+        delete requestFilters[key as keyof typeof requestFilters];
+      }
+    });
 
     const query: Record<string, any> = {
       query: event.data.query,
