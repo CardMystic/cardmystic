@@ -255,7 +255,7 @@
       </div>
       <div class="lg:col-span-10 flex flex-col items-center">
         <!-- Similar Cards Section -->
-        <UCard v-if="card" class="similar-cards-section">
+        <UCard v-if="card" class="similar-cards-section w-full">
           <ListCardDetailsSimilarCardsResults :is-loading="isSimilarCardsLoading" :search-results="similarCards"
             :skeleton-count="8" />
         </UCard>
