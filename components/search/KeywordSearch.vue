@@ -21,8 +21,8 @@
 
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton @click="showFilters = true" variant="ghost" color="neutral" size="sm"
-          icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
+        <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
+          aria-label="Show advanced search filters">
           Show Advanced Filters
         </UButton>
       </UTooltip>
