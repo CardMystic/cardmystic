@@ -14,7 +14,9 @@
         <ul v-else class="mb-2 max-h-56 overflow-y-auto">
           <li v-for="card in clipboard.list.value" :key="card.id"
             class="flex items-center justify-between py-1 px-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-            <span class="truncate">{{ card.name }}</span>
+            <NuxtLink :to="`/card/${card.id}`" class="truncate flex-1 cursor-pointer hover:text-primary">
+              {{ card.name }}
+            </NuxtLink>
             <UButton class="cursor-pointer" icon="i-lucide-x" size="xs" color="error" variant="ghost"
               @click.stop="clipboard.remove(card.id)" aria-label="Remove" />
           </li>
