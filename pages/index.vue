@@ -11,7 +11,7 @@
       <div class="header-layout">
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
-          <h2 class="subtitle">
+          <h2 class="subtitle text-white">
             <b class="text-primary">A.I. Search Engine</b> For <b class="text-primary">MTG</b>
           </h2>
         </div>
