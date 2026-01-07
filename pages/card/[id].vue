@@ -59,7 +59,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -263,10 +263,6 @@
       <div class="lg:col-span-10 flex flex-col items-center">
         <!-- Similar Cards Section -->
         <UCard v-if="card" class="similar-cards-section">
-          <div class="similar-cards-header">
-            <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
-            <h3 class="similar-cards-title">Similar Cards</h3>
-          </div>
           <ListCardDetailsSimilarCardsResults :is-loading="isSimilarCardsLoading" :search-results="similarCards"
             :skeleton-count="8" />
         </UCard>
