@@ -20,13 +20,6 @@
     <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl relative z-10 items-center">
       <!-- Left: Card Image -->
       <div class="lg:col-span-3 flex flex-col items-center">
-        <!-- Back to Results button aligned with card image -->
-        <div class="back-button-container-aligned mb-4">
-          <UButton class="cursor-pointer" color="primary" variant="solid" @click="$router.back()"
-            icon="i-heroicons-arrow-left">
-            Back to Results
-          </UButton>
-        </div>
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
@@ -59,7 +52,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -536,7 +529,7 @@ const similaritySearch = computed(() => {
 });
 
 const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
-  queryKey: ['similar-cards', cardIdParam],
+  queryKey: ['card-details-similar-cards', cardIdParam.value],
   queryFn: async () => {
     if (!similaritySearch.value) return [];
 
