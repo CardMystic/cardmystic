@@ -1,15 +1,5 @@
 <template>
   <UCard variant="subtle" :class="['card-root', isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
-    <!-- Confirmation Modal -->
-    <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
-      description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
-      :ui="{ footer: 'justify-end' }">
-      <template #footer="{ close }">
-        <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-        <UButton label="Yes, This is a Poor Result" color="error" @click="confirmDislike" />
-      </template>
-    </UModal>
-
     <div class="card-image-wrapper">
       <!-- Card content: image + score -->
       <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
@@ -89,7 +79,8 @@
           <UTooltip v-if="!hideThumbsDownButton" text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
-                icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result" @click="handleDislike" />
+                icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result"
+                @click="isThumbsDownClicked = !isThumbsDownClicked" />
             </template>
           </UTooltip>
         </div>
@@ -160,58 +151,6 @@ const props = defineProps({
 const sizeClass = computed(() => `card-${props.size}`);
 
 const isThumbsDownClicked = ref(false);
-const showConfirmModal = ref(false);
-
-// Get the search query from route params
-const searchQuery = computed(() => {
-  // For AI/Commander search, the query is in route.query.query
-  if (route.query.query) {
-    return String(route.query.query);
-  }
-  // For similarity search, the query is the card_name
-  if (route.query.card_name) {
-    return String(route.query.card_name);
-  }
-  return '';
-});
-
-// Handle dislike button click - show confirmation modal
-function handleDislike() {
-  // Don't allow unclicking
-  if (isThumbsDownClicked.value) {
-    return;
-  }
-
-  if (!searchQuery.value || !props.card.card_data?.name) {
-    console.warn('Cannot track dislike: missing query or card name');
-    return;
-  }
-
-  // Show confirmation modal
-  showConfirmModal.value = true;
-}
-
-// Confirm dislike action
-async function confirmDislike() {
-  showConfirmModal.value = false;
-
-  // Set the visual state (cannot be undone)
-  isThumbsDownClicked.value = true;
-
-  try {
-    await $fetch('/api/metrics/dislike', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: {
-        query: searchQuery.value,
-        cardName: props.card.card_data.name,
-      },
-    });
-  } catch (error) {
-    console.error('Failed to track dislike:', error);
-    // Optionally: show a toast notification to the user
-  }
-}
 
 // Navigation helper
 function navigateToCard(cardId: string | undefined) {
