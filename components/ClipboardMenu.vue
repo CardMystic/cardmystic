@@ -49,7 +49,7 @@ const { copy } = useCopyToClipboard()
 const toast = useToast()
 
 const clipboardLabel = computed(() => {
-  return '(' + (clipboard.count.value > 0 ? clipboard.count.value + '' : '0') + ')'
+  return (clipboard.count.value > 0 ? clipboard.count.value + '' : '0')
 })
 
 function copyNames() {
