@@ -37,7 +37,7 @@
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
         <p class="whitespace-nowrap overflow-hidden truncate">
           <span
-            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: orange;' : ''">
+            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
             {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
           </span>
         </p>
