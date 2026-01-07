@@ -17,7 +17,7 @@
       <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto relative z-10">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl relative z-10 items-center">
       <!-- Left: Card Image -->
       <div class="lg:col-span-3 flex flex-col items-center">
         <!-- Back to Results button aligned with card image -->
@@ -58,7 +58,7 @@
                 <div class="flex flex-col">
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
-                  <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
+                  <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
                   }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
@@ -138,7 +138,7 @@
       </div>
 
       <!-- Center: Card Details -->
-      <div class="lg:col-span-7 flex flex-col max-w-[732px]">
+      <div class="lg:col-span-7 flex flex-col">
         <UCard class="card-header-card">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
@@ -260,16 +260,29 @@
           </div>
         </UCard>
       </div>
+      <div class="lg:col-span-10 flex flex-col items-center">
+        <!-- Similar Cards Section -->
+        <UCard v-if="card" class="similar-cards-section">
+          <div class="similar-cards-header">
+            <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
+            <h3 class="similar-cards-title">Similar Cards</h3>
+          </div>
+          <ListCardDetailsSimilarCardsResults :is-loading="isSimilarCardsLoading" :search-results="similarCards"
+            :skeleton-count="8" />
+        </UCard>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import ClipboardButton from '~/components/ClipboardButton.vue';
+import ListCardDetailsSimilarCardsResults from '~/components/ListCardDetailsSimilarCardsResults.vue';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
+import { useQuery } from '@tanstack/vue-query';
+import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
+import { DefaultLimitSimilarity, SimilaritySearchSchema } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
@@ -513,6 +526,41 @@ function findSimilarCards() {
 
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
+
+// Similarity search query
+const similaritySearch = computed(() => {
+  if (!card.value?.name) return undefined;
+
+  return SimilaritySearchSchema.parse({
+    card_name: card.value.name,
+    limit: 41, // Request 41 so we have 40 after removing the first card
+    filters: undefined,
+    exclude_card_data: false,
+  });
+});
+
+const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
+  queryKey: ['similar-cards', cardIdParam],
+  queryFn: async () => {
+    if (!similaritySearch.value) return [];
+
+    const response = await fetch('/api/search/similarity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(similaritySearch.value),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch similar cards');
+    }
+
+    const results = await response.json() as Array<Card>;
+    return results;
+  },
+  staleTime: 1000 * 60 * 15, // 15 minutes
+  enabled: computed(() => !!card.value?.name),
+});
+
 </script>
 
 <style scoped lang="sass">
@@ -932,4 +980,34 @@ function findSimilarCards() {
   z-index: 0
   filter: blur(8px)
   transform: scale(1.1)
+
+// Similar Cards Section Styling
+.similar-cards-section
+  border-radius: 24px
+  backdrop-filter: blur(20px) saturate(180%)
+  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+  position: relative
+
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+    pointer-events: none
+
+.similar-cards-header
+  display: flex
+  align-items: center
+  margin-bottom: 16px
+
+.similar-cards-title
+  font-size: 1.3rem
+  font-weight: 600
+
 </style>
