@@ -52,7 +52,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -625,11 +625,17 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
 .card-header-card
   border-radius: 24px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -639,13 +645,17 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .card-title
   font-size: 2.2rem
   font-weight: 700
-  @apply bg-gradient-to-br from-purple-400 to-pink-400 bg-clip-text text-transparent
   margin-bottom: 4px
 
 .card-title-text
@@ -659,14 +669,12 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   margin-bottom: 8px
 
 .set-name
-  @apply text-gray-300
   font-size: 0.9rem
   font-weight: 400
   margin: 0
   font-style: italic
 
 .card-type
-  @apply text-primary-400
   font-size: 1.1rem
   font-weight: 500
   margin: 0
@@ -676,11 +684,17 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   border-radius: 24px
   padding: 16px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -690,8 +704,13 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .oracle-text
   font-size: 1.1rem
@@ -722,7 +741,6 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   font-weight: 600
 
 .stats
-  @apply text-yellow-400
   font-weight: 700
   font-size: 1.2rem
 
@@ -732,22 +750,26 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   border-top: 1px solid rgba(147, 114, 255, 0.2)
 
 .artist-label
-  @apply text-gray-300
   font-size: 0.9rem
 
 .artist-name
-  @apply text-primary-400
   font-size: 1rem
 
 // Legalities Card
 .legalities-card
   border-radius: 24px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   
   &::before
     content: ''
@@ -757,8 +779,13 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .legalities-header
   display: flex
@@ -789,7 +816,6 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
     min-width: 71.2px
 
 .format-name
-  @apply text-gray-100
   font-size: 11px
   font-weight: bold
   text-align: center
@@ -801,11 +827,17 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
 .price-card
   border-radius: 24px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -815,8 +847,13 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .price-header
   display: flex
@@ -839,7 +876,6 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   padding: 4px 0
 
 .currency-label
-  @apply text-gray-200
   font-size: 0.9rem
   font-weight: 500
 
@@ -964,20 +1000,32 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   background-size: cover
   background-position: center
   background-repeat: no-repeat
-  opacity: 0.2
   pointer-events: none
   z-index: 0
-  filter: blur(8px)
   transform: scale(1.1)
+
+  @media (prefers-color-scheme: light)
+    opacity: 0.5
+    filter: blur(6px)
+
+  @media (prefers-color-scheme: dark)
+    opacity: 0.2
+    filter: blur(8px)
 
 // Similar Cards Section Styling
 .similar-cards-section
   border-radius: 24px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -987,8 +1035,13 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .similar-cards-header
   display: flex
