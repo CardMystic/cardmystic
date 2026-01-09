@@ -17,16 +17,9 @@
       <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl mx-auto relative z-10">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl relative z-10 items-center">
       <!-- Left: Card Image -->
       <div class="lg:col-span-3 flex flex-col items-center">
-        <!-- Back to Results button aligned with card image -->
-        <div class="back-button-container-aligned mb-4">
-          <UButton class="cursor-pointer" color="primary" variant="solid" @click="$router.back()"
-            icon="i-heroicons-arrow-left">
-            Back to Results
-          </UButton>
-        </div>
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
@@ -58,8 +51,8 @@
                 <div class="flex flex-col">
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
-                  <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(', ')
-                  }}</span>
+                  <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -138,7 +131,7 @@
       </div>
 
       <!-- Center: Card Details -->
-      <div class="lg:col-span-7 flex flex-col max-w-[732px]">
+      <div class="lg:col-span-7 flex flex-col">
         <UCard class="card-header-card">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
@@ -260,16 +253,25 @@
           </div>
         </UCard>
       </div>
+      <div class="lg:col-span-10 flex flex-col items-center">
+        <!-- Similar Cards Section -->
+        <UCard v-if="card" class="similar-cards-section w-full">
+          <ListCardDetailsSimilarCardsResults :is-loading="isSimilarCardsLoading" :search-results="similarCards"
+            :skeleton-count="8" />
+        </UCard>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import ClipboardButton from '~/components/ClipboardButton.vue';
+import ListCardDetailsSimilarCardsResults from '~/components/ListCardDetailsSimilarCardsResults.vue';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
+import { useQuery } from '@tanstack/vue-query';
+import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
+import { DefaultLimitSimilarity, SimilaritySearchSchema } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
@@ -513,6 +515,41 @@ function findSimilarCards() {
 
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
+
+// Similarity search query
+const similaritySearch = computed(() => {
+  if (!card.value?.name) return undefined;
+
+  return SimilaritySearchSchema.parse({
+    card_name: card.value.name,
+    limit: 41, // Request 41 so we have 40 after removing the first card
+    filters: undefined,
+    exclude_card_data: false,
+  });
+});
+
+const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
+  queryKey: ['card-details-similar-cards', cardIdParam.value],
+  queryFn: async () => {
+    if (!similaritySearch.value) return [];
+
+    const response = await fetch('/api/search/similarity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(similaritySearch.value),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch similar cards');
+    }
+
+    const results = await response.json() as Array<Card>;
+    return results;
+  },
+  staleTime: 1000 * 60 * 15, // 15 minutes
+  enabled: computed(() => !!card.value?.name),
+});
+
 </script>
 
 <style scoped lang="sass">
@@ -588,11 +625,17 @@ function findSimilarCards() {
 .card-header-card
   border-radius: 24px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -602,13 +645,17 @@ function findSimilarCards() {
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .card-title
   font-size: 2.2rem
   font-weight: 700
-  @apply bg-gradient-to-br from-purple-400 to-pink-400 bg-clip-text text-transparent
   margin-bottom: 4px
 
 .card-title-text
@@ -622,14 +669,12 @@ function findSimilarCards() {
   margin-bottom: 8px
 
 .set-name
-  @apply text-gray-300
   font-size: 0.9rem
   font-weight: 400
   margin: 0
   font-style: italic
 
 .card-type
-  @apply text-primary-400
   font-size: 1.1rem
   font-weight: 500
   margin: 0
@@ -639,11 +684,17 @@ function findSimilarCards() {
   border-radius: 24px
   padding: 16px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -653,8 +704,13 @@ function findSimilarCards() {
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .oracle-text
   font-size: 1.1rem
@@ -685,7 +741,6 @@ function findSimilarCards() {
   font-weight: 600
 
 .stats
-  @apply text-yellow-400
   font-weight: 700
   font-size: 1.2rem
 
@@ -695,22 +750,26 @@ function findSimilarCards() {
   border-top: 1px solid rgba(147, 114, 255, 0.2)
 
 .artist-label
-  @apply text-gray-300
   font-size: 0.9rem
 
 .artist-name
-  @apply text-primary-400
   font-size: 1rem
 
 // Legalities Card
 .legalities-card
   border-radius: 24px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   
   &::before
     content: ''
@@ -720,8 +779,13 @@ function findSimilarCards() {
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .legalities-header
   display: flex
@@ -752,7 +816,6 @@ function findSimilarCards() {
     min-width: 71.2px
 
 .format-name
-  @apply text-gray-100
   font-size: 11px
   font-weight: bold
   text-align: center
@@ -764,11 +827,17 @@ function findSimilarCards() {
 .price-card
   border-radius: 24px
   backdrop-filter: blur(20px) saturate(180%)
-  background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
   border: 1px solid rgba(147, 114, 255, 0.3)
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
   position: relative
   margin-bottom: 16px
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
 
   &::before
     content: ''
@@ -778,8 +847,13 @@ function findSimilarCards() {
     right: 0
     bottom: 0
     border-radius: 24px
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
     pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
 
 .price-header
   display: flex
@@ -802,7 +876,6 @@ function findSimilarCards() {
   padding: 4px 0
 
 .currency-label
-  @apply text-gray-200
   font-size: 0.9rem
   font-weight: 500
 
@@ -927,9 +1000,56 @@ function findSimilarCards() {
   background-size: cover
   background-position: center
   background-repeat: no-repeat
-  opacity: 0.2
   pointer-events: none
   z-index: 0
-  filter: blur(8px)
   transform: scale(1.1)
+
+  @media (prefers-color-scheme: light)
+    opacity: 0.5
+    filter: blur(6px)
+
+  @media (prefers-color-scheme: dark)
+    opacity: 0.2
+    filter: blur(8px)
+
+// Similar Cards Section Styling
+.similar-cards-section
+  border-radius: 24px
+  backdrop-filter: blur(20px) saturate(180%)
+  border: 1px solid rgba(147, 114, 255, 0.3)
+  position: relative
+
+  @media (prefers-color-scheme: light)
+    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
+    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
+
+  @media (prefers-color-scheme: dark)
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
+
+  &::before
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    border-radius: 24px
+    pointer-events: none
+
+    @media (prefers-color-scheme: light)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
+
+    @media (prefers-color-scheme: dark)
+      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+
+.similar-cards-header
+  display: flex
+  align-items: center
+  margin-bottom: 16px
+
+.similar-cards-title
+  font-size: 1.3rem
+  font-weight: 600
+
 </style>

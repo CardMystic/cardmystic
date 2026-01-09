@@ -28,16 +28,16 @@
     <div class="flex flex-col items-center justify-center text-center">
 
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-        <p class="whitespace-nowrap overflow-hidden truncate">
+        <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
           {{ card.card_data.name.split(' // ')[0] }}
         </p>
         <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
           class="manacost-text whitespace-nowrap" />
       </div>
       <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
-        <p class="whitespace-nowrap overflow-hidden truncate">
+        <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
           <span
-            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: orange;' : ''">
+            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
             {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
           </span>
         </p>
