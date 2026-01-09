@@ -14,7 +14,7 @@
         <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
           <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
             :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
-            :hide-thumbs-down-button="isKeywordSearch" />
+            :hide-thumbs-down-button="isKeywordSearch || isSimilaritySearch" />
         </div>
       </div>
     </template>

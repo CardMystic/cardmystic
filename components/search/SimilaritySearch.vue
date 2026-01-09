@@ -1,5 +1,9 @@
 <template>
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
+    <!-- Honeypot field - hidden from users but visible to bots -->
+    <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
+      style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
+
     <UFormField name="card_name" class="mb-2">
       <div class="flex gap-2">
         <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
@@ -99,7 +103,21 @@ const filteredCards = computed(() => {
   return filtered;
 });
 
+// Honeypot field for bot detection
+const honeypot = ref('')
+
+const toast = useToast()
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  // Bot detection: if honeypot field is filled, reject the submission
+  if (honeypot.value) {
+    toast.add({
+      title: 'Invalid submission',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     const requestFilters = { ...event.data.filters } // shallow copy
 
