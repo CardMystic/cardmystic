@@ -13,8 +13,8 @@
 
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton @click="showFilters = true" variant="ghost" color="neutral" size="sm"
-          icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
+        <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
+          aria-label="Show advanced search filters">
           Show Advanced Filters
         </UButton>
       </UTooltip>
@@ -35,7 +35,6 @@ import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
 
 const autoComplete = ref();
-const showFilters = ref(false);
 defineShortcuts({
   '/': () => {
     autoComplete.value?.inputRef?.focus();
@@ -51,6 +50,7 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const cardNameParam = computed(() => String(route.query.card_name || ''));
+const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
 const parsedFilters = computed(() => {
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
@@ -110,6 +110,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         delete requestFilters.selectedColorFilterOption
       }
     }
+
+    // Remove undefined/null/empty values from filters
+    Object.keys(requestFilters).forEach(key => {
+      const value = requestFilters[key as keyof typeof requestFilters];
+      if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+        delete requestFilters[key as keyof typeof requestFilters];
+      }
+    });
+
     // Construct query parameters
     const query: Record<string, any> = {
       card_name: event.data.card_name,
