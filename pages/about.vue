@@ -4,7 +4,7 @@
     <div
       class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
       <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
-        What is <span class="text-primary">CardMystic</span>?
+        🔮 What is <span class="text-primary">CardMystic</span>?
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
         CardMystic is a powerful Open Source AI Search engine for Magic: The
@@ -18,7 +18,7 @@
     <div
       class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
       <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
-        Why <span class="text-primary">CardMystic</span>?
+        🤔 Why <span class="text-primary">CardMystic</span>?
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
         Magic: The Gathering is complex and intricate, but finding cards
@@ -35,7 +35,7 @@
     <div
       class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
       <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
-        What Sets Us Apart
+        ⭐ What Sets Us Apart
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
         Unlike similar tools, we are NOT just a generic AI wrapper. Our team's AI experts have meticulously trained
@@ -48,7 +48,7 @@
     <!-- Contact Us -->
     <div
       class="w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
-      <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">Contact Us</h2>
+      <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">💬 Contact Us</h2>
       <p class="text-base md:text-lg leading-relaxed">
         Have questions, feedback, or ideas for CardMystic? We'd love to hear
         from you!
