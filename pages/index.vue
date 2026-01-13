@@ -11,9 +11,9 @@
       <div class="header-layout">
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
-          <h2 class="subtitle text-white">
+          <h1 class="subtitle text-white">
             <b class="text-primary">A.I. Search Engine</b> For <b class="text-primary">MTG</b>
-          </h2>
+          </h1>
         </div>
       </div>
 
@@ -40,7 +40,7 @@
         <div class="flex items-start gap-4">
           <UIcon name="i-lucide-book-open" class="text-3xl text-primary flex-shrink-0 mt-1" />
           <div>
-            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h3>
+            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h2>
             <p class="text-base md:text-lg leading-relaxed">
               Simply describe the cards you want in plain English, and let our
               intelligent search engine do the rest. Still not sure? Try an
@@ -56,7 +56,7 @@
         <div class="flex items-start gap-4">
           <UIcon name="i-lucide-sparkles" class="text-3xl text-primary flex-shrink-0 mt-1" />
           <div>
-            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h3>
+            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h2>
             <p class="text-base md:text-lg leading-relaxed">
               Our A.I. experts meticulously train custom, state-of-the-art models to understand the nuances of Magic
               including
