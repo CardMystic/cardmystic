@@ -120,6 +120,8 @@ const heroCards: CardType[] = [
   {
     card_name: 'The Ur-Dragon',
     card_data: {
+      id: '7e78b70b-0c67-4f14-8ad7-c9f8e3f59743',
+      name: 'The Ur-Dragon',
       image_uris: {
         normal: 'https://cards.scryfall.io/normal/front/7/e/7e78b70b-0c67-4f14-8ad7-c9f8e3f59743.jpg',
       }
@@ -128,7 +130,7 @@ const heroCards: CardType[] = [
   {
     card_name: 'Ugin, the Spirit Dragon',
     card_data: {
-      id: '9c017fa9-7021-417a-9c2e-3df409739fcf',
+      id: '58c1e824-c8a9-4312-8e4c-a29a26d189a4',
       name: 'Ugin, the Spirit Dragon',
       image_uris: {
         normal: 'https://cards.scryfall.io/normal/front/5/8/58c1e824-c8a9-4312-8e4c-a29a26d189a4.jpg',
