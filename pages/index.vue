@@ -12,7 +12,8 @@
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h1 class="subtitle text-white">
-            <b class="text-primary">A.I. Search Engine</b> For <b class="text-primary">MTG</b>
+            <b class="highlight">CardMystic</b> Is An <b class="highlight">A.I. Search Engine</b> For <b
+              class="highlight">MTG</b>
           </h1>
         </div>
       </div>
@@ -196,6 +197,10 @@ setPageInfo({
   opacity: 0.25
   z-index: 0
 
+
+.highlight
+  color: #e4842a
+
 .image
   width: 200px
   height: 200px
@@ -209,9 +214,6 @@ setPageInfo({
 .explore-spacer
   flex-grow: 1
   justify-content: flex-end
-
-.stopExploreOverlap
-  padding-bottom: 60px
 
 .header-layout
   margin-bottom: 20px
@@ -229,7 +231,6 @@ setPageInfo({
 
 .subtitle
   font-size: 2.0rem
-  font-style: italic
   line-height: 1.2
   @media (max-width: 768px)
     font-size: 1.5rem
