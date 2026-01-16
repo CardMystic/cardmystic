@@ -261,16 +261,7 @@ setPageInfo({
 .explore-spacer
   flex-grow: 1
   justify-content: flex-end
-  position: relative
-  z-index: 20
   min-height: 100px
-
-.explore-content
-  display: flex
-  flex-direction: column
-  align-items: center
-  gap: 4px
-  padding: 8px 16px
 
 .header-layout
   margin-bottom: 20px
