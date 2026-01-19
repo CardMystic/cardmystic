@@ -6,6 +6,11 @@ import UserRegister from '~/components/user/register.vue'
 import { useUserProfile } from '~/composables/useUserProfile'
 
 const isOpen = ref(false)
+const colorMode = useColorMode()
+
+const wizardImage = computed(() => {
+  return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_darkmode.webp'
+})
 const isLoginModalOpen = ref(false)
 const authMode = ref<'login' | 'register'>('login')
 const { userProfile, initAuthListener } = useUserProfile()
@@ -173,7 +178,12 @@ const externalItems: NavigationMenuItem[] = [
 
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
-        <img src="/wizard_outline.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+        <ClientOnly>
+          <img :src="wizardImage" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+          <template #fallback>
+            <img src="/wizard.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+          </template>
+        </ClientOnly>
       </NuxtLink>
     </div>
 
@@ -181,7 +191,12 @@ const externalItems: NavigationMenuItem[] = [
     <div class="flex-row hidden md:flex">
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity mr-6">
-        <img src="/wizard_outline.webp" alt="CardMystic Logo" class="w-12 h-12 object-contain" />
+        <ClientOnly>
+          <img :src="wizardImage" alt="CardMystic Logo" class="w-12 h-12 object-contain" />
+          <template #fallback>
+            <img src="/wizard.webp" alt="CardMystic Logo" class="w-12 h-12 object-contain" />
+          </template>
+        </ClientOnly>
       </NuxtLink>
 
       <!-- Desktop Navigation -->

@@ -1,5 +1,9 @@
 <template>
   <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
+    <!-- Honeypot field - hidden from users but visible to bots -->
+    <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
+      style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
+
     <UFormField name="card_name" class="mb-2">
       <div class="flex gap-2">
         <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
@@ -13,8 +17,8 @@
 
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton @click="showFilters = true" variant="ghost" color="neutral" size="sm"
-          icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
+        <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
+          aria-label="Show advanced search filters">
           Show Advanced Filters
         </UButton>
       </UTooltip>
@@ -35,7 +39,6 @@ import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
 
 const autoComplete = ref();
-const showFilters = ref(false);
 defineShortcuts({
   '/': () => {
     autoComplete.value?.inputRef?.focus();
@@ -51,6 +54,7 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const cardNameParam = computed(() => String(route.query.card_name || ''));
+const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
 const parsedFilters = computed(() => {
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
@@ -99,7 +103,21 @@ const filteredCards = computed(() => {
   return filtered;
 });
 
+// Honeypot field for bot detection
+const honeypot = ref('')
+
+const toast = useToast()
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
+  // Bot detection: if honeypot field is filled, reject the submission
+  if (honeypot.value) {
+    toast.add({
+      title: 'Invalid submission',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     const requestFilters = { ...event.data.filters } // shallow copy
 
@@ -110,6 +128,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         delete requestFilters.selectedColorFilterOption
       }
     }
+
+    // Remove undefined/null/empty values from filters
+    Object.keys(requestFilters).forEach(key => {
+      const value = requestFilters[key as keyof typeof requestFilters];
+      if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+        delete requestFilters[key as keyof typeof requestFilters];
+      }
+    });
+
     // Construct query parameters
     const query: Record<string, any> = {
       card_name: event.data.card_name,

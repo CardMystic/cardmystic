@@ -26,10 +26,20 @@
 
       <UCardContent class="mt-2 text-base">
         <p class="font-semibold">
-          1. Current Data Collection (Analytics Only)
+          1. Current Data Collection
         </p>
         <p class="mt-2">
-          We use Microsoft Clarity to collect anonymized analytics, which may include:
+          We collect the following information to improve our service:
+        </p>
+        <ul class="list-disc ml-6 mt-4">
+          <li><strong>Search queries:</strong> All search queries you submit are tracked and stored for training
+            purposes to improve our AI search models</li>
+          <li><strong>Card interaction feedback:</strong> Dislike clicks on card search results to help refine search
+            quality and relevance</li>
+        </ul>
+
+        <p class="mt-6">
+          We also use Microsoft Clarity to collect anonymized analytics, which may include:
         </p>
         <ul class="list-disc ml-6 mt-4">
           <li>Device and browser details</li>
@@ -65,11 +75,20 @@
 
       <UCardContent class="mt-2 text-base">
         <p class="font-semibold">
+          For search queries and feedback:
+        </p>
+        <ul class="list-disc ml-6 mt-4">
+          <li>Training and improving our AI search models</li>
+          <li>Refining search result relevance and quality</li>
+          <li>Understanding user preferences and search patterns</li>
+        </ul>
+
+        <p class="mt-6 font-semibold">
           For analytics:
         </p>
         <ul class="list-disc ml-6 mt-4">
           <li>Understanding site performance and usage patterns</li>
-          <li>Improving search quality and user experience</li>
+          <li>Improving overall user experience</li>
         </ul>
 
         <p class="mt-6 font-semibold">

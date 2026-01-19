@@ -11,9 +11,10 @@
       <div class="header-layout">
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
-          <h2 class="subtitle">
-            <b class="text-primary">A.I. Search Engine</b> For <b class="text-primary">MTG</b>
-          </h2>
+          <h1 class="subtitle text-white">
+            <b class="highlight">CardMystic</b> Is An <b class="highlight">A.I. Search Engine</b> For <b
+              class="highlight">MTG</b>
+          </h1>
         </div>
       </div>
 
@@ -23,11 +24,23 @@
     </UContainer>
 
     <!-- Explore text + icon -->
-    <div class="explore-spacer mb-2 flex flex-col items-center gap-1 text-white">
-      <span class="text-md opacity-100">Explore More</span>
-      <UIcon name="i-lucide-chevron-down" class="text-xl opacity-100" />
+    <div class="explore-spacer mb-4 flex flex-col items-center gap-1 text-black">
+      <!-- Fanned cards at bottom -->
+      <div class="bottom-cards">
+        <div v-if="heroCards[0]" class="card-wrapper card-left">
+          <CardSimple :card="heroCards[0]" size="small" />
+        </div>
+        <div v-if="heroCards[1]" class="card-wrapper card-center">
+          <CardSimple :card="heroCards[1]" size="small" />
+        </div>
+        <div v-if="heroCards[2]" class="card-wrapper card-right">
+          <CardSimple :card="heroCards[2]" size="small" />
+        </div>
+      </div>
     </div>
   </div>
+
+
 
   <!-- Everything below the fold -->
   <UContainer class="mt-14 mb-10">
@@ -40,7 +53,7 @@
         <div class="flex items-start gap-4">
           <UIcon name="i-lucide-book-open" class="text-3xl text-primary flex-shrink-0 mt-1" />
           <div>
-            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h3>
+            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h2>
             <p class="text-base md:text-lg leading-relaxed">
               Simply describe the cards you want in plain English, and let our
               intelligent search engine do the rest. Still not sure? Try an
@@ -56,7 +69,7 @@
         <div class="flex items-start gap-4">
           <UIcon name="i-lucide-sparkles" class="text-3xl text-primary flex-shrink-0 mt-1" />
           <div>
-            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h3>
+            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h2>
             <p class="text-base md:text-lg leading-relaxed">
               Our A.I. experts meticulously train custom, state-of-the-art models to understand the nuances of Magic
               including
@@ -96,9 +109,45 @@ useSeoMeta({
 
 import SearchForm from '~/components/search/Search.vue';
 import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
+import CardSimple from '~/components/CardSimple.vue';
+import type { Card as CardType } from '~/models/cardModel';
 
 // Use search type composable to check if AI search is active
 const { isAiSearch } = useSearchType();
+
+// Hardcoded hero cards
+const heroCards: CardType[] = [
+  {
+    card_name: 'The Ur-Dragon',
+    card_data: {
+      id: '7e78b70b-0c67-4f14-8ad7-c9f8e3f59743',
+      name: 'The Ur-Dragon',
+      image_uris: {
+        normal: 'https://cards.scryfall.io/normal/front/7/e/7e78b70b-0c67-4f14-8ad7-c9f8e3f59743.jpg',
+      }
+    } as any
+  },
+  {
+    card_name: 'Ugin, the Spirit Dragon',
+    card_data: {
+      id: '58c1e824-c8a9-4312-8e4c-a29a26d189a4',
+      name: 'Ugin, the Spirit Dragon',
+      image_uris: {
+        normal: 'https://cards.scryfall.io/normal/front/5/8/58c1e824-c8a9-4312-8e4c-a29a26d189a4.jpg',
+      }
+    } as any
+  },
+  {
+    card_name: 'Teferi, Time Raveler',
+    card_data: {
+      id: '5cb76266-ae50-4bbc-8f96-d98f309b02d3',
+      name: 'Teferi, Time Raveler',
+      image_uris: {
+        normal: 'https://cards.scryfall.io/normal/front/5/c/5cb76266-ae50-4bbc-8f96-d98f309b02d3.jpg',
+      }
+    } as any
+  }
+];
 
 // Mouse trail effect
 interface Dot {
@@ -183,6 +232,7 @@ setPageInfo({
   justify-content: center
   border-bottom: 3px solid white
   background-color: black
+  overflow: hidden
 
 .hero-bg
   position: absolute
@@ -196,22 +246,24 @@ setPageInfo({
   opacity: 0.25
   z-index: 0
 
+
+.highlight
+  color: #e4842a
+
 .image
   width: 200px
   height: 200px
   position: relative
-  bottom: 10px
-  left: 0px
+  z-index: 10
   @media (max-width: 768px)
-    width: 150px
-    height: 150px
+    top: -10px
+    width: 130px
+    height: 130px
 
 .explore-spacer
   flex-grow: 1
   justify-content: flex-end
-
-.stopExploreOverlap
-  padding-bottom: 60px
+  min-height: 100px
 
 .header-layout
   margin-bottom: 20px
@@ -227,9 +279,55 @@ setPageInfo({
   min-width: 372px
   position: relative
 
+.logo-container
+  position: relative
+  width: 200px
+  height: 200px
+  display: flex
+  align-items: center
+  justify-content: center
+  margin-bottom: -10px
+  @media (max-width: 768px)
+    width: 150px
+    height: 150px
+
+.bottom-cards
+  position: absolute
+  bottom: -20px
+  left: 50%
+  transform: translateX(-50%) translateY(50%)
+  display: flex
+  align-items: center
+  justify-content: center
+  width: 500px
+  height: 300px
+  z-index: 5
+  @media (max-width: 768px)
+    width: 350px
+    height: 200px
+
+.card-wrapper
+  position: absolute
+  width: 180px
+  @media (max-width: 768px)
+    width: 105px
+    
+.card-left
+  transform: rotate(-15deg) translateX(-100px)
+  @media (max-width: 768px)
+    transform: rotate(-15deg) translateX(-70px)
+
+.card-center
+  transform: rotate(0deg)
+  z-index: 2
+
+.card-right
+  transform: rotate(15deg) translateX(100px)
+  @media (max-width: 768px)
+    transform: rotate(15deg) translateX(70px)
+
 .subtitle
   font-size: 2.0rem
-  font-style: italic
   line-height: 1.2
   @media (max-width: 768px)
     font-size: 1.5rem
