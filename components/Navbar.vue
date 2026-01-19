@@ -13,7 +13,7 @@ const wizardImage = computed(() => {
 })
 const isLoginModalOpen = ref(false)
 const authMode = ref<'login' | 'register'>('login')
-const { userProfile, initAuthListener } = useUserProfile()
+const { userProfile, initAuthListener, profileIconUrl, username } = useUserProfile()
 
 // Initialize auth listener on component mount
 onMounted(() => {
@@ -173,8 +173,13 @@ const externalItems: NavigationMenuItem[] = [
           </div>
         </template>
       </UModal>
-      <UButton v-else class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Profile"
-        @click="navigateTo('/profile')" />
+      <div v-else class="ml-2 cursor-pointer" @click="navigateTo('/profile')">
+        <div v-if="profileIconUrl"
+          class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+          <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+        </div>
+        <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+      </div>
 
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
@@ -188,7 +193,7 @@ const externalItems: NavigationMenuItem[] = [
     </div>
 
     <!-- Desktop -->
-    <div class="flex-row hidden md:flex">
+    <div class="flex-row hidden md:flex items-center">
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity mr-6">
         <ClientOnly>
@@ -206,7 +211,7 @@ const externalItems: NavigationMenuItem[] = [
         content: 'w-auto'
       }" />
       <!-- Clipboard Button (always visible, right side) -->
-      <ClipboardMenu class="ml-4" />
+      <ClipboardMenu class="ml-4 h-[50px]" />
 
       <!-- Auth Button - Login/Register Modal or Profile Link -->
       <UModal v-if="!userProfile" v-model:open="isLoginModalOpen"
@@ -222,8 +227,13 @@ const externalItems: NavigationMenuItem[] = [
           </div>
         </template>
       </UModal>
-      <UButton v-else class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Profile"
-        @click="navigateTo('/profile')" />
+      <div v-else class="ml-4 cursor-pointer" @click="navigateTo('/profile')">
+        <div v-if="profileIconUrl"
+          class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+          <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+        </div>
+        <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+      </div>
 
     </div>
 
