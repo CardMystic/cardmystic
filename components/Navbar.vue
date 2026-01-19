@@ -173,13 +173,25 @@ const externalItems: NavigationMenuItem[] = [
           </div>
         </template>
       </UModal>
-      <div v-else class="ml-2 cursor-pointer" @click="navigateTo('/profile')">
-        <div v-if="profileIconUrl"
-          class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
-          <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+      <UPopover v-else class="ml-2">
+        <div class="cursor-pointer">
+          <div v-if="profileIconUrl"
+            class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+            <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+          </div>
+          <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
         </div>
-        <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
-      </div>
+        <template #content>
+          <div class="p-2 w-48 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
+            <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+              block @click="navigateTo('/lists')" />
+            <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost"
+              label="Search History" block disabled />
+            <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
+              block @click="navigateTo('/profile')" />
+          </div>
+        </template>
+      </UPopover>
 
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
@@ -227,13 +239,25 @@ const externalItems: NavigationMenuItem[] = [
           </div>
         </template>
       </UModal>
-      <div v-else class="ml-4 cursor-pointer" @click="navigateTo('/profile')">
-        <div v-if="profileIconUrl"
-          class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
-          <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+      <UPopover v-else class="ml-4">
+        <div class="cursor-pointer">
+          <div v-if="profileIconUrl"
+            class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+            <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+          </div>
+          <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
         </div>
-        <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
-      </div>
+        <template #content>
+          <div class="p-2 w-48 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
+            <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+              block @click="navigateTo('/lists')" />
+            <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost"
+              label="Search History" block disabled />
+            <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
+              block @click="navigateTo('/profile')" />
+          </div>
+        </template>
+      </UPopover>
 
     </div>
 

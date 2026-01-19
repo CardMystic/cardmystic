@@ -27,6 +27,10 @@
             @click="copyNames" :disabled="clipboard.list.value.length === 0">
             Copy
           </UButton>
+          <UButton class="cursor-pointer" icon="i-lucide-save" color="primary" variant="outline" size="sm" block
+            @click="openSaveToList" :disabled="clipboard.list.value.length === 0">
+            Save to List
+          </UButton>
           <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid" size="sm" block
             class="cursor-pointer" :disabled="clipboard.list.value.length === 0" @click="openMassEntry">
             Buy (${{ clipboard.totalPrice.value.toFixed(2) }})
@@ -39,6 +43,7 @@
       </div>
     </template>
   </UPopover>
+  <SaveToListModal v-model="isSaveToListOpen" :card-ids="cardIds" @saved="handleSaved" />
 </template>
 
 <script setup lang="ts">
@@ -46,15 +51,21 @@ import { useClipboard as useClipboardStore } from '~/composables/useClipboard'
 import { useClipboard as useCopyToClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
+import SaveToListModal from '~/components/SaveToListModal.vue'
 
 const clipboard = useClipboardStore()
 const { copy } = useCopyToClipboard()
 const toast = useToast()
 const router = useRouter()
 const isOpen = ref(false)
+const isSaveToListOpen = ref(false)
 
 const clipboardLabel = computed(() => {
   return (clipboard.count.value > 0 ? clipboard.count.value + '' : '0')
+})
+
+const cardIds = computed(() => {
+  return clipboard.list.value.map(card => card.id)
 })
 
 function navigateToCard(cardId: string) {
@@ -72,6 +83,15 @@ function copyNames() {
     title: 'Card names copied!',
     icon: 'i-lucide-clipboard-check'
   })
+}
+
+function openSaveToList() {
+  isSaveToListOpen.value = true
+}
+
+function handleSaved() {
+  // Optionally clear clipboard after saving
+  // clipboard.clear()
 }
 
 function openMassEntry() {
