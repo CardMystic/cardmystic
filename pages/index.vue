@@ -263,7 +263,7 @@ setPageInfo({
 .explore-spacer
   flex-grow: 1
   justify-content: flex-end
-  min-height: 100px
+  min-height: 120px
 
 .header-layout
   margin-bottom: 20px
@@ -293,7 +293,7 @@ setPageInfo({
 
 .bottom-cards
   position: absolute
-  bottom: -20px
+  bottom: 0px
   left: 50%
   transform: translateX(-50%) translateY(50%)
   display: flex
