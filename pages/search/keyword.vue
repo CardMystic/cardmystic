@@ -12,6 +12,7 @@
   </UContainer>
 
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
+  <BackToTop />
 </template>
 
 <script setup lang="ts">
