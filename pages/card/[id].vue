@@ -3,7 +3,7 @@
     <!-- Background art layer -->
     <div v-if="card && cardArtUrl" class="page-background-art" :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
 
-    <div v-if="!card && !error"
+    <div v-if="pending || (!card && !error)"
       class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
       <div class="flex justify-center items-center mb-4">
         <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
@@ -11,7 +11,7 @@
       <p class="text-white text-center">Loading card details...</p>
     </div>
 
-    <div v-else-if="error" class="text-center">
+    <div v-else-if="error && !pending" class="text-center">
       <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4 cursor-pointer" />
       <p class="mt-4 text-white">{{ error }}</p>
       <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
@@ -281,8 +281,8 @@ const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
 
-const { data: cardData, error } = await useAsyncData(
-  `card-with-printings-${cardIdParam.value}`,
+const { data: cardData, error, pending } = useAsyncData(
+  () => `card-with-printings-${cardIdParam.value}`,
   async () => {
     const card = await $fetch<ScryfallCard>(`/api/cards/${cardIdParam.value}`);
 
@@ -300,7 +300,8 @@ const { data: cardData, error } = await useAsyncData(
   },
   {
     server: true,
-    lazy: false,
+    lazy: true,
+    watch: [cardIdParam]
   }
 );
 

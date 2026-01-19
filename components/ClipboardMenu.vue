@@ -1,5 +1,5 @@
 <template>
-  <UPopover>
+  <UPopover v-model:open="isOpen">
     <UButton class="cursor-pointer" icon="i-lucide-clipboard-list" color="primary" variant="solid"
       :label="clipboardLabel"></UButton>
     <template #content>
@@ -14,9 +14,10 @@
         <ul v-else class="mb-2 max-h-56 overflow-y-auto">
           <li v-for="card in clipboard.list.value" :key="card.id"
             class="flex items-center justify-between py-1 px-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-            <NuxtLink :to="`/card/${card.id}`" class="truncate flex-1 cursor-pointer hover:text-primary">
+            <span class="truncate flex-1 cursor-pointer hover:text-primary hover:underline"
+              @click="navigateToCard(card.id)">
               {{ card.name }}
-            </NuxtLink>
+            </span>
             <UButton class="cursor-pointer" icon="i-lucide-x" size="xs" color="error" variant="ghost"
               @click.stop="clipboard.remove(card.id)" aria-label="Remove" />
           </li>
@@ -49,10 +50,19 @@ import { useToast } from '#imports'
 const clipboard = useClipboardStore()
 const { copy } = useCopyToClipboard()
 const toast = useToast()
+const router = useRouter()
+const isOpen = ref(false)
 
 const clipboardLabel = computed(() => {
   return (clipboard.count.value > 0 ? clipboard.count.value + '' : '0')
 })
+
+function navigateToCard(cardId: string) {
+  isOpen.value = false
+  nextTick(() => {
+    router.push(`/card/${cardId}`)
+  })
+}
 
 function copyNames() {
   if (clipboard.list.value.length === 0) return
