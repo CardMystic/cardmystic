@@ -96,8 +96,8 @@ function openSaveToList() {
 }
 
 function handleSaved() {
-  // Optionally clear clipboard after saving
-  // clipboard.clear()
+  // Clear clipboard after saving
+  clipboard.clear()
 }
 
 function openMassEntry() {

@@ -119,25 +119,39 @@ export const useCardLists = () => {
     updates: {
       name?: string;
       description?: string;
-      visibility?: 'private' | 'unlisted' | 'public';
     },
   ) => {
     if (!userProfile.value?.id) {
-      return { data: null, error: new Error('User not authenticated') };
+      return { error: new Error('User not authenticated') };
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('card_lists')
       .update({
         ...updates,
         updated_at: new Date().toISOString(),
       })
       .eq('id', listId)
-      .eq('user_id', userProfile.value.id)
-      .select()
-      .single();
+      .eq('user_id', userProfile.value.id);
 
-    return { data, error };
+    return { error };
+  };
+
+  const updateListAvatar = async (listId: string, cardName: string) => {
+    if (!userProfile.value?.id) {
+      return { error: new Error('User not authenticated') };
+    }
+
+    const { error } = await supabase
+      .from('card_lists')
+      .update({
+        avatar_card_name: cardName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', listId)
+      .eq('user_id', userProfile.value.id);
+
+    return { error };
   };
 
   return {
@@ -148,5 +162,6 @@ export const useCardLists = () => {
     removeCardFromList,
     deleteList,
     updateList,
+    updateListAvatar,
   };
 };

@@ -77,6 +77,7 @@ export default defineNuxtConfig({
     css: {
       preprocessorOptions: {
         sass: {
+          // @ts-ignore - modern-compiler is valid but not in types yet
           api: 'modern-compiler',
         },
       },

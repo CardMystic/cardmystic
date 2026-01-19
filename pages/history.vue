@@ -9,7 +9,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
       <h1 class="text-3xl font-bold">Search History</h1>
-      <UButton icon="i-lucide-trash-2" color="error" variant="outline" label="Clear All" @click="handleClearAll"
+      <UButton icon="i-lucide-trash-2" color="error" variant="outline" label="Clear All" @click="confirmClearAll"
         :disabled="!history || history.length === 0" />
     </div>
 
@@ -51,12 +51,44 @@
 
           <div class="flex gap-2">
             <UButton icon="i-lucide-search" color="primary" variant="solid" label="Search" @click="runSearch(item)" />
-            <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm" @click="deleteItem(item.id)" />
+            <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm" @click="deleteItem(item)" />
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Delete Confirmation Modal -->
+  <UModal v-model:open="isDeleteModalOpen" title="Delete Search">
+    <template #content>
+      <div class="p-4 space-y-4">
+        <p class="text-gray-600 dark:text-gray-400">
+          Are you sure you want to delete this search? This action cannot be undone.
+        </p>
+        <div class="flex justify-end gap-2">
+          <UButton color="neutral" variant="ghost" label="Cancel" @click="isDeleteModalOpen = false"
+            :disabled="deleteLoading" />
+          <UButton color="error" variant="solid" label="Delete" :loading="deleteLoading" @click="handleDelete" />
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- Clear All Confirmation Modal -->
+  <UModal v-model:open="isClearAllModalOpen" title="Clear All History">
+    <template #content>
+      <div class="p-4 space-y-4">
+        <p class="text-gray-600 dark:text-gray-400">
+          Are you sure you want to clear all search history? This action cannot be undone.
+        </p>
+        <div class="flex justify-end gap-2">
+          <UButton color="neutral" variant="ghost" label="Cancel" @click="isClearAllModalOpen = false"
+            :disabled="clearAllLoading" />
+          <UButton color="error" variant="solid" label="Clear All" :loading="clearAllLoading" @click="handleClearAll" />
+        </div>
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
@@ -72,6 +104,13 @@ const router = useRouter()
 const history = ref<any[]>([])
 const loading = ref(true)
 const error = ref('')
+
+// Delete modal state
+const isDeleteModalOpen = ref(false)
+const isClearAllModalOpen = ref(false)
+const itemToDelete = ref<any>(null)
+const deleteLoading = ref(false)
+const clearAllLoading = ref(false)
 
 const loadHistory = async () => {
   loading.value = true
@@ -159,8 +198,19 @@ const runSearch = (item: any) => {
   router.push({ path, query })
 }
 
-const deleteItem = async (id: string) => {
-  const { error: deleteError } = await deleteSearchHistory(id)
+const deleteItem = (item: any) => {
+  itemToDelete.value = item
+  isDeleteModalOpen.value = true
+}
+
+const handleDelete = async () => {
+  if (!itemToDelete.value) return
+
+  deleteLoading.value = true
+
+  const { error: deleteError } = await deleteSearchHistory(itemToDelete.value.id)
+
+  deleteLoading.value = false
 
   if (deleteError) {
     toast.add({
@@ -170,18 +220,26 @@ const deleteItem = async (id: string) => {
       icon: 'i-lucide-x-circle'
     })
   } else {
-    history.value = history.value.filter(item => item.id !== id)
+    history.value = history.value.filter(item => item.id !== itemToDelete.value.id)
     toast.add({
       title: 'Search deleted',
       icon: 'i-lucide-check-circle'
     })
+    isDeleteModalOpen.value = false
+    itemToDelete.value = null
   }
 }
 
+const confirmClearAll = () => {
+  isClearAllModalOpen.value = true
+}
+
 const handleClearAll = async () => {
-  if (!confirm('Are you sure you want to clear all search history?')) return
+  clearAllLoading.value = true
 
   const { error: clearError } = await clearAllHistory()
+
+  clearAllLoading.value = false
 
   if (clearError) {
     toast.add({
@@ -196,6 +254,7 @@ const handleClearAll = async () => {
       title: 'History cleared',
       icon: 'i-lucide-check-circle'
     })
+    isClearAllModalOpen.value = false
   }
 }
 
