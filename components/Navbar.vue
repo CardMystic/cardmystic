@@ -186,7 +186,7 @@ const externalItems: NavigationMenuItem[] = [
             <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
               block @click="navigateTo('/lists')" />
             <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost"
-              label="Search History" block disabled />
+              label="Search History" block @click="navigateTo('/history')" />
             <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
               block @click="navigateTo('/profile')" />
           </div>
@@ -252,7 +252,7 @@ const externalItems: NavigationMenuItem[] = [
             <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
               block @click="navigateTo('/lists')" />
             <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost"
-              label="Search History" block disabled />
+              label="Search History" block @click="navigateTo('/history')" />
             <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
               block @click="navigateTo('/profile')" />
           </div>

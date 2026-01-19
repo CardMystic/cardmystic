@@ -123,10 +123,8 @@ export const useUserProfile = () => {
       userProfile.value = session?.user ?? null;
 
       if (event === 'SIGNED_IN') {
-        console.log('User signed in:', session?.user);
         fetchProfileData();
       } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
         profileData.value = null;
       }
     });

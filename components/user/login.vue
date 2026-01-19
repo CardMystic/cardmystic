@@ -13,10 +13,6 @@ const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
   })
-
-  if (!error) {
-    console.log('Login successful with Google:', data)
-  }
 }
 
 const signInWithEmail = async () => {
@@ -33,10 +29,6 @@ const signInWithEmail = async () => {
   if (error) {
     errorMessage.value = error.message
   } else {
-    console.log('Login successful:', {
-      user: data.user,
-      session: data.session
-    })
     navigateTo('/')
   }
 }

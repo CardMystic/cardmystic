@@ -107,6 +107,7 @@ const filteredCards = computed(() => {
 const honeypot = ref('')
 
 const toast = useToast()
+const { saveSearch } = useSearchHistory()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
@@ -136,6 +137,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         delete requestFilters[key as keyof typeof requestFilters];
       }
     });
+
+    // Save to search history
+    await saveSearch(event.data.card_name, 'similarity', requestFilters)
 
     // Construct query parameters
     const query: Record<string, any> = {

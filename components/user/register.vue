@@ -15,10 +15,6 @@ const signUpWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
   })
-
-  if (!error) {
-    console.log('Registration successful with Google:', data)
-  }
 }
 
 const signUpWithEmail = async () => {
@@ -42,10 +38,6 @@ const signUpWithEmail = async () => {
   if (error) {
     errorMessage.value = error.message
   } else {
-    console.log('Registration successful:', {
-      user: data.user,
-      session: data.session
-    })
     successMessage.value = 'Account created! Please check your email to verify your account before logging in.'
     email.value = ''
     password.value = ''

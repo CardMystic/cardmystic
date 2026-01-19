@@ -87,6 +87,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      search_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          query: string;
+          filters: Json | null;
+          search_type: 'ai' | 'similarity' | 'keyword' | 'commander';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          query: string;
+          filters?: Json | null;
+          search_type: 'ai' | 'similarity' | 'keyword' | 'commander';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          query?: string;
+          filters?: Json | null;
+          search_type?: 'ai' | 'similarity' | 'keyword' | 'commander';
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
