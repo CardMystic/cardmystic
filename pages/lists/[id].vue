@@ -37,14 +37,18 @@
         <UButton icon="i-lucide-arrow-left" color="neutral" variant="ghost" label="Back to Lists" class="mb-4" />
       </NuxtLink>
 
-      <div v-if="list">
+      <div v-if="list" class="flex flex-row justify-between">
         <!-- Action Buttons -->
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap items-center">
           <UButton icon="i-lucide-copy" color="primary" variant="outline" label="Copy Names" @click="copyCardNames"
             :disabled="!cards || cards.length === 0" />
           <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
             :label="`Buy on TCGPlayer ($${totalPrice.toFixed(2)})`" @click="openMassEntry"
             :disabled="!cards || cards.length === 0" />
+        </div>
+        <!-- Sort Component -->
+        <div v-if="cards && cards.length > 0">
+          <Sort @sort="handleSort" />
         </div>
       </div>
     </div>
@@ -68,8 +72,8 @@
 
     <!-- Cards Grid -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-      <Card v-for="card in cards" :key="card.id" :card="card" :show-card-info="true" :hide-progress-bar="true"
-        :hide-thumbs-down-button="true" />
+      <Card v-for="card in sortedCards" :key="card.card_data.id" :card="card" :show-card-info="true"
+        :hide-progress-bar="true" :hide-thumbs-down-button="true" />
     </div>
   </div>
 
@@ -110,7 +114,9 @@ import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
 import Card from '~/components/Card.vue'
+import Sort from '~/components/search/Sort.vue'
 import { refDebounced } from '@vueuse/core'
+import { sortSearchResults } from '~/utils/sort'
 
 const route = useRoute()
 const listId = route.params.id as string
@@ -124,6 +130,27 @@ const list = ref<any>(null)
 const cards = ref<any[]>([])
 const loading = ref(true)
 const error = ref('')
+
+// Sorting state
+const sortBy = ref<string | undefined>(undefined)
+const sortDirection = ref<'asc' | 'desc'>('asc')
+
+// Handle sort changes
+function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
+  sortBy.value = sortOption;
+  sortDirection.value = direction;
+}
+
+// Computed sorted results - skip the first card (we're already viewing it on the page)
+const sortedCards = computed(() => {
+  if (!cards.value || cards.value.length === 0) {
+    return [];
+  }
+
+  // Skip the first card (the current card being viewed)
+  return sortSearchResults(cards.value, sortBy.value, sortDirection.value) || [];
+});
+
 
 // Banner state
 const isEditBannerModalOpen = ref(false)
