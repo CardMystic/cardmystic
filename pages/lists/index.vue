@@ -18,8 +18,9 @@
 
     <!-- Error State -->
     <div v-else-if="error" class="text-center py-12">
-      <p class="text-red-500 mb-4">{{ error }}</p>
-      <UButton @click="loadLists">Try Again</UButton>
+      <UIcon name="i-lucide-alert-circle" class="w-16 h-16 mx-auto mb-4 text-red-500" />
+      <p class="text-red-500 mb-2 text-lg font-semibold">Error loading lists</p>
+      <p class="text-gray-500">{{ error }}</p>
     </div>
 
     <!-- Empty State -->
@@ -82,33 +83,18 @@ import { useCardLists } from '~/composables/useCardLists'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useToast } from '#imports'
 
-const { fetchUserLists, deleteList } = useCardLists()
+const { userLists, isLoadingLists, listsError, deleteListMutation } = useCardLists()
 const { userProfile, profileIconUrl, fetchUser } = useUserProfile()
 const toast = useToast()
 
-const lists = ref<any[]>([])
-const loading = ref(true)
-const error = ref('')
+const lists = computed(() => userLists.value || [])
+const loading = computed(() => isLoadingLists.value)
+const error = computed(() => listsError.value?.message || '')
 
 // Delete modal state
 const isDeleteModalOpen = ref(false)
 const listToDelete = ref<any>(null)
-const deleteLoading = ref(false)
-
-const loadLists = async () => {
-  loading.value = true
-  error.value = ''
-
-  const { data, error: fetchError } = await fetchUserLists()
-
-  if (fetchError) {
-    error.value = fetchError.message
-  } else {
-    lists.value = data || []
-  }
-
-  loading.value = false
-}
+const deleteLoading = computed(() => deleteListMutation.isPending.value)
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -132,27 +118,20 @@ const confirmDelete = (list: any) => {
 const handleDelete = async () => {
   if (!listToDelete.value) return
 
-  deleteLoading.value = true
-
-  const { error: deleteError } = await deleteList(listToDelete.value.id)
-
-  deleteLoading.value = false
-
-  if (deleteError) {
-    toast.add({
-      title: 'Error deleting list',
-      description: deleteError.message,
-      color: 'error'
-    })
-  } else {
+  try {
+    await deleteListMutation.mutateAsync(listToDelete.value.id)
     toast.add({
       title: 'List deleted',
       icon: 'i-lucide-trash-2'
     })
     isDeleteModalOpen.value = false
     listToDelete.value = null
-    // Reload lists
-    await loadLists()
+  } catch (error: any) {
+    toast.add({
+      title: 'Error deleting list',
+      description: error.message,
+      color: 'error'
+    })
   }
 }
 
@@ -161,8 +140,6 @@ onMounted(async () => {
 
   if (!userProfile.value) {
     navigateTo('/')
-  } else {
-    loadLists()
   }
 })
 </script>

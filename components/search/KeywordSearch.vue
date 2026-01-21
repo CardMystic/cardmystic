@@ -78,7 +78,7 @@ const state = reactive<Partial<Schema>>({
 const honeypot = ref('')
 
 const toast = useToast()
-const { saveSearch } = useSearchHistory()
+const { saveSearchMutation } = useSearchHistory()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
@@ -110,7 +110,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
 
     // Save to search history
-    await saveSearch(event.data.query, 'keyword', requestFilters)
+    saveSearchMutation.mutate({ query: event.data.query, searchType: 'keyword', filters: requestFilters })
 
     const query: Record<string, any> = {
       query: event.data.query,

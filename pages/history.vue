@@ -20,8 +20,9 @@
 
     <!-- Error State -->
     <div v-else-if="error" class="text-center py-12">
-      <p class="text-red-500 mb-4">{{ error }}</p>
-      <UButton @click="loadHistory">Try Again</UButton>
+      <UIcon name="i-lucide-alert-circle" class="w-16 h-16 mx-auto mb-4 text-red-500" />
+      <p class="text-red-500 mb-2 text-lg font-semibold">Error loading history</p>
+      <p class="text-gray-500">{{ error }}</p>
     </div>
 
     <!-- Empty State -->
@@ -96,36 +97,21 @@ import { useSearchHistory } from '~/composables/useSearchHistory'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useToast } from '#imports'
 
-const { fetchSearchHistory, deleteSearchHistory, clearAllHistory } = useSearchHistory()
+const { searchHistory, isLoadingHistory, historyError, deleteSearchHistoryMutation, clearAllHistoryMutation } = useSearchHistory()
 const { userProfile, profileIconUrl } = useUserProfile()
 const toast = useToast()
 const router = useRouter()
 
-const history = ref<any[]>([])
-const loading = ref(true)
-const error = ref('')
+const history = computed(() => searchHistory.value || [])
+const loading = computed(() => isLoadingHistory.value)
+const error = computed(() => historyError.value?.message || '')
 
 // Delete modal state
 const isDeleteModalOpen = ref(false)
 const isClearAllModalOpen = ref(false)
 const itemToDelete = ref<any>(null)
-const deleteLoading = ref(false)
-const clearAllLoading = ref(false)
-
-const loadHistory = async () => {
-  loading.value = true
-  error.value = ''
-
-  const { data, error: fetchError } = await fetchSearchHistory()
-
-  if (fetchError) {
-    error.value = fetchError.message
-  } else {
-    history.value = data || []
-  }
-
-  loading.value = false
-}
+const deleteLoading = computed(() => deleteSearchHistoryMutation.isPending.value)
+const clearAllLoading = computed(() => clearAllHistoryMutation.isPending.value)
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -206,27 +192,21 @@ const deleteItem = (item: any) => {
 const handleDelete = async () => {
   if (!itemToDelete.value) return
 
-  deleteLoading.value = true
-
-  const { error: deleteError } = await deleteSearchHistory(itemToDelete.value.id)
-
-  deleteLoading.value = false
-
-  if (deleteError) {
-    toast.add({
-      title: 'Error deleting search',
-      description: deleteError.message,
-      color: 'error',
-      icon: 'i-lucide-x-circle'
-    })
-  } else {
-    history.value = history.value.filter(item => item.id !== itemToDelete.value.id)
+  try {
+    await deleteSearchHistoryMutation.mutateAsync(itemToDelete.value.id)
     toast.add({
       title: 'Search deleted',
       icon: 'i-lucide-check-circle'
     })
     isDeleteModalOpen.value = false
     itemToDelete.value = null
+  } catch (error: any) {
+    toast.add({
+      title: 'Error deleting search',
+      description: error.message,
+      color: 'error',
+      icon: 'i-lucide-x-circle'
+    })
   }
 }
 
@@ -235,34 +215,26 @@ const confirmClearAll = () => {
 }
 
 const handleClearAll = async () => {
-  clearAllLoading.value = true
-
-  const { error: clearError } = await clearAllHistory()
-
-  clearAllLoading.value = false
-
-  if (clearError) {
-    toast.add({
-      title: 'Error clearing history',
-      description: clearError.message,
-      color: 'error',
-      icon: 'i-lucide-x-circle'
-    })
-  } else {
-    history.value = []
+  try {
+    await clearAllHistoryMutation.mutateAsync()
     toast.add({
       title: 'History cleared',
       icon: 'i-lucide-check-circle'
     })
     isClearAllModalOpen.value = false
+  } catch (error: any) {
+    toast.add({
+      title: 'Error clearing history',
+      description: error.message,
+      color: 'error',
+      icon: 'i-lucide-x-circle'
+    })
   }
 }
 
 onMounted(() => {
   if (!userProfile.value) {
     navigateTo('/')
-  } else {
-    loadHistory()
   }
 })
 </script>

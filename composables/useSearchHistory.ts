@@ -1,6 +1,8 @@
 import type { Database } from '~/database.types';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import { computed } from 'vue';
 
 type SearchHistory = Database['public']['Tables']['search_history']['Row'];
 type SearchHistoryInsert =
@@ -9,6 +11,34 @@ type SearchHistoryInsert =
 export const useSearchHistory = () => {
   const supabase = useSupabase();
   const { userProfile } = useUserProfile();
+  const queryClient = useQueryClient();
+
+  // Fetch search history with TanStack Query
+  const {
+    data: searchHistory,
+    isLoading: isLoadingHistory,
+    error: historyError,
+    refetch: refetchHistory,
+  } = useQuery({
+    queryKey: ['search-history', computed(() => userProfile.value?.id)],
+    queryFn: async () => {
+      if (!userProfile.value?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('search_history')
+        .select('*')
+        .eq('user_id', userProfile.value.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: computed(() => !!userProfile.value?.id),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const saveSearch = async (
     query: string,
@@ -16,7 +46,7 @@ export const useSearchHistory = () => {
     filters?: any,
   ) => {
     if (!userProfile.value?.id) {
-      return { error: new Error('User not authenticated') };
+      throw new Error('User not authenticated');
     }
 
     const newSearch: SearchHistoryInsert = {
@@ -26,35 +56,29 @@ export const useSearchHistory = () => {
       filters: filters || null,
     };
 
-    const { error, data } = await supabase
-      .from('search_history')
-      .insert(newSearch);
+    const { error } = await supabase.from('search_history').insert(newSearch);
 
-    if (error) {
-      console.error('Error saving search history:', error);
-    }
-
-    return { error };
+    if (error) throw error;
   };
 
-  const fetchSearchHistory = async () => {
-    if (!userProfile.value?.id) {
-      return { data: null, error: new Error('User not authenticated') };
-    }
-
-    const { data, error } = await supabase
-      .from('search_history')
-      .select('*')
-      .eq('user_id', userProfile.value.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    return { data, error };
-  };
+  const saveSearchMutation = useMutation({
+    mutationFn: ({
+      query,
+      searchType,
+      filters,
+    }: {
+      query: string;
+      searchType: 'ai' | 'similarity' | 'keyword' | 'commander';
+      filters?: any;
+    }) => saveSearch(query, searchType, filters),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['search-history'] });
+    },
+  });
 
   const deleteSearchHistory = async (searchId: string) => {
     if (!userProfile.value?.id) {
-      return { error: new Error('User not authenticated') };
+      throw new Error('User not authenticated');
     }
 
     const { error } = await supabase
@@ -63,12 +87,19 @@ export const useSearchHistory = () => {
       .eq('id', searchId)
       .eq('user_id', userProfile.value.id);
 
-    return { error };
+    if (error) throw error;
   };
+
+  const deleteSearchHistoryMutation = useMutation({
+    mutationFn: (searchId: string) => deleteSearchHistory(searchId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['search-history'] });
+    },
+  });
 
   const clearAllHistory = async () => {
     if (!userProfile.value?.id) {
-      return { error: new Error('User not authenticated') };
+      throw new Error('User not authenticated');
     }
 
     const { error } = await supabase
@@ -76,13 +107,26 @@ export const useSearchHistory = () => {
       .delete()
       .eq('user_id', userProfile.value.id);
 
-    return { error };
+    if (error) throw error;
   };
 
+  const clearAllHistoryMutation = useMutation({
+    mutationFn: () => clearAllHistory(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['search-history'] });
+    },
+  });
+
   return {
-    saveSearch,
-    fetchSearchHistory,
-    deleteSearchHistory,
-    clearAllHistory,
+    // Query data and states
+    searchHistory,
+    isLoadingHistory,
+    historyError,
+    refetchHistory,
+
+    // Mutations
+    saveSearchMutation,
+    deleteSearchHistoryMutation,
+    clearAllHistoryMutation,
   };
 };

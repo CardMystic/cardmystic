@@ -70,13 +70,13 @@ const isOpen = computed({
 })
 
 const toast = useToast()
-const { fetchUserLists, createList, addCardsToList } = useCardLists()
+const { userLists, isLoadingLists, createListMutation, addCardsToListMutation } = useCardLists()
 
-const lists = ref<any[]>([])
+const lists = computed(() => userLists.value || [])
 const selectedListId = ref<string>('')
 const newListName = ref('')
 const newListDescription = ref('')
-const loading = ref(false)
+const loading = computed(() => createListMutation.isPending.value || addCardsToListMutation.isPending.value)
 const errorMessage = ref('')
 
 const cardCount = computed(() => props.cardIds.length)
@@ -88,21 +88,9 @@ const listOptions = computed(() => {
   }))
 })
 
-// Load user's lists when modal opens
-watch(isOpen, async (opened) => {
-  if (opened) {
-    loading.value = true
-    errorMessage.value = ''
-    const { data, error } = await fetchUserLists()
-    if (error) {
-      errorMessage.value = `Failed to load lists: ${error.message}`
-      console.error('Error loading lists:', error)
-    } else {
-      lists.value = data || []
-    }
-    loading.value = false
-  } else {
-    // Reset form when closed
+// Reset form when modal closes
+watch(isOpen, (opened) => {
+  if (!opened) {
     selectedListId.value = ''
     newListName.value = ''
     newListDescription.value = ''
@@ -111,7 +99,6 @@ watch(isOpen, async (opened) => {
 })
 
 const handleSave = async () => {
-  loading.value = true
   errorMessage.value = ''
 
   try {
@@ -119,23 +106,19 @@ const handleSave = async () => {
 
     // If creating a new list
     if (!listId && newListName.value.trim()) {
-      const { data, error } = await createList(newListName.value, newListDescription.value)
-      if (error) {
-        errorMessage.value = error.message
-        loading.value = false
-        return
-      }
-      listId = data!.id
+      const newList = await createListMutation.mutateAsync({
+        name: newListName.value,
+        description: newListDescription.value
+      })
+      listId = newList.id
     }
 
     // Add cards to the list
     if (listId) {
-      const { error } = await addCardsToList(listId, props.cardIds)
-      if (error) {
-        errorMessage.value = error.message
-        loading.value = false
-        return
-      }
+      await addCardsToListMutation.mutateAsync({
+        listId,
+        cardIds: props.cardIds
+      })
 
       toast.add({
         title: 'Cards saved to list!',
@@ -147,11 +130,9 @@ const handleSave = async () => {
     } else {
       errorMessage.value = 'Please select a list or create a new one'
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving cards:', error)
-    errorMessage.value = 'An unexpected error occurred'
-  } finally {
-    loading.value = false
+    errorMessage.value = error.message || 'An unexpected error occurred'
   }
 }
 </script>

@@ -60,8 +60,9 @@
 
     <!-- Error State -->
     <div v-else-if="error" class="text-center py-12">
-      <p class="text-red-500 mb-4">{{ error }}</p>
-      <UButton @click="loadListAndCards">Try Again</UButton>
+      <UIcon name="i-lucide-alert-circle" class="w-16 h-16 mx-auto mb-4 text-red-500" />
+      <p class="text-red-500 mb-2 text-lg font-semibold">Error loading list</p>
+      <p class="text-gray-500">{{ error }}</p>
     </div>
 
     <!-- Empty State -->
@@ -123,13 +124,16 @@ const listId = route.params.id as string
 const toast = useToast()
 const { copy } = useClipboard()
 
-const { fetchUserLists, getListItems, updateListAvatar } = useCardLists()
+const { userLists, isLoadingLists, useListItems, updateListAvatarMutation } = useCardLists()
 const { userProfile, fetchUser } = useUserProfile()
 
-const list = ref<any>(null)
-const cards = ref<any[]>([])
-const loading = ref(true)
+const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
 const error = ref('')
+
+// Use TanStack Query for list items
+const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
+const cards = ref<any[]>([])
+const loading = computed(() => isLoadingLists.value || isLoadingItems.value)
 
 // Sorting state
 const sortBy = ref<string | undefined>(undefined)
@@ -220,25 +224,22 @@ const totalPrice = computed(() => {
 const updateBannerImage = async () => {
   if (!selectedBannerCard.value || !list.value) return
 
-  bannerUpdateLoading.value = true
-
-  const { error: updateError } = await updateListAvatar(listId, selectedBannerCard.value)
-
-  bannerUpdateLoading.value = false
-
-  if (updateError) {
-    toast.add({
-      title: 'Error updating banner',
-      description: updateError.message,
-      color: 'error'
+  try {
+    await updateListAvatarMutation.mutateAsync({
+      listId: list.value.id,
+      cardName: selectedBannerCard.value
     })
-  } else {
-    list.value.avatar_card_name = selectedBannerCard.value
     toast.add({
       title: 'Banner updated!',
       icon: 'i-lucide-check'
     })
     isEditBannerModalOpen.value = false
+  } catch (error: any) {
+    toast.add({
+      title: 'Error updating banner',
+      description: error.message,
+      color: 'error'
+    })
   }
 }
 
@@ -259,65 +260,41 @@ function openMassEntry() {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-const loadListAndCards = async () => {
-  loading.value = true
-  error.value = ''
-
-  // Fetch list details
-  const { data: listsData, error: listsError } = await fetchUserLists()
-  if (listsError) {
-    error.value = listsError.message
-    loading.value = false
-    return
-  }
-
-  list.value = listsData?.find((l: any) => l.id === listId)
-
-  if (!list.value) {
-    error.value = 'List not found'
-    loading.value = false
-    return
-  }
-
-  // Fetch list items (card IDs)
-  const { data: itemsData, error: itemsError } = await getListItems(listId)
-  if (itemsError) {
-    error.value = itemsError.message
-    loading.value = false
-    return
-  }
-
-  // Fetch card details from Scryfall
-  if (itemsData && itemsData.length > 0) {
-    const cardIds = itemsData.map((item: any) => item.card_id)
-
-    try {
-      const cardPromises = cardIds.map((id: string) =>
-        $fetch(`https://api.scryfall.com/cards/${id}`)
-      )
-      const cardsData = await Promise.all(cardPromises)
-
-      // Wrap cards in the format expected by Card component
-      cards.value = cardsData.map((cardData: any) => ({
-        card_data: cardData,
-        score: undefined
-      }))
-    } catch (err) {
-      error.value = 'Failed to load card details'
-      console.error('Error fetching cards:', err)
-    }
-  }
-
-  loading.value = false
-}
-
 onMounted(async () => {
   await fetchUser()
 
   if (!userProfile.value) {
     navigateTo('/')
-  } else {
-    loadListAndCards()
   }
+
+  // Check if list exists after data loads
+  watch(list, (newList) => {
+    if (!isLoadingLists.value && !newList) {
+      error.value = 'List not found'
+    }
+  }, { immediate: true })
 })
+
+// Fetch card details from Scryfall when list items are loaded
+watch(listItems, async (items) => {
+  if (!items || items.length === 0) return
+
+  const cardIds = items.map((item: any) => item.card_id)
+
+  try {
+    const cardPromises = cardIds.map((id: string) =>
+      $fetch(`https://api.scryfall.com/cards/${id}`)
+    )
+    const cardsData = await Promise.all(cardPromises)
+
+    // Update cards ref with detailed data
+    cards.value = cardsData.map((cardData: any) => ({
+      card_data: cardData,
+      score: undefined
+    }))
+  } catch (err) {
+    error.value = 'Failed to load card details'
+    console.error('Error fetching cards:', err)
+  }
+}, { immediate: true })
 </script>
