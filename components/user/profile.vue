@@ -149,7 +149,7 @@ const handleSignOut = async () => {
 
     <div class="flex flex-col space-y-6 max-w-2xl mx-auto p-6 relative z-10">
       <!-- Skeleton Loading State -->
-      <div v-if="loading" class="rounded-xl bg-zinc-900 p-6 shadow-xl">
+      <div v-if="loading" class="rounded-xl p-6 shadow-xl">
         <!-- Profile Header Skeleton -->
         <USkeleton class="h-8 w-32 mb-6" />
 
@@ -163,14 +163,14 @@ const handleSignOut = async () => {
         </div>
 
         <!-- Username Section Skeleton -->
-        <div class="space-y-4 mb-6 pb-6 border-b border-zinc-700">
+        <div class="space-y-4 mb-6 pb-6 border-b">
           <USkeleton class="h-6 w-40" />
           <USkeleton class="h-12 w-full" />
           <USkeleton class="h-10 w-40" />
         </div>
 
         <!-- Password Section Skeleton -->
-        <div class="space-y-4 mb-6 pb-6 border-b border-zinc-700">
+        <div class="space-y-4 mb-6 pb-6 border-b">
           <USkeleton class="h-6 w-40" />
           <USkeleton class="h-12 w-full" />
           <USkeleton class="h-12 w-full" />
@@ -183,8 +183,8 @@ const handleSignOut = async () => {
       </div>
 
       <!-- Actual Profile Content -->
-      <div v-else class="rounded-xl bg-zinc-900 p-6 shadow-xl">
-        <h1 class="text-2xl font-bold text-white mb-6">Profile</h1>
+      <div v-else class="rounded-xl p-6 shadow-xl">
+        <h1 class="text-2xl font-bold mb-6">Profile</h1>
 
         <!-- Profile Image and Basic Info -->
         <div class="flex items-center space-x-4 mb-6">
@@ -197,14 +197,14 @@ const handleSignOut = async () => {
             </div>
             <div v-else
               class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-              <UIcon name="i-lucide-user" class="w-12 h-12 text-white" />
+              <UIcon name="i-lucide-user" class="w-12 h-12" />
             </div>
 
             <!-- Edit Button Overlay -->
             <UPopover>
               <div
-                class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <UIcon name="i-lucide-pencil" class="w-6 h-6 text-white" />
+                class="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <UIcon name="i-lucide-pencil" class="w-6 h-6" />
               </div>
 
               <template #content>
@@ -214,20 +214,21 @@ const handleSignOut = async () => {
                     :loading="cardsStatus === 'pending' || profileIconLoading" :items="filteredCards"
                     placeholder="Search for a card..." icon="i-lucide-search" class="w-full"
                     @update:model-value="updateProfileCard" />
-                  <p class="text-xs text-zinc-400 mt-2">Search for an MTG card to use as your profile icon</p>
+                  <p class="text-xs text-gray-600 dark:text-zinc-400 mt-2">Search for an MTG card to use as your profile
+                    icon</p>
                 </div>
               </template>
             </UPopover>
           </div>
           <div class="flex flex-col">
-            <p class="text-lg font-semibold text-white">{{ computedUsername }}</p>
-            <p class="text-sm text-zinc-400">{{ userProfile?.email }}</p>
+            <p class="text-lg font-semibold">{{ computedUsername }}</p>
+            <p class="text-sm text-gray-600 dark:text-zinc-400">{{ userProfile?.email }}</p>
           </div>
         </div>
 
         <!-- Update Username -->
-        <div class="space-y-4 mb-6 pb-6 border-b border-zinc-700">
-          <h2 class="text-lg font-semibold text-white">Update Username</h2>
+        <div class="space-y-4 mb-6 pb-6 border-b">
+          <h2 class="text-lg font-semibold">Update Username</h2>
           <UInput v-model="username" type="text" placeholder="Username" size="lg" class="w-full" />
           <UButton color="primary" variant="solid" size="md" :loading="updateLoading" :disabled="updateLoading"
             @click="updateUsername">
@@ -236,8 +237,8 @@ const handleSignOut = async () => {
         </div>
 
         <!-- Update Password -->
-        <div class="space-y-4 mb-6 pb-6 border-b border-zinc-700">
-          <h2 class="text-lg font-semibold text-white">Update Password</h2>
+        <div class="space-y-4 mb-6 pb-6 border-b">
+          <h2 class="text-lg font-semibold">Update Password</h2>
           <UInput v-model="currentPassword" type="password" placeholder="Current Password" size="lg" class="w-full" />
           <UInput v-model="newPassword" type="password" placeholder="New Password" size="lg" class="w-full" />
           <UInput v-model="confirmPassword" type="password" placeholder="Confirm New Password" size="lg"
