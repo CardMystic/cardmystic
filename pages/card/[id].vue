@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -287,6 +287,10 @@ const cardIdParam = computed(() => String(route.params.id) || '');
 const { data: cardData, error, pending } = useAsyncData(
   () => `card-with-printings-${cardIdParam.value}`,
   async () => {
+    if (!cardIdParam.value || cardIdParam.value === 'undefined') {
+      throw new Error('No card ID provided');
+    }
+
     const card = await $fetch<ScryfallCard>(`/api/cards/${cardIdParam.value}`);
 
     let printings: ScryfallCard[] = [];
