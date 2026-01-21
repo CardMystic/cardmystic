@@ -44,9 +44,9 @@
     </div>
 
     <!-- Show More Button -->
-    <div v-if="history.length > 10 && !showAll" class="flex justify-center pt-4">
+    <div v-if="history.length > showMoreThreshold && !showAll" class="flex justify-center pt-4">
       <UButton @click="showAll = true" color="primary" variant="outline" size="lg">
-        Show More ({{ history.length - 10 }} more)
+        Show More ({{ history.length - showMoreThreshold }} more)
       </UButton>
     </div>
   </div>
@@ -54,6 +54,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+
+const showMoreThreshold = 7
 
 const props = defineProps<{
   history: any[]
@@ -70,7 +72,7 @@ const showAll = ref(false)
 
 const displayedHistory = computed(() => {
   if (showAll.value || !props.history) return props.history
-  return props.history.slice(0, 10)
+  return props.history.slice(0, showMoreThreshold)
 })
 
 const formatDate = (dateString: string) => {
