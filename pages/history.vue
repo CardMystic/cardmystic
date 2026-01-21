@@ -192,7 +192,7 @@ const runSearch = (item: any) => {
   }
 
   if (item.filters) {
-    Object.assign(query, item.filters)
+    query.filters = JSON.stringify(item.filters)
   }
 
   router.push({ path, query })

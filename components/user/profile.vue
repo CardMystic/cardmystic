@@ -145,7 +145,6 @@ const handleSignOut = async () => {
 <template>
   <div class="page-wrapper py-4 flex justify-center w-full">
     <!-- Background art layer -->
-    <!-- Background Image -->
     <div v-if="profileIconUrl" class="fixed inset-0 z-0">
       <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
         :style="{ backgroundImage: `url(${profileIconUrl})` }"></div>
