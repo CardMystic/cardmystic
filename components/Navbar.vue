@@ -161,7 +161,7 @@ const externalItems: NavigationMenuItem[] = [
         <!-- Clipboard Button -->
         <ClipboardMenu class="cursor-pointer" />
 
-        <span class="relative flex items-center">
+        <span v-if="!userProfile" class="relative flex items-center">
           <!-- Login/Register Button with Tooltip -->
           <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
             :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
@@ -200,7 +200,7 @@ const externalItems: NavigationMenuItem[] = [
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu class="ml-4 h-[50px]" />
 
-      <span class="relative">
+      <span v-if="!userProfile" class="relative">
         <!-- Login/Register Button with Tooltip -->
         <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
           :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
