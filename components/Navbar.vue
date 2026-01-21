@@ -242,7 +242,7 @@ const externalItems: NavigationMenuItem[] = [
             block @click="navigateTo('/history')" />
           <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
             block @click="navigateTo('/profile')" />
-          <UDivider />
+          <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
           <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
             @click="handleLogout" />
         </div>
