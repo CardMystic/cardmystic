@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useSupabase } from '~/composables/useSupabase'
+import { useRecaptcha } from '~/composables/useRecaptcha'
 
 const supabase = useSupabase()
+const { verifyRecaptcha } = useRecaptcha()
 
 const email = ref('')
 const password = ref('')
@@ -12,9 +14,24 @@ const successMessage = ref<string | null>(null)
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null
+  loading.value = true
+
+  const verified = await verifyRecaptcha('signup_google')
+  if (!verified) {
+    errorMessage.value = 'Security verification failed. Please try again.'
+    loading.value = false
+    return
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
   })
+
+  loading.value = false
+
+  if (error) {
+    errorMessage.value = error.message
+  }
 }
 
 const signUpWithEmail = async () => {
@@ -24,6 +41,13 @@ const signUpWithEmail = async () => {
 
   if (password.value !== confirmPassword.value) {
     errorMessage.value = 'Passwords do not match'
+    loading.value = false
+    return
+  }
+
+  const verified = await verifyRecaptcha('signup')
+  if (!verified) {
+    errorMessage.value = 'Security verification failed. Please try again.'
     loading.value = false
     return
   }
