@@ -8,55 +8,22 @@
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold">Search History</h1>
+      <h1 class="text-3xl font-bold">History</h1>
       <UButton icon="i-lucide-trash-2" color="error" variant="outline" label="Clear All" @click="confirmClearAll"
-        :disabled="!history || history.length === 0" />
+        :disabled="currentTabEmpty" />
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <!-- Tabs -->
+    <UTabs v-model="selectedTab" :items="tabs" class="mb-6">
+      <template #search>
+        <SearchHistoryList :history="searchHistoryData" :loading="searchLoading" :error="searchError"
+          @delete-item="deleteSearchItem" @run-search="runSearch" />
+      </template>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center py-12">
-      <UIcon name="i-lucide-alert-circle" class="w-16 h-16 mx-auto mb-4 text-red-500" />
-      <p class="text-red-500 mb-2 text-lg font-semibold">Error loading history</p>
-      <p class="text-gray-500">{{ error }}</p>
-    </div>
-
-    <!-- Empty State -->
-    <div v-else-if="!history || history.length === 0" class="text-center py-12">
-      <UIcon name="i-lucide-history" class="w-16 h-16 mx-auto mb-4 text-gray-400" />
-      <p class="text-gray-500 text-lg mb-4">No search history yet</p>
-      <p class="text-gray-400 text-sm">Your searches will appear here</p>
-    </div>
-
-    <!-- History List -->
-    <div v-else class="space-y-3">
-      <div v-for="item in history" :key="item.id"
-        class="border border-gray-300 dark:border-gray-700 rounded-lg p-4 hover:border-primary transition-colors">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-2">
-              <UBadge :color="getSearchTypeColor(item.search_type)" variant="soft">
-                {{ getSearchTypeLabel(item.search_type) }}
-              </UBadge>
-              <span class="text-sm text-gray-500">{{ formatDate(item.created_at) }}</span>
-            </div>
-            <p class="text-lg font-medium mb-2">{{ item.query }}</p>
-            <div v-if="item.filters" class="text-sm text-gray-600 dark:text-gray-400">
-              <span class="font-medium">Filters:</span> {{ formatFilters(item.filters) }}
-            </div>
-          </div>
-
-          <div class="flex gap-2">
-            <UButton icon="i-lucide-search" color="primary" variant="solid" label="Search" @click="runSearch(item)" />
-            <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm" @click="deleteItem(item)" />
-          </div>
-        </div>
-      </div>
-    </div>
+      <template #cards>
+        <CardHistoryList :card-history="cardHistoryData" :loading="cardLoading" :error="cardError" class="mt-2" />
+      </template>
+    </UTabs>
   </div>
 
   <!-- Delete Confirmation Modal -->
@@ -69,18 +36,19 @@
         <div class="flex justify-end gap-2">
           <UButton color="neutral" variant="ghost" label="Cancel" @click="isDeleteModalOpen = false"
             :disabled="deleteLoading" />
-          <UButton color="error" variant="solid" label="Delete" :loading="deleteLoading" @click="handleDelete" />
+          <UButton color="error" variant="solid" label="Delete" :loading="deleteLoading" @click="handleDeleteSearch" />
         </div>
       </div>
     </template>
   </UModal>
 
   <!-- Clear All Confirmation Modal -->
-  <UModal v-model:open="isClearAllModalOpen" title="Clear All History">
+  <UModal v-model:open="isClearAllModalOpen" :title="`Clear All ${selectedTab === '0' ? 'Search' : 'Card'} History`">
     <template #content>
       <div class="p-4 space-y-4">
         <p class="text-gray-600 dark:text-gray-400">
-          Are you sure you want to clear all search history? This action cannot be undone.
+          Are you sure you want to clear all {{ selectedTab === '0' ? 'search' : 'card' }} history? This action
+          cannot be undone.
         </p>
         <div class="flex justify-end gap-2">
           <UButton color="neutral" variant="ghost" label="Cancel" @click="isClearAllModalOpen = false"
@@ -93,72 +61,54 @@
 </template>
 
 <script setup lang="ts">
+import SearchHistoryList from '~/components/SearchHistoryList.vue'
+import CardHistoryList from '~/components/CardHistoryList.vue'
 import { useSearchHistory } from '~/composables/useSearchHistory'
+import { useCardHistory } from '~/composables/useCardHistory'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useToast } from '#imports'
 
 const { searchHistory, isLoadingHistory, historyError, deleteSearchHistoryMutation, clearAllHistoryMutation } = useSearchHistory()
+const { cardHistory, isLoadingHistory: isLoadingCardHistory, historyError: cardHistoryError, clearAllHistoryMutation: clearAllCardHistoryMutation } = useCardHistory()
 const { userProfile, profileIconUrl } = useUserProfile()
 const toast = useToast()
 const router = useRouter()
 
-const history = computed(() => searchHistory.value || [])
-const loading = computed(() => isLoadingHistory.value)
-const error = computed(() => historyError.value?.message || '')
+const selectedTab = ref('0')
+
+const tabs = [
+  { key: 'search', label: 'Search History', icon: 'i-lucide-search', slot: 'search' },
+  { key: 'cards', label: 'Recent Cards', icon: 'i-lucide-eye', slot: 'cards' }
+]
+
+const searchHistoryData = computed(() => searchHistory.value || [])
+const searchLoading = computed(() => isLoadingHistory.value)
+const searchError = computed(() => historyError.value?.message || '')
+
+const cardHistoryData = computed(() => cardHistory.value || [])
+const cardLoading = computed(() => isLoadingCardHistory.value)
+const cardError = computed(() => cardHistoryError.value?.message || '')
+
+const currentTabEmpty = computed(() => {
+  if (selectedTab.value === '0') {
+    return !searchHistoryData.value || searchHistoryData.value.length === 0
+  } else {
+    return !cardHistoryData.value || cardHistoryData.value.length === 0
+  }
+})
 
 // Delete modal state
 const isDeleteModalOpen = ref(false)
 const isClearAllModalOpen = ref(false)
 const itemToDelete = ref<any>(null)
 const deleteLoading = computed(() => deleteSearchHistoryMutation.isPending.value)
-const clearAllLoading = computed(() => clearAllHistoryMutation.isPending.value)
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-  })
-}
-
-const getSearchTypeLabel = (type: string) => {
-  const labels: Record<string, string> = {
-    'ai': 'AI Search',
-    'similarity': 'Similarity',
-    'keyword': 'Keyword',
-    'commander': 'Commander'
+const clearAllLoading = computed(() => {
+  if (selectedTab.value === '0') {
+    return clearAllHistoryMutation.isPending.value
+  } else {
+    return clearAllCardHistoryMutation.isPending.value
   }
-  return labels[type] || type
-}
-
-const getSearchTypeColor = (type: string): 'primary' | 'success' | 'warning' | 'error' => {
-  const colors: Record<string, 'primary' | 'success' | 'warning' | 'error'> = {
-    'ai': 'primary',
-    'similarity': 'success',
-    'keyword': 'warning',
-    'commander': 'error'
-  }
-  return colors[type] || 'primary'
-}
-
-const formatFilters = (filters: any) => {
-  if (!filters || typeof filters !== 'object') return 'None'
-  const entries = Object.entries(filters).filter(([_, v]) => v !== null && v !== undefined && v !== '')
-  if (entries.length === 0) return 'None'
-  return entries.map(([k, v]) => `${k}: ${v}`).join(', ')
-}
+})
 
 const runSearch = (item: any) => {
   const paths: Record<string, string> = {
@@ -184,12 +134,12 @@ const runSearch = (item: any) => {
   router.push({ path, query })
 }
 
-const deleteItem = (item: any) => {
+const deleteSearchItem = (item: any) => {
   itemToDelete.value = item
   isDeleteModalOpen.value = true
 }
 
-const handleDelete = async () => {
+const handleDeleteSearch = async () => {
   if (!itemToDelete.value) return
 
   try {
@@ -216,11 +166,19 @@ const confirmClearAll = () => {
 
 const handleClearAll = async () => {
   try {
-    await clearAllHistoryMutation.mutateAsync()
-    toast.add({
-      title: 'History cleared',
-      icon: 'i-lucide-check-circle'
-    })
+    if (selectedTab.value === '0') {
+      await clearAllHistoryMutation.mutateAsync()
+      toast.add({
+        title: 'Search history cleared',
+        icon: 'i-lucide-check-circle'
+      })
+    } else {
+      await clearAllCardHistoryMutation.mutateAsync()
+      toast.add({
+        title: 'Card history cleared',
+        icon: 'i-lucide-check-circle'
+      })
+    }
     isClearAllModalOpen.value = false
   } catch (error: any) {
     toast.add({

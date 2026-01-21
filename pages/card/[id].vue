@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -277,12 +277,14 @@ import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
 import { DefaultLimitSimilarity, SimilaritySearchSchema } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
+import { useCardHistory } from '~/composables/useCardHistory';
 
 const route = useRoute();
 const isFlipped = ref(false);
 const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
+const { saveCardViewMutation } = useCardHistory();
 
 const { data: cardData, error, pending } = useAsyncData(
   () => `card-with-printings-${cardIdParam.value}`,
@@ -364,6 +366,13 @@ useSeoMeta({
     card.value?.card_faces?.[0]?.image_uris?.normal ||
     'https://cardmystic.com/og-default.png'
 })
+
+// Save card view to history when card is loaded
+watch(card, (newCard) => {
+  if (newCard?.id) {
+    saveCardViewMutation.mutate(newCard.id);
+  }
+}, { immediate: true });
 
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {

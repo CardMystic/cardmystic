@@ -72,6 +72,35 @@ export type Database = {
           },
         ];
       };
+      card_history: {
+        Row: {
+          id: number;
+          user_id: string | null;
+          card_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id?: string | null;
+          card_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string | null;
+          card_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_history_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_card_name: string | null;
