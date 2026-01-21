@@ -145,7 +145,11 @@ const handleSignOut = async () => {
 <template>
   <div class="page-wrapper py-4 flex justify-center w-full">
     <!-- Background art layer -->
-    <div v-if="profileIconUrl" class="page-background-art" :style="{ backgroundImage: `url(${profileIconUrl})` }"></div>
+    <!-- Background Image -->
+    <div v-if="profileIconUrl" class="fixed inset-0 z-0">
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+        :style="{ backgroundImage: `url(${profileIconUrl})` }"></div>
+    </div>
 
     <div class="flex flex-col space-y-6 max-w-2xl mx-auto p-6 relative z-10">
       <!-- Skeleton Loading State -->
@@ -270,21 +274,5 @@ const handleSignOut = async () => {
 .page-wrapper {
   position: relative;
   min-height: 100vh;
-}
-
-.page-background-art {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.2;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(8px);
-  transform: scale(1.1);
 }
 </style>

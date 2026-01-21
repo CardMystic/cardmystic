@@ -1,7 +1,10 @@
 <template>
   <div class="page-wrapper py-4 flex justify-center w-full">
-    <!-- Background art layer -->
-    <div v-if="card && cardArtUrl" class="page-background-art" :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
+    <!-- Background Image -->
+    <div v-if="cardArtUrl" class="fixed inset-0 z-0">
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+        :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
+    </div>
 
     <div v-if="pending || (!card && !error)"
       class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
@@ -991,28 +994,7 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
 .page-wrapper
   position: relative
   min-height: 100vh
-
-.page-background-art
-  position: fixed
-  top: 0
-  left: 0
-  right: 0
-  bottom: 0
-  background-size: cover
-  background-position: center
-  background-repeat: no-repeat
-  pointer-events: none
-  z-index: 0
-  transform: scale(1.1)
-
-  @media (prefers-color-scheme: light)
-    opacity: 0.5
-    filter: blur(6px)
-
-  @media (prefers-color-scheme: dark)
-    opacity: 0.2
-    filter: blur(8px)
-
+  
 // Similar Cards Section Styling
 .similar-cards-section
   border-radius: 24px
