@@ -156,16 +156,10 @@ const externalItems: NavigationMenuItem[] = [
         </template>
       </UPopover>
 
-      <!-- Clipboard Button -->
-      <ClipboardMenu class="cursor-pointer" />
-
       <!-- Auth Button - Login/Register Modal or Profile Link -->
       <UModal v-if="!userProfile" v-model:open="isLoginModalOpen"
         :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
         :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'">
-        <!-- Login/Register Button -->
-        <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
-          :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
         <template #content>
           <div>
             <UserLogin v-if="authMode === 'login'" @switch-to-register="authMode = 'register'" />
@@ -194,14 +188,26 @@ const externalItems: NavigationMenuItem[] = [
       </UPopover>
 
       <!-- Logo -->
-      <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
-        <ClientOnly>
-          <img :src="wizardImage" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
-          <template #fallback>
-            <img src="/wizard.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
-          </template>
-        </ClientOnly>
-      </NuxtLink>
+      <div class="flex flex-row">
+        <!-- Clipboard Button -->
+        <ClipboardMenu class="cursor-pointer" />
+
+        <span class="relative flex items-center">
+          <!-- Login/Register Button with Tooltip -->
+          <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
+            :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
+
+          <LoginTooltip class="ml-2" />
+        </span>
+        <NuxtLink to="/" class="hover:opacity-80 transition-opacity ml-2">
+          <ClientOnly>
+            <img :src="wizardImage" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+            <template #fallback>
+              <img src="/wizard.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+            </template>
+          </ClientOnly>
+        </NuxtLink>
+      </div>
     </div>
 
     <!-- Desktop -->
@@ -225,13 +231,18 @@ const externalItems: NavigationMenuItem[] = [
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu class="ml-4 h-[50px]" />
 
+      <span class="relative">
+        <!-- Login/Register Button with Tooltip -->
+        <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
+          :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
+
+        <LoginTooltip class="ml-2" />
+      </span>
+
       <!-- Auth Button - Login/Register Modal or Profile Link -->
       <UModal v-if="!userProfile" v-model:open="isLoginModalOpen"
         :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
         :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'">
-        <!-- Login/Register Button -->
-        <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
-          :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
         <template #content>
           <div>
             <UserLogin v-if="authMode === 'login'" @switch-to-register="authMode = 'register'" />
