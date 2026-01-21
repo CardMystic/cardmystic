@@ -47,7 +47,6 @@
     "globals": "^16.1.0",
     "prettier": "^3.5.3",
     "sass-embedded": "^1.83.4",
-    "supabase": "^2.70.4",
     "typescript-eslint": "^8.32.1",
     "vite-plugin-devtools-json": "^0.4.1"
   }
