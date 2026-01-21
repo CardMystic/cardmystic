@@ -13,12 +13,17 @@ const wizardImage = computed(() => {
 })
 const isLoginModalOpen = ref(false)
 const authMode = ref<'login' | 'register'>('login')
-const { userProfile, initAuthListener, profileIconUrl, username } = useUserProfile()
+const { userProfile, initAuthListener, profileIconUrl, username, signOut } = useUserProfile()
 
 // Initialize auth listener on component mount
 onMounted(() => {
   initAuthListener()
 })
+
+const handleLogout = async () => {
+  await signOut()
+  navigateTo('/')
+}
 
 const props = defineProps<{
   isFixed?: boolean
@@ -230,13 +235,16 @@ const externalItems: NavigationMenuItem[] = [
         <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
       </div>
       <template #content>
-        <div class="p-2 w-48 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
+        <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
           <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists" block
             @click="navigateTo('/lists')" />
           <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="Search History"
             block @click="navigateTo('/history')" />
           <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
             block @click="navigateTo('/profile')" />
+          <UDivider />
+          <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
+            @click="handleLogout" />
         </div>
       </template>
     </UPopover>
