@@ -173,7 +173,30 @@ const externalItems: NavigationMenuItem[] = [
 
           <LoginTooltip class="ml-2" />
         </span>
-        <NuxtLink to="/" class="hover:opacity-80 transition-opacity ml-2">
+        <UPopover v-else class="ml-4">
+          <div class="cursor-pointer">
+            <div v-if="profileIconUrl"
+              class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+              <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+            </div>
+            <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+          </div>
+          <template #content>
+            <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
+              <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+                block @click="navigateTo('/lists')" />
+              <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
+                block @click="navigateTo('/history')" />
+              <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
+                block @click="navigateTo('/profile')" />
+              <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+              <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
+                @click="handleLogout" />
+            </div>
+          </template>
+        </UPopover>
+
+        <NuxtLink to="/" class="hover:opacity-80 transition-opacity ml-4">
           <ClientOnly>
             <img :src="wizardImage" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
             <template #fallback>
@@ -213,6 +236,29 @@ const externalItems: NavigationMenuItem[] = [
         <LoginTooltip class="ml-2" />
       </span>
 
+      <UPopover v-else class="ml-2">
+        <div class="cursor-pointer">
+          <div v-if="profileIconUrl"
+            class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+            <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+          </div>
+          <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+        </div>
+        <template #content>
+          <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
+            <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+              block @click="navigateTo('/lists')" />
+            <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
+              block @click="navigateTo('/history')" />
+            <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
+              block @click="navigateTo('/profile')" />
+            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+            <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
+              @click="handleLogout" />
+          </div>
+        </template>
+      </UPopover>
+
     </div>
 
     <!-- Auth Button - Login/Register Modal or Profile Link -->
@@ -226,28 +272,7 @@ const externalItems: NavigationMenuItem[] = [
         </div>
       </template>
     </UModal>
-    <UPopover v-else class="ml-2">
-      <div class="cursor-pointer">
-        <div v-if="profileIconUrl"
-          class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
-          <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
-        </div>
-        <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
-      </div>
-      <template #content>
-        <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
-          <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists" block
-            @click="navigateTo('/lists')" />
-          <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History" block
-            @click="navigateTo('/history')" />
-          <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
-            block @click="navigateTo('/profile')" />
-          <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-          <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
-            @click="handleLogout" />
-        </div>
-      </template>
-    </UPopover>
+
 
   </header>
 
