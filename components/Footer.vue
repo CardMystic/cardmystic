@@ -32,8 +32,8 @@
         <p>All other content © 2025 Fiasco Games LLC</p>
         <p class="text-xs opacity-70">
           This site is protected by reCAPTCHA and the Google
-          <a href="https://policies.google.com/privacy">Privacy Policy</a> and
-          <a href="https://policies.google.com/terms">Terms of Service</a> apply.
+          <a class="text-purple-400" href="https://policies.google.com/privacy">Privacy Policy</a> and
+          <a class="text-purple-400" href="https://policies.google.com/terms">Terms of Service</a> apply.
         </p>
         <p>
           <NuxtLink :to="commitUrl" target="_blank" rel="noopener"
