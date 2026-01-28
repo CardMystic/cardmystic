@@ -6,6 +6,11 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type SearchHistory =
+  Database['public']['Tables']['search_history']['Row'];
+export type SearchHistoryInsert =
+  Database['public']['Tables']['search_history']['Insert'];
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)

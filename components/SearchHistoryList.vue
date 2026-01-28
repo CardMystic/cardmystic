@@ -54,12 +54,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { SearchHistory } from '~/database.types';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter'
 
 const showMoreThreshold = 7
 
 const props = defineProps<{
-  history: any[]
+  history: SearchHistory[]
   loading: boolean
   error: string
 }>()

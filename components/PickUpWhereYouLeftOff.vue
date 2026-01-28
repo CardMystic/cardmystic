@@ -10,12 +10,13 @@
           Recent Searches
         </h3>
         <div v-if="recentSearches.length > 0" class="recent-search-container space-y-2 flex justify-center flex-col">
-          <NuxtLink v-for="search in recentSearches" :key="search.id" :to="search.url" class="recent-item group">
+          <NuxtLink v-for="search in recentSearches" :key="search.id" class="recent-item group"
+            @click.prevent="rerunSearchHistory(search, router)">
             <div class="flex items-center gap-3">
               <UIcon name="i-lucide-clock" class="text-primary flex-shrink-0" />
               <div class="flex-1 min-w-0">
                 <p class="search-query truncate">{{ search.query }}</p>
-                <p class="search-meta">{{ formatRelativeTime(search.timestamp) }}</p>
+                <p class="search-meta">{{ formatRelativeTimeShort(search.created_at) }}</p>
               </div>
               <UIcon name="i-lucide-arrow-right" class="opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
@@ -63,28 +64,17 @@
 import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCardHistory } from '~/composables/useCardHistory';
 import { useQuery } from '@tanstack/vue-query';
-import { formatRelativeTime } from '~/utils/dateFormatter';
+import { rerunSearchHistory } from '#imports';
 import CardSimple from '~/components/CardSimple.vue';
+import type { SearchHistory } from '~/database.types';
 
+const router = useRouter();
 const { searchHistory } = useSearchHistory();
 const { cardHistory } = useCardHistory();
 
-interface SearchItem {
-  id: string;
-  query: string;
-  url: string;
-  timestamp: number;
-}
-
-const recentSearches = computed<SearchItem[]>(() => {
+const recentSearches = computed<SearchHistory[]>(() => {
   if (!searchHistory.value) return [];
-
-  return searchHistory.value.slice(0, 3).map(search => ({
-    id: search.id,
-    query: search.query,
-    url: buildSearchUrl(search),
-    timestamp: new Date(search.created_at).getTime()
-  }));
+  return searchHistory.value.slice(0, 3)
 });
 
 // Get unique card IDs from history
@@ -120,25 +110,6 @@ const displayedCards = computed(() =>
   }))
 );
 
-function buildSearchUrl(search: any): string {
-  const searchType = search.search_type || 'keyword';
-  const basePath = `/search/${searchType}`;
-  const params = new URLSearchParams();
-
-  if (search.query) {
-    if (searchType === 'similarity') {
-      params.set('card_name', search.query);
-    } else {
-      params.set('query', search.query);
-    }
-  }
-
-  if (search.filters) {
-    params.set('filters', JSON.stringify(search.filters));
-  }
-
-  return `${basePath}?${params.toString()}`;
-}
 </script>
 
 <style scoped lang="sass">

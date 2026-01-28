@@ -1,12 +1,8 @@
-import type { Database } from '~/database.types';
+import type { SearchHistory, SearchHistoryInsert } from '~/database.types';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed } from 'vue';
-
-type SearchHistory = Database['public']['Tables']['search_history']['Row'];
-type SearchHistoryInsert =
-  Database['public']['Tables']['search_history']['Insert'];
 
 export const useSearchHistory = () => {
   const supabase = useSupabase();
@@ -19,7 +15,7 @@ export const useSearchHistory = () => {
     isLoading: isLoadingHistory,
     error: historyError,
     refetch: refetchHistory,
-  } = useQuery({
+  } = useQuery<SearchHistory[]>({
     queryKey: ['search-history', computed(() => userProfile.value?.id)],
     queryFn: async () => {
       if (!userProfile.value?.id) {

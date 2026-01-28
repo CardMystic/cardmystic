@@ -17,7 +17,7 @@
     <UTabs v-model="selectedTab" :items="tabs" class="mb-6">
       <template #search>
         <SearchHistoryList :history="searchHistoryData" :loading="searchLoading" :error="searchError"
-          @delete-item="deleteSearchItem" @run-search="runSearch" />
+          @delete-item="deleteSearchItem" @run-search="item => rerunSearchHistory(item, router)" />
       </template>
 
       <template #cards>
@@ -66,6 +66,7 @@ import CardHistoryList from '~/components/CardHistoryList.vue'
 import { useSearchHistory } from '~/composables/useSearchHistory'
 import { useCardHistory } from '~/composables/useCardHistory'
 import { useUserProfile } from '~/composables/useUserProfile'
+import { rerunSearchHistory } from '~/utils/history'
 import { useToast } from '#imports'
 
 const { searchHistory, isLoadingHistory, historyError, deleteSearchHistoryMutation, clearAllHistoryMutation } = useSearchHistory()
@@ -125,30 +126,6 @@ const clearAllLoading = computed(() => {
     return clearAllCardHistoryMutation.isPending.value
   }
 })
-
-const runSearch = (item: any) => {
-  const paths: Record<string, string> = {
-    'ai': '/search',
-    'similarity': '/search/similarity',
-    'keyword': '/search/keyword',
-    'commander': '/search/commander'
-  }
-
-  const path = paths[item.search_type] || '/search'
-  const query: any = { searchType: item.search_type }
-
-  if (item.search_type === 'similarity') {
-    query.card_name = item.query
-  } else {
-    query.query = item.query
-  }
-
-  if (item.filters) {
-    query.filters = JSON.stringify(item.filters)
-  }
-
-  router.push({ path, query })
-}
 
 const deleteSearchItem = (item: any) => {
   itemToDelete.value = item
