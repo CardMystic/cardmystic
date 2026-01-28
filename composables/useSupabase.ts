@@ -5,11 +5,14 @@ let _supabase: SupabaseClient | null = null;
 export const useSupabase = () => {
   if (!_supabase) {
     const config = useRuntimeConfig();
-    const supabaseUrl =
-      config.public.supabaseUrl || 'https://ddbgietanhxrozzmogur.supabase.co';
-    const supabaseKey =
-      config.public.supabaseKey ||
-      'sb_publishable_yFYuk_hrvXA6gcW8wPATHA_ek3KU1vs';
+    const supabaseUrl = config.public.supabaseUrl;
+    const supabaseKey = config.public.supabaseKey;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        'Supabase configuration is missing. Please set NUXT_PUBLIC_SUPABASE_URL and NUXT_PUBLIC_SUPABASE_KEY environment variables.',
+      );
+    }
 
     _supabase = createClient(supabaseUrl, supabaseKey);
   }
