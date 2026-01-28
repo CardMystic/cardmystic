@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="section-title">History</h2>
+    <h2 class="section-title">Where You Left Off</h2>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Recent Searches -->
@@ -9,7 +9,7 @@
           <UIcon name="i-lucide-search" class="inline-block" />
           Recent Searches
         </h3>
-        <div v-if="recentSearches.length > 0" class="recent-search-container space-y-2">
+        <div v-if="recentSearches.length > 0" class="recent-search-container space-y-2 flex justify-center flex-col">
           <NuxtLink v-for="search in recentSearches" :key="search.id" :to="search.url" class="recent-item group">
             <div class="flex items-center gap-3">
               <UIcon name="i-lucide-clock" class="text-primary flex-shrink-0" />
