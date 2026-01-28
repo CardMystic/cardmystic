@@ -60,7 +60,7 @@
 
     <!-- Cards Results -->
     <ListSearchResults :isLoading="loading" :searchResults="sortedCards" :queryParam="null" :skeletonCount="20"
-      helpText="Your list is loading..." />
+      :isList="true" helpText="Your list is loading..." />
   </div>
 
   <!-- Edit Banner Modal -->
@@ -208,9 +208,9 @@ const filteredBannerCards = computed(() => {
   return filtered
 })
 
-// Get banner image URL from avatar_card_name or first card
+// Get banner image URL from avatar_card_name only
 const bannerImageUrl = computed(() => {
-  const cardName = list.value?.avatar_card_name || (cards.value.length > 0 ? cards.value[0].card_data.name : null)
+  const cardName = list.value?.avatar_card_name
   if (!cardName) return null
 
   // Scryfall's card image API

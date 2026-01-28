@@ -3,9 +3,11 @@
     class="relative border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
     <!-- Background Image -->
     <div v-if="getListImageUrl(list)"
-      class="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+      class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
       :style="{ backgroundImage: `url(${getListImageUrl(list)})` }"></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+    <div
+      class="absolute inset-0 bg-gradient-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent">
+    </div>
 
     <!-- Delete Button (visible on hover) -->
     <UButton v-if="showDeleteButton" @click.stop="$emit('delete')"
@@ -15,7 +17,7 @@
     <!-- Content (clickable) -->
     <div class="relative p-4" @click="navigateTo(`/lists/${list.id}`)">
       <h3 class="text-xl font-semibold mb-2">{{ list.name }}</h3>
-      <p v-if="list.description" class="text-sm mb-3 line-clamp-2">
+      <p v-if="list.description" class="text-sm mb-3 line-clamp-1">
         {{ list.description }}
       </p>
       <div class="flex items-center justify-between text-sm">
