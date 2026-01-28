@@ -65,8 +65,11 @@ const signInWithEmail = async () => {
       Sign in to CardMystic
     </h1>
 
-    <UButton class="w-full" color="neutral" variant="solid" icon="i-simple-icons-google" label="Continue with Google"
-      @click="signInWithGoogle" />
+    <UButton class="w-full" color="neutral" variant="solid" label="Continue with Google" @click="signInWithGoogle">
+      <template #leading>
+        <img src="/icons-google.svg" alt="Google" class="w-5 h-5" />
+      </template>
+    </UButton>
 
     <div class="text-center text-zinc-400 text-sm">or</div>
 

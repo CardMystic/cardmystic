@@ -47,6 +47,8 @@ export default defineNuxtConfig({
     public: {
       commitHash: getCommitHash(),
       recaptchaSiteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || '',
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
+      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
