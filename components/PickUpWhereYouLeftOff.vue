@@ -195,13 +195,11 @@ function buildSearchUrl(search: any): string {
   font-weight: 500
   font-size: 0.95rem
   line-height: 1.3
-  color: white
 
 .search-meta
   font-size: 0.8rem
   opacity: 0.7
   margin-top: 0.25rem
-  color: white
 
 .empty-state
   text-align: center

@@ -14,11 +14,11 @@
 
     <!-- Content (clickable) -->
     <div class="relative p-4" @click="navigateTo(`/lists/${list.id}`)">
-      <h3 class="text-xl font-semibold mb-2 text-white">{{ list.name }}</h3>
-      <p v-if="list.description" class="text-gray-200 text-sm mb-3 line-clamp-2">
+      <h3 class="text-xl font-semibold mb-2">{{ list.name }}</h3>
+      <p v-if="list.description" class="text-sm mb-3 line-clamp-2">
         {{ list.description }}
       </p>
-      <div class="flex items-center justify-between text-sm text-gray-300">
+      <div class="flex items-center justify-between text-sm">
         <span>{{ formatShortDate(list.updated_at) }}</span>
         <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
       </div>
