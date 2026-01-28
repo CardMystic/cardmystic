@@ -31,6 +31,11 @@
       </div>
     </div>
 
+    <!-- Banner Skeleton -->
+    <div v-else class="mb-6">
+      <USkeleton class="h-48 md:h-64 rounded-lg" />
+    </div>
+
     <!-- Back Button and Actions -->
     <div class="mb-6">
       <NuxtLink to="/lists">
@@ -53,29 +58,9 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary" />
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center py-12">
-      <UIcon name="i-lucide-alert-circle" class="w-16 h-16 mx-auto mb-4 text-red-500" />
-      <p class="text-red-500 mb-2 text-lg font-semibold">Error loading list</p>
-      <p class="text-gray-500">{{ error }}</p>
-    </div>
-
-    <!-- Empty State -->
-    <div v-else-if="!cards || cards.length === 0" class="text-center py-12">
-      <UIcon name="i-lucide-inbox" class="w-16 h-16 mx-auto mb-4 text-gray-400" />
-      <p class="text-gray-500 text-lg">No cards in this list yet</p>
-    </div>
-
-    <!-- Cards Grid -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-      <Card v-for="card in sortedCards" :key="card.card_data.id" :card="card" :show-card-info="true"
-        :hide-progress-bar="true" :hide-thumbs-down-button="true" />
-    </div>
+    <!-- Cards Results -->
+    <ListSearchResults :isLoading="loading" :searchResults="sortedCards" :queryParam="null" :skeletonCount="20"
+      helpText="Your list is loading..." />
   </div>
 
   <!-- Edit Banner Modal -->
@@ -114,10 +99,11 @@ import { useUserProfile } from '~/composables/useUserProfile'
 import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
-import Card from '~/components/Card.vue'
+import ListSearchResults from '~/components/ListSearchResults.vue'
 import Sort from '~/components/search/Sort.vue'
 import { refDebounced } from '@vueuse/core'
 import { sortSearchResults } from '~/utils/sort'
+import { useQuery } from '@tanstack/vue-query'
 
 const route = useRoute()
 const listId = route.params.id as string
@@ -132,8 +118,32 @@ const error = ref('')
 
 // Use TanStack Query for list items
 const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
-const cards = ref<any[]>([])
-const loading = computed(() => isLoadingLists.value || isLoadingItems.value)
+
+// Use TanStack Query to fetch card details
+const { data: cardsData, isLoading: isLoadingCards } = useQuery({
+  queryKey: ['list-cards', listId],
+  queryFn: async () => {
+    if (!listItems.value || listItems.value.length === 0) return []
+
+    const cardIds = listItems.value.map((item: any) => item.card_id)
+    const cardPromises = cardIds.map((id: string) =>
+      $fetch(`https://api.scryfall.com/cards/${id}`)
+    )
+    const cardsData = await Promise.all(cardPromises)
+
+    return cardsData.map((cardData: any) => ({
+      card_name: cardData.name,
+      card_data: cardData,
+      score: undefined
+    }))
+  },
+  enabled: computed(() => (listItems.value?.length ?? 0) > 0),
+  staleTime: 1000 * 60 * 10, // 10 minutes
+})
+
+const cards = computed(() => cardsData.value || [])
+
+const loading = computed(() => isLoadingLists.value || isLoadingItems.value || isLoadingCards.value)
 
 // Sorting state
 const sortBy = ref<string | undefined>(undefined)
@@ -215,7 +225,7 @@ const previewBannerUrl = computed(() => {
 
 const totalPrice = computed(() => {
   if (!cards.value || cards.value.length === 0) return 0
-  return cards.value.reduce((sum, card) => {
+  return cards.value.reduce((sum: number, card: any) => {
     const price = card.card_data?.prices?.usd
     return sum + (price ? parseFloat(price) : 0)
   }, 0)
@@ -245,7 +255,7 @@ const updateBannerImage = async () => {
 
 function copyCardNames() {
   if (!cards.value || cards.value.length === 0) return
-  const names = cards.value.map(card => card.card_data.name).join('\n')
+  const names = cards.value.map((card: any) => card.card_data.name).join('\n')
   copy(names)
   toast.add({
     title: 'Card names copied!',
@@ -255,7 +265,7 @@ function copyCardNames() {
 
 function openMassEntry() {
   if (!cards.value || cards.value.length === 0) return
-  const names = cards.value.map(card => card.card_data.name)
+  const names = cards.value.map((card: any) => card.card_data.name)
   const url = getMassEntryAffiliateLink(names)
   window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -274,27 +284,4 @@ onMounted(async () => {
     }
   }, { immediate: true })
 })
-
-// Fetch card details from Scryfall when list items are loaded
-watch(listItems, async (items) => {
-  if (!items || items.length === 0) return
-
-  const cardIds = items.map((item: any) => item.card_id)
-
-  try {
-    const cardPromises = cardIds.map((id: string) =>
-      $fetch(`https://api.scryfall.com/cards/${id}`)
-    )
-    const cardsData = await Promise.all(cardPromises)
-
-    // Update cards ref with detailed data
-    cards.value = cardsData.map((cardData: any) => ({
-      card_data: cardData,
-      score: undefined
-    }))
-  } catch (err) {
-    error.value = 'Failed to load card details'
-    console.error('Error fetching cards:', err)
-  }
-}, { immediate: true })
 </script>
