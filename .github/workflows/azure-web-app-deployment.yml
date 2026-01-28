@@ -41,9 +41,21 @@ jobs:
           api_location: '.output/server' # Api source code path - optional
           output_location: '.output/public' # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
+      - name: Deploy Dev Branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          action: 'upload'
+          app_location: '/'
+          api_location: '.output/server'
+          output_location: '.output/public'
       - name: Build And Deploy (Next)
         id: builddeploy-next
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
@@ -60,10 +72,16 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
+    permissions:
+      pull-requests: write
     steps:
       - name: Close Pull Request
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: 'close'
+          app_location: '/' # Close still requires a location
+          api_location: '.output/server'
+          output_location: '.output/public'
