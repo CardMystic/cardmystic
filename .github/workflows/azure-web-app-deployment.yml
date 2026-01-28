@@ -6,7 +6,7 @@ on:
       - main
       - dev
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
     paths-ignore:
       - 'README.md'
       - '.vscode/**'
@@ -67,21 +67,3 @@ jobs:
           api_location: '.output/server' # Api source code path - optional
           output_location: '.output/public' # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
-          action: 'close'
-          app_location: '/' # Close still requires a location
-          api_location: '.output/server'
-          output_location: '.output/public'
