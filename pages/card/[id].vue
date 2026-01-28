@@ -259,6 +259,11 @@
           <ListCardDetailsSimilarCardsResults :is-loading="isSimilarCardsLoading" :search-results="similarCards"
             :skeleton-count="8" />
         </UCard>
+
+        <!-- Discussion Forum Section -->
+        <div v-if="card" class="w-full">
+          <CardDiscussion :card-id="card.id" />
+        </div>
       </div>
     </div>
   </div>
@@ -267,6 +272,7 @@
 <script setup lang="ts">
 import ClipboardButton from '~/components/ClipboardButton.vue';
 import ListCardDetailsSimilarCardsResults from '~/components/ListCardDetailsSimilarCardsResults.vue';
+import CardDiscussion from '~/components/CardDiscussion.vue';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useQuery } from '@tanstack/vue-query';
