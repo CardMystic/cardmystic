@@ -46,6 +46,9 @@ export default defineNuxtConfig({
     // Keys within public are also exposed client-side
     public: {
       commitHash: getCommitHash(),
+      recaptchaSiteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || '',
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
+      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
@@ -77,6 +80,7 @@ export default defineNuxtConfig({
     css: {
       preprocessorOptions: {
         sass: {
+          // @ts-ignore - modern-compiler is valid but not in types yet
           api: 'modern-compiler',
         },
       },

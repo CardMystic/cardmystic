@@ -139,6 +139,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // If true, show additional card info (name, type, clipboard button)
   showCardInfo: {
     type: Boolean,
     default: false,

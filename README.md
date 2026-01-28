@@ -131,6 +131,18 @@ bun run preview
 
 Check out the [Nuxt deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
+# Database
+
+The database is hosted on Supabase. You can sign up for a free account at [supabase.com](https://supabase.com/).
+
+## Generate Supabase Databse Types
+
+To generate the Supabase database types (when the schema changes) run:
+
+```bash
+npm run gen:types
+```
+
 ## 🙏 Acknowledgements
 
 - [Scryfall](https://scryfall.com/) for card data

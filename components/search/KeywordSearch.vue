@@ -124,6 +124,7 @@ const filteredSuggestions = computed(() => {
 const honeypot = ref('')
 
 const toast = useToast()
+const { saveSearchMutation } = useSearchHistory()
 
 function handleInput(event: Event) {
   searchTerm.value = (event.target as HTMLInputElement).value;
@@ -230,6 +231,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         delete requestFilters[key as keyof typeof requestFilters];
       }
     });
+
+    // Save to search history
+    saveSearchMutation.mutate({ query: event.data.query, searchType: 'keyword', filters: requestFilters })
 
     const query: Record<string, any> = {
       query: event.data.query,
