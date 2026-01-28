@@ -262,9 +262,11 @@
       </div>
     </div>
   </div>
+  <BackToTop />
 </template>
 
 <script setup lang="ts">
+import BackToTop from '~/components/BackToTop.vue';
 import ClipboardButton from '~/components/ClipboardButton.vue';
 import ListCardDetailsSimilarCardsResults from '~/components/ListCardDetailsSimilarCardsResults.vue';
 import { computed, h, ref, watch } from 'vue';
