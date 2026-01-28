@@ -28,7 +28,7 @@
             <UBadge :color="getSearchTypeColor(item.search_type)" variant="soft">
               {{ getSearchTypeLabel(item.search_type) }}
             </UBadge>
-            <span class="text-sm text-gray-500">{{ formatDate(item.created_at) }}</span>
+            <span class="text-sm text-gray-500">{{ formatRelativeTimeShort(item.created_at) }}</span>
           </div>
           <p class="text-lg font-medium mb-2">{{ item.query }}</p>
           <div v-if="item.filters" class="text-sm text-gray-600 dark:text-gray-400">
@@ -54,6 +54,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { formatRelativeTimeShort } from '~/utils/dateFormatter'
 
 const showMoreThreshold = 7
 
@@ -74,26 +75,6 @@ const displayedHistory = computed(() => {
   if (showAll.value || !props.history) return props.history
   return props.history.slice(0, showMoreThreshold)
 })
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-  })
-}
 
 const getSearchTypeLabel = (type: string) => {
   const labels: Record<string, string> = {

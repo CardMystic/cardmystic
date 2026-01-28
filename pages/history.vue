@@ -73,8 +73,24 @@ const { cardHistory, isLoadingHistory: isLoadingCardHistory, historyError: cardH
 const { userProfile, profileIconUrl } = useUserProfile()
 const toast = useToast()
 const router = useRouter()
+const route = useRoute()
 
 const selectedTab = ref('0')
+
+// Set active tab based on query parameter on mount
+onMounted(() => {
+  if (!userProfile.value) {
+    navigateTo('/')
+    return
+  }
+
+  const tabParam = route.query.tab as string
+  if (tabParam === 'cards') {
+    selectedTab.value = '1'
+  } else if (tabParam === 'search') {
+    selectedTab.value = '0'
+  }
+})
 
 const tabs = [
   { key: 'search', label: 'Search History', icon: 'i-lucide-search', slot: 'search' },
@@ -189,10 +205,4 @@ const handleClearAll = async () => {
     })
   }
 }
-
-onMounted(() => {
-  if (!userProfile.value) {
-    navigateTo('/')
-  }
-})
 </script>

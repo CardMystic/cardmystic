@@ -32,31 +32,8 @@
 
     <!-- Lists Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div v-for="list in lists" :key="list.id"
-        class="relative border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
-        <!-- Background Image -->
-        <div v-if="getListImageUrl(list)"
-          class="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
-          :style="{ backgroundImage: `url(${getListImageUrl(list)})` }"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-
-        <!-- Delete Button (visible on hover) -->
-        <UButton @click.stop="confirmDelete(list)"
-          class="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
-          color="error" variant="solid" icon="i-lucide-trash-2" size="sm" aria-label="Delete list" />
-
-        <!-- Content (clickable) -->
-        <div class="relative p-4" @click="navigateTo(`/lists/${list.id}`)">
-          <h3 class="text-xl font-semibold mb-2 text-white">{{ list.name }}</h3>
-          <p v-if="list.description" class="text-gray-200 text-sm mb-3 line-clamp-2">
-            {{ list.description }}
-          </p>
-          <div class="flex items-center justify-between text-sm text-gray-300">
-            <span>{{ formatDate(list.updated_at) }}</span>
-            <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
-          </div>
-        </div>
-      </div>
+      <CardListLink v-for="list in lists" :key="list.id" :list="list" :show-delete-button="true"
+        @delete="confirmDelete(list)" />
     </div>
   </div>
 
@@ -82,6 +59,7 @@
 import { useCardLists } from '~/composables/useCardLists'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useToast } from '#imports'
+import CardListLink from '~/components/CardListLink.vue'
 
 const { userLists, isLoadingLists, listsError, deleteListMutation } = useCardLists()
 const { userProfile, profileIconUrl, fetchUser } = useUserProfile()
@@ -95,20 +73,6 @@ const error = computed(() => listsError.value?.message || '')
 const isDeleteModalOpen = ref(false)
 const listToDelete = ref<any>(null)
 const deleteLoading = computed(() => deleteListMutation.isPending.value)
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
-
-const getListImageUrl = (list: any) => {
-  if (!list.avatar_card_name) return null
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(list.avatar_card_name)}&format=image&version=art_crop`
-}
 
 const confirmDelete = (list: any) => {
   listToDelete.value = list

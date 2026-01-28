@@ -44,6 +44,10 @@
 
   <!-- Everything below the fold -->
   <UContainer class="mt-14 mb-10">
+    <!-- User-specific sections when logged in -->
+    <RecentLists v-if="isLoggedIn" class="mb-14" />
+    <PickUpWhereYouLeftOff v-if="isLoggedIn" class="mb-14" />
+
     <QueryCount class="mb-14"></QueryCount>
     <!-- How To Use & How It Works Section -->
     <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -110,10 +114,17 @@ useSeoMeta({
 import SearchForm from '~/components/search/Search.vue';
 import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
 import CardSimple from '~/components/CardSimple.vue';
+import RecentLists from '~/components/RecentLists.vue';
+import PickUpWhereYouLeftOff from '~/components/PickUpWhereYouLeftOff.vue';
 import type { Card as CardType } from '~/models/cardModel';
+import { useUserProfile } from '~/composables/useUserProfile';
 
 // Use search type composable to check if AI search is active
 const { isAiSearch } = useSearchType();
+
+// Check if user is logged in
+const { userProfile } = useUserProfile();
+const isLoggedIn = computed(() => !!userProfile.value);
 
 // Hardcoded hero cards
 const heroCards: CardType[] = [
