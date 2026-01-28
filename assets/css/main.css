@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+.grecaptcha-badge {
+  visibility: hidden;
+}
+
 :root {
   --ui-primary: #8f6edf;
   --ui-secondary: #383d7a;
