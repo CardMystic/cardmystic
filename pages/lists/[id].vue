@@ -18,8 +18,31 @@
 
         <!-- Banner Content -->
         <div class="absolute bottom-0 left-0 right-0 p-6">
-          <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ list.name }}</h1>
-          <p v-if="list.description" class="text-gray-200 text-lg">{{ list.description }}</p>
+          <div v-if="isEditingTitle" class="mb-2">
+            <input v-model="editedTitle" @blur="updateListName" @keyup.enter="updateListName"
+              @keyup.esc="isEditingTitle = false"
+              class="text-3xl md:text-4xl font-bold text-white bg-black/50 px-2 py-1 rounded w-full outline-none focus:bg-black/70"
+              autofocus />
+          </div>
+          <h1 v-else @click="startEditingTitle"
+            class="text-3xl md:text-4xl font-bold text-white mb-2 cursor-pointer hover:opacity-80 transition-opacity">
+            {{ list.name }}
+          </h1>
+
+          <div v-if="isEditingDescription" class="mb-2">
+            <textarea v-model="editedDescription" @blur="updateListDescription"
+              @keyup.esc="isEditingDescription = false"
+              class="text-gray-200 text-lg bg-black/50 px-2 py-1 rounded w-full outline-none focus:bg-black/70 resize-none"
+              rows="2" autofocus />
+          </div>
+          <p v-else-if="list.description" @click="startEditingDescription"
+            class="text-gray-200 text-lg cursor-pointer hover:opacity-80 transition-opacity">
+            {{ list.description }}
+          </p>
+          <p v-else @click="startEditingDescription"
+            class="text-gray-400 text-lg italic cursor-pointer hover:opacity-80 transition-opacity">
+            Click to add description
+          </p>
         </div>
 
         <!-- Edit Icon (visible on hover) -->
@@ -110,7 +133,7 @@ const listId = route.params.id as string
 const toast = useToast()
 const { copy } = useClipboard()
 
-const { userLists, isLoadingLists, useListItems, updateListAvatarMutation } = useCardLists()
+const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation } = useCardLists()
 const { userProfile, fetchUser } = useUserProfile()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
@@ -268,6 +291,76 @@ function openMassEntry() {
   const names = cards.value.map((card: any) => card.card_data.name)
   const url = getMassEntryAffiliateLink(names)
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+// Editable title and description state
+const isEditingTitle = ref(false)
+const isEditingDescription = ref(false)
+const editedTitle = ref('')
+const editedDescription = ref('')
+
+const updateListName = async () => {
+  if (!list.value || !editedTitle.value.trim()) {
+    isEditingTitle.value = false
+    return
+  }
+
+  try {
+    await updateListMutation.mutateAsync({
+      listId: list.value.id,
+      updates: { name: editedTitle.value.trim() }
+    })
+    toast.add({
+      title: 'List name updated!',
+      icon: 'i-lucide-check'
+    })
+    isEditingTitle.value = false
+  } catch (error: any) {
+    toast.add({
+      title: 'Error updating list name',
+      description: error.message,
+      color: 'error'
+    })
+  }
+}
+
+const updateListDescription = async () => {
+  if (!list.value) {
+    isEditingDescription.value = false
+    return
+  }
+
+  try {
+    await updateListMutation.mutateAsync({
+      listId: list.value.id,
+      updates: { description: editedDescription.value.trim() || undefined }
+    })
+    toast.add({
+      title: 'List description updated!',
+      icon: 'i-lucide-check'
+    })
+    isEditingDescription.value = false
+  } catch (error: any) {
+    toast.add({
+      title: 'Error updating list description',
+      description: error.message,
+      color: 'error'
+    })
+  }
+}
+
+const startEditingTitle = () => {
+  if (list.value) {
+    editedTitle.value = list.value.name
+    isEditingTitle.value = true
+  }
+}
+
+const startEditingDescription = () => {
+  if (list.value) {
+    editedDescription.value = list.value.description || ''
+    isEditingDescription.value = true
+  }
 }
 
 onMounted(async () => {

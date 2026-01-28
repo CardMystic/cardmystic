@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
+    class="relative border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
     <!-- Background Image -->
     <div v-if="getListImageUrl(list)"
       class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
