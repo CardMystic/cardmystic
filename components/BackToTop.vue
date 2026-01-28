@@ -10,6 +10,7 @@
 const showButton = ref(false)
 const scrollThreshold = 300
 
+// Show or hide the button based on scroll position
 function handleScroll() {
   const scrollY = window.scrollY
   showButton.value = scrollY > scrollThreshold
