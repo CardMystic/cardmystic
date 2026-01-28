@@ -5,10 +5,11 @@
       style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
 
     <UFormField name="query" class="mb-2">
-      <div class="flex gap-2">
+      <div class="flex gap-2 w-full">
         <div ref="autocompleteContainer" class="flex-1 relative">
           <UInput ref="input" v-model="state.query" @input="handleInput" @focus="showDropdown = true"
-            @keydown="handleKeydown" placeholder="Search cards by keywords…" icon="i-lucide-search" class="h-10" />
+            @keydown="handleKeydown" placeholder="Search cards by keywords…" icon="i-lucide-search"
+            :ui="{ trailing: 'pe-1', base: 'h-10' }" class="w-full" />
           <div v-if="showDropdown && searchTerm.length >= 2 && filteredSuggestions.length > 0"
             class="absolute top-full left-0 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 max-h-64 overflow-y-auto">
             <div v-for="(suggestion, index) in filteredSuggestions" :key="suggestion"
