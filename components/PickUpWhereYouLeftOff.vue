@@ -25,7 +25,7 @@
         <p v-else class="empty-state">No recent searches</p>
         <div class="mt-4">
           <NuxtLink to="/history?tab=search">
-            <UButton color="primary" variant="outline" class="w-full">
+            <UButton color="primary" variant="outline" class="w-full justify-center" icon="i-lucide-arrow-right">
               See More
             </UButton>
           </NuxtLink>
@@ -50,7 +50,7 @@
         <p v-else class="empty-state">No recent cards viewed</p>
         <div class="mt-4">
           <NuxtLink to="/history?tab=cards">
-            <UButton color="primary" variant="outline" class="w-full">
+            <UButton color="primary" variant="outline" class="w-full justify-center" icon="i-lucide-arrow-right">
               See More
             </UButton>
           </NuxtLink>
@@ -80,7 +80,7 @@ const recentSearches = computed<SearchHistory[]>(() => {
 // Get unique card IDs from history
 const cardIds = computed<string[]>(() => {
   if (!cardHistory.value || cardHistory.value.length === 0) return [];
-  return [...new Set(cardHistory.value.slice(0, 4).map(h => h.card_id).filter(Boolean))];
+  return cardHistory.value.slice(0, 3).map(h => h.card_id);
 });
 
 // Fetch card details using TanStack Query
@@ -103,12 +103,12 @@ const { data: cards, isLoading: isLoadingCards, error: fetchError } = useQuery({
 
 const cardsError = computed(() => fetchError.value?.message || '');
 
-const displayedCards = computed(() =>
-  (cards.value || []).slice(0, 3).map((card: any) => ({
+const displayedCards = computed(() => {
+  return (cards.value || []).slice(0, 3).map((card: any) => ({
     card_data: card,
     card_name: card.name
-  }))
-);
+  }));
+});
 
 </script>
 

@@ -45,8 +45,10 @@
   <!-- Everything below the fold -->
   <UContainer class="mt-14 mb-10">
     <!-- User-specific sections when logged in -->
-    <RecentLists v-if="isLoggedIn" class="mb-14" />
-    <PickUpWhereYouLeftOff v-if="isLoggedIn" class="mb-14" />
+    <ClientOnly>
+      <RecentLists v-if="isLoggedIn" class="mb-14" />
+      <PickUpWhereYouLeftOff v-if="isLoggedIn" class="mb-14" />
+    </ClientOnly>
 
     <QueryCount class="mb-14"></QueryCount>
     <!-- How To Use & How It Works Section -->

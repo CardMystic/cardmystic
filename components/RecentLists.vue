@@ -6,10 +6,14 @@
       <USkeleton v-for="i in 3" :key="i" class="list-skeleton" />
     </div>
 
-    <div v-else-if="recentLists.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div v-else-if="recentLists.length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <CardListLink v-for="list in recentLists" :key="list.id" :list="list" :show-delete-button="false" />
+      <NuxtLink to="/lists">
+        <UButton color="primary" variant="outline" class="h-full w-full justify-center" icon="i-lucide-arrow-right">
+          See More
+        </UButton>
+      </NuxtLink>
     </div>
-
     <div v-else class="empty-state">
       <UIcon name="i-lucide-inbox" class="text-5xl opacity-30 mb-3" />
       <p class="mb-4">You haven't created any lists yet</p>
