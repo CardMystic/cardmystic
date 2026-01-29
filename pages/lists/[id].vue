@@ -117,6 +117,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'auth'
+})
+
 import { useCardLists } from '~/composables/useCardLists'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useClipboard } from '@vueuse/core'

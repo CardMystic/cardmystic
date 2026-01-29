@@ -61,6 +61,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'auth'
+})
+
 import SearchHistoryList from '~/components/SearchHistoryList.vue'
 import CardHistoryList from '~/components/CardHistoryList.vue'
 import { useSearchHistory } from '~/composables/useSearchHistory'

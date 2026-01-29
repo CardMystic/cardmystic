@@ -56,6 +56,10 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'auth'
+})
+
 import { useCardLists } from '~/composables/useCardLists'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useToast } from '#imports'
