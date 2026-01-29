@@ -124,9 +124,15 @@ import { useUserProfile } from '~/composables/useUserProfile';
 // Use search type composable to check if AI search is active
 const { isAiSearch } = useSearchType();
 
-// Check if user is logged in
-const { userProfile } = useUserProfile();
-const isLoggedIn = computed(() => !!userProfile.value);
+// Check if user is logged in - only initialize on client to avoid SSR issues
+let userProfile = ref<any>(null);
+let isLoggedIn = computed(() => false);
+
+if (process.client) {
+  const auth = useUserProfile();
+  userProfile = auth.userProfile;
+  isLoggedIn = computed(() => !!userProfile.value);
+}
 
 // Hardcoded hero cards
 const heroCards: CardType[] = [
