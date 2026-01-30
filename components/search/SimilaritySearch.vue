@@ -25,7 +25,7 @@
     </div>
 
     <UFormField v-if="showFilters" name="filters">
-      <Filters v-model="state.filters" />
+      <Filters ref="filtersRef" v-model="state.filters" />
     </UFormField>
   </UForm>
 </template>
@@ -39,6 +39,7 @@ import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
 
 const autoComplete = ref();
+const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 defineShortcuts({
   '/': () => {
     autoComplete.value?.inputRef?.focus();
@@ -120,6 +121,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 
   try {
+    filtersRef.value?.collapse();
     const requestFilters = { ...event.data.filters } // shallow copy
 
     // Only modify the copy, NEVER the form state
