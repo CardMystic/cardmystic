@@ -32,7 +32,7 @@
     </div>
 
     <UFormField v-if="showFilters" name="filters">
-      <Filters v-model="state.filters" />
+      <Filters ref="filtersRef" v-model="state.filters" />
     </UFormField>
   </UForm>
 </template>
@@ -45,6 +45,7 @@ import { CardSearchFiltersSchema } from '~/models/searchModel'
 import Filters from './Filters.vue'
 
 const input = ref();
+const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 defineShortcuts({
   '/': () => {
     input.value?.inputRef?.focus();
@@ -113,6 +114,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'ai'
     };
+    filtersRef.value?.collapse();
     navigateTo({ path: '/search', query });
   } catch (error) {
     console.error('Form submission error:', error)

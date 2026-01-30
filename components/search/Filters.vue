@@ -79,7 +79,7 @@
       </div>
     </div>
 
-    <UCollapsible class="flex flex-col gap-2">
+    <UCollapsible v-model:open="isOpen" class="flex flex-col gap-2">
       <UButton class="filters-toggle-btn cursor-pointer" label="Select Filters" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down" icon="i-lucide-list-filter" :ui="{
           trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
@@ -190,6 +190,13 @@ type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
 
 const screenWidth = ref(0)
+const isOpen = ref(false)
+
+function collapse() {
+  isOpen.value = false;
+}
+
+defineExpose({ collapse });
 
 onMounted(() => {
   screenWidth.value = window.innerWidth
@@ -312,9 +319,6 @@ const cardColors = CardColor.options.map(color => ({
   value: color
 })) as CheckboxGroupItem[];
 
-const showNotification = ref(false);
-const notificationMessage = ref('');
-
 const selectedColors = computed({
   get: () => modelValue?.selectedColors || [],
   set: (value) => {
@@ -403,15 +407,6 @@ function removeCardType(cardType: string) {
   if (index !== -1) {
     currentTypes.splice(index, 1);
     updateFilters({ selectedCardTypes: currentTypes.length > 0 ? currentTypes : undefined });
-  }
-}
-
-function removeColor(color: CardColorType) {
-  const currentColors = [...(modelValue?.selectedColors || [])];
-  const index = currentColors.indexOf(color);
-  if (index !== -1) {
-    currentColors.splice(index, 1);
-    updateFilters({ selectedColors: currentColors.length > 0 ? currentColors : undefined });
   }
 }
 
