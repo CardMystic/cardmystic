@@ -52,7 +52,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -302,7 +302,7 @@ const { data: cardData, error, pending } = useAsyncData(
   },
   {
     server: true,
-    lazy: true,
+    lazy: false,
     watch: [cardIdParam]
   }
 );
@@ -312,33 +312,24 @@ const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
 const canonicalUrl = computed(() =>
-  `https://cardmystic.com/card/${cardData.value?.card.oracle_id ?? cardIdParam.value}`
+  `https://cardmystic.io/card/${cardData.value?.card.oracle_id ?? cardIdParam.value}`
 );
-// Canonical prevents duplicate content issues
-useHead({
-  link: [
-    {
-      rel: 'canonical',
-      href: canonicalUrl.value,
-    },
-  ],
-});
 // Dynamic SEO meta based on card data
 useSeoMeta({
-  title: () => card.value ? `${card.value.name} | MTG Card Details | CardMystic` : 'MTG Card Details | CardMystic',
+  title: () => card.value ? `${card.value.name} (MTG) - CardMystic` : 'MTG Card Details | CardMystic',
   description: () => {
     if (!card.value) return 'Explore Magic: The Gathering cards on CardMystic';
     const oracle = card.value.oracle_text || card.value.card_faces?.[0]?.oracle_text || '';
     const type = card.value.type_line || '';
     return `${card.value.name} | ${type} | ${oracle.slice(0, 120)}${oracle.length > 120 ? '...' : ''}`;
   },
-  ogTitle: () => card.value ? `${card.value.name} | MTG Card Details | CardMystic` : 'MTG Card Details | CardMystic',
+  ogTitle: () => card.value ? `${card.value.name} (MTG) - CardMystic` : 'MTG Card Details | CardMystic',
   ogDescription: () =>
     card.value
       ? `View ${card.value.name}, a ${card.value.type_line || 'Magic: The Gathering card'}, with oracle text, rulings, and deckbuilding tools on CardMystic.`
       : 'View Magic: The Gathering card details with oracle text and deckbuilding tools on CardMystic.',
-  ogType: 'article',
-  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || '',
+  ogType: 'website',
+  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || 'https://cardmystic.io/cardmystic_cards.png',
   ogImageAlt: () =>
     card.value
       ? `${card.value.name} MTG card artwork`
@@ -357,8 +348,43 @@ useSeoMeta({
   twitterImage: () =>
     card.value?.image_uris?.normal ||
     card.value?.card_faces?.[0]?.image_uris?.normal ||
-    'https://cardmystic.com/og-default.png'
+    'https://cardmystic.io/cardmystic_cards.png'
 })
+
+// Add JSON-LD structured data for better SEO and rich snippets
+useHead({
+  link: [
+    {
+      rel: 'canonical',
+      href: canonicalUrl.value,
+    },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: () => {
+        if (!card.value) return '';
+        return JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: card.value.name,
+          description: card.value.oracle_text || card.value.card_faces?.[0]?.oracle_text || '',
+          image: card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || 'https://cardmystic.io/cardmystic_cards.png',
+          url: canonicalUrl.value,
+          brand: {
+            '@type': 'Brand',
+            name: 'Magic: The Gathering'
+          },
+          manufacturer: {
+            '@type': 'Organization',
+            name: 'Wizards of the Coast'
+          },
+          category: card.value.type_line || 'Trading Card',
+        });
+      },
+    }
+  ]
+});
 
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {
