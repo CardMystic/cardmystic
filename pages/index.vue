@@ -50,7 +50,9 @@
       <PickUpWhereYouLeftOff v-if="isLoggedIn" class="mb-14" />
     </ClientOnly> -->
 
-    <QueryCount class="mb-14"></QueryCount>
+    <ClientOnly>
+      <QueryCount class="mb-14"></QueryCount>
+    </ClientOnly>
     <!-- How To Use & How It Works Section -->
     <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
