@@ -53,7 +53,6 @@ import { useClipboard as useClipboardStore } from '~/composables/useClipboard'
 import { useClipboard as useCopyToClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
-import SaveToListModal from '~/components/SaveToListModal.vue'
 
 defineOptions({
   inheritAttrs: false
