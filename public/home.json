@@ -1,0 +1,23 @@
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://cardmystic.io/#organization",
+    "name": "CardMystic",
+    "url": "https://cardmystic.io",
+    "logo": "https://cardmystic.io/logo.png"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://cardmystic.io/#website",
+    "url": "https://cardmystic.io",
+    "name": "CardMystic",
+    "publisher": { "@id": "https://cardmystic.io/#organization" },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://cardmystic.io/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+]

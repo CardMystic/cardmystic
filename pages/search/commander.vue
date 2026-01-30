@@ -51,7 +51,7 @@ useSeoMeta({
       ? `Explore MTG commanders related to "${queryParam.value}" with AI-powered search on CardMystic.`
       : 'AI-powered commander search for Magic: The Gathering on CardMystic.',
 
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
   ogImageAlt: () => 'AI Commander Search',
 
   twitterCard: 'summary_large_image',
@@ -65,7 +65,7 @@ useSeoMeta({
       ? `Explore commanders related to "${queryParam.value}" with AI-powered search on CardMystic.`
       : 'AI-powered commander search for Magic: The Gathering on CardMystic.',
 
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
 })
 // Used for the github issues logic as it can't be dynamic.
 definePageMeta({
