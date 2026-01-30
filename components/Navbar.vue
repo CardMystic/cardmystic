@@ -167,7 +167,9 @@ const externalItems: NavigationMenuItem[] = [
       <!-- Logo -->
       <div class="flex flex-row">
         <!-- Clipboard Button -->
-        <ClipboardMenu class="cursor-pointer" />
+        <ClientOnly>
+          <ClipboardMenu class="cursor-pointer" />
+        </ClientOnly>
 
         <ClientOnly>
           <span v-if="!userProfile" class="relative flex items-center">
@@ -231,7 +233,9 @@ const externalItems: NavigationMenuItem[] = [
         content: 'w-auto'
       }" />
       <!-- Clipboard Button (always visible, right side) -->
-      <ClipboardMenu class="ml-4 h-[50px]" />
+      <ClientOnly>
+        <ClipboardMenu class="ml-4 h-[50px]" />
+      </ClientOnly>
 
       <ClientOnly>
         <span v-if="!userProfile" class="relative">
