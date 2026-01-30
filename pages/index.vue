@@ -86,12 +86,14 @@
       </div>
     </div>
 
-    <ExampleQueries class="mb-10" />
-    <TopQueries class="mb-10" />
-    <MeetTheDevs class="mb-10" />
-    <Sponsorships class="mb-10" />
-    <JoinUs class="mb-10" />
-    <ProductPromotionButtons />
+    <ClientOnly>
+      <ExampleQueries class="mb-10" />
+      <TopQueries class="mb-10" />
+      <MeetTheDevs class="mb-10" />
+      <Sponsorships class="mb-10" />
+      <JoinUs class="mb-10" />
+      <ProductPromotionButtons />
+    </ClientOnly>
   </UContainer>
 </template>
 
