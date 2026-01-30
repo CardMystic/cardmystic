@@ -2,6 +2,7 @@
 const showTooltip = ref(false)
 
 onMounted(() => {
+  if (process.server) return;
   // Check if user has dismissed the tooltip before
   const dismissed = localStorage.getItem('loginTooltipDismissed')
   if (dismissed === 'true') {
@@ -13,7 +14,9 @@ onMounted(() => {
 
 function dismissTooltip() {
   showTooltip.value = false
-  localStorage.setItem('loginTooltipDismissed', 'true')
+  if (!process.server) {
+    localStorage.setItem('loginTooltipDismissed', 'true')
+  }
 }
 </script>
 

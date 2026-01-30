@@ -45,6 +45,7 @@ export function useClipboard() {
 
   // Persistence
   function persist() {
+    if (process.server) return;
     try {
       localStorage.setItem(
         STORAGE_KEY,
