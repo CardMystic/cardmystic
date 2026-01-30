@@ -3,7 +3,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import ClipboardMenu from '~/components/ClipboardMenu.vue'
 import UserLogin from '~/components/user/login.vue'
 import UserRegister from '~/components/user/register.vue'
-import { useUserProfile } from '~/composables/useUserProfile'
+// import { useUserProfile } from '~/composables/useUserProfile'
 
 const isOpen = ref(false)
 const colorMode = useColorMode()
@@ -13,15 +13,18 @@ const wizardImage = computed(() => {
 })
 const isLoginModalOpen = ref(false)
 const authMode = ref<'login' | 'register'>('login')
-const { userProfile, initAuthListener, profileIconUrl, username, signOut } = useUserProfile()
+// const { userProfile, initAuthListener, profileIconUrl, username, signOut } = useUserProfile()
+const userProfile = ref(null)
+const profileIconUrl = ref(null)
+const username = ref('')
 
 // Initialize auth listener on component mount
-onMounted(() => {
-  initAuthListener()
-})
+// onMounted(() => {
+//   initAuthListener()
+// })
 
 const handleLogout = async () => {
-  await signOut()
+  // await signOut()
   navigateTo('/')
 }
 
