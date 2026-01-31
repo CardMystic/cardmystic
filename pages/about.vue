@@ -38,7 +38,7 @@
         ⭐ What Sets Us Apart
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
-        Unlike similar tools, we are NOT just a generic AI wrapper. Our team's AI experts have meticulously trained
+        Unlike similar tools, we are NOT a generic AI wrapper. Our team's AI experts have meticulously trained
         custom
         models specifically on Magic: The Gathering data to ensure the most accurate and relevant search results
         possible.
