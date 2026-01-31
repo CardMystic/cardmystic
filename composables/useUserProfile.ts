@@ -9,9 +9,11 @@ const profileData = ref<Database['public']['Tables']['profiles']['Row'] | null>(
 );
 
 export const useUserProfile = () => {
-  const supabase = useSupabase();
+  // Only initialize Supabase on client side
+  const supabase = process.server ? null : useSupabase();
 
   const fetchUser = async () => {
+    if (!supabase) return;
     loading.value = true;
     const {
       data: { user },
@@ -33,6 +35,7 @@ export const useUserProfile = () => {
   };
 
   const signOut = async () => {
+    if (!supabase) return;
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error);
@@ -42,7 +45,7 @@ export const useUserProfile = () => {
   };
 
   const fetchProfileData = async () => {
-    if (!userProfile.value?.id) return;
+    if (!supabase || !userProfile.value?.id) return;
 
     const { data, error } = await supabase
       .from('profiles')
@@ -56,7 +59,7 @@ export const useUserProfile = () => {
   };
 
   const updateProfileAvatar = async (cardName: string) => {
-    if (!cardName || !userProfile.value?.id) {
+    if (!supabase || !cardName || !userProfile.value?.id) {
       return { error: new Error('Invalid card name or user not logged in') };
     }
 
@@ -75,7 +78,7 @@ export const useUserProfile = () => {
   };
 
   const updateUsername = async (username: string) => {
-    if (!username.trim()) {
+    if (!supabase || !username.trim()) {
       return { error: new Error('Username cannot be empty') };
     }
 
@@ -87,7 +90,7 @@ export const useUserProfile = () => {
   };
 
   const updatePassword = async (newPassword: string) => {
-    if (newPassword.length < 6) {
+    if (!supabase || newPassword.length < 6) {
       return { error: new Error('Password must be at least 6 characters') };
     }
 
@@ -119,6 +122,7 @@ export const useUserProfile = () => {
 
   // Listen to auth state changes
   const initAuthListener = () => {
+    if (!supabase) return;
     supabase.auth.onAuthStateChange((event, session) => {
       userProfile.value = session?.user ?? null;
 

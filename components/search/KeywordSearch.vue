@@ -35,7 +35,7 @@
     </div>
 
     <UFormField v-if="showFilters" name="filters">
-      <Filters v-model="state.filters" />
+      <Filters ref="filtersRef" v-model="state.filters" />
     </UFormField>
   </UForm>
 </template>
@@ -49,6 +49,7 @@ import { refDebounced } from '@vueuse/core'
 import Filters from './Filters.vue'
 
 const input = ref();
+const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 
 defineShortcuts({
   '/': () => input.value?.inputRef?.focus()
@@ -204,6 +205,7 @@ watch(selectedIndex, (newIndex) => {
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   showDropdown.value = false;
+  filtersRef.value?.collapse();
   // Bot detection: if honeypot field is filled, reject the submission
   if (honeypot.value) {
     toast.add({

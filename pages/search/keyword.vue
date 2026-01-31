@@ -55,7 +55,7 @@ useSeoMeta({
       ? `Explore MTG cards related to "${queryParam.value}" with Keyword search on CardMystic.`
       : 'Keyword search for Magic: The Gathering on CardMystic.',
 
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
   ogImageAlt: () => 'Keyword Card Search',
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -68,7 +68,7 @@ useSeoMeta({
       ? `Explore cards related to "${queryParam.value}" with Keyword search on CardMystic.`
       : 'Keyword search for Magic: The Gathering on CardMystic.',
 
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
 })
 // Used for the github issues logic as it can't be dynamic.
 definePageMeta({
