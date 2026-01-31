@@ -81,7 +81,8 @@ const { data: topQueries, isLoading, error } = useQuery({
     'topQueries',
   ],
   queryFn: async () => {
-    const response = await fetch('/api/cache/top');
+    const config = useRuntimeConfig();
+    const response = await fetch(`${config.public.backendUrl}/cache/top`);
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }

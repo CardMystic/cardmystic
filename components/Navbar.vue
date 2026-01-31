@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ClipboardMenu from '~/components/ClipboardMenu.vue'
+import UserLogin from '~/components/user/login.vue'
+import UserRegister from '~/components/user/register.vue'
+import { useUserProfile } from '~/composables/useUserProfile'
 
 const isOpen = ref(false)
 const colorMode = useColorMode()
@@ -8,6 +11,19 @@ const colorMode = useColorMode()
 const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_darkmode.webp'
 })
+const isLoginModalOpen = ref(false)
+const authMode = ref<'login' | 'register'>('login')
+const { userProfile, initAuthListener, profileIconUrl, username, signOut } = useUserProfile()
+
+// Initialize auth listener on component mount
+onMounted(() => {
+  initAuthListener()
+})
+
+const handleLogout = async () => {
+  await signOut()
+  navigateTo('/')
+}
 
 const props = defineProps<{
   isFixed?: boolean
@@ -145,22 +161,56 @@ const externalItems: NavigationMenuItem[] = [
         </template>
       </UPopover>
 
-      <!-- Clipboard Button -->
-      <ClipboardMenu class="cursor-pointer" />
-
       <!-- Logo -->
-      <NuxtLink to="/" class="hover:opacity-80 transition-opacity">
+      <div class="flex flex-row">
+        <!-- Clipboard Button -->
+        <ClipboardMenu class="cursor-pointer" />
+
         <ClientOnly>
-          <img :src="wizardImage" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
-          <template #fallback>
-            <img src="/wizard.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
-          </template>
+          <span v-if="!userProfile" class="relative flex items-center">
+            <!-- Login/Register Button with Tooltip -->
+            <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
+              :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
+
+            <LoginTooltip class="ml-2" />
+          </span>
+          <UPopover v-else class="ml-4">
+            <div class="cursor-pointer">
+              <div v-if="profileIconUrl"
+                class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+                <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+              </div>
+              <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+            </div>
+            <template #content>
+              <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
+                <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+                  block @click="navigateTo('/lists')" />
+                <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
+                  block @click="navigateTo('/history')" />
+                <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost"
+                  label="Settings" block @click="navigateTo('/profile')" />
+                <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout"
+                  block @click="handleLogout" />
+              </div>
+            </template>
+          </UPopover>
         </ClientOnly>
-      </NuxtLink>
+
+        <NuxtLink to="/" class="hover:opacity-80 transition-opacity ml-4">
+          <ClientOnly>
+            <img :src="wizardImage" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+            <template #fallback>
+              <img src="/wizard.webp" alt="CardMystic Logo" class="w-10 h-10 object-contain" />
+            </template>
+          </ClientOnly>
+        </NuxtLink>
+      </div>
     </div>
 
     <!-- Desktop -->
-    <div class="flex-row hidden md:flex">
+    <div class="flex-row hidden md:flex items-center">
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity mr-6">
         <ClientOnly>
@@ -178,8 +228,59 @@ const externalItems: NavigationMenuItem[] = [
         content: 'w-auto'
       }" />
       <!-- Clipboard Button (always visible, right side) -->
-      <ClipboardMenu class="ml-4" />
+      <ClipboardMenu class="ml-4 h-[50px]" />
+
+      <ClientOnly>
+        <span v-if="!userProfile" class="relative">
+          <!-- Login/Register Button with Tooltip -->
+          <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
+            :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
+
+          <LoginTooltip class="ml-2" />
+        </span>
+
+        <UPopover v-else class="ml-2">
+          <div class="cursor-pointer">
+            <div v-if="profileIconUrl"
+              class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
+              <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
+            </div>
+            <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+          </div>
+          <template #content>
+            <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
+              <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+                block @click="navigateTo('/lists')" />
+              <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
+                block @click="navigateTo('/history')" />
+              <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
+                block @click="navigateTo('/profile')" />
+              <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+              <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
+                @click="handleLogout" />
+            </div>
+          </template>
+        </UPopover>
+      </ClientOnly>
+
     </div>
 
+    <!-- Auth Button - Login/Register Modal or Profile Link -->
+    <ClientOnly>
+      <UModal v-if="!userProfile" v-model:open="isLoginModalOpen"
+        :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
+        :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'">
+        <template #content>
+          <div>
+            <UserLogin v-if="authMode === 'login'" @switch-to-register="authMode = 'register'" />
+            <UserRegister v-else @switch-to-login="authMode = 'login'" />
+          </div>
+        </template>
+      </UModal>
+    </ClientOnly>
+
+
   </header>
+
+
 </template>

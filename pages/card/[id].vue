@@ -1,7 +1,10 @@
 <template>
   <div class="page-wrapper py-4 flex justify-center w-full">
-    <!-- Background art layer -->
-    <div v-if="card && cardArtUrl" class="page-background-art" :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
+    <!-- Background Image -->
+    <div v-if="cardArtUrl" class="fixed inset-0 z-0">
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+        :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
+    </div>
 
     <div v-if="pending || (!card && !error)"
       class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
@@ -276,17 +279,24 @@ import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
 import { DefaultLimitSimilarity, SimilaritySearchSchema } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
+import { useCardHistory } from '~/composables/useCardHistory';
 
 const route = useRoute();
 const isFlipped = ref(false);
 const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
+const { saveCardViewMutation } = useCardHistory();
 
 const { data: cardData, error, pending } = useAsyncData(
   () => `card-with-printings-${cardIdParam.value}`,
   async () => {
-    const card = await $fetch<ScryfallCard>(`/api/cards/${cardIdParam.value}`);
+    if (!cardIdParam.value || cardIdParam.value === 'undefined') {
+      throw new Error('No card ID provided');
+    }
+
+    const config = useRuntimeConfig();
+    const card = await $fetch<ScryfallCard>(`${config.public.backendUrl}/cards/${cardIdParam.value}`);
 
     let printings: ScryfallCard[] = [];
     if (card.prints_search_uri) {
@@ -385,6 +395,13 @@ useHead({
     }
   ]
 });
+
+// Save card view to history when card is loaded
+watch(card, (newCard) => {
+  if (newCard?.id) {
+    saveCardViewMutation.mutate(newCard.id);
+  }
+}, { immediate: true });
 
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {
@@ -562,7 +579,8 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   queryFn: async () => {
     if (!similaritySearch.value) return [];
 
-    const response = await fetch('/api/search/similarity', {
+    const config = useRuntimeConfig();
+    const response = await fetch(`${config.public.backendUrl}/search/similarity`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(similaritySearch.value),
@@ -1019,28 +1037,7 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
 .page-wrapper
   position: relative
   min-height: 100vh
-
-.page-background-art
-  position: fixed
-  top: 0
-  left: 0
-  right: 0
-  bottom: 0
-  background-size: cover
-  background-position: center
-  background-repeat: no-repeat
-  pointer-events: none
-  z-index: 0
-  transform: scale(1.1)
-
-  @media (prefers-color-scheme: light)
-    opacity: 0.5
-    filter: blur(6px)
-
-  @media (prefers-color-scheme: dark)
-    opacity: 0.2
-    filter: blur(8px)
-
+  
 // Similar Cards Section Styling
 .similar-cards-section
   border-radius: 24px
