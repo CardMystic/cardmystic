@@ -46,9 +46,9 @@
     <ClientOnly>
       <RecentLists v-if="isLoggedIn" class="mb-14" />
       <PickUpWhereYouLeftOff v-if="isLoggedIn" class="mb-14" />
+      <QueryCount class="mb-14"></QueryCount>
     </ClientOnly>
 
-    <QueryCount class="mb-14"></QueryCount>
     <!-- How To Use & How It Works Section -->
     <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
@@ -138,32 +138,32 @@ const isLoggedIn = computed(() => !!userProfile.value);
 // Hardcoded hero cards
 const heroCards: CardType[] = [
   {
-    card_name: 'The Ur-Dragon',
+    card_name: 'Ugin, the Spirit Dragon',
     card_data: {
-      id: '7e78b70b-0c67-4f14-8ad7-c9f8e3f59743',
-      name: 'The Ur-Dragon',
+      id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
+      name: 'Ugin, the Spirit Dragon',
       image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/7/e/7e78b70b-0c67-4f14-8ad7-c9f8e3f59743.jpg',
+        normal: 'https://cards.scryfall.io/normal/front/1/b/1bacda35-bb91-4537-a14d-846650fa85f6.jpg?1594157535',
       }
     } as any
   },
   {
-    card_name: 'Ugin, the Spirit Dragon',
+    card_name: 'The Ur-Dragon',
     card_data: {
-      id: '58c1e824-c8a9-4312-8e4c-a29a26d189a4',
-      name: 'Ugin, the Spirit Dragon',
+      id: '10d42b35-844f-4a64-9981-c6118d45e826',
+      name: 'The Ur-Dragon',
       image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/5/8/58c1e824-c8a9-4312-8e4c-a29a26d189a4.jpg',
+        normal: 'https://cards.scryfall.io/normal/front/6/2/6270c798-a3ba-4826-b0a9-82f7e12890f6.jpg?1719466632',
       }
     } as any
   },
   {
     card_name: 'Teferi, Time Raveler',
     card_data: {
-      id: '5cb76266-ae50-4bbc-8f96-d98f309b02d3',
+      id: '662fe50f-d75c-422c-8c6c-1f9b5c4ba21f',
       name: 'Teferi, Time Raveler',
       image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/5/c/5cb76266-ae50-4bbc-8f96-d98f309b02d3.jpg',
+        normal: 'https://cards.scryfall.io/normal/front/5/a/5a47d968-bba0-4277-b5d7-eb9e1acd7953.jpg?1731704855',
       }
     } as any
   }
