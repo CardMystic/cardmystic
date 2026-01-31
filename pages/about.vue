@@ -27,7 +27,7 @@
       </p>
       <p class="text-base md:text-lg leading-relaxed">
         CardMystic makes card discovery effortless with semantic AI search.
-        Just describe what you're looking for and let CardMystic handle the rest.
+        Just describe what you're looking for and let CardMystic handle the rest!
       </p>
     </div>
 
