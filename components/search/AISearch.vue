@@ -55,6 +55,11 @@ const schema = z.object({
   query: z.string().min(1, ""),
   filters: CardSearchFiltersSchema.optional(),
 })
+// Honeypot field for bot detection
+const honeypot = ref('')
+
+const toast = useToast()
+const { saveSearchMutation } = useSearchHistory()
 
 type Schema = z.output<typeof schema>
 
@@ -73,12 +78,6 @@ const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
   filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
 })
-
-// Honeypot field for bot detection
-const honeypot = ref('')
-
-const toast = useToast()
-const { saveSearchMutation } = useSearchHistory()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission

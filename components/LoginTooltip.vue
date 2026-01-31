@@ -14,9 +14,8 @@ onMounted(() => {
 
 function dismissTooltip() {
   showTooltip.value = false
-  if (!process.server) {
-    localStorage.setItem('loginTooltipDismissed', 'true')
-  }
+  if (process.server) return;
+  localStorage.setItem('loginTooltipDismissed', 'true')
 }
 </script>
 
