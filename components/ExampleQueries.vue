@@ -54,6 +54,7 @@ import { computed } from 'vue';
 import { useQuery } from '@tanstack/vue-query'
 import { type ExampleQueryResponse } from '~/models/searchModel';
 const router = useRouter();
+const config = useRuntimeConfig();
 
 // Computed property to get all scores for normalization context
 const allScores = computed(() => results.value?.cards.map((r) => r.score || 0) || []);
@@ -64,7 +65,7 @@ const { data: results, isLoading, refetch } = useQuery({
     'example',
   ],
   queryFn: async () => {
-    const response = await fetch('/api/search/example', {
+    const response = await fetch(`${config.public.backendUrl}/search/example`, {
       method: 'GET',
     });
     if (!response.ok) {

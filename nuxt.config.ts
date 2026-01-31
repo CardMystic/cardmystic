@@ -49,6 +49,8 @@ export default defineNuxtConfig({
       recaptchaSiteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || '',
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
       supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
+      backendUrl:
+        process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],

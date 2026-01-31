@@ -112,7 +112,8 @@ const { data: searchResults, isLoading } = useQuery({
     wordSearch,
   ],
   queryFn: async () => {
-    const response = await fetch('/api/search/colbert', {
+    const config = useRuntimeConfig();
+    const response = await fetch(`${config.public.backendUrl}/search/colbert`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(wordSearch.value),

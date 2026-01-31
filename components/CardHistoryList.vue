@@ -12,7 +12,7 @@
   </div>
 
   <!-- Empty State -->
-  <div v-else-if="!cards || cards.length === 0" class="text-center py-12">
+  <div v-else-if="safeCards.length === 0" class="text-center py-12">
     <UIcon name="i-lucide-clock" class="w-16 h-16 mx-auto mb-4 text-gray-400" />
     <p class="text-gray-500 text-lg mb-4">No recently viewed cards</p>
     <p class="text-gray-400 text-sm">Cards you view will appear here</p>
@@ -27,9 +27,9 @@
     </div>
 
     <!-- Show More Button -->
-    <div v-if="cards && cards.length > 10 && !showAll" class="flex justify-center pt-6">
+    <div v-if="safeCards.length > 10 && !showAll" class="flex justify-center pt-6">
       <UButton @click="showAll = true" color="primary" variant="outline" size="lg">
-        Show More ({{ cards.length - 10 }} more)
+        Show More ({{ safeCards.length - 10 }} more)
       </UButton>
     </div>
   </div>
@@ -39,6 +39,7 @@
 import Card from '~/components/Card.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
+const config = useRuntimeConfig();
 
 const props = defineProps<{
   cardHistory: any[]
@@ -60,7 +61,7 @@ const { data: cards, isLoading: isLoadingCards, error: fetchError } = useQuery({
   queryFn: async () => {
     if (cardIds.value.length === 0) return []
 
-    const cardsData = await $fetch('/api/cards/cards-by-ids', {
+    const cardsData = await $fetch(`${config.public.backendUrl}/cards/cards-by-ids`, {
       method: 'POST',
       body: { cardIds: cardIds.value }
     })
@@ -73,8 +74,11 @@ const { data: cards, isLoading: isLoadingCards, error: fetchError } = useQuery({
 
 const cardsError = computed(() => fetchError.value?.message || '')
 
+// Always use an array for all card usages
+const safeCards = computed(() => Array.isArray(cards.value) ? cards.value : [])
+
 const displayedCards = computed(() => {
-  if (showAll.value || !cards.value) return cards.value
-  return cards.value.slice(0, 10)
+  if (showAll.value) return safeCards.value
+  return safeCards.value.slice(0, 10)
 })
 </script>

@@ -45,7 +45,7 @@
           <p class="text-red-500 text-sm">Error loading cards</p>
         </div>
         <div v-else-if="displayedCards.length > 0" class="grid grid-cols-3 gap-2">
-          <CardSimple v-for="card in displayedCards" :key="card.id" :card="card" />
+          <CardSimple v-for="card in displayedCards" :key="card.card_data.id" :card="card" />
         </div>
         <p v-else class="empty-state">No recent cards viewed</p>
         <div class="mt-4">
@@ -90,7 +90,8 @@ const { data: cards, isLoading: isLoadingCards, error: fetchError } = useQuery({
     const ids = cardIds.value;
     if (ids.length === 0) return [];
 
-    const cardsData = await $fetch('/api/cards/cards-by-ids', {
+    const config = useRuntimeConfig();
+    const cardsData = await $fetch(`${config.public.backendUrl}/cards/cards-by-ids`, {
       method: 'POST',
       body: { cardIds: ids }
     });
@@ -103,8 +104,11 @@ const { data: cards, isLoading: isLoadingCards, error: fetchError } = useQuery({
 
 const cardsError = computed(() => fetchError.value?.message || '');
 
+// Always use an array for all card usages
+const safeCards = computed(() => Array.isArray(cards.value) ? cards.value : [])
+
 const displayedCards = computed(() => {
-  return (cards.value || []).slice(0, 3).map((card: any) => ({
+  return safeCards.value.slice(0, 3).map((card: any) => ({
     card_data: card,
     card_name: card.name
   }));

@@ -116,7 +116,8 @@ const skeletonCount = computed(() => limitParam.value || 20);
 const { data: searchResults, isLoading } = useQuery({
   queryKey: ['search', 'keyword', keywordSearch],
   queryFn: async () => {
-    const response = await fetch('/api/search/keyword', {
+    const config = useRuntimeConfig();
+    const response = await fetch(`${config.public.backendUrl}/search/keyword`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(keywordSearch.value),

@@ -45,6 +45,7 @@ jobs:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
           NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
           NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}
       - name: Deploy Dev Branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: Azure/static-web-apps-deploy@v1
@@ -61,6 +62,7 @@ jobs:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
           NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
           NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}
       - name: Build And Deploy (Next)
         id: builddeploy-next
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'dev'
@@ -79,3 +81,4 @@ jobs:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
           NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
           NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}

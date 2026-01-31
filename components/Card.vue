@@ -117,6 +117,7 @@ import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/ClipboardButton.vue';
 
+const config = useRuntimeConfig();
 const router = useRouter();
 const route = useRoute();
 
@@ -179,7 +180,7 @@ const searchQuery = computed(() => {
 // Mutation for tracking dislike
 const dislikeMutation = useMutation({
   mutationFn: async (data: { query: string; cardName: string }) => {
-    const response = await fetch('/api/metrics/dislike', {
+    const response = await fetch(`${config.public.backendUrl}/metrics/dislike`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

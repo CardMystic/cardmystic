@@ -55,7 +55,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -295,7 +295,8 @@ const { data: cardData, error, pending } = useAsyncData(
       throw new Error('No card ID provided');
     }
 
-    const card = await $fetch<ScryfallCard>(`/api/cards/${cardIdParam.value}`);
+    const config = useRuntimeConfig();
+    const card = await $fetch<ScryfallCard>(`${config.public.backendUrl}/cards/${cardIdParam.value}`);
 
     let printings: ScryfallCard[] = [];
     if (card.prints_search_uri) {
@@ -578,7 +579,8 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
   queryFn: async () => {
     if (!similaritySearch.value) return [];
 
-    const response = await fetch('/api/search/similarity', {
+    const config = useRuntimeConfig();
+    const response = await fetch(`${config.public.backendUrl}/search/similarity`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(similaritySearch.value),

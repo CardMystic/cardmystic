@@ -1,4 +1,7 @@
 export const useRecaptcha = () => {
+  const config = useRuntimeConfig();
+  const siteKey = config.public.recaptchaSiteKey;
+
   const executeRecaptcha = async (action: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       if (!window.grecaptcha) {
@@ -6,7 +9,6 @@ export const useRecaptcha = () => {
         return;
       }
 
-      const siteKey = useRuntimeConfig().public.recaptchaSiteKey;
       if (!siteKey) {
         reject(new Error('reCAPTCHA site key not configured'));
         return;
@@ -32,7 +34,7 @@ export const useRecaptcha = () => {
         success: boolean;
         score?: number;
         message?: string;
-      }>('/api/recaptcha/verify', {
+      }>(`${config.public.backendUrl}/recaptcha/verify`, {
         method: 'POST',
         body: {
           token,
