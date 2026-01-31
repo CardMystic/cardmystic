@@ -28,10 +28,10 @@
               @click="copyNames" :disabled="clipboard.list.value.length === 0">
               Copy
             </UButton>
-            <!-- <UButton class="cursor-pointer" icon="i-lucide-save" color="primary" variant="outline" size="sm" block
+            <UButton class="cursor-pointer" icon="i-lucide-save" color="primary" variant="outline" size="sm" block
               @click="openSaveToList" :disabled="clipboard.list.value.length === 0">
               Save to List
-            </UButton> -->
+            </UButton>
             <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid" size="sm" block
               class="cursor-pointer" :disabled="clipboard.list.value.length === 0" @click="openMassEntry">
               Buy (${{ clipboard.totalPrice.value.toFixed(2) }})
