@@ -9,7 +9,7 @@
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
-      <SortComponent @sort="handleSort" class="mb-3" />
+      <SortComponent v-if="!props.isList" @sort="handleSort" class="mb-3" />
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
           <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"

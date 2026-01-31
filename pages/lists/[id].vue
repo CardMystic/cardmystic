@@ -7,7 +7,7 @@
 
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Banner Section -->
-    <div v-if="list" class="mb-6 relative group">
+    <div v-if="list" class="mb-6 relative group cursor-pointer">
       <!-- Banner Image -->
       <div class="relative h-48 md:h-64 rounded-lg overflow-hidden shadow-xl">
         <div v-if="bannerImageUrl" class="absolute inset-0 bg-cover bg-center"
@@ -17,7 +17,7 @@
         <div v-else class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>
 
         <!-- Banner Content -->
-        <div class="absolute bottom-0 left-0 right-0 p-6">
+        <div class="absolute bottom-0 left-0 right-0 p-6 ">
           <div v-if="isEditingTitle" class="mb-2">
             <input v-model="editedTitle" @blur="updateListName" @keyup.enter="updateListName"
               @keyup.esc="isEditingTitle = false"
@@ -62,17 +62,18 @@
     <!-- Back Button and Actions -->
     <div class="mb-6">
       <NuxtLink to="/lists">
-        <UButton icon="i-lucide-arrow-left" color="neutral" variant="ghost" label="Back to Lists" class="mb-4" />
+        <UButton icon="i-lucide-arrow-left" color="neutral" variant="ghost" label="Back to Lists"
+          class="mb-4 cursor-pointer" />
       </NuxtLink>
 
       <div v-if="list" class="flex flex-row justify-between">
         <!-- Action Buttons -->
         <div class="flex gap-2 flex-wrap items-center">
           <UButton icon="i-lucide-copy" color="primary" variant="outline" label="Copy Names" @click="copyCardNames"
-            :disabled="!cards || cards.length === 0" />
+            :disabled="!cards || cards.length === 0" class="cursor-pointer" />
           <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
             :label="`Buy on TCGPlayer ($${totalPrice.toFixed(2)})`" @click="openMassEntry"
-            :disabled="!cards || cards.length === 0" />
+            :disabled="!cards || cards.length === 0" class="cursor-pointer" />
         </div>
         <!-- Sort Component -->
         <div v-if="cards && cards.length > 0">
@@ -137,7 +138,7 @@ const listId = route.params.id as string
 const toast = useToast()
 const { copy } = useClipboard()
 
-const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation } = useCardLists()
+const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation, removeCardFromListMutation } = useCardLists()
 const { userProfile, fetchUser } = useUserProfile()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
