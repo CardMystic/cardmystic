@@ -19,7 +19,7 @@
       </div>
 
       <!-- Search -->
-      <!-- <SearchForm /> -->
+      <SearchForm />
 
     </UContainer>
 
