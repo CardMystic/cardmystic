@@ -126,7 +126,7 @@ export const useUserProfile = () => {
     supabase.auth.onAuthStateChange((event, session) => {
       userProfile.value = session?.user ?? null;
 
-      if (event === 'SIGNED_IN') {
+      if (session?.user) {
         fetchProfileData();
       } else if (event === 'SIGNED_OUT') {
         profileData.value = null;
