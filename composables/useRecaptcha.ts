@@ -30,6 +30,7 @@ export const useRecaptcha = () => {
   const verifyRecaptcha = async (action: string): Promise<boolean> => {
     try {
       const token = await executeRecaptcha(action);
+      console.log('reCAPTCHA token:', token);
       const response = await $fetch<{
         success: boolean;
         score?: number;
