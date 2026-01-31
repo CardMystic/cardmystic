@@ -19,7 +19,7 @@
       </div>
 
       <!-- Search -->
-      <SearchForm />
+      <Search />
 
     </UContainer>
 
@@ -120,6 +120,7 @@ useHead({
   ]
 })
 
+import Search from '~/components/search/Search.vue';
 import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
 import CardSimple from '~/components/CardSimple.vue';
 import RecentLists from '~/components/RecentLists.vue';
