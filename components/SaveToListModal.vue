@@ -1,7 +1,13 @@
 <template>
   <UModal v-model:open="isOpen" title="Save Cards to List" description="Choose a list or create a new one">
     <template #content>
-      <div class="p-4 space-y-4">
+
+      <!-- If not logged in show message -->
+      <div v-if="!isLoggedIn" class="p-4 text-center text-red-500">
+        Login to create card lists!
+      </div>
+
+      <div v-if="isLoggedIn" class="p-4 space-y-4">
         <!-- Existing Lists -->
         <div v-if="lists && lists.length > 0">
           <label class="block text-sm font-medium mb-2">Select Existing List</label>
@@ -41,7 +47,7 @@
         <UButton color="neutral" variant="outline" @click="isOpen = false" :disabled="loading">
           Cancel
         </UButton>
-        <UButton color="primary" variant="solid" @click="handleSave"
+        <UButton v-if="isLoggedIn" color="primary" variant="solid" @click="handleSave"
           :disabled="loading || (!selectedListId && !newListName.trim())">
           Save
         </UButton>
@@ -53,6 +59,10 @@
 <script setup lang="ts">
 import { useCardLists } from '~/composables/useCardLists'
 import { useToast } from '#imports'
+
+// Check if user is logged in
+const { userProfile } = useUserProfile();
+const isLoggedIn = computed(() => !!userProfile.value);
 
 const props = defineProps<{
   modelValue: boolean

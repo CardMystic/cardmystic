@@ -40,8 +40,6 @@
     </div>
   </div>
 
-
-
   <!-- Everything below the fold -->
   <UContainer class="mt-14 mb-10">
     <!-- User-specific sections when logged in -->
