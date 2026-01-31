@@ -130,12 +130,12 @@ export const useCardLists = () => {
 
   // Get list items with TanStack Query (can be called from components)
   const useListItems = (listId: Ref<string> | string) => {
-    if (!supabase) return;
     const listIdRef = typeof listId === 'string' ? ref(listId) : listId;
 
     return useQuery({
       queryKey: ['list-items', listIdRef],
       queryFn: async () => {
+        if (!supabase) return [];
         const { data, error } = await supabase
           .from('card_list_items')
           .select('*')

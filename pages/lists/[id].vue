@@ -310,6 +310,10 @@ const updateListName = async () => {
   }
 
   try {
+    if (editedTitle.value.trim() === list.value.name) {
+      isEditingTitle.value = false
+      return
+    }
     await updateListMutation.mutateAsync({
       listId: list.value.id,
       updates: { name: editedTitle.value.trim() }
@@ -335,6 +339,10 @@ const updateListDescription = async () => {
   }
 
   try {
+    if (editedDescription.value.trim() === (list.value.description || '')) {
+      isEditingDescription.value = false
+      return
+    }
     await updateListMutation.mutateAsync({
       listId: list.value.id,
       updates: { description: editedDescription.value.trim() || undefined }
