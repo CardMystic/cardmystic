@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed } from 'vue';
 
 export const useSearchHistory = () => {
-  const supabase = useSupabase();
+  const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
 
@@ -18,6 +18,7 @@ export const useSearchHistory = () => {
   } = useQuery<SearchHistory[]>({
     queryKey: ['search-history', computed(() => userProfile.value?.id)],
     queryFn: async () => {
+      if (!supabase) return [];
       if (!userProfile.value?.id) {
         throw new Error('User not authenticated');
       }
@@ -41,6 +42,7 @@ export const useSearchHistory = () => {
     searchType: 'ai' | 'similarity' | 'keyword' | 'commander',
     filters?: any,
   ) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -58,7 +60,7 @@ export const useSearchHistory = () => {
   };
 
   const saveSearchMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       query,
       searchType,
       filters,
@@ -66,13 +68,17 @@ export const useSearchHistory = () => {
       query: string;
       searchType: 'ai' | 'similarity' | 'keyword' | 'commander';
       filters?: any;
-    }) => saveSearch(query, searchType, filters),
+    }) => {
+      if (!supabase) return;
+      return await saveSearch(query, searchType, filters);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['search-history'] });
     },
   });
 
   const deleteSearchHistory = async (searchId: string) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -94,6 +100,7 @@ export const useSearchHistory = () => {
   });
 
   const clearAllHistory = async () => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -107,7 +114,10 @@ export const useSearchHistory = () => {
   };
 
   const clearAllHistoryMutation = useMutation({
-    mutationFn: () => clearAllHistory(),
+    mutationFn: async () => {
+      if (!supabase) return;
+      return clearAllHistory();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['search-history'] });
     },
