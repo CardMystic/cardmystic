@@ -4,12 +4,10 @@ import { useUserProfile } from './useUserProfile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
 
-type CardList = Database['public']['Tables']['card_lists']['Row'];
 type CardListInsert = Database['public']['Tables']['card_lists']['Insert'];
-type CardListItem = Database['public']['Tables']['card_list_items']['Row'];
 
 export const useCardLists = () => {
-  const supabase = useSupabase();
+  const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
 
@@ -22,6 +20,7 @@ export const useCardLists = () => {
   } = useQuery({
     queryKey: ['user-lists', computed(() => userProfile.value?.id)],
     queryFn: async () => {
+      if (!supabase) return [];
       if (!userProfile.value?.id) {
         throw new Error('User not authenticated');
       }
@@ -40,6 +39,7 @@ export const useCardLists = () => {
   });
 
   const createList = async (name: string, description?: string) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -65,19 +65,23 @@ export const useCardLists = () => {
   };
 
   const createListMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       name,
       description,
     }: {
       name: string;
       description?: string;
-    }) => createList(name, description),
+    }) => {
+      if (!supabase) return;
+      return createList(name, description);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
   });
 
   const addCardsToList = async (listId: string, cardIds: string[]) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -108,8 +112,16 @@ export const useCardLists = () => {
   };
 
   const addCardsToListMutation = useMutation({
-    mutationFn: ({ listId, cardIds }: { listId: string; cardIds: string[] }) =>
-      addCardsToList(listId, cardIds),
+    mutationFn: async ({
+      listId,
+      cardIds,
+    }: {
+      listId: string;
+      cardIds: string[];
+    }) => {
+      if (!supabase) return;
+      return addCardsToList(listId, cardIds);
+    },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
@@ -118,6 +130,7 @@ export const useCardLists = () => {
 
   // Get list items with TanStack Query (can be called from components)
   const useListItems = (listId: Ref<string> | string) => {
+    if (!supabase) return;
     const listIdRef = typeof listId === 'string' ? ref(listId) : listId;
 
     return useQuery({
@@ -138,6 +151,7 @@ export const useCardLists = () => {
   };
 
   const removeCardFromList = async (listId: string, cardId: string) => {
+    if (!supabase) return;
     const { error } = await supabase
       .from('card_list_items')
       .delete()
@@ -148,8 +162,16 @@ export const useCardLists = () => {
   };
 
   const removeCardFromListMutation = useMutation({
-    mutationFn: ({ listId, cardId }: { listId: string; cardId: string }) =>
-      removeCardFromList(listId, cardId),
+    mutationFn: async ({
+      listId,
+      cardId,
+    }: {
+      listId: string;
+      cardId: string;
+    }) => {
+      if (!supabase) return;
+      return removeCardFromList(listId, cardId);
+    },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
@@ -157,6 +179,7 @@ export const useCardLists = () => {
   });
 
   const deleteList = async (listId: string) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -171,7 +194,10 @@ export const useCardLists = () => {
   };
 
   const deleteListMutation = useMutation({
-    mutationFn: (listId: string) => deleteList(listId),
+    mutationFn: async (listId: string) => {
+      if (!supabase) return;
+      return deleteList(listId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
@@ -184,6 +210,7 @@ export const useCardLists = () => {
       description?: string;
     },
   ) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -201,19 +228,23 @@ export const useCardLists = () => {
   };
 
   const updateListMutation = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       listId,
       updates,
     }: {
       listId: string;
       updates: { name?: string; description?: string };
-    }) => updateList(listId, updates),
+    }) => {
+      if (!supabase) return;
+      return updateList(listId, updates);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
   });
 
   const updateListAvatar = async (listId: string, cardName: string) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -231,8 +262,16 @@ export const useCardLists = () => {
   };
 
   const updateListAvatarMutation = useMutation({
-    mutationFn: ({ listId, cardName }: { listId: string; cardName: string }) =>
-      updateListAvatar(listId, cardName),
+    mutationFn: async ({
+      listId,
+      cardName,
+    }: {
+      listId: string;
+      cardName: string;
+    }) => {
+      if (!supabase) return;
+      return updateListAvatar(listId, cardName);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },

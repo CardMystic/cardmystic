@@ -44,7 +44,7 @@
         </div>
       </template>
     </UPopover>
-    <!-- <SaveToListModal v-model="isSaveToListOpen" :card-ids="cardIds" @saved="handleSaved" /> -->
+    <SaveToListModal v-model="isSaveToListOpen" :card-ids="cardIds" @saved="handleSaved" />
   </div>
 </template>
 
