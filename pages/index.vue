@@ -126,7 +126,6 @@ useHead({
   ]
 })
 
-import SearchForm from '~/components/search/Search.vue';
 import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
 import CardSimple from '~/components/CardSimple.vue';
 // import RecentLists from '~/components/RecentLists.vue';
