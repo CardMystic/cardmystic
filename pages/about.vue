@@ -22,7 +22,7 @@
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
         Magic: The Gathering is complex and intricate, but finding cards
-        shouldn't be. Our developers decided that traditional keyword search
+        shouldn't be! Our developers decided that traditional keyword search
         engines fall short.
       </p>
       <p class="text-base md:text-lg leading-relaxed">
