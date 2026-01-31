@@ -11,7 +11,8 @@
         <!-- Existing Lists -->
         <div v-if="lists && lists.length > 0">
           <label class="block text-sm font-medium mb-2">Select Existing List</label>
-          <USelect v-model="selectedListId" :items="listOptions" placeholder="Choose a list..." class="w-full" />
+          <USelect :disabled="newListName.trim() ? true : false" v-model="selectedListId" :items="listOptions"
+            placeholder="Choose a list..." class="w-full" />
         </div>
 
         <div v-if="lists && lists.length > 0" class="flex items-center gap-2 text-sm text-gray-500">
@@ -28,9 +29,23 @@
         </div>
 
         <!-- Card Count Info -->
-        <div class="text-sm text-gray-600 dark:text-gray-400">
-          {{ cardCount }} card{{ cardCount !== 1 ? 's' : '' }} will be added to the list
+        <div v-if="newListName.trim() || selectedListId" class="text-sm">
+          <span class="text-orange-400 font-medium">
+            {{ cardCount }}
+          </span>
+          card{{ cardCount !== 1 ? 's' : '' }} will be added to
+          {{ newListName.trim() ? 'the new list ' : 'the existing list ' }}
+
+          <span class="text-orange-400 font-medium">
+            {{
+              newListName.trim()
+                ? newListName.trim()
+                : lists.find(list => list.id === selectedListId)?.name || ''
+            }}
+          </span>
+          .
         </div>
+
 
         <!-- Error Message -->
         <div v-if="errorMessage" class="text-sm text-red-500">
@@ -115,7 +130,7 @@ const handleSave = async () => {
     let listId = selectedListId.value
 
     // If creating a new list
-    if (!listId && newListName.value.trim()) {
+    if (newListName.value.trim()) {
       const newList = await createListMutation.mutateAsync({
         name: newListName.value,
         description: newListDescription.value
