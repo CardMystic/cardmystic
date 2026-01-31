@@ -28,8 +28,6 @@ export const useRecaptcha = () => {
   const verifyRecaptcha = async (action: string): Promise<boolean> => {
     try {
       const token = await executeRecaptcha(action);
-      console.log('verifying reCAPTCHA token:', token);
-      // Call your CardMystic backend through the Nuxt proxy
       const response = await $fetch<{
         success: boolean;
         score?: number;
@@ -41,7 +39,6 @@ export const useRecaptcha = () => {
           action,
         },
       });
-      console.log('reCAPTCHA verification response:', response);
       return response.success;
     } catch (error) {
       console.error('reCAPTCHA verification failed:', error);

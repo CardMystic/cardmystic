@@ -4,11 +4,10 @@ import { useUserProfile } from './useUserProfile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed } from 'vue';
 
-type CardHistory = Database['public']['Tables']['card_history']['Row'];
 type CardHistoryInsert = Database['public']['Tables']['card_history']['Insert'];
 
 export const useCardHistory = () => {
-  const supabase = useSupabase();
+  const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
 
@@ -21,6 +20,7 @@ export const useCardHistory = () => {
   } = useQuery({
     queryKey: ['card-history', computed(() => userProfile.value?.id)],
     queryFn: async () => {
+      if (!supabase) return [];
       if (!userProfile.value?.id) {
         throw new Error('User not authenticated');
       }
@@ -40,6 +40,7 @@ export const useCardHistory = () => {
   });
 
   const saveCardView = async (cardId: string) => {
+    if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -55,13 +56,17 @@ export const useCardHistory = () => {
   };
 
   const saveCardViewMutation = useMutation({
-    mutationFn: (cardId: string) => saveCardView(cardId),
+    mutationFn: async (cardId: string) => {
+      if (!supabase) return;
+      return saveCardView(cardId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card-history'] });
     },
   });
 
   const clearAllHistory = async () => {
+    if (!supabase) return [];
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
@@ -75,7 +80,10 @@ export const useCardHistory = () => {
   };
 
   const clearAllHistoryMutation = useMutation({
-    mutationFn: () => clearAllHistory(),
+    mutationFn: async () => {
+      if (!supabase) return;
+      return clearAllHistory();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card-history'] });
     },
