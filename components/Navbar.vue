@@ -177,7 +177,7 @@ const externalItems: NavigationMenuItem[] = [
             <LoginTooltip class="ml-2" />
           </span>
           <div v-else-if="loading" class="w-10 h-10 flex items-center justify-center ml-4">
-            <ULoadingSpinner size="md" />
+            <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
           </div>
           <UPopover v-else v-model:open="isMobileProfilePopoverOpen" class="ml-4">
             <div class="cursor-pointer">
@@ -245,7 +245,7 @@ const externalItems: NavigationMenuItem[] = [
         </span>
 
         <div v-else-if="loading" class="w-10 h-10 flex items-center justify-center ml-2">
-          <ULoadingSpinner size="md" />
+          <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 animate-spin text-primary" />
         </div>
 
         <UPopover v-else v-model:open="isDesktopProfilePopoverOpen" class="ml-2">

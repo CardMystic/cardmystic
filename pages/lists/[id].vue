@@ -149,7 +149,7 @@ const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 
 // Use TanStack Query to fetch card details
 const { data: cardsData, isLoading: isLoadingCards } = useQuery({
-  queryKey: ['list-cards', listId],
+  queryKey: ['list-cards', listId, computed(() => listItems.value?.map((i: any) => i.card_id).join(','))],
   queryFn: async () => {
     if (!listItems.value || listItems.value.length === 0) return []
 
