@@ -6,6 +6,8 @@ import UserRegister from '~/components/user/register.vue'
 import { useUserProfile } from '~/composables/useUserProfile'
 
 const isOpen = ref(false)
+const isMobileProfilePopoverOpen = ref(false)
+const isDesktopProfilePopoverOpen = ref(false)
 const colorMode = useColorMode()
 
 const wizardImage = computed(() => {
@@ -174,28 +176,28 @@ const externalItems: NavigationMenuItem[] = [
 
             <LoginTooltip class="ml-2" />
           </span>
-          <UPopover v-else class="ml-4">
-            <div v-if="!loading" class="cursor-pointer">
+          <div v-else-if="loading" class="w-10 h-10 flex items-center justify-center ml-4">
+            <ULoadingSpinner size="md" />
+          </div>
+          <UPopover v-else v-model:open="isMobileProfilePopoverOpen" class="ml-4">
+            <div class="cursor-pointer">
               <div v-if="profileIconUrl"
                 class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
                 <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
               </div>
               <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
             </div>
-            <div v-else class="w-10 h-10 flex items-center justify-center">
-              <ULoadingSpinner size="md" />
-            </div>
             <template #content>
               <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
                 <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
-                  block @click="navigateTo('/lists')" />
+                  block @click="navigateTo('/lists'); isMobileProfilePopoverOpen = false" />
                 <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
-                  block @click="navigateTo('/history')" />
+                  block @click="navigateTo('/history'); isMobileProfilePopoverOpen = false" />
                 <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost"
-                  label="Settings" block @click="navigateTo('/profile')" />
+                  label="Settings" block @click="navigateTo('/profile'); isMobileProfilePopoverOpen = false" />
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout"
-                  block @click="handleLogout" />
+                  block @click="handleLogout(); isMobileProfilePopoverOpen = false" />
               </div>
             </template>
           </UPopover>
@@ -242,28 +244,29 @@ const externalItems: NavigationMenuItem[] = [
           <LoginTooltip class="ml-2" />
         </span>
 
-        <UPopover v-else class="ml-2">
-          <div v-if="!loading" class="cursor-pointer">
+        <div v-else-if="loading" class="w-10 h-10 flex items-center justify-center ml-2">
+          <ULoadingSpinner size="md" />
+        </div>
+
+        <UPopover v-else v-model:open="isDesktopProfilePopoverOpen" class="ml-2">
+          <div class="cursor-pointer">
             <div v-if="profileIconUrl"
               class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
               <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
             </div>
             <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
           </div>
-          <div v-else class="w-10 h-10 flex items-center justify-center">
-            <ULoadingSpinner size="md" />
-          </div>
           <template #content>
             <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
               <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
-                block @click="navigateTo('/lists')" />
+                block @click="navigateTo('/lists'); isDesktopProfilePopoverOpen = false" />
               <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
-                block @click="navigateTo('/history')" />
+                block @click="navigateTo('/history'); isDesktopProfilePopoverOpen = false" />
               <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
-                block @click="navigateTo('/profile')" />
+                block @click="navigateTo('/profile'); isDesktopProfilePopoverOpen = false" />
               <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
               <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
-                @click="handleLogout" />
+                @click="handleLogout(); isDesktopProfilePopoverOpen = false" />
             </div>
           </template>
         </UPopover>
