@@ -66,7 +66,7 @@ import { useToast } from '#imports'
 import CardListLink from '~/components/CardListLink.vue'
 
 const { userLists, isLoadingLists, listsError, deleteListMutation } = useCardLists()
-const { userProfile, profileIconUrl, fetchUser } = useUserProfile()
+const { userProfile, profileIconUrl } = useUserProfile()
 const toast = useToast()
 
 const lists = computed(() => userLists.value || [])
@@ -102,12 +102,4 @@ const handleDelete = async () => {
     })
   }
 }
-
-onMounted(async () => {
-  await fetchUser()
-
-  if (!userProfile.value) {
-    navigateTo('/')
-  }
-})
 </script>

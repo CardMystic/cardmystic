@@ -139,7 +139,7 @@ const toast = useToast()
 const { copy } = useClipboard()
 
 const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation, removeCardFromListMutation } = useCardLists()
-const { userProfile, fetchUser } = useUserProfile()
+const { userProfile } = useUserProfile()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
 const error = ref('')
@@ -376,12 +376,7 @@ const startEditingDescription = () => {
   }
 }
 
-onMounted(async () => {
-  await fetchUser()
-
-  if (!userProfile.value) {
-    navigateTo('/')
-  }
+onMounted(() => {
 
   // Check if list exists after data loads
   watch(list, (newList) => {

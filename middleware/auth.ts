@@ -1,9 +1,16 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const { userProfile, fetchUser } = useUserProfile();
+  const { userProfile, loading } = useUserProfile();
 
-  // Ensure user data is fetched
-  if (!userProfile.value) {
-    await fetchUser();
+  // Wait for user data to load
+  if (loading.value) {
+    await new Promise((resolve) => {
+      const unwatch = watch(loading, (isLoading) => {
+        if (!isLoading) {
+          unwatch();
+          resolve(undefined);
+        }
+      });
+    });
   }
 
   // Redirect to home if not authenticated

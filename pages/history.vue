@@ -84,11 +84,6 @@ const selectedTab = ref('0')
 
 // Set active tab based on query parameter on mount
 onMounted(() => {
-  if (!userProfile.value) {
-    navigateTo('/')
-    return
-  }
-
   const tabParam = route.query.tab as string
   if (tabParam === 'cards') {
     selectedTab.value = '1'

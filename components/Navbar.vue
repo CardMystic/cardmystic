@@ -13,12 +13,11 @@ const wizardImage = computed(() => {
 })
 const isLoginModalOpen = ref(false)
 const authMode = ref<'login' | 'register'>('login')
-const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading, fetchUser } = useUserProfile()
+const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading } = useUserProfile()
 
 // Initialize auth listener on component mount
-onMounted(async () => {
+onMounted(() => {
   initAuthListener()
-  await fetchUser()
 })
 
 const handleLogout = async () => {

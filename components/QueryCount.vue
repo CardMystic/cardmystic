@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-const { totalQueries, isLoading } = useQueryMetrics();
+const { totalQueries } = useQueryMetrics();
 
 const previousCount = ref<string>('');
 const mounted = ref(false);

@@ -1,38 +1,57 @@
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '~/database.types';
 import { useSupabase } from './useSupabase';
-
-const userProfile = ref<User | null>(null);
-const loading = ref(true);
-const profileData = ref<Database['public']['Tables']['profiles']['Row'] | null>(
-  null,
-);
+import { useQuery } from '@tanstack/vue-query';
 
 export const useUserProfile = () => {
   // Only initialize Supabase on client side
   const supabase = process.server ? null : useSupabase();
 
-  const fetchUser = async () => {
-    if (!supabase) return;
-    loading.value = true;
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+  // Fetch user with TanStack Query
+  const {
+    data: userProfile,
+    isLoading: loading,
+    refetch: fetchUser,
+  } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      if (!supabase) return null;
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
-    if (error) {
-      console.error('Error fetching user:', error);
-      userProfile.value = null;
-    } else {
-      userProfile.value = user;
-      // Automatically fetch profile data when user is loaded
-      if (user) {
-        await fetchProfileData();
+      if (error) {
+        console.error('Error fetching user:', error);
+        return null;
       }
-    }
+      return user;
+    },
+    enabled: !process.server && !!supabase,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
-    loading.value = false;
-  };
+  // Fetch profile data with TanStack Query
+  const { data: profileData, refetch: fetchProfileData } = useQuery({
+    queryKey: ['profile', userProfile],
+    queryFn: async () => {
+      if (!supabase || !userProfile.value?.id) return null;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userProfile.value.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !process.server && !!supabase && !!userProfile.value?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const signOut = async () => {
     if (!supabase) return;
@@ -40,21 +59,8 @@ export const useUserProfile = () => {
     if (error) {
       console.error('Error signing out:', error);
     } else {
-      userProfile.value = null;
-    }
-  };
-
-  const fetchProfileData = async () => {
-    if (!supabase || !userProfile.value?.id) return;
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userProfile.value.id)
-      .single();
-
-    if (!error && data) {
-      profileData.value = data;
+      // Refetch to clear user data
+      await fetchUser();
     }
   };
 
@@ -70,8 +76,9 @@ export const useUserProfile = () => {
       })
       .eq('id', userProfile.value.id);
 
-    if (!error && profileData.value) {
-      profileData.value.avatar_card_name = cardName;
+    if (!error) {
+      // Refetch profile data to update cache
+      await fetchProfileData();
     }
 
     return { error };
@@ -101,11 +108,6 @@ export const useUserProfile = () => {
     return { error };
   };
 
-  // Initialize user and profile data on first use
-  if (userProfile.value && !profileData.value) {
-    fetchProfileData();
-  }
-
   // Computed properties
   const username = computed(() => {
     return (
@@ -123,13 +125,12 @@ export const useUserProfile = () => {
   // Listen to auth state changes
   const initAuthListener = () => {
     if (!supabase) return;
-    supabase.auth.onAuthStateChange((event, session) => {
-      userProfile.value = session?.user ?? null;
-
-      if (session?.user) {
-        fetchProfileData();
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      // Refetch queries when auth state changes
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        await fetchUser();
       } else if (event === 'SIGNED_OUT') {
-        profileData.value = null;
+        await fetchUser();
       }
     });
   };

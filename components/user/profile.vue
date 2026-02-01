@@ -9,7 +9,6 @@ const {
   username: computedUsername,
   profileIconUrl,
   signOut,
-  fetchUser,
   updateProfileAvatar,
   updateUsername: updateUsernameFn,
   updatePassword: updatePasswordFn
@@ -28,10 +27,6 @@ const selectedProfileCard = ref(profileData.value?.avatar_card_name || '')
 const searchTerm = ref('')
 const debouncedSearchTerm = refDebounced(searchTerm, 150)
 const profileIconLoading = ref(false)
-
-onMounted(async () => {
-  await fetchUser()
-})
 
 // Sync username when user profile changes
 watch(computedUsername, (newVal) => {
