@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ClipboardMenu from '~/components/ClipboardMenu.vue'
-import UserLogin from '~/components/user/login.vue'
-import UserRegister from '~/components/user/register.vue'
 import { useUserProfile } from '~/composables/useUserProfile'
+import { useCardLists } from '~/composables/useCardLists'
 
 const isOpen = ref(false)
 const isMobileProfilePopoverOpen = ref(false)
@@ -13,13 +12,25 @@ const colorMode = useColorMode()
 const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_darkmode.webp'
 })
-const isLoginModalOpen = ref(false)
-const authMode = ref<'login' | 'register'>('login')
 const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading } = useUserProfile()
+const { prefetchUserLists } = useCardLists()
 
 // Initialize auth listener on component mount
 onMounted(() => {
   initAuthListener()
+
+  // Prefetch user lists if user is already logged in
+  if (userProfile.value?.id) {
+    prefetchUserLists()
+  }
+})
+
+// Watch for user login and prefetch
+watch(userProfile, (newUser, oldUser) => {
+  if (newUser?.id && !oldUser?.id) {
+    // User just logged in, prefetch their lists
+    prefetchUserLists()
+  }
 })
 
 const handleLogout = async () => {
@@ -171,8 +182,8 @@ const externalItems: NavigationMenuItem[] = [
         <ClientOnly>
           <span v-if="!userProfile && !loading" class="relative flex items-center">
             <!-- Login/Register Button with Tooltip -->
-            <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
-              :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
+            <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
+              @click="navigateTo('/login')" />
 
             <LoginTooltip class="ml-2" />
           </span>
@@ -238,8 +249,8 @@ const externalItems: NavigationMenuItem[] = [
       <ClientOnly>
         <span v-if="!userProfile && !loading" class="relative">
           <!-- Login/Register Button with Tooltip -->
-          <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
-            :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
+          <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
+            @click="navigateTo('/login')" />
 
           <LoginTooltip class="ml-2" />
         </span>
@@ -273,21 +284,6 @@ const externalItems: NavigationMenuItem[] = [
       </ClientOnly>
 
     </div>
-
-    <!-- Auth Button - Login/Register Modal or Profile Link -->
-    <ClientOnly>
-      <UModal v-if="!userProfile" v-model:open="isLoginModalOpen"
-        :title="authMode === 'login' ? 'Sign in to CardMystic' : 'Create your CardMystic account'"
-        :description="authMode === 'login' ? 'Login to access your account' : 'Register for a new account'">
-        <template #content>
-          <div>
-            <UserLogin v-if="authMode === 'login'" @switch-to-register="authMode = 'register'" />
-            <UserRegister v-else @switch-to-login="authMode = 'login'" />
-          </div>
-        </template>
-      </UModal>
-    </ClientOnly>
-
 
   </header>
 

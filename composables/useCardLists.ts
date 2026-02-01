@@ -11,6 +11,77 @@ export const useCardLists = () => {
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
 
+  // Prefetch user lists AND all card details for each list
+  const prefetchUserLists = async () => {
+    if (!supabase || !userProfile.value?.id) return;
+
+    try {
+      // First, fetch all user lists
+      const lists = await queryClient.fetchQuery({
+        queryKey: ['user-lists', userProfile.value.id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from('card_lists')
+            .select('*')
+            .eq('user_id', userProfile.value!.id)
+            .order('updated_at', { ascending: false });
+
+          if (error) throw error;
+          return data;
+        },
+        staleTime: 1000 * 60 * 5,
+      });
+
+      // Then, for each list, prefetch the list items AND card details
+      if (lists && lists.length > 0) {
+        await Promise.all(
+          lists.map(async (list: any) => {
+            // Fetch list items
+            const listItems = await queryClient.fetchQuery({
+              queryKey: ['list-items', list.id],
+              queryFn: async () => {
+                const { data, error } = await supabase
+                  .from('card_list_items')
+                  .select('*')
+                  .eq('list_id', list.id)
+                  .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                return data || [];
+              },
+              staleTime: 1000 * 60 * 5,
+            });
+
+            // Fetch all card details for this list
+            if (listItems && listItems.length > 0) {
+              const cardIds = listItems
+                .map((item: any) => item.card_id)
+                .join(',');
+              await queryClient.prefetchQuery({
+                queryKey: ['list-cards', list.id, cardIds],
+                queryFn: async () => {
+                  const cardPromises = listItems.map((item: any) =>
+                    $fetch(`https://api.scryfall.com/cards/${item.card_id}`),
+                  );
+                  const cardsData = await Promise.all(cardPromises);
+
+                  return cardsData.map((cardData: any) => ({
+                    card_name: cardData.name,
+                    card_data: cardData,
+                    score: undefined,
+                  }));
+                },
+                staleTime: 1000 * 60 * 10,
+              });
+            }
+          }),
+        );
+      }
+    } catch (error) {
+      console.error('Error prefetching user lists:', error);
+    }
+  };
+
   // Fetch user lists with TanStack Query
   const {
     data: userLists,
@@ -294,5 +365,8 @@ export const useCardLists = () => {
 
     // For nested queries (list items)
     useListItems,
+
+    // Prefetching
+    prefetchUserLists,
   };
 };

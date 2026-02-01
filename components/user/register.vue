@@ -77,8 +77,12 @@ const signUpWithEmail = async () => {
       Create your CardMystic account
     </h1>
 
-    <UButton class="w-full" color="neutral" variant="solid" icon="i-simple-icons-google" label="Continue with Google"
-      @click="signUpWithGoogle" />
+    <UButton class="w-full cursor-pointer" color="neutral" variant="solid" label="Continue with Google"
+      @click="signUpWithGoogle">
+      <template #leading>
+        <img src="/icons-google.svg" alt="Google" class="w-5 h-5" />
+      </template>
+    </UButton>
 
     <div class="text-center text-zinc-400 text-sm">or</div>
 
