@@ -13,11 +13,12 @@ const wizardImage = computed(() => {
 })
 const isLoginModalOpen = ref(false)
 const authMode = ref<'login' | 'register'>('login')
-const { userProfile, initAuthListener, profileIconUrl, username, signOut } = useUserProfile()
+const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading, fetchUser } = useUserProfile()
 
 // Initialize auth listener on component mount
-onMounted(() => {
+onMounted(async () => {
   initAuthListener()
+  await fetchUser()
 })
 
 const handleLogout = async () => {
@@ -167,7 +168,7 @@ const externalItems: NavigationMenuItem[] = [
         <ClipboardMenu class="cursor-pointer" />
 
         <ClientOnly>
-          <span v-if="!userProfile" class="relative flex items-center">
+          <span v-if="!userProfile && !loading" class="relative flex items-center">
             <!-- Login/Register Button with Tooltip -->
             <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
               :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
@@ -175,12 +176,15 @@ const externalItems: NavigationMenuItem[] = [
             <LoginTooltip class="ml-2" />
           </span>
           <UPopover v-else class="ml-4">
-            <div class="cursor-pointer">
+            <div v-if="!loading" class="cursor-pointer">
               <div v-if="profileIconUrl"
                 class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
                 <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
               </div>
               <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+            </div>
+            <div v-else class="w-10 h-10 flex items-center justify-center">
+              <ULoadingSpinner size="md" />
             </div>
             <template #content>
               <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
@@ -231,7 +235,7 @@ const externalItems: NavigationMenuItem[] = [
       <ClipboardMenu class="ml-4 h-[50px]" />
 
       <ClientOnly>
-        <span v-if="!userProfile" class="relative">
+        <span v-if="!userProfile && !loading" class="relative">
           <!-- Login/Register Button with Tooltip -->
           <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user"
             :label="authMode === 'login' ? 'Login' : 'Register'" @click="isLoginModalOpen = true" />
@@ -240,12 +244,15 @@ const externalItems: NavigationMenuItem[] = [
         </span>
 
         <UPopover v-else class="ml-2">
-          <div class="cursor-pointer">
+          <div v-if="!loading" class="cursor-pointer">
             <div v-if="profileIconUrl"
               class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform">
               <img :src="profileIconUrl" :alt="username || 'Profile'" class="w-full h-full object-cover" />
             </div>
             <UButton v-else color="primary" variant="solid" icon="i-lucide-user" label="Profile" />
+          </div>
+          <div v-else class="w-10 h-10 flex items-center justify-center">
+            <ULoadingSpinner size="md" />
           </div>
           <template #content>
             <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
