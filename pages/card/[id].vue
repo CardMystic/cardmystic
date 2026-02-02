@@ -322,7 +322,7 @@ const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
 const canonicalUrl = computed(() =>
-  `https://cardmystic.io/card/${cardData.value?.card.oracle_id ?? cardIdParam.value}`
+  `https://cardmystic.io/card/${cardData.value?.card.id ?? cardIdParam.value}`
 );
 // Dynamic SEO meta based on card data
 useSeoMeta({

@@ -58,7 +58,7 @@ export const useCardLists = () => {
                 .map((item: any) => item.card_id)
                 .join(',');
               await queryClient.prefetchQuery({
-                queryKey: ['list-cards', list.id, cardIds],
+                queryKey: ['list-cards', list.id],
                 queryFn: async () => {
                   const cardPromises = listItems.map((item: any) =>
                     $fetch(`https://api.scryfall.com/cards/${item.card_id}`),
@@ -222,14 +222,39 @@ export const useCardLists = () => {
   };
 
   const removeCardFromList = async (listId: string, cardId: string) => {
+    console.log(
+      'removeCardFromList called with listId:',
+      listId,
+      'cardId:',
+      cardId,
+    );
     if (!supabase) return;
-    const { error } = await supabase
+
+    console.log('Attempting to remove card from list in database...');
+    const { data, error, count } = await supabase
       .from('card_list_items')
       .delete()
       .eq('list_id', listId)
-      .eq('card_id', cardId);
-
+      .eq('card_id', cardId)
+      .select();
+    console.log(
+      'Delete operation completed. Data:',
+      data,
+      'Error:',
+      error,
+      'Count:',
+      count,
+    );
     if (error) throw error;
+
+    if (!data || data.length === 0) {
+      console.warn(
+        'No card found to delete with listId:',
+        listId,
+        'cardId:',
+        cardId,
+      );
+    }
   };
 
   const removeCardFromListMutation = useMutation({
@@ -245,6 +270,7 @@ export const useCardLists = () => {
     },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
   });

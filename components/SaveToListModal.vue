@@ -95,7 +95,7 @@ const isOpen = computed({
 })
 
 const toast = useToast()
-const { userLists, isLoadingLists, createListMutation, addCardsToListMutation } = useCardLists()
+const { userLists, createListMutation, addCardsToListMutation } = useCardLists()
 
 const lists = computed(() => userLists.value || [])
 const selectedListId = ref<string>('')

@@ -91,6 +91,14 @@
                 icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result" @click="handleDislike" />
             </template>
           </UTooltip>
+
+          <!-- Remove from list button -->
+          <UTooltip v-if="showRemoveButton" text="Remove from list" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
+                aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
+            </template>
+          </UTooltip>
         </div>
         <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
           @click="toggleShowAllData">
@@ -157,7 +165,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showRemoveButton: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+const emit = defineEmits<{
+  (e: 'remove', cardId: string): void;
+}>();
 
 const sizeClass = computed(() => `card-${props.size}`);
 

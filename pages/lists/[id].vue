@@ -83,7 +83,7 @@
 
     <!-- Cards Results -->
     <ListSearchResults :isLoading="loading" :searchResults="sortedCards" :queryParam="null" :skeletonCount="20"
-      :isList="true" helpText="Your list is loading..." />
+      :isList="true" :listId="listId" helpText="Your list is loading..." @removeCard="handleRemoveCard" />
   </div>
 
   <!-- Edit Banner Modal -->
@@ -178,6 +178,27 @@ const sortDirection = ref<'asc' | 'desc'>('asc')
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
   sortDirection.value = direction;
+}
+
+// Handle removing a card from the list
+async function handleRemoveCard(cardId: string) {
+  try {
+    console.log('Removing card from list:', cardId);
+    if (!listId || !cardId) {
+      throw new Error('Cannot remove card: missing listId or cardId');
+    }
+    await removeCardFromListMutation.mutateAsync({ listId, cardId });
+    toast.add({
+      title: 'Card removed from list',
+      icon: 'i-lucide-check'
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Error removing card',
+      description: error.message,
+      color: 'error'
+    });
+  }
 }
 
 // Computed sorted results - skip the first card (we're already viewing it on the page)
