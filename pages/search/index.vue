@@ -4,7 +4,7 @@
       <SearchForm class="mt-6 w-full" />
 
       <!-- Results -->
-      <ListSearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
+      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
         :skeleton-count="skeletonCount" help-text="Please enter a search query to find cards." />
     </div>
   </UContainer>

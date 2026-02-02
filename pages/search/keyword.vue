@@ -5,7 +5,7 @@
       <SearchForm class="mt-6 w-full" />
 
       <!-- Results -->
-      <ListSearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
+      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
         :skeleton-count="skeletonCount" help-text="Try describing what the card does or listing mechanics or types."
         :is-keyword-search="true" />
     </div>

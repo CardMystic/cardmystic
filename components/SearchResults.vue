@@ -9,13 +9,12 @@
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
-      <SortComponent v-if="!props.isList" @sort="handleSort" class="mb-3" />
+      <SortComponent @sort="handleSort" class="mb-3" />
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
           <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
-            :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch || isList"
-            :hide-thumbs-down-button="isKeywordSearch || isSimilaritySearch || isList" :show-remove-button="isList"
-            @remove="(cardId) => emit('removeCard', cardId)" />
+            :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
+            :hide-thumbs-down-button="isKeywordSearch || isSimilaritySearch" />
         </div>
       </div>
     </template>
@@ -61,12 +60,6 @@ const props = defineProps<{
   helpText?: string;
   isSimilaritySearch?: boolean;
   isKeywordSearch?: boolean;
-  isList?: boolean;
-  listId?: string;
-}>();
-
-const emit = defineEmits<{
-  (e: 'removeCard', cardId: string): void;
 }>();
 
 // Sorting state

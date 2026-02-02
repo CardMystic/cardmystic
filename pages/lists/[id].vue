@@ -92,8 +92,7 @@
     </div>
 
     <!-- Cards Results -->
-    <ListSearchResults :isLoading="loading" :searchResults="sortedCards" :queryParam="null" :skeletonCount="20"
-      :isList="true" :listId="listId" helpText="Your list is loading..." @removeCard="handleRemoveCard" />
+    <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20" @removeCard="handleRemoveCard" />
   </div>
 
   <!-- Edit Banner Modal -->
@@ -135,7 +134,7 @@ import { useCardLists } from '~/composables/useCardLists'
 import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
-import ListSearchResults from '~/components/ListSearchResults.vue'
+import CardListResults from '~/components/CardListResults.vue'
 import Sort from '~/components/search/Sort.vue'
 import { refDebounced } from '@vueuse/core'
 import { sortSearchResults } from '~/utils/sort'
