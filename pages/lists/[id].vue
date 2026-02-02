@@ -86,7 +86,7 @@
       <div class="flex gap-2">
         <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
           :loading="cardsStatus === 'pending' || addCardLoading" :items="filteredAddCards"
-          placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1"
+          placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 cursor-pointer"
           @update:model-value="handleAddCard" />
       </div>
     </div>
@@ -116,8 +116,9 @@
 
         <!-- Action Buttons -->
         <div class="flex gap-2 justify-end">
-          <UButton color="neutral" variant="ghost" label="Cancel" @click="isEditBannerModalOpen = false" />
-          <UButton color="primary" variant="solid" label="Save" :loading="bannerUpdateLoading"
+          <UButton class="cursor-pointer" color="neutral" variant="ghost" label="Cancel"
+            @click="isEditBannerModalOpen = false" />
+          <UButton class="cursor-pointer" color="primary" variant="solid" label="Save" :loading="bannerUpdateLoading"
             :disabled="!selectedBannerCard" @click="updateBannerImage" />
         </div>
       </div>

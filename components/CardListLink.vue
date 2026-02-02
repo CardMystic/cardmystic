@@ -11,7 +11,7 @@
 
     <!-- Delete Button (visible on hover) -->
     <UButton v-if="showDeleteButton" @click.stop="$emit('delete')"
-      class="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
+      class="cursor-pointer absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
       color="error" variant="solid" icon="i-lucide-trash-2" size="sm" aria-label="Delete list" />
 
     <!-- Content (clickable) -->
