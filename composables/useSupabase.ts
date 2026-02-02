@@ -1,9 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-
-let _supabase: SupabaseClient | null = null;
+import type { Database } from '~/database.types';
 
 export const useSupabase = () => {
-  if (!_supabase) {
+  const nuxtApp = useNuxtApp();
+
+  // Use a key on nuxtApp to store the client instance
+  // This ensures proper scoping per request on server and single instance on client
+  if (!nuxtApp._supabaseClient) {
     const config = useRuntimeConfig();
     const supabaseUrl = config.public.supabaseUrl;
     const supabaseKey = config.public.supabaseKey;
@@ -14,8 +17,14 @@ export const useSupabase = () => {
       );
     }
 
-    _supabase = createClient(supabaseUrl, supabaseKey);
+    nuxtApp._supabaseClient = createClient<Database>(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
   }
 
-  return _supabase;
+  return nuxtApp._supabaseClient as SupabaseClient<Database>;
 };

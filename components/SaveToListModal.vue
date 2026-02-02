@@ -135,6 +135,9 @@ const handleSave = async () => {
         name: newListName.value,
         description: newListDescription.value
       })
+      if (!newList || !newList.id) {
+        throw new Error('Failed to create new list')
+      }
       listId = newList.id
     }
 

@@ -1,10 +1,10 @@
 import { useSupabase } from './useSupabase';
-import { useQuery } from '@tanstack/vue-query';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 
 export const useUserProfile = () => {
   // Only initialize Supabase on client side
   const supabase = process.server ? null : useSupabase();
-  const userId = computed(() => userProfile.value?.id ?? null);
+  const queryClient = useQueryClient();
 
   // Fetch user with TanStack Query
   const {
@@ -34,16 +34,19 @@ export const useUserProfile = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  // Computed userId that depends on the userProfile query result
+  const userId = computed(() => userProfile.value?.id ?? null);
+
   // Fetch profile data with TanStack Query
   const { data: profileData, refetch: fetchProfileData } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
-      if (!supabase || !userProfile.value?.id) return null;
+      if (!supabase || !userId.value) return null;
 
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userProfile.value.id)
+        .eq('id', userId.value)
         .single();
 
       if (error) {
@@ -52,15 +55,20 @@ export const useUserProfile = () => {
       }
       return data;
     },
-    enabled: !process.server && !!supabase && !!userProfile.value?.id,
+    enabled: computed(() => !process.server && !!supabase && !!userId.value),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const signOut = async () => {
     if (!supabase) return;
 
-    // Don't wait for anything, just sign out and reload
-    supabase.auth.signOut().finally(() => {
+    try {
+      // Clear all query caches first
+      queryClient.clear();
+
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+
       // Clear local storage to be sure
       if (typeof window !== 'undefined') {
         localStorage.clear();
@@ -69,7 +77,11 @@ export const useUserProfile = () => {
 
       // Force hard reload
       window.location.href = '/';
-    });
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Still try to redirect even if there was an error
+      window.location.href = '/';
+    }
   };
 
   const updateProfileAvatar = async (cardName: string) => {
@@ -137,6 +149,9 @@ export const useUserProfile = () => {
       // Refetch queries when auth state changes
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         await fetchUser();
+      } else if (event === 'SIGNED_OUT') {
+        // Clear all cached data when user signs out
+        queryClient.clear();
       }
     });
   };
