@@ -34,9 +34,9 @@ import { formatShortDate } from '~/utils/dateFormatter';
 interface List {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   updated_at: string;
-  avatar_card_name?: string;
+  avatar_card_name?: string | null;
 }
 
 interface Props {

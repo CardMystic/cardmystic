@@ -7,8 +7,9 @@
 
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Header -->
-    <div class="mb-8">
+    <div class="mb-8 flex items-center justify-between">
       <h1 class="text-3xl font-bold">My Card Lists</h1>
+      <UButton icon="i-lucide-plus" label="New List" @click="isCreateModalOpen = true" />
     </div>
 
     <!-- Loading State -->
@@ -53,6 +54,26 @@
       </div>
     </template>
   </UModal>
+
+  <!-- Create List Modal -->
+  <UModal v-model:open="isCreateModalOpen" title="Create New List">
+    <template #content>
+      <div class="p-4 space-y-4">
+        <UFormField label="List Name">
+          <UInput v-model="newListName" placeholder="Enter list name" class="w-full" />
+        </UFormField>
+        <UFormField label="Description (optional)">
+          <UTextarea v-model="newListDescription" placeholder="Enter description" class="w-full" />
+        </UFormField>
+        <div class="flex justify-end gap-2">
+          <UButton color="neutral" variant="ghost" label="Cancel" @click="isCreateModalOpen = false"
+            :disabled="createLoading" />
+          <UButton color="primary" variant="solid" label="Create" :loading="createLoading"
+            :disabled="!newListName.trim()" @click="handleCreate" />
+        </div>
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
@@ -65,7 +86,7 @@ import { useUserProfile } from '~/composables/useUserProfile'
 import { useToast } from '#imports'
 import CardListLink from '~/components/CardListLink.vue'
 
-const { userLists, isLoadingLists, listsError, deleteListMutation } = useCardLists()
+const { userLists, isLoadingLists, listsError, deleteListMutation, createListMutation } = useCardLists()
 const { userProfile, profileIconUrl } = useUserProfile()
 const toast = useToast()
 
@@ -77,6 +98,12 @@ const error = computed(() => listsError.value?.message || '')
 const isDeleteModalOpen = ref(false)
 const listToDelete = ref<any>(null)
 const deleteLoading = computed(() => deleteListMutation.isPending.value)
+
+// Create modal state
+const isCreateModalOpen = ref(false)
+const newListName = ref('')
+const newListDescription = ref('')
+const createLoading = computed(() => createListMutation.isPending.value)
 
 const confirmDelete = (list: any) => {
   listToDelete.value = list
@@ -97,6 +124,30 @@ const handleDelete = async () => {
   } catch (error: any) {
     toast.add({
       title: 'Error deleting list',
+      description: error.message,
+      color: 'error'
+    })
+  }
+}
+
+const handleCreate = async () => {
+  if (!newListName.value.trim()) return
+
+  try {
+    await createListMutation.mutateAsync({
+      name: newListName.value.trim(),
+      description: newListDescription.value.trim() || undefined
+    })
+    toast.add({
+      title: 'List created',
+      icon: 'i-lucide-check'
+    })
+    isCreateModalOpen.value = false
+    newListName.value = ''
+    newListDescription.value = ''
+  } catch (error: any) {
+    toast.add({
+      title: 'Error creating list',
       description: error.message,
       color: 'error'
     })
