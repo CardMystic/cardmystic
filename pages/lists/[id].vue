@@ -183,7 +183,6 @@ function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
 // Handle removing a card from the list
 async function handleRemoveCard(cardId: string) {
   try {
-    console.log('Removing card from list:', cardId);
     if (!listId || !cardId) {
       throw new Error('Cannot remove card: missing listId or cardId');
     }

@@ -7,9 +7,6 @@ export const rerunSearchHistory = (item: any, router: Router) => {
     keyword: '/search/keyword',
     commander: '/search/commander',
   };
-
-  console.log('item', item);
-
   const path = paths[item.search_type] || '/search';
   const query: any = { searchType: item.search_type };
 

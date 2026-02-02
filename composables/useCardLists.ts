@@ -222,29 +222,14 @@ export const useCardLists = () => {
   };
 
   const removeCardFromList = async (listId: string, cardId: string) => {
-    console.log(
-      'removeCardFromList called with listId:',
-      listId,
-      'cardId:',
-      cardId,
-    );
     if (!supabase) return;
 
-    console.log('Attempting to remove card from list in database...');
     const { data, error, count } = await supabase
       .from('card_list_items')
       .delete()
       .eq('list_id', listId)
       .eq('card_id', cardId)
       .select();
-    console.log(
-      'Delete operation completed. Data:',
-      data,
-      'Error:',
-      error,
-      'Count:',
-      count,
-    );
     if (error) throw error;
 
     if (!data || data.length === 0) {
