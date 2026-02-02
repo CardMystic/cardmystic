@@ -66,8 +66,7 @@
           class="mb-4 cursor-pointer" />
       </NuxtLink>
 
-      <div v-if="list" class="flex flex-row justify-between">
-        <!-- Action Buttons -->
+      <div v-if="list" class="flex flex-col sm:flex-row sm:justify-between gap-2">
         <div class="flex gap-2 flex-wrap items-center">
           <UButton icon="i-lucide-copy" color="primary" variant="outline" label="Copy Names" @click="copyCardNames"
             :disabled="!cards || cards.length === 0" class="cursor-pointer" />
@@ -76,7 +75,7 @@
             :disabled="!cards || cards.length === 0" class="cursor-pointer" />
         </div>
         <!-- Sort Component -->
-        <div v-if="cards && cards.length > 0">
+        <div v-if="cards && cards.length > 0" class="sm:self-end mt-4 sm:mt-0 ">
           <Sort @sort="handleSort" />
         </div>
       </div>
@@ -123,7 +122,6 @@ definePageMeta({
 })
 
 import { useCardLists } from '~/composables/useCardLists'
-import { useUserProfile } from '~/composables/useUserProfile'
 import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
@@ -139,7 +137,6 @@ const toast = useToast()
 const { copy } = useClipboard()
 
 const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation, removeCardFromListMutation } = useCardLists()
-const { userProfile } = useUserProfile()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
 const error = ref('')
