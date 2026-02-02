@@ -1,6 +1,9 @@
 import { useSupabase } from './useSupabase';
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
 
+// Track if auth listener is already initialized (singleton)
+let authListenerInitialized = false;
+
 export const useUserProfile = () => {
   // Only initialize Supabase on client side
   const supabase = process.server ? null : useSupabase();
@@ -142,16 +145,24 @@ export const useUserProfile = () => {
     return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(profileData.value.avatar_card_name)}&format=image&version=art_crop`;
   });
 
-  // Listen to auth state changes
+  // Listen to auth state changes - only initialize once globally
   const initAuthListener = () => {
-    if (!supabase) return;
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    if (!supabase || authListenerInitialized) return;
+
+    authListenerInitialized = true;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       // Refetch queries when auth state changes
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        await fetchUser();
+        // Invalidate instead of refetch to ensure fresh data
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
       } else if (event === 'SIGNED_OUT') {
         // Clear all cached data when user signs out
         queryClient.clear();
+        authListenerInitialized = false; // Allow re-initialization after sign out
       }
     });
   };
