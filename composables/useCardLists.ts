@@ -54,11 +54,10 @@ export const useCardLists = () => {
 
             // Fetch all card details for this list
             if (listItems && listItems.length > 0) {
-              const cardIds = listItems
-                .map((item: any) => item.card_id)
-                .join(',');
+              const cardIds = listItems.map((item: any) => item.card_id);
               await queryClient.prefetchQuery({
-                queryKey: ['list-cards', list.id],
+                // Include cardIds in queryKey to match the page's query
+                queryKey: ['list-cards', list.id, cardIds],
                 queryFn: async () => {
                   const cardPromises = listItems.map((item: any) =>
                     $fetch(`https://api.scryfall.com/cards/${item.card_id}`),
@@ -194,6 +193,8 @@ export const useCardLists = () => {
       return addCardsToList(listId, cardIds);
     },
     onSuccess: (_, { listId }) => {
+      // Invalidate list-items - the list-cards query will auto-refetch
+      // because its queryKey includes cardIds which depends on list-items
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
@@ -204,7 +205,8 @@ export const useCardLists = () => {
     const listIdRef = typeof listId === 'string' ? ref(listId) : listId;
 
     return useQuery({
-      queryKey: ['list-items', listIdRef],
+      // Use computed to unwrap the ref value for consistent queryKey matching with prefetch
+      queryKey: computed(() => ['list-items', listIdRef.value]),
       queryFn: async () => {
         if (!supabase) return [];
         const { data, error } = await supabase

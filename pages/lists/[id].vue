@@ -81,6 +81,16 @@
       </div>
     </div>
 
+    <!-- Add Card Search -->
+    <div v-if="list" class="mb-6">
+      <div class="flex gap-2">
+        <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
+          :loading="cardsStatus === 'pending' || addCardLoading" :items="filteredAddCards"
+          placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1"
+          @update:model-value="handleAddCard" />
+      </div>
+    </div>
+
     <!-- Cards Results -->
     <ListSearchResults :isLoading="loading" :searchResults="sortedCards" :queryParam="null" :skeletonCount="20"
       :isList="true" :listId="listId" helpText="Your list is loading..." @removeCard="handleRemoveCard" />
@@ -136,22 +146,31 @@ const listId = route.params.id as string
 const toast = useToast()
 const { copy } = useClipboard()
 
-const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation, removeCardFromListMutation } = useCardLists()
+const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation, removeCardFromListMutation, addCardsToListMutation } = useCardLists()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
+
+// Add card state
+const selectedCardToAdd = ref('')
+const addCardSearchTerm = ref('')
+const debouncedAddCardSearchTerm = refDebounced(addCardSearchTerm, 150)
+const addCardLoading = ref(false)
 const error = ref('')
 
 // Use TanStack Query for list items
 const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 
+// Computed card IDs from list items - used as dependency for card details query
+const cardIds = computed(() => listItems.value?.map((item: any) => item.card_id) || [])
+
 // Use TanStack Query to fetch card details
 const { data: cardsData, isLoading: isLoadingCards } = useQuery({
-  queryKey: ['list-cards', listId, computed(() => listItems.value?.map((i: any) => i.card_id).join(','))],
+  // Include cardIds in the queryKey so it refetches when the list items change
+  queryKey: computed(() => ['list-cards', listId, cardIds.value]),
   queryFn: async () => {
-    if (!listItems.value || listItems.value.length === 0) return []
+    if (cardIds.value.length === 0) return []
 
-    const cardIds = listItems.value.map((item: any) => item.card_id)
-    const cardPromises = cardIds.map((id: string) =>
+    const cardPromises = cardIds.value.map((id: string) =>
       $fetch(`https://api.scryfall.com/cards/${id}`)
     )
     const cardsData = await Promise.all(cardPromises)
@@ -162,7 +181,7 @@ const { data: cardsData, isLoading: isLoadingCards } = useQuery({
       score: undefined
     }))
   },
-  enabled: computed(() => (listItems.value?.length ?? 0) > 0),
+  enabled: computed(() => cardIds.value.length > 0),
   staleTime: 1000 * 60 * 10, // 10 minutes
 })
 
@@ -210,6 +229,62 @@ const sortedCards = computed(() => {
   return sortSearchResults(cards.value, sortBy.value, sortDirection.value) || [];
 });
 
+
+// Filter cards for add card autocomplete
+const filteredAddCards = computed(() => {
+  if (!debouncedAddCardSearchTerm.value || debouncedAddCardSearchTerm.value.length < 2) {
+    return []
+  }
+
+  const searchLower = debouncedAddCardSearchTerm.value.toLowerCase()
+  const filtered: string[] = []
+
+  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
+    const card = rawCards.value[i]
+    if (card.toLowerCase().includes(searchLower)) {
+      filtered.push(card)
+    }
+  }
+
+  return filtered
+})
+
+// Handle adding a card to the list
+async function handleAddCard(cardName: string) {
+  if (!cardName || !list.value) return
+
+  addCardLoading.value = true
+  try {
+    // First get the card ID from Scryfall
+    const cardData: any = await $fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`)
+
+    if (!cardData?.id) {
+      throw new Error('Card not found')
+    }
+
+    await addCardsToListMutation.mutateAsync({
+      listId: list.value.id,
+      cardIds: [cardData.id]
+    })
+
+    toast.add({
+      title: `Added ${cardName} to list`,
+      icon: 'i-lucide-check'
+    })
+
+    // Clear the selection
+    selectedCardToAdd.value = ''
+    addCardSearchTerm.value = ''
+  } catch (error: any) {
+    toast.add({
+      title: 'Error adding card',
+      description: error.message,
+      color: 'error'
+    })
+  } finally {
+    addCardLoading.value = false
+  }
+}
 
 // Banner state
 const isEditBannerModalOpen = ref(false)
