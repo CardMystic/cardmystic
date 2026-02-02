@@ -1,11 +1,10 @@
-import type { User } from '@supabase/supabase-js';
-import type { Database } from '~/database.types';
 import { useSupabase } from './useSupabase';
 import { useQuery } from '@tanstack/vue-query';
 
 export const useUserProfile = () => {
   // Only initialize Supabase on client side
   const supabase = process.server ? null : useSupabase();
+  const userId = computed(() => userProfile.value?.id ?? null);
 
   // Fetch user with TanStack Query
   const {
@@ -22,6 +21,10 @@ export const useUserProfile = () => {
       } = await supabase.auth.getUser();
 
       if (error) {
+        if (error.name === 'AuthSessionMissingError') {
+          // This is fine, the user logged out
+          return null;
+        }
         console.error('Error fetching user:', error);
         return null;
       }
@@ -33,7 +36,7 @@ export const useUserProfile = () => {
 
   // Fetch profile data with TanStack Query
   const { data: profileData, refetch: fetchProfileData } = useQuery({
-    queryKey: ['profile', userProfile],
+    queryKey: ['profile', userId],
     queryFn: async () => {
       if (!supabase || !userProfile.value?.id) return null;
 
@@ -55,13 +58,18 @@ export const useUserProfile = () => {
 
   const signOut = async () => {
     if (!supabase) return;
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-    } else {
-      // Refetch to clear user data
-      await fetchUser();
-    }
+
+    // Don't wait for anything, just sign out and reload
+    supabase.auth.signOut().finally(() => {
+      // Clear local storage to be sure
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+
+      // Force hard reload
+      window.location.href = '/';
+    });
   };
 
   const updateProfileAvatar = async (cardName: string) => {
@@ -128,8 +136,6 @@ export const useUserProfile = () => {
     supabase.auth.onAuthStateChange(async (event, session) => {
       // Refetch queries when auth state changes
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        await fetchUser();
-      } else if (event === 'SIGNED_OUT') {
         await fetchUser();
       }
     });
