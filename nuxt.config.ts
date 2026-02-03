@@ -67,6 +67,12 @@ export default defineNuxtConfig({
     '/': {
       prerender: true,
     },
+    '/about': {
+      prerender: true,
+    },
+    '/privacyPolicy': {
+      prerender: true,
+    },
   },
   vite: {
     server: {

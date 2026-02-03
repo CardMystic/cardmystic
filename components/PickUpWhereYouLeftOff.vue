@@ -80,7 +80,10 @@ const recentSearches = computed<SearchHistory[]>(() => {
 // Get unique card IDs from history
 const cardIds = computed<string[]>(() => {
   if (!cardHistory.value || cardHistory.value.length === 0) return [];
-  return cardHistory.value.slice(0, 3).map(h => h.card_id);
+  return cardHistory.value
+    .slice(0, 3)
+    .map(h => h.card_id)
+    .filter((id): id is string => id !== null);
 });
 
 // Fetch card details using TanStack Query
