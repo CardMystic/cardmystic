@@ -11,7 +11,7 @@
             @keydown="handleKeydown" placeholder="Search cards by keywords…" icon="i-lucide-search"
             :ui="{ trailing: 'pe-1', base: 'h-10' }" class="w-full" />
           <div v-if="showDropdown && searchTerm.length >= 2 && filteredSuggestions.length > 0"
-            class="absolute top-full left-0 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 max-h-64 overflow-y-auto">
+            class="text-left absolute top-full left-0 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 max-h-64 overflow-y-auto">
             <div v-for="(suggestion, index) in filteredSuggestions" :key="suggestion"
               @click="selectSuggestion(suggestion)"
               :class="['px-3 py-2 cursor-pointer text-sm', index === selectedIndex ? 'bg-gray-200 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-800']">
