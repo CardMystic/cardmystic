@@ -4,9 +4,6 @@ definePageMeta({
 })
 
 import UserProfile from '~/components/user/profile.vue'
-import { useUserProfile } from '~/composables/useUserProfile'
-
-const { userProfile, loading } = useUserProfile()
 </script>
 
 <template>
