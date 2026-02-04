@@ -70,6 +70,8 @@
         <div class="flex gap-2 flex-wrap items-center">
           <UButton icon="i-lucide-copy" color="primary" variant="outline" label="Copy Names" @click="copyCardNames"
             :disabled="!cards || cards.length === 0" class="cursor-pointer" />
+          <UButton icon="i-lucide-list-plus" color="primary" variant="outline" label="Bulk Add"
+            @click="isBulkAddModalOpen = true" class="cursor-pointer" />
           <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
             :label="`Buy on TCGPlayer ($${totalPrice.toFixed(2)})`" @click="openMassEntry"
             :disabled="!cards || cards.length === 0" class="cursor-pointer" />
@@ -94,6 +96,9 @@
     <!-- Cards Results -->
     <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20" @removeCard="handleRemoveCard" />
   </div>
+
+  <!-- Bulk Add Modal -->
+  <BulkAddCardsModal v-model:open="isBulkAddModalOpen" :list-id="listId" />
 
   <!-- Edit Banner Modal -->
   <UModal v-model:open="isEditBannerModalOpen" title="Change Banner Image"
@@ -285,6 +290,9 @@ async function handleAddCard(cardName: string) {
     addCardLoading.value = false
   }
 }
+
+// Bulk add state
+const isBulkAddModalOpen = ref(false)
 
 // Banner state
 const isEditBannerModalOpen = ref(false)

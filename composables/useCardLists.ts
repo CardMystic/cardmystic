@@ -198,6 +198,63 @@ export const useCardLists = () => {
     },
   });
 
+  const addCardsByNameToList = async (listId: string, cardNames: string[]) => {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    if (!cardNames.length) {
+      throw new Error('No card names to add');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      addedCount: number;
+      duplicatesSkipped: number;
+      invalidCardNames: string[];
+      message?: string;
+    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardNames,
+      },
+    });
+
+    return response;
+  };
+
+  const addCardsByNameToListMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardNames,
+    }: {
+      listId: string;
+      cardNames: string[];
+    }) => {
+      return addCardsByNameToList(listId, cardNames);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
   // Get list items with TanStack Query (can be called from components)
   const useListItems = (listId: Ref<string> | string) => {
     const listIdRef = typeof listId === 'string' ? ref(listId) : listId;
@@ -366,6 +423,7 @@ export const useCardLists = () => {
     // Mutations
     createListMutation,
     addCardsToListMutation,
+    addCardsByNameToListMutation,
     removeCardFromListMutation,
     deleteListMutation,
     updateListMutation,
