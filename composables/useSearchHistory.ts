@@ -26,7 +26,6 @@ export const useSearchHistory = () => {
       const { data, error } = await supabase
         .from('search_history')
         .select('*')
-        .eq('user_id', userProfile.value.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -86,8 +85,7 @@ export const useSearchHistory = () => {
     const { error } = await supabase
       .from('search_history')
       .delete()
-      .eq('id', searchId)
-      .eq('user_id', userProfile.value.id);
+      .eq('id', searchId);
 
     if (error) throw error;
   };
@@ -105,10 +103,7 @@ export const useSearchHistory = () => {
       throw new Error('User not authenticated');
     }
 
-    const { error } = await supabase
-      .from('search_history')
-      .delete()
-      .eq('user_id', userProfile.value.id);
+    const { error } = await supabase.from('search_history').delete();
 
     if (error) throw error;
   };

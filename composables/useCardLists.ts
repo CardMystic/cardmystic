@@ -23,7 +23,6 @@ export const useCardLists = () => {
           const { data, error } = await supabase
             .from('card_lists')
             .select('*')
-            .eq('user_id', userProfile.value!.id)
             .order('updated_at', { ascending: false });
 
           if (error) throw error;
@@ -98,7 +97,6 @@ export const useCardLists = () => {
       const { data, error } = await supabase
         .from('card_lists')
         .select('*')
-        .eq('user_id', userProfile.value.id)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -271,8 +269,7 @@ export const useCardLists = () => {
     const { error } = await supabase
       .from('card_lists')
       .delete()
-      .eq('id', listId)
-      .eq('user_id', userProfile.value.id);
+      .eq('id', listId);
 
     if (error) throw error;
   };
@@ -305,8 +302,7 @@ export const useCardLists = () => {
         ...updates,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', listId)
-      .eq('user_id', userProfile.value.id);
+      .eq('id', listId);
 
     if (error) throw error;
   };
@@ -339,8 +335,7 @@ export const useCardLists = () => {
         avatar_card_name: cardName,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', listId)
-      .eq('user_id', userProfile.value.id);
+      .eq('id', listId);
 
     if (error) throw error;
   };

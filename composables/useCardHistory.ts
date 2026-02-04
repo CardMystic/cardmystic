@@ -28,7 +28,6 @@ export const useCardHistory = () => {
       const { data, error } = await supabase
         .from('card_history')
         .select('*')
-        .eq('user_id', userProfile.value.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -71,10 +70,7 @@ export const useCardHistory = () => {
       throw new Error('User not authenticated');
     }
 
-    const { error } = await supabase
-      .from('card_history')
-      .delete()
-      .eq('user_id', userProfile.value.id);
+    const { error } = await supabase.from('card_history').delete();
 
     if (error) throw error;
   };
