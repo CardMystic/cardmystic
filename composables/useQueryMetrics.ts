@@ -3,7 +3,7 @@ import { useRuntimeConfig } from '#imports';
 
 export function useQueryMetrics() {
   const config = useRuntimeConfig();
-  const REFETCH_INTERVAL = 1000;
+  const REFETCH_INTERVAL = 10000;
 
   const query = useQuery({
     queryKey: ['totalQueries'],
@@ -13,9 +13,9 @@ export function useQueryMetrics() {
       );
       return response.totalQueries;
     },
-    refetchInterval: REFETCH_INTERVAL, // near-live updates every 5 seconds
-    refetchIntervalInBackground: true,
-    staleTime: 500, // avoids unnecessary requests between intervals
+    refetchInterval: REFETCH_INTERVAL, // near-live updates every 10 seconds
+    refetchIntervalInBackground: false, // pause updates when the app is not active
+    staleTime: REFETCH_INTERVAL, // avoids unnecessary requests between intervals
   });
 
   return {
