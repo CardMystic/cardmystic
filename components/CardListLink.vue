@@ -10,7 +10,7 @@
     </div>
 
     <!-- Delete Button (visible on hover) -->
-    <UButton v-if="showDeleteButton" @click.stop="$emit('delete')"
+    <UButton v-if="showDeleteButton" @click.stop="confirmDelete"
       class="cursor-pointer absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
       color="error" variant="solid" icon="i-lucide-trash-2" size="sm" aria-label="Delete list" />
 
@@ -25,32 +25,71 @@
         <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
       </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <UModal v-model:open="isDeleteModalOpen" title="Delete List">
+      <template #content>
+        <div class="p-4 space-y-4">
+          <p class="text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete <span class="font-semibold text-white">"{{ list.name }}"</span>?
+            This action cannot be undone.
+          </p>
+          <div class="flex justify-end gap-2">
+            <UButton color="neutral" variant="ghost" label="Cancel" @click="isDeleteModalOpen = false"
+              :disabled="deleteLoading" />
+            <UButton color="error" variant="solid" label="Delete" :loading="deleteLoading" @click="handleDelete" />
+          </div>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { formatShortDate } from '~/utils/dateFormatter';
+import { useCardLists } from '~/composables/useCardLists';
+import { useToast } from '#imports';
+import type { Database } from '~/database.types';
 
-interface List {
-  id: string;
-  name: string;
-  description?: string | null;
-  updated_at: string;
-  avatar_card_name?: string | null;
-}
+type List = Database['public']['Tables']['card_lists']['Row'];
 
-interface Props {
-  list: List;
-  showDeleteButton?: boolean;
-}
-
-withDefaults(defineProps<Props>(), {
-  showDeleteButton: true,
+const props = defineProps({
+  list: {
+    type: Object as () => List,
+    required: true
+  },
+  showDeleteButton: {
+    type: Boolean,
+    default: true
+  }
 });
 
-defineEmits<{
-  delete: [];
-}>();
+const { deleteListMutation } = useCardLists();
+const toast = useToast();
+
+const isDeleteModalOpen = ref(false);
+const deleteLoading = computed(() => deleteListMutation.isPending.value);
+
+const confirmDelete = () => {
+  isDeleteModalOpen.value = true;
+};
+
+const handleDelete = async () => {
+  try {
+    await deleteListMutation.mutateAsync(props.list.id);
+    toast.add({
+      title: 'List deleted',
+      icon: 'i-lucide-trash-2'
+    });
+    isDeleteModalOpen.value = false;
+  } catch (error: any) {
+    toast.add({
+      title: 'Error deleting list',
+      description: error.message,
+      color: 'error'
+    });
+  }
+};
 
 const getListImageUrl = (list: List) => {
   if (!list.avatar_card_name) return null;
