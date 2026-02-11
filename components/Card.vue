@@ -92,6 +92,15 @@
             </template>
           </UTooltip>
         </div>
+
+        <!-- Remove from list button -->
+        <UTooltip v-if="showRemoveButton" text="Remove from list" :popper="{ placement: 'top' }">
+          <template #default>
+            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
+              aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
+          </template>
+        </UTooltip>
+
         <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
           @click="toggleShowAllData">
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
@@ -155,7 +164,11 @@ const props = defineProps({
   isSearched: {
     type: Boolean,
     default: false,
-  }
+  },
+  showRemoveButton: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits<{
