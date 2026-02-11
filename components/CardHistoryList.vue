@@ -96,10 +96,10 @@ const handleClearAll = async () => {
   }
 }
 
-// Get unique card IDs from history
+// Get all card IDs from history
 const cardIds = computed(() => {
   if (!cardHistory.value || cardHistory.value.length === 0) return []
-  return [...new Set(cardHistory.value.map(h => h.card_id).filter(Boolean))] as string[]
+  return cardHistory.value.map(h => h.card_id).filter(Boolean) as string[]
 })
 
 // Fetch card details from backend using TanStack Query
