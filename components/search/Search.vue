@@ -120,6 +120,7 @@ const items = ref<SelectItem[]>([
 // Watch for search type changes
 watch(searchType, async (newType) => {
   // Save the entire query object to sessionStorage
+  if (process.server) return;
   if (route.query.searchType == 'ai') {
     sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
   }
