@@ -119,13 +119,12 @@ import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
-import { useMutation } from '@tanstack/vue-query';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/ClipboardButton.vue';
+import { useCardFeedback } from '~/composables/useCardFeedback';
 
-const config = useRuntimeConfig();
 const router = useRouter();
 const route = useRoute();
 
@@ -193,23 +192,8 @@ const searchQuery = computed(() => {
   return '';
 });
 
-// Mutation for tracking dislike
-const dislikeMutation = useMutation({
-  mutationFn: async (data: { query: string; cardName: string }) => {
-    const response = await fetch(`${config.public.backendUrl}/metrics/dislike`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to track dislike');
-    }
-    return response.json();
-  },
-  onError: (error) => {
-    console.error('Failed to track dislike:', error);
-  },
-});
+// Use the dislike mutation from composable
+const { dislikeMutation } = useCardFeedback();
 
 // Handle dislike button click - show confirmation modal
 function handleDislike() {

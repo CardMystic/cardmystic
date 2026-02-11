@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Card } from '~/models/cardModel';
@@ -22,6 +21,7 @@ import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { UContainer } from '#components';
+import { useColbertSearch } from '~/composables/useSearch';
 
 const route = useRoute();
 
@@ -101,32 +101,10 @@ const wordSearch = computed(() => {
   });
 });
 
-const queryEnabled = computed(() => !!wordSearch.value?.query);
-
 // Number of skeleton cards to show while loading (matches typical search result count)
 const skeletonCount = computed(() => limitParam.value || 20);
 
-const { data: searchResults, isLoading } = useQuery({
-  queryKey: [
-    'search',
-    'colbert',
-    wordSearch,
-  ],
-  queryFn: async () => {
-    const config = useRuntimeConfig();
-    const response = await fetch(`${config.public.backendUrl}/search/colbert`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(wordSearch.value),
-    });
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json() as Promise<Array<Card>>;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: queryEnabled,
-});
+const { searchResults, isLoading } = useColbertSearch(wordSearch);
 
 </script>
 

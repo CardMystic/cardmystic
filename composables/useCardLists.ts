@@ -278,6 +278,30 @@ export const useCardLists = () => {
     });
   };
 
+  // Get card details for list items with TanStack Query
+  const useListCards = (listId: string, cardIds: Ref<string[]>) => {
+    return useQuery({
+      // Include cardIds in the queryKey so it refetches when the list items change
+      queryKey: computed(() => ['list-cards', listId, cardIds.value]),
+      queryFn: async () => {
+        if (cardIds.value.length === 0) return [];
+
+        const cardPromises = cardIds.value.map((id: string) =>
+          $fetch(`https://api.scryfall.com/cards/${id}`),
+        );
+        const cardsData = await Promise.all(cardPromises);
+
+        return cardsData.map((cardData: any) => ({
+          card_name: cardData.name,
+          card_data: cardData,
+          score: undefined,
+        }));
+      },
+      enabled: computed(() => cardIds.value.length > 0),
+      staleTime: 1000 * 60 * 10, // 10 minutes
+    });
+  };
+
   const removeCardFromList = async (listId: string, cardId: string) => {
     if (!supabase) return;
 
@@ -431,6 +455,7 @@ export const useCardLists = () => {
 
     // For nested queries (list items)
     useListItems,
+    useListCards,
 
     // Prefetching
     prefetchUserLists,

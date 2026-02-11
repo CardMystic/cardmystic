@@ -51,32 +51,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useQuery } from '@tanstack/vue-query'
-import { type ExampleQueryResponse } from '~/models/searchModel';
+import { useExampleQueries } from '~/composables/useExampleQueries';
+
 const router = useRouter();
-const config = useRuntimeConfig();
+
+const { results, isLoading, refetch } = useExampleQueries();
 
 // Computed property to get all scores for normalization context
 const allScores = computed(() => results.value?.cards.map((r) => r.score || 0) || []);
-
-const { data: results, isLoading, refetch } = useQuery({
-  queryKey: [
-    'search',
-    'example',
-  ],
-  queryFn: async () => {
-    const response = await fetch(`${config.public.backendUrl}/search/example`, {
-      method: 'GET',
-    });
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json() as Promise<ExampleQueryResponse>;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: true, // Enable lazy loading
-  refetchOnWindowFocus: false,
-});
 
 // Call refetch() to manually trigger the query again
 function loadRandomExample() {

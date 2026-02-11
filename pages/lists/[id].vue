@@ -144,14 +144,13 @@ import CardListResults from '~/components/CardListResults.vue'
 import Sort from '~/components/search/Sort.vue'
 import { refDebounced } from '@vueuse/core'
 import { sortSearchResults } from '~/utils/sort'
-import { useQuery } from '@tanstack/vue-query'
 
 const route = useRoute()
 const listId = route.params.id as string
 const toast = useToast()
 const { copy } = useClipboard()
 
-const { userLists, isLoadingLists, useListItems, updateListAvatarMutation, updateListMutation, removeCardFromListMutation, addCardsToListMutation } = useCardLists()
+const { userLists, isLoadingLists, useListItems, useListCards, updateListAvatarMutation, updateListMutation, removeCardFromListMutation, addCardsToListMutation } = useCardLists()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
 
@@ -169,26 +168,7 @@ const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 const cardIds = computed(() => listItems.value?.map((item: any) => item.card_id) || [])
 
 // Use TanStack Query to fetch card details
-const { data: cardsData, isLoading: isLoadingCards } = useQuery({
-  // Include cardIds in the queryKey so it refetches when the list items change
-  queryKey: computed(() => ['list-cards', listId, cardIds.value]),
-  queryFn: async () => {
-    if (cardIds.value.length === 0) return []
-
-    const cardPromises = cardIds.value.map((id: string) =>
-      $fetch(`https://api.scryfall.com/cards/${id}`)
-    )
-    const cardsData = await Promise.all(cardPromises)
-
-    return cardsData.map((cardData: any) => ({
-      card_name: cardData.name,
-      card_data: cardData,
-      score: undefined
-    }))
-  },
-  enabled: computed(() => cardIds.value.length > 0),
-  staleTime: 1000 * 60 * 10, // 10 minutes
-})
+const { data: cardsData, isLoading: isLoadingCards } = useListCards(listId, cardIds)
 
 const cards = computed(() => cardsData.value || [])
 

@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCardHistory } from '~/composables/useCardHistory';
-import { useQuery } from '@tanstack/vue-query';
+import { useCardsByIds } from '~/composables/useCards';
 import { rerunSearchHistory } from '#imports';
 import CardSimple from '~/components/CardSimple.vue';
 import type { SearchHistory } from '~/database.types';
@@ -87,23 +87,7 @@ const cardIds = computed<string[]>(() => {
 });
 
 // Fetch card details using TanStack Query
-const { data: cards, isLoading: isLoadingCards, error: fetchError } = useQuery({
-  queryKey: ['recent-cards-details', cardIds],
-  queryFn: async () => {
-    const ids = cardIds.value;
-    if (ids.length === 0) return [];
-
-    const config = useRuntimeConfig();
-    const cardsData = await $fetch(`${config.public.backendUrl}/cards/cards-by-ids`, {
-      method: 'POST',
-      body: { cardIds: ids }
-    });
-
-    return cardsData || [];
-  },
-  enabled: computed(() => cardIds.value.length > 0),
-  staleTime: 1000 * 60 * 10, // 10 minutes cache
-});
+const { cards, isLoading: isLoadingCards, error: fetchError } = useCardsByIds(cardIds, 'recent-cards-details');
 
 const cardsError = computed(() => fetchError.value?.message || '');
 

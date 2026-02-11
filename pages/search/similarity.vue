@@ -14,14 +14,13 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
-import { ref, watch, computed } from 'vue';
+import { watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
 import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
+import { useSimilaritySearch } from '~/composables/useSearch';
 
 const route = useRoute();
 
@@ -105,33 +104,10 @@ const similaritySearch = computed(() => {
   });
 });
 
-const queryEnabled = computed(() => !!similaritySearch.value?.card_name);
-
 // Number of skeleton cards to show while loading (matches typical search result count)
 const skeletonCount = computed(() => limitParam.value || 20);
 
-const { data: searchResults, isLoading } = useQuery({
-  queryKey: [
-    'search',
-    'similarity',
-    similaritySearch,
-  ],
-  queryFn: async () => {
-    const config = useRuntimeConfig();
-    const response = await fetch(`${config.public.backendUrl}/search/similarity`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(similaritySearch.value),
-    });
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const results = await response.json() as Array<Card>;
-    return results;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: queryEnabled,
-});
+const { searchResults, isLoading } = useSimilaritySearch(similaritySearch);
 
 </script>
 

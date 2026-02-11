@@ -62,7 +62,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -281,12 +281,12 @@ import ClipboardButton from '~/components/ClipboardButton.vue';
 import ListCardDetailsSimilarCardsResults from '~/components/ListCardDetailsSimilarCardsResults.vue';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { useQuery } from '@tanstack/vue-query';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
-import { DefaultLimitSimilarity, SimilaritySearchSchema } from '~/models/searchModel';
+import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 import { useCardHistory } from '~/composables/useCardHistory';
+import { useSimilarCards } from '~/composables/useSearch';
 
 const route = useRoute();
 const isFlipped = ref(false);
@@ -589,40 +589,9 @@ function findSimilarCards() {
   navigateTo({ path: '/search/similarity', query: queryParams });
 }
 
-// Similarity search query
-const similaritySearch = computed(() => {
-  if (!card.value?.name) return undefined;
-
-  return SimilaritySearchSchema.parse({
-    card_name: card.value.name,
-    limit: 41, // Request 41 so we have 40 after removing the first card
-    filters: undefined,
-    exclude_card_data: false,
-  });
-});
-
-const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
-  queryKey: ['card-details-similar-cards', cardIdParam.value],
-  queryFn: async () => {
-    if (!similaritySearch.value) return [];
-
-    const config = useRuntimeConfig();
-    const response = await fetch(`${config.public.backendUrl}/search/similarity`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(similaritySearch.value),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch similar cards');
-    }
-
-    const results = await response.json() as Array<Card>;
-    return results;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: computed(() => !!card.value?.name),
-});
+// Use the similar cards composable
+const cardName = computed(() => card.value?.name);
+const { similarCards, isSimilarCardsLoading } = useSimilarCards(cardIdParam, cardName);
 
 </script>
 

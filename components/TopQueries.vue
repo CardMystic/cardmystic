@@ -70,28 +70,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuery } from '@tanstack/vue-query';
-import type { TopQuery } from '~/models/topQueryModel';
+import { useTopQueries } from '~/composables/useTopQueries';
 
 const router = useRouter();
 
-const { data: topQueries, isLoading, error } = useQuery({
-  queryKey: [
-    'cache',
-    'topQueries',
-  ],
-  queryFn: async () => {
-    const config = useRuntimeConfig();
-    const response = await fetch(`${config.public.backendUrl}/cache/top`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json() as Promise<TopQuery[]>;
-  },
-  staleTime: 1000 * 60 * 5, // 5 minutes
-  enabled: true, // Enable lazy loading
-  refetchOnWindowFocus: false,
-});
+const { topQueries, isLoading, error } = useTopQueries();
 
 // Split queries into left and right columns
 const leftColumnQueries = computed(() => {

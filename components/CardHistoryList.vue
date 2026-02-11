@@ -37,9 +37,8 @@
 
 <script setup lang="ts">
 import Card from '~/components/Card.vue'
-import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
-const config = useRuntimeConfig();
+import { useCardsByIds } from '~/composables/useCards'
 
 const props = defineProps<{
   cardHistory: any[]
@@ -52,25 +51,11 @@ const showAll = ref(false)
 // Get unique card IDs from history
 const cardIds = computed(() => {
   if (!props.cardHistory || props.cardHistory.length === 0) return []
-  return [...new Set(props.cardHistory.map(h => h.card_id).filter(Boolean))]
+  return [...new Set(props.cardHistory.map(h => h.card_id).filter(Boolean))] as string[]
 })
 
 // Fetch card details from backend using TanStack Query
-const { data: cards, isLoading: isLoadingCards, error: fetchError } = useQuery({
-  queryKey: ['card-history-details', cardIds],
-  queryFn: async () => {
-    if (cardIds.value.length === 0) return []
-
-    const cardsData = await $fetch(`${config.public.backendUrl}/cards/cards-by-ids`, {
-      method: 'POST',
-      body: { cardIds: cardIds.value }
-    })
-
-    return cardsData || []
-  },
-  enabled: computed(() => cardIds.value.length > 0),
-  staleTime: 1000 * 60 * 10, // 10 minutes cache
-})
+const { cards, isLoading: isLoadingCards, error: fetchError } = useCardsByIds(cardIds, 'card-history-details')
 
 const cardsError = computed(() => fetchError.value?.message || '')
 

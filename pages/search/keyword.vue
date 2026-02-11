@@ -16,7 +16,6 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Card } from '~/models/cardModel';
@@ -26,6 +25,7 @@ import SearchForm from '~/components/search/Search.vue';
 import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePageInfo } from '~/composables/usePageInfo';
+import { useKeywordSearch } from '~/composables/useSearch';
 
 const route = useRoute();
 
@@ -108,27 +108,10 @@ const keywordSearch = computed(() => {
   });
 });
 
-const queryEnabled = computed(() => !!keywordSearch.value?.query);
-
 const skeletonCount = computed(() => limitParam.value || 20);
 
 // Run the keyword search request
-const { data: searchResults, isLoading } = useQuery({
-  queryKey: ['search', 'keyword', keywordSearch],
-  queryFn: async () => {
-    const config = useRuntimeConfig();
-    const response = await fetch(`${config.public.backendUrl}/search/keyword`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(keywordSearch.value),
-    });
-    if (!response.ok) throw new Error('Network response was not ok');
-
-    return await response.json() as Card[];
-  },
-  staleTime: 1000 * 60 * 5, // 5 min cache in UI
-  enabled: queryEnabled,
-});
+const { searchResults, isLoading } = useKeywordSearch(keywordSearch);
 
 function handleFabClick() {
   const url = searchFeedbackUrl(getPageInfo());
