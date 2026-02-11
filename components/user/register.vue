@@ -106,7 +106,7 @@ const signUpWithEmail = async () => {
 
     <div class="text-center text-zinc-400 text-sm">
       Already have an account?
-      <UButton variant="link" color="primary" size="sm" :padded="false" @click="$emit('switch-to-login')">
+      <UButton variant="link" color="primary" size="sm" :padded="false" @click="navigateTo('/login')">
         Login Instead
       </UButton>
     </div>

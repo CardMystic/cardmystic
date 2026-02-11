@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen w-full flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-md mx-auto">
-      <UserRegister @switch-to-login="navigateTo('/login')" />
+      <UserRegister />
     </div>
   </div>
 </template>
