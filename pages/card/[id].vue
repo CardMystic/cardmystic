@@ -14,10 +14,17 @@
       <p class="text-white text-center">Loading card details...</p>
     </div>
 
-    <div v-else-if="error && !pending" class="text-center">
-      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4 cursor-pointer" />
-      <p class="mt-4 text-white">{{ error }}</p>
-      <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
+    <div v-else-if="error && !pending" class="text-center py-20">
+      <UIcon v-if="isNotFound" name="i-heroicons-magnifying-glass" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
+      <UIcon v-else name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4" />
+      <h2 v-if="isNotFound" class="text-2xl font-bold text-white mb-2">Card Not Found</h2>
+      <h2 v-else-if="isBadRequest" class="text-2xl font-bold text-white mb-2">Invalid Request</h2>
+      <p v-if="isNotFound" class="mt-4 text-gray-300 max-w-150">
+        We apologize, it seems the card with id: <strong>{{ cardIdParam }}</strong> doesn't exist. If you believe this
+        is a mistake, please contact us at <strong>thecardmystic@gmail.com</strong>.
+      </p>
+      <p v-else class="mt-4 text-gray-300 max-w-150">{{ errorMessage }}</p>
+      <UButton to="/search" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
     <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl relative z-10 items-center">
@@ -55,7 +62,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -316,6 +323,26 @@ const { data: cardData, error, pending } = useAsyncData(
     watch: [cardIdParam]
   }
 );
+
+// Check if error is a 404 Not Found
+const isNotFound = computed(() => {
+  if (!error.value) return false;
+  const err = error.value as any;
+  return err?.statusCode === 404 || err?.status === 404 || err?.data?.statusCode === 404;
+});
+
+// Check if error is a 400 Bad Request and get its message
+const isBadRequest = computed(() => {
+  if (!error.value) return false;
+  const err = error.value as any;
+  return err?.statusCode === 400 || err?.status === 400 || err?.data?.statusCode === 400;
+});
+
+const errorMessage = computed(() => {
+  if (!error.value) return '';
+  const err = error.value as any;
+  return err?.data?.message || err?.message || 'An error occurred';
+});
 
 // Extract card and printings from combined data
 const card = computed(() => cardData.value?.card);
