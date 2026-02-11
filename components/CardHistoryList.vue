@@ -1,59 +1,63 @@
 <template>
-  <!-- Loading State -->
-  <div v-if="isLoadingHistory || isLoadingCards" class="flex justify-center py-12">
-    <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary" />
-  </div>
-
-  <!-- Error State -->
-  <div v-else-if="historyError || cardsError" class="text-center py-12">
-    <UIcon name="i-lucide-alert-circle" class="w-16 h-16 mx-auto mb-4 text-red-500" />
-    <p class="text-red-500 mb-2 text-lg font-semibold">Error loading card history</p>
-    <p class="text-gray-500">{{ historyError?.message || cardsError }}</p>
-  </div>
-
-  <!-- Empty State -->
-  <div v-else-if="safeCards.length === 0" class="text-center py-12">
-    <UIcon name="i-lucide-clock" class="w-16 h-16 mx-auto mb-4 text-gray-400" />
-    <p class="text-gray-500 text-lg mb-4">No recently viewed cards</p>
-    <p class="text-gray-400 text-sm">Cards you view will appear here</p>
-  </div>
-
-  <!-- Cards Grid -->
-  <div v-else>
-    <!-- Clear All Button -->
-    <div class="flex justify-end mb-4">
-      <UButton icon="i-lucide-trash-2" color="error" variant="outline" label="Clear All" @click="confirmClearAll" />
+  <div>
+    <!-- Loading State -->
+    <div v-if="isLoadingHistory || isLoadingCards" class="flex justify-center py-12">
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary" />
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-      <Card v-for="card in displayedCards" :key="card.id"
-        :card="{ card_name: card.name, card_data: card, score: undefined }" :show-card-info="true"
-        :hide-progress-bar="true" :hide-thumbs-down-button="true" />
+    <!-- Error State -->
+    <div v-else-if="historyError || cardsError" class="text-center py-12">
+      <UIcon name="i-lucide-alert-circle" class="w-16 h-16 mx-auto mb-4 text-red-500" />
+      <p class="text-red-500 mb-2 text-lg font-semibold">Error loading card history</p>
+      <p class="text-gray-500">{{ historyError?.message || cardsError }}</p>
     </div>
 
-    <!-- Show More Button -->
-    <div v-if="safeCards.length > 10 && !showAll" class="flex justify-center pt-6">
-      <UButton @click="showAll = true" color="primary" variant="outline" size="lg">
-        Show More ({{ safeCards.length - 10 }} more)
-      </UButton>
+    <!-- Empty State -->
+    <div v-else-if="safeCards.length === 0" class="text-center py-12">
+      <UIcon name="i-lucide-clock" class="w-16 h-16 mx-auto mb-4 text-gray-400" />
+      <p class="text-gray-500 text-lg mb-4">No recently viewed cards</p>
+      <p class="text-gray-400 text-sm">Cards you view will appear here</p>
     </div>
-  </div>
 
-  <!-- Clear All Confirmation Modal -->
-  <UModal v-model:open="isClearAllModalOpen" title="Clear All Card History">
-    <template #content>
-      <div class="p-4 space-y-4">
-        <p class="text-gray-600 dark:text-gray-400">
-          Are you sure you want to clear all card history? This action cannot be undone.
-        </p>
-        <div class="flex justify-end gap-2">
-          <UButton color="neutral" variant="ghost" label="Cancel" @click="isClearAllModalOpen = false"
-            :disabled="clearAllLoading" />
-          <UButton color="error" variant="solid" label="Clear All" :loading="clearAllLoading" @click="handleClearAll" />
-        </div>
+    <!-- Cards Grid -->
+    <div v-else>
+      <!-- Clear All Button -->
+      <div class="flex justify-end mb-4">
+        <UButton icon="i-lucide-trash-2" color="error" variant="outline" label="Clear All" @click="confirmClearAll" />
       </div>
-    </template>
-  </UModal>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <Card v-for="card in displayedCards" :key="card.id"
+          :card="{ card_name: card.name, card_data: card, score: undefined }" :show-card-info="true"
+          :hide-progress-bar="true" :hide-thumbs-down-button="true" />
+      </div>
+
+      <!-- Show More Button -->
+      <div v-if="safeCards.length > 10 && !showAll" class="flex justify-center pt-6">
+        <UButton @click="showAll = true" color="primary" variant="outline" size="lg">
+          Show More ({{ safeCards.length - 10 }} more)
+        </UButton>
+      </div>
+    </div>
+
+    <!-- Clear All Confirmation Modal -->
+    <UModal v-model:open="isClearAllModalOpen" title="Clear All Card History">
+      <template #content>
+        <div class="p-4 space-y-4">
+          <p class="text-gray-600 dark:text-gray-400">
+            Are you sure you want to clear all card history? This action cannot be undone.
+          </p>
+          <div class="flex justify-end gap-2">
+            <UButton color="neutral" variant="ghost" label="Cancel" @click="isClearAllModalOpen = false"
+              :disabled="clearAllLoading" />
+            <UButton color="error" variant="solid" label="Clear All" :loading="clearAllLoading"
+              @click="handleClearAll" />
+          </div>
+        </div>
+      </template>
+    </UModal>
+  </div>
+
 </template>
 
 <script setup lang="ts">
