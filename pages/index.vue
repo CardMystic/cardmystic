@@ -83,9 +83,10 @@
         </div>
       </div>
     </div>
-
-    <ExampleQueries class="mb-10" />
-    <TopQueries class="mb-10" />
+    <ClientOnly>
+      <ExampleQueries class="mb-10" />
+      <TopQueries class="mb-10" />
+    </ClientOnly>
     <MeetTheDevs class="mb-10" />
     <Sponsorships class="mb-10" />
     <JoinUs class="mb-10" />
