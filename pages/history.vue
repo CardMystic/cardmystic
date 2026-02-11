@@ -18,7 +18,7 @@
       </template>
 
       <template #cards>
-        <CardHistoryList class="mt-2" />
+        <CardHistoryList />
       </template>
     </UTabs>
   </div>

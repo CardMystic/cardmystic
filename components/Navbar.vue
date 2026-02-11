@@ -2,7 +2,6 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import ClipboardMenu from '~/components/ClipboardMenu.vue'
 import { useUserProfile } from '~/composables/useUserProfile'
-import { useCardLists } from '~/composables/useCardLists'
 
 const isOpen = ref(false)
 const isMobileProfilePopoverOpen = ref(false)
@@ -13,24 +12,10 @@ const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_darkmode.webp'
 })
 const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading } = useUserProfile()
-const { prefetchUserLists } = useCardLists()
 
 // Initialize auth listener on component mount
 onMounted(() => {
   initAuthListener()
-
-  // Prefetch user lists if user is already logged in
-  if (userProfile.value?.id) {
-    prefetchUserLists()
-  }
-})
-
-// Watch for user login and prefetch
-watch(userProfile, (newUser, oldUser) => {
-  if (newUser?.id && !oldUser?.id) {
-    // User just logged in, prefetch their lists
-    prefetchUserLists()
-  }
 })
 
 const handleLogout = async () => {
