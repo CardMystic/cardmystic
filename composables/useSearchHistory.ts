@@ -103,7 +103,10 @@ export const useSearchHistory = () => {
       throw new Error('User not authenticated');
     }
 
-    const { error } = await supabase.from('search_history').delete();
+    const { error } = await supabase
+      .from('search_history')
+      .delete()
+      .eq('user_id', userProfile.value.id);
 
     if (error) throw error;
   };
