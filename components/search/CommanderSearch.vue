@@ -7,7 +7,7 @@
     <UFormField name="query" class="mb-2">
       <div class="flex gap-2">
         <UInput ref="input" v-model="state.query" placeholder="Describe the commander you want..."
-          icon="i-lucide-search" class="flex-1" :ui="{ trailing: 'pe-1', base: 'h-10' }">
+          icon="i-lucide-search" class="flex-1" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
           <template v-if="state.query?.length" #trailing>
             <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
               @click="state.query = ''" />
