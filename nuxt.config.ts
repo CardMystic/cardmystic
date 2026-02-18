@@ -31,6 +31,12 @@ export default defineNuxtConfig({
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     },
   },
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false, // ← THIS is the key
+    },
+  ],
   compatibilityDate: '2025-05-15',
   css: ['~/assets/css/main.css'],
   devtools: {
