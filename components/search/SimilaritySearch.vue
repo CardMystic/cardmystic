@@ -8,7 +8,7 @@
       <div class="flex gap-2">
         <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
           :loading="status === 'pending'" :items="filteredCards" placeholder="Enter a card name..."
-          icon="i-lucide-search" class="flex-1" :ui="{ base: 'text-base h-10' }" />
+          icon="i-lucide-search" class="flex-1 min-w-0" :ui="{ base: 'text-base h-10 truncate' }" />
         <UButton :disabled="state.card_name?.length == 0" type="submit" class="h-10 cursor-pointer">
           Submit
         </UButton>
