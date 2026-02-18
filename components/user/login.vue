@@ -4,6 +4,7 @@ import { useRecaptcha } from '~/composables/useRecaptcha'
 
 const supabase = useSupabase()
 const { verifyRecaptcha } = useRecaptcha()
+const config = useRuntimeConfig()
 
 const email = ref('')
 const password = ref('')
@@ -49,18 +50,33 @@ const signInWithEmail = async () => {
     return
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  })
+  try {
+    const res = await fetch(`${config.public.backendUrl}/user/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.value, password: password.value }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      errorMessage.value = data.message || 'Login failed.'
+      loading.value = false
+      return
+    }
+
+    // Set the Supabase session from the tokens returned by the backend
+    await supabase.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    })
+
+    navigateTo('/')
+  } catch (e) {
+    errorMessage.value = 'An unexpected error occurred.'
+  }
 
   loading.value = false
-
-  if (error) {
-    errorMessage.value = error.message
-  } else {
-    navigateTo('/')
-  }
 }
 </script>
 

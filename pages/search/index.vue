@@ -13,14 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
-import SearchForm from '~/components/search/Search.vue';
-import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
-import { UContainer } from '#components';
 import { useColbertSearch } from '~/composables/useSearch';
 
 const route = useRoute();

@@ -62,7 +62,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                  }}</span>
+                    }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -276,17 +276,12 @@
 </template>
 
 <script setup lang="ts">
-import BackToTop from '~/components/general/BackToTop.vue';
-import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
-import ListCardDetailsSimilarCardsResults from '~/components/results/ListCardDetailsSimilarCardsResults.vue';
-import { computed, h, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
-import { useCardHistory } from '~/composables/useCardHistory';
-import { useSimilarCards } from '~/composables/useSearch';
 
 const route = useRoute();
 const isFlipped = ref(false);

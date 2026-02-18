@@ -53,11 +53,8 @@ import { useCardLists } from '~/composables/useCardLists'
 import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
-import CardListResults from '~/components/results/CardListResults.vue'
-import Sort from '~/components/search/Sort.vue'
 import { refDebounced } from '@vueuse/core'
 import { sortSearchResults } from '~/utils/sort'
-import CardListBanner from '~/components/lists/CardListBanner.vue'
 
 const route = useRoute()
 const listId = route.params.id as string

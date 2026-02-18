@@ -124,11 +124,6 @@ useHead({
   ]
 })
 
-import Search from '~/components/search/Search.vue';
-import ProductPromotionButtons from '~/components/home/ProductPromotionButtons.vue';
-import CardSimple from '~/components/general/CardSimple.vue';
-import RecentLists from '~/components/lists/RecentLists.vue';
-import PickUpWhereYouLeftOff from '~/components/user/PickUpWhereYouLeftOff.vue';
 import type { Card as CardType } from '~/models/cardModel';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSearchType } from '~/composables/useSearchType';

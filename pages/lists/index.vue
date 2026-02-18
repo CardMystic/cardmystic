@@ -69,7 +69,7 @@ import { useToast } from '#imports'
 import CardListLink from '~/components/lists/CardListLink.vue'
 
 const { userLists, isLoadingLists, listsError, createListMutation } = useCardLists()
-const { userProfile, profileIconUrl } = useUserProfile()
+const { profileIconUrl } = useUserProfile()
 const toast = useToast()
 
 const lists = computed(() => userLists.value || [])

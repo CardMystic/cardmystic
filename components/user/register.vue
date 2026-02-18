@@ -4,6 +4,7 @@ import { useRecaptcha } from '~/composables/useRecaptcha'
 
 const supabase = useSupabase()
 const { verifyRecaptcha } = useRecaptcha()
+const config = useRuntimeConfig()
 
 const email = ref('')
 const password = ref('')
@@ -45,12 +46,6 @@ const signUpWithEmail = async () => {
     return
   }
 
-  if (password.value !== confirmPassword.value) {
-    errorMessage.value = 'Passwords do not match'
-    loading.value = false
-    return
-  }
-
   const verified = await verifyRecaptcha('signup')
   if (!verified) {
     errorMessage.value = 'Security verification failed. Please try again.'
@@ -58,21 +53,34 @@ const signUpWithEmail = async () => {
     return
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email: email.value,
-    password: password.value
-  })
+  try {
+    const res = await fetch(`${config.public.backendUrl}/user/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value,
+        confirmPassword: confirmPassword.value,
+      }),
+    })
 
-  loading.value = false
+    const data = await res.json()
 
-  if (error) {
-    errorMessage.value = error.message
-  } else {
-    successMessage.value = 'Account created! Please check your email to verify your account before logging in.'
+    if (!res.ok) {
+      errorMessage.value = data.message || 'Signup failed.'
+      loading.value = false
+      return
+    }
+
+    successMessage.value = data.message
     email.value = ''
     password.value = ''
     confirmPassword.value = ''
+  } catch (e) {
+    errorMessage.value = 'An unexpected error occurred.'
   }
+
+  loading.value = false
 }
 </script>
 

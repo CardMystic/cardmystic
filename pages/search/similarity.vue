@@ -17,8 +17,6 @@
 import { watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
-import SearchForm from '~/components/search/Search.vue';
-import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useSimilaritySearch } from '~/composables/useSearch';
 

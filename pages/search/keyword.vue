@@ -16,13 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, KeywordSearchSchema } from '~/models/searchModel';
-
-import SearchForm from '~/components/search/Search.vue';
-import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePageInfo } from '~/composables/usePageInfo';
 import { useKeywordSearch } from '~/composables/useSearch';

@@ -29,8 +29,6 @@ definePageMeta({
   middleware: 'auth'
 })
 
-import SearchHistoryList from '~/components/history/SearchHistoryList.vue'
-import CardHistoryList from '~/components/history/CardHistoryList.vue'
 import { useUserProfile } from '~/composables/useUserProfile'
 
 const { profileIconUrl } = useUserProfile()
