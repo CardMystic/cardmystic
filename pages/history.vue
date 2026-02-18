@@ -30,7 +30,7 @@ definePageMeta({
 })
 
 import SearchHistoryList from '~/components/history/SearchHistoryList.vue'
-import CardHistoryList from '~/components/user/CardHistoryList.vue'
+import CardHistoryList from '~/components/history/CardHistoryList.vue'
 import { useUserProfile } from '~/composables/useUserProfile'
 
 const { profileIconUrl } = useUserProfile()
