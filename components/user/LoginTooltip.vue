@@ -1,13 +1,13 @@
 <script setup lang="ts">
+const route = useRoute()
 const showTooltip = ref(false)
 
 onMounted(() => {
   if (process.server) return;
+  if (route.path !== '/') return;
   // Check if user has dismissed the tooltip before
   const dismissed = localStorage.getItem('loginTooltipDismissed')
-  if (dismissed === 'true') {
-    showTooltip.value = false
-  } else {
+  if (dismissed !== 'true') {
     showTooltip.value = true
   }
 })
