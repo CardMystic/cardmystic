@@ -11,7 +11,8 @@ const {
   signOut,
   updateProfileAvatar,
   updateUsername: updateUsernameFn,
-  updatePassword: updatePasswordFn
+  updatePassword: updatePasswordFn,
+  validatePasswordPolicy
 } = useUserProfile()
 
 const username = ref(computedUsername.value)
@@ -111,6 +112,12 @@ const updatePassword = async () => {
 
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
     errorMessage.value = 'All password fields are required'
+    return
+  }
+
+  const passwordError = validatePasswordPolicy(newPassword.value)
+  if (passwordError) {
+    errorMessage.value = passwordError
     return
   }
 

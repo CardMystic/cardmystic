@@ -9,6 +9,21 @@ export const useUserProfile = () => {
   const supabase = process.server ? null : useSupabase();
   const queryClient = useQueryClient();
 
+  function validatePasswordPolicy(password: string): string | null {
+    if (password.length < 8)
+      return 'Password must be at least 8 characters long.';
+    if (!/[A-Z]/.test(password))
+      return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(password))
+      return 'Password must contain at least one lowercase letter.';
+    if (!/[0-9]/.test(password))
+      return 'Password must contain at least one number.';
+    if (!/[^A-Za-z0-9]/.test(password))
+      return 'Password must contain at least one special character.';
+    if (/\s/.test(password)) return 'Password must not contain whitespace.';
+    return null;
+  }
+
   // Fetch user with TanStack Query
   const {
     data: userProfile,
@@ -120,15 +135,41 @@ export const useUserProfile = () => {
   };
 
   const updatePassword = async (newPassword: string) => {
-    if (!supabase || newPassword.length < 6) {
-      return { error: new Error('Password must be at least 6 characters') };
+    if (!supabase) {
+      return { error: new Error('Not available on server') };
     }
 
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
+    const config = useRuntimeConfig();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
 
-    return { error };
+    if (!accessToken) {
+      return { error: new Error('Not authenticated') };
+    }
+
+    try {
+      const res = await fetch(
+        `${config.public.backendUrl}/user/update-password`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ newPassword }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { error: new Error(data.message || 'Password update failed') };
+      }
+
+      return { error: null };
+    } catch (e) {
+      return { error: e as Error };
+    }
   };
 
   // Computed properties
@@ -173,6 +214,7 @@ export const useUserProfile = () => {
     loading: readonly(loading),
     username: readonly(username),
     profileIconUrl: readonly(profileIconUrl),
+    validatePasswordPolicy,
     fetchUser,
     fetchProfileData,
     updateProfileAvatar,

@@ -5,6 +5,7 @@ import { useRecaptcha } from '~/composables/useRecaptcha'
 const supabase = useSupabase()
 const { verifyRecaptcha } = useRecaptcha()
 const config = useRuntimeConfig()
+const { validatePasswordPolicy } = useUserProfile()
 
 const email = ref('')
 const password = ref('')
@@ -42,6 +43,19 @@ const signUpWithEmail = async () => {
   successMessage.value = null
 
   if (honeypot.value) {
+    loading.value = false
+    return
+  }
+
+  const passwordError = validatePasswordPolicy(password.value)
+  if (passwordError) {
+    errorMessage.value = passwordError
+    loading.value = false
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = 'Passwords do not match.'
     loading.value = false
     return
   }
