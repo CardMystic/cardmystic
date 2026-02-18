@@ -54,7 +54,7 @@
     <QueryCount class="mb-14"></QueryCount>
 
     <!-- How To Use & How It Works Section -->
-    <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
       <div
         class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
@@ -87,6 +87,7 @@
         </div>
       </div>
     </div>
+    <Efficiency class="mb-20" />
     <ExampleQueries class="mb-10" />
     <TopQueries class="mb-10" />
     <MeetTheDevs class="mb-10" />
