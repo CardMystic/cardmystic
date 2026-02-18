@@ -11,6 +11,7 @@ const confirmPassword = ref('')
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+const honeypot = ref('')
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null
@@ -38,6 +39,11 @@ const signUpWithEmail = async () => {
   loading.value = true
   errorMessage.value = null
   successMessage.value = null
+
+  if (honeypot.value) {
+    loading.value = false
+    return
+  }
 
   if (password.value !== confirmPassword.value) {
     errorMessage.value = 'Passwords do not match'
@@ -72,6 +78,9 @@ const signUpWithEmail = async () => {
 
 <template>
   <div class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
+    <!-- Honeypot field - hidden from users but visible to bots -->
+    <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
+      style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
 
     <h1 class="text-xl font-bold text-white text-center">
       Create your CardMystic account

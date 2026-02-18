@@ -9,6 +9,7 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
+const honeypot = ref('')
 
 const signInWithGoogle = async () => {
   errorMessage.value = null
@@ -36,6 +37,11 @@ const signInWithEmail = async () => {
   loading.value = true
   errorMessage.value = null
 
+  if (honeypot.value) {
+    loading.value = false
+    return
+  }
+
   const verified = await verifyRecaptcha('login')
   if (!verified) {
     errorMessage.value = 'Security verification failed. Please try again.'
@@ -60,6 +66,9 @@ const signInWithEmail = async () => {
 
 <template>
   <div class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
+    <!-- Honeypot field - hidden from users but visible to bots -->
+    <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
+      style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
 
     <h1 class="text-xl font-bold text-white text-center">
       Sign in to CardMystic
