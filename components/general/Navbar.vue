@@ -11,11 +11,19 @@ const colorMode = useColorMode()
 const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_darkmode.webp'
 })
-const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading } = useUserProfile()
+const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading, pingActivity } = useUserProfile()
 
 // Initialize auth listener on component mount
 onMounted(() => {
   initAuthListener()
+
+  // Ping the backend once on app load if the user is (or becomes) logged in
+  const stopWatch = watch(userProfile, (profile) => {
+    if (profile) {
+      pingActivity()
+      stopWatch()
+    }
+  }, { immediate: true })
 })
 
 const handleLogout = async () => {

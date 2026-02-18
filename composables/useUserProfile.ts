@@ -134,6 +134,22 @@ export const useUserProfile = () => {
     return { error };
   };
 
+  const pingActivity = async () => {
+    if (!supabase) return;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) return;
+    const config = useRuntimeConfig();
+    try {
+      await fetch(`${config.public.backendUrl}/user/ping`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      // Non-critical — silently ignore
+    }
+  };
+
   const updatePassword = async (newPassword: string) => {
     if (!supabase) {
       return { error: new Error('Not available on server') };
@@ -224,6 +240,7 @@ export const useUserProfile = () => {
     updateProfileAvatar,
     updateUsername,
     updatePassword,
+    pingActivity,
     signOut,
     initAuthListener,
   };
