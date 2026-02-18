@@ -49,8 +49,9 @@
       <template #fallback>
         <RecentListsNotLoggedIn class="mb-14" />
       </template>
-      <QueryCount class="mb-14"></QueryCount>
     </ClientOnly>
+
+    <QueryCount class="mb-14"></QueryCount>
 
     <!-- How To Use & How It Works Section -->
     <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
