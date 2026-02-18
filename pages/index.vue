@@ -41,11 +41,14 @@
   </div>
 
   <!-- Everything below the fold -->
-  <UContainer class="mt-14 mb-10">
+  <UContainer class="mt-10 mb-10">
     <!-- User-specific sections when logged in -->
     <ClientOnly>
       <RecentLists v-if="isLoggedIn" class="mb-14" />
-      <PickUpWhereYouLeftOff v-if="isLoggedIn" class="mb-14" />
+      <RecentListsNotLoggedIn v-else class="mb-14" />
+      <template #fallback>
+        <RecentListsNotLoggedIn class="mb-14" />
+      </template>
       <QueryCount class="mb-14"></QueryCount>
     </ClientOnly>
 

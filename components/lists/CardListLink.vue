@@ -15,12 +15,12 @@
       color="error" variant="solid" icon="i-lucide-trash-2" size="sm" aria-label="Delete list" />
 
     <!-- Content (clickable) -->
-    <div class="relative p-4" @click="navigateTo(`/lists/${list.id}`)">
-      <h3 class="text-xl font-semibold mb-2">{{ list.name }}</h3>
-      <p v-if="list.description" class="text-sm mb-3 line-clamp-1">
+    <div class="relative p-2 md:p-4" @click="navigateTo(`/lists/${list.id}`)">
+      <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">{{ list.name }}</h3>
+      <p v-if="list.description" class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
         {{ list.description }}
       </p>
-      <div class="flex items-center justify-between text-sm">
+      <div class="flex items-center justify-between text-xs md:text-sm">
         <span>{{ formatShortDate(list.updated_at) }}</span>
         <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
       </div>

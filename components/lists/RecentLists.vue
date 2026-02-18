@@ -2,11 +2,11 @@
   <div>
     <h2 class="section-title">Recent Lists</h2>
 
-    <div v-if="isLoadingLists" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div v-if="isLoadingLists" class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
       <USkeleton v-for="i in 3" :key="i" class="list-skeleton" />
     </div>
 
-    <div v-else-if="recentLists.length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div v-else-if="recentLists.length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
       <CardListLink v-for="list in recentLists" :key="list.id" :list="list" :show-delete-button="false" />
       <NuxtLink to="/lists">
         <UButton color="primary" variant="outline" class="h-full w-full justify-center" icon="i-lucide-arrow-right">
@@ -14,11 +14,21 @@
         </UButton>
       </NuxtLink>
     </div>
+
     <div v-else class="empty-state">
       <UIcon name="i-lucide-inbox" class="text-5xl opacity-30 mb-3" />
       <p class="mb-4">You haven't created any lists yet</p>
       <UButton to="/lists" color="primary" variant="soft">
         Create Your First List
+      </UButton>
+    </div>
+
+    <div v-if="!isLoadingLists" class="flex gap-3 mt-2 md:mt-4 justify-center">
+      <UButton to="/history?tab=search" color="neutral" variant="outline" icon="i-lucide-search">
+        Recent Searches
+      </UButton>
+      <UButton to="/history?tab=cards" color="neutral" variant="outline" icon="i-lucide-eye">
+        Recent Cards
       </UButton>
     </div>
   </div>
@@ -45,6 +55,9 @@ const recentLists = computed(() => {
   font-weight: 700
   margin-bottom: 1.5rem
   text-align: center
+  @media (max-width: 768px)
+    font-size: 1.5rem
+    margin-bottom: 0.75rem
 
 .list-skeleton
   height: 150px
