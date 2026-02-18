@@ -103,6 +103,12 @@ const signInWithEmail = async () => {
 
     <UInput class="w-full" v-model="password" type="password" placeholder="Password" size="lg" />
 
+    <div class="flex justify-end -mt-2">
+      <UButton variant="link" color="neutral" size="xs" :padded="false" @click="navigateTo('/reset-password')">
+        Forgot password?
+      </UButton>
+    </div>
+
     <UButton color="primary" variant="solid" size="md" :loading="loading" :disabled="loading" @click="signInWithEmail">
       {{ loading ? 'Signing in…' : 'Sign in' }}
     </UButton>

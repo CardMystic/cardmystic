@@ -204,6 +204,10 @@ export const useUserProfile = () => {
         // Clear all cached data when user signs out
         queryClient.clear();
         authListenerInitialized = false; // Allow re-initialization after sign out
+      } else if (event === 'PASSWORD_RECOVERY') {
+        // During a password recovery flow the user should not appear as logged in
+        // in the navbar. Clear query cache so the Login button stays visible.
+        queryClient.clear();
       }
     });
   };

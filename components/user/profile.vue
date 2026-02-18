@@ -22,6 +22,7 @@ const confirmPassword = ref('')
 const updateLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+const showPasswords = ref(false)
 
 // Profile icon card selection
 const selectedProfileCard = ref(profileData.value?.avatar_card_name || '')
@@ -248,10 +249,27 @@ const handleSignOut = async () => {
         <!-- Update Password -->
         <div class="space-y-4 mb-6 pb-6 border-b">
           <h2 class="text-lg font-semibold">Update Password</h2>
-          <UInput v-model="currentPassword" type="password" placeholder="Current Password" size="lg" class="w-full" />
-          <UInput v-model="newPassword" type="password" placeholder="New Password" size="lg" class="w-full" />
-          <UInput v-model="confirmPassword" type="password" placeholder="Confirm New Password" size="lg"
-            class="w-full" />
+          <UInput v-model="currentPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Current Password"
+            size="lg" class="w-full">
+            <template #trailing>
+              <UButton variant="link" color="neutral" :padded="false"
+                :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
+            </template>
+          </UInput>
+          <UInput v-model="newPassword" :type="showPasswords ? 'text' : 'password'" placeholder="New Password" size="lg"
+            class="w-full">
+            <template #trailing>
+              <UButton variant="link" color="neutral" :padded="false"
+                :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
+            </template>
+          </UInput>
+          <UInput v-model="confirmPassword" :type="showPasswords ? 'text' : 'password'"
+            placeholder="Confirm New Password" size="lg" class="w-full">
+            <template #trailing>
+              <UButton variant="link" color="neutral" :padded="false"
+                :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
+            </template>
+          </UInput>
           <UButton color="primary" variant="solid" size="md" :loading="updateLoading" :disabled="updateLoading"
             @click="updatePassword">
             Update Password
