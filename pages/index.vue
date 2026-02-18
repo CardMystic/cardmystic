@@ -88,8 +88,18 @@
       </div>
     </div>
     <Efficiency class="mb-20" />
-    <ExampleQueries class="mb-10" />
-    <TopQueries class="mb-10" />
+    <ClientOnly>
+      <ExampleQueries class="mb-10" />
+      <template #fallback>
+        <ExampleQueriesSkeleton class="mb-10" />
+      </template>
+    </ClientOnly>
+    <ClientOnly>
+      <TopQueries class="mb-10" />
+      <template #fallback>
+        <TopQueriesSkeleton class="mb-10" />
+      </template>
+    </ClientOnly>
     <MeetTheDevs class="mb-10" />
     <Sponsorships class="mb-10" />
     <JoinUs class="mb-10" />
