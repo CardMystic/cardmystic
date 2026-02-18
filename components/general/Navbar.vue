@@ -197,6 +197,10 @@ const externalItems: NavigationMenuItem[] = [
               </div>
             </template>
           </UPopover>
+          <template #fallback>
+            <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
+              @click="navigateTo('/login')" />
+          </template>
         </ClientOnly>
 
         <NuxtLink to="/" class="hover:opacity-80 transition-opacity ml-4">
@@ -266,6 +270,10 @@ const externalItems: NavigationMenuItem[] = [
             </div>
           </template>
         </UPopover>
+        <template #fallback>
+          <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
+            @click="navigateTo('/login')" />
+        </template>
       </ClientOnly>
 
     </div>
