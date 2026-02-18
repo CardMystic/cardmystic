@@ -8,6 +8,7 @@ export const useUserProfile = () => {
   // Only initialize Supabase on client side
   const supabase = process.server ? null : useSupabase();
   const queryClient = useQueryClient();
+  const config = useRuntimeConfig();
 
   function validatePasswordPolicy(password: string): string | null {
     if (password.length < 8)
@@ -139,7 +140,6 @@ export const useUserProfile = () => {
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
     if (!accessToken) return;
-    const config = useRuntimeConfig();
     try {
       await fetch(`${config.public.backendUrl}/user/ping`, {
         method: 'POST',
@@ -155,7 +155,6 @@ export const useUserProfile = () => {
       return { error: new Error('Not available on server') };
     }
 
-    const config = useRuntimeConfig();
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
 

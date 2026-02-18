@@ -18,12 +18,16 @@ onMounted(() => {
   initAuthListener()
 
   // Ping the backend once on app load if the user is (or becomes) logged in
-  const stopWatch = watch(userProfile, (profile) => {
-    if (profile) {
-      pingActivity()
-      stopWatch()
-    }
-  }, { immediate: true })
+  if (userProfile.value) {
+    pingActivity()
+  } else {
+    const stopWatch = watch(userProfile, (profile) => {
+      if (profile) {
+        pingActivity()
+        stopWatch()
+      }
+    })
+  }
 })
 
 const handleLogout = async () => {
