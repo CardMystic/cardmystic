@@ -12,8 +12,9 @@
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h1 class="subtitle text-white">
-            <b class="highlight">CardMystic</b> Is An <b class="highlight">A.I. Search Engine</b> For <b
-              class="highlight">MTG</b>
+            <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I. Search
+              Engine</b> For
+            <b style="color: var(--ui-highlight)">MTG</b>
           </h1>
         </div>
       </div>
@@ -274,10 +275,6 @@ setPageInfo({
   background-attachment: fixed
   opacity: 0.25
   z-index: 0
-
-
-.highlight
-  color: #e4842a
 
 .image
   width: 200px
