@@ -66,7 +66,7 @@ definePageMeta({
 import { useCardLists } from '~/composables/useCardLists'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useToast } from '#imports'
-import CardListLink from '~/components/CardListLink.vue'
+import CardListLink from '~/components/lists/CardListLink.vue'
 
 const { userLists, isLoadingLists, listsError, createListMutation } = useCardLists()
 const { userProfile, profileIconUrl } = useUserProfile()

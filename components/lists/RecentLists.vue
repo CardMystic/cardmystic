@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { useCardLists } from '~/composables/useCardLists';
-import CardListLink from '~/components/CardListLink.vue';
+import CardListLink from '~/components/lists/CardListLink.vue';
 
 const { userLists, isLoadingLists } = useCardLists();
 

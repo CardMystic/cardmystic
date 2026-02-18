@@ -62,7 +62,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -276,9 +276,9 @@
 </template>
 
 <script setup lang="ts">
-import BackToTop from '~/components/BackToTop.vue';
-import ClipboardButton from '~/components/ClipboardButton.vue';
-import ListCardDetailsSimilarCardsResults from '~/components/ListCardDetailsSimilarCardsResults.vue';
+import BackToTop from '~/components/general/BackToTop.vue';
+import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
+import ListCardDetailsSimilarCardsResults from '~/components/results/ListCardDetailsSimilarCardsResults.vue';
 import { computed, h, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';

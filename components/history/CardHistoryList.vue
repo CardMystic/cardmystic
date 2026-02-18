@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import Card from '~/components/Card.vue'
+import Card from '~/components/general/Card.vue'
 import { computed, ref } from 'vue'
 import { useCardsByIds } from '~/composables/useCards'
 import { useCardHistory } from '~/composables/useCardHistory'

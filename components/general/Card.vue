@@ -123,7 +123,7 @@ import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import ClipboardButton from '~/components/ClipboardButton.vue';
+import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { useCardFeedback } from '~/composables/useCardFeedback';
 
 const router = useRouter();

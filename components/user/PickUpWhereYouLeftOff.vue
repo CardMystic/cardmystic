@@ -65,7 +65,7 @@ import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCardHistory } from '~/composables/useCardHistory';
 import { useCardsByIds } from '~/composables/useCards';
 import { rerunSearchHistory } from '#imports';
-import CardSimple from '~/components/CardSimple.vue';
+import CardSimple from '~/components/general/CardSimple.vue';
 import type { SearchHistory } from '~/database.types';
 
 const router = useRouter();
