@@ -176,7 +176,7 @@
       <UCardContent class="mt-2 text-base">
         <p>
           If you have any questions about this Privacy Policy or how your information is
-          handled, please reach out to us.
+          handled, please reach out to us!
         </p>
         <p class="mt-4">
           📧 Email:
