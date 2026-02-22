@@ -92,6 +92,15 @@
             </template>
           </UTooltip>
         </div>
+
+        <!-- Remove from list button -->
+        <UTooltip v-if="showRemoveButton" text="Remove from list" :popper="{ placement: 'top' }">
+          <template #default>
+            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
+              aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
+          </template>
+        </UTooltip>
+
         <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
           @click="toggleShowAllData">
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
@@ -111,11 +120,11 @@ import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
-import { useMutation } from '@tanstack/vue-query';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import ClipboardButton from '~/components/ClipboardButton.vue';
+import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
+import { useCardFeedback } from '~/composables/useCardFeedback';
 
 const router = useRouter();
 const route = useRoute();
@@ -139,6 +148,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // If true, show additional card info (name, type, clipboard button)
   showCardInfo: {
     type: Boolean,
     default: false,
@@ -155,7 +165,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showRemoveButton: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+const emit = defineEmits<{
+  (e: 'remove', cardId: string): void;
+}>();
 
 const sizeClass = computed(() => `card-${props.size}`);
 
@@ -175,23 +193,8 @@ const searchQuery = computed(() => {
   return '';
 });
 
-// Mutation for tracking dislike
-const dislikeMutation = useMutation({
-  mutationFn: async (data: { query: string; cardName: string }) => {
-    const response = await fetch('/api/metrics/dislike', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to track dislike');
-    }
-    return response.json();
-  },
-  onError: (error) => {
-    console.error('Failed to track dislike:', error);
-  },
-});
+// Use the dislike mutation from composable
+const { dislikeMutation } = useCardFeedback();
 
 // Handle dislike button click - show confirmation modal
 function handleDislike() {

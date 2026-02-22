@@ -182,7 +182,7 @@ import { computed } from 'vue';
 import { z } from 'zod';
 import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus, cardColorToSymbol } from '~/models/cardModel';
 import type { CardSearchFilters } from '~/models/searchModel';
-import ManaIcon from '../ManaIcon.vue';
+import ManaIcon from '../general/ManaIcon.vue';
 import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt/ui';
 import { getColorIdentityName } from '~/utils/colorPairings';
 

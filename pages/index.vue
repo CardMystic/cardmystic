@@ -12,14 +12,15 @@
         <div class="title-container">
           <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
           <h1 class="subtitle text-white">
-            <b class="highlight">CardMystic</b> Is An <b class="highlight">A.I. Search Engine</b> For <b
-              class="highlight">MTG</b>
+            <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I. Search
+              Engine</b> For
+            <b style="color: var(--ui-highlight)">MTG</b>
           </h1>
         </div>
       </div>
 
       <!-- Search -->
-      <SearchForm />
+      <Search />
 
     </UContainer>
 
@@ -40,13 +41,21 @@
     </div>
   </div>
 
-
-
   <!-- Everything below the fold -->
-  <UContainer class="mt-14 mb-10">
+  <UContainer class="mt-10 mb-10">
+    <!-- User-specific sections when logged in -->
+    <ClientOnly>
+      <RecentLists v-if="isLoggedIn" class="mb-14" />
+      <RecentListsNotLoggedIn v-else class="mb-14" />
+      <template #fallback>
+        <RecentListsNotLoggedIn class="mb-14" />
+      </template>
+    </ClientOnly>
+
     <QueryCount class="mb-14"></QueryCount>
+
     <!-- How To Use & How It Works Section -->
-    <div class="mb-22 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
       <div
         class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
@@ -79,9 +88,19 @@
         </div>
       </div>
     </div>
-
-    <ExampleQueries class="mb-10" />
-    <TopQueries class="mb-10" />
+    <Efficiency class="mb-20" />
+    <ClientOnly>
+      <ExampleQueries class="mb-10" />
+      <template #fallback>
+        <ExampleQueriesSkeleton class="mb-10" />
+      </template>
+    </ClientOnly>
+    <ClientOnly>
+      <TopQueries class="mb-10" />
+      <template #fallback>
+        <TopQueriesSkeleton class="mb-10" />
+      </template>
+    </ClientOnly>
     <MeetTheDevs class="mb-10" />
     <Sponsorships class="mb-10" />
     <JoinUs class="mb-10" />
@@ -116,43 +135,45 @@ useHead({
   ]
 })
 
-import SearchForm from '~/components/search/Search.vue';
-import ProductPromotionButtons from '~/components/ProductPromotionButtons.vue';
-import CardSimple from '~/components/CardSimple.vue';
 import type { Card as CardType } from '~/models/cardModel';
-
+import { useUserProfile } from '~/composables/useUserProfile';
+import { useSearchType } from '~/composables/useSearchType';
 // Use search type composable to check if AI search is active
 const { isAiSearch } = useSearchType();
+
+// Check if user is logged in
+const { userProfile } = useUserProfile();
+const isLoggedIn = computed(() => !!userProfile.value);
 
 // Hardcoded hero cards
 const heroCards: CardType[] = [
   {
-    card_name: 'The Ur-Dragon',
+    card_name: 'Ugin, the Spirit Dragon',
     card_data: {
-      id: '7e78b70b-0c67-4f14-8ad7-c9f8e3f59743',
-      name: 'The Ur-Dragon',
+      id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
+      name: 'Ugin, the Spirit Dragon',
       image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/7/e/7e78b70b-0c67-4f14-8ad7-c9f8e3f59743.jpg',
+        normal: 'https://cards.scryfall.io/normal/front/1/b/1bacda35-bb91-4537-a14d-846650fa85f6.jpg?1594157535',
       }
     } as any
   },
   {
-    card_name: 'Ugin, the Spirit Dragon',
+    card_name: 'The Ur-Dragon',
     card_data: {
-      id: '58c1e824-c8a9-4312-8e4c-a29a26d189a4',
-      name: 'Ugin, the Spirit Dragon',
+      id: '10d42b35-844f-4a64-9981-c6118d45e826',
+      name: 'The Ur-Dragon',
       image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/5/8/58c1e824-c8a9-4312-8e4c-a29a26d189a4.jpg',
+        normal: 'https://cards.scryfall.io/normal/front/6/2/6270c798-a3ba-4826-b0a9-82f7e12890f6.jpg?1719466632',
       }
     } as any
   },
   {
     card_name: 'Teferi, Time Raveler',
     card_data: {
-      id: '5cb76266-ae50-4bbc-8f96-d98f309b02d3',
+      id: '662fe50f-d75c-422c-8c6c-1f9b5c4ba21f',
       name: 'Teferi, Time Raveler',
       image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/5/c/5cb76266-ae50-4bbc-8f96-d98f309b02d3.jpg',
+        normal: 'https://cards.scryfall.io/normal/front/5/a/5a47d968-bba0-4277-b5d7-eb9e1acd7953.jpg?1731704855',
       }
     } as any
   }
@@ -255,10 +276,6 @@ setPageInfo({
   opacity: 0.25
   z-index: 0
 
-
-.highlight
-  color: #e4842a
-
 .image
   width: 200px
   height: 200px
@@ -272,7 +289,7 @@ setPageInfo({
 .explore-spacer
   flex-grow: 1
   justify-content: flex-end
-  min-height: 100px
+  min-height: 120px
 
 .header-layout
   margin-bottom: 20px
@@ -302,7 +319,7 @@ setPageInfo({
 
 .bottom-cards
   position: absolute
-  bottom: -20px
+  bottom: 0px
   left: 50%
   transform: translateX(-50%) translateY(50%)
   display: flex

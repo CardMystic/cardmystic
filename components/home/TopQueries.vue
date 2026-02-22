@@ -1,31 +1,6 @@
 <template>
   <div class="top-queries-container mt-2 mb-2">
-    <div v-if="isLoading" class="top-queries-content">
-      <div class="queries-header">
-        <USkeleton class="h-6 w-6 mr-2" :ui="{ rounded: 'rounded-full' }" />
-        <USkeleton class="h-6 w-48" />
-      </div>
-
-      <div class="queries-grid">
-        <!-- Left column skeleton -->
-        <div class="queries-column">
-          <div v-for="index in 5" :key="`left-${index}`" class="query-item-skeleton">
-            <USkeleton class="h-6 w-6" :ui="{ rounded: 'rounded-full' }" />
-            <USkeleton class="h-4 flex-1" />
-            <USkeleton class="h-8 w-12" />
-          </div>
-        </div>
-
-        <!-- Right column skeleton -->
-        <div class="queries-column">
-          <div v-for="index in 5" :key="`right-${index}`" class="query-item-skeleton">
-            <USkeleton class="h-6 w-6" :ui="{ rounded: 'rounded-full' }" />
-            <USkeleton class="h-4 flex-1" />
-            <USkeleton class="h-8 w-12" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <TopQueriesSkeleton v-if="isLoading" />
 
     <div v-else-if="topQueries && topQueries.length > 0" class="top-queries-content">
       <div class="queries-header">
@@ -70,27 +45,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuery } from '@tanstack/vue-query';
-import type { TopQuery } from '~/models/topQueryModel';
+import { useTopQueries } from '~/composables/useTopQueries';
 
 const router = useRouter();
 
-const { data: topQueries, isLoading, error } = useQuery({
-  queryKey: [
-    'cache',
-    'topQueries',
-  ],
-  queryFn: async () => {
-    const response = await fetch('/api/cache/top');
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json() as Promise<TopQuery[]>;
-  },
-  staleTime: 1000 * 60 * 5, // 5 minutes
-  enabled: true, // Enable lazy loading
-  refetchOnWindowFocus: false,
-});
+const { topQueries, isLoading, error } = useTopQueries();
 
 // Split queries into left and right columns
 const leftColumnQueries = computed(() => {
@@ -187,15 +146,6 @@ function tryQuery(query: string) {
     border-color: rgba(147, 114, 255, 0.4)
     transform: translateY(-2px)
     box-shadow: 0 4px 12px rgba(147, 114, 255, 0.3)
-
-.query-item-skeleton
-  display: flex
-  align-items: center
-  gap: 12px
-  padding: 12px 16px
-  border-radius: 12px
-  background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(147, 114, 255, 0.02))
-  border: 1px solid rgba(147, 114, 255, 0.1)
 
 .query-rank
   display: flex
