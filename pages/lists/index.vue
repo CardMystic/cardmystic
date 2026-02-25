@@ -9,7 +9,7 @@
     <!-- Header -->
     <div class="mb-8 flex items-center justify-between">
       <h1 class="text-3xl font-bold">My Card Lists</h1>
-      <UButton icon="i-lucide-plus" label="New List" @click="isCreateModalOpen = true" />
+      <UButton icon="i-lucide-plus" label="New List" @click="isCreateModalOpen = true" class="cursor-pointer" />
     </div>
 
     <!-- Loading State -->
