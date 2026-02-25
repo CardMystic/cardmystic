@@ -1,45 +1,43 @@
 <template>
-  <div class="hero px-0 h-full w-full justify-center flex flex-col items-center" @mousemove="handleMouseMove"
-    @mousedown="handleMouseDown" @mouseup="handleMouseUp">
-    <div class="hero-bg"></div>
-    <div v-for="dot in dots" :key="dot.id" class="mouse-dot"
-      :style="{ left: dot.x + 'px', top: dot.y + 'px', opacity: dot.opacity, width: dot.size + 'px', height: dot.size + 'px' }">
-    </div>
-    <div class="explore-spacer">
-    </div>
-    <UContainer class="flex flex-col items-center justify-center text-center max-w-[1000px] h-full relative z-10">
-      <div class="header-layout">
-        <div class="title-container">
-          <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
-          <h1 class="subtitle text-white">
-            <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I. Search
-              Engine</b> For
-            <b style="color: var(--ui-highlight)">MTG</b>
-          </h1>
-        </div>
+  <SpaceBackground :full="true">
+    <div class="hero px-0 h-full w-full justify-center flex flex-col items-center">
+      <div class="explore-spacer">
       </div>
-
-      <!-- Search -->
-      <Search />
-
-    </UContainer>
-
-    <!-- Explore text + icon -->
-    <div class="explore-spacer mb-4 flex flex-col items-center gap-1 text-black">
-      <!-- Fanned cards at bottom -->
-      <div class="bottom-cards">
-        <div v-if="heroCards[0]" class="card-wrapper card-left">
-          <CardSimple :card="heroCards[0]" size="small" />
+      <UContainer class="flex flex-col items-center justify-center text-center max-w-[1000px] h-full relative z-10">
+        <div class="header-layout">
+          <div class="title-container">
+            <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
+            <h1 class="subtitle text-white">
+              <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I.
+                Search
+                Engine</b> For
+              <b style="color: var(--ui-highlight)">MTG</b>
+            </h1>
+          </div>
         </div>
-        <div v-if="heroCards[1]" class="card-wrapper card-center">
-          <CardSimple :card="heroCards[1]" size="small" />
-        </div>
-        <div v-if="heroCards[2]" class="card-wrapper card-right">
-          <CardSimple :card="heroCards[2]" size="small" />
+
+        <!-- Search -->
+        <Search />
+
+      </UContainer>
+
+      <!-- Explore text + icon -->
+      <div class="explore-spacer mb-4 flex flex-col items-center gap-1 text-black">
+        <!-- Fanned cards at bottom -->
+        <div class="bottom-cards">
+          <div v-if="heroCards[0]" class="card-wrapper card-left">
+            <CardSimple :card="heroCards[0]" size="small" />
+          </div>
+          <div v-if="heroCards[1]" class="card-wrapper card-center">
+            <CardSimple :card="heroCards[1]" size="small" />
+          </div>
+          <div v-if="heroCards[2]" class="card-wrapper card-right">
+            <CardSimple :card="heroCards[2]" size="small" />
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </SpaceBackground>
 
   <!-- Everything below the fold -->
   <UContainer class="mt-10 mb-10">
@@ -179,64 +177,6 @@ const heroCards: CardType[] = [
   }
 ];
 
-// Mouse trail effect
-interface Dot {
-  id: number;
-  x: number;
-  y: number;
-  opacity: number;
-  size: number;
-}
-
-const dots = ref<Dot[]>([]);
-let dotId = 0;
-let lastDotTime = 0;
-const isDragging = ref(false);
-
-const handleMouseDown = () => {
-  isDragging.value = true;
-};
-
-const handleMouseUp = () => {
-  isDragging.value = false;
-};
-
-const handleMouseMove = (e: MouseEvent) => {
-  const now = Date.now();
-  // When dragging, create dots more frequently (30ms), otherwise 120ms
-  const threshold = isDragging.value ? 30 : 120;
-  if (now - lastDotTime < threshold) return;
-  lastDotTime = now;
-
-  // Add random offset between -30 and 30 pixels for scatter effect
-  const randomOffsetX = (Math.random() - 0.5) * 60;
-  const randomOffsetY = (Math.random() - 0.5) * 60;
-
-  // Random size between 4 and 10 pixels
-  const randomSize = 6 + Math.random() * 6;
-
-  const newDot: Dot = {
-    id: dotId++,
-    x: e.clientX + randomOffsetX,
-    y: e.clientY + randomOffsetY,
-    opacity: 0.5,
-    size: randomSize
-  };
-
-  dots.value.push(newDot);
-
-  // Remove after animation completes (CSS handles the animation)
-  setTimeout(() => {
-    dots.value = dots.value.filter(d => d.id !== newDot.id);
-  }, 600);
-
-  // When dragging, allow more dots (10), otherwise limit to 3
-  const maxDots = isDragging.value ? 10 : 3;
-  if (dots.value.length > maxDots) {
-    dots.value = dots.value.slice(-maxDots);
-  }
-};
-
 const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: '/',
@@ -261,20 +201,7 @@ setPageInfo({
   align-items: center
   justify-content: center
   border-bottom: 3px solid white
-  background-color: black
   overflow: hidden
-
-.hero-bg
-  position: absolute
-  top: 0
-  left: 0
-  width: 100%
-  height: 100%
-  background-image: url('/space.webp')
-  background-position: center
-  background-attachment: fixed
-  opacity: 0.25
-  z-index: 0
 
 .image
   width: 200px
@@ -360,24 +287,4 @@ setPageInfo({
     text-align: center
     position: relative
     top: -15px
-
-.mouse-dot
-  position: fixed
-  width: 8px
-  height: 8px
-  background-color: white
-  pointer-events: none
-  z-index: 5
-  transform: translate(-50%, -50%)
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8)
-  clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%)
-  animation: starFall 0.6s ease-out forwards
-
-@keyframes starFall
-  0%
-    opacity: 0.5
-    transform: translate(-50%, -50%)
-  100%
-    opacity: 0
-    transform: translate(-50%, calc(-50% + 3px))
 </style>
