@@ -1,10 +1,4 @@
 <template>
-  <!-- Banner Background Image -->
-  <div v-if="bannerImageUrl" class="fixed inset-0 z-0">
-    <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
-      :style="{ backgroundImage: `url(${bannerImageUrl})` }"></div>
-  </div>
-
   <!-- Banner Section -->
   <div v-if="list" class="mb-6 relative group cursor-pointer">
     <!-- Banner Image -->

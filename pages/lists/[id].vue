@@ -1,5 +1,11 @@
 <template>
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+    <!-- Page Background Image (blurred, behind all content) -->
+    <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+        :style="{ backgroundImage: `url(${bannerImageUrl})` }"></div>
+    </div>
+
     <CardListBanner :list="list" :is-loading="isLoadingLists" />
 
     <!-- Back Button and Actions -->
@@ -71,6 +77,13 @@ const {
 } = useCardLists()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
+
+// Banner background image URL
+const bannerImageUrl = computed(() => {
+  const cardName = list.value?.avatar_card_name
+  if (!cardName) return null
+  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}&format=image&version=art_crop`
+})
 
 // Add card state
 const selectedCardToAdd = ref('')
