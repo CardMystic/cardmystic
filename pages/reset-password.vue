@@ -1,94 +1,91 @@
 <template>
-  <div class="min-h-screen w-full flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-md mx-auto">
-      <ClientOnly>
-        <!-- Step 1: Request reset email -->
-        <div v-if="!isRecoverySession" class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
-          <h1 class="text-xl font-bold text-white text-center">Reset your password</h1>
-          <p class="text-zinc-400 text-sm text-center">
-            Enter your email and we'll send you a link to reset your password.
-          </p>
+  <SpaceBackground>
+    <ClientOnly>
+      <!-- Step 1: Request reset email -->
+      <div v-if="!isRecoverySession" class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
+        <h1 class="text-xl font-bold text-white text-center">Reset your password</h1>
+        <p class="text-zinc-400 text-sm text-center">
+          Enter your email and we'll send you a link to reset your password.
+        </p>
 
-          <UInput v-model="email" type="email" placeholder="Email" size="lg" class="w-full" />
+        <UInput v-model="email" type="email" placeholder="Email" size="lg" class="w-full" />
 
-          <!-- Honeypot: hidden from real users, bots will fill this in -->
-          <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off"
-            style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;" aria-hidden="true" />
+        <!-- Honeypot: hidden from real users, bots will fill this in -->
+        <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off"
+          style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;" aria-hidden="true" />
 
-          <UButton color="primary" variant="solid" size="md" :loading="loading" :disabled="loading || !email"
-            @click="sendResetEmail">
-            {{ loading ? 'Sending…' : 'Send reset link' }}
+        <UButton color="primary" variant="solid" size="md" :loading="loading" :disabled="loading || !email"
+          @click="sendResetEmail">
+          {{ loading ? 'Sending…' : 'Send reset link' }}
+        </UButton>
+
+        <p v-if="errorMessage" class="text-red-400 text-sm text-center">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="text-green-400 text-sm text-center">{{ successMessage }}</p>
+
+        <div class="text-center text-zinc-400 text-sm">
+          <UButton variant="link" color="primary" size="sm" :padded="false" @click="navigateTo('/login')">
+            Back to login
           </UButton>
-
-          <p v-if="errorMessage" class="text-red-400 text-sm text-center">{{ errorMessage }}</p>
-          <p v-if="successMessage" class="text-green-400 text-sm text-center">{{ successMessage }}</p>
-
-          <div class="text-center text-zinc-400 text-sm">
-            <UButton variant="link" color="primary" size="sm" :padded="false" @click="navigateTo('/login')">
-              Back to login
-            </UButton>
-          </div>
         </div>
+      </div>
 
-        <!-- Step 2: Set new password (arrived via magic link) -->
-        <div v-else class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
-          <h1 class="text-xl font-bold text-white text-center">Set a new password</h1>
+      <!-- Step 2: Set new password (arrived via magic link) -->
+      <div v-else class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
+        <h1 class="text-xl font-bold text-white text-center">Set a new password</h1>
 
-          <UInput v-model="newPassword" :type="showPasswords ? 'text' : 'password'" placeholder="New password" size="lg"
-            class="w-full">
-            <template #trailing>
-              <UButton variant="link" color="neutral" :padded="false"
-                :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
-            </template>
-          </UInput>
-          <UInput v-model="confirmPassword" :type="showPasswords ? 'text' : 'password'"
-            placeholder="Confirm new password" size="lg" class="w-full">
-            <template #trailing>
-              <UButton variant="link" color="neutral" :padded="false"
-                :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
-            </template>
-          </UInput>
+        <UInput v-model="newPassword" :type="showPasswords ? 'text' : 'password'" placeholder="New password" size="lg"
+          class="w-full">
+          <template #trailing>
+            <UButton variant="link" color="neutral" :padded="false"
+              :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
+          </template>
+        </UInput>
+        <UInput v-model="confirmPassword" :type="showPasswords ? 'text' : 'password'" placeholder="Confirm new password"
+          size="lg" class="w-full">
+          <template #trailing>
+            <UButton variant="link" color="neutral" :padded="false"
+              :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
+          </template>
+        </UInput>
 
-          <!-- Honeypot: hidden from real users, bots will fill this in -->
-          <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off"
-            style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;" aria-hidden="true" />
+        <!-- Honeypot: hidden from real users, bots will fill this in -->
+        <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off"
+          style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;" aria-hidden="true" />
 
-          <ul class="text-xs text-zinc-500 space-y-0.5 list-disc list-inside">
-            <li>At least 8 characters</li>
-            <li>Uppercase &amp; lowercase letters</li>
-            <li>At least one number</li>
-            <li>At least one special character</li>
-            <li>No whitespace</li>
-          </ul>
+        <ul class="text-xs text-zinc-500 space-y-0.5 list-disc list-inside">
+          <li>At least 8 characters</li>
+          <li>Uppercase &amp; lowercase letters</li>
+          <li>At least one number</li>
+          <li>At least one special character</li>
+          <li>No whitespace</li>
+        </ul>
 
-          <UButton color="primary" variant="solid" size="md" :loading="loading"
-            :disabled="loading || !newPassword || !confirmPassword" @click="submitNewPassword">
-            {{ loading ? 'Updating…' : 'Update password' }}
-          </UButton>
+        <UButton color="primary" variant="solid" size="md" :loading="loading"
+          :disabled="loading || !newPassword || !confirmPassword" @click="submitNewPassword">
+          {{ loading ? 'Updating…' : 'Update password' }}
+        </UButton>
 
-          <p v-if="errorMessage" class="text-red-400 text-sm text-center">{{ errorMessage }}</p>
-          <p v-if="successMessage" class="text-green-400 text-sm text-center">{{ successMessage }}</p>
+        <p v-if="errorMessage" class="text-red-400 text-sm text-center">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="text-green-400 text-sm text-center">{{ successMessage }}</p>
+      </div>
+
+      <template #fallback>
+        <div class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
+          <USkeleton class="h-7 w-48 mx-auto" />
+          <USkeleton class="h-4 w-64 mx-auto" />
+          <USkeleton class="h-10 w-full rounded-md" />
+          <USkeleton class="h-10 w-full rounded-md" />
         </div>
-
-        <template #fallback>
-          <div class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
-            <USkeleton class="h-7 w-48 mx-auto" />
-            <USkeleton class="h-4 w-64 mx-auto" />
-            <USkeleton class="h-10 w-full rounded-md" />
-            <USkeleton class="h-10 w-full rounded-md" />
-          </div>
-        </template>
-      </ClientOnly>
-
-    </div>
-  </div>
+      </template>
+    </ClientOnly>
+  </SpaceBackground>
 </template>
 
 <script setup lang="ts">
 import { useSupabase } from '~/composables/useSupabase'
 import { useUserProfile } from '~/composables/useUserProfile'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'home' })
 
 useSeoMeta({
   title: 'Reset Password - CardMystic',
