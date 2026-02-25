@@ -6,7 +6,7 @@ const isOpen = ref(false)
 const colorMode = useColorMode()
 
 const wizardImage = computed(() => {
-  return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_darkmode.webp'
+  return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_black.webp'
 })
 
 const props = defineProps<{
