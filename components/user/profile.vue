@@ -9,9 +9,9 @@ const {
   username: computedUsername,
   profileIconUrl,
   signOut,
-  updateProfileAvatar,
-  updateUsername: updateUsernameFn,
-  updatePassword: updatePasswordFn,
+  updateAvatarMutation,
+  updateUsernameMutation,
+  updatePasswordMutation,
   validatePasswordPolicy
 } = useUserProfile()
 
@@ -19,7 +19,6 @@ const username = ref(computedUsername.value)
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
-const updateLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const showPasswords = ref(false)
@@ -28,7 +27,6 @@ const showPasswords = ref(false)
 const selectedProfileCard = ref(profileData.value?.avatar_card_name || '')
 const searchTerm = ref('')
 const debouncedSearchTerm = refDebounced(searchTerm, 150)
-const profileIconLoading = ref(false)
 
 // Sync username when user profile changes
 watch(computedUsername, (newVal) => {
@@ -73,37 +71,25 @@ const filteredCards = computed(() => {
 
 const updateProfileCard = async (cardName: string) => {
   if (!cardName) return
-
-  profileIconLoading.value = true
   errorMessage.value = null
   successMessage.value = null
-
-  const { error } = await updateProfileAvatar(cardName)
-
-  profileIconLoading.value = false
-
-  if (error) {
-    errorMessage.value = error.message
-  } else {
+  try {
+    await updateAvatarMutation.mutateAsync(cardName)
     selectedProfileCard.value = cardName
     successMessage.value = 'Profile icon updated successfully!'
+  } catch (e: any) {
+    errorMessage.value = e.message
   }
 }
 
 const updateUsername = async () => {
   errorMessage.value = null
   successMessage.value = null
-
-  updateLoading.value = true
-
-  const { error } = await updateUsernameFn(username.value)
-
-  updateLoading.value = false
-
-  if (error) {
-    errorMessage.value = error.message
-  } else {
+  try {
+    await updateUsernameMutation.mutateAsync(username.value)
     successMessage.value = 'Username updated successfully!'
+  } catch (e: any) {
+    errorMessage.value = e.message
   }
 }
 
@@ -127,19 +113,14 @@ const updatePassword = async () => {
     return
   }
 
-  updateLoading.value = true
-
-  const { error } = await updatePasswordFn(newPassword.value)
-
-  updateLoading.value = false
-
-  if (error) {
-    errorMessage.value = error.message
-  } else {
+  try {
+    await updatePasswordMutation.mutateAsync(newPassword.value)
     successMessage.value = 'Password updated successfully!'
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
+  } catch (e: any) {
+    errorMessage.value = e.message
   }
 }
 
@@ -190,7 +171,7 @@ const handleSignOut = async () => {
                 <div class="p-4 w-80">
                   <h3 class="text-sm font-semibold mb-2">Choose Profile Icon</h3>
                   <USelectMenu v-model="selectedProfileCard" v-model:search-term="searchTerm"
-                    :loading="cardsStatus === 'pending' || profileIconLoading" :items="filteredCards"
+                    :loading="cardsStatus === 'pending' || updateAvatarMutation.isPending.value" :items="filteredCards"
                     placeholder="Search for a card..." icon="i-lucide-search" class="w-full"
                     @update:model-value="updateProfileCard" />
                   <p class="text-xs text-gray-600 dark:text-zinc-400 mt-2">Search for an MTG card to use as your profile
@@ -209,8 +190,8 @@ const handleSignOut = async () => {
         <div class="space-y-4 mb-6 pb-6 border-b">
           <h2 class="text-lg font-semibold">Update Username</h2>
           <UInput v-model="username" type="text" placeholder="Username" size="lg" class="w-full" />
-          <UButton color="primary" variant="solid" size="md" :loading="updateLoading" :disabled="updateLoading"
-            @click="updateUsername">
+          <UButton color="primary" variant="solid" size="md" :loading="updateUsernameMutation.isPending.value"
+            :disabled="updateUsernameMutation.isPending.value" @click="updateUsername">
             Update Username
           </UButton>
         </div>
@@ -239,8 +220,8 @@ const handleSignOut = async () => {
                 :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
             </template>
           </UInput>
-          <UButton color="primary" variant="solid" size="md" :loading="updateLoading" :disabled="updateLoading"
-            @click="updatePassword">
+          <UButton color="primary" variant="solid" size="md" :loading="updatePasswordMutation.isPending.value"
+            :disabled="updatePasswordMutation.isPending.value" @click="updatePassword">
             Update Password
           </UButton>
         </div>

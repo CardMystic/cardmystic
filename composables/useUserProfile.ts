@@ -1,5 +1,5 @@
 import { useSupabase } from './useSupabase';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 
 // Track if auth listener is already initialized (singleton)
 let authListenerInitialized = false;
@@ -103,37 +103,34 @@ export const useUserProfile = () => {
     }
   };
 
-  const updateProfileAvatar = async (cardName: string) => {
-    if (!supabase || !cardName || !userProfile.value?.id) {
-      return { error: new Error('Invalid card name or user not logged in') };
-    }
+  const updateAvatarMutation = useMutation({
+    mutationFn: async (cardName: string) => {
+      if (!supabase || !userProfile.value?.id) {
+        throw new Error('Invalid card name or user not logged in');
+      }
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_card_name: cardName })
+        .eq('id', userProfile.value.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        avatar_card_name: cardName,
-      })
-      .eq('id', userProfile.value.id);
-
-    if (!error) {
-      // Refetch profile data to update cache
-      await fetchProfileData();
-    }
-
-    return { error };
-  };
-
-  const updateUsername = async (username: string) => {
-    if (!supabase || !username.trim()) {
-      return { error: new Error('Username cannot be empty') };
-    }
-
-    const { error } = await supabase.auth.updateUser({
-      data: { username },
-    });
-
-    return { error };
-  };
+  const updateUsernameMutation = useMutation({
+    mutationFn: async (username: string) => {
+      if (!supabase || !username.trim()) {
+        throw new Error('Username cannot be empty');
+      }
+      const { error } = await supabase.auth.updateUser({ data: { username } });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
 
   const pingActivity = async () => {
     if (!supabase) return;
@@ -150,19 +147,14 @@ export const useUserProfile = () => {
     }
   };
 
-  const updatePassword = async (newPassword: string) => {
-    if (!supabase) {
-      return { error: new Error('Not available on server') };
-    }
+  const updatePasswordMutation = useMutation({
+    mutationFn: async (newPassword: string) => {
+      if (!supabase) throw new Error('Not available on server');
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('Not authenticated');
 
-    if (!accessToken) {
-      return { error: new Error('Not authenticated') };
-    }
-
-    try {
       const res = await fetch(
         `${config.public.backendUrl}/user/update-password`,
         {
@@ -176,16 +168,9 @@ export const useUserProfile = () => {
       );
 
       const data = await res.json();
-
-      if (!res.ok) {
-        return { error: new Error(data.message || 'Password update failed') };
-      }
-
-      return { error: null };
-    } catch (e) {
-      return { error: e as Error };
-    }
-  };
+      if (!res.ok) throw new Error(data.message || 'Password update failed');
+    },
+  });
 
   // Computed properties
   const username = computed(() => {
@@ -235,10 +220,9 @@ export const useUserProfile = () => {
     profileIconUrl: readonly(profileIconUrl),
     validatePasswordPolicy,
     fetchUser,
-    fetchProfileData,
-    updateProfileAvatar,
-    updateUsername,
-    updatePassword,
+    updateAvatarMutation,
+    updateUsernameMutation,
+    updatePasswordMutation,
     pingActivity,
     signOut,
     initAuthListener,
