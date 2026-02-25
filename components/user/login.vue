@@ -2,6 +2,8 @@
 import { useSupabase } from '~/composables/useSupabase'
 import { useRecaptcha } from '~/composables/useRecaptcha'
 
+const router = useRouter()
+
 const supabase = useSupabase()
 const { verifyRecaptcha } = useRecaptcha()
 const config = useRuntimeConfig()
@@ -71,7 +73,7 @@ const signInWithEmail = async () => {
       refresh_token: data.refresh_token,
     })
 
-    navigateTo('/')
+    router.push('/')
   } catch (e) {
     errorMessage.value = 'An unexpected error occurred.'
   }
@@ -104,7 +106,7 @@ const signInWithEmail = async () => {
     <UInput class="w-full" v-model="password" type="password" placeholder="Password" size="lg" />
 
     <div class="flex justify-end -mt-2">
-      <UButton variant="link" color="neutral" size="xs" :padded="false" @click="navigateTo('/reset-password')">
+      <UButton variant="link" color="neutral" size="xs" :padded="false" @click="router.push('/reset-password')">
         Forgot password?
       </UButton>
     </div>
@@ -119,7 +121,7 @@ const signInWithEmail = async () => {
 
     <div class="text-center text-zinc-400 text-sm">
       Don't have an account?
-      <UButton variant="link" color="primary" size="sm" :padded="false" @click="navigateTo('/register')">
+      <UButton variant="link" color="primary" size="sm" :padded="false" @click="router.push('/register')">
         Register Instead
       </UButton>
     </div>

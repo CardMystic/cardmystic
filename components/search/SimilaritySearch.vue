@@ -33,6 +33,8 @@
 <script lang="ts" setup>
 import * as z from 'zod'
 import { useRoute } from 'vue-router';
+
+const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import { refDebounced } from '@vueuse/core';
@@ -149,7 +151,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'similarity'
     };
-    navigateTo({ path: '/search/similarity', query });
+    router.push({ path: '/search/similarity', query });
   } catch (error) {
     console.error('Form submission error:', error)
   }

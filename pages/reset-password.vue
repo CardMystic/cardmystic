@@ -23,7 +23,7 @@
         <p v-if="successMessage" class="text-green-400 text-sm text-center">{{ successMessage }}</p>
 
         <div class="text-center text-zinc-400 text-sm">
-          <UButton variant="link" color="primary" size="sm" :padded="false" @click="navigateTo('/login')">
+          <UButton variant="link" color="primary" size="sm" :padded="false" @click="router.push('/login')">
             Back to login
           </UButton>
         </div>
@@ -84,6 +84,8 @@
 <script setup lang="ts">
 import { useSupabase } from '~/composables/useSupabase'
 import { useUserProfile } from '~/composables/useUserProfile'
+
+const router = useRouter()
 
 definePageMeta({ layout: 'home' })
 
@@ -174,7 +176,7 @@ const submitNewPassword = async () => {
     } else {
       await supabase.auth.signOut()
       successMessage.value = 'Password updated! Redirecting to login…'
-      setTimeout(() => navigateTo('/login'), 2000)
+      setTimeout(() => router.push('/login'), 2000)
     }
   } catch (error) {
     console.log(error)

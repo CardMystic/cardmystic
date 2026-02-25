@@ -40,6 +40,8 @@
 <script lang="ts" setup>
 import * as z from 'zod'
 import { useRoute } from 'vue-router';
+
+const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import Filters from './Filters.vue'
@@ -118,7 +120,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       searchType: 'ai'
     };
     filtersRef.value?.collapse();
-    navigateTo({ path: '/search', query });
+    router.push({ path: '/search', query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({

@@ -322,7 +322,7 @@ function findSimilarCards() {
     filters: undefined, // No additional filters for similarity search
     searchType: 'similarity'
   };
-  navigateTo({ path: '/search/similarity', query: queryParams });
+  router.push({ path: '/search/similarity', query: queryParams });
 }
 
 function handleImageError(event: Event) {

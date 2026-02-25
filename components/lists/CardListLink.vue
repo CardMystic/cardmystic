@@ -15,7 +15,7 @@
       color="error" variant="solid" icon="i-lucide-trash-2" size="sm" aria-label="Delete list" />
 
     <!-- Content (clickable) -->
-    <div class="relative p-2 md:p-4" @click="navigateTo(`/lists/${list.id}`)">
+    <div class="relative p-2 md:p-4" @click="router.push(`/lists/${list.id}`)">
       <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">{{ list.name }}</h3>
       <p v-if="list.description" class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
         {{ list.description }}
@@ -48,6 +48,8 @@
 <script setup lang="ts">
 import { formatShortDate } from '~/utils/dateFormatter';
 import { useCardLists } from '~/composables/useCardLists';
+
+const router = useRouter();
 import { useToast } from '#imports';
 import type { Database } from '~/database.types';
 

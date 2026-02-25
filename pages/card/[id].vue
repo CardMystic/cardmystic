@@ -284,6 +284,7 @@ import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer'
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
 const route = useRoute();
+const router = useRouter();
 const isFlipped = ref(false);
 const selectedPrinting = ref<string>('');
 
@@ -581,7 +582,7 @@ function findSimilarCards() {
     filters: undefined, // No additional filters for similarity search
   };
 
-  navigateTo({ path: '/search/similarity', query: queryParams });
+  router.push({ path: '/search/similarity', query: queryParams });
 }
 
 // Use the similar cards composable

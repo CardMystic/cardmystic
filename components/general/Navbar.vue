@@ -12,6 +12,7 @@ const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_black.webp'
 })
 const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading, pingActivity } = useUserProfile()
+const router = useRouter()
 
 // Initialize auth listener on component mount
 onMounted(() => {
@@ -32,7 +33,7 @@ onMounted(() => {
 
 const handleLogout = async () => {
   await signOut()
-  navigateTo('/')
+  router.push('/')
 }
 
 const props = defineProps<{
@@ -180,7 +181,7 @@ const externalItems: NavigationMenuItem[] = [
           <span v-if="!userProfile && !loading" class="relative flex items-center">
             <!-- Login/Register Button with Tooltip -->
             <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
-              @click="navigateTo('/login')" />
+              @click="router.push('/login')" />
 
             <LoginTooltip class="ml-2" />
           </span>
@@ -198,11 +199,11 @@ const externalItems: NavigationMenuItem[] = [
             <template #content>
               <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
                 <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
-                  block @click="navigateTo('/lists'); isMobileProfilePopoverOpen = false" />
+                  block @click="router.push('/lists'); isMobileProfilePopoverOpen = false" />
                 <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
-                  block @click="navigateTo('/history'); isMobileProfilePopoverOpen = false" />
+                  block @click="router.push('/history'); isMobileProfilePopoverOpen = false" />
                 <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost"
-                  label="Settings" block @click="navigateTo('/profile'); isMobileProfilePopoverOpen = false" />
+                  label="Settings" block @click="router.push('/profile'); isMobileProfilePopoverOpen = false" />
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout"
                   block @click="handleLogout(); isMobileProfilePopoverOpen = false" />
@@ -211,7 +212,7 @@ const externalItems: NavigationMenuItem[] = [
           </UPopover>
           <template #fallback>
             <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
-              @click="navigateTo('/login')" />
+              @click="router.push('/login')" />
           </template>
         </ClientOnly>
 
@@ -251,7 +252,7 @@ const externalItems: NavigationMenuItem[] = [
         <span v-if="!userProfile && !loading" class="relative">
           <!-- Login/Register Button with Tooltip -->
           <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
-            @click="navigateTo('/login')" />
+            @click="router.push('/login')" />
 
           <LoginTooltip class="ml-2" />
         </span>
@@ -271,11 +272,11 @@ const externalItems: NavigationMenuItem[] = [
           <template #content>
             <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
               <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
-                block @click="navigateTo('/lists'); isDesktopProfilePopoverOpen = false" />
+                block @click="router.push('/lists'); isDesktopProfilePopoverOpen = false" />
               <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
-                block @click="navigateTo('/history'); isDesktopProfilePopoverOpen = false" />
+                block @click="router.push('/history'); isDesktopProfilePopoverOpen = false" />
               <UButton class="cursor-pointer" icon="i-lucide-settings" color="neutral" variant="ghost" label="Settings"
-                block @click="navigateTo('/profile'); isDesktopProfilePopoverOpen = false" />
+                block @click="router.push('/profile'); isDesktopProfilePopoverOpen = false" />
               <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
               <UButton class="cursor-pointer" icon="i-lucide-log-out" color="error" variant="ghost" label="Logout" block
                 @click="handleLogout(); isDesktopProfilePopoverOpen = false" />
@@ -284,7 +285,7 @@ const externalItems: NavigationMenuItem[] = [
         </UPopover>
         <template #fallback>
           <UButton class="cursor-pointer ml-2" color="primary" variant="solid" icon="i-lucide-user" label="Login"
-            @click="navigateTo('/login')" />
+            @click="router.push('/login')" />
         </template>
       </ClientOnly>
 

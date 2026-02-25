@@ -2,6 +2,8 @@
 import { useSupabase } from '~/composables/useSupabase'
 import { useRecaptcha } from '~/composables/useRecaptcha'
 
+const router = useRouter()
+
 const supabase = useSupabase()
 const { verifyRecaptcha } = useRecaptcha()
 const config = useRuntimeConfig()
@@ -137,7 +139,7 @@ const signUpWithEmail = async () => {
 
     <div class="text-center text-zinc-400 text-sm">
       Already have an account?
-      <UButton variant="link" color="primary" size="sm" :padded="false" @click="navigateTo('/login')">
+      <UButton variant="link" color="primary" size="sm" :padded="false" @click="router.push('/login')">
         Login Instead
       </UButton>
     </div>

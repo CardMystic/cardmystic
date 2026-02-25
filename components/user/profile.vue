@@ -2,6 +2,8 @@
 import { useUserProfile } from '~/composables/useUserProfile'
 import { refDebounced } from '@vueuse/core'
 
+const router = useRouter()
+
 const {
   userProfile,
   profileData,
@@ -126,7 +128,7 @@ const updatePassword = async () => {
 
 const handleSignOut = async () => {
   await signOut()
-  navigateTo('/')
+  router.push('/')
 }
 </script>
 

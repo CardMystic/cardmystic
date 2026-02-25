@@ -67,6 +67,7 @@ const props = defineProps<{
 
 
 const route = useRoute();
+const router = useRouter();
 
 // Initialize search type based on props or route
 const { searchType, setSearchType } = useSearchType();
@@ -148,7 +149,7 @@ watch(searchType, async (newType) => {
         } catch { }
       }
     }
-    navigateTo({ path: '/search/similarity', query });
+    router.push({ path: '/search/similarity', query });
   } else if (newType === 'ai' && route.path !== '/search' && route.path !== '/') {
     let query: any = undefined;
     if (route.query.query && route.query.searchType === 'ai') {
@@ -162,7 +163,7 @@ watch(searchType, async (newType) => {
         } catch { }
       }
     }
-    navigateTo({ path: '/search', query });
+    router.push({ path: '/search', query });
   }
   else if (newType === 'commander' && route.path !== '/search/commander' && route.path !== '/') {
     let query: any = undefined;
@@ -177,7 +178,7 @@ watch(searchType, async (newType) => {
         } catch { }
       }
     }
-    navigateTo({ path: '/search/commander', query });
+    router.push({ path: '/search/commander', query });
   }
   else if (newType === 'keyword' && route.path !== '/search/keyword' && route.path !== '/') {
     let query: any = undefined;
@@ -192,7 +193,7 @@ watch(searchType, async (newType) => {
         } catch { }
       }
     }
-    navigateTo({ path: '/search/keyword', query });
+    router.push({ path: '/search/keyword', query });
   }
 });
 
