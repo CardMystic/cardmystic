@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  layout: 'home',
+  layout: 'fullscreen',
   middleware: (to) => {
     // Redirect if already logged in
     const { userProfile } = useUserProfile()

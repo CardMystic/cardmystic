@@ -109,7 +109,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'HomePage' });
 definePageMeta({
-  layout: 'home'
+  layout: 'fullscreen'
 });
 useSeoMeta({
   title: 'CardMystic - AI Search Engine for Magic: The Gathering',

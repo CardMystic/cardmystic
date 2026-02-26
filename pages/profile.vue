@@ -1,12 +1,13 @@
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'auth'
+  middleware: 'auth',
+  layout: 'fullscreen'
 })
 
 </script>
 
 <template>
-  <div class="w-full flex justify-center">
+  <SpaceBackground class="flex justify-center">
     <Profile />
-  </div>
+  </SpaceBackground>
 </template>

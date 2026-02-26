@@ -157,11 +157,7 @@ const handleSignOut = async () => {
 </script>
 
 <template>
-  <div class="w-full max-w-2xl mt-4 mb-4">
-    <!-- Background art layer -->
-    <div v-if="profileIconUrl" class="fixed inset-0 z-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
-      :style="{ backgroundImage: `url(${profileIconUrl})` }" />
-
+  <div class="w-full max-w-2xl profile-container">
     <div class="relative z-10">
       <ProfileSkeleton v-if="loading" />
 
@@ -263,4 +259,8 @@ const handleSignOut = async () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.profile-container {
+  margin-top: 40px;
+}
+</style>

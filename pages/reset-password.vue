@@ -87,7 +87,7 @@ import { useUserProfile } from '~/composables/useUserProfile'
 
 const router = useRouter()
 
-definePageMeta({ layout: 'home' })
+definePageMeta({ layout: 'fullscreen' })
 
 useSeoMeta({
   title: 'Reset Password - CardMystic',

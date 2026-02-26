@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+/* Default layout: constrained content width via UContainer, static navbar.
+ * Use for standard pages like search results, card details, lists, etc. */
 </script>
 
 <style scoped lang="sass">
