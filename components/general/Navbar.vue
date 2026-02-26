@@ -11,25 +11,8 @@ const colorMode = useColorMode()
 const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_black.webp'
 })
-const { userProfile, initAuthListener, profileIconUrl, username, signOut, loading, pingActivity } = useUserProfile()
+const { userProfile, profileIconUrl, username, signOut, loading } = useUserProfile()
 const router = useRouter()
-
-// Initialize auth listener on component mount
-onMounted(() => {
-  initAuthListener()
-
-  // Ping the backend once on app load if the user is (or becomes) logged in
-  if (userProfile.value) {
-    pingActivity()
-  } else { // Watch for userProfile changes to ping activity when they log in
-    const stopWatch = watch(userProfile, (profile) => {
-      if (profile) {
-        pingActivity()
-        stopWatch() // only need to ping once on login, so stop watching after the first change from null to a user object
-      }
-    })
-  }
-})
 
 const handleLogout = async () => {
   await signOut()

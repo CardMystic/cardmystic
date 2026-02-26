@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 
 // Track if auth listener is already initialized (singleton)
 let authListenerInitialized = false;
+// Suppress user queries during password-recovery so the navbar shows "Login"
+let inPasswordRecovery = false;
 
 export const useUserProfile = () => {
   // Only initialize Supabase on client side
@@ -34,6 +36,9 @@ export const useUserProfile = () => {
     queryKey: ['user'],
     queryFn: async () => {
       if (!supabase) return null;
+      // During password recovery the session is valid but the user should
+      // not appear logged-in in the UI (navbar should show "Login").
+      if (inPasswordRecovery) return null;
       const {
         data: { user },
         error,
@@ -197,17 +202,30 @@ export const useUserProfile = () => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       // Refetch queries when auth state changes
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Skip if we're in a recovery flow — the user should stay "logged out" in the UI
+        if (inPasswordRecovery) return;
         // Invalidate instead of refetch to ensure fresh data
         queryClient.invalidateQueries({ queryKey: ['user'] });
         queryClient.invalidateQueries({ queryKey: ['profile'] });
       } else if (event === 'SIGNED_OUT') {
-        // Clear all cached data when user signs out
-        queryClient.clear();
+        // Null-out data instead of queryClient.clear() — clear() destroys
+        // query observers and leaves isLoading permanently stuck when
+        // components (e.g. Navbar) stay mounted across navigations.
+        queryClient.cancelQueries();
+        queryClient.setQueryData(['user'], null);
+        queryClient.removeQueries({ queryKey: ['profile'] });
+        inPasswordRecovery = false;
         authListenerInitialized = false; // Allow re-initialization after sign out
       } else if (event === 'PASSWORD_RECOVERY') {
-        // During a password recovery flow the user should not appear as logged in
-        // in the navbar. Clear query cache so the Login button stays visible.
-        queryClient.clear();
+        // During a password recovery flow the user should not appear as
+        // logged in.  Cancel any in-flight refetch that the preceding
+        // SIGNED_IN event may have triggered, then set user data to null
+        // so the navbar shows the Login button.
+        inPasswordRecovery = true;
+        queryClient.cancelQueries({ queryKey: ['user'] });
+        queryClient.cancelQueries({ queryKey: ['profile'] });
+        queryClient.setQueryData(['user'], null);
+        queryClient.removeQueries({ queryKey: ['profile'] });
       }
     });
   };
