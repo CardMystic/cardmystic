@@ -13,6 +13,7 @@ const password = ref('')
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const honeypot = ref('')
+const showPassword = ref(false)
 
 const signInWithGoogle = async () => {
   errorMessage.value = null
@@ -103,7 +104,13 @@ const signInWithEmail = async () => {
 
     <UInput class="w-full" v-model="email" type="email" placeholder="Email" size="lg" />
 
-    <UInput class="w-full" v-model="password" type="password" placeholder="Password" size="lg" />
+    <UInput class="w-full" v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="Password"
+      size="lg">
+      <template #trailing>
+        <UButton variant="link" color="neutral" :padded="false"
+          :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPassword = !showPassword" />
+      </template>
+    </UInput>
 
     <div class="flex justify-end -mt-2">
       <UButton variant="link" color="neutral" size="xs" :padded="false" @click="router.push('/reset-password')">

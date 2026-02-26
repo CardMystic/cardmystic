@@ -16,6 +16,7 @@ const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const honeypot = ref('')
+const showPasswords = ref(false)
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null
@@ -121,9 +122,21 @@ const signUpWithEmail = async () => {
 
     <UInput class="w-full" v-model="email" type="email" placeholder="Email" size="lg" />
 
-    <UInput class="w-full" v-model="password" type="password" placeholder="Password" size="lg" />
+    <UInput class="w-full" v-model="password" :type="showPasswords ? 'text' : 'password'" placeholder="Password"
+      size="lg">
+      <template #trailing>
+        <UButton variant="link" color="neutral" :padded="false"
+          :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
+      </template>
+    </UInput>
 
-    <UInput class="w-full" v-model="confirmPassword" type="password" placeholder="Confirm Password" size="lg" />
+    <UInput class="w-full" v-model="confirmPassword" :type="showPasswords ? 'text' : 'password'"
+      placeholder="Confirm Password" size="lg">
+      <template #trailing>
+        <UButton variant="link" color="neutral" :padded="false"
+          :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
+      </template>
+    </UInput>
 
     <UButton color="primary" variant="solid" size="md" :loading="loading" :disabled="loading" @click="signUpWithEmail">
       {{ loading ? 'Creating account…' : 'Create account' }}
