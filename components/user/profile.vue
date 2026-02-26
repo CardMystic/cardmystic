@@ -157,42 +157,30 @@ const handleSignOut = async () => {
 </script>
 
 <template>
-  <div class="page-wrapper py-4 flex justify-center w-full">
+  <div class="w-full max-w-2xl mt-4 mb-4">
     <!-- Background art layer -->
-    <div v-if="profileIconUrl" class="fixed inset-0 z-0">
-      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
-        :style="{ backgroundImage: `url(${profileIconUrl})` }"></div>
-    </div>
+    <div v-if="profileIconUrl" class="fixed inset-0 z-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+      :style="{ backgroundImage: `url(${profileIconUrl})` }" />
 
-    <div class="flex flex-col space-y-6 max-w-2xl mx-auto p-6 relative z-10">
-      <!-- Skeleton Loading State -->
+    <div class="relative z-10">
       <ProfileSkeleton v-if="loading" />
 
-      <!-- Actual Profile Content -->
-      <div v-else class="rounded-xl p-6 shadow-xl">
-        <h1 class="text-2xl font-bold mb-6">Profile</h1>
-
+      <UCard v-else class="shadow-2xl">
         <!-- Profile Image and Basic Info -->
         <div class="flex items-center space-x-4 mb-6">
           <div class="relative w-24 h-24 group">
-            <!-- Profile Icon/Image -->
-            <div v-if="profileIconUrl"
-              class="w-24 h-24 rounded-full overflow-hidden border-2 border-purple-500 shadow-lg">
-              <img :src="profileIconUrl" :alt="profileData?.avatar_card_name || ''"
-                class="w-full h-full object-cover" />
-            </div>
+            <img v-if="profileIconUrl" :src="profileIconUrl" :alt="profileData?.avatar_card_name || ''"
+              class="w-24 h-24 rounded-full object-cover border-2 border-purple-500 shadow-lg" />
             <div v-else
               class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
               <UIcon name="i-lucide-user" class="w-12 h-12" />
             </div>
 
-            <!-- Edit Button Overlay -->
             <UPopover>
               <div
                 class="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 <UIcon name="i-lucide-pencil" class="w-6 h-6" />
               </div>
-
               <template #content>
                 <div class="p-4 w-80">
                   <h3 class="text-sm font-semibold mb-2">Choose Profile Icon</h3>
@@ -200,13 +188,13 @@ const handleSignOut = async () => {
                     :loading="cardsStatus === 'pending' || updateAvatarMutation.isPending.value" :items="filteredCards"
                     placeholder="Search for a card..." icon="i-lucide-search" class="w-full"
                     @update:model-value="updateProfileCard" />
-                  <p class="text-xs text-gray-600 dark:text-zinc-400 mt-2">Search for an MTG card to use as your profile
-                    icon</p>
+                  <p class="text-xs text-gray-600 dark:text-zinc-400 mt-2">Search for an MTG card to use as your
+                    profile icon</p>
                 </div>
               </template>
             </UPopover>
           </div>
-          <div class="flex flex-col">
+          <div>
             <p class="text-lg font-semibold">{{ computedUsername }}</p>
             <p class="text-sm text-gray-600 dark:text-zinc-400">{{ userProfile?.email }}</p>
           </div>
@@ -263,25 +251,16 @@ const handleSignOut = async () => {
         </div>
 
         <!-- Messages -->
-        <div v-if="errorMessage" class="mb-4">
-          <p class="text-red-400 text-sm">{{ errorMessage }}</p>
-        </div>
-        <div v-if="successMessage" class="mb-4">
-          <p class="text-green-400 text-sm">{{ successMessage }}</p>
-        </div>
+        <p v-if="errorMessage" class="text-red-400 text-sm mb-4">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="text-green-400 text-sm mb-4">{{ successMessage }}</p>
 
-        <!-- Sign Out Button -->
+        <!-- Sign Out -->
         <UButton color="error" variant="outline" size="md" @click="handleSignOut" class="w-full">
           Sign Out
         </UButton>
-      </div>
+      </UCard>
     </div>
   </div>
 </template>
 
-<style scoped>
-.page-wrapper {
-  position: relative;
-  min-height: 100vh;
-}
-</style>
+<style scoped></style>
