@@ -13,11 +13,13 @@ const {
   signOut,
   updateAvatarMutation,
   updateUsernameMutation,
+  updateEmailMutation,
   updatePasswordMutation,
   validatePasswordPolicy
 } = useUserProfile()
 
 const username = ref(computedUsername.value)
+const newEmail = ref(userProfile.value?.email || '')
 const currentPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
@@ -90,6 +92,28 @@ const updateUsername = async () => {
   try {
     await updateUsernameMutation.mutateAsync(username.value)
     successMessage.value = 'Username updated successfully!'
+  } catch (e: any) {
+    errorMessage.value = e.message
+  }
+}
+
+const updateEmail = async () => {
+  errorMessage.value = null
+  successMessage.value = null
+
+  if (!newEmail.value || !newEmail.value.trim()) {
+    errorMessage.value = 'Email cannot be empty'
+    return
+  }
+
+  if (newEmail.value === userProfile.value?.email) {
+    errorMessage.value = 'New email is the same as current email'
+    return
+  }
+
+  try {
+    await updateEmailMutation.mutateAsync(newEmail.value.trim())
+    successMessage.value = 'Confirmation email sent! Please check your inbox to verify the new email address.'
   } catch (e: any) {
     errorMessage.value = e.message
   }
@@ -195,6 +219,16 @@ const handleSignOut = async () => {
           <UButton color="primary" variant="solid" size="md" :loading="updateUsernameMutation.isPending.value"
             :disabled="updateUsernameMutation.isPending.value" @click="updateUsername">
             Update Username
+          </UButton>
+        </div>
+
+        <!-- Update Email -->
+        <div class="space-y-4 mb-6 pb-6 border-b">
+          <h2 class="text-lg font-semibold">Update Email</h2>
+          <UInput v-model="newEmail" type="email" placeholder="New email address" size="lg" class="w-full" />
+          <UButton color="primary" variant="solid" size="md" :loading="updateEmailMutation.isPending.value"
+            :disabled="updateEmailMutation.isPending.value" @click="updateEmail">
+            Update Email
           </UButton>
         </div>
 

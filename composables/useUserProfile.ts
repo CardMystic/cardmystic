@@ -152,6 +152,18 @@ export const useUserProfile = () => {
     }
   };
 
+  const updateEmailMutation = useMutation({
+    mutationFn: async (newEmail: string) => {
+      if (!supabase) throw new Error('Not available on server');
+
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+
   const updatePasswordMutation = useMutation({
     mutationFn: async (newPassword: string) => {
       if (!supabase) throw new Error('Not available on server');
@@ -240,6 +252,7 @@ export const useUserProfile = () => {
     fetchUser,
     updateAvatarMutation,
     updateUsernameMutation,
+    updateEmailMutation,
     updatePasswordMutation,
     pingActivity,
     signOut,
