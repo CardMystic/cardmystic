@@ -221,7 +221,8 @@ const handleSignOut = async () => {
         <div class="space-y-4 mb-6 pb-6 border-b">
           <h2 class="text-lg font-semibold">Update Username</h2>
           <UInput v-model="username" type="text" placeholder="Username" size="lg" class="w-full" />
-          <UButton color="primary" variant="solid" size="md" :loading="updateUsernameMutation.isPending.value"
+          <UButton class="cursor-pointer" color="primary" variant="solid" size="md"
+            :loading="updateUsernameMutation.isPending.value"
             :disabled="updateUsernameMutation.isPending.value || isUsernameUnchanged" @click="updateUsername">
             Update Username
           </UButton>
@@ -233,8 +234,8 @@ const handleSignOut = async () => {
             <p>Change your email to <span class="text-purple-500 font-semibold">{{ newEmail.trim() }}</span>?</p>
           </template>
           <template #footer="{ close }">
-            <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-            <UButton label="Confirm" color="primary" @click="confirmEmailUpdate" />
+            <UButton class="cursor-pointer" label="Cancel" color="neutral" variant="outline" @click="close" />
+            <UButton class="cursor-pointer" label="Confirm" color="primary" @click="confirmEmailUpdate" />
           </template>
         </UModal>
 
@@ -242,7 +243,8 @@ const handleSignOut = async () => {
         <div class="space-y-4 mb-6 pb-6 border-b">
           <h2 class="text-lg font-semibold">Update Email</h2>
           <UInput v-model="newEmail" type="email" placeholder="New email address" size="lg" class="w-full" />
-          <UButton color="primary" variant="solid" size="md" :loading="updateEmailMutation.isPending.value"
+          <UButton class="cursor-pointer" color="primary" variant="solid" size="md"
+            :loading="updateEmailMutation.isPending.value"
             :disabled="updateEmailMutation.isPending.value || isEmailUnchanged" @click="showEmailConfirmModal = true">
             Update Email
           </UButton>
@@ -272,7 +274,8 @@ const handleSignOut = async () => {
                 :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'" @click="showPasswords = !showPasswords" />
             </template>
           </UInput>
-          <UButton color="primary" variant="solid" size="md" :loading="updatePasswordMutation.isPending.value"
+          <UButton class="cursor-pointer" color="primary" variant="solid" size="md"
+            :loading="updatePasswordMutation.isPending.value"
             :disabled="updatePasswordMutation.isPending.value || isPasswordIncomplete" @click="updatePassword">
             Update Password
           </UButton>
