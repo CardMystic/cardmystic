@@ -48,7 +48,7 @@
         <!-- Flip Button for Dual-Faced Cards -->
         <UButton v-if="isDualFaced" color="info" variant="solid" class="mt-4 flip-btn" icon="i-heroicons-arrow-path"
           size="lg" @click="flipCard">
-          {{ isFlipped ? 'Show Front' : 'Show Back' }}
+          Flip
         </UButton>
 
         <!-- Printing Selection Dropdown -->

@@ -192,7 +192,10 @@ const showConfirmModal = ref(false);
 
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;
-  return cardData?.card_faces && cardData.card_faces.length >= 2;
+  if (!cardData?.card_faces || cardData.card_faces.length < 2) return false;
+  // Only layouts with truly separate card faces should be flippable
+  const flippableLayouts = ['transform', 'modal_dfc', 'reversible_card'];
+  return flippableLayouts.includes(cardData.layout);
 });
 
 function flipCard() {
