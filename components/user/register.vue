@@ -159,7 +159,8 @@ const signUpWithEmail = async () => {
 
     <p class="text-xs text-gray-400 text-center">
       Experiencing issues? Contact us at
-      <a href="mailto:thecardmystic@gmail.com" class="text-purple-400 hover:text-purple-300 underline">thecardmystic@gmail.com</a>
+      <a href="mailto:thecardmystic@gmail.com"
+        class="text-purple-400 hover:text-purple-300 underline">thecardmystic@gmail.com</a>
     </p>
 
   </div>
