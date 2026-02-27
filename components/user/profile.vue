@@ -150,6 +150,27 @@ const updatePassword = async () => {
   }
 }
 
+// Computed disabled states for update buttons
+const isUsernameUnchanged = computed(() => {
+  return !username.value?.trim() || username.value.trim() === computedUsername.value
+})
+
+const isEmailUnchanged = computed(() => {
+  return !newEmail.value?.trim() || newEmail.value.trim() === (userProfile.value?.email || '')
+})
+
+const isPasswordIncomplete = computed(() => {
+  return !currentPassword.value || !newPassword.value || !confirmPassword.value
+})
+
+// Email change confirmation
+const showEmailConfirmModal = ref(false)
+
+const confirmEmailUpdate = () => {
+  showEmailConfirmModal.value = false
+  updateEmail()
+}
+
 const handleSignOut = async () => {
   await signOut()
   router.push('/')
@@ -201,17 +222,28 @@ const handleSignOut = async () => {
           <h2 class="text-lg font-semibold">Update Username</h2>
           <UInput v-model="username" type="text" placeholder="Username" size="lg" class="w-full" />
           <UButton color="primary" variant="solid" size="md" :loading="updateUsernameMutation.isPending.value"
-            :disabled="updateUsernameMutation.isPending.value" @click="updateUsername">
+            :disabled="updateUsernameMutation.isPending.value || isUsernameUnchanged" @click="updateUsername">
             Update Username
           </UButton>
         </div>
+
+        <!-- Email Change Confirmation Modal -->
+        <UModal v-model:open="showEmailConfirmModal" title="Confirm Email Change" :ui="{ footer: 'justify-end' }">
+          <template #body>
+            <p>Change your email to <span class="text-purple-500 font-semibold">{{ newEmail.trim() }}</span>?</p>
+          </template>
+          <template #footer="{ close }">
+            <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
+            <UButton label="Confirm" color="primary" @click="confirmEmailUpdate" />
+          </template>
+        </UModal>
 
         <!-- Update Email -->
         <div class="space-y-4 mb-6 pb-6 border-b">
           <h2 class="text-lg font-semibold">Update Email</h2>
           <UInput v-model="newEmail" type="email" placeholder="New email address" size="lg" class="w-full" />
           <UButton color="primary" variant="solid" size="md" :loading="updateEmailMutation.isPending.value"
-            :disabled="updateEmailMutation.isPending.value" @click="updateEmail">
+            :disabled="updateEmailMutation.isPending.value || isEmailUnchanged" @click="showEmailConfirmModal = true">
             Update Email
           </UButton>
         </div>
@@ -241,7 +273,7 @@ const handleSignOut = async () => {
             </template>
           </UInput>
           <UButton color="primary" variant="solid" size="md" :loading="updatePasswordMutation.isPending.value"
-            :disabled="updatePasswordMutation.isPending.value" @click="updatePassword">
+            :disabled="updatePasswordMutation.isPending.value || isPasswordIncomplete" @click="updatePassword">
             Update Password
           </UButton>
         </div>
