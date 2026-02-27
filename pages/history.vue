@@ -1,10 +1,4 @@
 <template>
-  <!-- Background Image -->
-  <div v-if="profileIconUrl" class="fixed inset-0 z-0">
-    <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
-      :style="{ backgroundImage: `url(${profileIconUrl})` }"></div>
-  </div>
-
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Header -->
     <div class="mb-8">
@@ -29,9 +23,6 @@ definePageMeta({
   middleware: 'auth'
 })
 
-import { useUserProfile } from '~/composables/useUserProfile'
-
-const { profileIconUrl } = useUserProfile()
 const route = useRoute()
 
 const selectedTab = ref('0')
