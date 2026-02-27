@@ -44,6 +44,10 @@
             class="ml-2 text-purple-400 hover:text-purple-300 underline text-[10px]">Privacy Policy
           </NuxtLink>
         </p>
+        <p class="mt-2">
+          Experiencing issues? Contact us at
+          <a href="mailto:thecardmystic@gmail.com" class="text-purple-400 hover:text-purple-300 underline">thecardmystic@gmail.com</a>
+        </p>
       </div>
     </UContainer>
   </footer>

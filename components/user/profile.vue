@@ -289,6 +289,12 @@ const handleSignOut = async () => {
         <UButton color="error" variant="outline" size="md" @click="handleSignOut" class="w-full">
           Sign Out
         </UButton>
+
+        <!-- Contact -->
+        <p class="text-xs text-gray-400 text-center mt-4">
+          Experiencing issues? Contact us at
+          <a href="mailto:thecardmystic@gmail.com" class="text-purple-400 hover:text-purple-300 underline">thecardmystic@gmail.com</a>
+        </p>
       </UCard>
     </div>
   </div>
