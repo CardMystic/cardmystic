@@ -11,14 +11,22 @@
     </UModal>
     <div class="card-image-wrapper">
       <!-- Card content: image + score -->
-      <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
-        @error="handleImageError" v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
-        @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
+      <img :class="sizeClass" :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
+        @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)" loading="lazy" decoding="async"
+        :ui="{}" @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
       <div v-else class="image-placeholder">
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
 
       <ClipboardButton v-if="showCardInfo" :card="card" />
+
+      <!-- Flip Button for Dual-Faced Cards -->
+      <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
+        <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
+          square>
+          <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
+        </UButton>
+      </div>
 
       <!-- Score Bar -->
       <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full">
@@ -161,6 +169,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // True if the card was the searched card in a similarity search
   isSearched: {
     type: Boolean,
     default: false,
@@ -177,8 +186,18 @@ const emit = defineEmits<{
 
 const sizeClass = computed(() => `card-${props.size}`);
 
+const isFlipped = ref(false);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
+
+const isDualFaced = computed(() => {
+  const cardData = props.card?.card_data;
+  return cardData?.card_faces && cardData.card_faces.length >= 2;
+});
+
+function flipCard() {
+  isFlipped.value = !isFlipped.value;
+}
 
 // Get the search query from route params
 const searchQuery = computed(() => {
@@ -429,5 +448,35 @@ function toggleShowAllData() {
   /* center horizontally within container */
   display: block;
   box-sizing: border-box;
+}
+
+.flip-card-btn {
+  position: absolute;
+  right: 30px;
+  top: 88px;
+  opacity: 0;
+  pointer-events: auto;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  max-width: 30px;
+  max-height: 30px;
+  transition: opacity 0.2s;
+}
+
+.card-image-wrapper:hover .flip-card-btn {
+  opacity: 0.7;
+}
+
+@media (max-width: 767px) {
+  .flip-card-btn {
+    opacity: 0.7 !important;
+  }
+}
+
+.flip-card-icon {
+  font-size: 1.2rem;
 }
 </style>
