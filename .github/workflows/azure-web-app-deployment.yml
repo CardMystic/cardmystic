@@ -27,6 +27,21 @@ jobs:
         with:
           submodules: true
           lfs: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build app
+        run: pnpm build
+
       - name: Build And Deploy (Production)
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -40,7 +55,8 @@ jobs:
           app_location: '/' # App source code path
           api_location: '.output/server' # Api source code path - optional
           output_location: '.output/public' # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
+          skip_app_build: true
+          skip_api_build: true
       - name: Deploy Dev Branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: Azure/static-web-apps-deploy@v1
@@ -53,6 +69,8 @@ jobs:
           app_location: '/'
           api_location: '.output/server'
           output_location: '.output/public'
+          skip_app_build: true
+          skip_api_build: true
       - name: Build And Deploy (Next)
         id: builddeploy-next
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'dev'
@@ -66,4 +84,5 @@ jobs:
           app_location: '/' # App source code path
           api_location: '.output/server' # Api source code path - optional
           output_location: '.output/public' # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
+          skip_app_build: true
+          skip_api_build: true
