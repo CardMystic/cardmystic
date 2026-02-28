@@ -24,22 +24,22 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
-          lfs: false
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
-      - name: Enable pnpm
+      - name: Enable Corepack
         run: corepack enable
+
+      - name: Activate pnpm
+        run: corepack prepare pnpm@9.0.0 --activate
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build app
+      - name: Build
         run: pnpm build
 
       - name: Build And Deploy (Production)
