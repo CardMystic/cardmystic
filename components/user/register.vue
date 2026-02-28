@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSupabase } from '~/composables/useSupabase'
 import { useRecaptcha } from '~/composables/useRecaptcha'
+import { useUserProfile } from '~/composables/useUserProfile'
 
 const router = useRouter()
 

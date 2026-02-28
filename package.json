@@ -25,6 +25,7 @@
     "@tanstack/vue-query-devtools": "^5.81.5",
     "@vee-validate/nuxt": "^4.15.1",
     "@vee-validate/zod": "^4.15.1",
+    "@vueuse/core": "^14.2.1",
     "dotenv": "^16.6.1",
     "mana-font": "^1.18.0",
     "nuxt": "^3.15.4",

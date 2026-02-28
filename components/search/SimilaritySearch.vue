@@ -39,6 +39,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
+import { useSearchHistory } from '~/composables/useSearchHistory';
 
 const autoComplete = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
