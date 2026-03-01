@@ -11,14 +11,22 @@
     </UModal>
     <div class="card-image-wrapper">
       <!-- Card content: image + score -->
-      <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name"
-        @error="handleImageError" v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" :ui="{}"
-        @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
+      <img :class="sizeClass" :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
+        @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)" loading="lazy" decoding="async"
+        :ui="{}" @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
       <div v-else class="image-placeholder">
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
 
       <ClipboardButton v-if="showCardInfo" :card="card" />
+
+      <!-- Flip Button for Dual-Faced Cards -->
+      <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
+        <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
+          square>
+          <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
+        </UButton>
+      </div>
 
       <!-- Score Bar -->
       <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full">
@@ -92,6 +100,15 @@
             </template>
           </UTooltip>
         </div>
+
+        <!-- Remove from list button -->
+        <UTooltip v-if="showRemoveButton" text="Remove from list" :popper="{ placement: 'top' }">
+          <template #default>
+            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
+              aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
+          </template>
+        </UTooltip>
+
         <UButton v-if="isDev && showCardInfo" color="warning" variant="outline" class="ml-2" size="xs"
           @click="toggleShowAllData">
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
@@ -111,11 +128,11 @@ import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
-import { useMutation } from '@tanstack/vue-query';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import ClipboardButton from '~/components/ClipboardButton.vue';
+import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
+import { useCardFeedback } from '~/composables/useCardFeedback';
 
 const router = useRouter();
 const route = useRoute();
@@ -139,6 +156,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // If true, show additional card info (name, type, clipboard button)
   showCardInfo: {
     type: Boolean,
     default: false,
@@ -151,16 +169,38 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // True if the card was the searched card in a similarity search
   isSearched: {
+    type: Boolean,
+    default: false,
+  },
+  showRemoveButton: {
     type: Boolean,
     default: false,
   },
 });
 
+const emit = defineEmits<{
+  (e: 'remove', cardId: string): void;
+}>();
+
 const sizeClass = computed(() => `card-${props.size}`);
 
+const isFlipped = ref(false);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
+
+const isDualFaced = computed(() => {
+  const cardData = props.card?.card_data;
+  if (!cardData?.card_faces || cardData.card_faces.length < 2) return false;
+  // Only layouts with truly separate card faces should be flippable
+  const flippableLayouts = ['transform', 'modal_dfc', 'reversible_card'];
+  return flippableLayouts.includes(cardData.layout);
+});
+
+function flipCard() {
+  isFlipped.value = !isFlipped.value;
+}
 
 // Get the search query from route params
 const searchQuery = computed(() => {
@@ -175,23 +215,8 @@ const searchQuery = computed(() => {
   return '';
 });
 
-// Mutation for tracking dislike
-const dislikeMutation = useMutation({
-  mutationFn: async (data: { query: string; cardName: string }) => {
-    const response = await fetch('/api/metrics/dislike', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to track dislike');
-    }
-    return response.json();
-  },
-  onError: (error) => {
-    console.error('Failed to track dislike:', error);
-  },
-});
+// Use the dislike mutation from composable
+const { dislikeMutation } = useCardFeedback();
 
 // Handle dislike button click - show confirmation modal
 function handleDislike() {
@@ -319,7 +344,7 @@ function findSimilarCards() {
     filters: undefined, // No additional filters for similarity search
     searchType: 'similarity'
   };
-  navigateTo({ path: '/search/similarity', query: queryParams });
+  router.push({ path: '/search/similarity', query: queryParams });
 }
 
 function handleImageError(event: Event) {
@@ -426,5 +451,35 @@ function toggleShowAllData() {
   /* center horizontally within container */
   display: block;
   box-sizing: border-box;
+}
+
+.flip-card-btn {
+  position: absolute;
+  right: 30px;
+  top: 88px;
+  opacity: 0;
+  pointer-events: auto;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  max-width: 30px;
+  max-height: 30px;
+  transition: opacity 0.2s;
+}
+
+.card-image-wrapper:hover .flip-card-btn {
+  opacity: 0.7;
+}
+
+@media (max-width: 767px) {
+  .flip-card-btn {
+    opacity: 0.7 !important;
+  }
+}
+
+.flip-card-icon {
+  font-size: 1.2rem;
 }
 </style>

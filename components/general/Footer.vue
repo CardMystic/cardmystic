@@ -30,6 +30,11 @@
           prices.
         </p>
         <p>All other content © 2025 Fiasco Games LLC</p>
+        <p class="text-xs opacity-70">
+          This site is protected by reCAPTCHA and the Google
+          <a class="text-purple-400" href="https://policies.google.com/privacy">Privacy Policy</a> and
+          <a class="text-purple-400" href="https://policies.google.com/terms">Terms of Service</a> apply.
+        </p>
         <p>
           <NuxtLink :to="commitUrl" target="_blank" rel="noopener"
             class="text-purple-400 hover:text-purple-300 underline text-[10px]">
@@ -38,6 +43,11 @@
           <NuxtLink to="/privacyPolicy" rel="noopener"
             class="ml-2 text-purple-400 hover:text-purple-300 underline text-[10px]">Privacy Policy
           </NuxtLink>
+        </p>
+        <p class="mt-2">
+          Experiencing issues? Contact us at
+          <a href="mailto:thecardmystic@gmail.com"
+            class="text-purple-400 hover:text-purple-300 underline">thecardmystic@gmail.com</a>
         </p>
       </div>
     </UContainer>

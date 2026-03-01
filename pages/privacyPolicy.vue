@@ -1,11 +1,11 @@
 <template>
   <div class="flex items-center flex-col py-8 w-full">
     <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
-      <UCardTitle class="text-2xl font-bold">
+      <div class="text-2xl font-bold">
         🔒 Privacy Policy
-      </UCardTitle>
+      </div>
 
-      <UCardContent class="mt-2 text-base">
+      <div class="mt-2 text-base">
         <p>
           This Privacy Policy explains how CardMystic (“we”, “us”, or “our”) collects,
           uses, stores, and protects information when you use our website. We are committed
@@ -16,15 +16,15 @@
           In the near future, we will introduce an optional user account system that will
           store basic profile information such as email, username, and name.
         </p>
-      </UCardContent>
+      </div>
     </UCard>
 
     <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
-      <UCardTitle class="text-2xl font-bold">
+      <div class="text-2xl font-bold">
         📊 Information We Collect
-      </UCardTitle>
+      </div>
 
-      <UCardContent class="mt-2 text-base">
+      <div class="mt-2 text-base">
         <p class="font-semibold">
           1. Current Data Collection
         </p>
@@ -65,15 +65,15 @@
           This information will allow users to save preferences, access personalized
           features, and improve their experience on CardMystic.
         </p>
-      </UCardContent>
+      </div>
     </UCard>
 
     <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
-      <UCardTitle class="text-2xl font-bold">
+      <div class="text-2xl font-bold">
         🛡️ How We Use Your Information
-      </UCardTitle>
+      </div>
 
-      <UCardContent class="mt-2 text-base">
+      <div class="mt-2 text-base">
         <p class="font-semibold">
           For search queries and feedback:
         </p>
@@ -104,15 +104,15 @@
         <p class="mt-4">
           We do not sell, rent, or share your personal information with third parties.
         </p>
-      </UCardContent>
+      </div>
     </UCard>
 
     <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
-      <UCardTitle class="text-2xl font-bold">
+      <div class="text-2xl font-bold">
         🔐 Data Security
-      </UCardTitle>
+      </div>
 
-      <UCardContent class="mt-2 text-base">
+      <div class="mt-2 text-base">
         <p>
           We take security seriously. User passwords will be securely hashed using
           industry-standard best practices. Personal information will be protected through
@@ -123,15 +123,15 @@
           Because analytics data is handled exclusively by Microsoft Clarity, it is
           processed according to Microsoft’s security standards.
         </p>
-      </UCardContent>
+      </div>
     </UCard>
 
     <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
-      <UCardTitle class="text-2xl font-bold">
+      <div class="text-2xl font-bold">
         🧩 Third-Party Services
-      </UCardTitle>
+      </div>
 
-      <UCardContent class="mt-2 text-base">
+      <div class="mt-2 text-base">
         <p>
           We use Microsoft Clarity for analytics. Their policies apply to the collection
           and processing of analytics data:
@@ -151,32 +151,32 @@
         <p class="mt-4">
           No personal user data (email, username, etc.) is ever shared with Microsoft Clarity.
         </p>
-      </UCardContent>
+      </div>
     </UCard>
 
     <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
-      <UCardTitle class="text-2xl font-bold">
+      <div class="text-2xl font-bold">
         🔁 Changes to This Policy
-      </UCardTitle>
+      </div>
 
-      <UCardContent class="mt-2 text-base">
+      <div class="mt-2 text-base">
         <p>
           We may update this Privacy Policy as we launch new features, including the
           upcoming user account system. Any changes will be reflected on this page with an
           updated “Last Updated” date.
         </p>
-      </UCardContent>
+      </div>
     </UCard>
 
     <UCard class="p-2 max-w-[600px] shadow-xl rounded-xl">
-      <UCardTitle class="text-2xl font-bold">
+      <div class="text-2xl font-bold">
         💬 Contact Us
-      </UCardTitle>
+      </div>
 
-      <UCardContent class="mt-2 text-base">
+      <div class="mt-2 text-base">
         <p>
           If you have any questions about this Privacy Policy or how your information is
-          handled, please reach out to us!
+          handled, don't hesitate to reach out to us!
         </p>
         <p class="mt-4">
           📧 Email:
@@ -184,7 +184,7 @@
             thecardmystic@gmail.com
           </a>
         </p>
-      </UCardContent>
+      </div>
     </UCard>
   </div>
 </template>

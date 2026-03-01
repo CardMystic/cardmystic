@@ -22,12 +22,12 @@
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
         Magic: The Gathering is complex and intricate, but finding cards
-        shouldn't be. Our developers decided that traditional keyword search
+        shouldn't be! Our developers decided that traditional keyword search
         engines fall short.
       </p>
       <p class="text-base md:text-lg leading-relaxed">
         CardMystic makes card discovery effortless with semantic AI search.
-        Just describe what you're looking for and let CardMystic handle the rest.
+        Just describe what you're looking for and let CardMystic handle the rest!
       </p>
     </div>
 
@@ -38,7 +38,7 @@
         ⭐ What Sets Us Apart
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
-        Unlike similar tools, we are NOT just a generic AI wrapper. Our team's AI experts have meticulously trained
+        Unlike similar tools, we are NOT a generic AI wrapper. Our team's AI experts have meticulously trained
         custom
         models specifically on Magic: The Gathering data to ensure the most accurate and relevant search results
         possible.
@@ -74,7 +74,9 @@ useSeoMeta({
   description: 'Learn about CardMystic, an AI search engine for Magic: The Gathering cards. Custom trained models for accurate MTG card search using natural language.',
   ogTitle: 'About CardMystic - AI Magic: The Gathering Search Engine',
   ogDescription: 'Learn about CardMystic, an AI search engine for Magic: The Gathering cards.',
-  ogType: 'website'
+  ogType: 'website',
+  ogImage: () => 'https://cardmystic.io/cardmystic_cards.png',
+  ogImageAlt: () => 'CardMystic - About',
 })
 
 const { setPageInfo } = usePageInfo();

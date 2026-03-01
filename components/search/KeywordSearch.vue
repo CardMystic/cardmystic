@@ -43,6 +43,8 @@
 <script lang="ts" setup>
 import * as z from 'zod'
 import { useRoute } from 'vue-router'
+
+const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import { refDebounced } from '@vueuse/core'
@@ -125,6 +127,7 @@ const filteredSuggestions = computed(() => {
 const honeypot = ref('')
 
 const toast = useToast()
+const { saveSearchMutation } = useSearchHistory()
 
 function handleInput(event: Event) {
   searchTerm.value = (event.target as HTMLInputElement).value;
@@ -233,6 +236,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     });
 
+    // Save to search history
+    saveSearchMutation.mutate({ query: event.data.query, searchType: 'keyword', filters: requestFilters })
+
     const query: Record<string, any> = {
       query: event.data.query,
       filters: Object.keys(requestFilters).length > 0
@@ -242,7 +248,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       limit: 100
     }
 
-    navigateTo({ path: '/search/keyword', query })
+    router.push({ path: '/search/keyword', query })
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({

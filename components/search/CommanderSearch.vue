@@ -28,6 +28,8 @@
 <script lang="ts" setup>
 import * as z from 'zod'
 import { useRoute } from 'vue-router';
+
+const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import CommanderFilters from '~/components/search/CommanderFilters.vue'
@@ -65,6 +67,7 @@ const state = reactive<Partial<Schema>>({
 const honeypot = ref('')
 
 const toast = useToast()
+const { saveSearchMutation } = useSearchHistory()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
@@ -94,13 +97,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     // For commander search, always set isCommander to true
     formData.filters.isCommander = true;
 
+    // Save to search history
+    saveSearchMutation.mutate({ query: event.data.query, searchType: 'commander', filters: formData.filters })
+
     // Construct query parameters
     const query: Record<string, any> = {
       query: event.data.query,
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
       searchType: 'commander'
     };
-    navigateTo({ path: '/search/commander', query });
+    router.push({ path: '/search/commander', query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({

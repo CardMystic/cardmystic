@@ -1,0 +1,136 @@
+import type { SearchHistory, SearchHistoryInsert } from '~/database.types';
+import { useSupabase } from './useSupabase';
+import { useUserProfile } from './useUserProfile';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import { computed } from 'vue';
+
+export const useSearchHistory = () => {
+  const supabase = process.server ? null : useSupabase();
+  const { userProfile } = useUserProfile();
+  const queryClient = useQueryClient();
+
+  // Fetch search history with TanStack Query
+  const {
+    data: searchHistory,
+    isLoading: isLoadingHistory,
+    error: historyError,
+    refetch: refetchHistory,
+  } = useQuery<SearchHistory[]>({
+    queryKey: ['search-history', computed(() => userProfile.value?.id)],
+    queryFn: async () => {
+      if (!supabase) return [];
+      if (!userProfile.value?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('search_history')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: computed(() => !!userProfile.value?.id),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  const saveSearch = async (
+    query: string,
+    searchType: 'ai' | 'similarity' | 'keyword' | 'commander',
+    filters?: any,
+  ) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const newSearch: SearchHistoryInsert = {
+      user_id: userProfile.value.id,
+      query,
+      search_type: searchType,
+      filters: filters || null,
+    };
+
+    const { error } = await supabase.from('search_history').insert(newSearch);
+
+    if (error) throw error;
+  };
+
+  const saveSearchMutation = useMutation({
+    mutationFn: async ({
+      query,
+      searchType,
+      filters,
+    }: {
+      query: string;
+      searchType: 'ai' | 'similarity' | 'keyword' | 'commander';
+      filters?: any;
+    }) => {
+      if (!supabase) return;
+      return await saveSearch(query, searchType, filters);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['search-history'] });
+    },
+  });
+
+  const deleteSearchHistory = async (searchId: string) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { error } = await supabase
+      .from('search_history')
+      .delete()
+      .eq('id', searchId);
+
+    if (error) throw error;
+  };
+
+  const deleteSearchHistoryMutation = useMutation({
+    mutationFn: (searchId: string) => deleteSearchHistory(searchId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['search-history'] });
+    },
+  });
+
+  const clearAllHistory = async () => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { error } = await supabase
+      .from('search_history')
+      .delete()
+      .eq('user_id', userProfile.value.id);
+
+    if (error) throw error;
+  };
+
+  const clearAllHistoryMutation = useMutation({
+    mutationFn: async () => {
+      if (!supabase) return;
+      return clearAllHistory();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['search-history'] });
+    },
+  });
+
+  return {
+    // Query data and states
+    searchHistory,
+    isLoadingHistory,
+    historyError,
+    refetchHistory,
+
+    // Mutations
+    saveSearchMutation,
+    deleteSearchHistoryMutation,
+    clearAllHistoryMutation,
+  };
+};

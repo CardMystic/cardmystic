@@ -44,8 +44,8 @@
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
-import CardComponent from '~/components/Card.vue';
-import CardSkeleton from '~/components/CardSkeleton.vue';
+import CardComponent from '~/components/general/Card.vue';
+import CardSkeleton from '~/components/general/CardSkeleton.vue';
 import SortComponent from '~/components/search/Sort.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { sortSearchResults } from '~/utils/sort';

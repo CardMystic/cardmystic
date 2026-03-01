@@ -40,6 +40,8 @@
 <script lang="ts" setup>
 import * as z from 'zod'
 import { useRoute } from 'vue-router';
+
+const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import Filters from './Filters.vue'
@@ -55,6 +57,11 @@ const schema = z.object({
   query: z.string().min(1, ""),
   filters: CardSearchFiltersSchema.optional(),
 })
+// Honeypot field for bot detection
+const honeypot = ref('')
+
+const toast = useToast()
+const { saveSearchMutation } = useSearchHistory()
 
 type Schema = z.output<typeof schema>
 
@@ -73,11 +80,6 @@ const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
   filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
 })
-
-// Honeypot field for bot detection
-const honeypot = ref('')
-
-const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
@@ -108,6 +110,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     });
 
+    // Save to search history
+    saveSearchMutation.mutate({ query: event.data.query, searchType: 'ai', filters: requestFilters })
+
     // Construct query parameters
     const query: Record<string, any> = {
       query: event.data.query,
@@ -115,7 +120,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       searchType: 'ai'
     };
     filtersRef.value?.collapse();
-    navigateTo({ path: '/search', query });
+    router.push({ path: '/search', query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({

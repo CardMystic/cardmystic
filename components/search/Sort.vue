@@ -2,8 +2,8 @@
   <div class="flex items-center gap-1 justify-center h-[32px]">
     <UIcon name="i-lucide-arrow-up-down" />
     <span class="text-sm">Sort by:</span>
-    <USelect v-model="selectedSortValue" :items="sortOptions" placeholder="Select sort option" class="min-w-[180px]"
-      @update:modelValue="updateSort" />
+    <USelect v-model="selectedSortValue" :items="sortOptions" placeholder="Select sort option"
+      class="cursor-pointer min-w-[180px]" @update:modelValue="updateSort" />
     <UButton v-if="selectedSortValue" :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
       color="neutral" variant="ghost" size="sm" @click="toggleSortDirection"
       :title="sortDirection === 'asc' ? 'Ascending' : 'Descending'" />

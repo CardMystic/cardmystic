@@ -33,10 +33,13 @@
 <script lang="ts" setup>
 import * as z from 'zod'
 import { useRoute } from 'vue-router';
+
+const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
+import { useSearchHistory } from '~/composables/useSearchHistory';
 
 const autoComplete = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -108,6 +111,7 @@ const filteredCards = computed(() => {
 const honeypot = ref('')
 
 const toast = useToast()
+const { saveSearchMutation } = useSearchHistory()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
@@ -139,13 +143,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     });
 
+    // Save to search history
+    saveSearchMutation.mutate({ query: event.data.card_name, searchType: 'similarity', filters: requestFilters })
+
     // Construct query parameters
     const query: Record<string, any> = {
       card_name: event.data.card_name,
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'similarity'
     };
-    navigateTo({ path: '/search/similarity', query });
+    router.push({ path: '/search/similarity', query });
   } catch (error) {
     console.error('Form submission error:', error)
   }

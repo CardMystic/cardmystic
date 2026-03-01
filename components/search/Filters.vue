@@ -92,7 +92,7 @@
           <template #types>
             <div class="accordion-item">
               <USelectMenu v-model="selectedCardTypes" :items="cardTypes" placeholder="Select card types" multiple
-                class="w-full" />
+                class="w-full" :ui="{ base: 'text-base' }" />
             </div>
           </template>
           <!-- Colors Filter -->
@@ -100,7 +100,7 @@
             <div class="accordion-item">
               <div class="flex gap-2">
                 <USelect v-model="selectedColorFilterOption" :items="colorFilterOptions"
-                  placeholder="Select How To Match Colors" class="w-full" />
+                  placeholder="Select How To Match Colors" class="w-full" :ui="{ base: 'text-base' }" />
 
                 <UButton v-if="selectedColorFilterOption" icon="i-lucide-x" color="neutral" variant="ghost"
                   @click="clearColorFilterOption()" size="sm" class="flex-shrink-0" aria-label="Clear color filter">
@@ -138,20 +138,23 @@
               <div class="stats-grid">
                 <div class="stat-group">
                   <label class="stat-label">Mana Cost</label>
-                  <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption"
-                    :items="comparisonOperators" />
+                  <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption" :items="comparisonOperators"
+                    :ui="{ base: 'text-base' }" />
                   <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number" />
                 </div>
                 <div class="stat-group">
                   <label class="stat-label">Power</label>
-                  <USelect placeholder="Power Comparison" v-model="selectedPowerOption" :items="comparisonOperators" />
-                  <UInput v-model="selectedPower" placeholder="Any value, e.g. '2'" type="number" />
+                  <USelect placeholder="Power Comparison" v-model="selectedPowerOption" :items="comparisonOperators"
+                    :ui="{ base: 'text-base' }" />
+                  <UInput v-model="selectedPower" placeholder="Any value, e.g. '2'" type="number"
+                    :ui="{ base: 'text-base' }" />
                 </div>
                 <div class="stat-group">
                   <label class="stat-label">Toughness</label>
                   <USelect placeholder="Toughness Comparison" v-model="selectedToughnessOption"
-                    :items="comparisonOperators" />
-                  <UInput v-model="selectedToughness" placeholder="Any value, e.g. '2'" type="number" />
+                    :items="comparisonOperators" :ui="{ base: 'text-base' }" />
+                  <UInput v-model="selectedToughness" placeholder="Any value, e.g. '2'" type="number"
+                    :ui="{ base: 'text-base' }" />
                 </div>
               </div>
             </div>
@@ -161,10 +164,10 @@
             <div class="accordion-item">
               <div v-if="selectedCardFormats && selectedCardFormats.length > 0">
                 <div v-for="(format, i) in selectedCardFormats" :key="i" class="mb-3" style="display: flex; gap: 8px;">
-                  <USelect class="min-w-[160px]" v-model="format.format" :items="cardFormats" label="Format"
-                    clearable />
+                  <USelect class="min-w-[160px]" v-model="format.format" :items="cardFormats" label="Format" clearable
+                    :ui="{ base: 'text-base' }" />
                   <USelect class="min-w-[160px]" v-model="format.status" :items="cardFormatStatuses" label="Status"
-                    clearable />
+                    clearable :ui="{ base: 'text-base' }" />
                 </div>
               </div>
               <UButton @click="addFormatRow" color="primary" size="sm" icon="i-lucide-plus">
@@ -182,7 +185,7 @@ import { computed } from 'vue';
 import { z } from 'zod';
 import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus, cardColorToSymbol } from '~/models/cardModel';
 import type { CardSearchFilters } from '~/models/searchModel';
-import ManaIcon from '../ManaIcon.vue';
+import ManaIcon from '../general/ManaIcon.vue';
 import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt/ui';
 import { getColorIdentityName } from '~/utils/colorPairings';
 

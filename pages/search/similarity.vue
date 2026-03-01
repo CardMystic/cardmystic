@@ -1,10 +1,10 @@
 <template>
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <SearchForm similarity class="mt-6 w-full" />
+      <Search similarity class="mt-6 w-full" />
 
       <!-- Results -->
-      <ListSearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="cardNameParam"
+      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="cardNameParam"
         :skeleton-count="skeletonCount" help-text="Please enter a card name to search for similar cards."
         :is-similarity-search="true" />
     </div>
@@ -14,14 +14,11 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
-import { ref, watch, computed } from 'vue';
+import { watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
-import SearchForm from '~/components/search/Search.vue';
-import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
+import { useSimilaritySearch } from '~/composables/useSearch';
 
 const route = useRoute();
 
@@ -105,32 +102,10 @@ const similaritySearch = computed(() => {
   });
 });
 
-const queryEnabled = computed(() => !!similaritySearch.value?.card_name);
-
 // Number of skeleton cards to show while loading (matches typical search result count)
 const skeletonCount = computed(() => limitParam.value || 20);
 
-const { data: searchResults, isLoading } = useQuery({
-  queryKey: [
-    'search',
-    'similarity',
-    similaritySearch,
-  ],
-  queryFn: async () => {
-    const response = await fetch('/api/search/similarity', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(similaritySearch.value),
-    });
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const results = await response.json() as Array<Card>;
-    return results;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: queryEnabled,
-});
+const { searchResults, isLoading } = useSimilaritySearch(similaritySearch);
 
 </script>
 

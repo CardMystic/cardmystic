@@ -1,7 +1,10 @@
 <template>
   <div class="page-wrapper py-4 flex justify-center w-full">
-    <!-- Background art layer -->
-    <div v-if="card && cardArtUrl" class="page-background-art" :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
+    <!-- Background Image -->
+    <div v-if="cardArtUrl" class="fixed inset-0 z-0">
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+        :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
+    </div>
 
     <div v-if="pending || (!card && !error)"
       class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10">
@@ -11,10 +14,17 @@
       <p class="text-white text-center">Loading card details...</p>
     </div>
 
-    <div v-else-if="error && !pending" class="text-center">
-      <UIcon name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4 cursor-pointer" />
-      <p class="mt-4 text-white">{{ error }}</p>
-      <UButton to="/search" color="primary" class="mt-4">Back to Search</UButton>
+    <div v-else-if="error && !pending" class="text-center py-20">
+      <UIcon v-if="isNotFound" name="i-heroicons-magnifying-glass" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
+      <UIcon v-else name="i-heroicons-exclamation-circle" class="w-12 h-12 text-red-500 mx-auto mb-4" />
+      <h2 v-if="isNotFound" class="text-2xl font-bold text-white mb-2">Card Not Found</h2>
+      <h2 v-else-if="isBadRequest" class="text-2xl font-bold text-white mb-2">Invalid Request</h2>
+      <p v-if="isNotFound" class="mt-4 text-gray-300 max-w-150">
+        We apologize, it seems the card with id: <strong>{{ cardIdParam }}</strong> doesn't exist. If you believe this
+        is a mistake, please contact us at <strong>thecardmystic@gmail.com</strong>.
+      </p>
+      <p v-else class="mt-4 text-gray-300 max-w-150">{{ errorMessage }}</p>
+      <UButton to="/search" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
     <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl relative z-10 items-center">
@@ -38,7 +48,7 @@
         <!-- Flip Button for Dual-Faced Cards -->
         <UButton v-if="isDualFaced" color="info" variant="solid" class="mt-4 flip-btn" icon="i-heroicons-arrow-path"
           size="lg" @click="flipCard">
-          {{ isFlipped ? 'Show Front' : 'Show Back' }}
+          Flip
         </UButton>
 
         <!-- Printing Selection Dropdown -->
@@ -266,27 +276,30 @@
 </template>
 
 <script setup lang="ts">
-import BackToTop from '~/components/BackToTop.vue';
-import ClipboardButton from '~/components/ClipboardButton.vue';
-import ListCardDetailsSimilarCardsResults from '~/components/ListCardDetailsSimilarCardsResults.vue';
-import { computed, h, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { useQuery } from '@tanstack/vue-query';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
-import { DefaultLimitSimilarity, SimilaritySearchSchema } from '~/models/searchModel';
+import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
 const route = useRoute();
+const router = useRouter();
 const isFlipped = ref(false);
 const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
+const { saveCardViewMutation } = useCardHistory();
 
 const { data: cardData, error, pending } = useAsyncData(
   () => `card-with-printings-${cardIdParam.value}`,
   async () => {
-    const card = await $fetch<ScryfallCard>(`/api/cards/${cardIdParam.value}`);
+    if (!cardIdParam.value || cardIdParam.value === 'undefined') {
+      throw new Error('No card ID provided');
+    }
+
+    const config = useRuntimeConfig();
+    const card = await $fetch<ScryfallCard>(`${config.public.backendUrl}/cards/${cardIdParam.value}`);
 
     let printings: ScryfallCard[] = [];
     if (card.prints_search_uri) {
@@ -307,12 +320,32 @@ const { data: cardData, error, pending } = useAsyncData(
   }
 );
 
+// Check if error is a 404 Not Found
+const isNotFound = computed(() => {
+  if (!error.value) return false;
+  const err = error.value as any;
+  return err?.statusCode === 404 || err?.status === 404 || err?.data?.statusCode === 404;
+});
+
+// Check if error is a 400 Bad Request and get its message
+const isBadRequest = computed(() => {
+  if (!error.value) return false;
+  const err = error.value as any;
+  return err?.statusCode === 400 || err?.status === 400 || err?.data?.statusCode === 400;
+});
+
+const errorMessage = computed(() => {
+  if (!error.value) return '';
+  const err = error.value as any;
+  return err?.data?.message || err?.message || 'An error occurred';
+});
+
 // Extract card and printings from combined data
 const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
 const canonicalUrl = computed(() =>
-  `https://cardmystic.io/card/${cardData.value?.card.oracle_id ?? cardIdParam.value}`
+  `https://cardmystic.io/card/${cardData.value?.card.id ?? cardIdParam.value}`
 );
 // Dynamic SEO meta based on card data
 useSeoMeta({
@@ -385,6 +418,13 @@ useHead({
     }
   ]
 });
+
+// Save card view to history when card is loaded
+watch(card, (newCard) => {
+  if (newCard?.id) {
+    saveCardViewMutation.mutate(newCard.id);
+  }
+}, { immediate: true });
 
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {
@@ -542,42 +582,12 @@ function findSimilarCards() {
     filters: undefined, // No additional filters for similarity search
   };
 
-  navigateTo({ path: '/search/similarity', query: queryParams });
+  router.push({ path: '/search/similarity', query: queryParams });
 }
 
-// Similarity search query
-const similaritySearch = computed(() => {
-  if (!card.value?.name) return undefined;
-
-  return SimilaritySearchSchema.parse({
-    card_name: card.value.name,
-    limit: 41, // Request 41 so we have 40 after removing the first card
-    filters: undefined,
-    exclude_card_data: false,
-  });
-});
-
-const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
-  queryKey: ['card-details-similar-cards', cardIdParam.value],
-  queryFn: async () => {
-    if (!similaritySearch.value) return [];
-
-    const response = await fetch('/api/search/similarity', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(similaritySearch.value),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch similar cards');
-    }
-
-    const results = await response.json() as Array<Card>;
-    return results;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: computed(() => !!card.value?.name),
-});
+// Use the similar cards composable
+const cardName = computed(() => card.value?.name);
+const { similarCards, isSimilarCardsLoading } = useSimilarCards(cardIdParam, cardName);
 
 </script>
 
@@ -1019,28 +1029,7 @@ const { data: similarCards, isLoading: isSimilarCardsLoading } = useQuery({
 .page-wrapper
   position: relative
   min-height: 100vh
-
-.page-background-art
-  position: fixed
-  top: 0
-  left: 0
-  right: 0
-  bottom: 0
-  background-size: cover
-  background-position: center
-  background-repeat: no-repeat
-  pointer-events: none
-  z-index: 0
-  transform: scale(1.1)
-
-  @media (prefers-color-scheme: light)
-    opacity: 0.5
-    filter: blur(6px)
-
-  @media (prefers-color-scheme: dark)
-    opacity: 0.2
-    filter: blur(8px)
-
+  
 // Similar Cards Section Styling
 .similar-cards-section
   border-radius: 24px
