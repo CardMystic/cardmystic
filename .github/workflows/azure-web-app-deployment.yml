@@ -24,9 +24,24 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
         with:
-          submodules: true
-          lfs: false
+          node-version: 22
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
+          NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}
       - name: Build And Deploy (Production)
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -37,10 +52,11 @@ jobs:
           action: 'upload'
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: '/' # App source code path
+          app_location: '.output/public' # App source code path
           api_location: '.output/server' # Api source code path - optional
-          output_location: '.output/public' # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
+          output_location: '' # Built app content directory - optional
+          skip_app_build: true
+          skip_api_build: true
       - name: Deploy Dev Branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: Azure/static-web-apps-deploy@v1
@@ -50,9 +66,11 @@ jobs:
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           action: 'upload'
-          app_location: '/'
+          app_location: '.output/public'
           api_location: '.output/server'
-          output_location: '.output/public'
+          output_location: ''
+          skip_app_build: true
+          skip_api_build: true
       - name: Build And Deploy (Next)
         id: builddeploy-next
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'dev'
@@ -63,7 +81,8 @@ jobs:
           action: 'upload'
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: '/' # App source code path
+          app_location: '.output/public' # App source code path
           api_location: '.output/server' # Api source code path - optional
-          output_location: '.output/public' # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
+          output_location: '' # Built app content directory - optional
+          skip_app_build: true
+          skip_api_build: true
