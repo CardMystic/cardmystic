@@ -37,14 +37,11 @@ jobs:
 
       - name: Build
         run: pnpm build
-
-      - name: Verify SWA token present (PR)
-        if: github.event_name == 'pull_request'
-        run: |
-          if [ -z "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}" ]; then
-            echo "Missing SWA deployment token secret for PR deploy"
-            exit 1
-          fi
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
+          NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}
       - name: Build And Deploy (Production)
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
