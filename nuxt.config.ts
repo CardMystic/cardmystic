@@ -13,6 +13,7 @@ function getCommitHash() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  nitro: { preset: 'azure' },
   app: {
     head: {
       title: 'CardMystic - AI Search Engine for Magic: The Gathering',
