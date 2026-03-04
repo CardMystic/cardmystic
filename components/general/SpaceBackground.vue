@@ -23,8 +23,8 @@ withDefaults(defineProps<{
 // ---------------------------------------------------------------------------
 const FIELD_WIDTH = 3840
 const FIELD_HEIGHT = 2000
-const SMALL_COUNT = 1500
-const MEDIUM_COUNT = 500
+const SMALL_COUNT = 2000
+const MEDIUM_COUNT = 800
 const LARGE_COUNT = 67
 const XLARGE_COUNT = 20
 const STAR_COLOR = '#fff'
