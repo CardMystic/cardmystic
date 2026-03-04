@@ -31,6 +31,12 @@ export default defineNuxtConfig({
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     },
   },
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    },
+  ],
   compatibilityDate: '2025-05-15',
   css: ['~/assets/css/main.css'],
   devtools: {
@@ -46,6 +52,11 @@ export default defineNuxtConfig({
     // Keys within public are also exposed client-side
     public: {
       commitHash: getCommitHash(),
+      recaptchaSiteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || '',
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
+      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
+      backendUrl:
+        process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
@@ -62,6 +73,12 @@ export default defineNuxtConfig({
     '/': {
       prerender: true,
     },
+    '/about': {
+      prerender: true,
+    },
+    '/privacyPolicy': {
+      prerender: true,
+    },
   },
   vite: {
     server: {
@@ -72,7 +89,7 @@ export default defineNuxtConfig({
     },
     ssr: {},
     plugins: [
-      ...(process.env.NODE_ENV === 'development' ? [devtoolsJson()] : []),
+      ...(process.env.NODE_ENV === 'development' ? [devtoolsJson() as any] : []),
     ],
     css: {
       preprocessorOptions: {

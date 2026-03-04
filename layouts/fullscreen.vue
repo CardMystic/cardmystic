@@ -9,6 +9,9 @@
 </template>
 
 <script setup lang="ts">
+/* Fullscreen layout: full-width content, fixed navbar that overlays the page.
+ * Use for the landing page where content (e.g. hero sections) extends
+ * edge-to-edge and scrolls behind the navbar. */
 </script>
 
 <style scoped lang="sass">

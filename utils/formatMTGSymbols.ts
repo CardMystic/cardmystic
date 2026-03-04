@@ -1,5 +1,5 @@
 import { h } from 'vue';
-import ManaIcon from '~/components/ManaIcon.vue';
+import ManaIcon from '~/components/general/ManaIcon.vue';
 
 /**
  * Convert symbols (mana, tap, etc) in a string to ManaIcon components

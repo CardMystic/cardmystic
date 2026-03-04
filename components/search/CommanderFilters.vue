@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import ManaIcon from '~/components/ManaIcon.vue';
+import ManaIcon from '~/components/general/ManaIcon.vue';
 import { CardColor, cardColorToSymbol, type CardColorType } from '~/models/cardModel';
 import type { CheckboxGroupItem } from '@nuxt/ui';
 import type { CardSearchFilters } from '~/models/searchModel';

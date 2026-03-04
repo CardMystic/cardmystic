@@ -2,10 +2,10 @@
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
       <!-- Shared Search Form -->
-      <SearchForm class="mt-6 w-full" />
+      <Search class="mt-6 w-full" />
 
       <!-- Results -->
-      <ListSearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
+      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
         :skeleton-count="skeletonCount" help-text="Try describing what the card does or listing mechanics or types."
         :is-keyword-search="true" />
     </div>
@@ -16,16 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
-import { computed, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, KeywordSearchSchema } from '~/models/searchModel';
-
-import SearchForm from '~/components/search/Search.vue';
-import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePageInfo } from '~/composables/usePageInfo';
+import { useKeywordSearch } from '~/composables/useSearch';
 
 const route = useRoute();
 
@@ -108,26 +104,10 @@ const keywordSearch = computed(() => {
   });
 });
 
-const queryEnabled = computed(() => !!keywordSearch.value?.query);
-
 const skeletonCount = computed(() => limitParam.value || 20);
 
 // Run the keyword search request
-const { data: searchResults, isLoading } = useQuery({
-  queryKey: ['search', 'keyword', keywordSearch],
-  queryFn: async () => {
-    const response = await fetch('/api/search/keyword', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(keywordSearch.value),
-    });
-    if (!response.ok) throw new Error('Network response was not ok');
-
-    return await response.json() as Card[];
-  },
-  staleTime: 1000 * 60 * 5, // 5 min cache in UI
-  enabled: queryEnabled,
-});
+const { searchResults, isLoading } = useKeywordSearch(keywordSearch);
 
 function handleFabClick() {
   const url = searchFeedbackUrl(getPageInfo());

@@ -1,10 +1,10 @@
 <template>
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <SearchForm class="mt-6 w-full" />
+      <Search class="mt-6 w-full" />
 
       <!-- Results -->
-      <ListSearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
+      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
         :skeleton-count="skeletonCount" help-text="Please describe the commander you're looking for." />
     </div>
   </UContainer>
@@ -13,15 +13,11 @@
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Card } from '~/models/cardModel';
 import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
-import SearchForm from '~/components/search/Search.vue';
-import IssuesFab from '~/components/search/IssuesFab.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
-import { UContainer } from '#components';
+import { useColbertSearch } from '~/composables/useSearch';
 
 const route = useRoute();
 
@@ -101,31 +97,10 @@ const wordSearch = computed(() => {
   });
 });
 
-const queryEnabled = computed(() => !!wordSearch.value?.query);
-
 // Number of skeleton cards to show while loading (matches typical search result count)
 const skeletonCount = computed(() => limitParam.value || 20);
 
-const { data: searchResults, isLoading } = useQuery({
-  queryKey: [
-    'search',
-    'colbert',
-    wordSearch,
-  ],
-  queryFn: async () => {
-    const response = await fetch('/api/search/colbert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(wordSearch.value),
-    });
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json() as Promise<Array<Card>>;
-  },
-  staleTime: 1000 * 60 * 15, // 15 minutes
-  enabled: queryEnabled,
-});
+const { searchResults, isLoading } = useColbertSearch(wordSearch);
 
 </script>
 
