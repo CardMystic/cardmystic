@@ -59,8 +59,12 @@ interface Comet {
 const comets = ref<Comet[]>([])
 let cometId = 0
 let cometTimer: ReturnType<typeof setTimeout> | null = null
+let paused = false
 
 function spawnComet() {
+  // Never allow more than 1 comet on screen at a time
+  if (comets.value.length >= 1) return
+
   const angle = Math.random() * Math.PI * 2
   const cosA = Math.cos(angle)
   const sinA = Math.sin(angle)
@@ -117,6 +121,8 @@ function removeComet(id: number) {
 }
 
 function scheduleComet() {
+  if (cometTimer) clearTimeout(cometTimer)
+  if (paused) return
   const base = interval * 1000
   const delay = base * 0.8 + Math.random() * base * 0.4
   cometTimer = setTimeout(() => {
@@ -125,11 +131,26 @@ function scheduleComet() {
   }, delay)
 }
 
+function onVisibilityChange() {
+  if (document.hidden) {
+    paused = true
+    if (cometTimer) {
+      clearTimeout(cometTimer)
+      cometTimer = null
+    }
+  } else {
+    paused = false
+    scheduleComet()
+  }
+}
+
 onMounted(() => {
+  document.addEventListener('visibilitychange', onVisibilityChange)
   scheduleComet()
 })
 
 onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
   if (cometTimer) clearTimeout(cometTimer)
 })
 </script>
