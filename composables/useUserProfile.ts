@@ -216,6 +216,24 @@ export const useUserProfile = () => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         // Skip if we're in a recovery flow — the user should stay "logged out" in the UI
         if (inPasswordRecovery) return;
+
+        // Track OAuth signup metrics when returning from a Google sign-up redirect
+        if (
+          event === 'SIGNED_IN' &&
+          localStorage.getItem('oauth_signup_pending')
+        ) {
+          localStorage.removeItem('oauth_signup_pending');
+          const accessToken = session?.access_token;
+          if (accessToken) {
+            fetch(`${config.public.backendUrl}/signup/oauth`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }).catch(() => {
+              /* non-critical */
+            });
+          }
+        }
+
         // Invalidate instead of refetch to ensure fresh data
         queryClient.invalidateQueries({ queryKey: ['user'] });
         queryClient.invalidateQueries({ queryKey: ['profile'] });
