@@ -225,7 +225,7 @@ export const useUserProfile = () => {
           localStorage.removeItem('oauth_signup_pending');
           const accessToken = session?.access_token;
           if (accessToken) {
-            fetch(`${config.public.backendUrl}/signup/oauth`, {
+            fetch(`${config.public.backendUrl}/signup/record`, {
               method: 'POST',
               headers: { Authorization: `Bearer ${accessToken}` },
             }).catch(() => {
