@@ -30,6 +30,8 @@ const signUpWithGoogle = async () => {
     return
   }
 
+  localStorage.setItem('oauth_signup_pending', '1')
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
   })
