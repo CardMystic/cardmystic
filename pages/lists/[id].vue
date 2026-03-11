@@ -45,14 +45,15 @@
       </div>
     </div>
 
-    <!-- Sort (centered) -->
-    <div v-if="list && cards && cards.length > 0" class="mb-4 flex justify-center">
-      <Sort @sort="handleSort" />
+    <!-- Group By + Sort (centered) -->
+    <div v-if="list && cards && cards.length > 0" class="mb-4 flex flex-wrap items-center justify-center gap-2">
+      <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
+      <Sort default-sort-by="cmc" @sort="handleSort" />
     </div>
 
     <!-- Cards Results -->
     <ClientOnly>
-      <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20"
+      <CardListResults :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
         :commander-card-id="currentCommanderItem?.card_id" :commander-color-identity="commanderColorIdentity"
         @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
       <template #fallback>
@@ -65,6 +66,10 @@
 
   <!-- Bulk Add Modal -->
   <BulkAddCardsModal v-model:open="isBulkAddModalOpen" :list-id="listId" />
+
+  <BackToTop />
+
+  <JumpTo :groups="jumpToGroups" />
 
 
 </template>
@@ -79,7 +84,7 @@ import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
 import { refDebounced } from '@vueuse/core'
-import { sortSearchResults } from '~/utils/sort'
+import { groupAndSortCards } from '~/utils/sort'
 
 const route = useRoute()
 const listId = route.params.id as string
@@ -126,14 +131,18 @@ const cards = computed(() => cardsData.value || [])
 
 const loading = computed(() => isLoadingLists.value || isLoadingItems.value || isLoadingCards.value)
 
-// Sorting state
-const sortBy = ref<string | undefined>(undefined)
+// Sorting + grouping state
+const sortBy = ref<string | undefined>('cmc')
 const sortDirection = ref<'asc' | 'desc'>('asc')
+const groupBy = ref<string | undefined>('type')
 
-// Handle sort changes
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
   sortDirection.value = direction;
+}
+
+function handleGroupBy(value: string | undefined) {
+  groupBy.value = value;
 }
 
 // Handle removing a card from the list
@@ -156,23 +165,35 @@ async function handleRemoveCard(cardId: string) {
   }
 }
 
-// Computed sorted results - commander always first, then sort rest
-const sortedCards = computed(() => {
+// Computed grouped + sorted results - commander always first (outside groups)
+const cardGroups = computed(() => {
   if (!cards.value || cards.value.length === 0) {
-    return [];
+    return null;
   }
 
   const commanderCardId = currentCommanderItem.value?.card_id
+  const cardsToGroup = commanderCardId
+    ? cards.value.filter((c: any) => c.card_data.id !== commanderCardId)
+    : cards.value
+
+  const groups = groupAndSortCards(cardsToGroup, groupBy.value, sortBy.value, sortDirection.value);
+
+  // Prepend commander as its own group if present
   if (commanderCardId) {
     const commander = cards.value.find((c: any) => c.card_data.id === commanderCardId)
-    const rest = cards.value.filter((c: any) => c.card_data.id !== commanderCardId)
-    const sortedRest = sortSearchResults(rest, sortBy.value, sortDirection.value) || []
-    return commander ? [commander, ...sortedRest] : sortedRest
+    if (commander) {
+      const commanderGroup = { label: '', cards: [commander] };
+      return groups ? [commanderGroup, ...groups] : [commanderGroup];
+    }
   }
 
-  return sortSearchResults(cards.value, sortBy.value, sortDirection.value) || [];
+  return groups;
 });
 
+const jumpToGroups = computed(() => {
+  if (!cardGroups.value) return [];
+  return cardGroups.value.filter(g => g.label).map(g => g.label);
+});
 
 // Filter cards for add card autocomplete
 const filteredAddCards = computed(() => {

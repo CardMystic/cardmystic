@@ -9,15 +9,46 @@
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
-      <SortComponent @sort="handleSort" class="mb-3" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
-          <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
-            :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
-            :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
-            :score-scale="scoreScale" />
-        </div>
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
+        <GroupBy @update:groupBy="handleGroupBy" />
+        <SortComponent @sort="handleSort" />
       </div>
+
+      <!-- Grouped results (accordion) -->
+      <template v-if="groupedResults && groupedResults.length > 0 && groupedResults[0].label">
+        <div class="flex justify-center sm:justify-end gap-1 mb-1">
+          <UButton icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral" variant="ghost"
+            @click="openAccordionValues = accordionItems.map(i => i.value as string)" />
+          <UButton icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral" variant="ghost"
+            @click="openAccordionValues = []" />
+        </div>
+        <UAccordion type="multiple" v-model="openAccordionValues" :items="accordionItems"
+          :ui="{ item: 'w-fit mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary rounded-lg px-4 py-2 mb-1' }">
+          <template v-for="group in groupedResults" :key="group.label" #[group.label]>
+            <div :id="groupToId(group.label)"
+              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-2">
+              <div v-for="(result, index) in group.cards" :key="result.card_data.id">
+                <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
+                  :is-searched="false" :hide-progress-bar="isKeywordSearch"
+                  :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
+                  :score-scale="scoreScale" />
+              </div>
+            </div>
+          </template>
+        </UAccordion>
+      </template>
+
+      <!-- Flat results (no grouping) -->
+      <template v-else>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
+            <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
+              :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
+              :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
+              :score-scale="scoreScale" />
+          </div>
+        </div>
+      </template>
     </template>
 
     <template v-else-if="!queryParam">
@@ -41,13 +72,18 @@
       </UContainer>
     </template>
   </div>
+
+  <JumpTo :groups="(groupedResults || []).filter(g => g.label).map(g => g.label)" />
 </template>
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
+import type { CardGroup } from '~/utils/sort';
+import type { AccordionItem } from '@nuxt/ui';
 import SortComponent from '~/components/search/Sort.vue';
+import GroupBy from '~/components/search/GroupBy.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
-import { sortSearchResults } from '~/utils/sort';
+import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
 
 const { getPageInfo } = usePageInfo();
 
@@ -67,13 +103,19 @@ const props = defineProps<{
 const sortBy = ref<string | undefined>(undefined);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
-// Handle sort changes
+// Grouping state
+const groupBy = ref<string | undefined>(undefined);
+
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
   sortDirection.value = direction;
 }
 
-// Computed sorted results - optionally keep first result (searched card) at the top for similarity search
+function handleGroupBy(value: string | undefined) {
+  groupBy.value = value;
+}
+
+// Computed sorted results for flat display (no grouping, or similarity search)
 const sortedResults = computed(() => {
   if (!props.searchResults || props.searchResults.length === 0) {
     return props.searchResults;
@@ -86,9 +128,44 @@ const sortedResults = computed(() => {
     return sortedRest ? [firstCard, ...sortedRest] : [firstCard];
   }
 
-  // For other searches, sort all results
   return sortSearchResults(props.searchResults, sortBy.value, sortDirection.value);
 });
+
+// Computed grouped results
+const groupedResults = computed<CardGroup[] | null>(() => {
+  if (!groupBy.value || !props.searchResults || props.searchResults.length === 0) {
+    return null;
+  }
+
+  // For similarity search, keep first card out of groups
+  if (props.isSimilaritySearch) {
+    const [_firstCard, ...restCards] = props.searchResults;
+    return groupAndSortCards(restCards, groupBy.value, sortBy.value, sortDirection.value);
+  }
+
+  return groupAndSortCards(props.searchResults, groupBy.value, sortBy.value, sortDirection.value);
+});
+
+const accordionItems = computed<AccordionItem[]>(() => {
+  if (!groupedResults.value) return [];
+  return groupedResults.value
+    .filter(g => g.label)
+    .map(g => ({
+      label: g.label,
+      value: g.label,
+      slot: g.label as any,
+    }));
+});
+
+const openAccordionValues = ref<string[]>([]);
+
+watch(accordionItems, (items) => {
+  openAccordionValues.value = items.map(i => i.value as string);
+}, { immediate: true });
+
+function groupToId(label: string): string {
+  return 'group-' + label.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '').toLowerCase();
+}
 
 </script>
 

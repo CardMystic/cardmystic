@@ -103,7 +103,7 @@
                   placeholder="Select How To Match Colors" class="w-full" :ui="{ base: 'text-base' }" />
 
                 <UButton v-if="selectedColorFilterOption" icon="i-lucide-x" color="neutral" variant="ghost"
-                  @click="clearColorFilterOption()" size="sm" class="flex-shrink-0" aria-label="Clear color filter">
+                  @click="clearColorFilterOption()" size="sm" class="shrink-0" aria-label="Clear color filter">
                 </UButton>
               </div>
 
@@ -164,10 +164,10 @@
             <div class="accordion-item">
               <div v-if="selectedCardFormats && selectedCardFormats.length > 0">
                 <div v-for="(format, i) in selectedCardFormats" :key="i" class="mb-3" style="display: flex; gap: 8px;">
-                  <USelect class="min-w-[160px]" v-model="format.format" :items="cardFormats" label="Format" clearable
+                  <USelect class="min-w-40" v-model="format.format" :items="cardFormats" label="Format" clearable
                     :ui="{ base: 'text-base' }" />
-                  <USelect class="min-w-[160px]" v-model="format.status" :items="cardFormatStatuses" label="Status"
-                    clearable :ui="{ base: 'text-base' }" />
+                  <USelect class="min-w-40" v-model="format.status" :items="cardFormatStatuses" label="Status" clearable
+                    :ui="{ base: 'text-base' }" />
                 </div>
               </div>
               <UButton @click="addFormatRow" color="primary" size="sm" icon="i-lucide-plus">

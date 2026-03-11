@@ -1,9 +1,9 @@
 <template>
-  <div class="flex items-center gap-1 justify-center h-[32px]">
+  <div class="flex items-center gap-1 justify-center h-8">
     <UIcon name="i-lucide-arrow-up-down" />
     <span class="text-sm">Sort by:</span>
     <USelect v-model="selectedSortValue" :items="sortOptions" placeholder="Select sort option"
-      class="cursor-pointer min-w-[180px]" @update:modelValue="updateSort" />
+      class="cursor-pointer min-w-45" @update:modelValue="updateSort" />
     <UButton v-if="selectedSortValue" :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
       color="neutral" variant="ghost" size="sm" @click="toggleSortDirection"
       :title="sortDirection === 'asc' ? 'Ascending' : 'Descending'" />
@@ -13,7 +13,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+
+const props = defineProps<{
+  defaultSortBy?: string;
+  defaultDirection?: 'asc' | 'desc';
+}>();
 
 const sortOptions = [
   { value: 'name', label: 'Name (A-Z)' },
@@ -25,8 +30,14 @@ const sortOptions = [
   { value: 'released', label: 'Release Date' },
 ];
 
-const selectedSortValue = ref<string | undefined>(undefined);
-const sortDirection = ref<'asc' | 'desc'>('asc');
+const selectedSortValue = ref<string | undefined>(props.defaultSortBy);
+const sortDirection = ref<'asc' | 'desc'>(props.defaultDirection ?? 'asc');
+
+onMounted(() => {
+  if (props.defaultSortBy) {
+    emit('sort', props.defaultSortBy, sortDirection.value);
+  }
+});
 
 const emit = defineEmits<{
   (e: 'sort', sortBy: string | undefined, direction: 'asc' | 'desc'): void;

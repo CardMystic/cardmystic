@@ -7,16 +7,43 @@
       </div>
     </template>
 
-    <!-- Cards Grid -->
-    <template v-else-if="cards && cards.length > 0">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        <div v-for="card in cards" :key="card.card_data.id">
-          <ListCard :card="card" :is-commander="card.card_data.id === commanderCardId"
-            :commander-color-identity="commanderColorIdentity" @remove="(cardId: string) => emit('removeCard', cardId)"
-            @set-commander="(cardName: string) => emit('setCommander', cardName)"
-            @clear-commander="emit('clearCommander')" />
+    <!-- Cards display -->
+    <template v-else-if="groups && groups.length > 0">
+      <!-- Commander card(s) at the top (groups with empty label) -->
+      <template v-for="group in ungroupedGroups" :key="'ungrouped'">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+          <div v-for="card in group.cards" :key="card.card_data.id">
+            <ListCard :card="card" :is-commander="card.card_data.id === commanderCardId"
+              :commander-color-identity="commanderColorIdentity"
+              @remove="(cardId: string) => emit('removeCard', cardId)"
+              @set-commander="(cardName: string) => emit('setCommander', cardName)"
+              @clear-commander="emit('clearCommander')" />
+          </div>
         </div>
+      </template>
+
+      <!-- Grouped Cards (Accordion) -->
+      <div v-if="labeledGroups.length > 0" class="flex justify-center sm:justify-end gap-1 mb-1">
+        <UButton icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral" variant="ghost"
+          @click="openAccordionValues = labeledGroups.map(g => g.label)" />
+        <UButton icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral" variant="ghost"
+          @click="openAccordionValues = []" />
       </div>
+      <UAccordion v-if="labeledGroups.length > 0" type="multiple" v-model="openAccordionValues" :items="accordionItems"
+        :ui="{ item: 'w-fit mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary rounded-lg px-4 py-2 mb-1' }">
+        <template v-for="group in labeledGroups" :key="group.label" #[group.label]>
+          <div :id="groupToId(group.label)"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-2">
+            <div v-for="card in group.cards" :key="card.card_data.id">
+              <ListCard :card="card" :is-commander="card.card_data.id === commanderCardId"
+                :commander-color-identity="commanderColorIdentity"
+                @remove="(cardId: string) => emit('removeCard', cardId)"
+                @set-commander="(cardName: string) => emit('setCommander', cardName)"
+                @clear-commander="emit('clearCommander')" />
+            </div>
+          </div>
+        </template>
+      </UAccordion>
     </template>
 
     <!-- Empty State -->
@@ -35,18 +62,48 @@
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
+import type { CardGroup } from '~/utils/sort';
+import type { AccordionItem } from '@nuxt/ui';
 
-defineProps<{
+const props = defineProps<{
   isLoading: boolean;
-  cards: Card[] | undefined;
+  groups: CardGroup[] | null;
   skeletonCount?: number;
   commanderCardId?: string | null;
   commanderColorIdentity?: string[] | null;
 }>();
+
+const ungroupedGroups = computed(() => {
+  if (!props.groups) return [];
+  return props.groups.filter(g => !g.label);
+});
+
+const labeledGroups = computed(() => {
+  if (!props.groups) return [];
+  return props.groups.filter(g => g.label);
+});
+
+const accordionItems = computed<AccordionItem[]>(() => {
+  return labeledGroups.value.map(g => ({
+    label: g.label,
+    value: g.label,
+    slot: g.label as any,
+  }));
+});
+
+const openAccordionValues = ref<string[]>([]);
+
+watch(labeledGroups, (groups) => {
+  openAccordionValues.value = groups.map(g => g.label);
+}, { immediate: true });
 
 const emit = defineEmits<{
   (e: 'removeCard', cardId: string): void;
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander'): void;
 }>();
+
+function groupToId(label: string): string {
+  return 'group-' + label.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '').toLowerCase();
+}
 </script>

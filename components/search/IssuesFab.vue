@@ -4,7 +4,8 @@
       side: 'left',
       sideOffset: 8
     }" text="Report an issue with these results">
-      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft" @click="onClick && onClick()" />
+      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft" class="border-2 border-secondary"
+        @click="onClick && onClick()" />
     </UTooltip>
   </div>
 </template>
@@ -19,11 +20,9 @@ const onClick = props.onClick;
 <style lang="sass" scoped>
 .fixed-fab
   position: fixed
-  bottom: 24px
-  right: 24px
+  bottom: 58px
+  right: 8px
   z-index: 9999
-
-  border-radius: 9999px
   isolation: isolate
 
   transition: transform 0.3s ease
