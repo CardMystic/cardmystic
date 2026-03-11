@@ -121,15 +121,11 @@ import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { isLegal, isColorIdentityLegal } from '~/utils/legality';
+import { useCommanders } from '~/composables/useBulkData';
 
 const router = useRouter();
 
-const { data: commanders } = useFetch<string[]>('/commanders.min.json', {
-  key: 'commanders-list-card',
-  lazy: true,
-  server: false,
-  default: () => [] as string[],
-})
+const { data: commanders } = useCommanders();
 
 const props = defineProps<{
   card: Card;

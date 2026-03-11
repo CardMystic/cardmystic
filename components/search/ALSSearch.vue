@@ -50,6 +50,7 @@
 import * as z from 'zod'
 import { useRoute } from 'vue-router';
 import { refDebounced } from '@vueuse/core';
+import { useCommanders } from '~/composables/useBulkData';
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
@@ -81,13 +82,8 @@ const state = reactive<Partial<Schema>>({
 const commanderSearchTerm = ref('');
 const debouncedCommanderSearch = refDebounced(commanderSearchTerm, 150);
 
-const { data: rawCommanders, status: commanderStatus } = useFetch('/commanders.min.json', {
-  key: 'autocomplete-commanders',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
-});
+const { data: rawCommanders, status: commanderQueryStatus } = useCommanders();
+const commanderStatus = computed(() => commanderQueryStatus.value === 'pending' ? 'pending' : 'success');
 
 const filteredCommanders = computed(() => {
   if (!debouncedCommanderSearch.value || debouncedCommanderSearch.value.length < 2) {
@@ -101,8 +97,9 @@ const filteredCommanders = computed(() => {
   if (state.commander) {
     filtered.push(state.commander);
   }
-  for (let i = 0; i < rawCommanders.value.length && filtered.length < 100; i++) {
-    const cmd = rawCommanders.value[i];
+  const commanders = rawCommanders.value ?? [];
+  for (let i = 0; i < commanders.length && filtered.length < 100; i++) {
+    const cmd = commanders[i];
     if (cmd.toLowerCase().includes(searchLower) && cmd !== state.commander) {
       filtered.push(cmd);
     }

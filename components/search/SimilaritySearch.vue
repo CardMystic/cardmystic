@@ -40,6 +40,7 @@ import { CardSearchFiltersSchema } from '~/models/searchModel'
 import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
 import { useSearchHistory } from '~/composables/useSearchHistory';
+import { useCardNames } from '~/composables/useBulkData';
 
 const autoComplete = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -75,14 +76,9 @@ const searchTerm = ref("");
 // Debounced search term for better performance
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
-// Raw card data - keep as simple array for performance
-const { data: rawCards, status } = await useFetch('/card-names.min.json', {
-  key: 'autocomplete-cards',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
-});
+// Raw card data from backend bulk data API
+const { data: rawCards, status: cardNamesStatus } = useCardNames();
+const status = computed(() => cardNamesStatus.value === 'pending' ? 'pending' : 'success');
 
 // Pre-filter cards before passing to USelectMenu
 const filteredCards = computed(() => {
@@ -97,8 +93,9 @@ const filteredCards = computed(() => {
   const filtered = [state.card_name];
 
   // Only process first 100 matches for performance
-  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
-    const card = rawCards.value[i];
+  const cards = rawCards.value ?? [];
+  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
+    const card = cards[i];
     if (card.toLowerCase().includes(searchLower)) {
       filtered.push(card);
     }

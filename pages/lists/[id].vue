@@ -80,6 +80,7 @@ definePageMeta({
 })
 
 import { useCardLists } from '~/composables/useCardLists'
+import { useCardNames } from '~/composables/useBulkData'
 import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
@@ -204,8 +205,10 @@ const filteredAddCards = computed(() => {
   const searchLower = debouncedAddCardSearchTerm.value.toLowerCase()
   const filtered: string[] = []
 
-  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
-    const card = rawCards.value[i]
+  const cards = rawCards.value ?? []
+
+  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
+    const card = cards[i]
     if (card.toLowerCase().includes(searchLower)) {
       filtered.push(card)
     }
@@ -274,13 +277,8 @@ function goToRecommend() {
   router.push({ path: '/search/recommend', query })
 }
 
-const { data: rawCards, status: cardsStatus } = useFetch('/card-names.min.json', {
-  key: 'banner-card-names',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
-})
+const { data: rawCards, status: cardsQueryStatus } = useCardNames()
+const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pending' : 'success')
 
 // Commander autocomplete
 const setCommanderLoading = ref(false)

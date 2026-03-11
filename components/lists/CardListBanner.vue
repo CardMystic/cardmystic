@@ -87,6 +87,7 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core'
 import { useCardLists } from '~/composables/useCardLists'
+import { useCardNames } from '~/composables/useBulkData'
 import { useToast } from '#imports'
 
 const props = defineProps<{
@@ -111,14 +112,9 @@ const isEditingDescription = ref(false)
 const editedTitle = ref('')
 const editedDescription = ref('')
 
-// Load card names for banner selection
-const { data: rawCards, status: cardsStatus } = useFetch('/card-names.min.json', {
-  key: 'banner-card-names',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
-})
+// Load card names from backend bulk data API
+const { data: rawCards, status: cardsQueryStatus } = useCardNames()
+const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pending' : 'success')
 
 // Filter cards based on search
 const filteredBannerCards = computed(() => {
@@ -136,8 +132,10 @@ const filteredBannerCards = computed(() => {
     filtered.push(selectedBannerCard.value)
   }
 
-  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
-    const card = rawCards.value[i]
+  const cards = rawCards.value ?? []
+
+  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
+    const card = cards[i]
     if (card.toLowerCase().includes(searchLower) && !filtered.includes(card)) {
       filtered.push(card)
     }
