@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <div class="flex gap-4 max-md:hidden mb-4 justify-center">
+    <div class="flex gap-3 max-md:hidden mb-4 justify-center">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
         <UIcon name="i-lucide-search" class="icon" size="18" />
@@ -22,14 +22,19 @@
         <UIcon name="i-lucide-whole-word" class="icon" size="18" />
         Keyword Search
       </button>
+      <button type="button" :class="['search-tab-button-new', { active: searchType === 'recommend' }]"
+        @click="setSearchType('recommend')">
+        <UIcon name="i-lucide-box" class="icon" size="18" />
+        Deck Recommender
+      </button>
     </div>
 
     <!-- Mobile dropdown -->
     <div class="mb-2 md:hidden flex flex-col justify-center items-center">
       <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
-      <USelect label="select" class="w-[200px]" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
+      <USelect label="select" class="w-50" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
         variant="outline"
-        @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword')"
+        @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend')"
         :items="items" />
     </div>
 
@@ -46,6 +51,9 @@
 
       <!-- Keyword Search -->
       <KeywordSearch v-else-if="searchType === 'keyword'" />
+
+      <!-- Deck Recommender -->
+      <ALSSearch v-else-if="searchType === 'recommend'" />
     </div>
   </div>
 </template>
@@ -59,6 +67,7 @@ import AISearch from './AISearch.vue';
 import SimilaritySearch from './SimilaritySearch.vue';
 import CommanderSearch from './CommanderSearch.vue';
 import KeywordSearch from './KeywordSearch.vue';
+import ALSSearch from './ALSSearch.vue';
 
 // Define props
 const props = defineProps<{
@@ -81,6 +90,8 @@ if (props.similarity) {
   setSearchType('ai');
 } else if (route.path === '/search/keyword') {
   setSearchType('keyword');
+} else if (route.path === '/search/recommend') {
+  setSearchType('recommend');
 }
 
 // Compute icon based on search type
@@ -89,7 +100,8 @@ const searchIcon = computed(() => {
     ai: 'i-lucide-search',
     similarity: 'i-mdi-cards-outline',
     commander: 'i-mdi-crown',
-    keyword: 'i-lucide-whole-word'
+    keyword: 'i-lucide-whole-word',
+    recommend: 'i-lucide-box'
   };
   return iconMap[searchType.value] || 'i-lucide-search';
 });
@@ -115,6 +127,11 @@ const items = ref<SelectItem[]>([
     label: 'Keyword Search',
     value: 'keyword',
     icon: 'i-lucide-whole-word'
+  },
+  {
+    label: 'Deck Recommender',
+    value: 'recommend',
+    icon: 'i-lucide-box'
   }
 ])
 
@@ -133,6 +150,9 @@ watch(searchType, async (newType) => {
   }
   if (route.query.searchType == 'keyword') {
     sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
+  }
+  if (route.query.searchType == 'recommend') {
+    sessionStorage.setItem('recommend_search_query', JSON.stringify(route.query));
   }
 
   // Navigate to the appropriate route based on the selected search type, and reload saved session query if available
@@ -194,6 +214,21 @@ watch(searchType, async (newType) => {
       }
     }
     router.push({ path: '/search/keyword', query });
+  }
+  else if (newType === 'recommend' && route.path !== '/search/recommend' && route.path !== '/') {
+    let query: any = undefined;
+    if (route.query.decklist && route.query.searchType === 'recommend') {
+      query = { ...route.query };
+    } else {
+      const stored = sessionStorage.getItem('recommend_search_query');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.decklist) query = parsed;
+        } catch { }
+      }
+    }
+    router.push({ path: '/search/recommend', query });
   }
 });
 

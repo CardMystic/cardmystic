@@ -203,7 +203,7 @@ export const useCardLists = () => {
         if (error) throw error;
         return data;
       },
-      enabled: computed(() => !!listIdRef.value),
+      enabled: computed(() => !!supabase && !!listIdRef.value),
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
   };
@@ -367,6 +367,110 @@ export const useCardLists = () => {
     },
   });
 
+  const setCommander = async (listId: string, commanderName: string) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    // 1. Clear is_commander on all items in this list
+    const { error: clearError } = await supabase
+      .from('card_list_items')
+      .update({ is_commander: false })
+      .eq('list_id', listId);
+
+    if (clearError) throw clearError;
+
+    // 2. Check if the commander card already exists in the list
+    //    First, get the card ID from Scryfall
+    const cardData: any = await $fetch(
+      `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(commanderName)}`,
+    );
+
+    if (!cardData?.id) {
+      throw new Error('Commander card not found');
+    }
+
+    // 3. Check if card is already in the list
+    const { data: existingItems, error: checkError } = await supabase
+      .from('card_list_items')
+      .select('id')
+      .eq('list_id', listId)
+      .eq('card_id', cardData.id);
+
+    if (checkError) throw checkError;
+
+    // 4. Add card to list if not already there
+    if (!existingItems || existingItems.length === 0) {
+      const { error: insertError } = await supabase
+        .from('card_list_items')
+        .insert({ list_id: listId, card_id: cardData.id });
+
+      if (insertError) throw insertError;
+    }
+
+    // 5. Set is_commander = true for this card
+    const { error: setError } = await supabase
+      .from('card_list_items')
+      .update({ is_commander: true })
+      .eq('list_id', listId)
+      .eq('card_id', cardData.id);
+
+    if (setError) throw setError;
+
+    // 6. Update the list's updated_at timestamp
+    const { error: updateError } = await supabase
+      .from('card_lists')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', listId);
+
+    if (updateError) throw updateError;
+  };
+
+  const setCommanderMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      commanderName,
+    }: {
+      listId: string;
+      commanderName: string;
+    }) => {
+      if (!supabase) return;
+      return setCommander(listId, commanderName);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
+  const clearCommander = async (listId: string) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { error } = await supabase
+      .from('card_list_items')
+      .update({ is_commander: false })
+      .eq('list_id', listId);
+
+    if (error) throw error;
+  };
+
+  const clearCommanderMutation = useMutation({
+    mutationFn: async (listId: string) => {
+      if (!supabase) return;
+      return clearCommander(listId);
+    },
+    onSuccess: (_, listId) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
   return {
     // Query data and states
     userLists,
@@ -382,6 +486,8 @@ export const useCardLists = () => {
     deleteListMutation,
     updateListMutation,
     updateListAvatarMutation,
+    setCommanderMutation,
+    clearCommanderMutation,
 
     // For nested queries (list items)
     useListItems,

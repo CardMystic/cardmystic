@@ -33,7 +33,7 @@
     </div>
 
     <!-- Add Card Search -->
-    <div v-if="list" class="mb-6">
+    <div v-if="list" class="mb-2">
       <div class="flex gap-2">
         <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
           :loading="cardsStatus === 'pending' || addCardLoading" :items="filteredAddCards"
@@ -42,12 +42,57 @@
       </div>
     </div>
 
+    <!-- Deck Recommender -->
+    <div v-if="list && cards && cards.length > 0" class="mb-2">
+      <div class="flex gap-2 items-center">
+        <UInput v-model="recommendDescription"
+          placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
+          icon="i-lucide-box" class="flex-1" :ui="{ base: 'text-sm h-8' }" size="sm" />
+        <UButton icon="i-lucide-box" color="primary" variant="solid" label="Recommend" @click="goToRecommend"
+          class="cursor-pointer h-8" size="sm" />
+      </div>
+    </div>
+
+    <!-- Set Commander Button + Current Commander Display -->
+    <div v-if="list" class="mb-4">
+      <div class="flex gap-2 items-center">
+        <UButton icon="i-lucide-crown" color="neutral" variant="outline" label="Set Commander"
+          @click="isCommanderModalOpen = true" class="cursor-pointer h-8" size="sm" />
+        <template v-if="currentCommanderName">
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            {{ currentCommanderName }}
+          </span>
+          <UButton color="neutral" variant="link" size="xs" icon="i-lucide-circle-x" aria-label="Clear commander"
+            @click="handleClearCommander" />
+        </template>
+      </div>
+    </div>
+
     <!-- Cards Results -->
-    <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20" @removeCard="handleRemoveCard" />
+    <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20" :highlight-first-card="hasCommander"
+      @removeCard="handleRemoveCard" />
   </div>
 
   <!-- Bulk Add Modal -->
   <BulkAddCardsModal v-model:open="isBulkAddModalOpen" :list-id="listId" />
+
+  <!-- Set Commander Modal -->
+  <UModal v-model:open="isCommanderModalOpen" title="Set Commander" description="Select a commander for this list.">
+    <template #body>
+      <div class="space-y-4">
+        <USelectMenu v-model="selectedCommander" v-model:search-term="commanderSearchTerm"
+          :loading="commandersStatus === 'pending' || setCommanderLoading" :items="filteredCommanders"
+          placeholder="Search for a commander..." icon="i-lucide-crown" class="w-full" />
+      </div>
+    </template>
+    <template #footer="{ close }">
+      <div class="flex justify-end gap-2">
+        <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
+        <UButton label="Set Commander" color="primary" icon="i-lucide-crown" :disabled="!selectedCommander"
+          :loading="setCommanderLoading" @click="handleSetCommanderFromModal(close)" />
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
@@ -74,6 +119,8 @@ const {
   useListCards,
   removeCardFromListMutation,
   addCardsToListMutation,
+  setCommanderMutation,
+  clearCommanderMutation,
 } = useCardLists()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
@@ -135,13 +182,20 @@ async function handleRemoveCard(cardId: string) {
   }
 }
 
-// Computed sorted results - skip the first card (we're already viewing it on the page)
+// Computed sorted results - commander always first, then sort rest
 const sortedCards = computed(() => {
   if (!cards.value || cards.value.length === 0) {
     return [];
   }
 
-  // Skip the first card (the current card being viewed)
+  const commanderCardId = currentCommanderItem.value?.card_id
+  if (commanderCardId) {
+    const commander = cards.value.find((c: any) => c.card_data.id === commanderCardId)
+    const rest = cards.value.filter((c: any) => c.card_data.id !== commanderCardId)
+    const sortedRest = sortSearchResults(rest, sortBy.value, sortDirection.value) || []
+    return commander ? [commander, ...sortedRest] : sortedRest
+  }
+
   return sortSearchResults(cards.value, sortBy.value, sortDirection.value) || [];
 });
 
@@ -205,13 +259,135 @@ async function handleAddCard(cardName: string) {
 // Bulk add state
 const isBulkAddModalOpen = ref(false)
 
-const { data: rawCards, status: cardsStatus } = await useFetch('/card-names.min.json', {
+// Commander modal state
+const isCommanderModalOpen = ref(false)
+
+// Recommend state
+const recommendDescription = ref('')
+const router = useRouter()
+
+function goToRecommend() {
+  if (!cards.value || cards.value.length === 0) return
+  const decklist = cards.value.map((card: any) => card.card_data.name).join('\n')
+  const query: Record<string, any> = {
+    decklist,
+    searchType: 'recommend',
+  }
+  if (recommendDescription.value.trim()) {
+    query.description = recommendDescription.value.trim()
+  }
+  if (currentCommanderName.value) {
+    query.commander = currentCommanderName.value
+  }
+  router.push({ path: '/search/recommend', query })
+}
+
+const { data: rawCards, status: cardsStatus } = useFetch('/card-names.min.json', {
   key: 'banner-card-names',
   lazy: true,
   server: false,
   transform: (data: string[]) => data || [],
   default: () => []
 })
+
+// Commander autocomplete
+const selectedCommander = ref('')
+const commanderSearchTerm = ref('')
+const debouncedCommanderSearch = refDebounced(commanderSearchTerm, 150)
+const setCommanderLoading = ref(false)
+
+const { data: rawCommanders, status: commandersStatus } = useFetch('/commanders.min.json', {
+  key: 'autocomplete-commanders-list',
+  lazy: true,
+  server: false,
+  transform: (data: string[]) => data || [],
+  default: () => []
+})
+
+const filteredCommanders = computed(() => {
+  if (!debouncedCommanderSearch.value || debouncedCommanderSearch.value.length < 2) {
+    return []
+  }
+  const searchLower = debouncedCommanderSearch.value.toLowerCase()
+  const filtered: string[] = []
+  for (let i = 0; i < rawCommanders.value.length && filtered.length < 100; i++) {
+    const cmd = rawCommanders.value[i]
+    if (cmd.toLowerCase().includes(searchLower)) {
+      filtered.push(cmd)
+    }
+  }
+  return filtered
+})
+
+// Find the current commander from list items
+const currentCommanderItem = computed(() => {
+  return listItems.value?.find((item: any) => item.is_commander === true)
+})
+
+const currentCommanderName = computed(() => {
+  if (!currentCommanderItem.value || !cards.value) return null
+  const commanderItem = currentCommanderItem.value
+  const card = cards.value.find((c: any) => c.card_data.id === commanderItem.card_id)
+  return card?.card_data?.name || null
+})
+
+const hasCommander = computed(() => !!currentCommanderItem.value)
+
+async function handleSetCommander(commanderName: string) {
+  if (!commanderName || !list.value) return
+
+  setCommanderLoading.value = true
+  try {
+    await setCommanderMutation.mutateAsync({
+      listId: list.value.id,
+      commanderName,
+    })
+
+    toast.add({
+      title: `${commanderName} set as commander`,
+      icon: 'i-lucide-crown'
+    })
+
+    selectedCommander.value = ''
+    commanderSearchTerm.value = ''
+  } catch (error: any) {
+    toast.add({
+      title: 'Error setting commander',
+      description: error.message,
+      color: 'error'
+    })
+  } finally {
+    setCommanderLoading.value = false
+  }
+}
+
+async function handleClearCommander() {
+  if (!list.value) return
+
+  setCommanderLoading.value = true
+  try {
+    await clearCommanderMutation.mutateAsync(list.value.id)
+
+    toast.add({
+      title: 'Commander cleared',
+      icon: 'i-lucide-check'
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Error clearing commander',
+      description: error.message,
+      color: 'error'
+    })
+  } finally {
+    setCommanderLoading.value = false
+  }
+}
+
+async function handleSetCommanderFromModal(close: () => void) {
+  if (!selectedCommander.value) return
+  await handleSetCommander(selectedCommander.value)
+  close()
+}
 
 const totalPrice = computed(() => {
   if (!cards.value || cards.value.length === 0) return 0

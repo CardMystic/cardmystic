@@ -156,6 +156,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Score scale: 'normalized' means 0-1 range (multiply by 100), 'raw' uses default normalization
+  scoreScale: {
+    type: String as PropType<'normalized' | 'raw'>,
+    default: 'raw',
+  },
   // If true, show additional card info (name, type, clipboard button)
   showCardInfo: {
     type: Boolean,
@@ -287,8 +292,8 @@ function normalizeScore(score: number | undefined): number {
     return 0; // Default to 0 if score is undefined
   }
 
-  // For similarity search, treat score as 0-1 range and convert to percentage
-  if (props.isSimilaritySearch) {
+  // For similarity search or normalized scores, treat score as 0-1 range and convert to percentage
+  if (props.isSimilaritySearch || props.scoreScale === 'normalized') {
     return Math.min(Math.max(score * 100, 0), 100);
   }
 

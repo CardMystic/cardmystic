@@ -14,7 +14,8 @@
         <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
           <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
             :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
-            :hide-thumbs-down-button="isKeywordSearch || isSimilaritySearch" />
+            :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
+            :score-scale="scoreScale" />
         </div>
       </div>
     </template>
@@ -60,6 +61,8 @@ const props = defineProps<{
   helpText?: string;
   isSimilaritySearch?: boolean;
   isKeywordSearch?: boolean;
+  hideThumbsDownButton?: boolean;
+  scoreScale?: 'normalized' | 'raw';
 }>();
 
 // Sorting state

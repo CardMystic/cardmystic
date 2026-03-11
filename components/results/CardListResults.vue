@@ -10,9 +10,10 @@
     <!-- Cards Grid -->
     <template v-else-if="cards && cards.length > 0">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        <div v-for="card in cards" :key="card.card_data.id">
+        <div v-for="(card, index) in cards" :key="card.card_data.id">
           <CardComponent :card="card" :showCardInfo="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
-            :show-remove-button="true" @remove="(cardId) => emit('removeCard', cardId)" />
+            :show-remove-button="true" :is-searched="highlightFirstCard && index === 0"
+            @remove="(cardId) => emit('removeCard', cardId)" />
         </div>
       </div>
     </template>
@@ -40,6 +41,7 @@ defineProps<{
   isLoading: boolean;
   cards: Card[] | undefined;
   skeletonCount?: number;
+  highlightFirstCard?: boolean;
 }>();
 
 const emit = defineEmits<{

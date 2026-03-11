@@ -112,7 +112,7 @@ const editedTitle = ref('')
 const editedDescription = ref('')
 
 // Load card names for banner selection
-const { data: rawCards, status: cardsStatus } = await useFetch('/card-names.min.json', {
+const { data: rawCards, status: cardsStatus } = useFetch('/card-names.min.json', {
   key: 'banner-card-names',
   lazy: true,
   server: false,
