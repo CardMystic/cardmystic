@@ -220,8 +220,8 @@ async function handleAddCard(cardName: string) {
 
   addCardLoading.value = true
   try {
-    // First get the card ID from Scryfall
-    const cardData: any = await $fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`)
+    const config = useRuntimeConfig()
+    const cardData: any = await $fetch(`${config.public.backendUrl}/cards/name/${encodeURIComponent(cardName)}`)
 
     if (!cardData?.id) {
       throw new Error('Card not found')

@@ -215,18 +215,22 @@ export const useCardLists = () => {
 
   // Get card details for list items with TanStack Query
   const useListCards = (listId: string, cardIds: Ref<string[]>) => {
+    const config = useRuntimeConfig();
     return useQuery({
       // Include cardIds in the queryKey so it refetches when the list items change
       queryKey: computed(() => ['list-cards', listId, cardIds.value]),
       queryFn: async () => {
         if (cardIds.value.length === 0) return [];
 
-        const cardPromises = cardIds.value.map((id: string) =>
-          $fetch(`https://api.scryfall.com/cards/${id}`),
+        const cardsData: any[] = await $fetch(
+          `${config.public.backendUrl}/cards/cards-by-ids`,
+          {
+            method: 'POST',
+            body: { cardIds: cardIds.value },
+          },
         );
-        const cardsData = await Promise.all(cardPromises);
 
-        return cardsData.map((cardData: any) => ({
+        return (cardsData || []).map((cardData: any) => ({
           card_name: cardData.name,
           card_data: cardData,
           score: undefined,
@@ -411,9 +415,9 @@ export const useCardLists = () => {
     if (clearError) throw clearError;
 
     // 2. Check if the commander card already exists in the list
-    //    First, get the card ID from Scryfall
+    const config = useRuntimeConfig();
     const cardData: any = await $fetch(
-      `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(commanderName)}`,
+      `${config.public.backendUrl}/cards/name/${encodeURIComponent(commanderName)}`,
     );
 
     if (!cardData?.id) {
