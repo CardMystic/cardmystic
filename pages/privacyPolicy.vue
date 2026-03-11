@@ -18,7 +18,7 @@
       </div>
     </UCard>
 
-    <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
+    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
       <div class="text-2xl font-bold">
         📊 Information We Collect
       </div>
@@ -80,7 +80,7 @@
       </div>
     </UCard>
 
-    <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
+    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
       <div class="text-2xl font-bold">
         🛡️ How We Use Your Information
       </div>
@@ -120,7 +120,7 @@
       </div>
     </UCard>
 
-    <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
+    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
       <div class="text-2xl font-bold">
         🔐 Data Security
       </div>
@@ -144,7 +144,7 @@
       </div>
     </UCard>
 
-    <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
+    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
       <div class="text-2xl font-bold">
         🧩 Third-Party Services
       </div>
@@ -177,7 +177,7 @@
       </div>
     </UCard>
 
-    <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
+    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
       <div class="text-2xl font-bold">
         🔁 Changes to This Policy
       </div>
@@ -190,7 +190,7 @@
       </div>
     </UCard>
 
-    <UCard class="p-2 max-w-[600px] shadow-xl rounded-xl">
+    <UCard class="p-2 max-w-150 shadow-xl rounded-xl">
       <div class="text-2xl font-bold">
         💬 Contact Us
       </div>
