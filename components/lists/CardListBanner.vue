@@ -5,9 +5,9 @@
     <div class="relative h-48 md:h-64 rounded-lg overflow-hidden shadow-xl">
       <div v-if="bannerImageUrl" class="absolute inset-0 bg-cover bg-center"
         :style="{ backgroundImage: `url(${bannerImageUrl})` }">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent"></div>
       </div>
-      <div v-else class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>
+      <div v-else class="absolute inset-0 bg-linear-to-br from-purple-600 to-blue-600"></div>
 
       <!-- Banner Content -->
       <div class="absolute bottom-0 left-0 right-0 p-6 ">
