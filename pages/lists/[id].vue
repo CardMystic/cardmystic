@@ -36,7 +36,7 @@
     <div v-if="list" class="mb-2">
       <div class="flex gap-2">
         <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
-          :loading="cardsStatus === 'pending' || addCardLoading" :items="filteredAddCards"
+          :loading="(!!addCardSearchTerm && cardsStatus === 'pending') || addCardLoading" :items="filteredAddCards"
           placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 cursor-pointer"
           @update:model-value="handleAddCard" />
       </div>
