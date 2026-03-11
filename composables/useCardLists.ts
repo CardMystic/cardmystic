@@ -272,17 +272,25 @@ export const useCardLists = () => {
     },
     onMutate: async ({ listId, cardId }) => {
       // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['list-items', listId] });
       await queryClient.cancelQueries({ queryKey: ['list-cards', listId] });
 
-      // Optimistically remove the card from all list-cards queries for this list
+      // Optimistically remove the card from list-items cache
+      queryClient.setQueriesData<any[]>(
+        { queryKey: ['list-items', listId] },
+        (old) => old?.filter((item: any) => item.card_id !== cardId),
+      );
+
+      // Optimistically remove the card from list-cards cache
       queryClient.setQueriesData<any[]>(
         { queryKey: ['list-cards', listId] },
         (old) => old?.filter((card: any) => card.card_data.id !== cardId),
       );
     },
     onSuccess: (_, { listId }) => {
+      // Only invalidate list-items — list-cards will re-key automatically
+      // since its queryKey depends on cardIds derived from list-items
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
     onError: (_, { listId }) => {

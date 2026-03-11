@@ -10,22 +10,27 @@
 
     <!-- Actions + Add Card + Commander (single row) -->
     <div v-if="list" class="mb-2">
-      <div class="flex gap-2 flex-wrap items-center">
-        <UTooltip text="Copy card names">
-          <UButton icon="i-lucide-copy" color="primary" variant="outline" @click="copyCardNames"
-            :disabled="!cards || cards.length === 0" class="cursor-pointer" label="Copy" />
-        </UTooltip>
-        <UTooltip text="Bulk add cards">
-          <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkAddModalOpen = true"
-            class="cursor-pointer" label="Bulk Add" />
-        </UTooltip>
-        <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
-          :label="`Buy ($${totalPrice.toFixed(2)})`" @click="openMassEntry" :disabled="!cards || cards.length === 0"
-          class="cursor-pointer" />
-        <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
-          :loading="(!!addCardSearchTerm && cardsStatus === 'pending') || addCardLoading" :items="filteredAddCards"
-          placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 min-w-45 cursor-pointer"
-          @update:model-value="handleAddCard" />
+      <div class="flex flex-wrap items-center justify-between">
+        <div class="flex gap-2 mb-2">
+          <UTooltip text="Copy card names">
+            <UButton icon="i-lucide-copy" color="primary" variant="outline" @click="copyCardNames"
+              :disabled="!cards || cards.length === 0" class="cursor-pointer" label="Copy" />
+          </UTooltip>
+          <UTooltip text="Bulk add cards">
+            <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkAddModalOpen = true"
+              class="cursor-pointer" label="Bulk Add" />
+          </UTooltip>
+          <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
+            :label="`Buy ($${totalPrice.toFixed(2)})`" @click="openMassEntry" :disabled="!cards || cards.length === 0"
+            class="cursor-pointer" />
+        </div>
+        <div>
+          <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
+            :loading="(!!addCardSearchTerm && cardsStatus === 'pending') || addCardLoading" :items="filteredAddCards"
+            placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 min-w-90 cursor-pointer"
+            @update:model-value="handleAddCard" />
+        </div>
+
       </div>
     </div>
 
@@ -48,8 +53,8 @@
     <!-- Cards Results -->
     <ClientOnly>
       <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20"
-        :commander-card-id="currentCommanderItem?.card_id" @removeCard="handleRemoveCard"
-        @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
+        :commander-card-id="currentCommanderItem?.card_id" :commander-color-identity="commanderColorIdentity"
+        @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
       <template #fallback>
         <div class="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           <CardSkeleton v-for="i in 20" :key="`skeleton-${i}`" :showCardInfo="true" />
@@ -269,6 +274,13 @@ const currentCommanderName = computed(() => {
   const commanderItem = currentCommanderItem.value
   const card = cards.value.find((c: any) => c.card_data.id === commanderItem.card_id)
   return card?.card_data?.name || null
+})
+
+const commanderColorIdentity = computed(() => {
+  if (!currentCommanderItem.value || !cards.value) return null
+  const commanderItem = currentCommanderItem.value
+  const card = cards.value.find((c: any) => c.card_data.id === commanderItem.card_id)
+  return card?.card_data?.color_identity || null
 })
 
 async function handleSetCommander(commanderName: string) {

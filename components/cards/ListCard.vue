@@ -1,5 +1,5 @@
 <template>
-  <UCard variant="subtle" :class="['card-root', isCommander ? 'commander-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
+  <UCard variant="subtle" :class="['card-root', cardBgClass]" :ui="{ body: 'p-4 sm:p-4' }">
 
     <!-- Set Commander Confirmation Modal -->
     <UModal v-model:open="showCommanderModal" title="Set Commander">
@@ -41,6 +41,14 @@
       </div>
 
       <ClipboardButton :card="card" />
+
+      <!-- Legality Warning Overlay -->
+      <div v-if="legalityWarning" class="legality-overlay">
+        <div class="legality-overlay-content">
+          <UIcon name="i-lucide-triangle-alert" class="text-amber-400" size="28" />
+          <span class="text-xs text-amber-400 text-center font-medium leading-tight">{{ legalityWarning }}</span>
+        </div>
+      </div>
 
       <!-- Flip Button for Dual-Faced Cards -->
       <div v-if="isDualFaced" class="flip-card-btn" @click.stop="flipCard">
@@ -112,6 +120,7 @@ import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
+import { isLegal, isColorIdentityLegal } from '~/utils/legality';
 
 const router = useRouter();
 
@@ -125,6 +134,7 @@ const { data: commanders } = useFetch<string[]>('/commanders.min.json', {
 const props = defineProps<{
   card: Card;
   isCommander: boolean;
+  commanderColorIdentity?: string[] | null;
 }>();
 
 const emit = defineEmits<{
@@ -136,6 +146,31 @@ const emit = defineEmits<{
 const isFlipped = ref(false);
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
+
+const formatLegality = computed(() => {
+  return isLegal(props.card.card_data.legalities, 'commander');
+});
+
+const colorLegality = computed(() => {
+  if (!props.commanderColorIdentity || props.isCommander) return { legal: true };
+  return isColorIdentityLegal(
+    props.card.card_data.color_identity,
+    props.commanderColorIdentity,
+    props.card.card_data.type_line,
+  );
+});
+
+const legalityWarning = computed(() => {
+  if (!formatLegality.value.legal) return formatLegality.value.reason;
+  if (!colorLegality.value.legal) return colorLegality.value.reason;
+  return null;
+});
+
+const cardBgClass = computed(() => {
+  if (props.isCommander) return 'commander-card-bg';
+  if (legalityWarning.value) return 'illegal-card-bg';
+  return '';
+});
 
 const isEligibleCommander = computed(() => {
   if (!commanders.value || commanders.value.length === 0) return false;
@@ -253,6 +288,32 @@ function handleImageError(event: Event) {
 .commander-card-bg {
   background: #3a3520 !important;
   border: 1.5px solid rgba(234, 179, 8, 0.4);
+}
+
+.illegal-card-bg {
+  background: #3a2020 !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+}
+
+.legality-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 14px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.legality-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  max-width: 80%;
 }
 
 .card-image-wrapper img {
