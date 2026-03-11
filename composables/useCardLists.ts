@@ -1,7 +1,12 @@
 import type { Database } from '~/database.types';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
 
 type CardListInsert = Database['public']['Tables']['card_lists']['Insert'];
@@ -229,6 +234,7 @@ export const useCardLists = () => {
       },
       enabled: computed(() => cardIds.value.length > 0),
       staleTime: 1000 * 60 * 10, // 10 minutes
+      placeholderData: keepPreviousData,
     });
   };
 
@@ -264,10 +270,25 @@ export const useCardLists = () => {
       if (!supabase) return;
       return removeCardFromList(listId, cardId);
     },
+    onMutate: async ({ listId, cardId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['list-cards', listId] });
+
+      // Optimistically remove the card from all list-cards queries for this list
+      queryClient.setQueriesData<any[]>(
+        { queryKey: ['list-cards', listId] },
+        (old) => old?.filter((card: any) => card.card_data.id !== cardId),
+      );
+    },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+    onError: (_, { listId }) => {
+      // Refetch on error to restore correct state
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
     },
   });
 
