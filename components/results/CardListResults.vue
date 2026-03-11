@@ -10,10 +10,11 @@
     <!-- Cards Grid -->
     <template v-else-if="cards && cards.length > 0">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        <div v-for="(card, index) in cards" :key="card.card_data.id">
-          <CardComponent :card="card" :showCardInfo="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
-            :show-remove-button="true" :is-searched="highlightFirstCard && index === 0"
-            @remove="(cardId) => emit('removeCard', cardId)" />
+        <div v-for="card in cards" :key="card.card_data.id">
+          <ListCard :card="card" :is-commander="card.card_data.id === commanderCardId"
+            @remove="(cardId: string) => emit('removeCard', cardId)"
+            @set-commander="(cardName: string) => emit('setCommander', cardName)"
+            @clear-commander="emit('clearCommander')" />
         </div>
       </div>
     </template>
@@ -34,17 +35,17 @@
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
-import CardComponent from '~/components/general/Card.vue';
-import CardSkeleton from '~/components/general/CardSkeleton.vue';
 
 defineProps<{
   isLoading: boolean;
   cards: Card[] | undefined;
   skeletonCount?: number;
-  highlightFirstCard?: boolean;
+  commanderCardId?: string | null;
 }>();
 
 const emit = defineEmits<{
   (e: 'removeCard', cardId: string): void;
+  (e: 'setCommander', cardName: string): void;
+  (e: 'clearCommander'): void;
 }>();
 </script>

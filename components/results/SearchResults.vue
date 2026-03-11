@@ -12,7 +12,7 @@
       <SortComponent @sort="handleSort" class="mb-3" />
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
-          <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
+          <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
             :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
             :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
             :score-scale="scoreScale" />
@@ -45,8 +45,6 @@
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
-import CardComponent from '~/components/general/Card.vue';
-import CardSkeleton from '~/components/general/CardSkeleton.vue';
 import SortComponent from '~/components/search/Sort.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { sortSearchResults } from '~/utils/sort';

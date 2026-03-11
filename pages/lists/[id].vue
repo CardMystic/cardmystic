@@ -8,36 +8,23 @@
 
     <CardListBanner :list="list" :is-loading="isLoadingLists" />
 
-    <!-- Back Button and Actions -->
-    <div class="mb-6">
-      <NuxtLink to="/lists">
-        <UButton icon="i-lucide-arrow-left" color="neutral" variant="ghost" label="Back to Lists"
-          class="mb-4 cursor-pointer" />
-      </NuxtLink>
-
-      <div v-if="list" class="flex flex-col sm:flex-row sm:justify-between gap-2">
-        <div class="flex gap-2 flex-wrap items-center">
-          <UButton icon="i-lucide-copy" color="primary" variant="outline" label="Copy Names" @click="copyCardNames"
-            :disabled="!cards || cards.length === 0" class="cursor-pointer" />
-          <UButton icon="i-lucide-list-plus" color="primary" variant="outline" label="Bulk Add"
-            @click="isBulkAddModalOpen = true" class="cursor-pointer" />
-          <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
-            :label="`Buy on TCGPlayer ($${totalPrice.toFixed(2)})`" @click="openMassEntry"
-            :disabled="!cards || cards.length === 0" class="cursor-pointer" />
-        </div>
-        <!-- Sort Component -->
-        <div v-if="cards && cards.length > 0" class="sm:self-end mt-4 sm:mt-0 ">
-          <Sort @sort="handleSort" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Card Search -->
+    <!-- Actions + Add Card + Commander (single row) -->
     <div v-if="list" class="mb-2">
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap items-center">
+        <UTooltip text="Copy card names">
+          <UButton icon="i-lucide-copy" color="primary" variant="outline" @click="copyCardNames"
+            :disabled="!cards || cards.length === 0" class="cursor-pointer" label="Copy" />
+        </UTooltip>
+        <UTooltip text="Bulk add cards">
+          <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkAddModalOpen = true"
+            class="cursor-pointer" label="Bulk Add" />
+        </UTooltip>
+        <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
+          :label="`Buy ($${totalPrice.toFixed(2)})`" @click="openMassEntry" :disabled="!cards || cards.length === 0"
+          class="cursor-pointer" />
         <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
           :loading="(!!addCardSearchTerm && cardsStatus === 'pending') || addCardLoading" :items="filteredAddCards"
-          placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 cursor-pointer"
+          placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 min-w-45 cursor-pointer"
           @update:model-value="handleAddCard" />
       </div>
     </div>
@@ -53,46 +40,28 @@
       </div>
     </div>
 
-    <!-- Set Commander Button + Current Commander Display -->
-    <div v-if="list" class="mb-4">
-      <div class="flex gap-2 items-center">
-        <UButton icon="i-lucide-crown" color="neutral" variant="outline" label="Set Commander"
-          @click="isCommanderModalOpen = true" class="cursor-pointer h-8" size="sm" />
-        <template v-if="currentCommanderName">
-          <span class="text-sm text-gray-500 dark:text-gray-400">
-            {{ currentCommanderName }}
-          </span>
-          <UButton color="neutral" variant="link" size="xs" icon="i-lucide-circle-x" aria-label="Clear commander"
-            @click="handleClearCommander" />
-        </template>
-      </div>
+    <!-- Sort (centered) -->
+    <div v-if="list && cards && cards.length > 0" class="mb-4 flex justify-center">
+      <Sort @sort="handleSort" />
     </div>
 
     <!-- Cards Results -->
-    <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20" :highlight-first-card="hasCommander"
-      @removeCard="handleRemoveCard" />
+    <ClientOnly>
+      <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20"
+        :commander-card-id="currentCommanderItem?.card_id" @removeCard="handleRemoveCard"
+        @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
+      <template #fallback>
+        <div class="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <CardSkeleton v-for="i in 20" :key="`skeleton-${i}`" :showCardInfo="true" />
+        </div>
+      </template>
+    </ClientOnly>
   </div>
 
   <!-- Bulk Add Modal -->
   <BulkAddCardsModal v-model:open="isBulkAddModalOpen" :list-id="listId" />
 
-  <!-- Set Commander Modal -->
-  <UModal v-model:open="isCommanderModalOpen" title="Set Commander" description="Select a commander for this list.">
-    <template #body>
-      <div class="space-y-4">
-        <USelectMenu v-model="selectedCommander" v-model:search-term="commanderSearchTerm"
-          :loading="commandersStatus === 'pending' || setCommanderLoading" :items="filteredCommanders"
-          placeholder="Search for a commander..." icon="i-lucide-crown" class="w-full" />
-      </div>
-    </template>
-    <template #footer="{ close }">
-      <div class="flex justify-end gap-2">
-        <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-        <UButton label="Set Commander" color="primary" icon="i-lucide-crown" :disabled="!selectedCommander"
-          :loading="setCommanderLoading" @click="handleSetCommanderFromModal(close)" />
-      </div>
-    </template>
-  </UModal>
+
 </template>
 
 <script setup lang="ts">
@@ -259,9 +228,6 @@ async function handleAddCard(cardName: string) {
 // Bulk add state
 const isBulkAddModalOpen = ref(false)
 
-// Commander modal state
-const isCommanderModalOpen = ref(false)
-
 // Recommend state
 const recommendDescription = ref('')
 const router = useRouter()
@@ -291,33 +257,7 @@ const { data: rawCards, status: cardsStatus } = useFetch('/card-names.min.json',
 })
 
 // Commander autocomplete
-const selectedCommander = ref('')
-const commanderSearchTerm = ref('')
-const debouncedCommanderSearch = refDebounced(commanderSearchTerm, 150)
 const setCommanderLoading = ref(false)
-
-const { data: rawCommanders, status: commandersStatus } = useFetch('/commanders.min.json', {
-  key: 'autocomplete-commanders-list',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
-})
-
-const filteredCommanders = computed(() => {
-  if (!debouncedCommanderSearch.value || debouncedCommanderSearch.value.length < 2) {
-    return []
-  }
-  const searchLower = debouncedCommanderSearch.value.toLowerCase()
-  const filtered: string[] = []
-  for (let i = 0; i < rawCommanders.value.length && filtered.length < 100; i++) {
-    const cmd = rawCommanders.value[i]
-    if (cmd.toLowerCase().includes(searchLower)) {
-      filtered.push(cmd)
-    }
-  }
-  return filtered
-})
 
 // Find the current commander from list items
 const currentCommanderItem = computed(() => {
@@ -330,8 +270,6 @@ const currentCommanderName = computed(() => {
   const card = cards.value.find((c: any) => c.card_data.id === commanderItem.card_id)
   return card?.card_data?.name || null
 })
-
-const hasCommander = computed(() => !!currentCommanderItem.value)
 
 async function handleSetCommander(commanderName: string) {
   if (!commanderName || !list.value) return
@@ -347,9 +285,6 @@ async function handleSetCommander(commanderName: string) {
       title: `${commanderName} set as commander`,
       icon: 'i-lucide-crown'
     })
-
-    selectedCommander.value = ''
-    commanderSearchTerm.value = ''
   } catch (error: any) {
     toast.add({
       title: 'Error setting commander',
@@ -381,12 +316,6 @@ async function handleClearCommander() {
   } finally {
     setCommanderLoading.value = false
   }
-}
-
-async function handleSetCommanderFromModal(close: () => void) {
-  if (!selectedCommander.value) return
-  await handleSetCommander(selectedCommander.value)
-  close()
 }
 
 const totalPrice = computed(() => {

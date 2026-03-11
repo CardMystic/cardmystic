@@ -34,7 +34,7 @@
       <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
       <USelect label="select" class="w-50" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
         variant="outline"
-        @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend')"
+        @update:modelValue="(val) => { if (typeof val === 'string') setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend') }"
         :items="items" />
     </div>
 
