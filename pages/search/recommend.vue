@@ -7,7 +7,7 @@
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
         :skeleton-count="skeletonCount" score-scale="normalized" :hide-thumbs-down-button="true"
-        help-text="Paste a decklist above to get card recommendations." />
+        help-text="Paste a decklist above to get card recommendations." default-group-by="type" />
     </div>
   </UContainer>
 

@@ -10,7 +10,7 @@
 
     <template v-else-if="searchResults && searchResults.length">
       <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
-        <GroupBy @update:groupBy="handleGroupBy" />
+        <GroupBy :default-value="defaultGroupBy" @update:groupBy="handleGroupBy" />
         <SortComponent @sort="handleSort" />
       </div>
 
@@ -97,6 +97,7 @@ const props = defineProps<{
   isKeywordSearch?: boolean;
   hideThumbsDownButton?: boolean;
   scoreScale?: 'normalized' | 'raw';
+  defaultGroupBy?: string;
 }>();
 
 // Sorting state
@@ -104,7 +105,7 @@ const sortBy = ref<string | undefined>(undefined);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
 // Grouping state
-const groupBy = ref<string | undefined>(undefined);
+const groupBy = ref<string | undefined>(props.defaultGroupBy);
 
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
