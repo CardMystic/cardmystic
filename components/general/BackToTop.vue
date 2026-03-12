@@ -57,4 +57,6 @@ onUnmounted(() => {
   opacity: 0.9
   &:hover
     opacity: 1
+  @media (max-width: 767px)
+    top: 73px
 </style>
