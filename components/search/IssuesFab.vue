@@ -40,12 +40,4 @@ const onClick = props.onClick;
 
   &:hover::before
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(147, 114, 255, 0.4)
-
-  @media (max-width: 768px)
-    bottom: 20px
-    right: 20px
-    scale: 0.9
-
-  @media (max-height: 600px)
-    bottom: 80px
 </style>

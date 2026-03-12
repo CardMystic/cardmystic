@@ -30,6 +30,7 @@
 <script setup lang="ts">
 import { useCardLists } from '~/composables/useCardLists'
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData'
+import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders'
 import { useToast } from '#imports'
 
 const props = defineProps<{
@@ -60,14 +61,8 @@ const createLoading = computed(() => createListMutation.isPending.value)
 
 // Determine which partner category the selected commander belongs to
 const selectedCommanderPartnerType = computed(() => {
-  const name = newListCommander.value
-  if (!name || !partnerCommanders.value) return null
-  if (partnerCommanders.value.partner.includes(name)) return 'partner'
-  if (partnerCommanders.value.chooseABackground.includes(name)) return 'chooseABackground'
-  if (partnerCommanders.value.background.includes(name)) return 'background'
-  if (partnerCommanders.value.doctorsCompanion.includes(name)) return 'doctorsCompanion'
-  if (partnerCommanders.value.timeLordDoctor.includes(name)) return 'timeLordDoctor'
-  return null
+  if (!newListCommander.value || !partnerCommanders.value) return null
+  return getPartnerType(newListCommander.value, partnerCommanders.value)
 })
 
 const showPartnerField = computed(() => !!selectedCommanderPartnerType.value)
@@ -75,13 +70,7 @@ const showPartnerField = computed(() => !!selectedCommanderPartnerType.value)
 // Valid partner options based on the selected commander's partner type
 const validPartnerList = computed(() => {
   if (!partnerCommanders.value || !selectedCommanderPartnerType.value) return []
-  const type = selectedCommanderPartnerType.value
-  if (type === 'partner') return partnerCommanders.value.partner
-  if (type === 'chooseABackground') return partnerCommanders.value.background
-  if (type === 'background') return partnerCommanders.value.chooseABackground
-  if (type === 'doctorsCompanion') return partnerCommanders.value.timeLordDoctor
-  if (type === 'timeLordDoctor') return partnerCommanders.value.doctorsCompanion
-  return []
+  return getValidPartners(selectedCommanderPartnerType.value, partnerCommanders.value)
 })
 
 // Filtered commander autocomplete

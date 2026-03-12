@@ -26,6 +26,16 @@
       </div>
     </UFormField>
 
+    <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
+      <div class="flex gap-2 items-center">
+        <USelectMenu v-model="state.partnerCommander" v-model:search-term="partnerSearchTerm"
+          :loading="!partnerCommanders" :items="filteredPartners" placeholder="Select a partner commander (optional)..."
+          icon="i-lucide-crown" class="flex-1" :ui="{ base: 'text-base h-10' }" />
+        <UButton v-if="state.partnerCommander" color="neutral" variant="link" size="sm" icon="i-lucide-circle-x"
+          aria-label="Clear partner commander" @click="state.partnerCommander = ''" />
+      </div>
+    </UFormField>
+
     <UFormField name="limit" class="mb-2">
       <UInput v-model.number="state.limit" type="number" :min="1" :max="1000"
         placeholder="Number of results (default: 40)" icon="i-lucide-hash" class="w-full"
@@ -50,7 +60,8 @@
 import * as z from 'zod'
 import { useRoute } from 'vue-router';
 import { refDebounced } from '@vueuse/core';
-import { useCommanders } from '~/composables/useBulkData';
+import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
+import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
@@ -58,6 +69,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 const schema = z.object({
   description: z.string().optional(),
   commander: z.string().optional(),
+  partnerCommander: z.string().optional(),
   limit: z.number().min(1).max(1000).optional(),
   decklist: z.string().optional(),
 })
@@ -68,12 +80,14 @@ const route = useRoute();
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
-const commanderParam = computed(() => String(route.query.commander || ''));
+const commanderParam = computed(() => String(route.query.commanders || ''));
+const commanderNames = computed(() => commanderParam.value ? commanderParam.value.split(',').map(c => c.trim()).filter(Boolean) : []);
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
 
 const state = reactive<Partial<Schema>>({
   description: descriptionParam.value || '',
-  commander: commanderParam.value || '',
+  commander: commanderNames.value[0] || '',
+  partnerCommander: commanderNames.value[1] || '',
   limit: limitParam.value,
   decklist: decklistParam.value || '',
 })
@@ -83,6 +97,7 @@ const commanderSearchTerm = ref('');
 const debouncedCommanderSearch = refDebounced(commanderSearchTerm, 150);
 
 const { data: rawCommanders, status: commanderQueryStatus } = useCommanders();
+const { data: partnerCommanders } = usePartnerCommanders();
 const commanderStatus = computed(() => commanderQueryStatus.value === 'pending' ? 'pending' : 'success');
 
 const filteredCommanders = computed(() => {
@@ -107,6 +122,45 @@ const filteredCommanders = computed(() => {
   return filtered;
 })
 
+// Partner commander logic
+const partnerSearchTerm = ref('');
+const debouncedPartnerSearch = refDebounced(partnerSearchTerm, 150);
+
+const selectedCommanderPartnerType = computed(() => {
+  if (!state.commander || !partnerCommanders.value) return null
+  return getPartnerType(state.commander, partnerCommanders.value)
+})
+
+const showPartnerField = computed(() => !!selectedCommanderPartnerType.value)
+
+const validPartnerList = computed(() => {
+  if (!partnerCommanders.value || !selectedCommanderPartnerType.value) return []
+  return getValidPartners(selectedCommanderPartnerType.value, partnerCommanders.value)
+})
+
+const filteredPartners = computed(() => {
+  if (!debouncedPartnerSearch.value || debouncedPartnerSearch.value.length < 2) {
+    if (state.partnerCommander) return [state.partnerCommander]
+    return []
+  }
+  const searchLower = debouncedPartnerSearch.value.toLowerCase()
+  const filtered: string[] = []
+  if (state.partnerCommander) filtered.push(state.partnerCommander)
+  for (const cmd of validPartnerList.value) {
+    if (filtered.length >= 100) break
+    if (cmd !== state.commander && cmd !== state.partnerCommander && cmd.toLowerCase().includes(searchLower)) {
+      filtered.push(cmd)
+    }
+  }
+  return filtered
+})
+
+// Clear partner when commander changes
+watch(() => state.commander, () => {
+  state.partnerCommander = ''
+  partnerSearchTerm.value = ''
+})
+
 // Honeypot field for bot detection
 const honeypot = ref('')
 
@@ -123,10 +177,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 
   try {
+    const commandersList: string[] = []
+    if (event.data.commander) commandersList.push(event.data.commander)
+    if (event.data.partnerCommander) commandersList.push(event.data.partnerCommander)
+
     const query: Record<string, any> = {
       decklist: event.data.decklist,
       description: event.data.description || undefined,
-      commander: event.data.commander || undefined,
+      commanders: commandersList.length > 0 ? commandersList.join(',') : undefined,
       limit: event.data.limit || undefined,
       searchType: 'recommend',
     };
@@ -155,9 +213,14 @@ watch(descriptionParam, (newVal) => {
     state.description = newVal;
   }
 });
-watch(commanderParam, (newVal) => {
-  if (newVal !== state.commander) {
-    state.commander = newVal;
+watch(commanderNames, (newVal) => {
+  const newFirst = newVal[0] || ''
+  const newSecond = newVal[1] || ''
+  if (newFirst !== state.commander) {
+    state.commander = newFirst;
+  }
+  if (newSecond !== state.partnerCommander) {
+    state.partnerCommander = newSecond;
   }
 });
 watch(limitParam, (newVal) => {

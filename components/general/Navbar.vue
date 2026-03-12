@@ -137,7 +137,7 @@ const externalItems: NavigationMenuItem[] = [
 
 <template>
   <header
-    :class="[props.isFixed ? 'fixed' : 'sticky', 'left-0 right-0 top-0 z-50 px-4 py-4 flex items-center justify-center bg-white/100 dark:bg-gray-950/75 backdrop-blur border-b border-gray-200 dark:border-gray-800']">
+    :class="[props.isFixed ? 'fixed' : 'sticky', 'left-0 right-0 top-0 z-50 px-4 py-4 flex items-center justify-center bg-white dark:bg-gray-950/75 backdrop-blur border-b border-gray-200 dark:border-gray-800']">
 
     <!-- Mobile -->
     <div class="md:hidden flex flex-row justify-between w-full">
@@ -236,12 +236,12 @@ const externalItems: NavigationMenuItem[] = [
 
       <!-- Desktop Navigation -->
       <UNavigationMenu :items="[...mainItems, ...externalItems]" :ui="{
-        viewport: 'w-auto min-w-[12rem] max-w-sm',
+        viewport: 'w-auto min-w-48 max-w-sm',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
         content: 'w-auto'
       }" />
       <!-- Clipboard Button (always visible, right side) -->
-      <ClipboardMenu class="ml-4 h-[50px]" />
+      <ClipboardMenu class="ml-4 h-12.5" />
 
       <ClientOnly>
         <span v-if="!userProfile && !loading" class="relative">

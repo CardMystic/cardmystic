@@ -36,7 +36,9 @@ const route = useRoute();
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
-const commanderParam = computed(() => String(route.query.commander || ''));
+const commanderParam = computed(() => String(route.query.commanders || ''));
+const commanderNames = computed(() => commanderParam.value ? commanderParam.value.split(',').map(c => c.trim()).filter(Boolean) : []);
+const firstCommanderName = computed(() => commanderNames.value[0] || '');
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 100);
 
 useSeoMeta({
@@ -44,33 +46,33 @@ useSeoMeta({
     decklistParam.value
       ? 'noindex, follow'
       : 'index, follow',
-  title: () => commanderParam.value
-    ? `Deck Recommendations for ${commanderParam.value} | CardMystic`
+  title: () => firstCommanderName.value
+    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
     : 'Deck Recommender | CardMystic',
-  description: () => commanderParam.value
-    ? `Get card recommendations for your ${commanderParam.value} Magic: The Gathering deck!`
+  description: () => firstCommanderName.value
+    ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!`
     : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
   ogType: 'website',
 
-  ogTitle: () => commanderParam.value
-    ? `Deck Recommendations for ${commanderParam.value} | CardMystic`
+  ogTitle: () => firstCommanderName.value
+    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
     : 'Deck Recommender | CardMystic',
 
   ogDescription: () =>
-    commanderParam.value
-      ? `Get card recommendations for your ${commanderParam.value} Magic: The Gathering deck!`
+    firstCommanderName.value
+      ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!`
       : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
 
   ogImage: 'https://cardmystic.io/cardmystic_cards.png',
   ogImageAlt: () => 'Deck Recommender',
   twitterCard: 'summary_large_image',
-  twitterTitle: () => commanderParam.value
-    ? `Deck Recommendations for ${commanderParam.value} | CardMystic`
+  twitterTitle: () => firstCommanderName.value
+    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
     : 'Deck Recommender | CardMystic',
 
   twitterDescription: () =>
-    commanderParam.value
-      ? `Get card recommendations for your ${commanderParam.value} Magic: The Gathering deck!.`
+    firstCommanderName.value
+      ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!.`
       : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
 
   twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
@@ -89,15 +91,15 @@ function parseDecklist(raw: string): string[] {
 
 const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
   const hasDecklist = !!decklistParam.value;
-  const hasCommander = !!commanderParam.value;
-  if (!hasDecklist && !hasCommander) return undefined;
+  const hasCommanders = commanderNames.value.length > 0;
+  if (!hasDecklist && !hasCommanders) return undefined;
   const cards = hasDecklist ? parseDecklist(decklistParam.value) : [];
   if (hasDecklist && cards.length === 0) return undefined;
   return {
     cards: cards.length > 0 ? cards : undefined,
     limit: limitParam.value,
     query: descriptionParam.value || undefined,
-    commander: commanderParam.value || undefined,
+    commanders: hasCommanders ? commanderNames.value : undefined,
   };
 });
 
@@ -106,14 +108,14 @@ const skeletonCount = ref(20);
 const { searchResults, isLoading } = useAlsRecommend(alsRequest);
 
 const { data: commanderCard } = useQuery({
-  queryKey: computed(() => ['commander-card', commanderParam.value]),
+  queryKey: computed(() => ['commander-card', firstCommanderName.value]),
   queryFn: async (): Promise<CardType> => {
     const cardData = await $fetch<ScryfallCard>(
-      `${config.public.backendUrl}/cards/name/${encodeURIComponent(commanderParam.value)}`,
+      `${config.public.backendUrl}/cards/name/${encodeURIComponent(firstCommanderName.value)}`,
     );
-    return { card_name: commanderParam.value, card_data: cardData };
+    return { card_name: firstCommanderName.value, card_data: cardData };
   },
-  enabled: computed(() => !!commanderParam.value),
+  enabled: computed(() => !!firstCommanderName.value),
   staleTime: 1000 * 60 * 15,
 });
 

@@ -6,7 +6,7 @@ export interface AlsRecommendRequest {
   cards?: string[];
   limit: number;
   query?: string;
-  commander?: string;
+  commanders?: string[];
 }
 
 export function useAlsRecommend(
@@ -18,7 +18,8 @@ export function useAlsRecommend(
     () =>
       !!searchParams.value &&
       ((searchParams.value.cards && searchParams.value.cards.length > 0) ||
-        !!searchParams.value.commander),
+        (searchParams.value.commanders &&
+          searchParams.value.commanders.length > 0)),
   );
 
   const {
