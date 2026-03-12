@@ -137,7 +137,6 @@ const loading = computed(() =>
   isLoadingLists.value ||
   isLoadingItems.value ||
   isLoadingCards.value ||
-  isFetchingCards.value ||
   (cardIds.value.length > 0 && cards.value.length === 0)
 )
 
