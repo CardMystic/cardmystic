@@ -26,7 +26,7 @@
         <UButton icon="i-lucide-trash-2" color="error" variant="outline" label="Clear All" @click="confirmClearAll" />
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <Card v-for="card in displayedCards" :key="card.id"
           :card="{ card_name: card.name, card_data: card, score: undefined }" :show-card-info="true"
           :hide-progress-bar="true" :hide-thumbs-down-button="true" />

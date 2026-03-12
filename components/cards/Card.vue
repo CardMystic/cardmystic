@@ -1,5 +1,5 @@
 <template>
-  <UCard variant="subtle" :class="['card-root', isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-4 sm:p-4' }">
+  <UCard variant="subtle" :class="['card-root', isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-2 sm:p-4' }">
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"

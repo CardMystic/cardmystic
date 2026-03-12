@@ -57,7 +57,7 @@
         :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
         @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
       <template #fallback>
-        <div class="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+        <div class="mt-3 w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           <CardSkeleton v-for="i in 20" :key="`skeleton-${i}`" :showCardInfo="true" />
         </div>
       </template>
@@ -279,8 +279,14 @@ function goToRecommend() {
   if (recommendDescription.value.trim()) {
     query.description = recommendDescription.value.trim()
   }
-  if (currentCommanderName.value) {
-    query.commander = currentCommanderName.value
+  const commanderNamesList = currentCommanderItems.value
+    .map((item: any) => {
+      const card = cards.value.find((c: any) => c.card_data.id === item.card_id)
+      return card?.card_data?.name
+    })
+    .filter(Boolean)
+  if (commanderNamesList.length > 0) {
+    query.commanders = commanderNamesList.join(',')
   }
   router.push({ path: '/search/recommend', query })
 }
