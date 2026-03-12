@@ -4,9 +4,12 @@
       <!-- Shared Search Form -->
       <Search class="mt-6 w-full" />
 
-      <!-- Commander Card -->
-      <div v-if="commanderCard" class="mt-4 w-fit">
-        <Card :card="commanderCard" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true" />
+      <!-- Commander Card(s) -->
+      <div v-if="commanderCards && commanderCards.length" class="mt-4 flex flex-wrap gap-4 justify-center">
+        <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-[300px]">
+          <Card :card="cmd" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
+            :is-commander="true" />
+        </div>
       </div>
 
       <!-- Results -->
@@ -107,15 +110,20 @@ const skeletonCount = ref(20);
 
 const { searchResults, isLoading } = useAlsRecommend(alsRequest);
 
-const { data: commanderCard } = useQuery({
-  queryKey: computed(() => ['commander-card', firstCommanderName.value]),
-  queryFn: async (): Promise<CardType> => {
-    const cardData = await $fetch<ScryfallCard>(
-      `${config.public.backendUrl}/cards/name/${encodeURIComponent(firstCommanderName.value)}`,
+const { data: commanderCards } = useQuery({
+  queryKey: computed(() => ['commander-cards', commanderNames.value]),
+  queryFn: async (): Promise<CardType[]> => {
+    const results = await Promise.all(
+      commanderNames.value.map(async (name) => {
+        const cardData = await $fetch<ScryfallCard>(
+          `${config.public.backendUrl}/cards/name/${encodeURIComponent(name)}`,
+        );
+        return { card_name: name, card_data: cardData } as CardType;
+      })
     );
-    return { card_name: firstCommanderName.value, card_data: cardData };
+    return results;
   },
-  enabled: computed(() => !!firstCommanderName.value),
+  enabled: computed(() => commanderNames.value.length > 0),
   staleTime: 1000 * 60 * 15,
 });
 

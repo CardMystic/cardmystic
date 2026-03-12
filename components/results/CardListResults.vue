@@ -30,7 +30,7 @@
           @click="openAccordionValues = []" />
       </div>
       <UAccordion v-if="labeledGroups.length > 0" type="multiple" v-model="openAccordionValues" :items="accordionItems"
-        :ui="{ item: 'w-fit mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary rounded-lg px-4 py-2 mb-1' }">
+        :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary rounded-lg px-4 py-2 mb-1' }">
         <template v-for="group in labeledGroups" :key="group.label" #[group.label]>
           <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-2">
             <div v-for="card in group.cards" :key="card.card_data.id">

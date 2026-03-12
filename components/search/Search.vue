@@ -217,14 +217,14 @@ watch(searchType, async (newType) => {
   }
   else if (newType === 'recommend' && route.path !== '/search/recommend' && route.path !== '/') {
     let query: any = undefined;
-    if (route.query.decklist && route.query.searchType === 'recommend') {
+    if ((route.query.decklist || route.query.commanders) && route.query.searchType === 'recommend') {
       query = { ...route.query };
     } else {
       const stored = sessionStorage.getItem('recommend_search_query');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (parsed.decklist) query = parsed;
+          if (parsed.decklist || parsed.commanders) query = parsed;
         } catch { }
       }
     }

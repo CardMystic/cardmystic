@@ -43,6 +43,19 @@ function groupToId(label: string): string {
 }
 
 function scrollToGroup(label: string) {
+  // Find the accordion trigger button matching this group label
+  const buttons = document.querySelectorAll('button');
+  const triggerBtn = Array.from(buttons).find(
+    btn => btn.textContent?.trim() === label
+  );
+
+  if (triggerBtn) {
+    const y = triggerBtn.getBoundingClientRect().top + window.scrollY - 130;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+    return;
+  }
+
+  // Fallback to content ID (when accordion is expanded)
   const id = groupToId(label);
   const el = document.getElementById(id);
   if (el) {

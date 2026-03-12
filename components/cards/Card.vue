@@ -1,5 +1,7 @@
 <template>
-  <UCard variant="subtle" :class="['card-root', isSearched ? 'searched-card-bg' : '']" :ui="{ body: 'p-2 sm:p-4' }">
+  <UCard variant="subtle"
+    :class="['card-root', isSearched ? 'searched-card-bg' : '', isCommander ? 'commander-card-bg' : '']"
+    :ui="{ body: 'p-2 sm:p-4' }">
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -180,6 +182,10 @@ const props = defineProps({
     default: false,
   },
   showRemoveButton: {
+    type: Boolean,
+    default: false,
+  },
+  isCommander: {
     type: Boolean,
     default: false,
   },
@@ -431,6 +437,11 @@ function toggleShowAllData() {
 
 .searched-card-bg {
   background: #353a75 !important;
+}
+
+.commander-card-bg {
+  background: #3a3520 !important;
+  border: 1.5px solid rgba(234, 179, 8, 0.4);
 }
 
 @media (max-width: 767px) {
