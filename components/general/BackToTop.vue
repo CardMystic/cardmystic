@@ -1,10 +1,8 @@
 <template>
-  <UButton v-if="showButton" icon="i-heroicons-arrow-up" variant="solid" size="lg"
-    class="back-to-top-button cursor-pointer border-2 border-secondary" aria-label="Back to top" @click="scrollToTop"
-    square
-    style="position: fixed !important; top: 85px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 9999 !important; width: 120px !important; max-width: 200px !important; height: auto !important; max-height: 48px !important;">
+  <div v-if="showButton" class="back-to-top cursor-pointer" @click="scrollToTop">
+    <UIcon name="i-heroicons-arrow-up" class="mr-1" />
     Back to top
-  </UButton>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -37,3 +35,26 @@ onUnmounted(() => {
   }
 })
 </script>
+
+<style lang="sass" scoped>
+.back-to-top
+  position: fixed
+  top: 83px
+  left: 50%
+  transform: translateX(-50%)
+  z-index: 9999
+  background: white
+  color: black
+  padding: 8px 20px
+  border-radius: 0 0 12px 12px
+  display: flex
+  align-items: center
+  justify-content: center
+  font-weight: 500
+  font-size: 14px
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15)
+  border: 1px solid rgba(0, 0, 0, 0.1)
+  opacity: 0.9
+  &:hover
+    opacity: 1
+</style>
