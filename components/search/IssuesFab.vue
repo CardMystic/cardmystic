@@ -22,7 +22,7 @@ const onClick = props.onClick;
   position: fixed
   bottom: 58px
   right: 8px
-  z-index: 9999
+  z-index: 99
   isolation: isolate
 
   transition: transform 0.3s ease

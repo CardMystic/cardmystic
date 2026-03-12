@@ -1,6 +1,6 @@
 <template>
   <div v-if="groups.length > 0"
-    class="ml-2 jump-to-container sm:bg-elevated p-2 rounded-md sm:border-2 sm:border-secondary"
+    class="jump-to-container sm:ml-2 sm:bg-elevated sm:p-2 sm:rounded-md sm:border-2 sm:border-secondary"
     :style="{ bottom: bottomOffset + 'px' }">
     <!-- Desktop: show all group buttons inline -->
     <div class="hidden sm:flex items-center gap-1 flex-wrap">
@@ -12,11 +12,11 @@
 
     <!-- Mobile: collapsed dropdown -->
     <div class="sm:hidden relative" ref="mobileContainer">
-      <UButton icon="i-lucide-map-pin" color="primary" variant="solid" size="sm" class="cursor-pointer"
-        aria-label="Jump to group" @click="mobileOpen = !mobileOpen" />
+      <UButton icon="i-lucide-map-pin" color="neutral" variant="soft" size="xl"
+        class="cursor-pointer border-2 border-secondary" aria-label="Jump to group" @click="mobileOpen = !mobileOpen" />
       <Transition name="fade">
         <div v-if="mobileOpen"
-          class="absolute right-0 bottom-full mb-2 bg-elevated rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-40 z-50">
+          class="absolute right-0 bottom-full mb-2 bg-elevated rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-40 z-999">
           <span class="text-xs font-medium text-muted px-2 pb-1">Jump to:</span>
           <UButton v-for="group in groups" :key="group" :label="group" size="xs" color="neutral" variant="soft"
             class="cursor-pointer w-full justify-start" @click="scrollToGroup(group); mobileOpen = false" />
