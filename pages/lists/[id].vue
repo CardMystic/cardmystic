@@ -69,6 +69,8 @@
 
   <BackToTop />
 
+  <DeckStats :card-count="cards?.length ?? 0" :total-price="totalPrice" @buy="openMassEntry" />
+
   <JumpTo :groups="jumpToGroups" />
 
 
