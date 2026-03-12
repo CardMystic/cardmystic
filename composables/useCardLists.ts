@@ -1,4 +1,3 @@
-import type { Database } from '~/database.types';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
 import {
@@ -8,8 +7,6 @@ import {
   keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
-
-type CardListInsert = Database['public']['Tables']['card_lists']['Insert'];
 
 export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
@@ -42,7 +39,11 @@ export const useCardLists = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const createList = async (name: string, description?: string) => {
+  const createList = async (
+    name: string,
+    description?: string,
+    commanders?: string[],
+  ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -52,32 +53,44 @@ export const useCardLists = () => {
       throw new Error('List name cannot be empty');
     }
 
-    const newList: CardListInsert = {
-      user_id: userProfile.value.id,
-      name: name.trim(),
-      description: description?.trim() || null,
-    };
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
 
-    const { data, error } = await supabase
-      .from('card_lists')
-      .insert(newList)
-      .select()
-      .single();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
 
-    if (error) throw error;
-    return data;
+    const config = useRuntimeConfig();
+    const response = await $fetch<{ id: string; name: string }>(
+      `${config.public.backendUrl}/supabase/card-lists/create`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          name: name.trim(),
+          description: description?.trim() || undefined,
+          commanders: commanders?.filter((c) => c.trim()) || [],
+        },
+      },
+    );
+
+    return response;
   };
 
   const createListMutation = useMutation({
     mutationFn: async ({
       name,
       description,
+      commanders,
     }: {
       name: string;
       description?: string;
+      commanders?: string[];
     }) => {
       if (!supabase) return;
-      return createList(name, description);
+      return createList(name, description, commanders);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });

@@ -58,3 +58,30 @@ export function useCardIds() {
     refetchOnWindowFocus: false,
   });
 }
+
+export interface PartnerCommanders {
+  partner: string[];
+  chooseABackground: string[];
+  background: string[];
+  doctorsCompanion: string[];
+  timeLordDoctor: string[];
+}
+
+export function usePartnerCommanders() {
+  const config = useRuntimeConfig();
+
+  return useQuery<PartnerCommanders>({
+    queryKey: ['bulkdata', 'partner-commanders'],
+    queryFn: async () => {
+      const response = await fetch(
+        `${config.public.backendUrl}/bulkdata/partner-commanders`,
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch partner commanders');
+      }
+      return response.json();
+    },
+    staleTime: STALE_TIME,
+    refetchOnWindowFocus: false,
+  });
+}
