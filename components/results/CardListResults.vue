@@ -13,11 +13,11 @@
       <template v-for="group in ungroupedGroups" :key="'ungrouped'">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
           <div v-for="card in group.cards" :key="card.card_data.id">
-            <ListCard :card="card" :is-commander="card.card_data.id === commanderCardId"
+            <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
               :commander-color-identity="commanderColorIdentity"
               @remove="(cardId: string) => emit('removeCard', cardId)"
               @set-commander="(cardName: string) => emit('setCommander', cardName)"
-              @clear-commander="emit('clearCommander')" />
+              @clear-commander="(cardId: string) => emit('clearCommander', cardId)" />
           </div>
         </div>
       </template>
@@ -35,11 +35,11 @@
           <div :id="groupToId(group.label)"
             class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-2">
             <div v-for="card in group.cards" :key="card.card_data.id">
-              <ListCard :card="card" :is-commander="card.card_data.id === commanderCardId"
+              <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
                 :commander-color-identity="commanderColorIdentity"
                 @remove="(cardId: string) => emit('removeCard', cardId)"
                 @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                @clear-commander="emit('clearCommander')" />
+                @clear-commander="(cardId: string) => emit('clearCommander', cardId)" />
             </div>
           </div>
         </template>
@@ -69,7 +69,7 @@ const props = defineProps<{
   isLoading: boolean;
   groups: CardGroup[] | null;
   skeletonCount?: number;
-  commanderCardId?: string | null;
+  commanderCardIds?: string[] | null;
   commanderColorIdentity?: string[] | null;
 }>();
 
@@ -100,7 +100,7 @@ watch(labeledGroups, (groups) => {
 const emit = defineEmits<{
   (e: 'removeCard', cardId: string): void;
   (e: 'setCommander', cardName: string): void;
-  (e: 'clearCommander'): void;
+  (e: 'clearCommander', cardId: string): void;
 }>();
 
 function groupToId(label: string): string {

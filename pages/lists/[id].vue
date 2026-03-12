@@ -54,7 +54,7 @@
     <!-- Cards Results -->
     <ClientOnly>
       <CardListResults :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
-        :commander-card-id="currentCommanderItem?.card_id" :commander-color-identity="commanderColorIdentity"
+        :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
         @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
       <template #fallback>
         <div class="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -174,26 +174,24 @@ async function handleRemoveCard(cardId: string) {
   }
 }
 
-// Computed grouped + sorted results - commander always first (outside groups)
+// Computed grouped + sorted results - commanders always first (outside groups)
 const cardGroups = computed(() => {
   if (!cards.value || cards.value.length === 0) {
     return null;
   }
 
-  const commanderCardId = currentCommanderItem.value?.card_id
-  const cardsToGroup = commanderCardId
-    ? cards.value.filter((c: any) => c.card_data.id !== commanderCardId)
+  const ids = commanderCardIds.value
+  const cardsToGroup = ids.length > 0
+    ? cards.value.filter((c: any) => !ids.includes(c.card_data.id))
     : cards.value
 
   const groups = groupAndSortCards(cardsToGroup, groupBy.value, sortBy.value, sortDirection.value);
 
-  // Prepend commander as its own group if present
-  if (commanderCardId) {
-    const commander = cards.value.find((c: any) => c.card_data.id === commanderCardId)
-    if (commander) {
-      const commanderGroup = { label: '', cards: [commander] };
-      return groups ? [commanderGroup, ...groups] : [commanderGroup];
-    }
+  // Prepend commanders as their own group if present
+  const commanderCards = cards.value.filter((c: any) => ids.includes(c.card_data.id))
+  if (commanderCards.length > 0) {
+    const commanderGroup = { label: '', cards: commanderCards };
+    return groups ? [commanderGroup, ...groups] : [commanderGroup];
   }
 
   return groups;
@@ -291,23 +289,34 @@ const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pendi
 // Commander autocomplete
 const setCommanderLoading = ref(false)
 
-// Find the current commander from list items
-const currentCommanderItem = computed(() => {
-  return listItems.value?.find((item: any) => item.is_commander === true)
+// Find the current commanders from list items (up to 2 for partner)
+const currentCommanderItems = computed(() => {
+  return listItems.value?.filter((item: any) => item.is_commander === true) || []
+})
+
+const commanderCardIds = computed(() => {
+  return currentCommanderItems.value.map((item: any) => item.card_id)
 })
 
 const currentCommanderName = computed(() => {
-  if (!currentCommanderItem.value || !cards.value) return null
-  const commanderItem = currentCommanderItem.value
-  const card = cards.value.find((c: any) => c.card_data.id === commanderItem.card_id)
+  if (currentCommanderItems.value.length === 0 || !cards.value) return null
+  const first = currentCommanderItems.value[0]
+  const card = cards.value.find((c: any) => c.card_data.id === first.card_id)
   return card?.card_data?.name || null
 })
 
 const commanderColorIdentity = computed(() => {
-  if (!currentCommanderItem.value || !cards.value) return null
-  const commanderItem = currentCommanderItem.value
-  const card = cards.value.find((c: any) => c.card_data.id === commanderItem.card_id)
-  return card?.card_data?.color_identity || null
+  if (currentCommanderItems.value.length === 0 || !cards.value) return null
+  const colors = new Set<string>()
+  for (const item of currentCommanderItems.value) {
+    const card = cards.value.find((c: any) => c.card_data.id === item.card_id)
+    if (card?.card_data?.color_identity) {
+      for (const c of card.card_data.color_identity) {
+        colors.add(c)
+      }
+    }
+  }
+  return colors.size > 0 ? [...colors] : null
 })
 
 async function handleSetCommander(commanderName: string) {
@@ -343,12 +352,12 @@ async function handleSetCommander(commanderName: string) {
   }
 }
 
-async function handleClearCommander() {
+async function handleClearCommander(cardId: string) {
   if (!list.value) return
 
   setCommanderLoading.value = true
   try {
-    await clearCommanderMutation.mutateAsync(list.value.id)
+    await clearCommanderMutation.mutateAsync({ listId: list.value.id, cardId })
 
     toast.add({
       title: 'Commander cleared',

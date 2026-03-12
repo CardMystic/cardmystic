@@ -449,26 +449,37 @@ export const useCardLists = () => {
     },
   });
 
-  const clearCommander = async (listId: string) => {
+  const clearCommander = async (listId: string, cardId?: string) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
 
-    const { error } = await supabase
+    let query = supabase
       .from('card_list_items')
       .update({ is_commander: false })
       .eq('list_id', listId);
 
+    if (cardId) {
+      query = query.eq('card_id', cardId);
+    }
+
+    const { error } = await query;
     if (error) throw error;
   };
 
   const clearCommanderMutation = useMutation({
-    mutationFn: async (listId: string) => {
+    mutationFn: async ({
+      listId,
+      cardId,
+    }: {
+      listId: string;
+      cardId?: string;
+    }) => {
       if (!supabase) return;
-      return clearCommander(listId);
+      return clearCommander(listId, cardId);
     },
-    onSuccess: (_, listId) => {
+    onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });

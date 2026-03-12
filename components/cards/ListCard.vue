@@ -136,7 +136,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
   (e: 'setCommander', cardName: string): void;
-  (e: 'clearCommander'): void;
+  (e: 'clearCommander', cardId: string): void;
 }>();
 
 const isFlipped = ref(false);
@@ -199,7 +199,7 @@ function confirmSetCommander(close: () => void) {
 }
 
 function confirmClearCommander(close: () => void) {
-  emit('clearCommander');
+  emit('clearCommander', props.card.card_data.id);
   close();
 }
 
