@@ -8,7 +8,7 @@
 
     <CardListBanner :list="list" :is-loading="isLoadingLists" />
 
-    <!-- Actions + Add Card + Commander (single row) -->
+    <!-- Actions + Add Card -->
     <div v-if="list" class="mb-2">
       <div class="flex flex-wrap items-center justify-between">
         <div class="flex gap-2 mb-2">

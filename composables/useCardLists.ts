@@ -406,58 +406,29 @@ export const useCardLists = () => {
       throw new Error('User not authenticated');
     }
 
-    // 1. Clear is_commander on all items in this list
-    const { error: clearError } = await supabase
-      .from('card_list_items')
-      .update({ is_commander: false })
-      .eq('list_id', listId);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
 
-    if (clearError) throw clearError;
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
 
-    // 2. Check if the commander card already exists in the list
     const config = useRuntimeConfig();
-    const cardData: any = await $fetch(
-      `${config.public.backendUrl}/cards/name/${encodeURIComponent(commanderName)}`,
+    const response = await $fetch(
+      `${config.public.backendUrl}/supabase/card-lists/set-commander`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          listId,
+          commanderName,
+        },
+      },
     );
 
-    if (!cardData?.id) {
-      throw new Error('Commander card not found');
-    }
-
-    // 3. Check if card is already in the list
-    const { data: existingItems, error: checkError } = await supabase
-      .from('card_list_items')
-      .select('id')
-      .eq('list_id', listId)
-      .eq('card_id', cardData.id);
-
-    if (checkError) throw checkError;
-
-    // 4. Add card to list if not already there
-    if (!existingItems || existingItems.length === 0) {
-      const { error: insertError } = await supabase
-        .from('card_list_items')
-        .insert({ list_id: listId, card_id: cardData.id });
-
-      if (insertError) throw insertError;
-    }
-
-    // 5. Set is_commander = true for this card
-    const { error: setError } = await supabase
-      .from('card_list_items')
-      .update({ is_commander: true })
-      .eq('list_id', listId)
-      .eq('card_id', cardData.id);
-
-    if (setError) throw setError;
-
-    // 6. Update the list's updated_at timestamp
-    const { error: updateError } = await supabase
-      .from('card_lists')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', listId);
-
-    if (updateError) throw updateError;
+    return response;
   };
 
   const setCommanderMutation = useMutation({

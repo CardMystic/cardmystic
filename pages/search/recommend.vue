@@ -4,6 +4,11 @@
       <!-- Shared Search Form -->
       <Search class="mt-6 w-full" />
 
+      <!-- Commander Card -->
+      <div v-if="commanderCard" class="mt-4 w-fit">
+        <Card :card="commanderCard" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true" />
+      </div>
+
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
         :skeleton-count="skeletonCount" score-scale="normalized" :hide-thumbs-down-button="true"
@@ -16,13 +21,17 @@
 </template>
 
 <script setup lang="ts">
+import { useQuery } from '@tanstack/vue-query';
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePageInfo } from '~/composables/usePageInfo';
 import { useAlsRecommend } from '~/composables/useAlsRecommend';
 import type { AlsRecommendRequest } from '~/composables/useAlsRecommend';
+import type { Card as CardType } from '~/models/cardModel';
+import type { ScryfallCard } from '~/models/cardModel';
 
+const config = useRuntimeConfig();
 const route = useRoute();
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
@@ -95,6 +104,18 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
 const skeletonCount = ref(20);
 
 const { searchResults, isLoading } = useAlsRecommend(alsRequest);
+
+const { data: commanderCard } = useQuery({
+  queryKey: computed(() => ['commander-card', commanderParam.value]),
+  queryFn: async (): Promise<CardType> => {
+    const cardData = await $fetch<ScryfallCard>(
+      `${config.public.backendUrl}/cards/name/${encodeURIComponent(commanderParam.value)}`,
+    );
+    return { card_name: commanderParam.value, card_data: cardData };
+  },
+  enabled: computed(() => !!commanderParam.value),
+  staleTime: 1000 * 60 * 15,
+});
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 

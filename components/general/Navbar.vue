@@ -60,6 +60,12 @@ const mainItems: NavigationMenuItem[] = [
         description: 'Search for cards by keywords and filters',
         icon: 'i-lucide-whole-word',
         to: '/search/keyword',
+      },
+      {
+        label: 'Deck Recommender',
+        description: 'Get decklist recommendations',
+        icon: 'i-lucide-box',
+        to: '/search/recommend',
       }
     ]
   },
@@ -99,6 +105,12 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Search for cards by keywords and filters',
     icon: 'i-lucide-whole-word',
     to: '/search/keyword',
+  },
+  {
+    label: 'Deck Recommender',
+    description: 'Get decklist recommendations',
+    icon: 'i-lucide-box',
+    to: '/search/recommend',
   },
   {
     label: 'About',

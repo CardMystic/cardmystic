@@ -1,5 +1,6 @@
 <template>
-  <div v-if="groups.length > 0" class="ml-2 jump-to-container sm:bg-elevated p-2 rounded-md border-2 border-secondary"
+  <div v-if="groups.length > 0"
+    class="ml-2 jump-to-container sm:bg-elevated p-2 rounded-md sm:border-2 sm:border-secondary"
     :style="{ bottom: bottomOffset + 'px' }">
     <!-- Desktop: show all group buttons inline -->
     <div class="hidden sm:flex items-center gap-1 flex-wrap">
