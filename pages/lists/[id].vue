@@ -101,6 +101,7 @@ const {
   addCardsToListMutation,
   setCommanderMutation,
   clearCommanderMutation,
+  updateListAvatarMutation,
 } = useCardLists()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
@@ -126,11 +127,19 @@ const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 const cardIds = computed(() => listItems.value?.map((item: any) => item.card_id) || [])
 
 // Use TanStack Query to fetch card details
-const { data: cardsData, isLoading: isLoadingCards } = useListCards(listId, cardIds)
+const { data: cardsData, isLoading: isLoadingCards, isFetching: isFetchingCards } = useListCards(listId, cardIds)
 
 const cards = computed(() => cardsData.value || [])
 
-const loading = computed(() => isLoadingLists.value || isLoadingItems.value || isLoadingCards.value)
+// Show loading when lists/items are loading, cards query is loading/fetching,
+// or items have loaded with card IDs but card data hasn't arrived yet
+const loading = computed(() =>
+  isLoadingLists.value ||
+  isLoadingItems.value ||
+  isLoadingCards.value ||
+  isFetchingCards.value ||
+  (cardIds.value.length > 0 && cards.value.length === 0)
+)
 
 // Sorting + grouping state
 const sortBy = ref<string | undefined>('cmc')
@@ -311,6 +320,14 @@ async function handleSetCommander(commanderName: string) {
       listId: list.value.id,
       commanderName,
     })
+
+    // Set the list image to the commander if no image has been set
+    if (!list.value.avatar_card_name) {
+      await updateListAvatarMutation.mutateAsync({
+        listId: list.value.id,
+        cardName: commanderName,
+      })
+    }
 
     toast.add({
       title: `${commanderName} set as commander`,
