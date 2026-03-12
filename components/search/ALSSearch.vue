@@ -70,7 +70,7 @@ const schema = z.object({
   description: z.string().optional(),
   commander: z.string().optional(),
   partnerCommander: z.string().optional(),
-  limit: z.number().min(1).max(1000).optional(),
+  limit: z.number().min(1).max(500).optional(),
   decklist: z.string().optional(),
 })
 
