@@ -4,9 +4,13 @@
       <!-- Shared Search Form -->
       <Search class="mt-6 w-full" />
 
+      <!-- Not Found Warning -->
+      <UAlert v-if="notFound && notFound.length" variant="outline" color="warning" icon="i-lucide-triangle-alert"
+        class="mt-4 w-full" title="Some cards were not recognised" :description="notFound.join(', ')" />
+
       <!-- Commander Card(s) -->
       <div v-if="commanderCards && commanderCards.length" class="mt-4 flex flex-wrap gap-4 justify-center">
-        <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-[300px]">
+        <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-75">
           <Card :card="cmd" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
             :is-commander="true" />
         </div>
@@ -40,9 +44,10 @@ const route = useRoute();
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
-const commanderParam = computed(() => String(route.query.commanders || ''));
-const commanderNames = computed(() => commanderParam.value ? commanderParam.value.split(',').map(c => c.trim()).filter(Boolean) : []);
-const firstCommanderName = computed(() => commanderNames.value[0] || '');
+const commanderParam = computed(() => String(route.query.commander || ''));
+const partnerCommanderParam = computed(() => String(route.query.partnerCommander || ''));
+const commanderNames = computed(() => [commanderParam.value, partnerCommanderParam.value].filter(Boolean));
+const firstCommanderName = computed(() => commanderParam.value || '');
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 100);
 
 useSeoMeta({
@@ -109,20 +114,24 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
 
 const skeletonCount = ref(20);
 
-const { searchResults, isLoading, error: searchError } = useAlsRecommend(alsRequest);
+const { searchResults, isLoading, error: searchError, notFound } = useAlsRecommend(alsRequest);
 
 const { data: commanderCards } = useQuery({
   queryKey: computed(() => ['commander-cards', commanderNames.value]),
   queryFn: async (): Promise<CardType[]> => {
     const results = await Promise.all(
       commanderNames.value.map(async (name) => {
-        const cardData = await $fetch<ScryfallCard>(
-          `${config.public.backendUrl}/cards/name/${encodeURIComponent(name)}`,
-        );
-        return { card_name: name, card_data: cardData } as CardType;
+        try {
+          const cardData = await $fetch<ScryfallCard>(
+            `${config.public.backendUrl}/cards/name/${encodeURIComponent(name)}`,
+          );
+          return { card_name: name, card_data: cardData } as CardType;
+        } catch {
+          return null;
+        }
       })
     );
-    return results;
+    return results.filter((r): r is CardType => r !== null);
   },
   enabled: computed(() => commanderNames.value.length > 0),
   staleTime: 1000 * 60 * 15,

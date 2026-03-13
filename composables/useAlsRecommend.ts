@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/vue-query';
-import { computed, type ComputedRef } from 'vue';
+import { computed, type ComputedRef, type Ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 
 export interface AlsRecommendRequest {
@@ -9,10 +9,16 @@ export interface AlsRecommendRequest {
   commanders?: string[];
 }
 
+interface AlsRecommendResponse {
+  not_found?: string[];
+  results: Card[];
+}
+
 export function useAlsRecommend(
   searchParams: ComputedRef<AlsRecommendRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const notFound: Ref<string[]> = ref([]);
 
   const queryEnabled = computed(
     () =>
@@ -42,7 +48,9 @@ export function useAlsRecommend(
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Failed to fetch recommendations');
       }
-      return response.json() as Promise<Card[]>;
+      const body = (await response.json()) as AlsRecommendResponse;
+      notFound.value = body.not_found ?? [];
+      return body.results ?? [];
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
     enabled: queryEnabled,
@@ -52,6 +60,7 @@ export function useAlsRecommend(
     searchResults,
     isLoading,
     error,
+    notFound,
     refetch,
   };
 }
