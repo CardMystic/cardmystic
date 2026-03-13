@@ -79,14 +79,14 @@ const route = useRoute();
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
-const commanderParam = computed(() => String(route.query.commanders || ''));
-const commanderNames = computed(() => commanderParam.value ? commanderParam.value.split(',').map(c => c.trim()).filter(Boolean) : []);
+const commanderParam = computed(() => String(route.query.commander || ''));
+const partnerCommanderParam = computed(() => String(route.query.partnerCommander || ''));
 const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 
 const state = reactive<Partial<Schema>>({
   description: descriptionParam.value || '',
-  commander: commanderNames.value[0] || '',
-  partnerCommander: commanderNames.value[1] || '',
+  commander: commanderParam.value || '',
+  partnerCommander: partnerCommanderParam.value || '',
   limit: limitParam.value,
   decklist: decklistParam.value || '',
 })
@@ -176,14 +176,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 
   try {
-    const commandersList: string[] = []
-    if (event.data.commander) commandersList.push(event.data.commander)
-    if (event.data.partnerCommander) commandersList.push(event.data.partnerCommander)
-
     const query: Record<string, any> = {
       decklist: event.data.decklist,
       description: event.data.description || undefined,
-      commanders: commandersList.length > 0 ? commandersList.join(',') : undefined,
+      commander: event.data.commander || undefined,
+      partnerCommander: event.data.partnerCommander || undefined,
       limit: event.data.limit || undefined,
       searchType: 'recommend',
     };
@@ -212,14 +209,14 @@ watch(descriptionParam, (newVal) => {
     state.description = newVal;
   }
 });
-watch(commanderNames, (newVal) => {
-  const newFirst = newVal[0] || ''
-  const newSecond = newVal[1] || ''
-  if (newFirst !== state.commander) {
-    state.commander = newFirst;
+watch(commanderParam, (newVal) => {
+  if (newVal !== state.commander) {
+    state.commander = newVal;
   }
-  if (newSecond !== state.partnerCommander) {
-    state.partnerCommander = newSecond;
+});
+watch(partnerCommanderParam, (newVal) => {
+  if (newVal !== state.partnerCommander) {
+    state.partnerCommander = newVal;
   }
 });
 watch(limitParam, (newVal) => {
