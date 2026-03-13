@@ -5,7 +5,8 @@
 
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
-        :skeleton-count="skeletonCount" help-text="Please enter a search query to find cards." />
+        :skeleton-count="skeletonCount" :error-message="searchError?.message"
+        help-text="Please enter a search query to find cards." />
     </div>
   </UContainer>
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
@@ -99,7 +100,7 @@ const wordSearch = computed(() => {
 // Number of skeleton cards to show while loading (matches typical search result count)
 const skeletonCount = computed(() => limitParam.value || 20);
 
-const { searchResults, isLoading } = useColbertSearch(wordSearch);
+const { searchResults, isLoading, error: searchError } = useColbertSearch(wordSearch);
 
 </script>
 

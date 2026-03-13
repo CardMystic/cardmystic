@@ -62,6 +62,9 @@
         <div class="flex flex-col items-center">
           <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
           <div class="font-bold text-2xl mb-2">No results found</div>
+          <div v-if="errorMessage" class="subtitle2 mb-2 text-center text-red-400">
+            {{ errorMessage }}
+          </div>
           <div class="subtitle2 mb-4">
             Try adjusting your search terms or filters.<br>
             If you think this is a mistake, <NuxtLink :to="searchFeedbackUrl(getPageInfo())" target="_blank"
@@ -92,6 +95,7 @@ const props = defineProps<{
   queryParam: string | null;
   skeletonCount: number;
   helpText?: string;
+  errorMessage?: string;
   isSimilaritySearch?: boolean;
   isKeywordSearch?: boolean;
   hideThumbsDownButton?: boolean;

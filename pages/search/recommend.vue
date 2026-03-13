@@ -15,7 +15,8 @@
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
         :skeleton-count="skeletonCount" score-scale="normalized" :hide-thumbs-down-button="true"
-        help-text="Paste a decklist above to get card recommendations." default-group-by="type" />
+        :error-message="searchError?.message" help-text="Paste a decklist above to get card recommendations."
+        default-group-by="type" />
     </div>
   </UContainer>
 
@@ -108,7 +109,7 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
 
 const skeletonCount = ref(20);
 
-const { searchResults, isLoading } = useAlsRecommend(alsRequest);
+const { searchResults, isLoading, error: searchError } = useAlsRecommend(alsRequest);
 
 const { data: commanderCards } = useQuery({
   queryKey: computed(() => ['commander-cards', commanderNames.value]),

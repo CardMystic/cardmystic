@@ -6,8 +6,8 @@
 
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"
-        :skeleton-count="skeletonCount" help-text="Try describing what the card does or listing mechanics or types."
-        :is-keyword-search="true" />
+        :skeleton-count="skeletonCount" :error-message="searchError?.message"
+        help-text="Try describing what the card does or listing mechanics or types." :is-keyword-search="true" />
     </div>
   </UContainer>
 
@@ -107,7 +107,7 @@ const keywordSearch = computed(() => {
 const skeletonCount = computed(() => limitParam.value || 20);
 
 // Run the keyword search request
-const { searchResults, isLoading } = useKeywordSearch(keywordSearch);
+const { searchResults, isLoading, error: searchError } = useKeywordSearch(keywordSearch);
 
 function handleFabClick() {
   const url = searchFeedbackUrl(getPageInfo());

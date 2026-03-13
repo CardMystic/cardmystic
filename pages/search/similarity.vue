@@ -5,8 +5,8 @@
 
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="cardNameParam"
-        :skeleton-count="skeletonCount" help-text="Please enter a card name to search for similar cards."
-        :is-similarity-search="true" />
+        :skeleton-count="skeletonCount" :error-message="searchError?.message"
+        help-text="Please enter a card name to search for similar cards." :is-similarity-search="true" />
     </div>
   </UContainer>
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
@@ -105,7 +105,7 @@ const similaritySearch = computed(() => {
 // Number of skeleton cards to show while loading (matches typical search result count)
 const skeletonCount = computed(() => limitParam.value || 20);
 
-const { searchResults, isLoading } = useSimilaritySearch(similaritySearch);
+const { searchResults, isLoading, error: searchError } = useSimilaritySearch(similaritySearch);
 
 </script>
 

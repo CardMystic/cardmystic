@@ -37,9 +37,8 @@
     </UFormField>
 
     <UFormField name="limit" class="mb-2">
-      <UInput v-model.number="state.limit" type="number" :min="1" :max="1000"
-        placeholder="Number of results (default: 40)" icon="i-lucide-hash" class="w-full"
-        :ui="{ base: 'text-base h-10' }" />
+      <UInput v-model.number="state.limit" type="number" :min="1" :max="1000" placeholder="Results limit (default: 40)"
+        icon="i-lucide-hash" class="w-full" :ui="{ base: 'text-base h-10' }" />
     </UFormField>
 
     <UFormField name="decklist">
@@ -82,7 +81,7 @@ const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
 const commanderParam = computed(() => String(route.query.commanders || ''));
 const commanderNames = computed(() => commanderParam.value ? commanderParam.value.split(',').map(c => c.trim()).filter(Boolean) : []);
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : undefined);
+const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
 
 const state = reactive<Partial<Schema>>({
   description: descriptionParam.value || '',
