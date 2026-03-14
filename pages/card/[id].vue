@@ -27,14 +27,14 @@
       <UButton to="/search" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-7xl relative z-10 items-center">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-2 max-w-7xl relative z-10 items-center">
       <!-- Left: Card Image -->
       <div class="lg:col-span-3 flex flex-col items-center">
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <img :src="cardImageUrl" class="card-image w-75 h-105 rounded-2xl object-contain" @error="handleImageError"
-            alt="Card image" />
+          <img :src="cardImageUrl" class="card-image w-60 h-84 lg:w-75 lg:h-105 rounded-2xl object-contain"
+            @error="handleImageError" alt="Card image" />
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
           <div v-if="card.rarity?.toLowerCase() === 'mythic'" class="card-sheen-container">
@@ -46,13 +46,13 @@
         </div>
 
         <!-- Flip Button for Dual-Faced Cards -->
-        <UButton v-if="isDualFaced" color="info" variant="solid" class="mt-4 flip-btn" icon="i-heroicons-arrow-path"
+        <UButton v-if="isDualFaced" color="info" variant="solid" class="mt-2 flip-btn" icon="i-heroicons-arrow-path"
           size="lg" @click="flipCard">
           Flip
         </UButton>
 
         <!-- Printing Selection Dropdown -->
-        <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-75">
+        <div v-if="printings && printings.length > 1" class="mt-2 w-full max-w-75">
           <ClientOnly>
             <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
               class="printing-select w-75 cursor-pointer">
@@ -75,21 +75,27 @@
           </ClientOnly>
         </div>
 
-        <!-- Action Buttons - Desktop only -->
-        <div :class="isDualFaced ? 'mt-4' : 'mt-6'" class="hidden lg:flex flex-col gap-2 w-full max-w-75">
+        <!-- Action Buttons + TCGPlayer - Desktop only -->
+        <div class="mt-2 hidden lg:flex flex-row gap-2 w-full max-w-75 items-center">
           <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-            class="similar-cards-btn similar-cards-btn-desktop w-full cursor-pointer">
-            Similar Cards
-          </UButton>
+            class="cursor-pointer" />
           <UButton v-if="isCommander" color="primary" variant="solid" icon="i-lucide-box" size="lg"
-            @click="getRecommendations" class="w-full cursor-pointer">
-            Get Recommendations
+            @click="getRecommendations" class="cursor-pointer" />
+          <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
+            :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
+            class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
+            rel="noopener noreferrer">
+            Buy on TCGPlayer
+          </UButton>
+          <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
+            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg">
+            Search on TCGPlayer
           </UButton>
         </div>
 
         <!-- Price Information - Desktop only -->
         <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)"
-          class="price-card mt-4 hidden lg:block w-full max-w-75">
+          class="price-card mt-2 hidden lg:block w-full max-w-75">
           <div class="price-header">
             <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
             <h3 class="price-title">Current Prices</h3>
@@ -133,25 +139,11 @@
           </div>
         </UCard>
 
-        <!-- TCGPlayer Button - Desktop only -->
-        <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
-          class="mt-0 tcgplayer-btn hidden lg:flex w-full max-w-75" icon="i-heroicons-shopping-cart" size="lg"
-          target="_blank" rel="noopener noreferrer">
-          Buy on TCGPlayer
-        </UButton>
-
-        <!-- Fallback button if no TCGPlayer ID - Desktop only -->
-        <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-          variant="outline" class="mt-4 tcgplayer-btn hidden lg:flex w-full max-w-75"
-          icon="i-heroicons-magnifying-glass" size="lg">
-          Search on TCGPlayer
-        </UButton>
       </div>
 
       <!-- Center: Card Details -->
       <div class="lg:col-span-7 flex flex-col">
-        <UCard class="card-header-card">
+        <UCard class="card-details-card">
           <h2 class="card-title">
             <span class="card-title-text">{{ currentName }}</span>
             <span v-if="currentManaCost">
@@ -165,43 +157,57 @@
           <p class="card-type">
             {{ currentTypeLine }}
           </p>
-        </UCard>
 
-        <div v-if="currentOracleText" class="card-text-container">
-          <div class="oracle-text">
-            <template v-for="(part, index) in formattedOracleText" :key="index">
-              <template v-if="typeof part === 'string'">{{ part }}</template>
-              <component v-else :is="part" />
-            </template>
-          </div>
+          <!-- Mobile toggle button -->
+          <UButton class="lg:hidden mt-2 w-full" variant="ghost" color="neutral" size="sm"
+            :icon="showMobileDetails ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+            @click="showMobileDetails = !showMobileDetails">
+            {{ showMobileDetails ? 'Hide Card Details' : 'Show Card Details' }}
+          </UButton>
 
-          <div class="stats-container" v-if="currentPower && currentToughness">
-            <div class="power-toughness">
-              Power / Toughness:
-              <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
+          <div v-if="currentOracleText" class="oracle-section" :class="{ 'hidden lg:block': !showMobileDetails }">
+            <div class="oracle-text">
+              <template v-for="(part, index) in formattedOracleText" :key="index">
+                <template v-if="typeof part === 'string'">{{ part }}</template>
+                <component v-else :is="part" />
+              </template>
+            </div>
+
+            <div class="stats-container" v-if="currentPower && currentToughness">
+              <div class="power-toughness">
+                Power / Toughness:
+                <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
+              </div>
+            </div>
+
+            <div v-if="currentPrinting && card.artist" class="artist-info">
+              <span class="artist-label">Illustrated by </span>
+              <strong class="artist-name">{{ currentPrinting.artist }}</strong>
             </div>
           </div>
+        </UCard>
 
-          <div v-if="currentPrinting && card.artist" class="artist-info">
-            <span class="artist-label">Illustrated by </span>
-            <strong class="artist-name">{{ currentPrinting.artist }}</strong>
-          </div>
-        </div>
-
-        <!-- Action Buttons - Mobile only -->
-        <div class="flex flex-col gap-2 mt-0 mb-4 lg:hidden">
-          <UButton color="neutral" variant="solid" class="similar-cards-btn" icon="i-mdi-cards-outline" size="lg"
-            @click="findSimilarCards" block>
-            Similar Cards
-          </UButton>
+        <!-- Action Buttons + TCGPlayer - Mobile only -->
+        <div class="flex flex-row gap-2 mt-0 mb-0 lg:hidden items-center">
+          <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
+            class="cursor-pointer" />
           <UButton v-if="isCommander" color="primary" variant="solid" icon="i-lucide-box" size="lg"
-            @click="getRecommendations" block>
-            Get Recommendations
+            @click="getRecommendations" class="cursor-pointer" />
+          <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
+            :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
+            class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
+            rel="noopener noreferrer">
+            Buy on TCGPlayer
+          </UButton>
+          <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
+            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg">
+            Search on TCGPlayer
           </UButton>
         </div>
 
         <!-- Price Information - Mobile only -->
-        <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card mb-4 lg:hidden">
+        <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card lg:hidden"
+          :class="{ 'hidden': !showMobileDetails }">
           <div class="price-header">
             <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
             <h4 class="price-title">Current Prices</h4>
@@ -247,27 +253,14 @@
           </div>
         </UCard>
 
-        <!-- TCGPlayer Button - Mobile only -->
-        <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-          :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
-          class="mb-4 tcgplayer-btn lg:hidden" icon="i-heroicons-shopping-cart" size="lg" block>
-          Buy on TCGPlayer
-        </UButton>
-
-        <!-- Fallback button if no TCGPlayer ID - Mobile only -->
-        <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-          variant="outline" class="mb-6 tcgplayer-btn lg:hidden" icon="i-heroicons-magnifying-glass" size="lg" block>
-          Search on TCGPlayer
-        </UButton>
-
-        <UCard class="legalities-card">
+        <UCard class="legalities-card" :class="{ 'hidden lg:block': !showMobileDetails }">
           <div class="legalities-header">
             <UIcon name="i-heroicons-scale" class="w-6 h-6 text-primary mr-2" />
             <h3 class="legalities-title">Legalities</h3>
           </div>
 
-          <div class="grid grid-cols-2 gap-2 p-2">
-            <div v-for="(format, name) in legalities" :key="name" class="mb-2">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1">
+            <div v-for="(format, name) in legalities" :key="name">
               <div class="legality-item">
                 <UBadge class="legality-chip" :color="getLegalityColor(format)" variant="solid" size="xs">
                   {{ format }}
@@ -281,13 +274,13 @@
       <div class="lg:col-span-10 flex flex-col items-center">
         <!-- Commander: Tabbed Recommended + Similar Cards -->
         <UCard v-if="card && isCommander" class="similar-cards-section w-full">
-          <UTabs :items="cardTabs">
+          <UTabs :items="cardTabs" class="lg:px-0 px-4">
             <template #recommended>
-              <div class="flex gap-2 mt-4 mb-4">
-                <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..." class="flex-1"
+              <div class="recommend-section flex gap-2 mt-4 mb-4">
+                <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..." class="flex-1 text-base"
                   icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
                 <UButton color="primary" icon="i-lucide-box" @click="applyRecommendQuery"
-                  :loading="isRecommendedLoading">
+                  :loading="isRecommendedLoading" class="text-base">
                   Recommend
                 </UButton>
               </div>
@@ -320,7 +313,7 @@
 
         <!-- Non-commander: Similar Cards only -->
         <UCard v-else-if="card" class="similar-cards-section w-full">
-          <div class="flex items-center mb-2">
+          <div class="flex items-center mb-2 px-4 lg:px-0">
             <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
             <h3 class="text-xl font-semibold">Similar Cards</h3>
           </div>
@@ -352,6 +345,7 @@ import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, stan
 const route = useRoute();
 const router = useRouter();
 const isFlipped = ref(false);
+const showMobileDetails = ref(false);
 const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
@@ -788,42 +782,21 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 .card-image-container:hover .card-image
   transform: scale(1.03)
 
-// Card Header Card Styling
-.card-header-card
+// Card Details Card Styling (header + description combined)
+.card-details-card
   border-radius: 24px
-  backdrop-filter: blur(20px) saturate(180%)
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
-  margin-bottom: 16px
-
-  @media (prefers-color-scheme: light)
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
-    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
-
-  @media (prefers-color-scheme: dark)
-    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
-
-  &::before
-    content: ''
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
-    border-radius: 24px
-    pointer-events: none
-
-    @media (prefers-color-scheme: light)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
-
-    @media (prefers-color-scheme: dark)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+  margin-bottom: 8px
+  background: var(--ui-bg)
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .card-title
   font-size: 2.2rem
   font-weight: 700
   margin-bottom: 4px
+  @media (max-width: 1023px)
+    font-size: 1.6rem
 
 .card-title-text
   margin-right: 8px
@@ -846,41 +819,14 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
   font-weight: 500
   margin: 0
 
-// Card Text Container
-.card-text-container
-  border-radius: 24px
-  padding: 16px
-  backdrop-filter: blur(20px) saturate(180%)
-  border: 1px solid rgba(147, 114, 255, 0.3)
-  position: relative
-  margin-bottom: 16px
-
-  @media (prefers-color-scheme: light)
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
-    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
-
-  @media (prefers-color-scheme: dark)
-    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
-
-  &::before
-    content: ''
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
-    border-radius: 24px
-    pointer-events: none
-
-    @media (prefers-color-scheme: light)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
-
-    @media (prefers-color-scheme: dark)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+// Oracle Section (within combined card details card)
+.oracle-section
+  margin-top: 16px
+  padding-top: 16px
+  border-top: 1px solid rgba(147, 114, 255, 0.2)
 
 .oracle-text
-  font-size: 1.1rem
+  font-size: 0.95rem
   line-height: 1.2
   margin-bottom: 16px
 
@@ -904,12 +850,12 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
   margin-top: 20px
 
 .power-toughness
-  font-size: 1.1rem
+  font-size: 0.95rem
   font-weight: 600
 
 .stats
   font-weight: 700
-  font-size: 1.2rem
+  font-size: 1rem
 
 .artist-info
   margin-top: 16px
@@ -925,39 +871,16 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 // Legalities Card
 .legalities-card
   border-radius: 24px
-  backdrop-filter: blur(20px) saturate(180%)
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
-  margin-bottom: 16px
-
-  @media (prefers-color-scheme: light)
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
-    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
-
-  @media (prefers-color-scheme: dark)
-    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
-  
-  &::before
-    content: ''
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
-    border-radius: 24px
-    pointer-events: none
-
-    @media (prefers-color-scheme: light)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
-
-    @media (prefers-color-scheme: dark)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+  margin-bottom: 0
+  background: var(--ui-bg)
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .legalities-header
   display: flex
   align-items: center
-  margin-bottom: 16px
+  margin-bottom: 8px
 
 .legalities-title
   font-size: 1.3rem
@@ -993,34 +916,11 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 // Price Card Styling
 .price-card
   border-radius: 24px
-  backdrop-filter: blur(20px) saturate(180%)
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
-  margin-bottom: 16px
-
-  @media (prefers-color-scheme: light)
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
-    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
-
-  @media (prefers-color-scheme: dark)
-    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
-
-  &::before
-    content: ''
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
-    border-radius: 24px
-    pointer-events: none
-
-    @media (prefers-color-scheme: light)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
-
-    @media (prefers-color-scheme: dark)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+  margin-bottom: 8px
+  background: var(--ui-bg)
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .price-header
   display: flex
@@ -1040,7 +940,7 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
   display: flex
   justify-content: space-between
   align-items: center
-  padding: 4px 0
+  padding: 0px
 
 .currency-label
   font-size: 0.9rem
@@ -1161,33 +1061,15 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 // Similar Cards Section Styling
 .similar-cards-section
   border-radius: 24px
-  backdrop-filter: blur(20px) saturate(180%)
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
+  background: var(--ui-bg)
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
-  @media (prefers-color-scheme: light)
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.12), rgba(199, 170, 255, 0.08))
-    box-shadow: 0 8px 32px rgba(147, 114, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)
-
-  @media (prefers-color-scheme: dark)
-    background: linear-gradient(135deg, rgba(44, 44, 44, 0.25), rgba(66, 66, 66, 0.15))
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)
-
-  &::before
-    content: ''
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
-    border-radius: 24px
-    pointer-events: none
-
-    @media (prefers-color-scheme: light)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.06), rgba(255, 255, 255, 0.25))
-
-    @media (prefers-color-scheme: dark)
-      background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(255, 255, 255, 0.02))
+  @media (max-width: 1023px)
+    :deep(> div)
+      padding-left: 1px
+      padding-right: 1px
 
 .similar-cards-header
   display: flex
@@ -1197,5 +1079,15 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 .similar-cards-title
   font-size: 1.3rem
   font-weight: 600
+
+// Recommend section font sizing
+.recommend-section
+  font-size: 1rem
+
+  :deep(input)
+    font-size: 1rem
+
+  :deep(button)
+    font-size: 1rem
 
 </style>
