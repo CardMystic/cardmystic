@@ -164,6 +164,7 @@ watch(() => state.commander, () => {
 const honeypot = ref('')
 
 const toast = useToast()
+const { saveSearchMutation } = useSearchHistory()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
@@ -186,6 +187,17 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     };
 
     console.log('Submitting form with data:', query);
+
+    saveSearchMutation.mutate({
+      query: event.data.description || event.data.commander || 'Deck Recommendation',
+      searchType: 'recommend',
+      filters: {
+        commander: event.data.commander || undefined,
+        partnerCommander: event.data.partnerCommander || undefined,
+        decklist: event.data.decklist || undefined,
+        limit: event.data.limit || undefined,
+      },
+    });
 
     router.push({ path: '/search/recommend', query });
   } catch (error) {

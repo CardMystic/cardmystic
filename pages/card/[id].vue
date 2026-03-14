@@ -2,7 +2,7 @@
   <div class="page-wrapper py-4 flex justify-center w-full">
     <!-- Background Image -->
     <div v-if="cardArtUrl" class="fixed inset-0 z-0">
-      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-30 blur-sm"
         :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
     </div>
 
@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -640,6 +640,7 @@ function flipCard() {
 }
 
 const { saveSearchQuery } = useSearchType();
+const { saveSearchMutation } = useSearchHistory();
 
 function findSimilarCards() {
   if (!card.value) return;
@@ -657,6 +658,11 @@ function getRecommendations() {
   if (!card.value?.name) return;
   const queryParams = { commander: card.value.name };
   saveSearchQuery('recommend', queryParams);
+  saveSearchMutation.mutate({
+    query: card.value.name,
+    searchType: 'recommend',
+    filters: { commander: card.value.name },
+  });
   router.push({ path: '/search/recommend', query: queryParams });
 }
 

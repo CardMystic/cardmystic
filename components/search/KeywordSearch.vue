@@ -1,5 +1,5 @@
 <template>
-  <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
+  <UForm :schema="schema" :state="state" class="grow space-y-4" @submit="onSubmit">
     <!-- Honeypot field - hidden from users but visible to bots -->
     <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
       style="position: absolute; left: -9999px; width: 1px; height: 1px;" />

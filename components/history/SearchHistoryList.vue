@@ -147,17 +147,19 @@ const getSearchTypeLabel = (type: string) => {
     'ai': 'AI Search',
     'similarity': 'Similarity',
     'keyword': 'Keyword',
-    'commander': 'Commander'
+    'commander': 'Commander',
+    'recommend': 'Deck Recommender'
   }
   return labels[type] || type
 }
 
-const getSearchTypeColor = (type: string): 'primary' | 'success' | 'warning' | 'error' => {
-  const colors: Record<string, 'primary' | 'success' | 'warning' | 'error'> = {
+const getSearchTypeColor = (type: string): 'primary' | 'success' | 'warning' | 'error' | 'info' => {
+  const colors: Record<string, 'primary' | 'success' | 'warning' | 'error' | 'info'> = {
     'ai': 'primary',
     'similarity': 'success',
     'keyword': 'warning',
-    'commander': 'error'
+    'commander': 'error',
+    'recommend': 'info'
   }
   return colors[type] || 'primary'
 }
