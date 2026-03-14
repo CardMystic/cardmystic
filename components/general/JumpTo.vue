@@ -99,6 +99,11 @@ onMounted(() => {
   }
 });
 
+// Recalculate position when groups change (e.g. results load in after a restored query)
+watch(() => props.groups, () => {
+  nextTick(updatePosition);
+});
+
 onUnmounted(() => {
   if (import.meta.client) {
     window.removeEventListener('scroll', updatePosition);
