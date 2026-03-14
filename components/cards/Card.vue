@@ -138,6 +138,7 @@ import { useCardFeedback } from '~/composables/useCardFeedback';
 
 const router = useRouter();
 const route = useRoute();
+const { saveCurrentSearchQuery } = useSearchType();
 
 const props = defineProps({
   card: {
@@ -257,19 +258,7 @@ function confirmDislike() {
 }
 // Navigation helper
 function navigateToCard(cardId: string | undefined) {
-  // Save current search query to sessionStorage
-  if (route.query.searchType == 'ai') {
-    sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'commander') {
-    sessionStorage.setItem('commander_search_query', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'similarity') {
-    sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'keyword') {
-    sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
-  }
+  saveCurrentSearchQuery(route.query);
 
   if (!cardId) {
     console.warn('Cannot navigate to card: ID is undefined');
@@ -340,19 +329,7 @@ const scoreColor = computed(() => {
 function findSimilarCards() {
   if (!props.card) return;
 
-  // Save current search query to sessionStorage
-  if (route.query.searchType == 'ai') {
-    sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'commander') {
-    sessionStorage.setItem('commander_search_query', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'similarity') {
-    sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'keyword') {
-    sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
-  }
+  saveCurrentSearchQuery(route.query);
 
   // Navigate to search page with similarity search endpoint
   const queryParams = {
