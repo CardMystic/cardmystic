@@ -26,7 +26,7 @@ const requiredFields: Record<SearchType, string[]> = {
   similarity: ['card_name'],
   commander: ['query'],
   keyword: ['query'],
-  recommend: ['decklist', 'commanders'],
+  recommend: ['decklist', 'commander'],
 };
 
 export const useSearchType = () => {

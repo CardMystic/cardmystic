@@ -32,11 +32,12 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-2">
               <UBadge :color="getSearchTypeColor(item.search_type)" variant="soft">
+                <UIcon :name="getSearchTypeIcon(item.search_type)" class="w-3.5 h-3.5 mr-1" />
                 {{ getSearchTypeLabel(item.search_type) }}
               </UBadge>
               <span class="text-sm text-gray-500">{{ formatRelativeTimeShort(item.created_at) }}</span>
             </div>
-            <p class="text-lg font-medium mb-2">{{ item.query }}</p>
+            <p class="text-lg font-medium mb-2">{{ item.query || 'General Recommendations' }}</p>
             <div v-if="item.filters" class="text-sm text-gray-600 dark:text-gray-400">
               <span class="font-medium">Filters:</span> {{ formatFilters(item.filters) }}
             </div>
@@ -151,6 +152,17 @@ const getSearchTypeLabel = (type: string) => {
     'recommend': 'Deck Recommender'
   }
   return labels[type] || type
+}
+
+const getSearchTypeIcon = (type: string) => {
+  const icons: Record<string, string> = {
+    'ai': 'i-lucide-search',
+    'similarity': 'i-mdi-cards-outline',
+    'keyword': 'i-lucide-whole-word',
+    'commander': 'i-mdi-crown',
+    'recommend': 'i-lucide-box'
+  }
+  return icons[type] || 'i-lucide-search'
 }
 
 const getSearchTypeColor = (type: string): 'primary' | 'success' | 'warning' | 'error' | 'info' => {

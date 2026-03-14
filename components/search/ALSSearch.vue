@@ -189,7 +189,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     console.log('Submitting form with data:', query);
 
     saveSearchMutation.mutate({
-      query: event.data.description || event.data.commander || 'Deck Recommendation',
+      query: event.data.description || event.data.decklist?.split('\n').slice(0, 3).join(', ') || '',
       searchType: 'recommend',
       filters: {
         commander: event.data.commander || undefined,

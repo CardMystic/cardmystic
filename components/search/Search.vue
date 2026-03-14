@@ -151,7 +151,7 @@ onMounted(() => {
     (type === 'similarity' && route.query.card_name) ||
     (type === 'commander' && route.query.query) ||
     (type === 'keyword' && route.query.query) ||
-    (type === 'recommend' && (route.query.decklist || route.query.commanders));
+    (type === 'recommend' && (route.query.decklist || route.query.commander));
 
   if (!hasQuery) {
     router.replace({ path: getPath(type), query: restored });
