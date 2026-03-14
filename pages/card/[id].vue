@@ -33,8 +33,8 @@
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
-          <img :src="cardImageUrl" class="card-image w-[300px] h-[420px] rounded-2xl object-contain"
-            @error="handleImageError" alt="Card image" />
+          <img :src="cardImageUrl" class="card-image w-75 h-105 rounded-2xl object-contain" @error="handleImageError"
+            alt="Card image" />
 
           <!-- Sheen container with same dimensions as card - only for mythic -->
           <div v-if="card.rarity?.toLowerCase() === 'mythic'" class="card-sheen-container">
@@ -52,9 +52,9 @@
         </UButton>
 
         <!-- Printing Selection Dropdown -->
-        <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-[300px]">
+        <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-75">
           <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
-            class="printing-select w-[300px] cursor-pointer">
+            class="printing-select w-75 cursor-pointer">
             <template #item="{ item }">
               <div class="flex items-center gap-3 py-2">
                 <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
@@ -62,7 +62,7 @@
                   <span class="font-semibold">{{ item.label }}</span>
                   <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                   <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                  }}</span>
                   <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                 </div>
               </div>
@@ -74,13 +74,13 @@
         <UButton color="neutral" variant="solid"
           :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-mdi-cards-outline"
           size="lg" @click="findSimilarCards"
-          class="hidden lg:flex similar-cards-btn-desktop w-full max-w-[300px] cursor-pointer">
+          class="hidden lg:flex similar-cards-btn-desktop w-full max-w-75 cursor-pointer">
           Similar Cards
         </UButton>
 
         <!-- Price Information - Desktop only -->
         <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)"
-          class="price-card mt-4 hidden lg:block w-full max-w-[300px]">
+          class="price-card mt-4 hidden lg:block w-full max-w-75">
           <div class="price-header">
             <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
             <h3 class="price-title">Current Prices</h3>
@@ -127,14 +127,14 @@
         <!-- TCGPlayer Button - Desktop only -->
         <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
           :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
-          class="mt-0 tcgplayer-btn hidden lg:flex w-full max-w-[300px]" icon="i-heroicons-shopping-cart" size="lg"
+          class="mt-0 tcgplayer-btn hidden lg:flex w-full max-w-75" icon="i-heroicons-shopping-cart" size="lg"
           target="_blank" rel="noopener noreferrer">
           Buy on TCGPlayer
         </UButton>
 
         <!-- Fallback button if no TCGPlayer ID - Desktop only -->
         <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-          variant="outline" class="mt-4 tcgplayer-btn hidden lg:flex w-full max-w-[300px]"
+          variant="outline" class="mt-4 tcgplayer-btn hidden lg:flex w-full max-w-75"
           icon="i-heroicons-magnifying-glass" size="lg">
           Search on TCGPlayer
         </UButton>
