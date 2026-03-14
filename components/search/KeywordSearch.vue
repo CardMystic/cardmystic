@@ -81,6 +81,10 @@ const state = reactive<Partial<Schema>>({
   filters: parsedFilters.value
 })
 
+watch(queryParam, (newVal) => {
+  if (newVal !== state.query) state.query = newVal;
+});
+
 const searchTerm = ref("");
 const showDropdown = ref(false);
 const selectedIndex = ref(-1);

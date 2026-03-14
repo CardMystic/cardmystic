@@ -53,30 +53,39 @@
 
         <!-- Printing Selection Dropdown -->
         <div v-if="printings && printings.length > 1" class="mt-4 w-full max-w-75">
-          <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
-            class="printing-select w-75 cursor-pointer">
-            <template #item="{ item }">
-              <div class="flex items-center gap-3 py-2">
-                <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
-                <div class="flex flex-col">
-                  <span class="font-semibold">{{ item.label }}</span>
-                  <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
-                  <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                  }}</span>
-                  <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
+          <ClientOnly>
+            <USelect v-model="selectedPrinting" :items="printingOptions" placeholder="Select Printing"
+              class="printing-select w-75 cursor-pointer">
+              <template #item="{ item }">
+                <div class="flex items-center gap-3 py-2">
+                  <img :src="item.image_url" alt="Set" width="36" height="50" class="rounded shadow" />
+                  <div class="flex flex-col">
+                    <span class="font-semibold">{{ item.label }}</span>
+                    <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
+                    <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
+                      }}</span>
+                    <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
+                  </div>
                 </div>
-              </div>
+              </template>
+            </USelect>
+            <template #fallback>
+              <USkeleton class="h-10 w-75 rounded" />
             </template>
-          </USelect>
+          </ClientOnly>
         </div>
 
-        <!-- Similar Cards Button - Desktop only -->
-        <UButton color="neutral" variant="solid"
-          :class="isDualFaced ? 'mt-4 similar-cards-btn' : 'mt-6 similar-cards-btn'" icon="i-mdi-cards-outline"
-          size="lg" @click="findSimilarCards"
-          class="hidden lg:flex similar-cards-btn-desktop w-full max-w-75 cursor-pointer">
-          Similar Cards
-        </UButton>
+        <!-- Action Buttons - Desktop only -->
+        <div :class="isDualFaced ? 'mt-4' : 'mt-6'" class="hidden lg:flex flex-col gap-2 w-full max-w-75">
+          <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
+            class="similar-cards-btn similar-cards-btn-desktop w-full cursor-pointer">
+            Similar Cards
+          </UButton>
+          <UButton v-if="isCommander" color="primary" variant="solid" icon="i-lucide-box" size="lg"
+            @click="getRecommendations" class="w-full cursor-pointer">
+            Get Recommendations
+          </UButton>
+        </div>
 
         <!-- Price Information - Desktop only -->
         <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)"
@@ -179,11 +188,17 @@
           </div>
         </div>
 
-        <!-- Similar Cards Button - Mobile only -->
-        <UButton color="neutral" variant="solid" class="mt-0 mb-4 similar-cards-btn lg:hidden"
-          icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards" block>
-          Similar Cards
-        </UButton>
+        <!-- Action Buttons - Mobile only -->
+        <div class="flex flex-col gap-2 mt-0 mb-4 lg:hidden">
+          <UButton color="neutral" variant="solid" class="similar-cards-btn" icon="i-mdi-cards-outline" size="lg"
+            @click="findSimilarCards" block>
+            Similar Cards
+          </UButton>
+          <UButton v-if="isCommander" color="primary" variant="solid" icon="i-lucide-box" size="lg"
+            @click="getRecommendations" block>
+            Get Recommendations
+          </UButton>
+        </div>
 
         <!-- Price Information - Mobile only -->
         <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card mb-4 lg:hidden">
@@ -264,10 +279,61 @@
         </UCard>
       </div>
       <div class="lg:col-span-10 flex flex-col items-center">
-        <!-- Similar Cards Section -->
-        <UCard v-if="card" class="similar-cards-section w-full">
-          <ListCardDetailsSimilarCardsResults :is-loading="isSimilarCardsLoading" :search-results="similarCards"
-            :skeleton-count="8" />
+        <!-- Commander: Tabbed Recommended + Similar Cards -->
+        <UCard v-if="card && isCommander" class="similar-cards-section w-full">
+          <UTabs :items="cardTabs">
+            <template #recommended>
+              <div class="flex gap-2 mt-4 mb-4">
+                <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..." class="flex-1"
+                  icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
+                <UButton color="primary" icon="i-lucide-box" @click="applyRecommendQuery"
+                  :loading="isRecommendedLoading">
+                  Recommend
+                </UButton>
+              </div>
+              <ClientOnly>
+                <SearchResults :is-loading="isRecommendedCardsEffectivelyLoading"
+                  :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
+                  :hide-thumbs-down-button="true" default-group-by="type" score-scale="normalized" />
+                <template #fallback>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <CardSkeleton v-for="i in 8" :key="`skeleton-rec-${i}`" :showCardInfo="true" />
+                  </div>
+                </template>
+              </ClientOnly>
+            </template>
+
+            <template #similar>
+              <ClientOnly>
+                <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
+                  :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
+                  default-group-by="type" score-scale="normalized" :is-similarity-search="true" />
+                <template #fallback>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <CardSkeleton v-for="i in 8" :key="`skeleton-sim-${i}`" :showCardInfo="true" />
+                  </div>
+                </template>
+              </ClientOnly>
+            </template>
+          </UTabs>
+        </UCard>
+
+        <!-- Non-commander: Similar Cards only -->
+        <UCard v-else-if="card" class="similar-cards-section w-full">
+          <div class="flex items-center mb-2">
+            <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
+            <h3 class="text-xl font-semibold">Similar Cards</h3>
+          </div>
+          <ClientOnly>
+            <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
+              :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
+              default-group-by="type" score-scale="normalized" :is-similarity-search="true" />
+            <template #fallback>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
+              </div>
+            </template>
+          </ClientOnly>
         </UCard>
       </div>
     </div>
@@ -354,13 +420,14 @@ useSeoMeta({
     if (!card.value) return 'Explore Magic: The Gathering cards on CardMystic';
     const oracle = card.value.oracle_text || card.value.card_faces?.[0]?.oracle_text || '';
     const type = card.value.type_line || '';
-    return `${card.value.name} | ${type} | ${oracle.slice(0, 120)}${oracle.length > 120 ? '...' : ''}`;
+    const base = `${card.value.name} | ${type} | ${oracle.slice(0, 100)}${oracle.length > 100 ? '...' : ''}`;
+    return `${base} Find similar cards and deck recommendations.`;
   },
   ogTitle: () => card.value ? `${card.value.name} (MTG) - CardMystic` : 'MTG Card Details | CardMystic',
   ogDescription: () =>
     card.value
-      ? `View ${card.value.name}, a ${card.value.type_line || 'Magic: The Gathering card'}, with oracle text, rulings, and deckbuilding tools on CardMystic.`
-      : 'View Magic: The Gathering card details with oracle text and deckbuilding tools on CardMystic.',
+      ? `View ${card.value.name}, a ${card.value.type_line || 'Magic: The Gathering card'}, with similar cards, deck recommendations, oracle text, and deckbuilding tools on CardMystic.`
+      : 'View Magic: The Gathering card details with similar cards, deck recommendations, and deckbuilding tools on CardMystic.',
   ogType: 'website',
   ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || 'https://cardmystic.io/cardmystic_cards.png',
   ogImageAlt: () =>
@@ -375,8 +442,8 @@ useSeoMeta({
 
   twitterDescription: () =>
     card.value
-      ? `View ${card.value.name} and explore oracle text, rulings, and deckbuilding tools on CardMystic.`
-      : 'Search and explore Magic: The Gathering cards on CardMystic.',
+      ? `View ${card.value.name} with similar cards, deck recommendations, oracle text, and deckbuilding tools on CardMystic.`
+      : 'Search and explore Magic: The Gathering cards with similar cards and deck recommendations on CardMystic.',
 
   twitterImage: () =>
     card.value?.image_uris?.normal ||
@@ -572,22 +639,77 @@ function flipCard() {
   isFlipped.value = !isFlipped.value;
 }
 
+const { saveSearchQuery } = useSearchType();
+
 function findSimilarCards() {
   if (!card.value) return;
 
-  // Navigate to search page with similarity search endpoint
   const queryParams = {
     card_name: card.value.name,
-    limit: DefaultLimitSimilarity,
-    filters: undefined, // No additional filters for similarity search
+    limit: String(DefaultLimitSimilarity),
   };
 
+  saveSearchQuery('similarity', queryParams);
   router.push({ path: '/search/similarity', query: queryParams });
+}
+
+function getRecommendations() {
+  if (!card.value?.name) return;
+  const queryParams = { commander: card.value.name };
+  saveSearchQuery('recommend', queryParams);
+  router.push({ path: '/search/recommend', query: queryParams });
 }
 
 // Use the similar cards composable
 const cardName = computed(() => card.value?.name);
 const { similarCards, isSimilarCardsLoading } = useSimilarCards(cardIdParam, cardName);
+
+// Treat "not yet fetched" as loading to avoid a flash of "no results"
+const isSimilarCardsEffectivelyLoading = computed(() => {
+  return isSimilarCardsLoading.value || (!similarCards.value && !!cardName.value);
+});
+
+// Filter out the first card (the card being viewed) from similar cards
+const filteredSimilarCards = computed(() => {
+  if (!similarCards.value || similarCards.value.length <= 1) return undefined;
+  const [, ...rest] = similarCards.value;
+  return rest;
+});
+
+// Commander detection
+const { data: commanders } = useCommanders();
+const isCommander = computed(() => {
+  if (!card.value?.name || !commanders.value) return false;
+  return commanders.value.includes(card.value.name);
+});
+
+const cardTabs = [
+  { key: 'recommended', label: 'Deck Recommendations', icon: 'i-lucide-box', slot: 'recommended' },
+  { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
+];
+
+// ALS Recommend for commanders
+const recommendQuery = ref('');
+const appliedRecommendQuery = ref('');
+
+function applyRecommendQuery() {
+  appliedRecommendQuery.value = recommendQuery.value.trim();
+}
+
+const alsRecommendRequest = computed(() => {
+  if (!isCommander.value || !card.value?.name) return undefined;
+  return {
+    commanders: [card.value.name],
+    limit: 40,
+    query: appliedRecommendQuery.value || undefined,
+  };
+});
+
+const { searchResults: recommendedCards, isLoading: isRecommendedLoading } = useAlsRecommend(alsRecommendRequest);
+
+const isRecommendedCardsEffectivelyLoading = computed(() => {
+  return isRecommendedLoading.value || (!recommendedCards.value && isCommander.value);
+});
 
 </script>
 

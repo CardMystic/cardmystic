@@ -81,6 +81,10 @@ const state = reactive<Partial<Schema>>({
   filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
 })
 
+watch(queryParam, (newVal) => {
+  if (newVal !== state.query) state.query = newVal;
+});
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
   if (honeypot.value) {

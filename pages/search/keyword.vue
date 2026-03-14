@@ -109,6 +109,11 @@ const skeletonCount = computed(() => limitParam.value || 20);
 // Run the keyword search request
 const { searchResults, isLoading, error: searchError } = useKeywordSearch(keywordSearch);
 
+const { saveSearchQuery } = useSearchType();
+watch(() => route.query, (query) => {
+  if (query.query) saveSearchQuery('keyword', query);
+}, { immediate: true });
+
 function handleFabClick() {
   const url = searchFeedbackUrl(getPageInfo());
   window.open(url, '_blank');

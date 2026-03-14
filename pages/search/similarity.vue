@@ -107,6 +107,11 @@ const skeletonCount = computed(() => limitParam.value || 20);
 
 const { searchResults, isLoading, error: searchError } = useSimilaritySearch(similaritySearch);
 
+const { saveSearchQuery } = useSearchType();
+watch(() => route.query, (query) => {
+  if (query.card_name) saveSearchQuery('similarity', query);
+}, { immediate: true });
+
 </script>
 
 <style lang="sass" scoped>

@@ -63,6 +63,10 @@ const state = reactive<Partial<Schema>>({
   filters: parsedFilters.value || { selectedColorFilterOption: 'Contains At Least' }
 })
 
+watch(queryParam, (newVal) => {
+  if (newVal !== state.query) state.query = newVal;
+});
+
 // Honeypot field for bot detection
 const honeypot = ref('')
 

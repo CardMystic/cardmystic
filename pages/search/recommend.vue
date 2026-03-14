@@ -138,6 +138,14 @@ const { data: commanderCards } = useQuery({
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();
+const { saveSearchQuery } = useSearchType();
+
+// Save recommend query to sessionStorage so it can be restored from the search dropdown
+watch(() => route.query, (query) => {
+  if (query.decklist || query.commander) {
+    saveSearchQuery('recommend', query);
+  }
+}, { immediate: true });
 
 watch(decklistParam, (newDecklist) => {
   setPageInfo({

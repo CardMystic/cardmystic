@@ -102,6 +102,11 @@ const skeletonCount = computed(() => limitParam.value || 20);
 
 const { searchResults, isLoading, error: searchError } = useColbertSearch(wordSearch);
 
+const { saveSearchQuery } = useSearchType();
+watch(() => route.query, (query) => {
+  if (query.query) saveSearchQuery('ai', query);
+}, { immediate: true });
+
 </script>
 
 <style lang="sass" scoped>

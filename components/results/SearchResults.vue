@@ -75,7 +75,9 @@
     </template>
   </div>
 
-  <JumpTo :groups="(groupedResults || []).filter(g => g.label).map(g => g.label)" />
+  <Teleport to="body">
+    <JumpTo :groups="(groupedResults || []).filter(g => g.label).map(g => g.label)" />
+  </Teleport>
 </template>
 
 <script lang="ts" setup>

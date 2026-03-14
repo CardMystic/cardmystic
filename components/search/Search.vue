@@ -79,7 +79,7 @@ const route = useRoute();
 const router = useRouter();
 
 // Initialize search type based on props or route
-const { searchType, setSearchType, getPath, saveCurrentSearchQuery, restoreSearchQuery } = useSearchType();
+const { searchType, setSearchType, getPath, restoreSearchQuery } = useSearchType();
 
 // Set initial search type
 if (props.similarity) {
@@ -138,6 +138,9 @@ const items = ref<SelectItem[]>([
 // On mount, restore previous query from sessionStorage if the page has no active query params.
 // This handles navigating via the Navbar dropdown, where the route changes but searchType may not.
 onMounted(() => {
+  // Don't restore searches on the home page
+  if (route.path === '/') return;
+
   const restored = restoreSearchQuery(searchType.value);
   if (!restored) return;
 
@@ -158,9 +161,6 @@ onMounted(() => {
 // Watch for search type changes
 watch(searchType, (newType) => {
   if (process.server) return;
-
-  // Save the current query before navigating away
-  saveCurrentSearchQuery(route.query);
 
   // Navigate to the new search type's path (onMounted will restore the saved query)
   const targetPath = getPath(newType);
