@@ -4,8 +4,7 @@
     :style="{ bottom: bottomOffset + 'px' }">
     <!-- Desktop: show all group buttons inline -->
     <div class="hidden sm:flex items-center gap-1 flex-wrap">
-      <UIcon name="i-lucide-map-pin" class="text-primary mr-1" />
-      <span class="text-xs font-medium text-muted mr-1">Jump to:</span>
+      <UIcon name="i-lucide-map-pin" class="text-primary mr-0" />
       <UButton v-for="group in groups" :key="group" :label="group" size="xs" color="neutral" variant="soft"
         class="cursor-pointer" @click="scrollToGroup(group)" />
     </div>

@@ -247,9 +247,15 @@ export function groupAndSortCards(
 
   const groups = groupCards(cards, groupBy);
 
-  // Sort cards within each group
-  return groups.map((group) => ({
-    ...group,
-    cards: sortSearchResults(group.cards, sortBy, sortDirection) || group.cards,
-  }));
+  // Sort cards within each group (default to score descending when no sortBy)
+  return groups.map((group) => {
+    if (sortBy) {
+      return {
+        ...group,
+        cards:
+          sortSearchResults(group.cards, sortBy, sortDirection) || group.cards,
+      };
+    }
+    return { ...group, cards: [...group.cards].sort(scoreTiebreaker) };
+  });
 }

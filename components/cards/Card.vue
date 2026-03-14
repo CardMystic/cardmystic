@@ -32,7 +32,7 @@
 
       <!-- Score Bar -->
       <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full">
-        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" />
+        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
         <p v-if="!isSearched" class="text-xs">
           {{ props.card.score !== undefined
             ? props.isSimilaritySearch
@@ -330,6 +330,12 @@ function normalizeScore(score: number | undefined): number {
 }
 
 const normalizedScore = computed(() => normalizeScore(props.card.score));
+
+const scoreColor = computed(() => {
+  if (normalizedScore.value >= 70) return 'success';
+  if (normalizedScore.value >= 40) return 'warning';
+  return 'error';
+});
 
 function findSimilarCards() {
   if (!props.card) return;
