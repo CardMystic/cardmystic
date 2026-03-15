@@ -2,7 +2,7 @@
   <!-- Banner Section -->
   <div v-if="list" class="mb-6 relative group cursor-pointer">
     <!-- Banner Image -->
-    <div class="relative h-48 md:h-64 rounded-lg overflow-hidden shadow-xl">
+    <div class="relative h-48 md:h-64 rounded-lg overflow-hidden">
       <div v-if="bannerImageUrl" class="absolute inset-0 bg-cover bg-center"
         :style="{ backgroundImage: `url(${bannerImageUrl})` }">
         <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent"></div>
@@ -37,12 +37,10 @@
         </p>
       </div>
 
-      <!-- Edit Icon (visible on hover) -->
-      <button @click="isEditBannerModalOpen = true"
-        class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 hover:bg-black/70 rounded-full p-3"
-        aria-label="Change banner image">
-        <UIcon name="i-lucide-pencil" class="w-5 h-5 text-white" />
-      </button>
+      <!-- Edit Icon (always visible when no banner, hover-reveal when banner set) -->
+      <UButton @click="isEditBannerModalOpen = true" class="absolute top-4 right-4 transition-opacity cursor-pointer"
+        :class="bannerImageUrl ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'" color="neutral" variant="subtle"
+        icon="i-lucide-pencil" label="Change Banner Image" aria-label="Change banner image" />
     </div>
   </div>
 

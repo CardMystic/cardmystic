@@ -95,6 +95,21 @@ function handleClipboardClick() {
   .searched-plus-btn.clipboard-added {
     opacity: 0.7 !important;
   }
+
+  .searched-plus-btn {
+    right: 28px;
+    top: 38px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+  }
+
+  .searched-plus-icon {
+    font-size: 1.1rem;
+  }
 }
 
 .searched-plus-icon {

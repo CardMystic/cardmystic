@@ -1,5 +1,7 @@
 <template>
-  <UCard variant="subtle" :class="['card-root', cardBgClass]" :ui="{ body: 'p-4 sm:p-4' }">
+  <UCard variant="subtle"
+    :class="['card-root', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '', legalityWarning ? 'illegal-card-bg' : '']"
+    :ui="{ body: 'p-4 sm:p-4' }">
 
     <!-- Set Commander Confirmation Modal -->
     <UModal v-model:open="showCommanderModal" title="Set Commander">
@@ -162,12 +164,6 @@ const legalityWarning = computed(() => {
   return null;
 });
 
-const cardBgClass = computed(() => {
-  if (props.isCommander) return 'commander-card-bg';
-  if (legalityWarning.value) return 'illegal-card-bg';
-  return '';
-});
-
 const isEligibleCommander = computed(() => {
   if (!commanders.value || commanders.value.length === 0) return false;
   const name = props.card.card_data.name;
@@ -282,7 +278,6 @@ function handleImageError(event: Event) {
 }
 
 .commander-card-bg {
-  background: #3a3520 !important;
   border: 1.5px solid rgba(234, 179, 8, 0.4);
 }
 
@@ -343,6 +338,18 @@ function handleImageError(event: Event) {
 @media (max-width: 767px) {
   .flip-card-btn {
     opacity: 0.7 !important;
+    right: 20px;
+    top: 80px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+  }
+
+  .flip-card-icon {
+    font-size: 1rem;
   }
 }
 

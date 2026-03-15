@@ -1,6 +1,6 @@
 <template>
   <div v-if="cardCount > 0" class="deck-stats-bar border-2 border-secondary rounded-lg bg-elevated">
-    <span class="text-sm font-medium">{{ cardCount }} cards</span>
+    <span class="text-sm font-medium whitespace-nowrap">{{ cardCount }} cards</span>
     <span class="text-muted">|</span>
     <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid" size="xs"
       :label="`Buy ($${totalPrice.toFixed(2)})`" class="cursor-pointer" @click="emit('buy')" />
@@ -31,6 +31,6 @@ const emit = defineEmits<{
   padding: 6px 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
-  min-width: 215px;
+  min-width: 218px;
 }
 </style>

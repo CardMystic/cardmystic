@@ -2,7 +2,7 @@
   <div class="page-wrapper py-4 flex justify-center w-full">
     <!-- Background Image -->
     <div v-if="cardArtUrl" class="fixed inset-0 z-0">
-      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-30 blur-sm"
+      <div class="absolute inset-0 bg-cover bg-center opacity-80 dark:opacity-60 blur-sm"
         :style="{ backgroundImage: `url(${cardArtUrl})` }"></div>
     </div>
 
@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -108,7 +108,7 @@
                 <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                   currentPrinting.prices.usd }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
+                  <span class="dark:text-yellow-300 text-yellow-500">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                       currentPrinting.prices.usd_foil }}
                     <span class="text-sm">(Foil)</span>
@@ -123,7 +123,7 @@
                 <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
                   currentPrinting.prices.eur }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
+                  <span class="dark:text-yellow-300 text-yellow-500">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
                       currentPrinting.prices.eur_foil }}
                     <span class="text-sm">(Foil)</span>
@@ -221,7 +221,7 @@
                   currentPrinting.prices.usd
                 }}
                 <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
+                  <span class="dark:text-yellow-300 text-yellow-500">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
                       currentPrinting.prices.usd_foil
                     }} <span class="text-sm">(Foil)</span>
@@ -237,7 +237,7 @@
                   currentPrinting.prices.eur
                 }}
                 <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="text-yellow-300">
+                  <span class="dark:text-yellow-300 text-yellow-500">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
                       currentPrinting.prices.eur_foil
                     }} <span class="text-sm">(Foil)</span>
@@ -289,7 +289,7 @@
                   :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
                   :hide-thumbs-down-button="true" default-group-by="type" score-scale="normalized" />
                 <template #fallback>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <CardSkeleton v-for="i in 8" :key="`skeleton-rec-${i}`" :showCardInfo="true" />
                   </div>
                 </template>
@@ -302,7 +302,7 @@
                   :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
                   default-group-by="type" score-scale="normalized" :is-similarity-search="true" />
                 <template #fallback>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <CardSkeleton v-for="i in 8" :key="`skeleton-sim-${i}`" :showCardInfo="true" />
                   </div>
                 </template>
@@ -322,7 +322,7 @@
               :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
               default-group-by="type" score-scale="normalized" :is-similarity-search="true" />
             <template #fallback>
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
               </div>
             </template>

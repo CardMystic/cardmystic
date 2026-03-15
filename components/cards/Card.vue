@@ -1,6 +1,6 @@
 <template>
   <UCard variant="subtle"
-    :class="['card-root', isSearched ? 'searched-card-bg' : '', isCommander ? 'commander-card-bg' : '']"
+    :class="['card-root', isSearched ? 'searched-card-bg' : '', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
     :ui="{ body: 'p-2 sm:p-4' }">
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
@@ -36,8 +36,8 @@
         <p v-if="!isSearched" class="text-xs">
           {{ props.card.score !== undefined
             ? props.isSimilaritySearch
-              ? `${normalizedScore.toFixed(2)}%`
-              : normalizedScore.toFixed(2) + '%'
+              ? `${Math.round(normalizedScore)}%`
+              : Math.round(normalizedScore) + '%'
             : 'N/A' }}
         </p>
       </div>
@@ -423,7 +423,6 @@ function toggleShowAllData() {
 }
 
 .commander-card-bg {
-  background: #3a3520 !important;
   border: 1.5px solid rgba(234, 179, 8, 0.4);
 }
 
@@ -475,6 +474,18 @@ function toggleShowAllData() {
 @media (max-width: 767px) {
   .flip-card-btn {
     opacity: 0.7 !important;
+    right: 20px;
+    top: 80px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+  }
+
+  .flip-card-icon {
+    font-size: 1rem;
   }
 }
 

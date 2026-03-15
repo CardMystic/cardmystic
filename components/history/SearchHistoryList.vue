@@ -37,7 +37,8 @@
               </UBadge>
               <span class="text-sm text-gray-500">{{ formatRelativeTimeShort(item.created_at) }}</span>
             </div>
-            <p class="text-lg font-medium mb-2">{{ item.query || 'General Recommendations' }}</p>
+            <p class="text-lg font-medium mb-2">
+              {{ item.query || (item.search_type === 'recommend' ? 'General Recommendations' : '') }}</p>
             <div v-if="item.filters" class="text-sm text-gray-600 dark:text-gray-400">
               <span class="font-medium">Filters:</span> {{ formatFilters(item.filters) }}
             </div>

@@ -9,7 +9,7 @@
       </div>
       <div style="height: 32px"></div> <!-- Sort spacer -->
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
       <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
     </div>
   </template>
@@ -23,7 +23,7 @@
       </div>
       <SortComponent @sort="handleSort" />
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
       <div v-for="result in displayedResults" :key="result.card_data.id">
         <Card :card="result" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true" />
       </div>
