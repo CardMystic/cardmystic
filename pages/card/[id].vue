@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -197,7 +197,7 @@
             :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
             class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
             rel="noopener noreferrer">
-            Buy on TCGPlayer
+            Buy on TCGPlayer {{ currentPrinting.prices.usd ? `($${currentPrinting.prices.usd})` : '' }}
           </UButton>
           <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
             variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg">
@@ -273,10 +273,10 @@
       </div>
       <div class="lg:col-span-10 flex flex-col items-center">
         <!-- Commander: Tabbed Recommended + Similar Cards -->
-        <UCard v-if="card && isCommander" class="similar-cards-section w-full">
-          <UTabs :items="cardTabs" class="lg:px-0 px-4">
+        <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0">
+          <UTabs :items="cardTabs">
             <template #recommended>
-              <div class="recommend-section flex gap-2 mt-4 mb-4">
+              <div class="recommend-section flex gap-2 mt-2 mb-4">
                 <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..." class="flex-1 text-base"
                   icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
                 <UButton color="primary" icon="i-lucide-box" @click="applyRecommendQuery"
