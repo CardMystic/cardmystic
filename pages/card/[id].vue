@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -713,7 +713,7 @@ const alsRecommendRequest = computed(() => {
   if (!isCommander.value || !card.value?.name) return undefined;
   return {
     commanders: [card.value.name],
-    limit: 40,
+    limit: 99,
     query: appliedRecommendQuery.value || undefined,
   };
 });

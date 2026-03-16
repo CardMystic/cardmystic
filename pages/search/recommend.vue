@@ -48,7 +48,10 @@ const commanderParam = computed(() => String(route.query.commander || ''));
 const partnerCommanderParam = computed(() => String(route.query.partnerCommander || ''));
 const commanderNames = computed(() => [commanderParam.value, partnerCommanderParam.value].filter(Boolean));
 const firstCommanderName = computed(() => commanderParam.value || '');
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 100);
+const limitParam = computed(() => {
+  const raw = Number(route.query.limit);
+  return raw > 0 ? raw : 99;
+});
 
 useSeoMeta({
   robots: () =>

@@ -37,8 +37,9 @@
     </UFormField>
 
     <UFormField name="limit" class="mb-2">
-      <UInput v-model.number="state.limit" type="number" :min="1" :max="1000" placeholder="Results limit (default: 40)"
-        icon="i-lucide-hash" class="w-full" :ui="{ base: 'text-base h-10' }" />
+      <UInput v-model.number="state.limit" type="number" inputmode="numeric" pattern="[0-9]*" :min="1" :max="1000"
+        placeholder="Results limit (default: 99, max: 500)" icon="i-lucide-hash" class="w-full"
+        :ui="{ base: 'text-base h-10' }" @keydown="filterNonNumericKeys" />
     </UFormField>
 
     <UFormField name="decklist">
@@ -65,11 +66,20 @@ import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 
+const allowedKeys = new Set(['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End']);
+function filterNonNumericKeys(e: KeyboardEvent) {
+  if (allowedKeys.has(e.key) || e.ctrlKey || e.metaKey) return;
+  if (!/^\d$/.test(e.key)) e.preventDefault();
+}
+
 const schema = z.object({
   description: z.string().optional(),
   commander: z.string().optional(),
   partnerCommander: z.string().optional(),
-  limit: z.number().min(1).max(500).optional(),
+  limit: z.union([
+    z.number().refine(v => !isNaN(v), { message: 'Must be a valid number' }).pipe(z.number().min(1).max(500)),
+    z.literal(''),
+  ]).optional().transform(v => (typeof v === 'number' && !isNaN(v) ? v : undefined)),
   decklist: z.string().optional(),
 })
 
