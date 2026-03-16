@@ -1,8 +1,9 @@
 <template>
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <!-- Shared Search Form -->
       <Search class="mt-6 w-full" />
+
+      <SearchAbout type="keyword" />
 
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam"

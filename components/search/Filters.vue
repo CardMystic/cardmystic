@@ -67,6 +67,23 @@
           </div>
         </template>
 
+        <!-- Platform Chips -->
+        <div v-if="modelValue?.isMTGO">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="updateFilters({ isMTGO: undefined })">MTGO
+          </UButton>
+        </div>
+        <div v-if="modelValue?.isArena">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="updateFilters({ isArena: undefined })">Arena
+          </UButton>
+        </div>
+        <div v-if="modelValue?.isPaper">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="updateFilters({ isPaper: undefined })">Paper
+          </UButton>
+        </div>
+
         <!-- Clear All Button -->
         <UButton color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
           Clear Filters
@@ -175,6 +192,14 @@
               </UButton>
             </div>
           </template>
+          <!-- Platform Filter -->
+          <template #platform>
+            <div class="accordion-item flex flex-wrap gap-4">
+              <UCheckbox v-model="isMTGO" label="MTGO" />
+              <UCheckbox v-model="isArena" label="Arena" />
+              <UCheckbox v-model="isPaper" label="Paper" />
+            </div>
+          </template>
         </UAccordion>
       </template>
     </UCollapsible>
@@ -245,6 +270,11 @@ const items = [
     label: 'Formats',
     icon: 'i-lucide-trophy',
     slot: 'formats' as const
+  },
+  {
+    label: 'Platform',
+    icon: 'i-lucide-monitor',
+    slot: 'platform' as const
   }
 ] satisfies AccordionItem[]
 
@@ -282,7 +312,10 @@ const hasActiveFilters = computed(() => {
     filters.selectedPower ||
     filters.selectedToughness ||
     (filters.selectedColorFilterOption && filters.selectedColorFilterOption !== 'Contains At Least') ||
-    (filters.selectedCardFormats && filters.selectedCardFormats.length > 0)
+    (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
+    filters.isMTGO ||
+    filters.isArena ||
+    filters.isPaper
   );
 });
 
@@ -397,6 +430,21 @@ const selectedCardFormats = computed({
   set: (value) => updateFilters({ selectedCardFormats: value })
 });
 
+const isMTGO = computed({
+  get: () => modelValue?.isMTGO || false,
+  set: (value) => updateFilters({ isMTGO: value || undefined })
+});
+
+const isArena = computed({
+  get: () => modelValue?.isArena || false,
+  set: (value) => updateFilters({ isArena: value || undefined })
+});
+
+const isPaper = computed({
+  get: () => modelValue?.isPaper || false,
+  set: (value) => updateFilters({ isPaper: value || undefined })
+});
+
 function addFormatRow() {
   const currentFormats = [...(modelValue?.selectedCardFormats || [])];
   currentFormats.push({ format: undefined, status: undefined });
@@ -460,7 +508,10 @@ function clearAllFilters() {
     selectedPowerOption: undefined,
     selectedToughnessOption: undefined,
     selectedColorFilterOption: "Contains At Least",
-    selectedCardFormats: undefined
+    selectedCardFormats: undefined,
+    isMTGO: undefined,
+    isArena: undefined,
+    isPaper: undefined,
   });
 }
 

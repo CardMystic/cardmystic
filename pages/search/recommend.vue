@@ -1,8 +1,9 @@
 <template>
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <!-- Shared Search Form -->
       <Search class="mt-6 w-full" />
+
+      <SearchAbout type="recommend" />
 
       <!-- Not Found Warning -->
       <UAlert v-if="notFound && notFound.length" variant="outline" color="warning" icon="i-lucide-triangle-alert"

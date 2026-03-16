@@ -3,6 +3,8 @@
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
       <Search similarity class="mt-6 w-full" />
 
+      <SearchAbout type="similarity" />
+
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="cardNameParam"
         :skeleton-count="skeletonCount" :error-message="searchError?.message"

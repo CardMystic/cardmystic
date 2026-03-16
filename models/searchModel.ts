@@ -50,6 +50,9 @@ export const CardSearchFiltersSchema = z.object({
   selectedToughness: z.string().optional(),
   selectedCardFormats: SelectedCardFormatsSchema,
   isCommander: z.boolean().optional(),
+  isMTGO: z.boolean().optional(),
+  isArena: z.boolean().optional(),
+  isPaper: z.boolean().optional(),
 });
 
 export type WordSearch = z.infer<typeof WordSearchSchema>;
@@ -70,9 +73,9 @@ export const SimilaritySearchSchema = z.object({
 
 export type KeywordSearch = z.infer<typeof KeywordSearchSchema>;
 export const KeywordSearchSchema = z.object({
-	query: z.string().min(1, "Query must not be empty"),
-	limit: z.number().int().positive().max(500).default(100),
-	filters: CardSearchFiltersSchema.optional(),
+  query: z.string().min(1, 'Query must not be empty'),
+  limit: z.number().int().positive().max(500).default(100),
+  filters: CardSearchFiltersSchema.optional(),
 });
 
 export type ExampleQueryResponse = z.infer<typeof ExampleQueryResponseSchema>;

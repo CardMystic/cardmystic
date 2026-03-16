@@ -55,6 +55,8 @@
       <!-- Deck Recommender -->
       <ALSSearch v-else-if="searchType === 'recommend'" />
     </div>
+
+    <SearchAbout v-show="showAbout" :type="searchType" :use-h1="false" />
   </div>
 </template>
 
@@ -72,6 +74,7 @@ import ALSSearch from './ALSSearch.vue';
 // Define props
 const props = defineProps<{
   similarity?: boolean;
+  showAbout?: boolean;
 }>();
 
 

@@ -18,7 +18,7 @@
         </div>
 
         <!-- Search -->
-        <Search />
+        <Search :showAbout="true" />
 
       </UContainer>
 
