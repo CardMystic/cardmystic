@@ -14,6 +14,13 @@
         <SortComponent @sort="handleSort" />
       </div>
 
+      <!-- Searched card pinned at top when grouped (similarity search) -->
+      <div v-if="searchedCard && groupedResults && groupedResults.length > 0 && groupedResults[0].label"
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+        <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
+          :hide-progress-bar="false" :hide-thumbs-down-button="true" :score-scale="scoreScale" />
+      </div>
+
       <!-- Grouped results (accordion) -->
       <template v-if="groupedResults && groupedResults.length > 0 && groupedResults[0].label">
         <div class="flex justify-center sm:justify-end gap-1 mb-1">
@@ -137,6 +144,14 @@ const sortedResults = computed(() => {
   return sortSearchResults(props.searchResults, sortBy.value, sortDirection.value);
 });
 
+// The searched card for similarity search (first result)
+const searchedCard = computed(() => {
+  if (!props.isSimilaritySearch || !props.searchResults || props.searchResults.length === 0) {
+    return undefined;
+  }
+  return props.searchResults[0];
+});
+
 // Computed grouped results
 const groupedResults = computed<CardGroup[] | null>(() => {
   if (!groupBy.value || !props.searchResults || props.searchResults.length === 0) {
@@ -145,7 +160,7 @@ const groupedResults = computed<CardGroup[] | null>(() => {
 
   // For similarity search, keep first card out of groups
   if (props.isSimilaritySearch) {
-    const [_firstCard, ...restCards] = props.searchResults;
+    const [, ...restCards] = props.searchResults;
     return groupAndSortCards(restCards, groupBy.value, sortBy.value, sortDirection.value);
   }
 
