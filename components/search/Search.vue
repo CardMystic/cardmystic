@@ -92,6 +92,8 @@ if (props.similarity) {
   setSearchType('keyword');
 } else if (route.path === '/search/recommend') {
   setSearchType('recommend');
+} else if (route.path === '/') {
+  setSearchType('ai');
 }
 
 // Compute icon based on search type

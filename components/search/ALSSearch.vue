@@ -91,7 +91,10 @@ const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
 const commanderParam = computed(() => String(route.query.commander || ''));
 const partnerCommanderParam = computed(() => String(route.query.partnerCommander || ''));
-const limitParam = computed(() => route.query.limit ? Number(route.query.limit) : 40);
+const limitParam = computed(() => {
+  const raw = Number(route.query.limit);
+  return raw > 0 ? raw : undefined;
+});
 
 const state = reactive<Partial<Schema>>({
   description: descriptionParam.value || '',
