@@ -85,6 +85,8 @@ function handleFabClick() {
   window.open(url, '_blank');
 }
 
+const isTryTopQuery = computed(() => route.query?.isTryTopQuery === 'true');
+
 const wordSearch = computed(() => {
   if (!queryParam.value) {
     return undefined; // Return undefined if no query is provided
@@ -94,6 +96,7 @@ const wordSearch = computed(() => {
     limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false, // Default to false, can be overridden by query param
+    isTryTopQuery: isTryTopQuery.value || undefined,
   });
 });
 

@@ -66,6 +66,7 @@ function tryQuery(query: string) {
     path: '/search',
     query: {
       query,
+      isTryTopQuery: 'true',
     },
   });
 }
