@@ -41,19 +41,19 @@
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
       <!-- Regular search input -->
-      <AISearch v-if="searchType === 'ai'" />
+      <AISearch v-if="searchType === 'ai'" :platform="platform" />
 
       <!-- Select Menu for similarity search -->
-      <SimilaritySearch v-else-if="searchType === 'similarity'" />
+      <SimilaritySearch v-else-if="searchType === 'similarity'" :platform="platform" />
 
       <!-- Commander Search -->
-      <CommanderSearch v-else-if="searchType === 'commander'" />
+      <CommanderSearch v-else-if="searchType === 'commander'" :platform="platform" />
 
       <!-- Keyword Search -->
       <KeywordSearch v-else-if="searchType === 'keyword'" />
 
       <!-- Deck Recommender -->
-      <ALSSearch v-else-if="searchType === 'recommend'" />
+      <ALSSearch v-else-if="searchType === 'recommend'" :platform="platform" />
     </div>
 
     <SearchAbout v-show="showAbout" :type="searchType" :use-h1="false" />
@@ -75,6 +75,8 @@ import ALSSearch from './ALSSearch.vue';
 const props = defineProps<{
   similarity?: boolean;
   showAbout?: boolean;
+  defaultSearchType?: 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend';
+  platform?: 'arena' | 'mtgo' | 'paper';
 }>();
 
 
@@ -85,7 +87,9 @@ const router = useRouter();
 const { searchType, setSearchType, getPath, restoreSearchQuery } = useSearchType();
 
 // Set initial search type
-if (props.similarity) {
+if (props.defaultSearchType) {
+  setSearchType(props.defaultSearchType);
+} else if (props.similarity) {
   setSearchType('similarity');
 } else if (route.path === '/search/commander') {
   setSearchType('commander');
@@ -143,8 +147,8 @@ const items = ref<SelectItem[]>([
 // On mount, restore previous query from sessionStorage if the page has no active query params.
 // This handles navigating via the Navbar dropdown, where the route changes but searchType may not.
 onMounted(() => {
-  // Don't restore searches on the home page
-  if (route.path === '/') return;
+  // Don't restore searches on the home page or SEO slug pages
+  if (route.path === '/' || !route.path.startsWith('/search')) return;
 
   const restored = restoreSearchQuery(searchType.value);
   if (!restored) return;

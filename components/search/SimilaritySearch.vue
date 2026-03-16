@@ -42,6 +42,10 @@ import Filters from './Filters.vue'
 import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCardNames } from '~/composables/useBulkData';
 
+const props = defineProps<{
+  platform?: 'arena' | 'mtgo' | 'paper'
+}>()
+
 const autoComplete = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 defineShortcuts({
@@ -59,12 +63,16 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
+const showFilters = ref(!!route.query.filters || !!props.platform);
 const parsedFilters = computed(() => {
+  const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  if (props.platform === 'arena') base.isArena = true;
+  if (props.platform === 'mtgo') base.isMTGO = true;
+  if (props.platform === 'paper') base.isPaper = true;
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
   }
-  return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  return base;
 });
 
 const state = reactive<Schema>({

@@ -1,9 +1,9 @@
 <template>
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <Search class="mt-6 w-full" />
+      <Search default-search-type="recommend" platform="mtgo" class="mt-6 w-full" />
 
-      <SearchAbout type="recommend" />
+      <SearchAbout type="mtgo-recommend" />
 
       <!-- Not Found Warning -->
       <UAlert v-if="notFound && notFound.length" variant="outline" color="warning" icon="i-lucide-triangle-alert"
@@ -20,11 +20,10 @@
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
         :skeleton-count="skeletonCount" score-scale="normalized" :hide-thumbs-down-button="true"
-        :error-message="searchError?.message" help-text="Paste a decklist above to get card recommendations."
+        :error-message="searchError?.message" help-text="Paste a decklist above to get MTGO card recommendations."
         default-group-by="type" />
     </div>
   </UContainer>
-
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
   <BackToTop />
 </template>
@@ -41,7 +40,6 @@ import type { Card as CardType } from '~/models/cardModel';
 import type { ScryfallCard } from '~/models/cardModel';
 import { CardSearchFiltersSchema } from '~/models/searchModel';
 
-const config = useRuntimeConfig();
 const route = useRoute();
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
@@ -58,49 +56,37 @@ const parsedFilters = computed(() => {
   if (route.query?.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
   }
-  return undefined;
+  return { isMTGO: true, selectedColorFilterOption: 'Contains At Least' as const };
 });
 
 useSeoMeta({
-  robots: () =>
-    decklistParam.value
-      ? 'noindex, follow'
-      : 'index, follow',
+  robots: () => decklistParam.value ? 'noindex, follow' : 'index, follow',
   title: () => firstCommanderName.value
-    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-    : 'Deck Recommender | CardMystic',
+    ? `MTGO Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+    : 'MTGO Deck Builder & Card Recommender | CardMystic',
   description: () => firstCommanderName.value
-    ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!`
-    : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
+    ? `Get MTGO card recommendations for your ${firstCommanderName.value} deck!`
+    : 'Build your MTGO deck with AI-powered card recommendations. Get suggestions for Vintage, Legacy, Modern, Pauper, and more on Magic: The Gathering Online.',
   ogType: 'website',
-
   ogTitle: () => firstCommanderName.value
-    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-    : 'Deck Recommender | CardMystic',
-
-  ogDescription: () =>
-    firstCommanderName.value
-      ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!`
-      : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
-
+    ? `MTGO Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+    : 'MTGO Deck Builder & Card Recommender | CardMystic',
+  ogDescription: () => firstCommanderName.value
+    ? `Get MTGO card recommendations for your ${firstCommanderName.value} deck!`
+    : 'Build your MTGO deck with AI-powered card recommendations.',
   ogImage: 'https://cardmystic.io/cardmystic_cards.png',
-  ogImageAlt: () => 'Deck Recommender',
+  ogImageAlt: () => 'MTGO Deck Builder',
   twitterCard: 'summary_large_image',
   twitterTitle: () => firstCommanderName.value
-    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-    : 'Deck Recommender | CardMystic',
-
-  twitterDescription: () =>
-    firstCommanderName.value
-      ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!.`
-      : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
-
+    ? `MTGO Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+    : 'MTGO Deck Builder & Card Recommender | CardMystic',
+  twitterDescription: () => firstCommanderName.value
+    ? `Get MTGO card recommendations for your ${firstCommanderName.value} deck!`
+    : 'Build your MTGO deck with AI-powered card recommendations.',
   twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
 })
 
-definePageMeta({
-  title: 'Deck Recommender',
-});
+definePageMeta({ title: 'MTGO Deck Builder' });
 
 function parseDecklist(raw: string): string[] {
   return raw
@@ -124,6 +110,7 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
   };
 });
 
+const config = useRuntimeConfig();
 const skeletonCount = ref(20);
 
 const { searchResults, isLoading, error: searchError, notFound } = useAlsRecommend(alsRequest);
@@ -150,26 +137,21 @@ const { data: commanderCards } = useQuery({
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();
-const { saveSearchQuery } = useSearchType();
-
-// Save recommend query to sessionStorage so it can be restored from the search dropdown
-watch(() => route.query, (query) => {
-  if (query.decklist || query.commander) {
-    saveSearchQuery('recommend', query);
-  }
-}, { immediate: true });
-
-watch(decklistParam, (newDecklist) => {
+watch([decklistParam, commanderParam], ([newDecklist, newCommander]) => {
   setPageInfo({
     page_url: route.fullPath,
-    page_name: 'Deck Recommender',
+    page_name: `MTGO Deck Builder: ${newCommander || 'Custom Deck'}`,
     query: newDecklist,
-    labels: ['deck recommender'],
+    labels: ['mtgo', 'deck recommender'],
   });
 }, { immediate: true });
 
 function handleFabClick() {
-  const url = searchFeedbackUrl(getPageInfo());
-  window.open(url, '_blank');
+  window.open(searchFeedbackUrl(getPageInfo()), '_blank');
 }
+
+const { saveSearchQuery } = useSearchType();
+watch(() => route.query, (query) => {
+  if (query.decklist || query.commander) saveSearchQuery('recommend', query);
+}, { immediate: true });
 </script>

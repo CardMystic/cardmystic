@@ -22,6 +22,19 @@
       </div>
     </UFormField>
     <CommanderFilters v-model="state.filters" />
+
+    <div v-if="!showFilters" class="flex justify-center">
+      <UTooltip text="Filter results by types, rarities, stats, and platform">
+        <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
+          aria-label="Show advanced search filters">
+          Show Advanced Filters
+        </UButton>
+      </UTooltip>
+    </div>
+
+    <UFormField v-if="showFilters" name="advancedFilters">
+      <Filters ref="filtersRef" v-model="state.filters" hide-colors hide-formats />
+    </UFormField>
   </UForm>
 </template>
 
@@ -33,8 +46,14 @@ const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import CommanderFilters from '~/components/search/CommanderFilters.vue'
+import Filters from './Filters.vue'
+
+const props = defineProps<{
+  platform?: 'arena' | 'mtgo' | 'paper'
+}>()
 
 const input = ref();
+const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 defineShortcuts({
   '/': () => {
     input.value?.inputRef?.focus();
@@ -50,12 +69,16 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || ''));
+const showFilters = ref(!!route.query.filters || !!props.platform);
 const parsedFilters = computed(() => {
+  const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  if (props.platform === 'arena') base.isArena = true;
+  if (props.platform === 'mtgo') base.isMTGO = true;
+  if (props.platform === 'paper') base.isPaper = true;
   if (route.query.filters) {
-    const filters = CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
-    return filters;
+    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
   }
-  return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  return base;
 });
 
 const state = reactive<Partial<Schema>>({
@@ -86,20 +109,30 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     const formData = {
       query: event.data.query,
-      filters: event.data.filters || {}
+      filters: { ...(event.data.filters || {}) }
     };
 
-    // Use state.filters.selectedColors directly
+    // Use state.filters.selectedColors directly for commander color identity
     const selColors = state.filters?.selectedColors;
     if (selColors && selColors.length > 0) {
       formData.filters.selectedColors = [...selColors];
       formData.filters.selectedColorFilterOption = 'Match Exactly';
     } else {
-      formData.filters = {};
+      // Keep other filters but remove color-related ones
+      delete formData.filters.selectedColors;
+      delete formData.filters.selectedColorFilterOption;
     }
 
     // For commander search, always set isCommander to true
     formData.filters.isCommander = true;
+
+    // Remove undefined/null/empty values from filters
+    Object.keys(formData.filters).forEach(key => {
+      const value = formData.filters[key as keyof typeof formData.filters];
+      if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+        delete formData.filters[key as keyof typeof formData.filters];
+      }
+    });
 
     // Save to search history
     saveSearchMutation.mutate({ query: event.data.query, searchType: 'commander', filters: formData.filters })
@@ -110,6 +143,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
       searchType: 'commander'
     };
+    filtersRef.value?.collapse();
     router.push({ path: '/search/commander', query });
   } catch (error) {
     console.error('Form submission error:', error)

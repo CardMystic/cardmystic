@@ -239,13 +239,17 @@ const orientation: Ref<'vertical' | 'horizontal'> = computed(() =>
   screenWidth.value < 768 ? 'vertical' : 'horizontal'
 )
 
-const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
+const { modelValue, hideColors, hideFormats } = defineProps<{
+  modelValue?: CardSearchFilters
+  hideColors?: boolean
+  hideFormats?: boolean
+}>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: CardSearchFilters]
 }>();
 
-const items = [
+const allItems = [
   {
     label: 'Card Types',
     icon: 'i-lucide-shapes',
@@ -277,6 +281,12 @@ const items = [
     slot: 'platform' as const
   }
 ] satisfies AccordionItem[]
+
+const items = computed(() => allItems.filter(item => {
+  if (hideColors && item.slot === 'colors') return false
+  if (hideFormats && item.slot === 'formats') return false
+  return true
+}))
 
 const cardTypes = CardType.options;
 const cardFormats = CardFormat.options;

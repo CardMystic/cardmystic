@@ -46,6 +46,19 @@
         autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" />
     </UFormField>
 
+    <div v-if="!showFilters" class="flex justify-center">
+      <UTooltip text="Filter results by colors, types, rarities, and more">
+        <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
+          aria-label="Show advanced search filters">
+          Show Advanced Filters
+        </UButton>
+      </UTooltip>
+    </div>
+
+    <UFormField v-if="showFilters" name="filters">
+      <Filters ref="filtersRef" v-model="state.filters" />
+    </UFormField>
+
     <div class="flex justify-center">
       <UButton icon="i-lucide-box" :disabled="!state.decklist?.trim() && !state.commander?.trim()" type="submit"
         class="cursor-pointer h-10">
@@ -61,6 +74,12 @@ import { useRoute } from 'vue-router';
 import { refDebounced } from '@vueuse/core';
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
+import { CardSearchFiltersSchema } from '~/models/searchModel'
+import Filters from './Filters.vue'
+
+const props = defineProps<{
+  platform?: 'arena' | 'mtgo' | 'paper'
+}>()
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
@@ -71,6 +90,8 @@ function filterNonNumericKeys(e: KeyboardEvent) {
   if (!/^\d$/.test(e.key)) e.preventDefault();
 }
 
+const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
+
 const schema = z.object({
   description: z.string().optional(),
   commander: z.string().optional(),
@@ -80,6 +101,7 @@ const schema = z.object({
     z.literal(''),
   ]).optional().transform(v => (typeof v === 'number' && !isNaN(v) ? v : undefined)),
   decklist: z.string().optional(),
+  filters: CardSearchFiltersSchema.optional(),
 })
 
 type Schema = z.output<typeof schema>
@@ -95,12 +117,25 @@ const limitParam = computed(() => {
   return raw > 0 ? raw : undefined;
 });
 
+const showFilters = ref(!!route.query.filters || !!props.platform);
+const parsedFilters = computed(() => {
+  const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  if (props.platform === 'arena') base.isArena = true;
+  if (props.platform === 'mtgo') base.isMTGO = true;
+  if (props.platform === 'paper') base.isPaper = true;
+  if (route.query.filters) {
+    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+  }
+  return base;
+});
+
 const state = reactive<Partial<Schema>>({
   description: descriptionParam.value || '',
   commander: commanderParam.value || '',
   partnerCommander: partnerCommanderParam.value || '',
   limit: limitParam.value,
   decklist: decklistParam.value || '',
+  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' },
 })
 
 // Commander autocomplete
@@ -189,28 +224,41 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   }
 
   try {
+    const requestFilters = { ...event.data.filters } // shallow copy
+
+    // Only modify the copy, NEVER the form state
+    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
+      if (requestFilters.selectedColorFilterOption === 'Contains At Least') {
+        delete requestFilters.selectedColors
+        delete requestFilters.selectedColorFilterOption
+      }
+    }
+
+    // Remove undefined/null/empty values from filters
+    Object.keys(requestFilters).forEach(key => {
+      const value = requestFilters[key as keyof typeof requestFilters];
+      if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+        delete requestFilters[key as keyof typeof requestFilters];
+      }
+    });
+
     const query: Record<string, any> = {
       decklist: event.data.decklist,
       description: event.data.description || undefined,
       commander: event.data.commander || undefined,
       partnerCommander: event.data.partnerCommander || undefined,
       limit: event.data.limit || undefined,
+      filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'recommend',
     };
-
-    console.log('Submitting form with data:', query);
 
     saveSearchMutation.mutate({
       query: event.data.description || '',
       searchType: 'recommend',
-      filters: {
-        commander: event.data.commander || undefined,
-        partnerCommander: event.data.partnerCommander || undefined,
-        decklist: event.data.decklist || undefined,
-        limit: event.data.limit || undefined,
-      },
+      filters: requestFilters,
     });
 
+    filtersRef.value?.collapse();
     router.push({ path: '/search/recommend', query });
   } catch (error) {
     console.error('Form submission error:', error)

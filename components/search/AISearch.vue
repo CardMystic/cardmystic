@@ -46,6 +46,10 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import Filters from './Filters.vue'
 
+const props = defineProps<{
+  platform?: 'arena' | 'mtgo' | 'paper'
+}>()
+
 const input = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 defineShortcuts({
@@ -68,12 +72,16 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || ''));
-const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
+const showFilters = ref(!!route.query.filters || !!props.platform);
 const parsedFilters = computed(() => {
+  const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  if (props.platform === 'arena') base.isArena = true;
+  if (props.platform === 'mtgo') base.isMTGO = true;
+  if (props.platform === 'paper') base.isPaper = true;
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
   }
-  return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  return base;
 });
 
 const state = reactive<Partial<Schema>>({

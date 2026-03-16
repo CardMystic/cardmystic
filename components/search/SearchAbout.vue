@@ -21,6 +21,9 @@
 
 <script setup lang="ts">
 export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend'
+  | 'arena-ai' | 'arena-similarity' | 'arena-recommend' | 'arena-commander'
+  | 'mtgo-ai' | 'mtgo-similarity' | 'mtgo-recommend' | 'mtgo-commander'
+  | 'modern-ai' | 'modern-similarity'
 
 const open = ref(false)
 
@@ -84,6 +87,106 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
       'Our recommendation model compares your deck to similar decks in our database to suggest cards that strengthen your deck and fill missing roles like card draw, ramp, or removal.',
       'You can describe what your deck needs, such as "card draw", "artifact removal", or "token synergy" to receive targeted card recommendations tailored to your strategy.',
       'Level up your next deck whether you\'re playing Commander, MTGO, MTG Arena, or any other Magic: The Gathering format!'
+    ],
+  },
+
+  'arena-ai': {
+    title: 'About MTG Arena Card Search',
+    heading: 'MTG Arena Card Search',
+    paragraphs: [
+      'Search for MTG Arena cards using natural language. CardMystic\'s AI-powered search helps you find Arena-legal cards by describing the mechanic, effect, or strategy you need.',
+      'Results are filtered to cards available on MTG Arena, so every suggestion is ready for your next Arena deck. Perfect for Standard, Explorer, Historic, Brawl, and other Arena formats.',
+      'Try searches like "creatures that draw cards on ETB", "cheap instant speed removal", or "multicolor lands" to discover powerful Arena-legal cards for your deck.',
+    ],
+  },
+
+  'arena-similarity': {
+    title: 'About MTG Arena Similarity Search',
+    heading: 'MTG Arena Card Similarity Search',
+    paragraphs: [
+      'Find MTG Arena cards similar to any card in Magic: The Gathering. Discover Arena-legal alternatives, budget replacements, and cards with similar effects.',
+      'Enter a card name and our engine finds the most similar cards available on MTG Arena. Ideal for finding substitutes when a card isn\'t available on Arena or when you need budget-friendly options.',
+      'Use additional filters like color identity, card type, and mana value to narrow results for the perfect Arena deck fit.',
+    ],
+  },
+
+  'arena-recommend': {
+    title: 'About MTG Arena Deck Recommender',
+    heading: 'MTG Arena Deck Builder & Card Recommender',
+    paragraphs: [
+      'Get AI-powered card recommendations for your MTG Arena deck. Paste your decklist and CardMystic will suggest Arena-legal cards that improve your deck\'s synergy and consistency.',
+      'Our recommendation engine analyzes your deck and suggests cards available on MTG Arena that fill gaps in your strategy — whether you need more removal, card draw, ramp, or win conditions.',
+      'Perfect for building and upgrading Standard, Explorer, Historic, and Brawl decks on MTG Arena.',
+    ],
+  },
+
+  'mtgo-ai': {
+    title: 'About MTGO Card Search',
+    heading: 'MTGO Card Search',
+    paragraphs: [
+      'Search for Magic: The Gathering Online cards using natural language. CardMystic\'s AI search helps you find MTGO-legal cards by describing the effect, mechanic, or strategy you\'re looking for.',
+      'Results are filtered to cards available on Magic: The Gathering Online, covering formats like Vintage, Legacy, Modern, Pauper, and more.',
+      'Try searches like "efficient graveyard hate", "fast mana rocks", or "win conditions for control decks" to find powerful cards for your MTGO deck.',
+    ],
+  },
+
+  'mtgo-similarity': {
+    title: 'About MTGO Similarity Search',
+    heading: 'MTGO Card Similarity Search',
+    paragraphs: [
+      'Find MTGO cards similar to any card in Magic: The Gathering. Discover alternatives and replacements available on Magic: The Gathering Online.',
+      'Enter a card name and our engine finds the most similar cards available on MTGO. Great for finding budget alternatives or discovering cards with similar effects for competitive and casual play.',
+      'Filter by color identity, card type, mana value, and format legality to find the perfect MTGO card for your deck.',
+    ],
+  },
+
+  'mtgo-recommend': {
+    title: 'About MTGO Deck Recommender',
+    heading: 'MTGO Deck Builder & Card Recommender',
+    paragraphs: [
+      'Get AI-powered card recommendations for your MTGO deck. Paste your decklist and CardMystic will suggest cards available on Magic: The Gathering Online that strengthen your deck.',
+      'Our recommendation engine analyzes your deck\'s strategy and suggests MTGO-legal cards to fill gaps — whether you need sideboard options, better removal, or stronger finishers.',
+      'Ideal for building and tuning decks for Vintage, Legacy, Modern, Pauper, and other MTGO formats.',
+    ],
+  },
+
+  'arena-commander': {
+    title: 'About MTG Arena Commander Search',
+    heading: 'MTG Arena Commander Search',
+    paragraphs: [
+      'Find the perfect commander for your next MTG Arena Brawl or Historic Brawl deck. Describe the strategy, playstyle, or theme you want and CardMystic\'s AI will find Arena-legal commanders that match.',
+      'Results are filtered to legendary creatures available on MTG Arena, so every suggestion is ready for your next Brawl deck. Our AI understands color identity, tribal synergies, and popular Arena archetypes.',
+      'Try searches like "lifegain commander", "token synergy Brawl commander", or "artifact commander in blue" to discover powerful Arena-legal commanders.',
+    ],
+  },
+
+  'mtgo-commander': {
+    title: 'About MTGO Commander Search',
+    heading: 'MTGO Commander Search',
+    paragraphs: [
+      'Find the perfect commander for your next MTGO EDH deck. Describe the strategy, playstyle, or theme you want and CardMystic\'s AI will find MTGO-legal commanders that match your deck concept.',
+      'Results are filtered to legendary creatures available on Magic: The Gathering Online, covering the full Commander card pool for competitive and casual EDH play.',
+      'Try searches like "stax commander", "combo commander in Sultai", or "voltron commander" to discover powerful commanders for your MTGO EDH deck.',
+    ],
+  },
+
+  'modern-ai': {
+    title: 'About Modern Card Search',
+    heading: 'MTG Modern Card Search',
+    paragraphs: [
+      'Search for Modern-legal Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards legal in Modern by describing the mechanic, effect, or strategy you need.',
+      'Results are filtered to cards legal in the Modern format, so every suggestion is tournament-ready. Perfect for building competitive Modern decks or exploring new strategies.',
+      'Try searches like "efficient graveyard hate", "one mana cantrips", or "creatures that generate card advantage" to discover powerful Modern-legal cards for your deck.',
+    ],
+  },
+
+  'modern-similarity': {
+    title: 'About Modern Similarity Search',
+    heading: 'MTG Modern Card Similarity Search',
+    paragraphs: [
+      'Find Modern-legal cards similar to any card in Magic: The Gathering. Discover alternatives, budget replacements, and cards with similar effects that are legal in Modern.',
+      'Enter a card name and our AI finds the most similar cards legal in the Modern format. Ideal for finding substitutes, budget-friendly options, or sideboard alternatives for your Modern deck.',
+      'Use additional filters like color identity, card type, and mana value to narrow results for the perfect Modern deck fit.',
     ],
   },
 }
