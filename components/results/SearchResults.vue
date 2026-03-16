@@ -107,6 +107,7 @@ const props = defineProps<{
   errorMessage?: string;
   isSimilaritySearch?: boolean;
   isKeywordSearch?: boolean;
+  hideSearchedCard?: boolean;
   hideThumbsDownButton?: boolean;
   scoreScale?: 'normalized' | 'raw';
   defaultGroupBy?: string;
@@ -135,7 +136,7 @@ const sortedResults = computed(() => {
   }
 
   // For similarity search, keep the first card (the searched card) separate
-  if (props.isSimilaritySearch) {
+  if (props.isSimilaritySearch && !props.hideSearchedCard) {
     const [firstCard, ...restCards] = props.searchResults;
     const sortedRest = sortSearchResults(restCards, sortBy.value, sortDirection.value);
     return sortedRest ? [firstCard, ...sortedRest] : [firstCard];
@@ -146,7 +147,7 @@ const sortedResults = computed(() => {
 
 // The searched card for similarity search (first result)
 const searchedCard = computed(() => {
-  if (!props.isSimilaritySearch || !props.searchResults || props.searchResults.length === 0) {
+  if (!props.isSimilaritySearch || props.hideSearchedCard || !props.searchResults || props.searchResults.length === 0) {
     return undefined;
   }
   return props.searchResults[0];
@@ -159,7 +160,7 @@ const groupedResults = computed<CardGroup[] | null>(() => {
   }
 
   // For similarity search, keep first card out of groups
-  if (props.isSimilaritySearch) {
+  if (props.isSimilaritySearch && !props.hideSearchedCard) {
     const [, ...restCards] = props.searchResults;
     return groupAndSortCards(restCards, groupBy.value, sortBy.value, sortDirection.value);
   }

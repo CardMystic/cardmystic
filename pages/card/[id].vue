@@ -77,15 +77,19 @@
 
         <!-- Action Buttons + TCGPlayer - Desktop only -->
         <div class="mt-2 hidden lg:flex flex-row gap-2 w-full max-w-75 items-center">
-          <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-            class="cursor-pointer" />
-          <UButton v-if="isCommander" color="primary" variant="solid" icon="i-lucide-box" size="lg"
-            @click="getRecommendations" class="cursor-pointer" />
+          <UTooltip text="Find similar cards">
+            <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
+              class="cursor-pointer" />
+          </UTooltip>
+          <UTooltip v-if="isCommander" text="Get deck recommendations">
+            <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
+              class="cursor-pointer" />
+          </UTooltip>
           <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
             :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
             class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
             rel="noopener noreferrer">
-            Buy on TCGPlayer
+            Buy {{ tcgPriceLabel }}
           </UButton>
           <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
             variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg">
@@ -189,15 +193,19 @@
 
         <!-- Action Buttons + TCGPlayer - Mobile only -->
         <div class="flex flex-row gap-2 mt-0 mb-0 lg:hidden items-center">
-          <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-            class="cursor-pointer" />
-          <UButton v-if="isCommander" color="primary" variant="solid" icon="i-lucide-box" size="lg"
-            @click="getRecommendations" class="cursor-pointer" />
+          <UTooltip text="Find similar cards">
+            <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
+              class="cursor-pointer" />
+          </UTooltip>
+          <UTooltip v-if="isCommander" text="Get deck recommendations">
+            <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
+              class="cursor-pointer" />
+          </UTooltip>
           <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
             :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
             class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
             rel="noopener noreferrer">
-            Buy on TCGPlayer {{ currentPrinting.prices.usd ? `($${currentPrinting.prices.usd})` : '' }}
+            Buy {{ tcgPriceLabel }}
           </UButton>
           <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
             variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg">
@@ -300,7 +308,7 @@
               <ClientOnly>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-                  default-group-by="type" score-scale="normalized" :is-similarity-search="true" />
+                  default-group-by="type" score-scale="normalized" :is-similarity-search="true" hide-searched-card />
                 <template #fallback>
                   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <CardSkeleton v-for="i in 8" :key="`skeleton-sim-${i}`" :showCardInfo="true" />
@@ -320,7 +328,7 @@
           <ClientOnly>
             <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
               :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-              default-group-by="type" score-scale="normalized" :is-similarity-search="true" />
+              default-group-by="type" score-scale="normalized" :is-similarity-search="true" hide-searched-card />
             <template #fallback>
               <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
@@ -560,6 +568,11 @@ const hasPrices = computed(() => {
   return (
     prices.usd || prices.usd_foil || prices.eur || prices.eur_foil || prices.tix
   );
+});
+
+const tcgPriceLabel = computed(() => {
+  const price = currentPrinting.value?.prices?.usd || currentPrinting.value?.prices?.usd_foil;
+  return price ? `($${price})` : '';
 });
 
 // Computed properties for current face data using current printing
