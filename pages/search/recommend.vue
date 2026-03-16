@@ -19,9 +19,9 @@
 
       <!-- Results -->
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
-        :skeleton-count="skeletonCount" score-scale="normalized" :hide-thumbs-down-button="true"
-        :error-message="searchError?.message" help-text="Paste a decklist above to get card recommendations."
-        default-group-by="type" />
+        :skeleton-count="skeletonCount" :score-scale="descriptionParam ? 'raw' : 'normalized'"
+        :hide-thumbs-down-button="true" :error-message="searchError?.message"
+        help-text="Paste a decklist above to get card recommendations." default-group-by="type" />
     </div>
   </UContainer>
 
