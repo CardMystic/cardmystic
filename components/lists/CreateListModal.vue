@@ -10,12 +10,12 @@
         </UFormField>
         <UFormField label="Commander (optional)">
           <USelectMenu v-model="newListCommander" v-model:search-term="commanderSearchTerm" :items="filteredCommanders"
-            placeholder="Search for a commander..." icon="i-lucide-crown" class="w-full" :loading="!commanders" />
+            placeholder="Search for a commander..." icon="i-lucide-crown" class="w-full" />
         </UFormField>
         <UFormField v-if="showPartnerField" label="Partner Commander (optional)">
           <USelectMenu v-model="newListPartnerCommander" v-model:search-term="partnerSearchTerm"
             :items="filteredPartners" placeholder="Search for a partner commander..." icon="i-lucide-crown"
-            class="w-full" :loading="!partnerCommanders" />
+            class="w-full" />
         </UFormField>
         <div class="flex justify-end gap-2">
           <UButton color="neutral" variant="ghost" label="Cancel" @click="isOpen = false" :disabled="createLoading" />

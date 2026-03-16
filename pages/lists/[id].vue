@@ -25,10 +25,9 @@
             class="cursor-pointer" />
         </div>
         <div>
-          <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
-            :loading="(!!addCardSearchTerm && cardsStatus === 'pending') || addCardLoading" :items="filteredAddCards"
-            placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 min-w-90 cursor-pointer"
-            @update:model-value="handleAddCard" />
+          <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm" :loading="addCardLoading"
+            :items="filteredAddCards" placeholder="Search for a card to add..." icon="i-lucide-plus"
+            class="flex-1 min-w-90 cursor-pointer" @update:model-value="handleAddCard" />
         </div>
 
       </div>
