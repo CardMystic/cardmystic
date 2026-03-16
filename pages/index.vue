@@ -1,12 +1,13 @@
 <template>
+  <CometDog />
   <SpaceBackground :full="true">
     <div class="hero px-0 h-full w-full justify-center flex flex-col items-center">
       <div class="explore-spacer">
       </div>
-      <UContainer class="flex flex-col items-center justify-center text-center max-w-[1000px] h-full relative z-10">
+      <UContainer class="flex flex-col items-center justify-center text-center max-w-250 h-full relative z-10">
         <div class="header-layout">
           <div class="title-container">
-            <img src="/wizard.webp" class="image w-[120px] h-[120px] object-cover" alt="Wizard" />
+            <img src="/wizard.webp" class="image w-30 h-30 object-cover" alt="Wizard" />
             <h1 class="subtitle text-white">
               <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I.
                 Search
@@ -56,9 +57,9 @@
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
       <div
-        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent">
         <div class="flex items-start gap-4">
-          <UIcon name="i-lucide-book-open" class="text-3xl text-primary flex-shrink-0 mt-1" />
+          <UIcon name="i-lucide-book-open" class="text-3xl text-primary shrink-0 mt-1" />
           <div>
             <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h2>
             <p class="text-base md:text-lg leading-relaxed">
@@ -72,9 +73,9 @@
 
       <!-- How It Works -->
       <div
-        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent">
         <div class="flex items-start gap-4">
-          <UIcon name="i-lucide-sparkles" class="text-3xl text-primary flex-shrink-0 mt-1" />
+          <UIcon name="i-lucide-sparkles" class="text-3xl text-primary shrink-0 mt-1" />
           <div>
             <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h2>
             <p class="text-base md:text-lg leading-relaxed">
