@@ -9,13 +9,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 /**
- * 1 = every page load triggers the easter egg.
- * 10 = roughly 1 in 10 visits will show the comet dog.
+ * Chance per roll: 1 / VISITS_PER_COMET.
+ * Rolls once on load, then every ROLL_INTERVAL_MS while the page is open.
+ * With 100 and 60 000 ms → on average ~100 minutes (~1.6 hours) to see him.
  */
-const VISITS_PER_COMET = 500
+const VISITS_PER_COMET = 100
+const ROLL_INTERVAL_MS = 60_000
 
 const visible = ref(false)
 const startX = ref(0)
@@ -23,8 +25,11 @@ const startY = ref(0)
 const endX = ref(0)
 const endY = ref(0)
 const duration = ref(6)
+let rollTimer: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
+function trySpawnComet() {
+  // Don't spawn while one is already on screen
+  if (visible.value) return
   if (Math.random() * VISITS_PER_COMET >= 1) return
 
   // Pick a random edge to enter from (0=top, 1=right, 2=bottom, 3=left)
@@ -57,6 +62,15 @@ onMounted(() => {
   duration.value = 12 + Math.random() * 6 // 12-18 seconds
 
   visible.value = true
+}
+
+onMounted(() => {
+  trySpawnComet()
+  rollTimer = setInterval(trySpawnComet, ROLL_INTERVAL_MS)
+})
+
+onUnmounted(() => {
+  if (rollTimer) clearInterval(rollTimer)
 })
 </script>
 
