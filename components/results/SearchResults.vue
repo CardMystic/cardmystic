@@ -25,7 +25,7 @@
         <UAccordion type="multiple" v-model="openAccordionValues" :items="accordionItems"
           :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
           <template v-for="group in groupedResults" :key="group.label" #[group.label]>
-            <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-2">
+            <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pb-4">
               <div v-for="(result, index) in group.cards" :key="result.card_data.id">
                 <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
                   :is-searched="false" :hide-progress-bar="isKeywordSearch"
