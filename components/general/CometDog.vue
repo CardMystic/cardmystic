@@ -14,9 +14,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 /**
  * Chance per roll: 1 / VISITS_PER_COMET.
  * Rolls once on load, then every ROLL_INTERVAL_MS while the page is open.
- * With 100 and 60 000 ms → on average ~100 minutes (~1.6 hours) to see him.
+ * With 60 and 60 000 ms → on average ~60 minutes (1 hour) to see him.
  */
-const VISITS_PER_COMET = 100
+const VISITS_PER_COMET = 60
 const ROLL_INTERVAL_MS = 60_000
 
 const visible = ref(false)
