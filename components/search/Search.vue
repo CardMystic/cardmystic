@@ -162,10 +162,11 @@ onMounted(() => {
 watch(searchType, (newType) => {
   if (process.server) return;
 
-  // Navigate to the new search type's path (onMounted will restore the saved query)
+  // Navigate to the new search type's path, restoring any saved query params immediately
   const targetPath = getPath(newType);
   if (route.path !== targetPath && route.path !== '/') {
-    router.push({ path: targetPath });
+    const savedQuery = restoreSearchQuery(newType);
+    router.push({ path: targetPath, query: savedQuery });
   }
 });
 
