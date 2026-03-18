@@ -1,6 +1,12 @@
 import type { CardSearchFilters } from '~/models/searchModel';
 
-export type Platform = 'arena' | 'mtgo' | 'modern' | 'paper' | 'all';
+export type Platform =
+  | 'arena'
+  | 'mtgo'
+  | 'modern'
+  | 'paper'
+  | 'commander'
+  | 'all';
 
 /** Valid platform route params — used to validate [platform] in routes. */
 export const validPlatforms: Platform[] = [
@@ -8,6 +14,7 @@ export const validPlatforms: Platform[] = [
   'mtgo',
   'modern',
   'paper',
+  'commander',
   'all',
 ];
 
@@ -35,6 +42,13 @@ export function getPlatformFilters(
         selectedColorFilterOption: 'Contains At Least' as const,
         selectedCardFormats: [
           { format: 'Modern' as const, status: 'Legal' as const },
+        ],
+      };
+    case 'commander':
+      return {
+        selectedColorFilterOption: 'Contains At Least' as const,
+        selectedCardFormats: [
+          { format: 'Commander' as const, status: 'Legal' as const },
         ],
       };
     case 'paper':
@@ -75,6 +89,14 @@ export function detectPlatformFromFilters(
     )
   )
     return 'modern';
+  if (
+    filters.selectedCardFormats?.some((f: any) =>
+      typeof f === 'string'
+        ? f.toLowerCase().includes('commander')
+        : f?.format?.toLowerCase() === 'commander',
+    )
+  )
+    return 'commander';
   return 'all';
 }
 
@@ -87,6 +109,8 @@ export function getPlatformDisplayName(platform: Platform): string {
       return 'MTGO';
     case 'modern':
       return 'Modern';
+    case 'commander':
+      return 'Commander';
     case 'paper':
       return 'Paper';
     case 'all':

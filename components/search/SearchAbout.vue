@@ -30,6 +30,7 @@ export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'r
   | 'mtgo-ai' | 'mtgo-similarity' | 'mtgo-recommend' | 'mtgo-commander' | 'mtgo-keyword'
   | 'modern-ai' | 'modern-similarity' | 'modern-recommend' | 'modern-commander' | 'modern-keyword'
   | 'paper-ai' | 'paper-similarity' | 'paper-recommend' | 'paper-commander' | 'paper-keyword'
+  | 'commander-ai' | 'commander-similarity' | 'commander-recommend' | 'commander-commander' | 'commander-keyword'
 
 const open = ref(false)
 
@@ -293,6 +294,56 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
       'Search paper Magic: The Gathering cards by keywords, mechanics, or oracle text. Find cards available in paper with specific abilities and interactions.',
       'This search is ideal when you know the mechanic or ability you want. Find paper cards with flying, trample, deathtouch, sacrifice effects, token generation, and many other MTG mechanics.',
       'Combine keywords with filters like color identity, card type, mana value, and rarity to quickly find paper cards for Commander, Legacy, Modern, and other tabletop formats.',
+    ],
+  },
+
+  'commander-ai': {
+    title: 'About Commander Card Search',
+    heading: 'Commander MTG Card Search',
+    paragraphs: [
+      'Search for Commander-legal Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards legal in Commander by describing the mechanic, effect, or strategy you need.',
+      'Results are filtered to cards legal in the Commander format, so every suggestion is ready for your next EDH deck.',
+      'Try searches like "board wipes that leave my creatures", "efficient card draw in green", or "combo pieces for infinite mana" to discover powerful Commander-legal cards for your deck.',
+    ],
+  },
+
+  'commander-similarity': {
+    title: 'About Commander Similarity Search',
+    heading: 'Commander MTG Card Similarity Search',
+    paragraphs: [
+      'Find Commander-legal cards similar to any card in Magic: The Gathering. Discover alternatives, budget replacements, and cards with similar effects that are legal in Commander.',
+      'Enter a card name and our AI finds the most similar cards legal in the Commander format. Ideal for finding substitutes or budget-friendly options for your EDH deck.',
+      'Use additional filters like color identity, card type, and mana value to narrow results for the perfect Commander deck fit.',
+    ],
+  },
+
+  'commander-commander': {
+    title: 'About Commander Search',
+    heading: 'Commander-Legal Commander Search',
+    paragraphs: [
+      'Find the perfect commander for your next EDH deck. Describe the strategy, playstyle, or theme you want and CardMystic\'s AI will find Commander-legal legendary creatures that match your deck concept.',
+      'Results are filtered to legendary creatures legal in the Commander format, covering the full EDH card pool for competitive and casual play.',
+      'Try searches like "lifegain commander", "spellslinger commander in blue and red", or "sacrifice commander" to discover powerful commanders for your EDH deck.',
+    ],
+  },
+
+  'commander-keyword': {
+    title: 'About Commander Keyword Search',
+    heading: 'Commander MTG Keyword Search',
+    paragraphs: [
+      'Search Commander-legal Magic: The Gathering cards by keywords, mechanics, or oracle text. Find cards with specific abilities and interactions that are legal in the Commander format.',
+      'This search is ideal when you know the mechanic or ability you want. Find Commander-legal cards with flying, trample, deathtouch, sacrifice effects, token generation, and many other MTG mechanics.',
+      'Combine keywords with filters like color identity, card type, mana value, and rarity to quickly find Commander-legal cards for your EDH deck.',
+    ],
+  },
+
+  'commander-recommend': {
+    title: 'About Commander Deck Recommender',
+    heading: 'Commander Deck Builder & Card Recommender',
+    paragraphs: [
+      'Get AI-powered card recommendations for your Commander deck. Paste your decklist and CardMystic will suggest Commander-legal cards that improve your deck\'s synergy and consistency.',
+      'Our recommendation engine analyzes your deck and suggests cards legal in Commander that fill gaps in your strategy — whether you need more removal, card draw, ramp, or win conditions.',
+      'Ideal for building and tuning competitive and casual EDH decks.',
     ],
   },
 }
