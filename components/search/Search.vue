@@ -23,7 +23,10 @@
         Keyword Search
       </button>
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'recommend' }]"
-        @click="setSearchType('recommend')">
+        @click="setSearchType('recommend')" class="relative">
+        <span
+          class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold whitespace-nowrap bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full px-1.5 py-0.5 border border-gray-200 dark:border-gray-600"><span
+            class="animate-rainbow">NEW</span> (Beta)</span>
         <UIcon name="i-lucide-box" class="icon" size="18" />
         Deck Recommender
       </button>
@@ -297,5 +300,31 @@ watch(searchType, (newType) => {
   .search-container {
     padding: 0 0px;
   }
+}
+
+@keyframes rainbow {
+  0% {
+    color: #dc2626;
+  }
+
+  25% {
+    color: #ea580c;
+  }
+
+  50% {
+    color: #16a34a;
+  }
+
+  75% {
+    color: #2563eb;
+  }
+
+  100% {
+    color: #dc2626;
+  }
+}
+
+.animate-rainbow {
+  animation: rainbow 3s ease-in-out infinite;
 }
 </style>
