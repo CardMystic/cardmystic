@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-wrap justify-center gap-2 mb-2">
     <UButton v-for="filter in visibleFilters" :key="filter.key" size="sm"
-      :variant="isActive(filter) ? 'solid' : 'outline'" :color="isActive(filter) ? 'primary' : 'neutral'"
+      :variant="isActive(filter) ? 'solid' : 'outline'" :color="isActive(filter) ? 'primary' : 'primary'"
       class="cursor-pointer rounded-pill" @click="toggle(filter)">
       <UIcon :name="filter.icon" class="w-3.5 h-3.5 mr-1" />
       {{ filter.label }}
