@@ -103,48 +103,58 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 ### Current counts (~298 slugs total)
 
-| Category  | Count | Example slugs                                                |
-| --------- | ----- | ------------------------------------------------------------ |
-| similar   | 76    | sol-ring, rhystic-study, dockside-extortionist, edgar-markov |
-| keyword   | 47    | flying, deathtouch, cascade, treasure-tokens, infect         |
-| commander | 35    | graveyard-recursion, dragons, vampires, blink-flicker        |
-| arena     | 35    | black-removal, board-wipes, planeswalkers, sagas             |
-| mtgo      | 35    | best-legacy-cards, combo-pieces, storm-cards, hatebears      |
-| modern    | 35    | best-creatures, burn-spells, sideboard-cards, cascade-cards  |
-| ai        | 35    | best-card-draw, best-mana-rocks, best-eldrazi, best-dragons  |
+| Platform | Search Type | Count | Example slugs                                                |
+| -------- | ----------- | ----- | ------------------------------------------------------------ |
+| all      | similarity  | 76    | sol-ring, rhystic-study, dockside-extortionist, edgar-markov |
+| all      | keyword     | 47    | flying, deathtouch, cascade, treasure-tokens, infect         |
+| all      | commander   | 35    | graveyard-recursion, dragons, vampires, blink-flicker        |
+| all      | ai          | 35    | best-card-draw, best-mana-rocks, best-eldrazi, best-dragons  |
+| arena    | ai          | 35    | black-removal, board-wipes, planeswalkers, sagas             |
+| mtgo     | ai          | 35    | best-legacy-cards, combo-pieces, storm-cards, hatebears      |
+| modern   | ai          | 35    | best-creatures, burn-spells, sideboard-cards, cascade-cards  |
 
 Example URLs:
-/ai/best-card-draw
-/modern/burn-spells
-/mtgo/best-legacy-cards
-/arena/black-removal
-/commander/graveyard-recursion
-/keyword/flying
+
+- `/search/all/ai/best-card-draw`
+- `/search/modern/ai/burn-spells`
+- `/search/mtgo/ai/best-legacy-cards`
+- `/search/arena/ai/black-removal`
+- `/search/all/commander/graveyard-recursion`
+- `/search/all/keyword/flying`
+- `/search/all/similarity/sol-ring`
 
 ### Similar cards section
 
 - Includes all cards from [Moxfield Commander Brackets Game Changers](https://moxfield.com/commanderbrackets/gamechangers)
 - Plus popular commander staples (Edgar Markov, Ur-Dragon, Atraxa, Muldrotha, etc.)
 
-## 5. Platform & Format Landing Pages
+## 5. Platform-Aware Routing
 
-### What they are
+### What it is
 
-- Dedicated search pages pre-configured for a specific platform or format
-- Each page embeds the full `<Search>` component with default filters applied
+- All search pages use a unified `[platform]` route parameter
+- Platforms: `all`, `arena`, `mtgo`, `modern`, `paper`
+- Search types: `ai`, `similarity`, `commander`, `keyword`, `deckbuilder`
 
-### Where they live
+### Why this matters for SEO
 
-- **Filesystem:** `pages/seo/{platform}/{page}.vue`
-- **URL:** `/{platform}/{page}` (same `/seo/` stripping as slug pages)
+- **Arena, MTGO, and Modern are high-value traffic segments.** Players searching for platform-specific cards have strong purchase and engagement intent — they're actively building decks for a specific client or format.
+- Dedicated `/search/arena/...`, `/search/mtgo/...`, and `/search/modern/...` URLs let Google index platform-specific landing pages separately, capturing long-tail queries like "best MTG Arena board wipes" or "MTGO legacy combo pieces" that generic `/search` pages would never rank for.
+- Each platform landing page has its own SEO meta, title, and description tuned to that audience, increasing click-through rates from search results.
+- Users who arrive on a platform-specific page stay in that platform context as they search and switch tabs — reducing friction and bounce rate.
 
-### Current landing pages
+### How it works
 
-| Platform | Pages                                                                                |
-| -------- | ------------------------------------------------------------------------------------ |
-| Arena    | /arena/search, /arena/similarity-search, /arena/deckbuilder, /arena/commander-search |
-| MTGO     | /mtgo/search, /mtgo/similarity-search, /mtgo/deckbuilder, /mtgo/commander-search     |
-| Modern   | /modern/search, /modern/similarity-search                                            |
+- When a user selects a platform filter (e.g. Arena) and submits a search, the route automatically updates to the correct platform (e.g. `/search/arena/ai`)
+- Platform detection from filters is centralized in `utils/platformConfig.ts` via `detectPlatformFromFilters()`
+- Switching search types preserves the platform from the restored session query's filters
+- Search history rerun also detects platform from saved filters
+
+### Platform filter in the UI
+
+- The Filters component uses a radio group (not checkboxes) for platform selection
+- Options: Any, Arena, MTGO, Paper
+- Modern is selected via the Format filter, not the platform radio
 
 ## Using card-ids.min.json
 

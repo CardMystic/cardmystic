@@ -37,6 +37,7 @@ import { useRoute } from 'vue-router';
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
+import type { Platform } from '~/utils/platformConfig'
 import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
 import { useSearchHistory } from '~/composables/useSearchHistory';
@@ -45,6 +46,13 @@ import { useCardNames } from '~/composables/useBulkData';
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper'
 }>()
+
+const route = useRoute();
+const { getPath, getPlatformFromPath } = useSearchType();
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 const autoComplete = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -60,7 +68,6 @@ const schema = z.object({
 })
 
 type Schema = z.output<typeof schema>
-const route = useRoute();
 
 const cardNameParam = computed(() => String(route.query.card_name || ''));
 const showFilters = ref(!!route.query.filters || !!props.platform);
@@ -157,7 +164,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'similarity'
     };
-    router.push({ path: '/search/similarity', query });
+    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
+    router.push({ path: getPath('similarity', targetPlatform), query });
   } catch (error) {
     console.error('Form submission error:', error)
   }

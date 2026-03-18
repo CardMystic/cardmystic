@@ -287,7 +287,7 @@ function goToRecommend() {
   if (commanderNamesList.length > 0) {
     query.commanders = commanderNamesList.join(',')
   }
-  router.push({ path: '/search/recommend', query })
+  router.push({ path: '/search/all/deckbuilder', query })
 }
 
 const { data: rawCards, status: cardsQueryStatus } = useCardNames()

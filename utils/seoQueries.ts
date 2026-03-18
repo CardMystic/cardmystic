@@ -2708,15 +2708,50 @@ export const mtgoMap = buildMap(mtgoQueries);
 export const modernMap = buildMap(modernQueries);
 export const aiMap = buildMap(aiQueries);
 
-/** All slugs for sitemap generation */
+// ─── Unified Lookup ──────────────────────────────────────────────
+
+import type { Platform } from '~/utils/platformConfig';
+
+type SearchType = 'ai' | 'similarity' | 'keyword' | 'commander';
+
+/**
+ * Mapping from (platform, searchType) to the corresponding query array / map.
+ * Arena, MTGO, Modern slug pages are all AI search type.
+ * Generic slug pages map to platform "all".
+ */
+const seoRegistry: Record<
+  string,
+  { queries: SeoQuery[]; map: Map<string, SeoQuery> }
+> = {
+  'arena:ai': { queries: arenaQueries, map: arenaMap },
+  'mtgo:ai': { queries: mtgoQueries, map: mtgoMap },
+  'modern:ai': { queries: modernQueries, map: modernMap },
+  'all:ai': { queries: aiQueries, map: aiMap },
+  'all:keyword': { queries: keywordQueries, map: keywordMap },
+  'all:commander': { queries: commanderQueries, map: commanderMap },
+  'all:similarity': { queries: similarQueries, map: similarMap },
+};
+
+/** Look up an SEO entry by platform + searchType + slug. */
+export function getSeoEntry(
+  platform: Platform,
+  searchType: SearchType,
+  slug: string,
+): SeoQuery | undefined {
+  const key = `${platform}:${searchType}`;
+  return seoRegistry[key]?.map.get(slug);
+}
+
+/** All slugs for sitemap generation, grouped by platform and search type. */
 export function getAllSeoSlugs() {
-  return {
-    similar: similarQueries.map((q) => q.slug),
-    keyword: keywordQueries.map((q) => q.slug),
-    commander: commanderQueries.map((q) => q.slug),
-    arena: arenaQueries.map((q) => q.slug),
-    mtgo: mtgoQueries.map((q) => q.slug),
-    modern: modernQueries.map((q) => q.slug),
-    ai: aiQueries.map((q) => q.slug),
-  };
+  const result: {
+    platform: Platform;
+    searchType: SearchType;
+    slugs: string[];
+  }[] = [];
+  for (const [key, { queries }] of Object.entries(seoRegistry)) {
+    const [platform, searchType] = key.split(':') as [Platform, SearchType];
+    result.push({ platform, searchType, slugs: queries.map((q) => q.slug) });
+  }
+  return result;
 }

@@ -1,9 +1,9 @@
 <template>
   <UContainer class="mb-6 px-0">
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <Search class="mt-6 w-full" />
+      <Search default-search-type="recommend" :platform="searchPlatformProp" class="mt-6 w-full" />
 
-      <SearchAbout type="recommend" />
+      <SearchAbout :type="aboutType" />
 
       <!-- Not Found Warning -->
       <UAlert v-if="notFound && notFound.length" variant="outline" color="warning" icon="i-lucide-triangle-alert"
@@ -21,10 +21,9 @@
       <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
         :skeleton-count="skeletonCount" :score-scale="descriptionParam ? 'raw' : 'normalized'"
         :hide-thumbs-down-button="true" :error-message="searchError?.message"
-        help-text="Paste a decklist above to get card recommendations." default-group-by="type" />
+        :help-text="`Paste a decklist above to get ${platformName} card recommendations.`" default-group-by="type" />
     </div>
   </UContainer>
-
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
   <BackToTop />
 </template>
@@ -40,9 +39,20 @@ import type { AlsRecommendRequest } from '~/composables/useAlsRecommend';
 import type { Card as CardType } from '~/models/cardModel';
 import type { ScryfallCard } from '~/models/cardModel';
 import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { isValidPlatform, getPlatformFilters, getSearchPlatformProp, getPlatformDisplayName, type Platform } from '~/utils/platformConfig';
+import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 
 const config = useRuntimeConfig();
 const route = useRoute();
+const platform = String(route.params.platform) as Platform;
+
+if (!isValidPlatform(platform)) {
+  throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
+}
+
+const platformName = getPlatformDisplayName(platform);
+const searchPlatformProp = getSearchPlatformProp(platform);
+const aboutType: SearchAboutType = platform === 'all' ? 'recommend' : `${platform}-recommend`;
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
@@ -54,53 +64,42 @@ const limitParam = computed(() => {
   const raw = Number(route.query.limit);
   return raw > 0 ? raw : 99;
 });
+const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
   }
-  return undefined;
+  return platformFilters;
 });
 
 useSeoMeta({
-  robots: () =>
-    decklistParam.value
-      ? 'noindex, follow'
-      : 'index, follow',
+  robots: () => decklistParam.value ? 'noindex, follow' : 'index, follow',
   title: () => firstCommanderName.value
-    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-    : 'Deck Recommender | CardMystic',
+    ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+    : `${platformName} Deck Builder & Card Recommender | CardMystic`,
   description: () => firstCommanderName.value
-    ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!`
-    : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
+    ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
+    : `Build your ${platformName} deck with AI-powered card recommendations.`,
   ogType: 'website',
-
   ogTitle: () => firstCommanderName.value
-    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-    : 'Deck Recommender | CardMystic',
-
-  ogDescription: () =>
-    firstCommanderName.value
-      ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!`
-      : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
-
+    ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+    : `${platformName} Deck Builder & Card Recommender | CardMystic`,
+  ogDescription: () => firstCommanderName.value
+    ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
+    : `Build your ${platformName} deck with AI-powered card recommendations.`,
   ogImage: 'https://cardmystic.io/cardmystic_cards.png',
-  ogImageAlt: () => 'Deck Recommender',
+  ogImageAlt: () => `${platformName} Deck Builder`,
   twitterCard: 'summary_large_image',
   twitterTitle: () => firstCommanderName.value
-    ? `Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-    : 'Deck Recommender | CardMystic',
-
-  twitterDescription: () =>
-    firstCommanderName.value
-      ? `Get card recommendations for your ${firstCommanderName.value} Magic: The Gathering deck!.`
-      : 'Get card recommendations for your Magic: The Gathering deck. Paste a decklist and discover cards that fit.',
-
+    ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+    : `${platformName} Deck Builder & Card Recommender | CardMystic`,
+  twitterDescription: () => firstCommanderName.value
+    ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
+    : `Build your ${platformName} deck with AI-powered card recommendations.`,
   twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
-})
-
-definePageMeta({
-  title: 'Deck Recommender',
 });
+
+definePageMeta({ title: 'Deck Recommender' });
 
 function parseDecklist(raw: string): string[] {
   return raw
@@ -152,24 +151,20 @@ const { data: commanderCards } = useQuery({
 const { setPageInfo, getPageInfo } = usePageInfo();
 const { saveSearchQuery } = useSearchType();
 
-// Save recommend query to sessionStorage so it can be restored from the search dropdown
 watch(() => route.query, (query) => {
-  if (query.decklist || query.commander) {
-    saveSearchQuery('recommend', query);
-  }
+  if (query.decklist || query.commander) saveSearchQuery('recommend', query);
 }, { immediate: true });
 
-watch(decklistParam, (newDecklist) => {
+watch([decklistParam, commanderParam], ([newDecklist, newCommander]) => {
   setPageInfo({
     page_url: route.fullPath,
-    page_name: 'Deck Recommender',
+    page_name: `${platformName} Deck Builder: ${newCommander || 'Custom Deck'}`,
     query: newDecklist,
-    labels: ['deck recommender'],
+    labels: [platform, 'deck recommender'],
   });
 }, { immediate: true });
 
 function handleFabClick() {
-  const url = searchFeedbackUrl(getPageInfo());
-  window.open(url, '_blank');
+  window.open(searchFeedbackUrl(getPageInfo()), '_blank');
 }
 </script>

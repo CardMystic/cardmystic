@@ -29,54 +29,34 @@ export default defineEventHandler((event) => {
   </url>
 `;
 
-  // Search pages
-  const searchPages = [
-    '/search',
-    '/search/similarity',
-    '/search/keyword',
-    '/search/recommend',
+  // Search landing pages (one per platform × search type)
+  const platforms = ['all', 'arena', 'mtgo', 'modern'];
+  const searchTypes = [
+    'ai',
+    'similarity',
+    'keyword',
+    'commander',
+    'deckbuilder',
   ];
-  for (const page of searchPages) {
-    xml += `
+  for (const platform of platforms) {
+    for (const st of searchTypes) {
+      xml += `
   <url>
-    <loc>${baseUrl}${page}</loc>
+    <loc>${baseUrl}/search/${platform}/${st}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 `;
-  }
-
-  // Platform & format landing pages
-  const landingPages = [
-    '/arena/ai-search',
-    '/arena/similarity-search',
-    '/arena/deckbuilder',
-    '/arena/commander-search',
-    '/mtgo/ai-search',
-    '/mtgo/similarity-search',
-    '/mtgo/deckbuilder',
-    '/mtgo/commander-search',
-    '/modern/ai-search',
-    '/modern/similarity-search',
-  ];
-  for (const page of landingPages) {
-    xml += `
-  <url>
-    <loc>${baseUrl}${page}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
+    }
   }
 
   // SEO slug pages (high-intent search results)
-  const seoSlugs = getAllSeoSlugs();
-  const seoCategories = Object.entries(seoSlugs) as [string, string[]][];
-  for (const [category, slugs] of seoCategories) {
+  const seoEntries = getAllSeoSlugs();
+  for (const { platform, searchType, slugs } of seoEntries) {
     for (const slug of slugs) {
       xml += `
   <url>
-    <loc>${baseUrl}/${category}/${slug}</loc>
+    <loc>${baseUrl}/search/${platform}/${searchType}/${slug}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

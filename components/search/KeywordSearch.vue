@@ -47,9 +47,12 @@ import { useRoute } from 'vue-router'
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
+import type { Platform } from '~/utils/platformConfig'
 import { refDebounced } from '@vueuse/core'
 import Filters from './Filters.vue'
 import { useCardNames } from '~/composables/useBulkData'
+
+const { getPath, getPlatformFromPath } = useSearchType();
 
 const input = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -66,6 +69,11 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const route = useRoute();
+
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 const queryParam = computed(() => String(route.query.query || ''));
 const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
@@ -249,7 +257,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       limit: 100
     }
 
-    router.push({ path: '/search/keyword', query })
+    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
+    router.push({ path: getPath('keyword', targetPlatform), query })
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({

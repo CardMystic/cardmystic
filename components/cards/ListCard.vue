@@ -212,7 +212,7 @@ function findSimilarCards() {
     filters: undefined,
     searchType: 'similarity'
   };
-  router.push({ path: '/search/similarity', query: queryParams });
+  router.push({ path: '/search/all/similarity', query: queryParams });
 }
 
 function getSimpleCardType(type_line: string): string {

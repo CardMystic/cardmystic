@@ -70,6 +70,7 @@ import SimilaritySearch from './SimilaritySearch.vue';
 import CommanderSearch from './CommanderSearch.vue';
 import KeywordSearch from './KeywordSearch.vue';
 import ALSSearch from './ALSSearch.vue';
+import { detectPlatformFromFilters, type Platform } from '~/utils/platformConfig';
 
 // Define props
 const props = defineProps<{
@@ -84,22 +85,28 @@ const route = useRoute();
 const router = useRouter();
 
 // Initialize search type based on props or route
-const { searchType, setSearchType, getPath, restoreSearchQuery } = useSearchType();
+const { searchType, setSearchType, getPath, getPlatformFromPath, restoreSearchQuery } = useSearchType();
+
+// Derive the current platform from the route (e.g. /search/arena/ai → 'arena')
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 // Set initial search type
 if (props.defaultSearchType) {
   setSearchType(props.defaultSearchType);
 } else if (props.similarity) {
   setSearchType('similarity');
-} else if (route.path === '/search/commander') {
+} else if (route.path.includes('/commander')) {
   setSearchType('commander');
-} else if (route.path === '/search') {
-  setSearchType('ai');
-} else if (route.path === '/search/keyword') {
+} else if (route.path.includes('/keyword')) {
   setSearchType('keyword');
-} else if (route.path === '/search/recommend') {
+} else if (route.path.includes('/deckbuilder')) {
   setSearchType('recommend');
-} else if (route.path === '/') {
+} else if (route.path.includes('/similarity')) {
+  setSearchType('similarity');
+} else if (route.path.includes('/ai') || route.path === '/') {
   setSearchType('ai');
 }
 
@@ -163,7 +170,9 @@ onMounted(() => {
     (type === 'recommend' && (route.query.decklist || route.query.commander));
 
   if (!hasQuery) {
-    router.replace({ path: getPath(type), query: restored });
+    const restoredFilters = restored.filters ? JSON.parse(String(restored.filters)) : undefined;
+    const targetPlatform = detectPlatformFromFilters(restoredFilters, currentPlatform.value as Platform);
+    router.replace({ path: getPath(type, targetPlatform), query: restored });
   }
 });
 
@@ -171,10 +180,12 @@ onMounted(() => {
 watch(searchType, (newType) => {
   if (process.server) return;
 
-  // Navigate to the new search type's path, restoring any saved query params immediately
-  const targetPath = getPath(newType);
+  // Navigate to the new search type's path, preserving the platform context
+  const savedQuery = restoreSearchQuery(newType);
+  const savedFilters = savedQuery?.filters ? JSON.parse(String(savedQuery.filters)) : undefined;
+  const targetPlatform = detectPlatformFromFilters(savedFilters, currentPlatform.value as Platform);
+  const targetPath = getPath(newType, targetPlatform);
   if (route.path !== targetPath && route.path !== '/') {
-    const savedQuery = restoreSearchQuery(newType);
     router.push({ path: targetPath, query: savedQuery });
   }
 });

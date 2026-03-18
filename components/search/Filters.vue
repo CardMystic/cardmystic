@@ -195,9 +195,7 @@
           <!-- Platform Filter -->
           <template #platform>
             <div class="accordion-item flex flex-wrap gap-4">
-              <UCheckbox v-model="isMTGO" label="MTGO" />
-              <UCheckbox v-model="isArena" label="Arena" />
-              <UCheckbox v-model="isPaper" label="Paper" />
+              <URadioGroup v-model="selectedPlatform" :items="platformOptions" orientation="horizontal" />
             </div>
           </template>
         </UAccordion>
@@ -440,19 +438,27 @@ const selectedCardFormats = computed({
   set: (value) => updateFilters({ selectedCardFormats: value })
 });
 
-const isMTGO = computed({
-  get: () => modelValue?.isMTGO || false,
-  set: (value) => updateFilters({ isMTGO: value || undefined })
-});
+const platformOptions = [
+  { label: 'Any', value: 'any' },
+  { label: 'Arena', value: 'arena' },
+  { label: 'MTGO', value: 'mtgo' },
+  { label: 'Paper', value: 'paper' },
+];
 
-const isArena = computed({
-  get: () => modelValue?.isArena || false,
-  set: (value) => updateFilters({ isArena: value || undefined })
-});
-
-const isPaper = computed({
-  get: () => modelValue?.isPaper || false,
-  set: (value) => updateFilters({ isPaper: value || undefined })
+const selectedPlatform = computed({
+  get: () => {
+    if (modelValue?.isArena) return 'arena';
+    if (modelValue?.isMTGO) return 'mtgo';
+    if (modelValue?.isPaper) return 'paper';
+    return 'any';
+  },
+  set: (value) => {
+    updateFilters({
+      isArena: value === 'arena' ? true : undefined,
+      isMTGO: value === 'mtgo' ? true : undefined,
+      isPaper: value === 'paper' ? true : undefined,
+    });
+  },
 });
 
 function addFormatRow() {

@@ -24,7 +24,7 @@
         is a mistake, please contact us at <strong>thecardmystic@gmail.com</strong>.
       </p>
       <p v-else class="mt-4 text-gray-300 max-w-150">{{ errorMessage }}</p>
-      <UButton to="/search" color="primary" class="mt-6">Back to Search</UButton>
+      <UButton to="/search/all/ai" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
     <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-2 max-w-7xl relative z-10 items-center">
@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -658,7 +658,7 @@ function findSimilarCards() {
   };
 
   saveSearchQuery('similarity', queryParams);
-  router.push({ path: '/search/similarity', query: queryParams });
+  router.push({ path: '/search/all/similarity', query: queryParams });
 }
 
 function getRecommendations() {
@@ -670,7 +670,7 @@ function getRecommendations() {
     searchType: 'recommend',
     filters: { commander: card.value.name },
   });
-  router.push({ path: '/search/recommend', query: queryParams });
+  router.push({ path: '/search/all/deckbuilder', query: queryParams });
 }
 
 // Use the similar cards composable

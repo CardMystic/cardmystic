@@ -1,14 +1,17 @@
 import type { Router } from 'vue-router';
+import { detectPlatformFromFilters } from '~/utils/platformConfig';
 
 export const rerunSearchHistory = (item: any, router: Router) => {
-  const paths: Record<string, string> = {
-    ai: '/search',
-    similarity: '/search/similarity',
-    keyword: '/search/keyword',
-    commander: '/search/commander',
-    recommend: '/search/recommend',
+  const searchTypeSegments: Record<string, string> = {
+    ai: 'ai',
+    similarity: 'similarity',
+    keyword: 'keyword',
+    commander: 'commander',
+    recommend: 'deckbuilder',
   };
-  const path = paths[item.search_type] || '/search';
+  const segment = searchTypeSegments[item.search_type] || 'ai';
+  const platform = detectPlatformFromFilters(item.filters);
+  const path = `/search/${platform}/${segment}`;
   const query: any = { searchType: item.search_type };
 
   if (item.search_type === 'similarity') {

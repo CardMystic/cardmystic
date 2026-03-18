@@ -45,12 +45,20 @@ import { useRoute } from 'vue-router';
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
+import type { Platform } from '~/utils/platformConfig'
 import CommanderFilters from '~/components/search/CommanderFilters.vue'
 import Filters from './Filters.vue'
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper'
 }>()
+
+const route = useRoute();
+const { getPath, getPlatformFromPath } = useSearchType();
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 const input = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -65,8 +73,6 @@ const schema = z.object({
 })
 
 type Schema = z.output<typeof schema>
-
-const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || ''));
 const showFilters = ref(!!route.query.filters || !!props.platform);
@@ -144,7 +150,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       searchType: 'commander'
     };
     filtersRef.value?.collapse();
-    router.push({ path: '/search/commander', query });
+    const targetPlatform = detectPlatformFromFilters(formData.filters, currentPlatform.value as Platform);
+    router.push({ path: getPath('commander', targetPlatform), query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({

@@ -21,9 +21,10 @@
 
 <script setup lang="ts">
 export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend'
-  | 'arena-ai' | 'arena-similarity' | 'arena-recommend' | 'arena-commander'
-  | 'mtgo-ai' | 'mtgo-similarity' | 'mtgo-recommend' | 'mtgo-commander'
-  | 'modern-ai' | 'modern-similarity'
+  | 'arena-ai' | 'arena-similarity' | 'arena-recommend' | 'arena-commander' | 'arena-keyword'
+  | 'mtgo-ai' | 'mtgo-similarity' | 'mtgo-recommend' | 'mtgo-commander' | 'mtgo-keyword'
+  | 'modern-ai' | 'modern-similarity' | 'modern-recommend' | 'modern-commander' | 'modern-keyword'
+  | 'paper-ai' | 'paper-similarity' | 'paper-recommend' | 'paper-commander' | 'paper-keyword'
 
 const open = ref(false)
 
@@ -187,6 +188,106 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
       'Find Modern-legal cards similar to any card in Magic: The Gathering. Discover alternatives, budget replacements, and cards with similar effects that are legal in Modern.',
       'Enter a card name and our AI finds the most similar cards legal in the Modern format. Ideal for finding substitutes, budget-friendly options, or sideboard alternatives for your Modern deck.',
       'Use additional filters like color identity, card type, and mana value to narrow results for the perfect Modern deck fit.',
+    ],
+  },
+
+  'modern-commander': {
+    title: 'About Modern Commander Search',
+    heading: 'MTG Modern Commander Search',
+    paragraphs: [
+      'Find the perfect commander for a Modern-legal EDH deck. Describe the strategy, playstyle, or theme you want and CardMystic\'s AI will find Modern-legal commanders that match your deck concept.',
+      'Results are filtered to legendary creatures legal in the Modern format, making it easy to explore commanders for Modern-legal Commander variants and casual play.',
+      'Try searches like "energy commander", "aggro commander in red and white", or "graveyard commander" to discover powerful Modern-legal commanders.',
+    ],
+  },
+
+  'modern-recommend': {
+    title: 'About Modern Deck Recommender',
+    heading: 'MTG Modern Deck Builder & Card Recommender',
+    paragraphs: [
+      'Get AI-powered card recommendations for your Modern deck. Paste your decklist and CardMystic will suggest Modern-legal cards that improve your deck\'s synergy and consistency.',
+      'Our recommendation engine analyzes your deck and suggests cards legal in Modern that fill gaps in your strategy — whether you need better sideboard options, more efficient removal, or stronger finishers.',
+      'Ideal for building and tuning competitive Modern decks for FNM, tournaments, and online play.',
+    ],
+  },
+
+  'modern-keyword': {
+    title: 'About Modern Keyword Search',
+    heading: 'MTG Modern Keyword Search',
+    paragraphs: [
+      'Search Modern-legal Magic: The Gathering cards by keywords, mechanics, or oracle text. Find cards with specific abilities and interactions that are legal in the Modern format.',
+      'This search is ideal when you know the mechanic or ability you want. Find Modern-legal cards with flying, trample, deathtouch, sacrifice effects, token generation, and many other MTG mechanics.',
+      'Combine keywords with filters like color identity, card type, mana value, and rarity to quickly find Modern-legal cards that match your deckbuilding requirements.',
+    ],
+  },
+
+  'arena-keyword': {
+    title: 'About MTG Arena Keyword Search',
+    heading: 'MTG Arena Keyword Search',
+    paragraphs: [
+      'Search MTG Arena cards by keywords, mechanics, or oracle text. Find Arena-legal cards with specific abilities and interactions for your next deck.',
+      'This search is ideal when you know the mechanic or ability you want. Find Arena-legal cards with flying, trample, deathtouch, sacrifice effects, token generation, and many other MTG mechanics.',
+      'Combine keywords with filters like color identity, card type, mana value, and rarity to quickly find Arena-legal cards for Standard, Explorer, Historic, and Brawl.',
+    ],
+  },
+
+  'mtgo-keyword': {
+    title: 'About MTGO Keyword Search',
+    heading: 'MTGO Keyword Search',
+    paragraphs: [
+      'Search MTGO cards by keywords, mechanics, or oracle text. Find cards available on Magic: The Gathering Online with specific abilities and interactions.',
+      'This search is ideal when you know the mechanic or ability you want. Find MTGO-legal cards with flying, trample, deathtouch, sacrifice effects, token generation, and many other MTG mechanics.',
+      'Combine keywords with filters like color identity, card type, mana value, and format legality to quickly find MTGO cards for Vintage, Legacy, Modern, Pauper, and other formats.',
+    ],
+  },
+
+  'paper-ai': {
+    title: 'About Paper Card Search',
+    heading: 'Paper MTG Card Search',
+    paragraphs: [
+      'Search for paper Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards available in paper by describing the mechanic, effect, or strategy you need.',
+      'Results are filtered to cards printed in paper, so every suggestion is available for tabletop play. Perfect for Commander, Legacy, Modern, Pioneer, Standard, and casual kitchen-table formats.',
+      'Try searches like "board wipes that leave my creatures", "efficient card draw in green", or "tribal lords" to discover powerful paper cards for your deck.',
+    ],
+  },
+
+  'paper-similarity': {
+    title: 'About Paper Similarity Search',
+    heading: 'Paper MTG Card Similarity Search',
+    paragraphs: [
+      'Find paper Magic: The Gathering cards similar to any card in the game. Discover alternatives, budget replacements, and cards with similar effects available in paper.',
+      'Enter a card name and our AI finds the most similar cards available in paper. Ideal for finding substitutes or budget-friendly options for your tabletop deck.',
+      'Use additional filters like color identity, card type, and mana value to narrow results for the perfect paper deck fit.',
+    ],
+  },
+
+  'paper-commander': {
+    title: 'About Paper Commander Search',
+    heading: 'Paper MTG Commander Search',
+    paragraphs: [
+      'Find the perfect commander for your next paper EDH deck. Describe the strategy, playstyle, or theme you want and CardMystic\'s AI will find paper-legal commanders that match your deck concept.',
+      'Results are filtered to legendary creatures available in paper, covering the full Commander card pool for competitive and casual tabletop play.',
+      'Try searches like "lifegain commander", "spellslinger commander in blue and red", or "sacrifice commander" to discover powerful commanders for your paper EDH deck.',
+    ],
+  },
+
+  'paper-recommend': {
+    title: 'About Paper Deck Recommender',
+    heading: 'Paper MTG Deck Builder & Card Recommender',
+    paragraphs: [
+      'Get AI-powered card recommendations for your paper Magic: The Gathering deck. Paste your decklist and CardMystic will suggest paper-available cards that improve your deck\'s synergy and consistency.',
+      'Our recommendation engine analyzes your deck and suggests cards available in paper that fill gaps in your strategy — whether you need more removal, card draw, ramp, or win conditions.',
+      'Ideal for building and tuning Commander, Legacy, Modern, Pioneer, and other tabletop format decks.',
+    ],
+  },
+
+  'paper-keyword': {
+    title: 'About Paper Keyword Search',
+    heading: 'Paper MTG Keyword Search',
+    paragraphs: [
+      'Search paper Magic: The Gathering cards by keywords, mechanics, or oracle text. Find cards available in paper with specific abilities and interactions.',
+      'This search is ideal when you know the mechanic or ability you want. Find paper cards with flying, trample, deathtouch, sacrifice effects, token generation, and many other MTG mechanics.',
+      'Combine keywords with filters like color identity, card type, mana value, and rarity to quickly find paper cards for Commander, Legacy, Modern, and other tabletop formats.',
     ],
   },
 }

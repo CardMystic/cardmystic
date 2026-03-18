@@ -42,13 +42,21 @@ import * as z from 'zod'
 import { useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
+import type { Platform } from '~/utils/platformConfig'
 import Filters from './Filters.vue'
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper'
 }>()
+
+const { getPath, getPlatformFromPath } = useSearchType();
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 const input = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -68,8 +76,6 @@ const toast = useToast()
 const { saveSearchMutation } = useSearchHistory()
 
 type Schema = z.output<typeof schema>
-
-const route = useRoute();
 
 const queryParam = computed(() => String(route.query.query || ''));
 const showFilters = ref(!!route.query.filters || !!props.platform);
@@ -132,7 +138,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       searchType: 'ai'
     };
     filtersRef.value?.collapse();
-    router.push({ path: '/search', query });
+    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
+    router.push({ path: getPath('ai', targetPlatform), query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({

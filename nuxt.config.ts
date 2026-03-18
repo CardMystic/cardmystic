@@ -69,19 +69,7 @@ export default defineNuxtConfig({
   fonts: {
     families: [{ name: 'Alfa Slab One', provider: 'google' }],
   },
-  hooks: {
-    'pages:extend'(pages) {
-      // Rewrite pages under /seo/ to remove the /seo prefix from URLs
-      // e.g. /seo/arena/search → /arena/search, /seo/ai/:slug → /ai/:slug
-      for (const page of pages) {
-        if (page.path.startsWith('/seo/')) {
-          page.path = page.path.replace('/seo/', '/');
-        } else if (page.path === '/seo') {
-          page.path = '/';
-        }
-      }
-    },
-  },
+  hooks: {},
   routeRules: {
     '/': {
       prerender: true,

@@ -75,6 +75,7 @@ import { refDebounced } from '@vueuse/core';
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
 import { CardSearchFiltersSchema } from '~/models/searchModel'
+import type { Platform } from '~/utils/platformConfig'
 import Filters from './Filters.vue'
 
 const props = defineProps<{
@@ -83,6 +84,8 @@ const props = defineProps<{
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
+
+const { getPath, getPlatformFromPath } = useSearchType();
 
 const allowedKeys = new Set(['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End']);
 function filterNonNumericKeys(e: KeyboardEvent) {
@@ -107,6 +110,11 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const route = useRoute();
+
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
@@ -259,7 +267,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
 
     filtersRef.value?.collapse();
-    router.push({ path: '/search/recommend', query });
+    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
+    router.push({ path: getPath('recommend', targetPlatform), query });
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({
