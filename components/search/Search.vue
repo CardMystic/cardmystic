@@ -180,10 +180,12 @@ onMounted(() => {
 watch(searchType, (newType) => {
   if (process.server) return;
 
-  // Navigate to the new search type's path, preserving the platform context
+  // Navigate to the new search type's path.
+  // Only preserve the current platform if the saved filters explicitly contain a platform flag;
+  // otherwise default to 'all' (no filters means the search wasn't platform-specific).
   const savedQuery = restoreSearchQuery(newType);
   const savedFilters = savedQuery?.filters ? JSON.parse(String(savedQuery.filters)) : undefined;
-  const targetPlatform = detectPlatformFromFilters(savedFilters, currentPlatform.value as Platform);
+  const targetPlatform = detectPlatformFromFilters(savedFilters);
   const targetPath = getPath(newType, targetPlatform);
   if (route.path !== targetPath && route.path !== '/') {
     router.push({ path: targetPath, query: savedQuery });

@@ -65,9 +65,8 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 - Homepage
 - Static pages (e.g. /about)
-- Search pages (/search, /search/similarity, /search/keyword, /search/recommend)
-- Platform & format landing pages (e.g. /arena/search, /mtgo/deckbuilder, /modern/similarity-search)
-- SEO slug pages (e.g. /similar/sol-ring, /keyword/flying, /commander/dragons, /arena/board-wipes)
+- Search landing pages — one per platform × search type (e.g. /search/all/ai, /search/arena/keyword, /search/modern/similarity)
+- SEO slug pages (e.g. /search/all/similarity/sol-ring, /search/all/keyword/flying, /search/arena/ai/board-wipes)
 - All card pages
 
 ### What's excluded
@@ -84,24 +83,27 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 ### Where they live
 
-- **Filesystem:** `pages/seo/{category}/[slug].vue`
-- **URL:** `/{category}/{slug}` (the `/seo/` prefix is stripped via `pages:extend` hook in `nuxt.config.ts`)
-- Categories: `similar`, `keyword`, `commander`, `arena`, `mtgo`, `modern`, `ai`
+- **Filesystem:** `pages/search/[platform]/{searchType}/[[slug]].vue`
+- **URL:** `/search/{platform}/{searchType}/{slug}`
+- The `[[slug]]` is an optional catch-all — the same page serves both the landing page (`/search/all/ai`) and SEO slug pages (`/search/all/ai/best-card-draw`)
+- 5 search type pages: `ai`, `similarity`, `commander`, `keyword`, `deckbuilder`
 
 ### How the routing works
 
-- Files live under `pages/seo/` to keep the project organized
-- A `pages:extend` hook in `nuxt.config.ts` rewrites `/seo/*` routes to `/*` so URLs don't contain `/seo/`
-- Example: `pages/seo/arena/[slug].vue` → URL `/arena/:slug`
+- All search pages live under `pages/search/[platform]/` with a subfolder per search type
+- The `[platform]` param is validated at runtime via `isValidPlatform()` from `utils/platformConfig.ts`
+- Valid platforms: `all`, `arena`, `mtgo`, `modern`, `paper`
+- Example: `pages/search/[platform]/ai/[[slug]].vue` → URL `/search/arena/ai/board-wipes`
 
 ### Configuration
 
 - All queries defined in `utils/seoQueries.ts`
 - Each entry has: `slug`, `query`, `searchType`, optional `filters`, `title`, `description`
-- Lookup maps (`similarMap`, `keywordMap`, etc.) are auto-built for O(1) slug resolution
-- `getAllSeoSlugs()` exports all slugs for sitemap generation
+- A unified `seoRegistry` maps `(platform:searchType)` keys to query arrays and O(1) lookup maps
+- `getSeoEntry(platform, searchType, slug)` resolves a single entry
+- `getAllSeoSlugs()` exports all slugs grouped by platform and search type for sitemap generation
 
-### Current counts (~298 slugs total)
+### Current counts (~300 slugs total)
 
 | Platform | Search Type | Count | Example slugs                                                |
 | -------- | ----------- | ----- | ------------------------------------------------------------ |
@@ -138,23 +140,31 @@ Example URLs:
 
 ### Why this matters for SEO
 
-- **Arena, MTGO, and Modern are high-value traffic segments.** Players searching for platform-specific cards have strong purchase and engagement intent — they're actively building decks for a specific client or format.
-- Dedicated `/search/arena/...`, `/search/mtgo/...`, and `/search/modern/...` URLs let Google index platform-specific landing pages separately, capturing long-tail queries like "best MTG Arena board wipes" or "MTGO legacy combo pieces" that generic `/search` pages would never rank for.
+- **Arena, MTGO, Modern, and Paper are high-value traffic segments.** Players searching for platform-specific cards have strong purchase and engagement intent — they're actively building decks for a specific client or format.
+- Dedicated `/search/arena/...`, `/search/mtgo/...`, `/search/modern/...`, and `/search/paper/...` URLs let Google index platform-specific landing pages separately, capturing long-tail queries like "best MTG Arena board wipes" or "MTGO legacy combo pieces" that generic `/search` pages would never rank for.
 - Each platform landing page has its own SEO meta, title, and description tuned to that audience, increasing click-through rates from search results.
-- Users who arrive on a platform-specific page stay in that platform context as they search and switch tabs — reducing friction and bounce rate.
+- Users who arrive on a platform-specific page stay in that platform context as they search — reducing friction and bounce rate.
 
 ### How it works
 
 - When a user selects a platform filter (e.g. Arena) and submits a search, the route automatically updates to the correct platform (e.g. `/search/arena/ai`)
 - Platform detection from filters is centralized in `utils/platformConfig.ts` via `detectPlatformFromFilters()`
-- Switching search types preserves the platform from the restored session query's filters
+- Switching search types only preserves the platform if the saved filters for that search type explicitly contain a platform flag (e.g. `isArena: true`); otherwise the route defaults to `/search/all/...`
 - Search history rerun also detects platform from saved filters
 
 ### Platform filter in the UI
 
 - The Filters component uses a radio group (not checkboxes) for platform selection
 - Options: Any, Arena, MTGO, Paper
-- Modern is selected via the Format filter, not the platform radio
+- Modern is selected via the Format filter (adding Modern/Legal to `selectedCardFormats`), not the platform radio
+
+### Platform detection logic (`detectPlatformFromFilters`)
+
+- `isArena: true` → `arena`
+- `isMTGO: true` → `mtgo`
+- `isPaper: true` → `paper`
+- `selectedCardFormats` contains Modern → `modern`
+- No platform flags → `all`
 
 ## Using card-ids.min.json
 

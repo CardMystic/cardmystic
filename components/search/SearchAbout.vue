@@ -6,15 +6,20 @@
         {{ title }}
       </UButton>
     </div>
-    <div v-show="open" class="flex justify-center mt-2">
-      <UCard class="max-w-lg w-full" :ui="{ body: 'p-4' }">
-        <component :is="useH1 ? 'h1' : 'h2'" class="text-lg font-bold mb-3">
-          {{ heading }}
-        </component>
-        <div class="space-y-2 text-sm text-gray-400">
-          <p v-for="(paragraph, i) in paragraphs" :key="i">{{ paragraph }}</p>
+    <div class="grid transition-all duration-300 ease-in-out"
+      :class="open ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 mt-0'">
+      <div class="overflow-hidden">
+        <div class="flex justify-center">
+          <UCard class="max-w-lg w-full" :ui="{ body: 'p-4' }">
+            <component :is="useH1 ? 'h1' : 'h2'" class="text-lg font-bold mb-3">
+              {{ heading }}
+            </component>
+            <div class="space-y-2 text-sm text-gray-400">
+              <p v-for="(paragraph, i) in paragraphs" :key="i">{{ paragraph }}</p>
+            </div>
+          </UCard>
         </div>
-      </UCard>
+      </div>
     </div>
   </div>
 </template>
