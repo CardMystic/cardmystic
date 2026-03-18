@@ -23,6 +23,8 @@
     </UFormField>
     <CommanderFilters v-model="state.filters" />
 
+    <QuickFilters v-model="state.filters" :show="['arena', 'mtgo', 'paper']" />
+
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by types, rarities, stats, and platform">
         <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"

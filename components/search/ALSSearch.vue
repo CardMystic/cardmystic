@@ -46,6 +46,8 @@
         autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" />
     </UFormField>
 
+    <QuickFilters v-model="state.filters" />
+
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
         <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
