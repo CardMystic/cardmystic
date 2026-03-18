@@ -11,7 +11,7 @@
         </div>
 
         <!-- Colors: single identity chip -->
-        <div v-if="(selectedColors || []).length > 0">
+        <div v-if="!hideColors && (selectedColors || []).length > 0">
           <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
             icon="i-lucide-circle-x" @click="clearColorChip">
             <span class="flex items-center gap-1">
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Color Filter Option Chip -->
-        <div v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'">
+        <div v-if="!hideColors && selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'">
           <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
             icon="i-lucide-circle-x" @click="clearColorFilterOption()">Color: {{ selectedColorFilterOption }}
           </UButton>
