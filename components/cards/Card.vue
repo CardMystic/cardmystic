@@ -31,9 +31,10 @@
       </div>
 
       <!-- Score Bar -->
-      <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full">
-        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
-        <p v-if="!isSearched" class="text-xs">
+      <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full"
+        :class="{ invisible: isSearched }">
+        <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
+        <p class="text-xs">
           {{ props.card.score !== undefined
             ? props.isSimilaritySearch
               ? `${Math.round(normalizedScore)}%`
