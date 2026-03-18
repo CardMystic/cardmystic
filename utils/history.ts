@@ -22,15 +22,25 @@ export const rerunSearchHistory = (item: any, router: Router) => {
     if (item.filters?.partnerCommander)
       query.partnerCommander = item.filters.partnerCommander;
     if (item.filters?.decklist) query.decklist = item.filters.decklist;
-    if (item.filters?.description) query.description = item.filters.description;
     if (item.filters?.limit) query.limit = item.filters.limit;
     if (item.query) query.description = item.query;
   } else {
     query.query = item.query;
   }
 
-  if (item.filters && item.search_type !== 'recommend') {
-    query.filters = JSON.stringify(item.filters);
+  if (item.filters) {
+    // Strip recommend-specific fields from filters before stringifying
+    const {
+      commander,
+      partnerCommander,
+      decklist,
+      description,
+      limit,
+      ...cardFilters
+    } = item.filters as Record<string, any>;
+    if (Object.keys(cardFilters).length > 0) {
+      query.filters = JSON.stringify(cardFilters);
+    }
   }
 
   router.push({ path, query });

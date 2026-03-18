@@ -35,6 +35,10 @@
                 <UIcon :name="getSearchTypeIcon(item.search_type)" class="w-3.5 h-3.5 mr-1" />
                 {{ getSearchTypeLabel(item.search_type) }}
               </UBadge>
+              <UBadge v-if="item.search_type === 'recommend' && item.filters?.commander" color="warning" variant="soft">
+                <UIcon name="i-lucide-crown" class="w-3.5 h-3.5 mr-1" />
+                {{ item.filters.commander }}
+              </UBadge>
               <span class="text-sm text-gray-500">{{ formatRelativeTimeShort(item.created_at) }}</span>
             </div>
             <p class="text-lg font-medium mb-2">

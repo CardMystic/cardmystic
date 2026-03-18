@@ -263,7 +263,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     saveSearchMutation.mutate({
       query: event.data.description || '',
       searchType: 'recommend',
-      filters: requestFilters,
+      filters: {
+        ...requestFilters,
+        commander: event.data.commander || undefined,
+        partnerCommander: event.data.partnerCommander || undefined,
+        decklist: event.data.decklist || undefined,
+        limit: event.data.limit || undefined,
+      },
     });
 
     filtersRef.value?.collapse();
