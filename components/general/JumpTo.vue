@@ -42,25 +42,32 @@ function groupToId(label: string): string {
 }
 
 function scrollToGroup(label: string) {
-  // Find the accordion trigger button matching this group label
-  const buttons = document.querySelectorAll('button');
-  const triggerBtn = Array.from(buttons).find(
-    btn => btn.textContent?.trim() === label
-  );
-
-  if (triggerBtn) {
-    const y = triggerBtn.getBoundingClientRect().top + window.scrollY - 130;
-    window.scrollTo({ top: y, behavior: 'smooth' });
+  // First try: find element by ID (content div inside accordion)
+  const id = groupToId(label);
+  const contentEl = document.getElementById(id);
+  if (contentEl) {
+    // Scroll to the accordion trigger (parent) rather than the content
+    const trigger = contentEl.closest('[data-accordion-item]')?.querySelector('button')
+      ?? contentEl.previousElementSibling as HTMLElement
+      ?? contentEl;
+    scrollToElement(trigger);
     return;
   }
 
-  // Fallback to content ID (when accordion is expanded)
-  const id = groupToId(label);
-  const el = document.getElementById(id);
-  if (el) {
-    const y = el.getBoundingClientRect().top + window.scrollY - 130;
-    window.scrollTo({ top: y, behavior: 'smooth' });
+  // Fallback: find accordion trigger button by text content
+  const buttons = document.querySelectorAll('button');
+  const triggerBtn = Array.from(buttons).find(
+    btn => btn.textContent?.trim().includes(label)
+  );
+  if (triggerBtn) {
+    scrollToElement(triggerBtn);
   }
+}
+
+function scrollToElement(el: Element) {
+  const navbarOffset = 130;
+  const top = el.getBoundingClientRect().top + window.scrollY - navbarOffset;
+  window.scrollTo({ top, behavior: 'smooth' });
 }
 
 function updatePosition() {
