@@ -31,13 +31,15 @@
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-2">
-              <UBadge :color="getSearchTypeColor(item.search_type)" variant="soft">
-                <UIcon :name="getSearchTypeIcon(item.search_type)" class="w-3.5 h-3.5 mr-1" />
-                {{ getSearchTypeLabel(item.search_type) }}
+              <UBadge :color="getSearchTypeColor(item.search_type ?? '')" variant="soft">
+                <UIcon :name="getSearchTypeIcon(item.search_type ?? '')" class="w-3.5 h-3.5 mr-1" />
+                {{ getSearchTypeLabel(item.search_type ?? '') }}
               </UBadge>
-              <UBadge v-if="item.search_type === 'recommend' && item.filters?.commander" color="warning" variant="soft">
+              <UBadge
+                v-if="item.search_type === 'recommend' && item.filters && typeof item.filters === 'object' && !Array.isArray(item.filters) && (item.filters as Record<string, any>).commander"
+                color="warning" variant="soft">
                 <UIcon name="i-lucide-crown" class="w-3.5 h-3.5 mr-1" />
-                {{ item.filters.commander }}
+                {{ (item.filters as Record<string, any>).commander }}
               </UBadge>
               <span class="text-sm text-gray-500">{{ formatRelativeTimeShort(item.created_at) }}</span>
             </div>
@@ -185,7 +187,13 @@ const formatFilters = (filters: any) => {
   if (!filters || typeof filters !== 'object') return 'None'
   const entries = Object.entries(filters).filter(([_, v]) => v !== null && v !== undefined && v !== '')
   if (entries.length === 0) return 'None'
-  return entries.map(([k, v]) => `${k}: ${v}`).join(', ')
+  return entries.map(([k, v]) => {
+    if (k === 'decklist' && typeof v === 'string') {
+      const count = v.split('\n').filter((l: string) => l.trim()).length
+      return `${count} cards`
+    }
+    return `${k}: ${v}`
+  }).join(', ')
 }
 
 const runSearch = (item: any) => {

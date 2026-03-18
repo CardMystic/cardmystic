@@ -267,6 +267,7 @@ const isBulkAddModalOpen = ref(false)
 // Recommend state
 const recommendDescription = ref('')
 const router = useRouter()
+const { saveSearchMutation } = useSearchHistory()
 
 function goToRecommend() {
   if (!cards.value || cards.value.length === 0) return
@@ -285,8 +286,22 @@ function goToRecommend() {
     })
     .filter(Boolean)
   if (commanderNamesList.length > 0) {
-    query.commanders = commanderNamesList.join(',')
+    query.commander = commanderNamesList[0]
   }
+  if (commanderNamesList.length > 1) {
+    query.partnerCommander = commanderNamesList[1]
+  }
+
+  saveSearchMutation.mutate({
+    query: recommendDescription.value.trim() || '',
+    searchType: 'recommend',
+    filters: {
+      commander: commanderNamesList[0] || undefined,
+      partnerCommander: commanderNamesList[1] || undefined,
+      decklist: decklist || undefined,
+    },
+  })
+
   router.push({ path: '/search/all/deckbuilder', query })
 }
 

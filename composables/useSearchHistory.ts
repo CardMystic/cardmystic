@@ -1,4 +1,7 @@
-import type { SearchHistory, SearchHistoryInsert } from '~/database.types';
+import type { Tables, TablesInsert } from '~/database.types';
+
+type SearchHistory = Tables<'search_history'>;
+type SearchHistoryInsert = TablesInsert<'search_history'>;
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
