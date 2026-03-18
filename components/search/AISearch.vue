@@ -33,9 +33,19 @@
       </UTooltip>
     </div>
 
-    <UFormField v-if="showFilters" name="filters">
-      <Filters ref="filtersRef" v-model="state.filters" />
-    </UFormField>
+    <UCard v-if="showFilters">
+      <UFormField name="filters">
+        <Filters ref="filtersRef" v-model="state.filters" />
+      </UFormField>
+      <template #footer>
+        <div class="flex items-center justify-center gap-2">
+          <UButton @click="hideFilters" variant="ghost" size="sm" icon="i-lucide-eye-off" color="neutral">
+            Hide Advanced Filters
+          </UButton>
+          <span class="text-xs text-neutral-400">This will clear selected advanced filters</span>
+        </div>
+      </template>
+    </UCard>
   </UForm>
 </template>
 
@@ -81,6 +91,11 @@ type Schema = z.output<typeof schema>
 
 const queryParam = computed(() => String(route.query.query || ''));
 const showFilters = ref(!!route.query.filters || !!props.platform);
+function hideFilters() {
+  const { isArena, isMTGO, isPaper, selectedCardFormats } = state.filters ?? {};
+  state.filters = { selectedColorFilterOption: 'Contains At Least' as const, isArena, isMTGO, isPaper, selectedCardFormats };
+  showFilters.value = false;
+}
 const parsedFilters = computed(() => {
   const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
   if (props.platform === 'arena') base.isArena = true;
