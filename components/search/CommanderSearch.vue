@@ -25,6 +25,8 @@
 
     <QuickFilters v-model="state.filters" :show="['arena', 'mtgo', 'paper']" />
 
+    <Filters v-if="!showFilters" ref="filtersRef" v-model="state.filters" hide-colors hide-formats hide-controls />
+
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by types, rarities, stats, and platform">
         <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
@@ -39,11 +41,10 @@
         <Filters ref="filtersRef" v-model="state.filters" hide-colors hide-formats />
       </UFormField>
       <template #footer>
-        <div class="flex items-center justify-center gap-2">
+        <div class="flex items-center justify-center">
           <UButton @click="hideFilters" variant="ghost" size="sm" icon="i-lucide-eye-off" color="neutral">
             Hide Advanced Filters
           </UButton>
-          <span class="text-xs text-neutral-400">This will clear selected advanced filters</span>
         </div>
       </template>
     </UCard>
@@ -102,8 +103,6 @@ const parsedFilters = computed(() => {
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
 function hideFilters() {
-  const { isArena, isMTGO, isPaper, selectedCardFormats } = state.filters ?? {};
-  state.filters = { selectedColorFilterOption: 'Contains At Least' as const, isArena, isMTGO, isPaper, selectedCardFormats };
   showFilters.value = false;
 }
 

@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -284,7 +284,7 @@
       </div>
       <div class="lg:col-span-10 flex flex-col items-center">
         <!-- Commander: Tabbed Recommended + Similar Cards -->
-        <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0">
+        <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
           <UTabs :items="cardTabs">
             <template #recommended>
               <div class="recommend-section flex gap-2 mt-2 mb-4">

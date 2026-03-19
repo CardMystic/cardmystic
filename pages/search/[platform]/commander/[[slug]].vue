@@ -13,9 +13,11 @@
       <SearchAbout v-else :type="aboutType" />
 
       <!-- Results -->
-      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-        :skeleton-count="skeletonCount" :error-message="searchError?.message"
-        :help-text="seoEntry ? `Loading ${platformName} commander results...` : `Please describe the ${platformName} commander you're looking for.`" />
+      <div class="mb-10 w-full">
+        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
+          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :help-text="seoEntry ? `Loading ${platformName} commander results...` : `Please describe the ${platformName} commander you're looking for.`" />
+      </div>
     </div>
   </UContainer>
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />

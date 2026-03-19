@@ -52,7 +52,7 @@
 
     <!-- Cards Results -->
     <ClientOnly>
-      <CardListResults :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
+      <CardListResults class="mb-8" :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
         :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
         @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
       <template #fallback>

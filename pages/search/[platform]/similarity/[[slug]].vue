@@ -12,11 +12,13 @@
       <!-- Landing page: show about section -->
       <SearchAbout v-else :type="aboutType" />
 
-      <!-- Results -->
-      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-        :skeleton-count="skeletonCount" :error-message="searchError?.message"
-        :help-text="seoEntry ? `Loading similar cards...` : `Please enter a card name to search for similar ${platformName} cards.`"
-        :is-similarity-search="true" />
+      <div class="mb-10 w-full">
+        <!-- Results -->
+        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
+          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :help-text="seoEntry ? `Loading similar cards...` : `Please enter a card name to search for similar ${platformName} cards.`"
+          :is-similarity-search="true" />
+      </div>
     </div>
   </UContainer>
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />

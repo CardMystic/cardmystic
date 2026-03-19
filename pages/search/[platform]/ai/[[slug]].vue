@@ -13,9 +13,12 @@
       <SearchAbout v-else :type="aboutType" />
 
       <!-- Results -->
-      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-        :skeleton-count="skeletonCount" :error-message="searchError?.message"
-        :help-text="seoEntry ? `Loading ${platformName} results...` : `Please enter a search query to find ${platformName} cards.`" />
+      <div class="mb-10 w-full">
+        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
+          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :help-text="seoEntry ? `Loading ${platformName} results...` : `Please enter a search query to find ${platformName} cards.`" />
+      </div>
+
     </div>
   </UContainer>
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />

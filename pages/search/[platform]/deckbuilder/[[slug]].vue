@@ -17,11 +17,14 @@
         </div>
       </div>
 
-      <!-- Results -->
-      <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
-        :skeleton-count="skeletonCount" :score-scale="descriptionParam ? 'raw' : 'normalized'"
-        :hide-thumbs-down-button="true" :error-message="searchError?.message"
-        :help-text="`Paste a decklist above to get ${platformName} card recommendations.`" default-group-by="type" />
+      <div class="mb-10 w-full">
+        <!-- Results -->
+        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
+          :skeleton-count="skeletonCount" :score-scale="descriptionParam ? 'raw' : 'normalized'"
+          :hide-thumbs-down-button="true" :error-message="searchError?.message"
+          :help-text="`Paste a decklist above to get ${platformName} card recommendations.`" default-group-by="type" />
+      </div>
+
     </div>
   </UContainer>
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />

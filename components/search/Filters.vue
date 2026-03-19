@@ -1,7 +1,7 @@
 <template>
   <div class="filters-container">
-    <!-- Active Filters Chips or a No Filters Selected chip -->
-    <div class="active-filters-section mb-2">
+    <!-- Active Filters Chips (hidden when controls are hidden and no advanced filters) -->
+    <div v-if="!hideControls || hasAdvancedFilters(modelValue)" class="active-filters-section mb-2">
       <div v-if="hasActiveFilters" class="active-filters-chips">
         <!-- Card Types Chips -->
         <div v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`">
@@ -101,7 +101,7 @@
       </div>
     </div>
 
-    <UCollapsible v-model:open="isOpen" class="flex flex-col gap-2">
+    <UCollapsible v-if="!hideControls" v-model:open="isOpen" class="flex flex-col gap-2">
       <UButton class="filters-toggle-btn cursor-pointer" label="Select Filters" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down" icon="i-lucide-list-filter" :ui="{
           trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
@@ -222,6 +222,7 @@ import type { CardSearchFilters } from '~/models/searchModel';
 import ManaIcon from '../general/ManaIcon.vue';
 import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt/ui';
 import { getColorIdentityName } from '~/utils/colorPairings';
+import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
@@ -248,10 +249,11 @@ const orientation: Ref<'vertical' | 'horizontal'> = computed(() =>
   screenWidth.value < 768 ? 'vertical' : 'horizontal'
 )
 
-const { modelValue, hideColors, hideFormats } = defineProps<{
+const { modelValue, hideColors, hideFormats, hideControls } = defineProps<{
   modelValue?: CardSearchFilters
   hideColors?: boolean
   hideFormats?: boolean
+  hideControls?: boolean
 }>();
 
 const emit = defineEmits<{
