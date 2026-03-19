@@ -87,12 +87,8 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const queryParam = computed(() => String(route.query.query || ''));
-const showFilters = ref(!!route.query.filters || !!props.platform);
-function hideFilters() {
-  const { isArena, isMTGO, isPaper, selectedCardFormats } = state.filters ?? {};
-  state.filters = { selectedColorFilterOption: 'Contains At Least' as const, isArena, isMTGO, isPaper, selectedCardFormats };
-  showFilters.value = false;
-}
+import { hasAdvancedFilters } from '~/utils/quickFilters'
+
 const parsedFilters = computed(() => {
   const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
   if (props.platform === 'arena') base.isArena = true;
@@ -103,6 +99,13 @@ const parsedFilters = computed(() => {
   }
   return base;
 });
+
+const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
+function hideFilters() {
+  const { isArena, isMTGO, isPaper, selectedCardFormats } = state.filters ?? {};
+  state.filters = { selectedColorFilterOption: 'Contains At Least' as const, isArena, isMTGO, isPaper, selectedCardFormats };
+  showFilters.value = false;
+}
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',

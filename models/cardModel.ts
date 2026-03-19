@@ -219,6 +219,7 @@ export const ScryfallCardSchema = z.object({
   purchase_uris: purchaseUrisSchema.optional(),
   preview: previewSchema,
   card_faces: z.array(cardFaceSchema).optional(),
+  game_changer: z.boolean().optional(),
 });
 
 export type Card = z.infer<typeof CardSchema>;

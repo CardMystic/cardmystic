@@ -157,6 +157,9 @@
           <div class="set-rarity-info">
             <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
             <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
+            <UTooltip v-if="card.game_changer" text="Is a Commander Game Changer">
+              <UBadge size="xl" color="primary" variant="subtle">Game Changer</UBadge>
+            </UTooltip>
           </div>
           <p class="card-type">
             {{ currentTypeLine }}

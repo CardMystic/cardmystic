@@ -53,6 +53,7 @@ export const CardSearchFiltersSchema = z.object({
   isMTGO: z.boolean().optional(),
   isArena: z.boolean().optional(),
   isPaper: z.boolean().optional(),
+  isGameChanger: z.boolean().optional(),
 });
 
 export type WordSearch = z.infer<typeof WordSearchSchema>;

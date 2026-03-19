@@ -88,18 +88,21 @@ const currentPlatform = computed(() => {
 });
 
 const queryParam = computed(() => String(route.query.query || ''));
-const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
-function hideFilters() {
-  const { isArena, isMTGO, isPaper, selectedCardFormats } = state.filters ?? {};
-  state.filters = { selectedColorFilterOption: 'Contains At Least' as const, isArena, isMTGO, isPaper, selectedCardFormats };
-  showFilters.value = false;
-}
+import { hasAdvancedFilters } from '~/utils/quickFilters'
+
 const parsedFilters = computed(() => {
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
   }
   return { selectedColorFilterOption: 'Contains At Least' as const }
 })
+
+const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
+function hideFilters() {
+  const { isArena, isMTGO, isPaper, selectedCardFormats } = state.filters ?? {};
+  state.filters = { selectedColorFilterOption: 'Contains At Least' as const, isArena, isMTGO, isPaper, selectedCardFormats };
+  showFilters.value = false;
+}
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value,

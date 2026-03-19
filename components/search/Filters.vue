@@ -83,6 +83,11 @@
             icon="i-lucide-circle-x" @click="updateFilters({ isPaper: undefined })">Paper
           </UButton>
         </div>
+        <div v-if="modelValue?.isGameChanger">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="updateFilters({ isGameChanger: undefined })">Game Changer
+          </UButton>
+        </div>
 
         <!-- Clear All Button -->
         <UButton color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
@@ -198,6 +203,12 @@
               <URadioGroup v-model="selectedPlatform" :items="platformOptions" orientation="horizontal" />
             </div>
           </template>
+          <!-- Game Changer Filter -->
+          <template #gameChanger>
+            <div class="accordion-item flex flex-wrap gap-4">
+              <UCheckbox v-model="isGameChanger" label="Game Changer" />
+            </div>
+          </template>
         </UAccordion>
       </template>
     </UCollapsible>
@@ -277,6 +288,11 @@ const allItems = [
     label: 'Platform',
     icon: 'i-lucide-monitor',
     slot: 'platform' as const
+  },
+  {
+    label: 'Game Changer',
+    icon: 'i-lucide-sparkles',
+    slot: 'gameChanger' as const
   }
 ] satisfies AccordionItem[]
 
@@ -323,7 +339,8 @@ const hasActiveFilters = computed(() => {
     (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
     filters.isMTGO ||
     filters.isArena ||
-    filters.isPaper
+    filters.isPaper ||
+    filters.isGameChanger
   );
 });
 
@@ -458,6 +475,13 @@ const selectedPlatform = computed({
       isMTGO: value === 'mtgo' ? true : undefined,
       isPaper: value === 'paper' ? true : undefined,
     });
+  },
+});
+
+const isGameChanger = computed({
+  get: () => !!modelValue?.isGameChanger,
+  set: (value) => {
+    updateFilters({ isGameChanger: value ? true : undefined });
   },
 });
 

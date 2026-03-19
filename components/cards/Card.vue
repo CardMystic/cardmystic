@@ -12,6 +12,7 @@
       </template>
     </UModal>
     <div class="card-image-wrapper">
+      <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
       <!-- Card content: image + score -->
       <img :class="sizeClass" :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
         @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)" loading="lazy" decoding="async"
