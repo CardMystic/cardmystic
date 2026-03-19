@@ -38,7 +38,7 @@
       <div class="flex gap-2 items-center">
         <UInput v-model="recommendDescription"
           placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
-          icon="i-lucide-box" class="flex-1" :ui="{ base: 'text-sm h-8' }" size="sm" />
+          icon="i-lucide-box" class="flex-1" :ui="{ base: 'text-sm h-8' }" size="sm" @keydown.enter="goToRecommend" />
         <UButton icon="i-lucide-box" color="primary" variant="solid" label="Recommend" @click="goToRecommend"
           class="cursor-pointer h-8" size="sm" />
       </div>
