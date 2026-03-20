@@ -4,8 +4,8 @@
       side: 'left',
       sideOffset: 8
     }" text="Report an issue with these results">
-      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft" class="border-2 border-secondary"
-        @click="onClick && onClick()" />
+      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft"
+        class="border-2 border-secondary cursor-pointer" @click="onClick && onClick()" />
     </UTooltip>
   </div>
 </template>

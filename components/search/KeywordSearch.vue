@@ -31,8 +31,8 @@
 
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
-          aria-label="Show advanced search filters">
+        <UButton class="cursor-pointer" @click="showFilters = true" variant="ghost" size="sm"
+          icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
           Show Advanced Filters
         </UButton>
       </UTooltip>
@@ -44,7 +44,8 @@
       </UFormField>
       <template #footer>
         <div class="flex items-center justify-center">
-          <UButton @click="hideFilters" variant="ghost" size="sm" icon="i-lucide-eye-off" color="neutral">
+          <UButton class="cursor-pointer" @click="hideFilters" variant="ghost" size="sm" icon="i-lucide-eye-off"
+            color="neutral">
             Hide Advanced Filters
           </UButton>
         </div>

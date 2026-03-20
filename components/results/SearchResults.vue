@@ -3,6 +3,7 @@
   <div class="mt-3 w-full">
     <template v-if="isLoading">
       <div style="height: 32px"></div> <!-- Sort spacer to prevent layout shift -->
+      <div v-if="defaultGroupBy" style="height: 26px"></div> <!-- Spacer for expand all/collapse all buttons -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
       </div>
@@ -24,10 +25,10 @@
       <!-- Grouped results (accordion) -->
       <template v-if="groupedResults && groupedResults.length > 0 && groupedResults[0].label">
         <div class="flex justify-center sm:justify-end gap-1 mb-1">
-          <UButton icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral" variant="ghost"
-            @click="openAccordionValues = accordionItems.map(i => i.value as string)" />
-          <UButton icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral" variant="ghost"
-            @click="openAccordionValues = []" />
+          <UButton class="cursor-pointer" icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral"
+            variant="ghost" @click="openAccordionValues = accordionItems.map(i => i.value as string)" />
+          <UButton class="cursor-pointer" icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral"
+            variant="ghost" @click="openAccordionValues = []" />
         </div>
         <UAccordion type="multiple" v-model="openAccordionValues" :items="accordionItems"
           :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">

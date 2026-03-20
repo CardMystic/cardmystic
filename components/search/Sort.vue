@@ -4,11 +4,11 @@
     <span class="text-sm">Sort by:</span>
     <USelect v-model="selectedSortValue" :items="sortOptions" placeholder="Select sort option"
       class="cursor-pointer min-w-45" @update:modelValue="updateSort" />
-    <UButton v-if="selectedSortValue" :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
-      color="neutral" variant="ghost" size="sm" @click="toggleSortDirection"
-      :title="sortDirection === 'asc' ? 'Ascending' : 'Descending'" />
-    <UButton v-if="selectedSortValue" icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="clearSort"
-      title="Clear sort" />
+    <UButton v-if="selectedSortValue" class="cursor-pointer"
+      :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'" color="neutral" variant="ghost"
+      size="sm" @click="toggleSortDirection" :title="sortDirection === 'asc' ? 'Ascending' : 'Descending'" />
+    <UButton v-if="selectedSortValue" class="cursor-pointer" icon="i-lucide-x" color="neutral" variant="ghost" size="sm"
+      @click="clearSort" title="Clear sort" />
   </div>
 </template>
 

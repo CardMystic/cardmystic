@@ -24,8 +24,8 @@
 
       <!-- Grouped Cards (Accordion) -->
       <div v-if="labeledGroups.length > 0" class="flex justify-center sm:justify-end gap-1 mb-1">
-        <UButton icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral" variant="ghost"
-          @click="openAccordionValues = labeledGroups.map(g => g.label)" />
+        <UButton class="cursor-pointer" icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral"
+          variant="ghost" @click="openAccordionValues = labeledGroups.map(g => g.label)" />
         <UButton icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral" variant="ghost"
           @click="openAccordionValues = []" />
       </div>

@@ -1,8 +1,8 @@
 <template>
   <div class="w-full mt-2">
     <div class="flex justify-center">
-      <UButton variant="ghost" size="sm" color="info" :icon="open ? 'i-lucide-chevron-up' : 'i-lucide-info'"
-        @click="open = !open">
+      <UButton class="cursor-pointer" variant="ghost" size="sm" color="info"
+        :icon="open ? 'i-lucide-chevron-up' : 'i-lucide-info'" @click="open = !open">
         {{ title }}
       </UButton>
     </div>
