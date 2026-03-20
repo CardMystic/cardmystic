@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type ComputedRef, type Ref } from 'vue';
-import type { ScryfallCard } from '~/models/cardModel';
+import type { Card, ScryfallCard } from '~/models/cardModel';
 
 /**
  * Composable for fetching card details by IDs
@@ -49,6 +49,55 @@ export function useCardsByIds(
 
   return {
     cards,
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Composable for fetching cards by name using a single batch request.
+ */
+export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
+  const config = useRuntimeConfig();
+
+  const queryOptions = {
+    queryKey: computed(() => [
+      'cards-by-name',
+      (names as ComputedRef<string[]>).value ?? (names as Ref<string[]>).value,
+    ]),
+    queryFn: async (): Promise<Card[]> => {
+      const nameList =
+        (names as ComputedRef<string[]>).value ??
+        (names as Ref<string[]>).value;
+      const scryfallCards = await $fetch<ScryfallCard[]>(
+        `${config.public.backendUrl}/cards/cards-by-names`,
+        {
+          method: 'POST',
+          body: { cardNames: nameList },
+        },
+      );
+      return (scryfallCards || []).map(
+        (cardData) =>
+          ({
+            card_name: cardData.name,
+            card_data: cardData,
+          }) as Card,
+      );
+    },
+    enabled: computed(() => {
+      const nameList =
+        (names as ComputedRef<string[]>).value ??
+        (names as Ref<string[]>).value;
+      return nameList.length > 0;
+    }),
+    staleTime: 1000 * 60 * 15,
+  };
+
+  const { data, isLoading, error, refetch } = useQuery(queryOptions);
+
+  return {
+    cards: data,
     isLoading,
     error,
     refetch,
