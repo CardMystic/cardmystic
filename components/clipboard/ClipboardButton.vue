@@ -1,10 +1,12 @@
 <template>
   <div class="searched-plus-btn" :class="{ 'clipboard-added': isInClipboard }" v-if="resolvedCardData">
-    <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
-      :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
-      @click.stop="handleClipboardClick">
-      <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
-    </UButton>
+    <UTooltip :text="isInClipboard ? 'Added to clipboard' : 'Add to clipboard'">
+      <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
+        :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
+        @click.stop="handleClipboardClick">
+        <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
+      </UButton>
+    </UTooltip>
   </div>
 </template>
 

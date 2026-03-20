@@ -25,10 +25,12 @@
 
       <!-- Flip Button for Dual-Faced Cards -->
       <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
-        <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
-          square>
-          <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
-        </UButton>
+        <UTooltip text="Flip card">
+          <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
+            square>
+            <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
+          </UButton>
+        </UTooltip>
       </div>
 
       <!-- Score Bar -->
