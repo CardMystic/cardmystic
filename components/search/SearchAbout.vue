@@ -92,8 +92,8 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Get personalized card recommendations for your Magic: The Gathering deck. Paste your decklist and CardMystic will suggest cards that improve synergy, consistency, and power level.',
       'Our recommendation model compares your deck to similar decks in our database to suggest cards that strengthen your deck and fill missing roles like card draw, ramp, or removal.',
-      'You can describe what your deck needs, such as "card draw", "artifact removal", or "token synergy" to receive targeted card recommendations tailored to your strategy.',
-      'Level up your next deck whether you\'re playing Commander, MTGO, MTG Arena, or any other Magic: The Gathering format!'
+      'Describe what you\'re looking for , such as "card draw", "artifact removal", or "token synergy" to receive targeted card recommendations tailored to your strategy.',
+      'Note: The recommendation model is trained on Commander decks. Other formats coming soon!',
     ],
   },
 
@@ -123,6 +123,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Get AI-powered card recommendations for your MTG Arena deck. Paste your decklist and CardMystic will suggest Arena-legal cards that improve your deck\'s synergy and consistency.',
       'Our recommendation engine analyzes your deck and suggests cards available on MTG Arena that fill gaps in your strategy — whether you need more removal, card draw, ramp, or win conditions.',
+      'Note: The recommendation model is trained on Commander decks, so results are optimized for the Commander format.',
       'Perfect for building and upgrading Standard, Explorer, Historic, and Brawl decks on MTG Arena.',
     ],
   },
@@ -153,6 +154,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Get AI-powered card recommendations for your MTGO deck. Paste your decklist and CardMystic will suggest cards available on Magic: The Gathering Online that strengthen your deck.',
       'Our recommendation engine analyzes your deck\'s strategy and suggests MTGO-legal cards to fill gaps — whether you need sideboard options, better removal, or stronger finishers.',
+      'Note: The recommendation model is trained on Commander decks, so results are optimized for the Commander format.',
       'Ideal for building and tuning decks for Vintage, Legacy, Modern, Pauper, and other MTGO formats.',
     ],
   },
@@ -213,6 +215,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Get AI-powered card recommendations for your Modern deck. Paste your decklist and CardMystic will suggest Modern-legal cards that improve your deck\'s synergy and consistency.',
       'Our recommendation engine analyzes your deck and suggests cards legal in Modern that fill gaps in your strategy — whether you need better sideboard options, more efficient removal, or stronger finishers.',
+      'Note: The recommendation model is trained on Commander decks, so results are optimized for the Commander format.',
       'Ideal for building and tuning competitive Modern decks for FNM, tournaments, and online play.',
     ],
   },
@@ -283,6 +286,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Get AI-powered card recommendations for your paper Magic: The Gathering deck. Paste your decklist and CardMystic will suggest paper-available cards that improve your deck\'s synergy and consistency.',
       'Our recommendation engine analyzes your deck and suggests cards available in paper that fill gaps in your strategy — whether you need more removal, card draw, ramp, or win conditions.',
+      'Note: The recommendation model is trained on Commander decks, so results are optimized for the Commander format.',
       'Ideal for building and tuning Commander, Legacy, Modern, Pioneer, and other tabletop format decks.',
     ],
   },
@@ -343,6 +347,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Get AI-powered card recommendations for your Commander deck. Paste your decklist and CardMystic will suggest Commander-legal cards that improve your deck\'s synergy and consistency.',
       'Our recommendation engine analyzes your deck and suggests cards legal in Commander that fill gaps in your strategy — whether you need more removal, card draw, ramp, or win conditions.',
+      'Note: The recommendation model is trained on Commander decks, so results are optimized for the Commander format.',
       'Ideal for building and tuning competitive and casual EDH decks.',
     ],
   },

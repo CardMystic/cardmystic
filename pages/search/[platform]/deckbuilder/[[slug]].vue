@@ -29,6 +29,8 @@
   </UContainer>
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
   <BackToTop />
+
+  <SaveToListModal v-model="showSaveAllModal" :cards="allCards" :commanders="commanderNames" />
 </template>
 
 <script setup lang="ts">
@@ -127,6 +129,27 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
 });
 
 const skeletonCount = ref(20);
+
+const showSaveAllModal = ref(false);
+
+provide('saveToList', () => {
+  showSaveAllModal.value = true
+})
+
+const allCards = computed(() => {
+  const cards: { id: string, name: string }[] = [];
+  if (commanderCards.value) {
+    for (const cmd of commanderCards.value) {
+      if (cmd.card_data?.id) cards.push({ id: cmd.card_data.id, name: cmd.card_data.name });
+    }
+  }
+  if (searchResults.value) {
+    for (const card of searchResults.value) {
+      if (card.card_data?.id) cards.push({ id: card.card_data.id, name: card.card_data.name });
+    }
+  }
+  return cards;
+});
 
 const { searchResults, isLoading, error: searchError, notFound } = useAlsRecommend(alsRequest);
 

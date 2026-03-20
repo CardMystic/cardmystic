@@ -42,13 +42,18 @@
     </UFormField>
 
     <UFormField name="decklist">
-      <UTextarea v-model="state.decklist" placeholder="Paste your decklist here (one card per line)..." :rows="6"
-        autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" />
+      <div class="relative">
+        <UTextarea v-model="state.decklist" placeholder="Paste your decklist here (one card per line)..." :rows="6"
+          autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" />
+        <UButton v-if="onSaveToList && hasCards" icon="i-lucide-list-plus" color="primary" variant="soft" size="xs"
+          label="Save All to List" class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
+          @click="onSaveToList" />
+      </div>
     </UFormField>
 
-    <QuickFilters v-model="state.filters" />
+    <QuickFilters v-model="state.filters" :show="['arena', 'mtgo', 'paper']" />
 
-    <Filters v-if="!showFilters" ref="filtersRef" v-model="state.filters" hide-controls />
+    <Filters v-if="!showFilters" ref="filtersRef" v-model="state.filters" hide-controls hide-formats />
 
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
@@ -61,7 +66,7 @@
 
     <UCard v-if="showFilters">
       <UFormField name="filters">
-        <Filters ref="filtersRef" v-model="state.filters" />
+        <Filters ref="filtersRef" v-model="state.filters" hide-formats />
       </UFormField>
       <template #footer>
         <div class="flex items-center justify-center">
@@ -94,6 +99,9 @@ import Filters from './Filters.vue'
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper'
 }>()
+
+const onSaveToList = inject<(() => void) | null>('saveToList', null) // Provided from deckbuilder [[slug]].vue
+const hasCards = computed(() => !!state.decklist?.trim() || !!state.commander?.trim())
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
