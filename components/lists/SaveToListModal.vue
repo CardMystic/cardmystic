@@ -93,7 +93,7 @@ const isLoggedIn = computed(() => !!userProfile.value)
 
 const props = defineProps<{
   modelValue: boolean
-  cards: { id: string, name: string }[]
+  cardNames: string[]
   commanders?: string[]
 }>()
 
@@ -108,13 +108,13 @@ const isOpen = computed({
 })
 
 const toast = useToast()
-const { userLists, createListMutation, addCardsToListMutation } = useCardLists()
+const { userLists, createListMutation, addCardsByNameToListMutation } = useCardLists()
 
 const lists = computed(() => userLists.value || [])
 const selectedListId = ref<string>('')
 const newListName = ref('')
 const newListDescription = ref('')
-const loading = computed(() => createListMutation.isPending.value || addCardsToListMutation.isPending.value)
+const loading = computed(() => createListMutation.isPending.value || addCardsByNameToListMutation.isPending.value)
 const errorMessage = ref('')
 
 // Editable commander names (initialized from prop)
@@ -128,15 +128,6 @@ const editableCardNames = computed(() =>
   cardNamesText.value.split('\n').map(n => n.trim()).filter(Boolean)
 )
 
-// Build a name→id lookup from the original cards prop
-const nameToIdMap = computed(() => {
-  const map = new Map<string, string>()
-  for (const card of props.cards) {
-    map.set(card.name.toLowerCase(), card.id)
-  }
-  return map
-})
-
 const listOptions = computed(() => {
   return lists.value.map(list => ({
     value: list.id,
@@ -148,7 +139,7 @@ const listOptions = computed(() => {
 watch(isOpen, (opened) => {
   if (opened) {
     editableCommanders.value = [...(props.commanders || [])]
-    cardNamesText.value = props.cards.map(c => c.name).join('\n')
+    cardNamesText.value = props.cardNames.join('\n')
   } else {
     selectedListId.value = ''
     newListName.value = ''
@@ -159,23 +150,6 @@ watch(isOpen, (opened) => {
 
 const handleSave = async () => {
   errorMessage.value = ''
-
-  // Resolve edited card names back to IDs
-  const resolvedIds: string[] = []
-  const unresolved: string[] = []
-  for (const name of editableCardNames.value) {
-    const id = nameToIdMap.value.get(name.toLowerCase())
-    if (id) {
-      resolvedIds.push(id)
-    } else {
-      unresolved.push(name)
-    }
-  }
-
-  if (unresolved.length > 0) {
-    errorMessage.value = `Could not resolve these cards: ${unresolved.join(', ')}. Only cards from the original results can be saved.`
-    return
-  }
 
   try {
     let listId = selectedListId.value
@@ -193,22 +167,28 @@ const handleSave = async () => {
       listId = newList.id
     }
 
-    if (listId) {
-      await addCardsToListMutation.mutateAsync({
-        listId,
-        cardIds: resolvedIds
-      })
-
-      toast.add({
-        title: 'Cards saved to list!',
-        icon: 'i-heroicons-check-circle'
-      })
-
-      emit('saved')
-      isOpen.value = false
-    } else {
+    if (!listId) {
       errorMessage.value = 'Please select a list or create a new one'
+      return
     }
+
+    const result = await addCardsByNameToListMutation.mutateAsync({
+      listId,
+      cardNames: editableCardNames.value,
+    })
+
+    const messages: string[] = []
+    if (result.addedCount > 0) messages.push(`Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`)
+    if (result.duplicatesSkipped > 0) messages.push(`${result.duplicatesSkipped} duplicate${result.duplicatesSkipped === 1 ? '' : 's'} skipped`)
+    if (result.invalidCardNames?.length > 0) messages.push(`${result.invalidCardNames.length} not found: ${result.invalidCardNames.join(', ')}`)
+
+    toast.add({
+      title: messages.join('. ') || 'Cards saved to list!',
+      icon: 'i-heroicons-check-circle'
+    })
+
+    emit('saved')
+    isOpen.value = false
   } catch (error: any) {
     console.error('Error saving cards:', error)
     errorMessage.value = error.message || 'An unexpected error occurred'

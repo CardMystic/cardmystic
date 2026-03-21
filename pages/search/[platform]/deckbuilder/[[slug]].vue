@@ -39,7 +39,7 @@
   <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
   <BackToTop />
 
-  <SaveToListModal v-model="showSaveAllModal" :cards="allCards" :commanders="commanderNames" />
+  <SaveToListModal v-model="showSaveAllModal" :card-names="decklistCardNames" :commanders="commanderNames" />
 </template>
 
 <script setup lang="ts">
@@ -140,6 +140,12 @@ provide('saveToList', () => {
 // Seed the deckbuilder store with the initial decklist from the URL
 const deckbuilderStore = useDeckbuilderStore();
 if (decklistParam.value) deckbuilderStore.decklist = decklistParam.value;
+
+// Card names from the decklist textarea for "Save All to List"
+const decklistCardNames = computed(() => {
+  if (!deckbuilderStore.decklist.trim()) return [];
+  return parseDecklist(deckbuilderStore.decklist);
+});
 
 const allCards = computed(() => {
   const cards: { id: string, name: string }[] = [];
