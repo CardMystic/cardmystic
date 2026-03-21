@@ -53,7 +53,7 @@ import { CardSearchFiltersSchema } from '~/models/searchModel';
 import { isValidPlatform, getPlatformFilters, getSearchPlatformProp, getPlatformDisplayName, type Platform } from '~/utils/platformConfig';
 import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 import { parseDecklist } from '~/utils/decklist';
-import { useDeckbuilder } from '~/stores/deckbuilder';
+import { useDeckbuilder } from '~/composables/useDeckbuilder';
 
 const { decklist: deckbuilderDecklist, showSaveAllModal } = useDeckbuilder();
 

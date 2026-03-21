@@ -95,7 +95,7 @@ import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
-import { useDeckbuilder } from '~/stores/deckbuilder'
+import { useDeckbuilder } from '~/composables/useDeckbuilder'
 import Filters from './Filters.vue'
 
 const props = defineProps<{

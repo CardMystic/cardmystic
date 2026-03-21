@@ -148,7 +148,7 @@ import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { useCardFeedback } from '~/composables/useCardFeedback';
-import { useDeckbuilder } from '~/stores/deckbuilder';
+import { useDeckbuilder } from '~/composables/useDeckbuilder';
 
 const router = useRouter();
 const route = useRoute();
