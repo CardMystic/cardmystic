@@ -148,7 +148,7 @@ import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { useCardFeedback } from '~/composables/useCardFeedback';
-import { useDeckbuilderStore } from '~/stores/deckbuilder';
+import { useDeckbuilder } from '~/stores/deckbuilder';
 
 const router = useRouter();
 const route = useRoute();
@@ -217,7 +217,7 @@ const emit = defineEmits<{
 
 const sizeClass = computed(() => `card-${props.size}`);
 
-const deckbuilderStore = useDeckbuilderStore();
+const deckbuilderStore = useDeckbuilder();
 
 const isInDecklist = computed(() => {
   if (!props.card.card_data?.name) return false;

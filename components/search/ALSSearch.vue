@@ -95,15 +95,14 @@ import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
-import { useDeckbuilderStore } from '~/stores/deckbuilder'
+import { useDeckbuilder } from '~/stores/deckbuilder'
 import Filters from './Filters.vue'
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper'
 }>()
 
-const onSaveToList = inject<(() => void) | null>('saveToList', null) // Provided from deckbuilder [[slug]].vue
-const deckbuilderStore = useDeckbuilderStore();
+const deckbuilderStore = useDeckbuilder();
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
@@ -133,6 +132,9 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const route = useRoute();
+
+const isOnDeckbuilderPage = computed(() => route.path.includes('/deckbuilder'));
+const onSaveToList = computed(() => isOnDeckbuilderPage.value ? () => { deckbuilderStore.showSaveAllModal.value = true } : null);
 
 const currentPlatform = computed(() => {
   if (route.params.platform) return String(route.params.platform);
@@ -178,11 +180,11 @@ const state = reactive<Partial<Schema>>({
 const hasCards = computed(() => !!state.decklist?.trim() || !!state.commander?.trim())
 
 // Two-way sync between local textarea state and the deckbuilder store
-watch(() => deckbuilderStore.decklist, (newVal) => {
+watch(() => deckbuilderStore.decklist.value, (newVal) => {
   if (newVal !== state.decklist) state.decklist = newVal;
 });
 watch(() => state.decklist, (newVal) => {
-  if (newVal !== undefined && newVal !== deckbuilderStore.decklist) deckbuilderStore.decklist = newVal;
+  if (newVal !== undefined && newVal !== deckbuilderStore.decklist.value) deckbuilderStore.decklist.value = newVal;
 });
 
 // Commander autocomplete

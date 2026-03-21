@@ -24,7 +24,6 @@
         </template>
       </div>
 
-
       <div class="mb-10 w-full">
         <!-- Results -->
         <SearchResults :show-add-to-deckbuilder-button="true" :is-loading="isLoading" :search-results="searchResults"
@@ -54,7 +53,9 @@ import { CardSearchFiltersSchema } from '~/models/searchModel';
 import { isValidPlatform, getPlatformFilters, getSearchPlatformProp, getPlatformDisplayName, type Platform } from '~/utils/platformConfig';
 import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 import { parseDecklist } from '~/utils/decklist';
-import { useDeckbuilderStore } from '~/stores/deckbuilder';
+import { useDeckbuilder } from '~/stores/deckbuilder';
+
+const { decklist: deckbuilderDecklist, showSaveAllModal } = useDeckbuilder();
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
@@ -131,20 +132,13 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
 
 const skeletonCount = ref(20);
 
-const showSaveAllModal = ref(false);
-
-provide('saveToList', () => {
-  showSaveAllModal.value = true
-})
-
-// Seed the deckbuilder store with the initial decklist from the URL
-const deckbuilderStore = useDeckbuilderStore();
-if (decklistParam.value) deckbuilderStore.decklist = decklistParam.value;
+// Seed the deckbuilder with the initial decklist from the URL
+if (decklistParam.value) deckbuilderDecklist.value = decklistParam.value;
 
 // Card names from the decklist textarea for "Save All to List"
 const decklistCardNames = computed(() => {
-  if (!deckbuilderStore.decklist.trim()) return [];
-  return parseDecklist(deckbuilderStore.decklist);
+  if (!deckbuilderDecklist.value.trim()) return [];
+  return parseDecklist(deckbuilderDecklist.value);
 });
 
 const allCards = computed(() => {

@@ -1,8 +1,8 @@
 <template>
-  <UContainer class="flex items-center flex-col py-8 w-full max-w-[800px]">
+  <UContainer class="flex items-center flex-col py-8 w-full max-w-200">
     <!-- What is CardMystic -->
     <div
-      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
+      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
       <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
         🔮 What is <span class="text-primary">CardMystic</span>?
       </h2>
@@ -16,7 +16,7 @@
 
     <!-- Why CardMystic -->
     <div
-      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
+      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
       <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
         🤔 Why <span class="text-primary">CardMystic</span>?
       </h2>
@@ -33,7 +33,7 @@
 
     <!-- What Sets Us Apart -->
     <div
-      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
+      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
       <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
         ⭐ What Sets Us Apart
       </h2>
@@ -47,7 +47,7 @@
 
     <!-- Contact Us -->
     <div
-      class="w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
+      class="w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent">
       <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">💬 Contact Us</h2>
       <p class="text-base md:text-lg leading-relaxed">
         Have questions, feedback, or ideas for CardMystic? We'd love to hear
