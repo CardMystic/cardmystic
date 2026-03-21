@@ -10,7 +10,7 @@
       :class="open ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 mt-0'">
       <div class="overflow-hidden">
         <div class="flex justify-center">
-          <UCard class="max-w-lg w-full" :ui="{ body: 'p-4' }">
+          <UCard class="max-w-lg w-full mt-2 mb-2" variant="soft" :ui="{ body: 'p-4' }">
             <component :is="useH1 ? 'h1' : 'h2'" class="text-lg font-bold mb-3">
               {{ heading }}
             </component>
