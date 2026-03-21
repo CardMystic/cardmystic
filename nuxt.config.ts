@@ -61,6 +61,7 @@ export default defineNuxtConfig({
   },
   plugins: ['~/plugins/vue-query.ts'],
   modules: [
+    '@pinia/nuxt',
     '@nuxt/ui',
     '@vee-validate/nuxt',
     '@nuxtjs/device',

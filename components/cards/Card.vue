@@ -105,6 +105,15 @@
                 icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result" @click="handleDislike" />
             </template>
           </UTooltip>
+
+          <!-- Add to deckbuilding search button -->
+          <UTooltip v-if="showAddToDeckbuilderButton" text="Add to deckbuilding search" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'" variant="soft"
+                :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" size="sm"
+                aria-label="Add to deckbuilding search" @click="deckbuilderStore.addCard(card.card_data.name)" />
+            </template>
+          </UTooltip>
         </div>
 
         <!-- Remove from list button -->
@@ -139,6 +148,7 @@ import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { useCardFeedback } from '~/composables/useCardFeedback';
+import { useDeckbuilderStore } from '~/stores/deckbuilder';
 
 const router = useRouter();
 const route = useRoute();
@@ -177,6 +187,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // If true, show a button to add to deckbuilding search
+  showAddToDeckbuilderButton: {
+    type: Boolean,
+    default: false,
+  },
   hideProgressBar: {
     type: Boolean,
     default: false,
@@ -201,6 +216,13 @@ const emit = defineEmits<{
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
+
+const deckbuilderStore = useDeckbuilderStore();
+
+const isInDecklist = computed(() => {
+  if (!props.card.card_data?.name) return false;
+  return deckbuilderStore.hasCard(props.card.card_data.name);
+});
 
 const isFlipped = ref(false);
 const isThumbsDownClicked = ref(false);

@@ -27,9 +27,10 @@
 
       <div class="mb-10 w-full">
         <!-- Results -->
-        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="decklistParam"
-          :skeleton-count="skeletonCount" :score-scale="descriptionParam ? 'raw' : 'normalized'"
-          :hide-thumbs-down-button="true" :error-message="searchError?.message"
+        <SearchResults :show-add-to-deckbuilder-button="true" :is-loading="isLoading" :search-results="searchResults"
+          :query-param="decklistParam" :skeleton-count="skeletonCount"
+          :score-scale="descriptionParam ? 'raw' : 'normalized'" :hide-thumbs-down-button="true"
+          :error-message="searchError?.message"
           :help-text="`Paste a decklist above to get ${platformName} card recommendations.`" default-group-by="type" />
       </div>
 
@@ -52,6 +53,8 @@ import { useCardsByName } from '~/composables/useCards';
 import { CardSearchFiltersSchema } from '~/models/searchModel';
 import { isValidPlatform, getPlatformFilters, getSearchPlatformProp, getPlatformDisplayName, type Platform } from '~/utils/platformConfig';
 import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
+import { parseDecklist } from '~/utils/decklist';
+import { useDeckbuilderStore } from '~/stores/deckbuilder';
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
@@ -111,13 +114,6 @@ useSeoMeta({
 
 definePageMeta({ title: 'Deck Recommender' });
 
-function parseDecklist(raw: string): string[] {
-  return raw
-    .split('\n')
-    .map((line) => line.replace(/^\d+x?\s+/i, '').trim())
-    .filter((name) => name.length > 0);
-}
-
 const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
   const hasDecklist = !!decklistParam.value;
   const hasCommanders = commanderNames.value.length > 0;
@@ -140,6 +136,10 @@ const showSaveAllModal = ref(false);
 provide('saveToList', () => {
   showSaveAllModal.value = true
 })
+
+// Seed the deckbuilder store with the initial decklist from the URL
+const deckbuilderStore = useDeckbuilderStore();
+if (decklistParam.value) deckbuilderStore.decklist = decklistParam.value;
 
 const allCards = computed(() => {
   const cards: { id: string, name: string }[] = [];

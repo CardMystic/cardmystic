@@ -41,6 +41,7 @@
 <script setup lang="ts">
 import { useCardLists } from '~/composables/useCardLists'
 import { useToast } from '#imports'
+import { parseDecklist } from '~/utils/decklist'
 
 const props = defineProps<{
   listId: string
@@ -57,16 +58,13 @@ const bulkAddResult = ref<{ addedCount: number; duplicatesSkipped: number; inval
 
 const bulkAddCardCount = computed(() => {
   if (!bulkAddCardNames.value.trim()) return 0
-  return bulkAddCardNames.value.split('\n').filter(name => name.trim()).length
+  return parseDecklist(bulkAddCardNames.value).length
 })
 
 async function handleBulkAdd() {
   if (bulkAddCardCount.value === 0) return
 
-  const cardNames = bulkAddCardNames.value
-    .split('\n')
-    .map(name => name.trim())
-    .filter(name => name)
+  const cardNames = parseDecklist(bulkAddCardNames.value)
 
   bulkAddLoading.value = true
   bulkAddResult.value = null

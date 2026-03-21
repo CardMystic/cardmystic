@@ -19,6 +19,7 @@
   "dependencies": {
     "@nuxt/ui": "^3.3.0",
     "@nuxtjs/device": "^3.2.4",
+    "@pinia/nuxt": "^0.11.3",
     "@supabase/supabase-js": "^2.89.0",
     "@tanstack/query-persist-client-core": "^5.81.5",
     "@tanstack/vue-query": "^5.81.5",
@@ -29,6 +30,7 @@
     "mana-font": "^1.18.0",
     "nuxt": "^3.15.4",
     "nuxt-vitalizer": "^0.10.0",
+    "pinia": "^3.0.4",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1",

@@ -44,7 +44,7 @@
     <UFormField name="decklist">
       <div class="relative">
         <UTextarea v-model="state.decklist" placeholder="Paste your decklist here (one card per line)..." :rows="6"
-          autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" />
+          autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" autocomplete="off" />
         <UButton v-if="onSaveToList && hasCards" icon="i-lucide-list-plus" color="primary" variant="soft" size="xs"
           label="Save All to List" class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
           @click="onSaveToList" />
@@ -95,6 +95,7 @@ import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
+import { useDeckbuilderStore } from '~/stores/deckbuilder'
 import Filters from './Filters.vue'
 
 const props = defineProps<{
@@ -102,7 +103,7 @@ const props = defineProps<{
 }>()
 
 const onSaveToList = inject<(() => void) | null>('saveToList', null) // Provided from deckbuilder [[slug]].vue
-const hasCards = computed(() => !!state.decklist?.trim() || !!state.commander?.trim())
+const deckbuilderStore = useDeckbuilderStore();
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
@@ -173,6 +174,16 @@ const state = reactive<Partial<Schema>>({
   decklist: decklistParam.value || '',
   filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' },
 })
+
+const hasCards = computed(() => !!state.decklist?.trim() || !!state.commander?.trim())
+
+// Two-way sync between local textarea state and the deckbuilder store
+watch(() => deckbuilderStore.decklist, (newVal) => {
+  if (newVal !== state.decklist) state.decklist = newVal;
+});
+watch(() => state.decklist, (newVal) => {
+  if (newVal !== undefined && newVal !== deckbuilderStore.decklist) deckbuilderStore.decklist = newVal;
+});
 
 // Commander autocomplete
 const commanderSearchTerm = ref('');

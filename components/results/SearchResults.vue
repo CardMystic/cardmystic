@@ -38,7 +38,7 @@
                 <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
                   :is-searched="false" :hide-progress-bar="isKeywordSearch"
                   :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
-                  :score-scale="scoreScale" />
+                  :score-scale="scoreScale" :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
               </div>
             </div>
           </template>
@@ -52,7 +52,7 @@
             <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
               :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
               :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
-              :score-scale="scoreScale" />
+              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :score-scale="scoreScale" />
           </div>
         </div>
       </template>
@@ -108,6 +108,7 @@ const props = defineProps<{
   errorMessage?: string;
   isSimilaritySearch?: boolean;
   isKeywordSearch?: boolean;
+  showAddToDeckbuilderButton?: boolean;
   hideSearchedCard?: boolean;
   hideThumbsDownButton?: boolean;
   scoreScale?: 'normalized' | 'raw';
