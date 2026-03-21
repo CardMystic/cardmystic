@@ -251,11 +251,15 @@ async function handleAddCard(cardName: string) {
     selectedCardToAdd.value = ''
     addCardSearchTerm.value = ''
   } catch (error: any) {
+    const isDuplicate = error?.code === '23505' || error?.statusCode === 409
     toast.add({
-      title: 'Error adding card',
-      description: error.message,
-      color: 'error'
+      title: isDuplicate ? 'Card already in list' : 'Error adding card',
+      description: isDuplicate ? `${cardName} is already in this list.` : error.message,
+      color: isDuplicate ? 'warning' : 'error',
+      icon: isDuplicate ? 'i-lucide-copy-check' : undefined
     })
+    selectedCardToAdd.value = ''
+    addCardSearchTerm.value = ''
   } finally {
     addCardLoading.value = false
   }

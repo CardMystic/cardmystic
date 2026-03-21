@@ -10,9 +10,21 @@
     <!-- Cards display -->
     <template v-else-if="groups && groups.length > 0">
       <!-- Commander card(s) at the top (groups with empty label) -->
-      <template v-for="group in ungroupedGroups" :key="'ungrouped'">
-        <div class="flex flex-wrap justify-center gap-2 mb-4">
+      <template v-for="(group, index) in ungroupedGroups" :key="'ungrouped-' + index">
+        <!-- Commander cards: centered flex -->
+        <div v-if="group.cards.every(c => commanderCardIds?.includes(c.card_data.id))"
+          class="flex flex-wrap justify-center gap-2 mb-4">
           <div v-for="card in group.cards" :key="card.card_data.id" class="max-w-75">
+            <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
+              :commander-color-identity="commanderColorIdentity"
+              @remove="(cardId: string) => emit('removeCard', cardId)"
+              @set-commander="(cardName: string) => emit('setCommander', cardName)"
+              @clear-commander="(cardId: string) => emit('clearCommander', cardId)" />
+          </div>
+        </div>
+        <!-- Ungrouped cards: grid layout -->
+        <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+          <div v-for="card in group.cards" :key="card.card_data.id">
             <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
               :commander-color-identity="commanderColorIdentity"
               @remove="(cardId: string) => emit('removeCard', cardId)"

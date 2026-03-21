@@ -98,8 +98,8 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
   },
 
   'arena-ai': {
-    title: 'About MTG Arena Card Search',
-    heading: 'MTG Arena Card Search',
+    title: 'About MTG Arena AI Card Search',
+    heading: 'MTG Arena AI Card Search',
     paragraphs: [
       'Search for MTG Arena cards using natural language. CardMystic\'s AI-powered search helps you find Arena-legal cards by describing the mechanic, effect, or strategy you need.',
       'Results are filtered to cards available on MTG Arena, so every suggestion is ready for your next Arena deck. Perfect for Standard, Explorer, Historic, Brawl, and other Arena formats.',
@@ -129,8 +129,8 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
   },
 
   'mtgo-ai': {
-    title: 'About MTGO Card Search',
-    heading: 'MTGO Card Search',
+    title: 'About MTGO AI Card Search',
+    heading: 'MTGO AI Card Search',
     paragraphs: [
       'Search for Magic: The Gathering Online cards using natural language. CardMystic\'s AI search helps you find MTGO-legal cards by describing the effect, mechanic, or strategy you\'re looking for.',
       'Results are filtered to cards available on Magic: The Gathering Online, covering formats like Vintage, Legacy, Modern, Pauper, and more.',
@@ -180,8 +180,8 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
   },
 
   'modern-ai': {
-    title: 'About Modern Card Search',
-    heading: 'MTG Modern Card Search',
+    title: 'About Modern AI Card Search',
+    heading: 'MTG Modern AI Card Search',
     paragraphs: [
       'Search for Modern-legal Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards legal in Modern by describing the mechanic, effect, or strategy you need.',
       'Results are filtered to cards legal in the Modern format, so every suggestion is tournament-ready. Perfect for building competitive Modern decks or exploring new strategies.',
@@ -251,8 +251,8 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
   },
 
   'paper-ai': {
-    title: 'About Paper Card Search',
-    heading: 'Paper MTG Card Search',
+    title: 'About Paper AI Card Search',
+    heading: 'Paper MTG AI Card Search',
     paragraphs: [
       'Search for paper Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards available in paper by describing the mechanic, effect, or strategy you need.',
       'Results are filtered to cards printed in paper, so every suggestion is available for tabletop play. Perfect for Commander, Legacy, Modern, Pioneer, Standard, and casual kitchen-table formats.',
@@ -302,7 +302,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
   },
 
   'commander-ai': {
-    title: 'About Commander Card Search',
+    title: 'About Commander AI Card Search',
     heading: 'Commander MTG Card Search',
     paragraphs: [
       'Search for Commander-legal Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards legal in Commander by describing the mechanic, effect, or strategy you need.',
