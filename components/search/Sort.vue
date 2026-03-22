@@ -18,17 +18,24 @@ import { ref, watch, onMounted } from 'vue';
 const props = defineProps<{
   defaultSortBy?: string;
   defaultDirection?: 'asc' | 'desc';
+  hasAlsScore?: boolean;
+  hasAiScore?: boolean;
 }>();
 
-const sortOptions = [
-  { value: 'name', label: 'Name (A-Z)' },
-  { value: 'cmc', label: 'Mana Cost' },
-  { value: 'price', label: 'Price' },
-  { value: 'rarity', label: 'Rarity' },
-  { value: 'power', label: 'Power' },
-  { value: 'toughness', label: 'Toughness' },
-  { value: 'released', label: 'Release Date' },
-];
+const sortOptions = computed(() => {
+  const options = [
+    { value: 'name', label: 'Name (A-Z)' },
+    { value: 'cmc', label: 'Mana Cost' },
+    { value: 'price', label: 'Price' },
+    { value: 'rarity', label: 'Rarity' },
+    { value: 'power', label: 'Power' },
+    { value: 'toughness', label: 'Toughness' },
+    { value: 'released', label: 'Release Date' },
+  ];
+  if (props.hasAlsScore) options.unshift({ value: 'deck_score', label: 'Deck Score' });
+  if (props.hasAiScore) options.unshift({ value: 'ai_score', label: 'AI Score' });
+  return options;
+});
 
 const selectedSortValue = ref<string | undefined>(props.defaultSortBy);
 const sortDirection = ref<'asc' | 'desc'>(props.defaultDirection ?? 'asc');
@@ -43,8 +50,13 @@ const emit = defineEmits<{
   (e: 'sort', sortBy: string | undefined, direction: 'asc' | 'desc'): void;
 }>();
 
+const scoreOptions = ['ai_score', 'deck_score'];
+
 function updateSort() {
   if (selectedSortValue.value) {
+    if (scoreOptions.includes(selectedSortValue.value)) {
+      sortDirection.value = 'desc';
+    }
     emit('sort', selectedSortValue.value, sortDirection.value);
   }
 }

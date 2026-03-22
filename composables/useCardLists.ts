@@ -246,7 +246,6 @@ export const useCardLists = () => {
         return (cardsData || []).map((cardData: any) => ({
           card_name: cardData.name,
           card_data: cardData,
-          score: undefined,
         }));
       },
       enabled: computed(() => cardIds.value.length > 0),

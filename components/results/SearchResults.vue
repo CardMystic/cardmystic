@@ -12,14 +12,14 @@
     <template v-else-if="searchResults && searchResults.length">
       <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
         <GroupBy :default-value="defaultGroupBy" @update:groupBy="handleGroupBy" />
-        <SortComponent @sort="handleSort" />
+        <SortComponent :has-als-score="hasAlsScore" :has-ai-score="hasAiScore" @sort="handleSort" />
       </div>
 
       <!-- Searched card pinned at top when grouped (similarity search) -->
       <div v-if="searchedCard && groupedResults && groupedResults.length > 0 && groupedResults[0].label"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
         <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
-          :hide-progress-bar="false" :hide-thumbs-down-button="true" :score-scale="scoreScale" />
+          :hide-progress-bar="false" :hide-thumbs-down-button="true" />
       </div>
 
       <!-- Grouped results (accordion) -->
@@ -38,7 +38,7 @@
                 <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
                   :is-searched="false" :hide-progress-bar="isKeywordSearch"
                   :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
-                  :score-scale="scoreScale" :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
+                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
               </div>
             </div>
           </template>
@@ -52,7 +52,7 @@
             <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
               :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
               :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
-              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :score-scale="scoreScale" />
+              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
           </div>
         </div>
       </template>
@@ -111,7 +111,6 @@ const props = defineProps<{
   showAddToDeckbuilderButton?: boolean;
   hideSearchedCard?: boolean;
   hideThumbsDownButton?: boolean;
-  scoreScale?: 'normalized' | 'raw';
   defaultGroupBy?: string;
 }>();
 
@@ -130,6 +129,14 @@ function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
 function handleGroupBy(value: string | undefined) {
   groupBy.value = value;
 }
+
+// Detect which score types are available in the current results
+const hasAlsScore = computed(() =>
+  !!props.searchResults?.some(c => c.als_score !== undefined)
+);
+const hasAiScore = computed(() =>
+  !!props.searchResults?.some(c => c.ai_normalized_score !== undefined)
+);
 
 // Computed sorted results for flat display (no grouping, or similarity search)
 const sortedResults = computed(() => {

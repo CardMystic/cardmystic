@@ -227,5 +227,7 @@ export const CardSchema = z.object({
   card_name: z.string(),
   card_data: ScryfallCardSchema,
   rank: z.number().optional(),
-  score: z.number().optional(),
+  als_score: z.number().optional(),
+  ai_raw_score: z.number().optional(),
+  ai_normalized_score: z.number().optional(),
 });

@@ -33,17 +33,41 @@
         </UTooltip>
       </div>
 
-      <!-- Score Bar -->
-      <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full"
-        :class="{ invisible: isSearched }">
-        <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
-        <p class="text-xs">
-          {{ props.card.score !== undefined
-            ? props.isSimilaritySearch
-              ? `${Math.round(normalizedScore)}%`
-              : Math.round(normalizedScore) + '%'
-            : 'N/A' }}
-        </p>
+      <!-- Score Bars -->
+      <div v-if="!hideProgressBar" class="mt-1 w-full" :class="{ invisible: isSearched }">
+        <!-- Dual bars: ALS + AI -->
+        <template v-if="hasDualScores">
+          <UTooltip text="AI Score: how relevant this card is to your query">
+            <div class="flex flex-row items-center justify-center text-center w-full mt-0.5">
+              <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
+              <p class="text-xs whitespace-nowrap">AI: {{ Math.round(normalizedScore) }}%</p>
+            </div>
+          </UTooltip>
+          <UTooltip text="Synergy score: how relevant this card is to your decklist">
+            <div class="flex flex-row items-center justify-center text-center w-full">
+              <UProgress v-model="alsDisplayScore" class="my-0 mr-2" size="md" :color="alsScoreColor" />
+              <p class="text-xs whitespace-nowrap">Deck: {{ Math.round(alsDisplayScore) }}%</p>
+            </div>
+          </UTooltip>
+        </template>
+        <!-- Single bar -->
+        <template v-else-if="hasAnyScore">
+          <UTooltip
+            :text="isAlsOnly ? 'Synergy score: how relevant this card is to your decklist' : 'AI Score: how relevant this card is to your query'">
+            <div class="flex flex-row items-center justify-center text-center w-full">
+              <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
+              <p class="text-xs whitespace-nowrap">{{ isAlsOnly ? 'Deck' : 'AI' }}: {{ Math.round(normalizedScore) }}%
+              </p>
+            </div>
+          </UTooltip>
+        </template>
+        <!-- No score -->
+        <template v-else>
+          <div class="flex flex-row items-center justify-center text-center w-full">
+            <UProgress :model-value="0" class="my-0 mr-2" size="md" color="error" />
+            <p class="text-xs">N/A</p>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -163,20 +187,10 @@ const props = defineProps({
     type: String as PropType<'small' | 'large'>,
     default: 'large',
   },
-  // Optional normalization context - if provided, use this instead of search store
-  normalizationContext: {
-    type: Array as PropType<number[]>,
-    default: undefined,
-  },
   // If true, treat score as 0-1 range for similarity search
   isSimilaritySearch: {
     type: Boolean,
     default: false,
-  },
-  // Score scale: 'normalized' means 0-1 range (multiply by 100), 'raw' uses default normalization
-  scoreScale: {
-    type: String as PropType<'normalized' | 'raw'>,
-    default: 'raw',
   },
   // If true, show additional card info (name, type, clipboard button)
   showCardInfo: {
@@ -308,49 +322,46 @@ function getSimpleCardType(type_line: string): string {
   }
 }
 
-function normalizeScore(score: number | undefined): number {
-  if (score === undefined) {
-    return 0; // Default to 0 if score is undefined
-  }
+// Whether this card has both ALS and AI scores (dual bar mode)
+const hasDualScores = computed(() =>
+  props.card.als_score !== undefined && props.card.ai_normalized_score !== undefined
+);
 
-  // For similarity search or normalized scores, treat score as 0-1 range and convert to percentage
-  if (props.isSimilaritySearch || props.scoreScale === 'normalized') {
-    return Math.min(Math.max(score * 100, 0), 100);
-  }
+// Whether this card has only an ALS score (no AI)
+const isAlsOnly = computed(() =>
+  props.card.als_score !== undefined && props.card.ai_normalized_score === undefined
+);
 
-  // Use provided normalization context if available, otherwise fall back to search store
-  const allScores =
-    props.normalizationContext ||
-    [props.card.score || 0];
+// Whether any displayable score exists
+const hasAnyScore = computed(() =>
+  props.card.ai_normalized_score !== undefined ||
+  props.card.als_score !== undefined
+);
 
-  // If no context available, return score as-is (assume it's already normalized)
-  if (allScores.length === 0) {
-    return score;
-  }
+// Primary score: prefer ai_normalized_score, fall back to als_score
+const primaryScore = computed(() => {
+  if (props.card.ai_normalized_score !== undefined) return props.card.ai_normalized_score;
+  if (props.card.als_score !== undefined) return props.card.als_score;
+  return undefined;
+});
 
-  const highestScore = Math.max(...allScores);
-
-  // Default range is 30-5, but expand max if scores exceed 30
-  const maxScore = Math.max(30, highestScore);
-  const minScore = maxScore - 25; // Always 25 points below max
-
-  // Clamp the score to the calculated range
-  const clampedScore = Math.min(Math.max(score, minScore), maxScore);
-
-  // Convert to 0-100 percentage
-  const normalizedScore =
-    ((clampedScore - minScore) / (maxScore - minScore)) * 100;
-
-  return normalizedScore;
+function toDisplayPercent(score: number | undefined): number {
+  if (score === undefined) return 0;
+  // All scores are 0-1 normalized, convert to percentage
+  return Math.min(Math.max(score * 100, 0), 100);
 }
 
-const normalizedScore = computed(() => normalizeScore(props.card.score));
+const normalizedScore = computed(() => toDisplayPercent(primaryScore.value));
+const alsDisplayScore = computed(() => toDisplayPercent(props.card.als_score));
 
-const scoreColor = computed(() => {
-  if (normalizedScore.value >= 70) return 'success';
-  if (normalizedScore.value >= 40) return 'warning';
+function scoreToColor(value: number) {
+  if (value >= 70) return 'success';
+  if (value >= 40) return 'warning';
   return 'error';
-});
+}
+
+const scoreColor = computed(() => scoreToColor(normalizedScore.value));
+const alsScoreColor = computed(() => scoreToColor(alsDisplayScore.value));
 
 function findSimilarCards() {
   if (!props.card) return;

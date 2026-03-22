@@ -34,10 +34,14 @@ const colorOrder: Record<string, number> = {
   G: 5,
 };
 
+function getEffectiveScore(card: Card): number {
+  if (card.ai_normalized_score !== undefined) return card.ai_normalized_score;
+  if (card.als_score !== undefined) return card.als_score;
+  return 0;
+}
+
 function scoreTiebreaker(a: Card, b: Card): number {
-  const aScore = a.score ?? 0;
-  const bScore = b.score ?? 0;
-  return bScore - aScore; // higher score first
+  return getEffectiveScore(b) - getEffectiveScore(a); // higher score first
 }
 
 function compareWithTiebreaker(primary: number, a: Card, b: Card): number {
@@ -108,6 +112,20 @@ export function sortSearchResults(
       case 'released': {
         const aValue = new Date(a.card_data.released_at).getTime();
         const bValue = new Date(b.card_data.released_at).getTime();
+        primary = direction * (aValue - bValue);
+        return compareWithTiebreaker(primary, a, b);
+      }
+
+      case 'deck_score': {
+        const aValue = a.als_score ?? 0;
+        const bValue = b.als_score ?? 0;
+        primary = direction * (aValue - bValue);
+        return compareWithTiebreaker(primary, a, b);
+      }
+
+      case 'ai_score': {
+        const aValue = a.ai_normalized_score ?? 0;
+        const bValue = b.ai_normalized_score ?? 0;
         primary = direction * (aValue - bValue);
         return compareWithTiebreaker(primary, a, b);
       }

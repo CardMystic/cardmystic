@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -298,7 +298,7 @@
               <ClientOnly>
                 <SearchResults :is-loading="isRecommendedCardsEffectivelyLoading"
                   :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
-                  :hide-thumbs-down-button="true" default-group-by="type" score-scale="normalized" />
+                  :hide-thumbs-down-button="true" default-group-by="type" />
                 <template #fallback>
                   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <CardSkeleton v-for="i in 8" :key="`skeleton-rec-${i}`" :showCardInfo="true" />
@@ -311,7 +311,7 @@
               <ClientOnly>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-                  default-group-by="type" score-scale="normalized" :is-similarity-search="true" hide-searched-card />
+                  default-group-by="type" :is-similarity-search="true" hide-searched-card />
                 <template #fallback>
                   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <CardSkeleton v-for="i in 8" :key="`skeleton-sim-${i}`" :showCardInfo="true" />
@@ -331,7 +331,7 @@
           <ClientOnly>
             <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
               :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-              default-group-by="type" score-scale="normalized" :is-similarity-search="true" hide-searched-card />
+              default-group-by="type" :is-similarity-search="true" hide-searched-card />
             <template #fallback>
               <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
