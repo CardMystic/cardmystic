@@ -1,6 +1,6 @@
 <template>
   <UCard variant="subtle"
-    :class="['card-root', isSearched ? 'searched-card-bg' : '', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
+    :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
     :ui="{ body: 'p-2 sm:p-4' }">
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
@@ -13,15 +13,36 @@
     </UModal>
     <div class="card-image-wrapper">
       <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
-      <!-- Card content: image + score -->
-      <img :class="sizeClass" :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
-        @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)" loading="lazy" decoding="async"
-        :ui="{}" @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
-      <div v-else class="image-placeholder">
-        <p class="placeholder-text">{{ card.card_data.name }}</p>
-      </div>
 
-      <ClipboardButton v-if="showCardInfo" :card="card" />
+      <!-- Partner commanders: two overlapping cards -->
+      <template v-if="hasPartner">
+        <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
+          <div class="partner-card partner-back" :class="{ 'partner-front': partnerFrontIndex === 1 }"
+            @mouseenter="partnerHoveredIndex = 1" @click="navigateToCard(card.partner_card_data!.id)">
+            <img class="card-large cursor-pointer" :src="getCardImageUrl(card.partner_card_data!)"
+              :alt="card.partner_card_data!.name" @error="handleImageError"
+              v-if="getCardImageUrl(card.partner_card_data!)" loading="lazy" decoding="async" />
+          </div>
+          <div class="partner-card" :class="{ 'partner-front': partnerFrontIndex === 0 }"
+            @mouseenter="partnerHoveredIndex = 0" @click="navigateToCard(card.card_data.id)">
+            <img class="card-large cursor-pointer" :src="getCardImageUrl(card.card_data, isFlipped)"
+              :alt="card.card_data.name" @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)"
+              loading="lazy" decoding="async" />
+          </div>
+        </div>
+      </template>
+
+      <!-- Single card (default) -->
+      <template v-else>
+        <img :class="sizeClass" :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
+          @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)" loading="lazy" decoding="async"
+          :ui="{}" @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
+        <div v-else class="image-placeholder">
+          <p class="placeholder-text">{{ card.card_data.name }}</p>
+        </div>
+      </template>
+
+      <ClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
 
       <!-- Flip Button for Dual-Faced Cards -->
       <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
@@ -35,7 +56,7 @@
 
       <!-- Score Bars -->
       <div v-if="!hideProgressBar" class="mt-1 w-full" :class="{ invisible: isSearched }">
-        <!-- Dual bars: ALS + AI -->
+        <!-- AI score bar (when AI scores present) -->
         <template v-if="hasDualScores">
           <UTooltip text="AI Score: how relevant this card is to your query">
             <div class="flex flex-row items-center justify-center text-center w-full mt-0.5">
@@ -50,7 +71,7 @@
             </div>
           </UTooltip>
         </template>
-        <!-- Single bar -->
+        <!-- Single AI/ALS bar -->
         <template v-else-if="hasAnyScore">
           <UTooltip
             :text="isAlsOnly ? 'Synergy score: how relevant this card is to your decklist' : 'AI Score: how relevant this card is to your query'">
@@ -61,11 +82,21 @@
             </div>
           </UTooltip>
         </template>
-        <!-- No score -->
-        <template v-else>
+        <!-- Popularity bar -->
+        <template v-if="hasPopularity">
+          <UTooltip :text="`In ${popularityPercent.toFixed(2)}% of decks that match your filters`">
+            <div class="flex flex-row items-center justify-center text-center w-full"
+              :class="{ 'mt-0.5': hasAnyScore }">
+              <UProgress v-model="popularityPercent" class="my-0 mr-2" size="md" :color="popularityColor" />
+              <p class="text-xs whitespace-nowrap">{{ popularityDisplay }}% POP</p>
+            </div>
+          </UTooltip>
+        </template>
+        <!-- No score at all -->
+        <template v-if="!hasAnyScore && !hasPopularity">
           <div class="flex flex-row items-center justify-center text-center w-full">
             <UProgress :model-value="0" class="my-0 mr-2" size="md" color="error" />
-            <p class="text-xs">N/A</p>
+            <p class="text-xs"></p>
           </div>
         </template>
       </div>
@@ -74,21 +105,44 @@
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
 
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-        <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-          {{ card.card_data.name.split(' // ')[0] }}
-        </p>
-        <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
-          class="manacost-text whitespace-nowrap" />
-      </div>
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
-        <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-          <span
-            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
-            {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
-          </span>
-        </p>
-      </div>
+      <!-- Partner: show both names and combined type line -->
+      <template v-if="hasPartner && showCardInfo">
+        <div v-for="scryfallCard in [card.card_data, card.partner_card_data!]" :key="scryfallCard.id"
+          class="flex flex-row items-center justify-between w-full">
+          <p class="whitespace-nowrap overflow-hidden truncate">
+            {{ scryfallCard.name?.split(' // ')[0] }}
+          </p>
+          <ManaCost v-if="scryfallCard.mana_cost" :manaCost="scryfallCard.mana_cost.split(' // ')[0]"
+            class="manacost-text whitespace-nowrap" />
+        </div>
+        <div class="flex flex-row items-center justify-between w-full text-xs">
+          <p class="whitespace-nowrap overflow-hidden truncate">
+            <span style="color: #ff4500;">
+              {{ getSimpleCardType(card.card_data.type_line) }} &amp; {{
+                getSimpleCardType(card.partner_card_data!.type_line) }}
+            </span>
+          </p>
+        </div>
+      </template>
+
+      <!-- Single card: original layout -->
+      <template v-else>
+        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
+          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
+            {{ card.card_data.name.split(' // ')[0] }}
+          </p>
+          <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
+            class="manacost-text whitespace-nowrap" />
+        </div>
+        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
+          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
+            <span
+              :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
+              {{ getSimpleCardType(card.card_data.type_line) ?? "" }}
+            </span>
+          </p>
+        </div>
+      </template>
 
       <!-- Action Buttons -->
       <div class="flex flex-row items-center justify-between text-center w-full">
@@ -96,9 +150,17 @@
         <!-- Left side buttons-->
         <div class="flex flex-row items-center">
           <!-- Buy on TCGPlayer button -->
-          <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
+          <UTooltip :text="hasPartner ? combinedPriceTooltip : 'Buy on TCGPlayer'" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton v-if="showCardInfo && card.card_data.tcgplayer_id"
+              <!-- Partner: combined price button -->
+              <UButton v-if="hasPartner && showCardInfo && partnerTcgplayerId"
+                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class="mt-1 mr-2"
+                icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
+                aria-label="Buy on TCGPlayer">
+                {{ combinedPriceLabel }}
+              </UButton>
+              <!-- Single card: original price button -->
+              <UButton v-else-if="!hasPartner && showCardInfo && card.card_data.tcgplayer_id"
                 :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
                 class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
                 aria-label="Buy on TCGPlayer">
@@ -225,6 +287,48 @@ const emit = defineEmits<{
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
+
+// Partner commander support
+const hasPartner = computed(() => !!props.card.partner_card_data);
+const partnerHoveredIndex = ref<number | null>(null);
+const partnerFrontIndex = computed(() => partnerHoveredIndex.value ?? 0);
+
+const combinedUsdPrice = computed(() => {
+  if (!hasPartner.value) return null;
+  let total = 0;
+  let hasPrice = false;
+  for (const card of [props.card.card_data, props.card.partner_card_data!]) {
+    const usd = parseFloat(card.prices?.usd ?? '');
+    if (!isNaN(usd)) {
+      total += usd;
+      hasPrice = true;
+    }
+  }
+  return hasPrice ? total : null;
+});
+
+const combinedPriceLabel = computed(() => {
+  if (combinedUsdPrice.value !== null) return `$${combinedUsdPrice.value.toFixed(2)}`;
+  return 'Buy';
+});
+
+const combinedPriceTooltip = computed(() => {
+  if (!hasPartner.value) return 'Buy on TCGPlayer';
+  const cards = [props.card.card_data, props.card.partner_card_data!];
+  const parts = cards
+    .map((c) => {
+      const price = c.prices?.usd ? `$${c.prices.usd}` : '?';
+      return `${c.name?.split(' // ')[0]}: ${price}`;
+    })
+    .join(' + ');
+  return `Buy on TCGPlayer (${parts})`;
+});
+
+const partnerTcgplayerId = computed(() => {
+  if (props.card.card_data.tcgplayer_id) return props.card.card_data.tcgplayer_id;
+  if (props.card.partner_card_data?.tcgplayer_id) return props.card.partner_card_data.tcgplayer_id;
+  return null;
+});
 
 const deckbuilderStore = useDeckbuilder();
 
@@ -358,6 +462,17 @@ function scoreToColor(value: number) {
 const scoreColor = computed(() => scoreToColor(normalizedScore.value));
 const alsScoreColor = computed(() => scoreToColor(alsDisplayScore.value));
 
+const hasPopularity = computed(() => props.card.popularity !== undefined);
+const popularityPercent = computed(() => {
+  if (props.card.popularity === undefined) return 0;
+  return Math.min(Math.max(props.card.popularity * 100, 0), 100);
+});
+const popularityDisplay = computed(() => {
+  if (popularityPercent.value < 1) return popularityPercent.value.toFixed(2);
+  return Math.round(popularityPercent.value).toString();
+});
+const popularityColor = computed(() => scoreToColor(popularityPercent.value));
+
 function findSimilarCards() {
   if (!props.card) return;
 
@@ -406,6 +521,7 @@ function toggleShowAllData() {
   position: relative;
   width: 100%;
   height: 100%;
+  container-type: inline-size;
 }
 
 /* Small Size Variant */
@@ -523,5 +639,49 @@ function toggleShowAllData() {
 
 .flip-card-icon {
   font-size: 1.2rem;
+}
+
+/* Partner commander stack — 24px shorter than a normal card to leave room for extra text */
+.partner-stack {
+  position: relative;
+  width: 100%;
+  height: calc(100cqw * 7 / 5 - 24px);
+}
+
+.partner-card {
+  position: absolute;
+  width: 72%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.partner-card.partner-back {
+  top: 0;
+}
+
+.partner-card:not(.partner-back) {
+  bottom: 0;
+}
+
+.partner-card.partner-front {
+  z-index: 1;
+}
+
+.partner-card:not(.partner-front) {
+  z-index: 0;
+}
+
+.partner-stack .card-large {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Partner images scale individually on hover */
+.partner-card img {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.partner-card:hover img {
+  transform: scale(1.05);
+  z-index: 2;
 }
 </style>
