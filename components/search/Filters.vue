@@ -89,8 +89,9 @@
           </UButton>
         </div>
 
-        <!-- Clear All Button -->
-        <UButton color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
+        <!-- Clear All Button (when colors are managed externally via hideColors, only show if non-color filters exist) -->
+        <UButton v-if="hideColors ? hasNonColorFilters : hasActiveFilters" color="error" size="sm"
+          class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
           Clear Filters
         </UButton>
       </div>
@@ -338,6 +339,25 @@ const hasActiveFilters = computed(() => {
     filters.selectedPower ||
     filters.selectedToughness ||
     (filters.selectedColorFilterOption && filters.selectedColorFilterOption !== 'Contains At Least') ||
+    (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
+    filters.isMTGO ||
+    filters.isArena ||
+    filters.isPaper ||
+    filters.isGameChanger
+  );
+});
+
+// Whether non-color filters are active (used to decide if "Clear Filters" button shows)
+const hasNonColorFilters = computed(() => {
+  const filters = modelValue;
+  if (!filters) return false;
+
+  return !!(
+    (filters.selectedCardTypes && filters.selectedCardTypes.length > 0) ||
+    (filters.selectedRarities && filters.selectedRarities.length > 0) ||
+    filters.selectedCMC ||
+    filters.selectedPower ||
+    filters.selectedToughness ||
     (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
     filters.isMTGO ||
     filters.isArena ||

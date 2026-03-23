@@ -12,6 +12,11 @@
         <UIcon name="i-mdi-crown" class="icon" size="18" />
         Popular Commanders
       </button>
+      <button type="button" :class="['search-tab-button-new', { active: statsType === 'popular-by-commander' }]"
+        @click="switchType('popular-by-commander')">
+        <UIcon name="i-lucide-crown" class="icon" size="18" />
+        Cards by Commander
+      </button>
     </div>
 
     <!-- Mobile dropdown -->
@@ -25,6 +30,7 @@
     <div class="search-input-row">
       <PopularCardsSearch v-if="statsType === 'popular-cards'" :platform="platform" />
       <PopularCommandersSearch v-else-if="statsType === 'popular-commanders'" :platform="platform" />
+      <PopularByCommanderSearch v-else-if="statsType === 'popular-by-commander'" />
     </div>
   </div>
 </template>
@@ -33,8 +39,9 @@
 import type { SelectItem } from '@nuxt/ui'
 import PopularCardsSearch from './PopularCardsSearch.vue';
 import PopularCommandersSearch from './PopularCommandersSearch.vue';
+import PopularByCommanderSearch from './PopularByCommanderSearch.vue';
 
-export type StatsType = 'popular-cards' | 'popular-commanders';
+export type StatsType = 'popular-cards' | 'popular-commanders' | 'popular-by-commander';
 
 const props = defineProps<{
   defaultStatsType?: StatsType;
@@ -47,7 +54,9 @@ const router = useRouter();
 const statsType = ref<StatsType>(props.defaultStatsType || 'popular-cards');
 
 const statsIcon = computed(() => {
-  return statsType.value === 'popular-cards' ? 'i-lucide-flame' : 'i-mdi-crown';
+  if (statsType.value === 'popular-cards') return 'i-lucide-flame';
+  if (statsType.value === 'popular-by-commander') return 'i-lucide-crown';
+  return 'i-mdi-crown';
 });
 
 const items = ref<SelectItem[]>([
@@ -60,6 +69,11 @@ const items = ref<SelectItem[]>([
     label: 'Popular Commanders',
     value: 'popular-commanders',
     icon: 'i-mdi-crown'
+  },
+  {
+    label: 'Cards by Commander',
+    value: 'popular-by-commander',
+    icon: 'i-lucide-crown'
   },
 ])
 

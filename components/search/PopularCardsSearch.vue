@@ -2,8 +2,9 @@
   <UForm :schema="schema" :state="state" class="grow space-y-4" @submit="onSubmit">
     <UFormField name="query" class="mb-2">
       <div class="flex gap-2">
-        <UInput ref="input" v-model="state.query" placeholder="Optionally re-rank by relevance..."
-          icon="i-lucide-search" class="flex-1" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
+        <UInput ref="input" v-model="state.query"
+          placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for all popular cards."
+          icon="i-lucide-flame" class="flex-1" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
           <template v-if="state.query?.length" #trailing>
             <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
               @click="state.query = ''" />
@@ -12,8 +13,8 @@
             <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>
-        <UButton type="submit" class="cursor-pointer h-10" icon="i-lucide-trophy">
-          Rank
+        <UButton type="submit" class="cursor-pointer h-10" icon="i-lucide-flame">
+          Search
         </UButton>
       </div>
     </UFormField>

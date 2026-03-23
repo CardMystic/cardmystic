@@ -77,12 +77,16 @@
 
         <!-- Action Buttons + TCGPlayer - Desktop only -->
         <div class="mt-2 hidden lg:flex flex-row gap-2 w-full max-w-75 items-center">
-          <UTooltip text="Find similar cards">
-            <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-              class="cursor-pointer" />
-          </UTooltip>
           <UTooltip v-if="isCommander" text="Get deck recommendations">
             <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
+              class="cursor-pointer" />
+          </UTooltip>
+          <UTooltip v-if="isCommander" text="Popular cards in this commander's decks">
+            <UButton color="neutral" variant="solid" icon="i-lucide-crown" size="lg" @click="viewPopularCards"
+              class="cursor-pointer" />
+          </UTooltip>
+          <UTooltip text="Find similar cards">
+            <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
               class="cursor-pointer" />
           </UTooltip>
           <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
@@ -204,6 +208,10 @@
             <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
               class="cursor-pointer" />
           </UTooltip>
+          <UTooltip v-if="isCommander" text="Popular cards in this commander's decks">
+            <UButton color="neutral" variant="solid" icon="i-lucide-crown" size="lg" @click="viewPopularCards"
+              class="cursor-pointer" />
+          </UTooltip>
           <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
             :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
             class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
@@ -295,6 +303,10 @@
                   Recommend
                 </UButton>
               </div>
+              <div class="flex justify-end mb-2">
+                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                  @click="getRecommendations">Go To Full Search Page</a>
+              </div>
               <ClientOnly>
                 <SearchResults :is-loading="isRecommendedCardsEffectivelyLoading"
                   :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
@@ -307,7 +319,28 @@
               </ClientOnly>
             </template>
 
+            <template #popular>
+              <div class="flex justify-end mt-2 mb-2">
+                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="viewPopularCards">Go
+                  To Full Search Page</a>
+              </div>
+              <ClientOnly>
+                <SearchResults :is-loading="isPopularCardsEffectivelyLoading"
+                  :search-results="popularCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
+                  :hide-thumbs-down-button="true" default-group-by="type" />
+                <template #fallback>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <CardSkeleton v-for="i in 8" :key="`skeleton-pop-${i}`" :showCardInfo="true" />
+                  </div>
+                </template>
+              </ClientOnly>
+            </template>
+
             <template #similar>
+              <div class="flex justify-end mt-2 mb-2">
+                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="findSimilarCards">Go
+                  To Full Search Page</a>
+              </div>
               <ClientOnly>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
@@ -324,9 +357,14 @@
 
         <!-- Non-commander: Similar Cards only -->
         <UCard v-else-if="card" class="similar-cards-section w-full">
-          <div class="flex items-center mb-2 px-4 lg:px-0">
-            <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
-            <h3 class="text-xl font-semibold">Similar Cards</h3>
+          <div class="flex items-center justify-between mb-2 px-4 lg:px-0">
+            <div class="flex items-center">
+              <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
+              <h3 class="text-xl font-semibold">Similar Cards</h3>
+            </div>
+            <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="findSimilarCards">Go To
+              Full
+              Search Page</a>
           </div>
           <ClientOnly>
             <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
@@ -676,6 +714,11 @@ function getRecommendations() {
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
 }
 
+function viewPopularCards() {
+  if (!card.value?.name) return;
+  router.push({ path: '/popular-by-commander/all', query: { commander: card.value.name } });
+}
+
 // Use the similar cards composable
 const cardName = computed(() => card.value?.name);
 const { similarCards, isSimilarCardsLoading } = useSimilarCards(cardIdParam, cardName);
@@ -701,6 +744,7 @@ const isCommander = computed(() => {
 
 const cardTabs = [
   { key: 'recommended', label: 'Deck Recommendations', icon: 'i-lucide-box', slot: 'recommended' },
+  { key: 'popular', label: 'Popular Cards', icon: 'i-lucide-flame', slot: 'popular' },
   { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
 ];
 
@@ -725,6 +769,21 @@ const { searchResults: recommendedCards, isLoading: isRecommendedLoading } = use
 
 const isRecommendedCardsEffectivelyLoading = computed(() => {
   return isRecommendedLoading.value || (!recommendedCards.value && isCommander.value);
+});
+
+// Popular cards for this commander
+const popularByCommanderRequest = computed(() => {
+  if (!isCommander.value || !card.value?.name) return undefined;
+  return {
+    commanders: [card.value.name],
+    limit: 40,
+  };
+});
+
+const { searchResults: popularCards, isLoading: isPopularCardsLoading } = usePopularByCommander(popularByCommanderRequest);
+
+const isPopularCardsEffectivelyLoading = computed(() => {
+  return isPopularCardsLoading.value || (!popularCards.value && isCommander.value);
 });
 
 </script>

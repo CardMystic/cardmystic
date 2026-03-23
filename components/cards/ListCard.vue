@@ -74,7 +74,7 @@
         <p class="whitespace-nowrap overflow-hidden truncate">
           <span
             :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
-            {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
+            {{ getSimpleCardType(card.card_data.type_line) ?? "" }}
           </span>
         </p>
       </div>

@@ -8,7 +8,7 @@
       <div class="flex gap-2 w-full">
         <div ref="autocompleteContainer" class="flex-1 relative">
           <UInput ref="input" v-model="state.query" @input="handleInput" @focus="showDropdown = true"
-            @keydown="handleKeydown" placeholder="Search cards by keywords…" icon="i-lucide-search"
+            @keydown="handleKeydown" placeholder="Search cards by keywords…" icon="i-lucide-whole-word"
             :ui="{ trailing: 'pe-1', base: 'text-base h-10' }" class="w-full" />
           <div v-if="showDropdown && searchTerm.length >= 2 && filteredSuggestions.length > 0"
             class="text-left absolute top-full left-0 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 max-h-64 overflow-y-auto">
@@ -19,8 +19,9 @@
             </div>
           </div>
         </div>
-        <UButton :disabled="state.query?.length == 0" type="submit" class="h-10 cursor-pointer">
-          Submit
+        <UButton icon="i-lucide-whole-word" :disabled="state.query?.length == 0" type="submit"
+          class="h-10 cursor-pointer">
+          Search
         </UButton>
       </div>
     </UFormField>

@@ -87,6 +87,12 @@ const exploreItems: NavigationMenuItem[] = [
         description: 'Top commanders across all decks',
         icon: 'i-mdi-crown',
         to: '/popular-commanders/all',
+      },
+      {
+        label: 'Popular Cards By Commander',
+        description: 'Most popular cards for each commander',
+        icon: 'i-lucide-chart-candlestick',
+        to: '/popular-by-commander/all',
       }
     ]
   },
@@ -147,6 +153,12 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Top commanders across all decks',
     icon: 'i-mdi-crown',
     to: '/popular-commanders/all',
+  },
+  {
+    label: 'Cards by Commander',
+    description: 'Popular cards for a commander',
+    icon: 'i-lucide-crown',
+    to: '/popular-by-commander/all',
   },
   {
     label: 'About',
@@ -272,12 +284,12 @@ const externalItems: NavigationMenuItem[] = [
 
       <!-- Desktop Navigation -->
       <UNavigationMenu :items="searchItems" :ui="{
-        viewport: 'w-auto min-w-48 max-w-sm',
+        viewport: 'w-auto min-w-60 max-w-sm',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
         content: 'w-auto'
       }" />
       <UNavigationMenu :items="exploreItems" :ui="{
-        viewport: 'w-auto min-w-48 max-w-sm',
+        viewport: 'w-auto min-w-60',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
         content: 'w-auto'
       }" />

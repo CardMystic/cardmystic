@@ -16,8 +16,8 @@
             <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>
-        <UButton :disabled="state.query?.length == 0" type="submit" class="cursor-pointer h-10">
-          Submit
+        <UButton icon="i-lucide-search" :disabled="state.query?.length == 0" type="submit" class="cursor-pointer h-10">
+          Search
         </UButton>
       </div>
     </UFormField>

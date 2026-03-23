@@ -35,8 +35,7 @@
           <template v-for="group in groupedResults" :key="group.label" #[group.label]>
             <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pb-4">
               <div v-for="(result, index) in group.cards" :key="result.card_data.id">
-                <Card :card="result" :showCardInfo="true"
-                  :is-searched="false" :hide-progress-bar="hideProgressBar"
+                <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                   :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
               </div>
@@ -49,9 +48,8 @@
       <template v-else>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
-            <Card :card="result" :showCardInfo="true"
-              :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="hideProgressBar"
-              :hide-thumbs-down-button="hideThumbsDownButton"
+            <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
+              :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
               :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
           </div>
         </div>
