@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend'
+export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend' | 'popular-cards' | 'popular-commanders'
   | 'arena-ai' | 'arena-similarity' | 'arena-recommend' | 'arena-commander' | 'arena-keyword'
   | 'mtgo-ai' | 'mtgo-similarity' | 'mtgo-recommend' | 'mtgo-commander' | 'mtgo-keyword'
   | 'modern-ai' | 'modern-similarity' | 'modern-recommend' | 'modern-commander' | 'modern-keyword'
@@ -94,6 +94,28 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
       'Our recommendation model compares your deck to similar decks in our database to suggest cards that strengthen your deck and fill missing roles like card draw, ramp, or removal.',
       'Describe what you\'re looking for , such as "card draw", "artifact removal", or "token synergy" to receive targeted card recommendations tailored to your strategy.',
       'Note: The recommendation model is trained on Commander decks. Other formats coming soon!',
+    ],
+  },
+
+  'popular-cards': {
+    title: 'About Popular Cards',
+    heading: 'Popular MTG Cards',
+    paragraphs: [
+      'Discover the most popular Magic: The Gathering cards across all decks. CardMystic analyzes thousands of decklists to surface the most played cards in the game.',
+      'Use the optional search bar to re-rank results by semantic relevance — describe what you\'re looking for and the ranking will adjust to highlight the most relevant popular cards.',
+      'Apply filters like color identity, card type, mana value, rarity, and format legality to narrow results and find popular cards that fit your deckbuilding needs.',
+      'Perfect for discovering format staples, finding the most popular cards in Commander, Modern, Standard, and other formats!',
+    ],
+  },
+
+  'popular-commanders': {
+    title: 'About Popular Commanders',
+    heading: 'Popular MTG Commanders',
+    paragraphs: [
+      'Discover the most popular commanders across all EDH decks. CardMystic analyzes thousands of Commander decklists to surface the most played commanders in the format.',
+      'Use the optional search bar to re-rank results by semantic relevance — describe a strategy or theme and the ranking will adjust to highlight the most relevant popular commanders.',
+      'Apply filters like color identity, card type, mana value, and rarity to narrow results and find the perfect commander for your next EDH deck.',
+      'Whether you\'re looking for the top commanders overall or commanders that match a specific playstyle, this tool helps you find the most played leaders in Commander!',
     ],
   },
 

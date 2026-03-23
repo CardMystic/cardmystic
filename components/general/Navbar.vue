@@ -27,7 +27,7 @@ function closePopover() {
   isOpen.value = false
 }
 
-const mainItems: NavigationMenuItem[] = [
+const searchItems: NavigationMenuItem[] = [
   {
     label: 'Home',
     icon: 'i-lucide-home',
@@ -69,6 +69,30 @@ const mainItems: NavigationMenuItem[] = [
       }
     ]
   },
+]
+
+const exploreItems: NavigationMenuItem[] = [
+  {
+    label: 'Explore',
+    icon: 'i-lucide-compass',
+    children: [
+      {
+        label: 'Popular Cards',
+        description: 'Top cards across all decks',
+        icon: 'i-lucide-flame',
+        to: '/popular-cards/all',
+      },
+      {
+        label: 'Popular Commanders',
+        description: 'Top commanders across all decks',
+        icon: 'i-mdi-crown',
+        to: '/popular-commanders/all',
+      }
+    ]
+  },
+]
+
+const trailingItems: NavigationMenuItem[] = [
   {
     label: 'About',
     icon: 'i-lucide-info',
@@ -111,6 +135,18 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Get decklist recommendations',
     icon: 'i-lucide-box',
     to: '/search/all/deckbuilder',
+  },
+  {
+    label: 'Popular Cards',
+    description: 'Top cards across all decks',
+    icon: 'i-lucide-flame',
+    to: '/popular-cards/all',
+  },
+  {
+    label: 'Popular Commanders',
+    description: 'Top commanders across all decks',
+    icon: 'i-mdi-crown',
+    to: '/popular-commanders/all',
   },
   {
     label: 'About',
@@ -235,11 +271,17 @@ const externalItems: NavigationMenuItem[] = [
       </NuxtLink>
 
       <!-- Desktop Navigation -->
-      <UNavigationMenu :items="[...mainItems, ...externalItems]" :ui="{
+      <UNavigationMenu :items="searchItems" :ui="{
         viewport: 'w-auto min-w-48 max-w-sm',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
         content: 'w-auto'
       }" />
+      <UNavigationMenu :items="exploreItems" :ui="{
+        viewport: 'w-auto min-w-48 max-w-sm',
+        childList: 'w-auto flex flex-col items-start p-2 gap-2',
+        content: 'w-auto'
+      }" />
+      <UNavigationMenu :items="[...trailingItems, ...externalItems]" />
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu class="ml-4 h-12.5" />
 
