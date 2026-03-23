@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Page Background Image (blurred, behind all content) -->
     <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
-      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20 blur-sm"
         :style="{ backgroundImage: `url(${bannerImageUrl})` }"></div>
     </div>
 
@@ -16,9 +16,9 @@
             <UButton icon="i-lucide-copy" color="primary" variant="outline" @click="copyCardNames"
               :disabled="!cards || cards.length === 0" class="cursor-pointer" label="Copy" />
           </UTooltip>
-          <UTooltip text="Bulk add cards">
-            <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkAddModalOpen = true"
-              class="cursor-pointer" label="Bulk Add" />
+          <UTooltip text="Bulk edit cards">
+            <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkEditModalOpen = true"
+              class="cursor-pointer" label="Bulk Edit" />
           </UTooltip>
           <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
             :label="`Buy ($${totalPrice.toFixed(2)})`" @click="openMassEntry" :disabled="!cards || cards.length === 0"
@@ -63,8 +63,8 @@
     </ClientOnly>
   </div>
 
-  <!-- Bulk Add Modal -->
-  <BulkAddCardsModal v-model:open="isBulkAddModalOpen" :list-id="listId" />
+  <!-- Bulk Edit Modal -->
+  <BulkAddCardsModal v-model:open="isBulkEditModalOpen" :list-id="listId" :current-card-names="currentCardNames" />
 
   <BackToTop />
 
@@ -265,8 +265,11 @@ async function handleAddCard(cardName: string) {
   }
 }
 
-// Bulk add state
-const isBulkAddModalOpen = ref(false)
+// Bulk edit state
+const isBulkEditModalOpen = ref(false)
+const currentCardNames = computed(() =>
+  cards.value?.map((card: any) => card.card_data.name).filter(Boolean) || []
+)
 
 // Recommend state
 const recommendDescription = ref('')

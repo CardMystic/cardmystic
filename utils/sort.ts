@@ -17,12 +17,12 @@ const rarityOrder: RarityOrder = {
 };
 
 const typeOrder: Record<string, number> = {
-  creature: 1,
-  sorcery: 2,
-  instant: 3,
-  artifact: 4,
-  enchantment: 5,
-  planeswalker: 6,
+  creature: 2,
+  sorcery: 3,
+  instant: 4,
+  artifact: 5,
+  enchantment: 6,
+  planeswalker: 1,
   land: 7,
 };
 
