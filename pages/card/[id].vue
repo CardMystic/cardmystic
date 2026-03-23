@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -82,7 +82,7 @@
               class="cursor-pointer" />
           </UTooltip>
           <UTooltip v-if="isCommander" text="Popular cards in this commander's decks">
-            <UButton color="neutral" variant="solid" icon="i-lucide-crown" size="lg" @click="viewPopularCards"
+            <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
               class="cursor-pointer" />
           </UTooltip>
           <UTooltip text="Find similar cards">
@@ -209,7 +209,7 @@
               class="cursor-pointer" />
           </UTooltip>
           <UTooltip v-if="isCommander" text="Popular cards in this commander's decks">
-            <UButton color="neutral" variant="solid" icon="i-lucide-crown" size="lg" @click="viewPopularCards"
+            <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
               class="cursor-pointer" />
           </UTooltip>
           <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"

@@ -79,7 +79,7 @@ const exploreItems: NavigationMenuItem[] = [
       {
         label: 'Popular Cards',
         description: 'Top cards across all decks',
-        icon: 'i-lucide-flame',
+        icon: 'i-lucide-chart-no-axes-combined',
         to: '/popular-cards/all',
       },
       {
@@ -91,7 +91,7 @@ const exploreItems: NavigationMenuItem[] = [
       {
         label: 'Popular Cards By Commander',
         description: 'Most popular cards for each commander',
-        icon: 'i-lucide-chart-candlestick',
+        icon: 'i-lucide-flame',
         to: '/popular-by-commander/all',
       }
     ]
@@ -145,7 +145,7 @@ const mainItemsMobile: NavigationMenuItem[] = [
   {
     label: 'Popular Cards',
     description: 'Top cards across all decks',
-    icon: 'i-lucide-flame',
+    icon: 'i-lucide-chart-no-axes-combined',
     to: '/popular-cards/all',
   },
   {

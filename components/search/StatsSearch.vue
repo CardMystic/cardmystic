@@ -4,7 +4,7 @@
     <div class="flex gap-3 max-md:hidden mb-4 justify-center">
       <button type="button" :class="['search-tab-button-new', { active: statsType === 'popular-cards' }]"
         @click="switchType('popular-cards')">
-        <UIcon name="i-lucide-flame" class="icon" size="18" />
+        <UIcon name="i-lucide-chart-no-axes-combined" class="icon" size="18" />
         Popular Cards
       </button>
       <button type="button" :class="['search-tab-button-new', { active: statsType === 'popular-commanders' }]"
@@ -54,7 +54,7 @@ const router = useRouter();
 const statsType = ref<StatsType>(props.defaultStatsType || 'popular-cards');
 
 const statsIcon = computed(() => {
-  if (statsType.value === 'popular-cards') return 'i-lucide-flame';
+  if (statsType.value === 'popular-cards') return 'i-lucide-chart-no-axes-combined';
   if (statsType.value === 'popular-by-commander') return 'i-lucide-crown';
   return 'i-mdi-crown';
 });
@@ -63,7 +63,7 @@ const items = ref<SelectItem[]>([
   {
     label: 'Popular Cards',
     value: 'popular-cards',
-    icon: 'i-lucide-flame'
+    icon: 'i-lucide-chart-no-axes-combined'
   },
   {
     label: 'Popular Commanders',

@@ -14,7 +14,7 @@
     <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
       <div class="flex gap-2 items-center">
         <USelectMenu v-model="state.partnerCommander" v-model:search-term="partnerSearchTerm" :items="filteredPartners"
-          placeholder="Select a partner commander (optional)..." icon="i-lucide-chart-candlestick" class="flex-1"
+          placeholder="Select a partner commander (optional)..." icon="i-lucide-flame" class="flex-1"
           :ui="{ base: 'text-base h-10' }" />
         <UButton v-if="state.partnerCommander" class="cursor-pointer" color="neutral" variant="link" size="sm"
           icon="i-lucide-circle-x" aria-label="Clear partner commander" @click="state.partnerCommander = ''" />
@@ -32,8 +32,7 @@
               @click="state.query = ''" />
           </template>
         </UInput>
-        <UButton type="submit" class="cursor-pointer h-10" icon="i-lucide-chart-candlestick"
-          :disabled="!state.commander">
+        <UButton type="submit" class="cursor-pointer h-10" icon="i-lucide-flame" :disabled="!state.commander">
           Search
         </UButton>
       </div>
