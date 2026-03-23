@@ -9,7 +9,7 @@
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam || 'top'"
           :skeleton-count="skeletonCount" :error-message="searchError?.message"
-          :help-text="`Showing the most popular ${platformName} cards across all decks.`" :hide-progress-bar="true"
+          :help-text="`Showing the most popular ${platformName} cards across all decks.`"
           :hide-thumbs-down-button="true" />
       </div>
     </div>
@@ -60,7 +60,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Popular Cards' });
 
-const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : 200);
+const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -90,6 +90,6 @@ const topCardsSearch = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || 200);
+const skeletonCount = computed(() => limitParam.value || 100);
 const { searchResults, isLoading, error: searchError } = useTopCardsSearch(topCardsSearch);
 </script>
