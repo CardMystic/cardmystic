@@ -284,12 +284,12 @@ const externalItems: NavigationMenuItem[] = [
 
       <!-- Desktop Navigation -->
       <UNavigationMenu :items="searchItems" :ui="{
-        viewport: 'w-auto min-w-60 max-w-sm',
+        viewport: 'w-auto min-w-65 max-w-sm',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
         content: 'w-auto'
       }" />
       <UNavigationMenu :items="exploreItems" :ui="{
-        viewport: 'w-auto min-w-60',
+        viewport: 'w-auto min-w-65',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
         content: 'w-auto'
       }" />
