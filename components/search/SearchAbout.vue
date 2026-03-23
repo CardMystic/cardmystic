@@ -101,8 +101,8 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     title: 'About Popular Cards',
     heading: 'Popular MTG Cards',
     paragraphs: [
-      'Discover the most popular Magic: The Gathering cards across all decks. CardMystic analyzes thousands of decklists to surface the most played cards in the game.',
-      'Use the optional search bar to re-rank results by semantic relevance — describe what you\'re looking for and the ranking will adjust to highlight the most relevant popular cards.',
+      'Discover the most popular Magic: The Gathering cards across all decks.',
+      'Use the optional search bar to re-rank results by semantic relevance: describe what you\'re looking for and the ranking will adjust to highlight the most relevant popular cards.',
       'Apply filters like color identity, card type, mana value, rarity, and format legality to narrow results and find popular cards that fit your deckbuilding needs.',
       'Perfect for discovering format staples, finding the most popular cards in Commander, Modern, Standard, and other formats!',
     ],
@@ -112,8 +112,8 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     title: 'About Popular Commanders',
     heading: 'Popular MTG Commanders',
     paragraphs: [
-      'Discover the most popular commanders across all EDH decks. CardMystic analyzes thousands of Commander decklists to surface the most played commanders in the format.',
-      'Use the optional search bar to re-rank results by semantic relevance — describe a strategy or theme and the ranking will adjust to highlight the most relevant popular commanders.',
+      'Discover the most popular commanders across all EDH decks.',
+      'Use the optional search bar to re-rank results by semantic relevance: describe a strategy or theme and the ranking will adjust to highlight the most relevant popular commanders.',
       'Apply filters like color identity, card type, mana value, and rarity to narrow results and find the perfect commander for your next EDH deck.',
       'Whether you\'re looking for the top commanders overall or commanders that match a specific playstyle, this tool helps you find the most played leaders in Commander!',
     ],

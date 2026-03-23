@@ -17,7 +17,7 @@
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
           :skeleton-count="skeletonCount" :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading ${platformName} keyword results...` : `Try describing what the card does or listing mechanics or types.`"
-          :is-keyword-search="true" />
+          :hide-thumbs-down-button="true" :hide-progress-bar="true" />
       </div>
     </div>
   </UContainer>

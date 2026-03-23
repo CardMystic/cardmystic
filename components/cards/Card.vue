@@ -187,11 +187,6 @@ const props = defineProps({
     type: String as PropType<'small' | 'large'>,
     default: 'large',
   },
-  // If true, treat score as 0-1 range for similarity search
-  isSimilaritySearch: {
-    type: Boolean,
-    default: false,
-  },
   // If true, show additional card info (name, type, clipboard button)
   showCardInfo: {
     type: Boolean,
