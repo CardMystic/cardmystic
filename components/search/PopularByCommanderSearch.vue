@@ -38,6 +38,8 @@
       </div>
     </UFormField>
 
+    <QuickFilters v-model="state.filters" :show="['arena', 'mtgo', 'paper']" />
+
     <Filters v-if="!showFilters" ref="filtersRef" v-model="state.filters" hide-colors hide-formats hide-controls />
 
     <div v-if="!showFilters" class="flex justify-center">

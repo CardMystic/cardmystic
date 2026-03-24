@@ -41,11 +41,71 @@ function getEffectiveScore(card: Card): number {
 }
 
 function scoreTiebreaker(a: Card, b: Card): number {
-  return getEffectiveScore(b) - getEffectiveScore(a); // higher score first
+  const primary = getEffectiveScore(b) - getEffectiveScore(a); // higher score first
+  if (primary !== 0) return primary;
+  // Break effective-score ties: prefer higher popularity, then ALS
+  if (a.popularity !== undefined && b.popularity !== undefined) {
+    const diff = (b.popularity ?? 0) - (a.popularity ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return (b.als_score ?? 0) - (a.als_score ?? 0);
 }
 
-function compareWithTiebreaker(primary: number, a: Card, b: Card): number {
-  return primary !== 0 ? primary : scoreTiebreaker(a, b);
+/**
+ * Sort-aware tiebreaker: when the primary sort field ties, use a related
+ * secondary score (e.g. popularity for AI score ties) before falling back
+ * to the generic effective-score tiebreaker.
+ */
+function sortAwareTiebreaker(
+  a: Card,
+  b: Card,
+  sortBy: string | null | undefined,
+): number {
+  switch (sortBy) {
+    case 'ai_score': {
+      // Tie on AI score → prefer higher popularity, then ALS
+      if (a.popularity !== undefined && b.popularity !== undefined) {
+        const diff = (b.popularity ?? 0) - (a.popularity ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return (b.als_score ?? 0) - (a.als_score ?? 0);
+    }
+    case 'popularity': {
+      // Tie on popularity → prefer higher AI score, then ALS
+      if (
+        a.ai_normalized_score !== undefined &&
+        b.ai_normalized_score !== undefined
+      ) {
+        const diff =
+          (b.ai_normalized_score ?? 0) - (a.ai_normalized_score ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return (b.als_score ?? 0) - (a.als_score ?? 0);
+    }
+    case 'deck_score': {
+      // Tie on deck/ALS score → prefer higher AI score, then popularity
+      if (
+        a.ai_normalized_score !== undefined &&
+        b.ai_normalized_score !== undefined
+      ) {
+        const diff =
+          (b.ai_normalized_score ?? 0) - (a.ai_normalized_score ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return (b.popularity ?? 0) - (a.popularity ?? 0);
+    }
+    default:
+      return scoreTiebreaker(a, b);
+  }
+}
+
+function compareWithTiebreaker(
+  primary: number,
+  a: Card,
+  b: Card,
+  sortBy?: string | null,
+): number {
+  return primary !== 0 ? primary : sortAwareTiebreaker(a, b, sortBy);
 }
 
 export function sortSearchResults(
@@ -53,11 +113,17 @@ export function sortSearchResults(
   sortBy: string | null | undefined,
   sortDirection: 'asc' | 'desc',
 ): Array<Card> | null | undefined {
-  if (!searchResults || !sortBy) {
+  if (!searchResults) {
     return searchResults;
   }
 
   const results = [...searchResults];
+
+  if (!sortBy) {
+    // No explicit sort — use default score-based ordering
+    return results.sort(scoreTiebreaker);
+  }
+
   const direction = sortDirection === 'asc' ? 1 : -1;
 
   return results.sort((a, b) => {
@@ -120,21 +186,21 @@ export function sortSearchResults(
         const aValue = a.als_score ?? 0;
         const bValue = b.als_score ?? 0;
         primary = direction * (aValue - bValue);
-        return compareWithTiebreaker(primary, a, b);
+        return compareWithTiebreaker(primary, a, b, sortBy);
       }
 
       case 'ai_score': {
         const aValue = a.ai_normalized_score ?? 0;
         const bValue = b.ai_normalized_score ?? 0;
         primary = direction * (aValue - bValue);
-        return compareWithTiebreaker(primary, a, b);
+        return compareWithTiebreaker(primary, a, b, sortBy);
       }
 
       case 'popularity': {
         const aValue = a.popularity ?? 0;
         const bValue = b.popularity ?? 0;
         primary = direction * (aValue - bValue);
-        return compareWithTiebreaker(primary, a, b);
+        return compareWithTiebreaker(primary, a, b, sortBy);
       }
 
       default:

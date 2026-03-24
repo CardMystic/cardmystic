@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -744,7 +744,7 @@ const isCommander = computed(() => {
 
 const cardTabs = [
   { key: 'recommended', label: 'Deck Recommendations', icon: 'i-lucide-box', slot: 'recommended' },
-  { key: 'popular', label: 'Popular Cards', icon: 'i-lucide-flame', slot: 'popular' },
+  { key: 'popular', label: 'Popular Commander Cards', icon: 'i-lucide-flame', slot: 'popular' },
   { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
 ];
 

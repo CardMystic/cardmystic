@@ -5,7 +5,7 @@
       <button type="button" :class="['search-tab-button-new', { active: statsType === 'popular-cards' }]"
         @click="switchType('popular-cards')">
         <UIcon name="i-lucide-chart-no-axes-combined" class="icon" size="18" />
-        Popular Cards
+        Popular Commander Cards
       </button>
       <button type="button" :class="['search-tab-button-new', { active: statsType === 'popular-commanders' }]"
         @click="switchType('popular-commanders')">
@@ -62,7 +62,7 @@ const statsIcon = computed(() => {
 
 const items = ref<SelectItem[]>([
   {
-    label: 'Popular Cards',
+    label: 'Popular Commander Cards',
     value: 'popular-cards',
     icon: 'i-lucide-chart-no-axes-combined'
   },

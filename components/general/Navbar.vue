@@ -39,7 +39,7 @@ const searchItems: NavigationMenuItem[] = [
     children: [
       {
         label: 'AI Search',
-        description: 'Search for cards using AI',
+        description: 'Find cards by describing them using AI',
         icon: 'i-lucide-brain',
         to: '/search/all/ai',
       },
@@ -51,7 +51,7 @@ const searchItems: NavigationMenuItem[] = [
       },
       {
         label: 'Commander Search',
-        description: 'Search for commanders using AI',
+        description: 'Find commanders by describing them using AI',
         icon: 'i-mdi-crown',
         to: '/search/all/commander',
       },
@@ -77,8 +77,8 @@ const exploreItems: NavigationMenuItem[] = [
     icon: 'i-lucide-compass',
     children: [
       {
-        label: 'Popular Cards',
-        description: 'Top cards across all decks',
+        label: 'Popular Commander Cards',
+        description: 'Top cards across all commander decks',
         icon: 'i-lucide-chart-no-axes-combined',
         to: '/popular-cards/all',
       },
@@ -143,8 +143,8 @@ const mainItemsMobile: NavigationMenuItem[] = [
     to: '/search/all/deckbuilder',
   },
   {
-    label: 'Popular Cards',
-    description: 'Top cards across all decks',
+    label: 'Popular Commander Cards',
+    description: 'Top cards across all commander decks',
     icon: 'i-lucide-chart-no-axes-combined',
     to: '/popular-cards/all',
   },
@@ -286,7 +286,7 @@ const externalItems: NavigationMenuItem[] = [
       <UNavigationMenu :items="searchItems" :ui="{
         viewport: 'w-auto min-w-65 max-w-sm',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
-        content: 'w-auto'
+        content: 'w-auto',
       }" />
       <UNavigationMenu :items="exploreItems" :ui="{
         viewport: 'w-auto min-w-65',

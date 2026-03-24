@@ -42,23 +42,23 @@ const queryParam = computed(() => String(route.query?.query || ''));
 useSeoMeta({
   robots: () => queryParam.value ? 'noindex, follow' : 'index, follow',
   title: () => queryParam.value
-    ? `${queryParam.value} - ${platformName} Popular Cards | CardMystic`
-    : `${platformName} Popular Cards | CardMystic`,
+    ? `${queryParam.value} - ${platformName} Popular Commander Cards | CardMystic`
+    : `${platformName} Popular Commander Cards | CardMystic`,
   description: () => queryParam.value
     ? `Top ${platformName} cards re-ranked by "${queryParam.value}".`
     : `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   ogType: 'website',
-  ogTitle: () => `${platformName} Popular Cards | CardMystic`,
+  ogTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
   ogDescription: () => `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   ogImage: 'https://cardmystic.io/cardmystic_cards.png',
-  ogImageAlt: () => `${platformName} Popular Cards`,
+  ogImageAlt: () => `${platformName} Popular Commander Cards`,
   twitterCard: 'summary_large_image',
-  twitterTitle: () => `${platformName} Popular Cards | CardMystic`,
+  twitterTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
   twitterDescription: () => `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
 });
 
-definePageMeta({ title: 'Popular Cards' });
+definePageMeta({ title: 'Popular Commander Cards' });
 
 const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : 100);
 const platformFilters = getPlatformFilters(platform);
@@ -72,7 +72,7 @@ const parsedFilters = computed(() => {
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
-  page_name: `${platformName} Popular Cards`,
+  page_name: `${platformName} Popular Commander Cards`,
   query: queryParam.value,
   filters: parsedFilters.value,
   labels: [platform, 'popular cards'],
