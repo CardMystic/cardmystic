@@ -130,6 +130,13 @@ export function sortSearchResults(
         return compareWithTiebreaker(primary, a, b);
       }
 
+      case 'popularity': {
+        const aValue = a.popularity ?? 0;
+        const bValue = b.popularity ?? 0;
+        primary = direction * (aValue - bValue);
+        return compareWithTiebreaker(primary, a, b);
+      }
+
       default:
         return 0;
     }

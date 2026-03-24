@@ -3,11 +3,13 @@
     <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
       <StatsSearch default-stats-type="popular-by-commander" class="mt-6 w-full" />
 
+      <SearchAbout type="popular-by-commander" />
+
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="commanderParam || ''"
           :skeleton-count="skeletonCount" :error-message="searchError?.message" :help-text="helpText"
-          :hide-thumbs-down-button="true" />
+          :hide-thumbs-down-button="true" default-group-by="type" />
       </div>
     </div>
   </UContainer>
