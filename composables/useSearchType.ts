@@ -1,7 +1,15 @@
 import { ref } from 'vue';
 import type { LocationQuery } from 'vue-router';
 
-type SearchType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend';
+type SearchType =
+  | 'ai'
+  | 'similarity'
+  | 'commander'
+  | 'keyword'
+  | 'recommend'
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander';
 
 const searchType = ref<SearchType>('ai');
 
@@ -11,6 +19,9 @@ const storageKeys: Record<SearchType, string> = {
   commander: 'commander_search_query',
   keyword: 'keyword_search_query',
   recommend: 'recommend_search_query',
+  'popular-cards': 'popular_cards_search_query',
+  'popular-commanders': 'popular_commanders_search_query',
+  'popular-by-commander': 'popular_by_commander_search_query',
 };
 
 /** Map search type to its sub-path segment under /search/[platform]/... */
@@ -20,6 +31,9 @@ const searchTypeSegments: Record<SearchType, string> = {
   commander: 'commander',
   keyword: 'keyword',
   recommend: 'deckbuilder',
+  'popular-cards': 'popular-cards',
+  'popular-commanders': 'popular-commanders',
+  'popular-by-commander': 'popular-by-commander',
 };
 
 const requiredFields: Record<SearchType, string[]> = {
@@ -28,6 +42,9 @@ const requiredFields: Record<SearchType, string[]> = {
   commander: ['query'],
   keyword: ['query'],
   recommend: ['decklist', 'commander'],
+  'popular-cards': ['query', 'filters'],
+  'popular-commanders': ['query', 'filters'],
+  'popular-by-commander': ['commander'],
 };
 
 /** Build the path for a given search type and platform. */

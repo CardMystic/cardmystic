@@ -137,6 +137,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     };
 
     filtersRef.value?.collapse();
+    const { saveSearchQuery } = useSearchType();
+    saveSearchQuery('popular-commanders', query);
     const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
     router.push({ path: `/popular-commanders/${targetPlatform}`, query });
   } catch (error) {

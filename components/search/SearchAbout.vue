@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend' | 'popular-cards' | 'popular-commanders'
+export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend' | 'popular-cards' | 'popular-commanders' | 'popular-by-commander'
   | 'arena-ai' | 'arena-similarity' | 'arena-recommend' | 'arena-commander' | 'arena-keyword'
   | 'mtgo-ai' | 'mtgo-similarity' | 'mtgo-recommend' | 'mtgo-commander' | 'mtgo-keyword'
   | 'modern-ai' | 'modern-similarity' | 'modern-recommend' | 'modern-commander' | 'modern-keyword'
@@ -116,6 +116,17 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
       'Use the optional search bar to re-rank results by semantic relevance: describe a strategy or theme and the ranking will adjust to highlight the most relevant popular commanders.',
       'Apply filters like color identity, card type, mana value, and rarity to narrow results and find the perfect commander for your next EDH deck.',
       'Whether you\'re looking for the top commanders overall or commanders that match a specific playstyle, this tool helps you find the most played leaders in Commander!',
+    ],
+  },
+
+  'popular-by-commander': {
+    title: 'About Popular Cards by Commander',
+    heading: 'Popular Cards by Commander',
+    paragraphs: [
+      'Discover the most popular cards for any commander.',
+      'Select a commander to see which cards appear most often in their decks. If the commander has a partner, you can optionally select a partner to refine the results further.',
+      'Use the optional search bar to re-rank results by semantic relevance: describe what you\'re looking for (e.g. "ramp", "removal", "card draw") and the ranking will adjust accordingly.',
+      'Apply filters like card type, mana value, and rarity to narrow results and find the best cards for your commander deck!',
     ],
   },
 

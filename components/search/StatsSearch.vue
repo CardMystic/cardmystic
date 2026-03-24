@@ -50,6 +50,7 @@ const props = defineProps<{
 
 const route = useRoute();
 const router = useRouter();
+const { restoreSearchQuery } = useSearchType();
 
 const statsType = ref<StatsType>(props.defaultStatsType || 'popular-cards');
 
@@ -84,11 +85,26 @@ const currentPlatform = computed(() => {
 
 function switchType(type: StatsType) {
   statsType.value = type;
+  const saved = restoreSearchQuery(type);
   const targetPath = `/${type}/${currentPlatform.value}`;
   if (route.path !== targetPath) {
-    router.push({ path: targetPath });
+    router.push({ path: targetPath, query: saved ?? undefined });
   }
 }
+
+// Restore query when arriving via navbar (no active query params)
+onMounted(() => {
+  const type = statsType.value;
+  const hasQuery =
+    (type === 'popular-by-commander' && route.query.commander) ||
+    (type !== 'popular-by-commander' && (route.query.query || route.query.filters));
+  if (!hasQuery) {
+    const saved = restoreSearchQuery(type);
+    if (saved) {
+      router.replace({ path: route.path, query: saved });
+    }
+  }
+});
 </script>
 
 <style scoped>

@@ -206,6 +206,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     };
 
     filtersRef.value?.collapse();
+    const { saveSearchQuery } = useSearchType();
+    saveSearchQuery('popular-by-commander', query);
     router.push({ path: '/popular-by-commander/all', query });
   } catch (error) {
     console.error('Form submission error:', error)

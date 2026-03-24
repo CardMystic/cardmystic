@@ -135,6 +135,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     };
 
     filtersRef.value?.collapse();
+    const { saveSearchQuery } = useSearchType();
+    saveSearchQuery('popular-cards', query);
     const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
     router.push({ path: `/popular-cards/${targetPlatform}`, query });
   } catch (error) {

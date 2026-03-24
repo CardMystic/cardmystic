@@ -12,7 +12,8 @@
     <template v-else-if="searchResults && searchResults.length">
       <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
         <GroupBy :default-value="defaultGroupBy" @update:groupBy="handleGroupBy" />
-        <SortComponent :has-als-score="hasAlsScore" :has-ai-score="hasAiScore" @sort="handleSort" />
+        <SortComponent :has-als-score="hasAlsScore" :has-ai-score="hasAiScore" :has-popularity="hasPopularity"
+          @sort="handleSort" />
       </div>
 
       <!-- Searched card pinned at top when grouped (similarity search) -->
@@ -134,6 +135,9 @@ const hasAlsScore = computed(() =>
 );
 const hasAiScore = computed(() =>
   !!props.searchResults?.some(c => c.ai_normalized_score !== undefined)
+);
+const hasPopularity = computed(() =>
+  !!props.searchResults?.some(c => c.popularity !== undefined && c.popularity > 0)
 );
 
 // Computed sorted results for flat display (no grouping, or similarity search)
