@@ -89,7 +89,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'AI Search' });
 
-const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : undefined);
+const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : undefined; });
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {

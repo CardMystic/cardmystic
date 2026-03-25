@@ -88,7 +88,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Keyword Search' });
 
-const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : 40);
+const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : 40; });
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
