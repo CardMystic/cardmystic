@@ -152,6 +152,18 @@ export const useUserProfile = () => {
     }
   };
 
+  const recordOAuthSignup = async (accessToken: string) => {
+    try {
+      await fetch(`${config.public.backendUrl}/user/signup/record`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      // Non-critical — silently ignore
+      console.log('issue recording OAuth signup');
+    }
+  };
+
   const updateEmailMutation = useMutation({
     mutationFn: async (newEmail: string) => {
       if (!supabase) throw new Error('Not available on server');
@@ -212,27 +224,26 @@ export const useUserProfile = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // After an OAuth redirect, Supabase may have already processed the
+      // URL tokens before the listener is registered, so the first event
+      // is INITIAL_SESSION rather than SIGNED_IN.  Check both for the
+      // pending OAuth signup flag.
+      if (
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') &&
+        session &&
+        sessionStorage.getItem('pendingOAuthSignup')
+      ) {
+        sessionStorage.removeItem('pendingOAuthSignup');
+        const accessToken = session.access_token;
+        if (accessToken) {
+          recordOAuthSignup(accessToken);
+        }
+      }
+
       // Refetch queries when auth state changes
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         // Skip if we're in a recovery flow — the user should stay "logged out" in the UI
         if (inPasswordRecovery) return;
-
-        // Track OAuth signup metrics when returning from a Google sign-up redirect
-        if (
-          event === 'SIGNED_IN' &&
-          localStorage.getItem('oauth_signup_pending')
-        ) {
-          localStorage.removeItem('oauth_signup_pending');
-          const accessToken = session?.access_token;
-          if (accessToken) {
-            fetch(`${config.public.backendUrl}/signup/record`, {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${accessToken}` },
-            }).catch(() => {
-              /* non-critical */
-            });
-          }
-        }
 
         // Invalidate instead of refetch to ensure fresh data
         queryClient.invalidateQueries({ queryKey: ['user'] });

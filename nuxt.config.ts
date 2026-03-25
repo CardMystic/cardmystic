@@ -69,6 +69,7 @@ export default defineNuxtConfig({
   fonts: {
     families: [{ name: 'Alfa Slab One', provider: 'google' }],
   },
+  hooks: {},
   routeRules: {
     '/': {
       prerender: true,
@@ -89,7 +90,9 @@ export default defineNuxtConfig({
     },
     ssr: {},
     plugins: [
-      ...(process.env.NODE_ENV === 'development' ? [devtoolsJson() as any] : []),
+      ...(process.env.NODE_ENV === 'development'
+        ? [devtoolsJson() as any]
+        : []),
     ],
     css: {
       preprocessorOptions: {

@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <div class="flex gap-4 max-md:hidden mb-4 justify-center">
+    <div class="flex gap-3 max-md:hidden mb-4 justify-center">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
         <UIcon name="i-lucide-search" class="icon" size="18" />
@@ -22,31 +22,44 @@
         <UIcon name="i-lucide-whole-word" class="icon" size="18" />
         Keyword Search
       </button>
+      <button type="button" :class="['search-tab-button-new', { active: searchType === 'recommend' }]"
+        @click="setSearchType('recommend')" class="relative">
+        <span
+          class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold whitespace-nowrap bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full px-1.5 py-0.5 border border-gray-200 dark:border-gray-600"><span
+            class="animate-rainbow">NEW</span> (Beta)</span>
+        <UIcon name="i-lucide-box" class="icon" size="18" />
+        Deck Recommender
+      </button>
     </div>
 
     <!-- Mobile dropdown -->
     <div class="mb-2 md:hidden flex flex-col justify-center items-center">
       <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
-      <USelect label="select" class="w-[200px]" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
+      <USelect label="select" class="w-50" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
         variant="outline"
-        @update:modelValue="(val) => setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword')"
+        @update:modelValue="(val) => { if (typeof val === 'string') setSearchType(val as 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend') }"
         :items="items" />
     </div>
 
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
       <!-- Regular search input -->
-      <AISearch v-if="searchType === 'ai'" />
+      <AISearch v-if="searchType === 'ai'" :platform="platform" />
 
       <!-- Select Menu for similarity search -->
-      <SimilaritySearch v-else-if="searchType === 'similarity'" />
+      <SimilaritySearch v-else-if="searchType === 'similarity'" :platform="platform" />
 
       <!-- Commander Search -->
-      <CommanderSearch v-else-if="searchType === 'commander'" />
+      <CommanderSearch v-else-if="searchType === 'commander'" :platform="platform" />
 
       <!-- Keyword Search -->
       <KeywordSearch v-else-if="searchType === 'keyword'" />
+
+      <!-- Deck Recommender -->
+      <ALSSearch v-else-if="searchType === 'recommend'" :platform="platform" />
     </div>
+
+    <SearchAbout v-show="showAbout" :type="searchType" :use-h1="false" />
   </div>
 </template>
 
@@ -59,10 +72,15 @@ import AISearch from './AISearch.vue';
 import SimilaritySearch from './SimilaritySearch.vue';
 import CommanderSearch from './CommanderSearch.vue';
 import KeywordSearch from './KeywordSearch.vue';
+import ALSSearch from './ALSSearch.vue';
+import { detectPlatformFromFilters, type Platform } from '~/utils/platformConfig';
 
 // Define props
 const props = defineProps<{
   similarity?: boolean;
+  showAbout?: boolean;
+  defaultSearchType?: 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend';
+  platform?: 'arena' | 'mtgo' | 'paper';
 }>();
 
 
@@ -70,17 +88,29 @@ const route = useRoute();
 const router = useRouter();
 
 // Initialize search type based on props or route
-const { searchType, setSearchType } = useSearchType();
+const { searchType, setSearchType, getPath, getPlatformFromPath, restoreSearchQuery } = useSearchType();
+
+// Derive the current platform from the route (e.g. /search/arena/ai → 'arena')
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 // Set initial search type
-if (props.similarity) {
+if (props.defaultSearchType) {
+  setSearchType(props.defaultSearchType);
+} else if (props.similarity) {
   setSearchType('similarity');
-} else if (route.path === '/search/commander') {
+} else if (route.path.includes('/commander')) {
   setSearchType('commander');
-} else if (route.path === '/search') {
-  setSearchType('ai');
-} else if (route.path === '/search/keyword') {
+} else if (route.path.includes('/keyword')) {
   setSearchType('keyword');
+} else if (route.path.includes('/deckbuilder')) {
+  setSearchType('recommend');
+} else if (route.path.includes('/similarity')) {
+  setSearchType('similarity');
+} else if (route.path.includes('/ai') || route.path === '/') {
+  setSearchType('ai');
 }
 
 // Compute icon based on search type
@@ -89,7 +119,8 @@ const searchIcon = computed(() => {
     ai: 'i-lucide-search',
     similarity: 'i-mdi-cards-outline',
     commander: 'i-mdi-crown',
-    keyword: 'i-lucide-whole-word'
+    keyword: 'i-lucide-whole-word',
+    recommend: 'i-lucide-box'
   };
   return iconMap[searchType.value] || 'i-lucide-search';
 });
@@ -115,85 +146,52 @@ const items = ref<SelectItem[]>([
     label: 'Keyword Search',
     value: 'keyword',
     icon: 'i-lucide-whole-word'
+  },
+  {
+    label: 'Deck Recommender',
+    value: 'recommend',
+    icon: 'i-lucide-box'
   }
 ])
 
-// Watch for search type changes
-watch(searchType, async (newType) => {
-  // Save the entire query object to sessionStorage
-  if (process.server) return;
-  if (route.query.searchType == 'ai') {
-    sessionStorage.setItem('ai_search_query', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'commander') {
-    sessionStorage.setItem('commander_search_query', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'similarity') {
-    sessionStorage.setItem('similarity_search_card_name', JSON.stringify(route.query));
-  }
-  if (route.query.searchType == 'keyword') {
-    sessionStorage.setItem('keyword_search_query', JSON.stringify(route.query));
-  }
+// On mount, restore previous query from sessionStorage if the page has no active query params.
+// This handles navigating via the Navbar dropdown, where the route changes but searchType may not.
+onMounted(() => {
+  // Don't restore searches on the home page or SEO slug pages
+  if (route.path === '/' || !route.path.startsWith('/search')) return;
 
-  // Navigate to the appropriate route based on the selected search type, and reload saved session query if available
-  if (newType === 'similarity' && route.path !== '/search/similarity' && route.path !== '/') {
-    let query: any = undefined;
-    if (route.query.card_name) {
-      query = { ...route.query };
-    } else {
-      const stored = sessionStorage.getItem('similarity_search_card_name');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.card_name) query = parsed;
-        } catch { }
-      }
-    }
-    router.push({ path: '/search/similarity', query });
-  } else if (newType === 'ai' && route.path !== '/search' && route.path !== '/') {
-    let query: any = undefined;
-    if (route.query.query && route.query.searchType === 'ai') {
-      query = { ...route.query };
-    } else {
-      const stored = sessionStorage.getItem('ai_search_query');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.query) query = parsed;
-        } catch { }
-      }
-    }
-    router.push({ path: '/search', query });
+  const restored = restoreSearchQuery(searchType.value);
+  if (!restored) return;
+
+  // Only restore if the current route has no meaningful query
+  const type = searchType.value;
+  const hasQuery =
+    (type === 'ai' && route.query.query) ||
+    (type === 'similarity' && route.query.card_name) ||
+    (type === 'commander' && route.query.query) ||
+    (type === 'keyword' && route.query.query) ||
+    (type === 'recommend' && (route.query.decklist || route.query.commander));
+
+  if (!hasQuery) {
+    const restoredFilters = restored.filters ? JSON.parse(String(restored.filters)) : undefined;
+    const targetPlatform = detectPlatformFromFilters(restoredFilters, currentPlatform.value as Platform);
+    router.replace({ path: getPath(type, targetPlatform), query: restored });
   }
-  else if (newType === 'commander' && route.path !== '/search/commander' && route.path !== '/') {
-    let query: any = undefined;
-    if (route.query.query && route.query.searchType === 'commander') {
-      query = { ...route.query };
-    } else {
-      const stored = sessionStorage.getItem('commander_search_query');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.query) query = parsed;
-        } catch { }
-      }
-    }
-    router.push({ path: '/search/commander', query });
-  }
-  else if (newType === 'keyword' && route.path !== '/search/keyword' && route.path !== '/') {
-    let query: any = undefined;
-    if (route.query.query && route.query.searchType === 'keyword') {
-      query = { ...route.query };
-    } else {
-      const stored = sessionStorage.getItem('keyword_search_query');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.query) query = parsed;
-        } catch { }
-      }
-    }
-    router.push({ path: '/search/keyword', query });
+});
+
+// Watch for search type changes
+watch(searchType, (newType) => {
+  if (process.server) return;
+
+  // Navigate to the new search type's path.
+  // Only preserve the current platform if the saved filters explicitly contain a platform flag;
+  // otherwise default to 'all' (no filters means the search wasn't platform-specific).
+  const savedQuery = restoreSearchQuery(newType);
+  const savedFilters = savedQuery?.filters ? JSON.parse(String(savedQuery.filters)) : undefined;
+  const targetPlatform = detectPlatformFromFilters(savedFilters);
+  const targetPath = getPath(newType, targetPlatform);
+  if (route.path !== targetPath && route.path !== '/') {
+    router.push({ path: targetPath, query: savedQuery });
   }
 });
 
@@ -302,5 +300,31 @@ watch(searchType, async (newType) => {
   .search-container {
     padding: 0 0px;
   }
+}
+
+@keyframes rainbow {
+  0% {
+    color: #dc2626;
+  }
+
+  25% {
+    color: #ea580c;
+  }
+
+  50% {
+    color: #16a34a;
+  }
+
+  75% {
+    color: #2563eb;
+  }
+
+  100% {
+    color: #dc2626;
+  }
+}
+
+.animate-rainbow {
+  animation: rainbow 3s ease-in-out infinite;
 }
 </style>

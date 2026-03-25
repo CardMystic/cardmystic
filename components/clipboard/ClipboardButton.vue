@@ -1,10 +1,12 @@
 <template>
   <div class="searched-plus-btn" :class="{ 'clipboard-added': isInClipboard }" v-if="resolvedCardData">
-    <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
-      :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
-      @click.stop="handleClipboardClick">
-      <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
-    </UButton>
+    <UTooltip :text="isInClipboard ? 'Added to clipboard' : 'Add to clipboard'">
+      <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
+        :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="lg" square
+        @click.stop="handleClipboardClick">
+        <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="searched-plus-icon" />
+      </UButton>
+    </UTooltip>
   </div>
 </template>
 
@@ -94,6 +96,21 @@ function handleClipboardClick() {
   .searched-plus-btn,
   .searched-plus-btn.clipboard-added {
     opacity: 0.7 !important;
+  }
+
+  .searched-plus-btn {
+    right: 28px;
+    top: 38px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+  }
+
+  .searched-plus-icon {
+    font-size: 1.1rem;
   }
 }
 

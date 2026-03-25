@@ -22,7 +22,7 @@
       <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results.cards" :ui="{
         item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
       }">
-        <Card :card="item" :normalization-context="allScores" size="small" />
+        <Card :card="item" size="small" />
       </UCarousel>
     </div>
   </div>
@@ -36,8 +36,6 @@ const router = useRouter();
 
 const { results, isLoading, refetch } = useExampleQueries();
 
-// Computed property to get all scores for normalization context
-const allScores = computed(() => results.value?.cards.map((r) => r.score || 0) || []);
 
 // Call refetch() to manually trigger the query again
 function loadRandomExample() {

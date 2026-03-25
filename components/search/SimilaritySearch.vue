@@ -1,32 +1,47 @@
 <template>
-  <UForm :schema="schema" :state="state" class="flex-grow-1 space-y-4" @submit="onSubmit">
+  <UForm :schema="schema" :state="state" class="grow space-y-4" @submit="onSubmit">
     <!-- Honeypot field - hidden from users but visible to bots -->
     <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
       style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
 
     <UFormField name="card_name" class="mb-2">
       <div class="flex gap-2">
-        <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
-          :loading="status === 'pending'" :items="filteredCards" placeholder="Enter a card name..."
-          icon="i-lucide-search" class="flex-1 min-w-0" :ui="{ base: 'text-base h-10 truncate' }" />
-        <UButton :disabled="state.card_name?.length == 0" type="submit" class="h-10 cursor-pointer">
-          Submit
+        <UInputMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm" :items="filteredCards"
+          placeholder="Enter a card name..." icon="i-mdi-cards-outline" class="flex-1 min-w-0"
+          :ui="{ base: 'text-base h-10 truncate' }" />
+        <UButton icon="i-mdi-cards-outline" :disabled="state.card_name?.length == 0" type="submit"
+          class="h-10 cursor-pointer">
+          Search
         </UButton>
       </div>
     </UFormField>
 
+    <QuickFilters v-model="state.filters" />
+
+    <Filters v-if="!showFilters" ref="filtersRef" v-model="state.filters" hide-controls />
+
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton @click="showFilters = true" variant="ghost" size="sm" icon="i-lucide-sliders-horizontal"
-          aria-label="Show advanced search filters">
+        <UButton class="cursor-pointer" @click="showFilters = true" variant="ghost" size="sm"
+          icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
           Show Advanced Filters
         </UButton>
       </UTooltip>
     </div>
 
-    <UFormField v-if="showFilters" name="filters">
-      <Filters ref="filtersRef" v-model="state.filters" />
-    </UFormField>
+    <UCard v-if="showFilters">
+      <UFormField name="filters">
+        <Filters ref="filtersRef" v-model="state.filters" />
+      </UFormField>
+      <template #footer>
+        <div class="flex items-center justify-center">
+          <UButton class="cursor-pointer" @click="hideFilters" variant="ghost" size="sm" icon="i-lucide-eye-off"
+            color="neutral">
+            Hide Advanced Filters
+          </UButton>
+        </div>
+      </template>
+    </UCard>
   </UForm>
 </template>
 
@@ -37,9 +52,22 @@ import { useRoute } from 'vue-router';
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
+import type { Platform } from '~/utils/platformConfig'
 import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
 import { useSearchHistory } from '~/composables/useSearchHistory';
+import { useCardNames } from '~/composables/useBulkData';
+
+const props = defineProps<{
+  platform?: 'arena' | 'mtgo' | 'paper'
+}>()
+
+const route = useRoute();
+const { getPath, getPlatformFromPath } = useSearchType();
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return getPlatformFromPath(route.path);
+});
 
 const autoComplete = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -55,36 +83,40 @@ const schema = z.object({
 })
 
 type Schema = z.output<typeof schema>
-const route = useRoute();
 
 const cardNameParam = computed(() => String(route.query.card_name || ''));
-const showFilters = ref(route.query.filters ? true : false); // We show filters automatically if there are filters in the URL
+import { hasAdvancedFilters } from '~/utils/quickFilters'
+
 const parsedFilters = computed(() => {
+  const base: Record<string, any> = { selectedColorFilterOption: 'Match Exactly' as 'Match Exactly' };
+  if (props.platform === 'arena') base.isArena = true;
+  if (props.platform === 'mtgo') base.isMTGO = true;
+  if (props.platform === 'paper') base.isPaper = true;
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
   }
-  return { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  return base;
 });
+
+const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
+function hideFilters() {
+  showFilters.value = false;
+}
 
 const state = reactive<Schema>({
   card_name: cardNameParam.value || '',
-  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
+  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Match Exactly' }
 })
 
 const searchTerm = ref("");
 // Debounced search term for better performance
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
-// Raw card data - keep as simple array for performance
-const { data: rawCards, status } = await useFetch('/card-names.min.json', {
-  key: 'autocomplete-cards',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
-});
+// Raw card data from backend bulk data API
+const { data: rawCards, status: cardNamesStatus } = useCardNames();
+const status = computed(() => cardNamesStatus.value === 'pending' ? 'pending' : 'success');
 
-// Pre-filter cards before passing to USelectMenu
+// Pre-filter cards before passing to UInputMenu
 const filteredCards = computed(() => {
   if (!debouncedSearchTerm.value || debouncedSearchTerm.value.length < 2) {
     if (state.card_name) {
@@ -97,8 +129,9 @@ const filteredCards = computed(() => {
   const filtered = [state.card_name];
 
   // Only process first 100 matches for performance
-  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
-    const card = rawCards.value[i];
+  const cards = rawCards.value ?? [];
+  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
+    const card = cards[i];
     if (card.toLowerCase().includes(searchLower)) {
       filtered.push(card);
     }
@@ -129,10 +162,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     // Only modify the copy, NEVER the form state
     if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
-      if (requestFilters.selectedColorFilterOption === 'Contains At Least') {
-        delete requestFilters.selectedColors
-        delete requestFilters.selectedColorFilterOption
-      }
+      delete requestFilters.selectedColors
+      delete requestFilters.selectedColorFilterOption
     }
 
     // Remove undefined/null/empty values from filters
@@ -152,7 +183,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'similarity'
     };
-    router.push({ path: '/search/similarity', query });
+    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
+    router.push({ path: getPath('similarity', targetPlatform), query });
   } catch (error) {
     console.error('Form submission error:', error)
   }
