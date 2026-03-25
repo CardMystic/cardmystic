@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend'
+export type SearchAboutType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend' | 'popular-cards' | 'popular-commanders' | 'popular-by-commander'
   | 'arena-ai' | 'arena-similarity' | 'arena-recommend' | 'arena-commander' | 'arena-keyword'
   | 'mtgo-ai' | 'mtgo-similarity' | 'mtgo-recommend' | 'mtgo-commander' | 'mtgo-keyword'
   | 'modern-ai' | 'modern-similarity' | 'modern-recommend' | 'modern-commander' | 'modern-keyword'
@@ -94,6 +94,39 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
       'Our recommendation model compares your deck to similar decks in our database to suggest cards that strengthen your deck and fill missing roles like card draw, ramp, or removal.',
       'Describe what you\'re looking for , such as "card draw", "artifact removal", or "token synergy" to receive targeted card recommendations tailored to your strategy.',
       'Note: The recommendation model is trained on Commander decks. Other formats coming soon!',
+    ],
+  },
+
+  'popular-cards': {
+    title: 'About Popular Commander Cards',
+    heading: 'Popular MTG Commander Cards',
+    paragraphs: [
+      'Discover the most popular Magic: The Gathering cards across all Commander (EDH) decks.',
+      'Use the optional search bar to re-rank results by semantic relevance: describe what you\'re looking for and the ranking will adjust to highlight the most relevant popular cards.',
+      'Apply filters like color identity, card type, mana value, rarity, and format legality to narrow results and find popular cards that fit your deckbuilding needs.',
+      'Note: Deck data is currently sourced from Commander (EDH) decks only. Support for 60-card formats like Modern and Standard is coming in the future!',
+    ],
+  },
+
+  'popular-commanders': {
+    title: 'About Popular Commanders',
+    heading: 'Popular MTG Commanders',
+    paragraphs: [
+      'Discover the most popular commanders across all EDH decks.',
+      'Use the optional search bar to re-rank results by semantic relevance: describe a strategy or theme and the ranking will adjust to highlight the most relevant popular commanders.',
+      'Apply filters like color identity, card type, mana value, and rarity to narrow results and find the perfect commander for your next EDH deck.',
+      'Note: Deck data is currently sourced from Commander (EDH) decks only. Support for 60-card formats like Modern and Standard is coming in the future!',
+    ],
+  },
+
+  'popular-by-commander': {
+    title: 'About Popular Cards by Commander',
+    heading: 'Popular Cards by Commander',
+    paragraphs: [
+      'Discover the most popular cards for any commander.',
+      'Select a commander to see which cards appear most often in their decks. If the commander has a partner, you can optionally select a partner to refine the results further.',
+      'Use the optional search bar to re-rank results by semantic relevance: describe what you\'re looking for (e.g. "ramp", "removal", "card draw") and the ranking will adjust accordingly.',
+      'Note: Deck data is currently sourced from Commander (EDH) decks only. Support for 60-card formats like Modern and Standard is coming in the future!',
     ],
   },
 

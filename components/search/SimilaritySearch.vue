@@ -6,11 +6,12 @@
 
     <UFormField name="card_name" class="mb-2">
       <div class="flex gap-2">
-        <USelectMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm"
-          :items="filteredCards" placeholder="Enter a card name..." icon="i-lucide-search" class="flex-1 min-w-0"
+        <UInputMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm" :items="filteredCards"
+          placeholder="Enter a card name..." icon="i-mdi-cards-outline" class="flex-1 min-w-0"
           :ui="{ base: 'text-base h-10 truncate' }" />
-        <UButton :disabled="state.card_name?.length == 0" type="submit" class="h-10 cursor-pointer">
-          Submit
+        <UButton icon="i-mdi-cards-outline" :disabled="state.card_name?.length == 0" type="submit"
+          class="h-10 cursor-pointer">
+          Search
         </UButton>
       </div>
     </UFormField>
@@ -87,7 +88,7 @@ const cardNameParam = computed(() => String(route.query.card_name || ''));
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  const base: Record<string, any> = { selectedColorFilterOption: 'Match Exactly' as 'Match Exactly' };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -104,7 +105,7 @@ function hideFilters() {
 
 const state = reactive<Schema>({
   card_name: cardNameParam.value || '',
-  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' }
+  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Match Exactly' }
 })
 
 const searchTerm = ref("");
@@ -115,7 +116,7 @@ const debouncedSearchTerm = refDebounced(searchTerm, 150);
 const { data: rawCards, status: cardNamesStatus } = useCardNames();
 const status = computed(() => cardNamesStatus.value === 'pending' ? 'pending' : 'success');
 
-// Pre-filter cards before passing to USelectMenu
+// Pre-filter cards before passing to UInputMenu
 const filteredCards = computed(() => {
   if (!debouncedSearchTerm.value || debouncedSearchTerm.value.length < 2) {
     if (state.card_name) {
@@ -161,10 +162,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     // Only modify the copy, NEVER the form state
     if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
-      if (requestFilters.selectedColorFilterOption === 'Contains At Least') {
-        delete requestFilters.selectedColors
-        delete requestFilters.selectedColorFilterOption
-      }
+      delete requestFilters.selectedColors
+      delete requestFilters.selectedColorFilterOption
     }
 
     // Remove undefined/null/empty values from filters

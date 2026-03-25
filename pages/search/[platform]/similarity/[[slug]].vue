@@ -17,7 +17,7 @@
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
           :skeleton-count="skeletonCount" :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading similar cards...` : `Please enter a card name to search for similar ${platformName} cards.`"
-          :is-similarity-search="true" />
+          :is-similarity-search="true" :hide-thumbs-down-button="true" />
       </div>
     </div>
   </UContainer>
@@ -74,7 +74,7 @@ useSeoMeta({
   ogDescription: () => seoEntry
     ? seoEntry.description
     : `${platformName} similarity search on CardMystic.`,
-  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Similarity Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoEntry
@@ -83,12 +83,12 @@ useSeoMeta({
   twitterDescription: () => seoEntry
     ? seoEntry.description
     : `${platformName} similarity search on CardMystic.`,
-  twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'Similarity Search' });
 
-const limitParam = computed(() => route.query?.limit ? Number(route.query.limit) : 40);
+const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : 40; });
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {

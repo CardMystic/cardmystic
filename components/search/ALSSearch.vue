@@ -17,7 +17,7 @@
 
     <UFormField name="commander" class="mb-2">
       <div class="flex gap-2 items-center">
-        <USelectMenu v-model="state.commander" v-model:search-term="commanderSearchTerm" :items="filteredCommanders"
+        <UInputMenu v-model="state.commander" v-model:search-term="commanderSearchTerm" :items="filteredCommanders"
           placeholder="Select a commander (optional)..." icon="i-lucide-crown" class="flex-1"
           :ui="{ base: 'text-base h-10' }" />
         <UButton v-if="state.commander" class="cursor-pointer" color="neutral" variant="link" size="sm"
@@ -27,7 +27,7 @@
 
     <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
       <div class="flex gap-2 items-center">
-        <USelectMenu v-model="state.partnerCommander" v-model:search-term="partnerSearchTerm" :items="filteredPartners"
+        <UInputMenu v-model="state.partnerCommander" v-model:search-term="partnerSearchTerm" :items="filteredPartners"
           placeholder="Select a partner commander (optional)..." icon="i-lucide-crown" class="flex-1"
           :ui="{ base: 'text-base h-10' }" />
         <UButton v-if="state.partnerCommander" color="neutral" variant="link" size="sm" icon="i-lucide-circle-x"
@@ -153,7 +153,7 @@ const limitParam = computed(() => {
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  const base: Record<string, any> = { selectedColorFilterOption: 'Color Identity' as 'Color Identity' };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -174,7 +174,7 @@ const state = reactive<Partial<Schema>>({
   partnerCommander: partnerCommanderParam.value || '',
   limit: limitParam.value,
   decklist: decklistParam.value || '',
-  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Contains At Least' },
+  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Color Identity' },
 })
 
 const hasCards = computed(() => !!state.decklist?.trim() || !!state.commander?.trim())
@@ -277,10 +277,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     // Only modify the copy, NEVER the form state
     if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
-      if (requestFilters.selectedColorFilterOption === 'Contains At Least') {
-        delete requestFilters.selectedColors
-        delete requestFilters.selectedColorFilterOption
-      }
+      delete requestFilters.selectedColors
+      delete requestFilters.selectedColorFilterOption
     }
 
     // Remove undefined/null/empty values from filters

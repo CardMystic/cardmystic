@@ -1336,7 +1336,7 @@ export const arenaQueries: SeoQuery[] = [
     filters: {
       isArena: true,
       selectedColors: ['Black'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTG Arena Black Removal Spells',
     description:
@@ -1349,7 +1349,7 @@ export const arenaQueries: SeoQuery[] = [
     filters: {
       isArena: true,
       selectedColors: ['Blue'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTG Arena Blue Card Draw',
     description:
@@ -1371,7 +1371,7 @@ export const arenaQueries: SeoQuery[] = [
     filters: {
       isArena: true,
       selectedColors: ['White'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTG Arena White Removal Spells',
     description:
@@ -1384,7 +1384,7 @@ export const arenaQueries: SeoQuery[] = [
     filters: {
       isArena: true,
       selectedColors: ['Red'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTG Arena Red Aggro Cards',
     description:
@@ -1397,7 +1397,7 @@ export const arenaQueries: SeoQuery[] = [
     filters: {
       isArena: true,
       selectedColors: ['Green'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTG Arena Green Ramp Cards',
     description:
@@ -1712,7 +1712,7 @@ export const mtgoQueries: SeoQuery[] = [
     filters: {
       isMTGO: true,
       selectedColors: ['Black'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTGO Black Removal Spells',
     description:
@@ -1725,7 +1725,7 @@ export const mtgoQueries: SeoQuery[] = [
     filters: {
       isMTGO: true,
       selectedColors: ['Blue'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTGO Blue Card Draw',
     description:
@@ -1927,7 +1927,7 @@ export const mtgoQueries: SeoQuery[] = [
     filters: {
       isMTGO: true,
       selectedColors: ['Red'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'MTGO Burn Spells',
     description:
@@ -2049,7 +2049,7 @@ export const modernQueries: SeoQuery[] = [
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Red'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'Best Modern Burn Spells',
     description:
@@ -2173,7 +2173,7 @@ export const modernQueries: SeoQuery[] = [
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Black'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'Best Modern Discard Spells',
     description:
@@ -2296,7 +2296,7 @@ export const modernQueries: SeoQuery[] = [
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Green'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'Best Modern Green Creatures',
     description:
@@ -2309,7 +2309,7 @@ export const modernQueries: SeoQuery[] = [
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['White'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'Best Modern White Creatures',
     description:
@@ -2322,7 +2322,7 @@ export const modernQueries: SeoQuery[] = [
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Blue'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'Best Modern Blue Instants',
     description:
@@ -2335,7 +2335,7 @@ export const modernQueries: SeoQuery[] = [
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Black'],
-      selectedColorFilterOption: 'Contains At Least',
+      selectedColorFilterOption: 'Match Exactly',
     },
     title: 'Best Modern Black Creatures',
     description:

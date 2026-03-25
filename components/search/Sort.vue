@@ -3,7 +3,7 @@
     <UIcon name="i-lucide-arrow-up-down" />
     <span class="text-sm">Sort by:</span>
     <USelect v-model="selectedSortValue" :items="sortOptions" placeholder="Select sort option"
-      class="cursor-pointer min-w-45" @update:modelValue="updateSort" />
+      class="cursor-pointer min-w-45" />
     <UButton v-if="selectedSortValue" class="cursor-pointer"
       :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'" color="neutral" variant="ghost"
       size="sm" @click="toggleSortDirection" :title="sortDirection === 'asc' ? 'Ascending' : 'Descending'" />
@@ -20,6 +20,7 @@ const props = defineProps<{
   defaultDirection?: 'asc' | 'desc';
   hasAlsScore?: boolean;
   hasAiScore?: boolean;
+  hasPopularity?: boolean;
 }>();
 
 const sortOptions = computed(() => {
@@ -32,6 +33,7 @@ const sortOptions = computed(() => {
     { value: 'toughness', label: 'Toughness' },
     { value: 'released', label: 'Release Date' },
   ];
+  if (props.hasPopularity) options.unshift({ value: 'popularity', label: 'Popularity' });
   if (props.hasAlsScore) options.unshift({ value: 'deck_score', label: 'Deck Score' });
   if (props.hasAiScore) options.unshift({ value: 'ai_score', label: 'AI Score' });
   return options;
@@ -50,11 +52,11 @@ const emit = defineEmits<{
   (e: 'sort', sortBy: string | undefined, direction: 'asc' | 'desc'): void;
 }>();
 
-const scoreOptions = ['ai_score', 'deck_score'];
+const scoreOptions = ['ai_score', 'deck_score', 'popularity'];
 
-function updateSort() {
+function updateSort(defaultDesc = false) {
   if (selectedSortValue.value) {
-    if (scoreOptions.includes(selectedSortValue.value)) {
+    if (defaultDesc && scoreOptions.includes(selectedSortValue.value)) {
       sortDirection.value = 'desc';
     }
     emit('sort', selectedSortValue.value, sortDirection.value);
@@ -63,7 +65,7 @@ function updateSort() {
 
 function toggleSortDirection() {
   sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
-  updateSort();
+  emit('sort', selectedSortValue.value, sortDirection.value);
 }
 
 function clearSort() {
@@ -74,7 +76,7 @@ function clearSort() {
 
 // Watch for changes to selectedSortValue
 watch(selectedSortValue, () => {
-  updateSort();
+  updateSort(true);
 });
 </script>
 

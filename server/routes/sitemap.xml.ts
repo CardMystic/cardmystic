@@ -3,7 +3,7 @@ import cardIds from '~/public/card-ids.min.json';
 import { getAllSeoSlugs } from '~/utils/seoQueries';
 
 export default defineEventHandler((event) => {
-  const baseUrl = 'https://cardmystic.io';
+  const baseUrl = 'https://cardmystic.com';
   const now = new Date().toISOString();
 
   setResponseHeaders(event, {

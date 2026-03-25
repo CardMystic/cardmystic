@@ -15,6 +15,7 @@ const colorFilterOptionEnum = z.enum([
   'Match Exactly',
   'Contains At Least',
   'Contains At Most',
+  'Color Identity',
 ]);
 export type ColorFilterOption = z.infer<typeof colorFilterOptionEnum>;
 const comparisonOperatorEnum = z.enum([

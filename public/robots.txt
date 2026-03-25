@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cardmystic.io/sitemap.xml
+Sitemap: https://cardmystic.com/sitemap.xml

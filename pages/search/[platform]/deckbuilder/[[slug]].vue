@@ -100,7 +100,7 @@ useSeoMeta({
   ogDescription: () => firstCommanderName.value
     ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
     : `Build your ${platformName} deck with AI-powered card recommendations.`,
-  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => `${platformName} Deck Builder`,
   twitterCard: 'summary_large_image',
   twitterTitle: () => firstCommanderName.value
@@ -109,7 +109,7 @@ useSeoMeta({
   twitterDescription: () => firstCommanderName.value
     ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
     : `Build your ${platformName} deck with AI-powered card recommendations.`,
-  twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'Deck Recommender' });

@@ -2,7 +2,7 @@
   <div class="layout-container">
     <navbar />
     <main class="main-content">
-      <UContainer class="flex responsive-align" style="padding-top: 0px">
+      <UContainer class="px-1 flex responsive-align" style="padding-top: 0px">
         <slot />
       </UContainer>
     </main>

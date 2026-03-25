@@ -30,23 +30,19 @@ export function getPlatformFilters(
     case 'arena':
       return {
         isArena: true,
-        selectedColorFilterOption: 'Contains At Least' as const,
       };
     case 'mtgo':
       return {
         isMTGO: true,
-        selectedColorFilterOption: 'Contains At Least' as const,
       };
     case 'modern':
       return {
-        selectedColorFilterOption: 'Contains At Least' as const,
         selectedCardFormats: [
           { format: 'Modern' as const, status: 'Legal' as const },
         ],
       };
     case 'commander':
       return {
-        selectedColorFilterOption: 'Contains At Least' as const,
         selectedCardFormats: [
           { format: 'Commander' as const, status: 'Legal' as const },
         ],
@@ -54,11 +50,10 @@ export function getPlatformFilters(
     case 'paper':
       return {
         isPaper: true,
-        selectedColorFilterOption: 'Contains At Least' as const,
       };
     case 'all':
     default:
-      return { selectedColorFilterOption: 'Contains At Least' as const };
+      return {};
   }
 }
 
