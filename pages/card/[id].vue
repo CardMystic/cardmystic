@@ -357,27 +357,47 @@
           </UTabs>
         </UCard>
 
-        <!-- Non-commander: Similar Cards only -->
-        <UCard v-else-if="card" class="similar-cards-section w-full">
-          <div class="flex items-center justify-between mb-2 px-4 lg:px-0">
-            <div class="flex items-center">
-              <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
-              <h3 class="text-xl font-semibold">Similar Cards</h3>
-            </div>
-            <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="findSimilarCards">Go To
-              Full
-              Search Page</a>
-          </div>
-          <ClientOnly>
-            <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
-              :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-              default-group-by="type" :is-similarity-search="true" hide-searched-card />
-            <template #fallback>
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
+        <!-- Non-commander: Popular Commanders + Similar Cards -->
+        <UCard v-else-if="card" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
+          <UTabs :items="nonCommanderTabs">
+            <template #popular-commanders>
+              <div class="flex gap-2 mt-2 mb-4">
+                <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
+                  class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
+                <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
+                  :loading="isPopularCommandersLoading" class="text-base">
+                  Search
+                </UButton>
               </div>
+              <ClientOnly>
+                <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
+                  :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
+                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="none" />
+                <template #fallback>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <CardSkeleton v-for="i in 8" :key="`skeleton-popcmd-${i}`" :showCardInfo="true" />
+                  </div>
+                </template>
+              </ClientOnly>
             </template>
-          </ClientOnly>
+
+            <template #similar>
+              <div class="flex justify-end mt-2 mb-2">
+                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="findSimilarCards">Go
+                  To Full Search Page</a>
+              </div>
+              <ClientOnly>
+                <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
+                  :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
+                  default-group-by="type" :is-similarity-search="true" hide-searched-card />
+                <template #fallback>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
+                  </div>
+                </template>
+              </ClientOnly>
+            </template>
+          </UTabs>
         </UCard>
       </div>
     </div>
@@ -738,15 +758,20 @@ const filteredSimilarCards = computed(() => {
 });
 
 // Commander detection
-const { data: commanders } = useCommanders();
+const { data: commandersSet } = useCommandersSet();
 const isCommander = computed(() => {
-  if (!card.value?.name || !commanders.value) return false;
-  return commanders.value.includes(card.value.name);
+  if (!card.value?.name || !commandersSet.value) return false;
+  return commandersSet.value.has(card.value.name);
 });
 
 const cardTabs = [
   { key: 'recommended', label: 'Deck Recommendations', icon: 'i-lucide-box', slot: 'recommended' },
   { key: 'popular', label: 'Popular Commander Cards', icon: 'i-lucide-flame', slot: 'popular' },
+  { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
+];
+
+const nonCommanderTabs = [
+  { key: 'popular-commanders', label: 'Popular Commanders', icon: 'i-lucide-crown', slot: 'popular-commanders' },
   { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
 ];
 
@@ -786,6 +811,29 @@ const { searchResults: popularCards, isLoading: isPopularCardsLoading } = usePop
 
 const isPopularCardsEffectivelyLoading = computed(() => {
   return isPopularCardsLoading.value || (!popularCards.value && isCommander.value);
+});
+
+// Popular commanders for this card (non-commander cards)
+const popularCommandersQuery = ref('');
+const appliedPopularCommandersQuery = ref('');
+
+function applyPopularCommandersQuery() {
+  appliedPopularCommandersQuery.value = popularCommandersQuery.value.trim();
+}
+
+const popularCommandersForCardRequest = computed(() => {
+  if (isCommander.value || !card.value?.name) return undefined;
+  return {
+    card_name: card.value.name,
+    limit: 40,
+    query: appliedPopularCommandersQuery.value || undefined,
+  };
+});
+
+const { searchResults: popularCommandersForCard, isLoading: isPopularCommandersLoading } = usePopularCommandersForCard(popularCommandersForCardRequest);
+
+const isPopularCommandersEffectivelyLoading = computed(() => {
+  return isPopularCommandersLoading.value || (!popularCommandersForCard.value && !isCommander.value && !!card.value?.name);
 });
 
 </script>

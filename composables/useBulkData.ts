@@ -40,6 +40,27 @@ export function useCommanders() {
   });
 }
 
+/** Same cached query as useCommanders(), but returns a Set for O(1) lookups. */
+export function useCommandersSet() {
+  const config = useRuntimeConfig();
+
+  return useQuery<string[], Error, Set<string>>({
+    queryKey: ['bulkdata', 'commanders'],
+    queryFn: async () => {
+      const response = await fetch(
+        `${config.public.backendUrl}/bulkdata/commanders.min.json`,
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch commanders');
+      }
+      return response.json();
+    },
+    select: (data) => new Set(data),
+    staleTime: STALE_TIME,
+    refetchOnWindowFocus: false,
+  });
+}
+
 export function useCardIds() {
   const config = useRuntimeConfig();
 

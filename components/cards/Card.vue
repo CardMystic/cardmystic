@@ -268,7 +268,7 @@ import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { useCardFeedback } from '~/composables/useCardFeedback';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
-import { useCommanders } from '~/composables/useBulkData';
+import { useCommandersSet } from '~/composables/useBulkData';
 
 const router = useRouter();
 const route = useRoute();
@@ -339,10 +339,10 @@ const emit = defineEmits<{
 const sizeClass = computed(() => `card-${props.size}`);
 
 // Commander detection
-const { data: commanders } = useCommanders();
+const { data: commandersSet } = useCommandersSet();
 const isCommander = computed(() => {
-  if (!props.card?.card_data?.name || !commanders.value) return false;
-  return commanders.value.includes(props.card.card_data.name);
+  if (!props.card?.card_data?.name || !commandersSet.value) return false;
+  return commandersSet.value.has(props.card.card_data.name);
 });
 
 // Partner commander support

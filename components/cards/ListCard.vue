@@ -123,11 +123,11 @@ import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { isLegal, isColorIdentityLegal } from '~/utils/legality';
-import { useCommanders } from '~/composables/useBulkData';
+import { useCommandersSet } from '~/composables/useBulkData';
 
 const router = useRouter();
 
-const { data: commanders } = useCommanders();
+const { data: commanders } = useCommandersSet();
 
 const props = defineProps<{
   card: Card;
@@ -165,9 +165,9 @@ const legalityWarning = computed(() => {
 });
 
 const isEligibleCommander = computed(() => {
-  if (!commanders.value || commanders.value.length === 0) return false;
+  if (!commanders.value || commanders.value.size === 0) return false;
   const name = props.card.card_data.name;
-  return commanders.value.includes(name);
+  return commanders.value.has(name);
 });
 
 const isDualFaced = computed(() => {

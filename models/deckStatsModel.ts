@@ -59,3 +59,13 @@ export const PopularByCommanderSearchSchema = z.object({
 export type PopularByCommanderSearch = z.infer<
   typeof PopularByCommanderSearchSchema
 >;
+
+export const PopularCommandersForCardSearchSchema = z.object({
+  card_name: z.string(),
+  query: z.string().optional(),
+  limit: z.number().min(1).max(200).optional().default(40),
+  filters: CardSearchFiltersSchema.optional(),
+});
+export type PopularCommandersForCardSearch = z.infer<
+  typeof PopularCommandersForCardSearchSchema
+>;
