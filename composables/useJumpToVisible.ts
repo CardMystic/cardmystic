@@ -1,5 +1,3 @@
-const isJumpToVisible = ref(false);
-
 export function useJumpToVisible() {
-  return isJumpToVisible;
+  return useState<boolean>('jumpToVisible', () => false);
 }
