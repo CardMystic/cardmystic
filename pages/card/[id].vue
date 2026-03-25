@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -77,26 +77,27 @@
 
         <!-- Action Buttons + TCGPlayer - Desktop only -->
         <div class="mt-2 hidden lg:flex flex-row gap-2 w-full max-w-75 items-center">
-          <UTooltip v-if="isCommander" text="Get deck recommendations">
+          <UTooltip v-if="isCommander" text="Get Deck Recommendations for this Commander">
             <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
-              class="cursor-pointer" />
+              class="cursor-pointer" aria-label="Get Deck Recommendations for this Commander" />
           </UTooltip>
-          <UTooltip v-if="isCommander" text="Popular cards in this commander's decks">
+          <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
             <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
-              class="cursor-pointer" />
+              class="cursor-pointer" aria-label="Popular Cards for this Commander" />
           </UTooltip>
           <UTooltip text="Find similar cards">
             <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-              class="cursor-pointer" />
+              class="cursor-pointer" aria-label="Find similar cards" />
           </UTooltip>
           <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
             :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
             class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
-            rel="noopener noreferrer">
+            rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
             Buy {{ tcgPriceLabel }}
           </UButton>
           <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg">
+            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
+            aria-label="Search on TCGPlayer">
             Search on TCGPlayer
           </UButton>
         </div>
@@ -200,26 +201,27 @@
 
         <!-- Action Buttons + TCGPlayer - Mobile only -->
         <div class="flex flex-row gap-2 mt-0 mb-0 lg:hidden items-center">
+          <UTooltip v-if="isCommander" text="Get Deck Recommendations for this Commander">
+            <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
+              class="cursor-pointer" aria-label="Get Deck Recommendations for this Commander" />
+          </UTooltip>
+          <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
+            <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
+              class="cursor-pointer" aria-label="Popular Cards for this Commander" />
+          </UTooltip>
           <UTooltip text="Find similar cards">
             <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-              class="cursor-pointer" />
-          </UTooltip>
-          <UTooltip v-if="isCommander" text="Get deck recommendations">
-            <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
-              class="cursor-pointer" />
-          </UTooltip>
-          <UTooltip v-if="isCommander" text="Popular cards in this commander's decks">
-            <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
-              class="cursor-pointer" />
+              class="cursor-pointer" aria-label="Find similar cards" />
           </UTooltip>
           <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
             :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
             class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
-            rel="noopener noreferrer">
+            rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
             Buy {{ tcgPriceLabel }}
           </UButton>
           <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg">
+            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
+            aria-label="Search on TCGPlayer">
             Search on TCGPlayer
           </UButton>
         </div>
@@ -454,7 +456,7 @@ const card = computed(() => cardData.value?.card);
 const printings = computed(() => cardData.value?.printings || []);
 
 const canonicalUrl = computed(() =>
-  `https://cardmystic.io/card/${cardData.value?.card.id ?? cardIdParam.value}`
+  `https://cardmystic.com/card/${cardData.value?.card.id ?? cardIdParam.value}`
 );
 // Dynamic SEO meta based on card data
 useSeoMeta({
@@ -472,7 +474,7 @@ useSeoMeta({
       ? `View ${card.value.name}, a ${card.value.type_line || 'Magic: The Gathering card'}, with similar cards, deck recommendations, oracle text, and deckbuilding tools on CardMystic.`
       : 'View Magic: The Gathering card details with similar cards, deck recommendations, and deckbuilding tools on CardMystic.',
   ogType: 'website',
-  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: () => card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () =>
     card.value
       ? `${card.value.name} MTG card artwork`
@@ -491,7 +493,7 @@ useSeoMeta({
   twitterImage: () =>
     card.value?.image_uris?.normal ||
     card.value?.card_faces?.[0]?.image_uris?.normal ||
-    'https://cardmystic.io/cardmystic_cards.png'
+    'https://cardmystic.com/cardmystic_cards.png'
 })
 
 // Add JSON-LD structured data for better SEO and rich snippets
@@ -512,7 +514,7 @@ useHead({
           '@type': 'WebPage',
           name: card.value.name,
           description: card.value.oracle_text || card.value.card_faces?.[0]?.oracle_text || '',
-          image: card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || 'https://cardmystic.io/cardmystic_cards.png',
+          image: card.value?.image_uris?.normal || card.value?.card_faces?.[0]?.image_uris?.normal || 'https://cardmystic.com/cardmystic_cards.png',
           url: canonicalUrl.value,
           brand: {
             '@type': 'Brand',

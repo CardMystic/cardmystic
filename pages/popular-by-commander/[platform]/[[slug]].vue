@@ -64,14 +64,14 @@ useSeoMeta({
     ? `${commanderDisplay.value} Popular Cards | CardMystic`
     : 'Popular Cards by Commander | CardMystic',
   ogDescription: () => 'Find the most popular cards for any commander on CardMystic.',
-  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: 'Popular Cards by Commander',
   twitterCard: 'summary_large_image',
   twitterTitle: () => commanderParam.value
     ? `${commanderDisplay.value} Popular Cards | CardMystic`
     : 'Popular Cards by Commander | CardMystic',
   twitterDescription: () => 'Find the most popular cards for any commander on CardMystic.',
-  twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'Popular Cards by Commander' });

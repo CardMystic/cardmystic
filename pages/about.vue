@@ -75,7 +75,7 @@ useSeoMeta({
   ogTitle: 'About CardMystic - AI Magic: The Gathering Search Engine',
   ogDescription: 'Learn about CardMystic, an AI search engine for Magic: The Gathering cards.',
   ogType: 'website',
-  ogImage: () => 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: () => 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => 'CardMystic - About',
 })
 

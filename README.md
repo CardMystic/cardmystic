@@ -7,7 +7,7 @@
   <img src="public/wizard.webp" alt="CardMystic" width="150"/>
 </div>
 
-🧙‍♂️ Check it out: [https://cardmystic.io](https://cardmystic.io)
+🧙‍♂️ Check it out: [https://cardmystic.com](https://cardmystic.com)
 
 Magic: The Gathering is a complex and intricate game, but finding cards shouldn't be. Our developers decided that traditional keyword search engines fall short. They require exact wording and an intimate knowledge of Magic terms.
 
@@ -18,14 +18,14 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 ## ✨ Features
 
 - AI / Semantic search for MTG cards: Find cards using natural language queries
-  - Example Query: [X Spell Board Wipes](https://cardmystic.io/search/all/ai?query=x+spell+board+wipes)
+  - Example Query: [X Spell Board Wipes](https://cardmystic.com/search/all/ai?query=x+spell+board+wipes)
 - Similarity search: find cards similar to a given card
-  - Example Query: [Lightning Bolt](https://cardmystic.io/search/all/similarity?card_name=Lightning+Bolt)
+  - Example Query: [Lightning Bolt](https://cardmystic.com/search/all/similarity?card_name=Lightning+Bolt)
 - Commander search: AI search specifically for legendary creatures
 - Keyword search: traditional text-based card search
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get AI-powered card recommendations
 - Platform-specific search: search filtered to Arena, MTGO, Modern, or Paper cards
-  - Example: [Arena AI Search](https://cardmystic.io/search/arena/ai)
+  - Example: [Arena AI Search](https://cardmystic.com/search/arena/ai)
 - Card Lists: Create and manage custom card collections with commander designation
 - User accounts with authentication (Supabase)
 - Filter by colors, types, converted mana cost, power/toughness, etc.
@@ -52,7 +52,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 The CardMystic server code is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
 
-[API Documentation](https://api.cardmystic.io/documentation)
+[API Documentation](https://api.cardmystic.com/documentation)
 
 ## 🤖 Models
 

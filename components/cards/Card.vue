@@ -1,7 +1,7 @@
 <template>
   <UCard variant="subtle"
-    :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
-    :ui="{ body: 'p-2 sm:p-4' }">
+    :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
+    :ui="{ body: 'p-1 sm:p-4' }">
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -145,7 +145,7 @@
       </template>
 
       <!-- Action Buttons -->
-      <div class="flex flex-row items-center justify-between text-center w-full">
+      <div class="flex flex-row items-center justify-between text-center w-full mt-1">
 
         <!-- Left side buttons-->
         <div class="flex flex-row items-center">
@@ -154,7 +154,7 @@
             <template #default>
               <!-- Partner: combined price button -->
               <UButton v-if="hasPartner && showCardInfo && partnerTcgplayerId"
-                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class="mt-1 mr-2"
+                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class=" mr-2"
                 icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
                 aria-label="Buy on TCGPlayer">
                 {{ combinedPriceLabel }}
@@ -162,7 +162,7 @@
               <!-- Single card: original price button -->
               <UButton v-else-if="!hasPartner && showCardInfo && card.card_data.tcgplayer_id"
                 :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-                class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
+                class=" mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
                 aria-label="Buy on TCGPlayer">
                 {{
                   card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
@@ -170,19 +170,36 @@
               </UButton>
             </template>
           </UTooltip>
-          <!-- Similarity search button -->
-          <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
+          <!-- Recommend button (commander only) -->
+          <UTooltip v-if="showCardInfo && !isSearched && isCommander" text="Get Deck Recommendations for this Commander"
+            :popper="{ placement: 'top' }">
             <template #default>
-              <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid"
-                class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"
-                aria-label="Find Similar Cards">
+              <UButton color="primary" variant="solid" class=" mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
+                @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander">
+              </UButton>
+            </template>
+          </UTooltip>
+          <!-- Popular cards button (commander only) -->
+          <UTooltip v-if="showCardInfo && !isSearched && isCommander" text="Popular Cards for this Commander"
+            :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton color="error" variant="solid" class=" mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
+                @click="viewPopularCards" aria-label="Popular Cards for this Commander">
+              </UButton>
+            </template>
+          </UTooltip>
+          <!-- Similarity search button -->
+          <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class=" mr-2 cursor-pointer"
+                icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards">
               </UButton>
             </template>
           </UTooltip>
         </div>
 
         <!-- Right side buttons -->
-        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
+        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2 justify-center">
 
           <!-- Thumbs down button -->
           <UTooltip v-if="!hideThumbsDownButton" text="I disagree with this result!" :popper="{ placement: 'top' }">
@@ -235,10 +252,12 @@ import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { useCardFeedback } from '~/composables/useCardFeedback';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
+import { useCommanders } from '~/composables/useBulkData';
 
 const router = useRouter();
 const route = useRoute();
-const { saveCurrentSearchQuery } = useSearchType();
+const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
+const { saveSearchMutation } = useSearchHistory();
 
 const props = defineProps({
   card: {
@@ -276,7 +295,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  isCommander: {
+  goldHighlight: {
     type: Boolean,
     default: false,
   },
@@ -287,6 +306,13 @@ const emit = defineEmits<{
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
+
+// Commander detection
+const { data: commanders } = useCommanders();
+const isCommander = computed(() => {
+  if (!props.card?.card_data?.name || !commanders.value) return false;
+  return commanders.value.includes(props.card.card_data.name);
+});
 
 // Partner commander support
 const hasPartner = computed(() => !!props.card.partner_card_data);
@@ -486,6 +512,23 @@ function findSimilarCards() {
     searchType: 'similarity'
   };
   router.push({ path: '/search/all/similarity', query: queryParams });
+}
+
+function getRecommendations() {
+  if (!props.card?.card_data?.name) return;
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('recommend', queryParams);
+  saveSearchMutation.mutate({
+    query: props.card.card_data.name,
+    searchType: 'recommend',
+    filters: { commander: props.card.card_data.name },
+  });
+  router.push({ path: '/search/all/deckbuilder', query: queryParams });
+}
+
+function viewPopularCards() {
+  if (!props.card?.card_data?.name) return;
+  router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
 }
 
 function handleImageError(event: Event) {

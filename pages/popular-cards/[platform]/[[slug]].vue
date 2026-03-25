@@ -50,12 +50,12 @@ useSeoMeta({
   ogType: 'website',
   ogTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
   ogDescription: () => `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
-  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => `${platformName} Popular Commander Cards`,
   twitterCard: 'summary_large_image',
   twitterTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
   twitterDescription: () => `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
-  twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'Popular Commander Cards' });

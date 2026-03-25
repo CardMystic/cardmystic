@@ -37,6 +37,17 @@ const bottomOffset = ref(8);
 const minBottom = 8;
 const footerGap = 12;
 
+const jumpToVisible = useJumpToVisible();
+
+watch(() => props.groups, (groups) => {
+  jumpToVisible.value = groups.length > 0;
+  nextTick(updatePosition);
+}, { immediate: true });
+
+onUnmounted(() => {
+  jumpToVisible.value = false;
+});
+
 function groupToId(label: string): string {
   return 'group-' + label.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '').toLowerCase();
 }
@@ -104,11 +115,6 @@ onMounted(() => {
     document.addEventListener('click', handleClickOutside);
     updatePosition();
   }
-});
-
-// Recalculate position when groups change (e.g. results load in after a restored query)
-watch(() => props.groups, () => {
-  nextTick(updatePosition);
 });
 
 onUnmounted(() => {

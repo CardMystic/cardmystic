@@ -75,7 +75,7 @@ useSeoMeta({
   ogDescription: () => seoEntry
     ? seoEntry.description
     : `AI-powered ${platformName} card search on CardMystic.`,
-  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} AI Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoEntry
@@ -84,7 +84,7 @@ useSeoMeta({
   twitterDescription: () => seoEntry
     ? seoEntry.description
     : `AI-powered ${platformName} card search on CardMystic.`,
-  twitterImage: 'https://cardmystic.io/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'AI Search' });
