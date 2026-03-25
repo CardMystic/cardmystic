@@ -150,52 +150,67 @@
         <!-- Left side buttons-->
         <div class="flex flex-row items-center">
           <!-- Buy on TCGPlayer button -->
-          <UTooltip :text="hasPartner ? combinedPriceTooltip : 'Buy on TCGPlayer'" :popper="{ placement: 'top' }">
+          <UTooltip :text="hasPartner ? combinedPriceTooltip : singleBuyTooltip" :popper="{ placement: 'top' }">
             <template #default>
               <!-- Partner: combined price button -->
               <UButton v-if="hasPartner && showCardInfo && partnerTcgplayerId"
-                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class=" mr-2"
-                icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
+                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class="mr-1 sm:mr-2"
+                icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank" rel="noopener noreferrer"
                 aria-label="Buy on TCGPlayer">
                 {{ combinedPriceLabel }}
               </UButton>
               <!-- Single card: original price button -->
               <UButton v-else-if="!hasPartner && showCardInfo && card.card_data.tcgplayer_id"
                 :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-                class=" mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
+                class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank" rel="noopener noreferrer"
                 aria-label="Buy on TCGPlayer">
-                {{
-                  card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
-                    'Buy' }}
+                {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
               </UButton>
             </template>
           </UTooltip>
-          <!-- Recommend button (commander only) -->
-          <UTooltip v-if="showCardInfo && !isSearched && isCommander" text="Get Deck Recommendations for this Commander"
-            :popper="{ placement: 'top' }">
-            <template #default>
-              <UButton color="primary" variant="solid" class=" mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
-                @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander">
-              </UButton>
+          <!-- More actions popover (mobile only) -->
+          <UPopover v-if="showCardInfo && !isSearched" v-model:open="moreActionsOpen" class="sm:hidden">
+            <UTooltip text="More actions" :popper="{ placement: 'top' }">
+              <UButton color="neutral" variant="solid" class="mr-1 cursor-pointer"
+                icon="i-lucide-ellipsis" size="xs" aria-label="More actions" />
+            </UTooltip>
+            <template #content>
+              <div class="flex flex-col gap-1 p-2 w-48">
+                <UButton color="neutral" variant="ghost" class="cursor-pointer justify-start" size="sm"
+                  icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
+                  Find Similar Cards
+                </UButton>
+                <template v-if="isCommander">
+                  <UButton color="primary" variant="ghost" class="cursor-pointer justify-start" size="sm"
+                    icon="i-lucide-box" @click="getRecommendations(); moreActionsOpen = false">
+                    Deck Recommendations
+                  </UButton>
+                  <UButton color="error" variant="ghost" class="cursor-pointer justify-start" size="sm"
+                    icon="i-lucide-flame" @click="viewPopularCards(); moreActionsOpen = false">
+                    Popular Cards
+                  </UButton>
+                </template>
+              </div>
             </template>
-          </UTooltip>
-          <!-- Popular cards button (commander only) -->
-          <UTooltip v-if="showCardInfo && !isSearched && isCommander" text="Popular Cards for this Commander"
-            :popper="{ placement: 'top' }">
-            <template #default>
-              <UButton color="error" variant="solid" class=" mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
-                @click="viewPopularCards" aria-label="Popular Cards for this Commander">
-              </UButton>
-            </template>
-          </UTooltip>
-          <!-- Similarity search button -->
-          <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
-            <template #default>
-              <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid" class=" mr-2 cursor-pointer"
-                icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards">
-              </UButton>
-            </template>
-          </UTooltip>
+          </UPopover>
+          <!-- Desktop buttons (hidden on mobile) -->
+          <template v-if="showCardInfo && !isSearched">
+            <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
+              <UButton v-if="isCommander" color="primary" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+                icon="i-lucide-box" size="sm" @click="getRecommendations"
+                aria-label="Get Deck Recommendations for this Commander" />
+            </UTooltip>
+            <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
+              <UButton v-if="isCommander" color="error" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+                icon="i-lucide-flame" size="sm" @click="viewPopularCards"
+                aria-label="Popular Cards for this Commander" />
+            </UTooltip>
+            <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
+              <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+                icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"
+                aria-label="Find Similar Cards" />
+            </UTooltip>
+          </template>
         </div>
 
         <!-- Right side buttons -->
@@ -204,8 +219,8 @@
           <!-- Thumbs down button -->
           <UTooltip v-if="!hideThumbsDownButton" text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
-                icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result" @click="handleDislike" />
+              <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="ghost"
+                icon="i-lucide-thumbs-down" :size="isMobile ? 'xs' : 'sm'" aria-label="Disagree with this result" @click="handleDislike" />
             </template>
           </UTooltip>
 
@@ -213,7 +228,7 @@
           <UTooltip v-if="showAddToDeckbuilderButton" text="Add to deckbuilding search" :popper="{ placement: 'top' }">
             <template #default>
               <UButton class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'" variant="soft"
-                :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" size="sm"
+                :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" :size="isMobile ? 'xs' : 'sm'"
                 aria-label="Add to deckbuilding search" @click="deckbuilderStore.addCard(card.card_data.name)" />
             </template>
           </UTooltip>
@@ -222,7 +237,7 @@
         <!-- Remove from list button -->
         <UTooltip v-if="showRemoveButton" text="Remove from list" :popper="{ placement: 'top' }">
           <template #default>
-            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
+            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" :size="isMobile ? 'xs' : 'sm'"
               aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
           </template>
         </UTooltip>
@@ -232,6 +247,7 @@
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
         </UButton>
       </div>
+
     </div>
   </UCard>
   <div v-if="isDev && showAllData" class="card-data mt-2">
@@ -243,7 +259,7 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
@@ -258,6 +274,21 @@ const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
+
+// Responsive: detect mobile (<640px, matching Tailwind's sm breakpoint)
+const isMobile = ref(false);
+let mediaQuery: MediaQueryList | null = null;
+function updateMobile(e: MediaQueryListEvent | MediaQueryList) {
+  isMobile.value = !e.matches;
+}
+onMounted(() => {
+  mediaQuery = window.matchMedia('(min-width: 640px)');
+  isMobile.value = !mediaQuery.matches;
+  mediaQuery.addEventListener('change', updateMobile);
+});
+onUnmounted(() => {
+  mediaQuery?.removeEventListener('change', updateMobile);
+});
 
 const props = defineProps({
   card: {
@@ -356,6 +387,11 @@ const partnerTcgplayerId = computed(() => {
   return null;
 });
 
+const singleBuyTooltip = computed(() => {
+  const price = props.card.card_data.prices?.usd;
+  return price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer';
+});
+
 const deckbuilderStore = useDeckbuilder();
 
 const isInDecklist = computed(() => {
@@ -366,6 +402,7 @@ const isInDecklist = computed(() => {
 const isFlipped = ref(false);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
+const moreActionsOpen = ref(false);
 
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;
