@@ -9,7 +9,7 @@
       </div>
       <div style="height: 32px"></div> <!-- Sort spacer -->
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
       <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
     </div>
   </template>
@@ -23,9 +23,9 @@
       </div>
       <SortComponent @sort="handleSort" />
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
       <div v-for="result in displayedResults" :key="result.card_data.id">
-        <CardComponent :card="result" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true" />
+        <Card :card="result" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true" />
       </div>
     </div>
     <div v-if="hasMoreCards && !showAll" class="flex justify-center mt-6">
@@ -54,8 +54,6 @@
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
-import CardComponent from '~/components/general/Card.vue';
-import CardSkeleton from '~/components/general/CardSkeleton.vue';
 import SortComponent from '~/components/search/Sort.vue';
 import { sortSearchResults } from '~/utils/sort';
 

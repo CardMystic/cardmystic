@@ -42,7 +42,8 @@ export function useColbertSearch(
         },
       );
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? 'Network response was not ok');
       }
       return response.json() as Promise<Array<Card>>;
     },
@@ -85,7 +86,8 @@ export function useSimilaritySearch(
         },
       );
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? 'Network response was not ok');
       }
       return response.json() as Promise<Array<Card>>;
     },
@@ -128,7 +130,8 @@ export function useKeywordSearch(
         },
       );
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? 'Network response was not ok');
       }
       return response.json() as Promise<Array<Card>>;
     },

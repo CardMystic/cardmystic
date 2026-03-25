@@ -2,52 +2,77 @@
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Page Background Image (blurred, behind all content) -->
     <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
-      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20 blur-sm"
         :style="{ backgroundImage: `url(${bannerImageUrl})` }"></div>
     </div>
 
     <CardListBanner :list="list" :is-loading="isLoadingLists" />
 
-    <!-- Back Button and Actions -->
-    <div class="mb-6">
-      <NuxtLink to="/lists">
-        <UButton icon="i-lucide-arrow-left" color="neutral" variant="ghost" label="Back to Lists"
-          class="mb-4 cursor-pointer" />
-      </NuxtLink>
-
-      <div v-if="list" class="flex flex-col sm:flex-row sm:justify-between gap-2">
-        <div class="flex gap-2 flex-wrap items-center">
-          <UButton icon="i-lucide-copy" color="primary" variant="outline" label="Copy Names" @click="copyCardNames"
-            :disabled="!cards || cards.length === 0" class="cursor-pointer" />
-          <UButton icon="i-lucide-list-plus" color="primary" variant="outline" label="Bulk Add"
-            @click="isBulkAddModalOpen = true" class="cursor-pointer" />
+    <!-- Actions + Add Card -->
+    <div v-if="list" class="mb-2">
+      <div class="flex flex-wrap items-center justify-between">
+        <div class="flex gap-2 mb-2">
+          <UTooltip text="Copy card names">
+            <UButton icon="i-lucide-copy" color="primary" variant="outline" @click="copyCardNames"
+              :disabled="!cards || cards.length === 0" class="cursor-pointer" label="Copy" />
+          </UTooltip>
+          <UTooltip text="Bulk edit cards">
+            <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkEditModalOpen = true"
+              class="cursor-pointer" label="Bulk Edit" />
+          </UTooltip>
           <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
-            :label="`Buy on TCGPlayer ($${totalPrice.toFixed(2)})`" @click="openMassEntry"
-            :disabled="!cards || cards.length === 0" class="cursor-pointer" />
+            :label="`Buy ($${totalPrice.toFixed(2)})`" @click="openMassEntry" :disabled="!cards || cards.length === 0"
+            class="cursor-pointer" />
         </div>
-        <!-- Sort Component -->
-        <div v-if="cards && cards.length > 0" class="sm:self-end mt-4 sm:mt-0 ">
-          <Sort @sort="handleSort" />
+        <div>
+          <UInputMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm" :loading="addCardLoading"
+            :items="filteredAddCards" placeholder="Search for a card to add..." icon="i-lucide-plus"
+            class="flex-1 min-w-90 cursor-pointer" @update:model-value="handleAddCard" />
         </div>
+
       </div>
     </div>
 
-    <!-- Add Card Search -->
-    <div v-if="list" class="mb-6">
-      <div class="flex gap-2">
-        <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm"
-          :loading="cardsStatus === 'pending' || addCardLoading" :items="filteredAddCards"
-          placeholder="Search for a card to add..." icon="i-lucide-plus" class="flex-1 cursor-pointer"
-          @update:model-value="handleAddCard" />
+    <!-- Deck Recommender -->
+    <div v-if="list && cards && cards.length > 0" class="mb-2">
+      <div class="flex gap-2 items-center">
+        <UInput v-model="recommendDescription"
+          placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
+          icon="i-lucide-box" class="flex-1" :ui="{ base: 'text-sm h-8' }" size="sm" @keydown.enter="goToRecommend" />
+        <UButton icon="i-lucide-box" color="primary" variant="solid" label="Recommend" @click="goToRecommend"
+          class="cursor-pointer h-8" size="sm" />
       </div>
+    </div>
+
+    <!-- Group By + Sort (centered) -->
+    <div v-if="list && cards && cards.length > 0" class="mb-4 flex flex-wrap items-center justify-center gap-2">
+      <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
+      <Sort default-sort-by="cmc" @sort="handleSort" />
     </div>
 
     <!-- Cards Results -->
-    <CardListResults :isLoading="loading" :cards="sortedCards" :skeletonCount="20" @removeCard="handleRemoveCard" />
+    <ClientOnly>
+      <CardListResults class="mb-8" :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
+        :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
+        @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
+      <template #fallback>
+        <div class="mt-3 w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <CardSkeleton v-for="i in 20" :key="`skeleton-${i}`" :showCardInfo="true" />
+        </div>
+      </template>
+    </ClientOnly>
   </div>
 
-  <!-- Bulk Add Modal -->
-  <BulkAddCardsModal v-model:open="isBulkAddModalOpen" :list-id="listId" />
+  <!-- Bulk Edit Modal -->
+  <BulkAddCardsModal v-model:open="isBulkEditModalOpen" :list-id="listId" :current-card-names="currentCardNames" />
+
+  <BackToTop />
+
+  <DeckStats :card-count="cards?.length ?? 0" :total-price="totalPrice" @buy="openMassEntry" />
+
+  <JumpTo :groups="jumpToGroups" />
+
+
 </template>
 
 <script setup lang="ts">
@@ -56,11 +81,12 @@ definePageMeta({
 })
 
 import { useCardLists } from '~/composables/useCardLists'
+import { useCardNames } from '~/composables/useBulkData'
 import { useClipboard } from '@vueuse/core'
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer'
 import { useToast } from '#imports'
 import { refDebounced } from '@vueuse/core'
-import { sortSearchResults } from '~/utils/sort'
+import { groupAndSortCards } from '~/utils/sort'
 
 const route = useRoute()
 const listId = route.params.id as string
@@ -74,6 +100,9 @@ const {
   useListCards,
   removeCardFromListMutation,
   addCardsToListMutation,
+  setCommanderMutation,
+  clearCommanderMutation,
+  updateListAvatarMutation,
 } = useCardLists()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
@@ -99,20 +128,31 @@ const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 const cardIds = computed(() => listItems.value?.map((item: any) => item.card_id) || [])
 
 // Use TanStack Query to fetch card details
-const { data: cardsData, isLoading: isLoadingCards } = useListCards(listId, cardIds)
+const { data: cardsData, isLoading: isLoadingCards, isFetching: isFetchingCards } = useListCards(listId, cardIds)
 
 const cards = computed(() => cardsData.value || [])
 
-const loading = computed(() => isLoadingLists.value || isLoadingItems.value || isLoadingCards.value)
+// Show loading when lists/items are loading, cards query is loading/fetching,
+// or items have loaded with card IDs but card data hasn't arrived yet
+const loading = computed(() =>
+  isLoadingLists.value ||
+  isLoadingItems.value ||
+  isLoadingCards.value ||
+  (cardIds.value.length > 0 && cards.value.length === 0)
+)
 
-// Sorting state
-const sortBy = ref<string | undefined>(undefined)
+// Sorting + grouping state
+const sortBy = ref<string | undefined>('cmc')
 const sortDirection = ref<'asc' | 'desc'>('asc')
+const groupBy = ref<string | undefined>('type')
 
-// Handle sort changes
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
   sortDirection.value = direction;
+}
+
+function handleGroupBy(value: string | undefined) {
+  groupBy.value = value;
 }
 
 // Handle removing a card from the list
@@ -135,16 +175,33 @@ async function handleRemoveCard(cardId: string) {
   }
 }
 
-// Computed sorted results - skip the first card (we're already viewing it on the page)
-const sortedCards = computed(() => {
+// Computed grouped + sorted results - commanders always first (outside groups)
+const cardGroups = computed(() => {
   if (!cards.value || cards.value.length === 0) {
-    return [];
+    return null;
   }
 
-  // Skip the first card (the current card being viewed)
-  return sortSearchResults(cards.value, sortBy.value, sortDirection.value) || [];
+  const ids = commanderCardIds.value
+  const cardsToGroup = ids.length > 0
+    ? cards.value.filter((c: any) => !ids.includes(c.card_data.id))
+    : cards.value
+
+  const groups = groupAndSortCards(cardsToGroup, groupBy.value, sortBy.value, sortDirection.value);
+
+  // Prepend commanders as their own group if present
+  const commanderCards = cards.value.filter((c: any) => ids.includes(c.card_data.id))
+  if (commanderCards.length > 0) {
+    const commanderGroup = { label: '', cards: commanderCards };
+    return groups ? [commanderGroup, ...groups] : [commanderGroup];
+  }
+
+  return groups;
 });
 
+const jumpToGroups = computed(() => {
+  if (!cardGroups.value) return [];
+  return cardGroups.value.filter(g => g.label).map(g => g.label);
+});
 
 // Filter cards for add card autocomplete
 const filteredAddCards = computed(() => {
@@ -155,8 +212,10 @@ const filteredAddCards = computed(() => {
   const searchLower = debouncedAddCardSearchTerm.value.toLowerCase()
   const filtered: string[] = []
 
-  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
-    const card = rawCards.value[i]
+  const cards = rawCards.value ?? []
+
+  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
+    const card = cards[i]
     if (card.toLowerCase().includes(searchLower)) {
       filtered.push(card)
     }
@@ -171,8 +230,8 @@ async function handleAddCard(cardName: string) {
 
   addCardLoading.value = true
   try {
-    // First get the card ID from Scryfall
-    const cardData: any = await $fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}`)
+    const config = useRuntimeConfig()
+    const cardData: any = await $fetch(`${config.public.backendUrl}/cards/name/${encodeURIComponent(cardName)}`)
 
     if (!cardData?.id) {
       throw new Error('Card not found')
@@ -192,26 +251,157 @@ async function handleAddCard(cardName: string) {
     selectedCardToAdd.value = ''
     addCardSearchTerm.value = ''
   } catch (error: any) {
+    const isDuplicate = error?.code === '23505' || error?.statusCode === 409
     toast.add({
-      title: 'Error adding card',
-      description: error.message,
-      color: 'error'
+      title: isDuplicate ? 'Card already in list' : 'Error adding card',
+      description: isDuplicate ? `${cardName} is already in this list.` : error.message,
+      color: isDuplicate ? 'warning' : 'error',
+      icon: isDuplicate ? 'i-lucide-copy-check' : undefined
     })
+    selectedCardToAdd.value = ''
+    addCardSearchTerm.value = ''
   } finally {
     addCardLoading.value = false
   }
 }
 
-// Bulk add state
-const isBulkAddModalOpen = ref(false)
+// Bulk edit state
+const isBulkEditModalOpen = ref(false)
+const currentCardNames = computed(() =>
+  cards.value?.map((card: any) => card.card_data.name).filter(Boolean) || []
+)
 
-const { data: rawCards, status: cardsStatus } = await useFetch('/card-names.min.json', {
-  key: 'banner-card-names',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
+// Recommend state
+const recommendDescription = ref('')
+const router = useRouter()
+const { saveSearchMutation } = useSearchHistory()
+
+function goToRecommend() {
+  if (!cards.value || cards.value.length === 0) return
+  const decklist = cards.value.map((card: any) => card.card_data.name).join('\n')
+  const query: Record<string, any> = {
+    decklist,
+    searchType: 'recommend',
+  }
+  if (recommendDescription.value.trim()) {
+    query.description = recommendDescription.value.trim()
+  }
+  const commanderNamesList = currentCommanderItems.value
+    .map((item: any) => {
+      const card = cards.value.find((c: any) => c.card_data.id === item.card_id)
+      return card?.card_data?.name
+    })
+    .filter(Boolean)
+  if (commanderNamesList.length > 0) {
+    query.commander = commanderNamesList[0]
+  }
+  if (commanderNamesList.length > 1) {
+    query.partnerCommander = commanderNamesList[1]
+  }
+
+  saveSearchMutation.mutate({
+    query: recommendDescription.value.trim() || '',
+    searchType: 'recommend',
+    filters: {
+      commander: commanderNamesList[0] || undefined,
+      partnerCommander: commanderNamesList[1] || undefined,
+      decklist: decklist || undefined,
+    },
+  })
+
+  router.push({ path: '/search/all/deckbuilder', query })
+}
+
+const { data: rawCards, status: cardsQueryStatus } = useCardNames()
+const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pending' : 'success')
+
+// Commander autocomplete
+const setCommanderLoading = ref(false)
+
+// Find the current commanders from list items (up to 2 for partner)
+const currentCommanderItems = computed(() => {
+  return listItems.value?.filter((item: any) => item.is_commander === true) || []
 })
+
+const commanderCardIds = computed(() => {
+  return currentCommanderItems.value.map((item: any) => item.card_id)
+})
+
+const currentCommanderName = computed(() => {
+  if (currentCommanderItems.value.length === 0 || !cards.value) return null
+  const first = currentCommanderItems.value[0]
+  const card = cards.value.find((c: any) => c.card_data.id === first.card_id)
+  return card?.card_data?.name || null
+})
+
+const commanderColorIdentity = computed(() => {
+  if (currentCommanderItems.value.length === 0 || !cards.value) return null
+  const colors = new Set<string>()
+  for (const item of currentCommanderItems.value) {
+    const card = cards.value.find((c: any) => c.card_data.id === item.card_id)
+    if (card?.card_data?.color_identity) {
+      for (const c of card.card_data.color_identity) {
+        colors.add(c)
+      }
+    }
+  }
+  return colors.size > 0 ? [...colors] : null
+})
+
+async function handleSetCommander(commanderName: string) {
+  if (!commanderName || !list.value) return
+
+  setCommanderLoading.value = true
+  try {
+    await setCommanderMutation.mutateAsync({
+      listId: list.value.id,
+      commanderName,
+    })
+
+    // Set the list image to the commander if no image has been set
+    if (!list.value.avatar_card_name) {
+      await updateListAvatarMutation.mutateAsync({
+        listId: list.value.id,
+        cardName: commanderName,
+      })
+    }
+
+    toast.add({
+      title: `${commanderName} set as commander`,
+      icon: 'i-lucide-crown'
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Error setting commander',
+      description: error.message,
+      color: 'error'
+    })
+  } finally {
+    setCommanderLoading.value = false
+  }
+}
+
+async function handleClearCommander(cardId: string) {
+  if (!list.value) return
+
+  setCommanderLoading.value = true
+  try {
+    await clearCommanderMutation.mutateAsync({ listId: list.value.id, cardId })
+
+    toast.add({
+      title: 'Commander cleared',
+      icon: 'i-lucide-check'
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Error clearing commander',
+      description: error.message,
+      color: 'error'
+    })
+  } finally {
+    setCommanderLoading.value = false
+  }
+}
 
 const totalPrice = computed(() => {
   if (!cards.value || cards.value.length === 0) return 0

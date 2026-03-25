@@ -1,10 +1,12 @@
-import type { Database } from '~/database.types';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
-
-type CardListInsert = Database['public']['Tables']['card_lists']['Insert'];
 
 export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
@@ -37,7 +39,11 @@ export const useCardLists = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const createList = async (name: string, description?: string) => {
+  const createList = async (
+    name: string,
+    description?: string,
+    commanders?: string[],
+  ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -47,32 +53,44 @@ export const useCardLists = () => {
       throw new Error('List name cannot be empty');
     }
 
-    const newList: CardListInsert = {
-      user_id: userProfile.value.id,
-      name: name.trim(),
-      description: description?.trim() || null,
-    };
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
 
-    const { data, error } = await supabase
-      .from('card_lists')
-      .insert(newList)
-      .select()
-      .single();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
 
-    if (error) throw error;
-    return data;
+    const config = useRuntimeConfig();
+    const response = await $fetch<{ id: string; name: string }>(
+      `${config.public.backendUrl}/supabase/card-lists/create`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          name: name.trim(),
+          description: description?.trim() || undefined,
+          commanders: commanders?.filter((c) => c.trim()) || [],
+        },
+      },
+    );
+
+    return response;
   };
 
   const createListMutation = useMutation({
     mutationFn: async ({
       name,
       description,
+      commanders,
     }: {
       name: string;
       description?: string;
+      commanders?: string[];
     }) => {
       if (!supabase) return;
-      return createList(name, description);
+      return createList(name, description, commanders);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
@@ -186,6 +204,59 @@ export const useCardLists = () => {
     },
   });
 
+  const bulkEditList = async (listId: string, cardNames: string[]) => {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      addedCount: number;
+      removedCount: number;
+      invalidCardNames: string[];
+      message?: string;
+    }>(`${config.public.backendUrl}/supabase/card-lists/bulk-edit`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardNames,
+      },
+    });
+
+    return response;
+  };
+
+  const bulkEditListMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardNames,
+    }: {
+      listId: string;
+      cardNames: string[];
+    }) => {
+      return bulkEditList(listId, cardNames);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
   // Get list items with TanStack Query (can be called from components)
   const useListItems = (listId: Ref<string> | string) => {
     const listIdRef = typeof listId === 'string' ? ref(listId) : listId;
@@ -203,32 +274,36 @@ export const useCardLists = () => {
         if (error) throw error;
         return data;
       },
-      enabled: computed(() => !!listIdRef.value),
+      enabled: computed(() => !!supabase && !!listIdRef.value),
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
   };
 
   // Get card details for list items with TanStack Query
   const useListCards = (listId: string, cardIds: Ref<string[]>) => {
+    const config = useRuntimeConfig();
     return useQuery({
       // Include cardIds in the queryKey so it refetches when the list items change
       queryKey: computed(() => ['list-cards', listId, cardIds.value]),
       queryFn: async () => {
         if (cardIds.value.length === 0) return [];
 
-        const cardPromises = cardIds.value.map((id: string) =>
-          $fetch(`https://api.scryfall.com/cards/${id}`),
+        const cardsData: any[] = await $fetch(
+          `${config.public.backendUrl}/cards/cards-by-ids`,
+          {
+            method: 'POST',
+            body: { cardIds: cardIds.value },
+          },
         );
-        const cardsData = await Promise.all(cardPromises);
 
-        return cardsData.map((cardData: any) => ({
+        return (cardsData || []).map((cardData: any) => ({
           card_name: cardData.name,
           card_data: cardData,
-          score: undefined,
         }));
       },
       enabled: computed(() => cardIds.value.length > 0),
       staleTime: 1000 * 60 * 10, // 10 minutes
+      placeholderData: keepPreviousData,
     });
   };
 
@@ -264,10 +339,33 @@ export const useCardLists = () => {
       if (!supabase) return;
       return removeCardFromList(listId, cardId);
     },
+    onMutate: async ({ listId, cardId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['list-items', listId] });
+      await queryClient.cancelQueries({ queryKey: ['list-cards', listId] });
+
+      // Optimistically remove the card from list-items cache
+      queryClient.setQueriesData<any[]>(
+        { queryKey: ['list-items', listId] },
+        (old) => old?.filter((item: any) => item.card_id !== cardId),
+      );
+
+      // Optimistically remove the card from list-cards cache
+      queryClient.setQueriesData<any[]>(
+        { queryKey: ['list-cards', listId] },
+        (old) => old?.filter((card: any) => card.card_data.id !== cardId),
+      );
+    },
     onSuccess: (_, { listId }) => {
+      // Only invalidate list-items — list-cards will re-key automatically
+      // since its queryKey depends on cardIds derived from list-items
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+    onError: (_, { listId }) => {
+      // Refetch on error to restore correct state
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
     },
   });
 
@@ -367,6 +465,92 @@ export const useCardLists = () => {
     },
   });
 
+  const setCommander = async (listId: string, commanderName: string) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch(
+      `${config.public.backendUrl}/supabase/card-lists/set-commander`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          listId,
+          commanderName,
+        },
+      },
+    );
+
+    return response;
+  };
+
+  const setCommanderMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      commanderName,
+    }: {
+      listId: string;
+      commanderName: string;
+    }) => {
+      if (!supabase) return;
+      return setCommander(listId, commanderName);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
+  const clearCommander = async (listId: string, cardId?: string) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    let query = supabase
+      .from('card_list_items')
+      .update({ is_commander: false })
+      .eq('list_id', listId);
+
+    if (cardId) {
+      query = query.eq('card_id', cardId);
+    }
+
+    const { error } = await query;
+    if (error) throw error;
+  };
+
+  const clearCommanderMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardId,
+    }: {
+      listId: string;
+      cardId?: string;
+    }) => {
+      if (!supabase) return;
+      return clearCommander(listId, cardId);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
   return {
     // Query data and states
     userLists,
@@ -378,10 +562,13 @@ export const useCardLists = () => {
     createListMutation,
     addCardsToListMutation,
     addCardsByNameToListMutation,
+    bulkEditListMutation,
     removeCardFromListMutation,
     deleteListMutation,
     updateListMutation,
     updateListAvatarMutation,
+    setCommanderMutation,
+    clearCommanderMutation,
 
     // For nested queries (list items)
     useListItems,

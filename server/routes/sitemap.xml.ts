@@ -1,8 +1,9 @@
 // server/routes/sitemap.xml.ts
 import cardIds from '~/public/card-ids.min.json';
+import { getAllSeoSlugs } from '~/utils/seoQueries';
 
 export default defineEventHandler((event) => {
-  const baseUrl = 'https://cardmystic.io';
+  const baseUrl = 'https://cardmystic.com';
   const now = new Date().toISOString();
 
   setResponseHeaders(event, {
@@ -27,6 +28,41 @@ export default defineEventHandler((event) => {
     <priority>0.5</priority>
   </url>
 `;
+
+  // Search landing pages (one per platform × search type)
+  const platforms = ['all', 'arena', 'mtgo', 'modern'];
+  const searchTypes = [
+    'ai',
+    'similarity',
+    'keyword',
+    'commander',
+    'deckbuilder',
+  ];
+  for (const platform of platforms) {
+    for (const st of searchTypes) {
+      xml += `
+  <url>
+    <loc>${baseUrl}/search/${platform}/${st}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+    }
+  }
+
+  // SEO slug pages (high-intent search results)
+  const seoEntries = getAllSeoSlugs();
+  for (const { platform, searchType, slugs } of seoEntries) {
+    for (const slug of slugs) {
+      xml += `
+  <url>
+    <loc>${baseUrl}/search/${platform}/${searchType}/${slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+    }
+  }
 
   // Card pages
   for (const id of cardIds) {

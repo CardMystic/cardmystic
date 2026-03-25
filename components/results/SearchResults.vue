@@ -3,20 +3,58 @@
   <div class="mt-3 w-full">
     <template v-if="isLoading">
       <div style="height: 32px"></div> <!-- Sort spacer to prevent layout shift -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+      <div v-if="defaultGroupBy" style="height: 26px"></div> <!-- Spacer for expand all/collapse all buttons -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
       </div>
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
-      <SortComponent @sort="handleSort" class="mb-3" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
-          <CardComponent :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
-            :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
-            :hide-thumbs-down-button="isKeywordSearch || isSimilaritySearch" />
-        </div>
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
+        <GroupBy :default-value="defaultGroupBy" @update:groupBy="handleGroupBy" />
+        <SortComponent :has-als-score="hasAlsScore" :has-ai-score="hasAiScore" :has-popularity="hasPopularity"
+          @sort="handleSort" />
       </div>
+
+      <!-- Searched card pinned at top when grouped (similarity search) -->
+      <div v-if="searchedCard && groupedResults && groupedResults.length > 0 && groupedResults[0].label"
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+        <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
+          :hide-progress-bar="false" :hide-thumbs-down-button="true" />
+      </div>
+
+      <!-- Grouped results (accordion) -->
+      <template v-if="groupedResults && groupedResults.length > 0 && groupedResults[0].label">
+        <div class="flex justify-center sm:justify-end gap-1 mb-1">
+          <UButton class="cursor-pointer" icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral"
+            variant="ghost" @click="openAccordionValues = accordionItems.map(i => i.value as string)" />
+          <UButton class="cursor-pointer" icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral"
+            variant="ghost" @click="openAccordionValues = []" />
+        </div>
+        <UAccordion type="multiple" v-model="openAccordionValues" :items="accordionItems"
+          :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
+          <template v-for="group in groupedResults" :key="group.label" #[group.label]>
+            <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pb-4">
+              <div v-for="(result, index) in group.cards" :key="result.card_data.id">
+                <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
+                  :hide-thumbs-down-button="hideThumbsDownButton"
+                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
+              </div>
+            </div>
+          </template>
+        </UAccordion>
+      </template>
+
+      <!-- Flat results (no grouping) -->
+      <template v-else>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
+            <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
+              :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
+              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
+          </div>
+        </div>
+      </template>
     </template>
 
     <template v-else-if="!queryParam">
@@ -31,6 +69,9 @@
         <div class="flex flex-col items-center">
           <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
           <div class="font-bold text-2xl mb-2">No results found</div>
+          <div v-if="errorMessage" class="subtitle2 mb-2 text-center text-red-400">
+            {{ errorMessage }}
+          </div>
           <div class="subtitle2 mb-4">
             Try adjusting your search terms or filters.<br>
             If you think this is a mistake, <NuxtLink :to="searchFeedbackUrl(getPageInfo())" target="_blank"
@@ -40,15 +81,20 @@
       </UContainer>
     </template>
   </div>
+
+  <Teleport to="body">
+    <JumpTo :groups="(groupedResults || []).filter(g => g.label).map(g => g.label)" />
+  </Teleport>
 </template>
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
-import CardComponent from '~/components/general/Card.vue';
-import CardSkeleton from '~/components/general/CardSkeleton.vue';
+import type { CardGroup } from '~/utils/sort';
+import type { AccordionItem } from '@nuxt/ui';
 import SortComponent from '~/components/search/Sort.vue';
+import GroupBy from '~/components/search/GroupBy.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
-import { sortSearchResults } from '~/utils/sort';
+import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
 
 const { getPageInfo } = usePageInfo();
 
@@ -58,36 +104,101 @@ const props = defineProps<{
   queryParam: string | null;
   skeletonCount: number;
   helpText?: string;
+  errorMessage?: string;
   isSimilaritySearch?: boolean;
-  isKeywordSearch?: boolean;
+  hideProgressBar?: boolean;
+  showAddToDeckbuilderButton?: boolean;
+  hideSearchedCard?: boolean;
+  hideThumbsDownButton?: boolean;
+  defaultGroupBy?: string;
 }>();
 
 // Sorting state
 const sortBy = ref<string | undefined>(undefined);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
-// Handle sort changes
+// Grouping state
+const groupBy = ref<string | undefined>(props.defaultGroupBy);
+
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
   sortDirection.value = direction;
 }
 
-// Computed sorted results - optionally keep first result (searched card) at the top for similarity search
+function handleGroupBy(value: string | undefined) {
+  groupBy.value = value;
+}
+
+// Detect which score types are available in the current results
+const hasAlsScore = computed(() =>
+  !!props.searchResults?.some(c => c.als_score !== undefined)
+);
+const hasAiScore = computed(() =>
+  !!props.searchResults?.some(c => c.ai_normalized_score !== undefined)
+);
+const hasPopularity = computed(() =>
+  !!props.searchResults?.some(c => c.popularity !== undefined && c.popularity > 0)
+);
+
+// Computed sorted results for flat display (no grouping, or similarity search)
 const sortedResults = computed(() => {
   if (!props.searchResults || props.searchResults.length === 0) {
     return props.searchResults;
   }
 
   // For similarity search, keep the first card (the searched card) separate
-  if (props.isSimilaritySearch) {
+  if (props.isSimilaritySearch && !props.hideSearchedCard) {
     const [firstCard, ...restCards] = props.searchResults;
     const sortedRest = sortSearchResults(restCards, sortBy.value, sortDirection.value);
     return sortedRest ? [firstCard, ...sortedRest] : [firstCard];
   }
 
-  // For other searches, sort all results
   return sortSearchResults(props.searchResults, sortBy.value, sortDirection.value);
 });
+
+// The searched card for similarity search (first result)
+const searchedCard = computed(() => {
+  if (!props.isSimilaritySearch || props.hideSearchedCard || !props.searchResults || props.searchResults.length === 0) {
+    return undefined;
+  }
+  return props.searchResults[0];
+});
+
+// Computed grouped results
+const groupedResults = computed<CardGroup[] | null>(() => {
+  if (!groupBy.value || !props.searchResults || props.searchResults.length === 0) {
+    return null;
+  }
+
+  // For similarity search, keep first card out of groups
+  if (props.isSimilaritySearch && !props.hideSearchedCard) {
+    const [, ...restCards] = props.searchResults;
+    return groupAndSortCards(restCards, groupBy.value, sortBy.value, sortDirection.value);
+  }
+
+  return groupAndSortCards(props.searchResults, groupBy.value, sortBy.value, sortDirection.value);
+});
+
+const accordionItems = computed<AccordionItem[]>(() => {
+  if (!groupedResults.value) return [];
+  return groupedResults.value
+    .filter(g => g.label)
+    .map(g => ({
+      label: g.label,
+      value: g.label,
+      slot: g.label as any,
+    }));
+});
+
+const openAccordionValues = ref<string[]>([]);
+
+watch(accordionItems, (items) => {
+  openAccordionValues.value = items.map(i => i.value as string);
+}, { immediate: true });
+
+function groupToId(label: string): string {
+  return 'group-' + label.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '').toLowerCase();
+}
 
 </script>
 

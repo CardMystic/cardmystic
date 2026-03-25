@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useUserProfile } from '~/composables/useUserProfile'
+import { useCardNames } from '~/composables/useBulkData'
 import { refDebounced } from '@vueuse/core'
 
 const router = useRouter()
@@ -42,14 +43,9 @@ watch(() => profileData.value?.avatar_card_name, (newVal) => {
   if (newVal) selectedProfileCard.value = newVal
 })
 
-// Load card names
-const { data: rawCards, status: cardsStatus } = await useFetch('/card-names.min.json', {
-  key: 'profile-card-names',
-  lazy: true,
-  server: false,
-  transform: (data: string[]) => data || [],
-  default: () => []
-})
+// Load card names from backend bulk data API
+const { data: rawCards, status: cardsQueryStatus } = useCardNames()
+const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pending' : 'success')
 
 // Filter cards based on search
 const filteredCards = computed(() => {
@@ -63,8 +59,10 @@ const filteredCards = computed(() => {
   const searchLower = debouncedSearchTerm.value.toLowerCase()
   const filtered = [selectedProfileCard.value]
 
-  for (let i = 0; i < rawCards.value.length && filtered.length < 100; i++) {
-    const card = rawCards.value[i]
+  const cards = rawCards.value ?? []
+
+  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
+    const card = cards[i]
     if (card.toLowerCase().includes(searchLower)) {
       filtered.push(card)
     }
@@ -201,8 +199,8 @@ const handleSignOut = async () => {
               <template #content>
                 <div class="p-4 w-80">
                   <h3 class="text-sm font-semibold mb-2">Choose Profile Icon</h3>
-                  <USelectMenu v-model="selectedProfileCard" v-model:search-term="searchTerm"
-                    :loading="cardsStatus === 'pending' || updateAvatarMutation.isPending.value" :items="filteredCards"
+                  <UInputMenu v-model="selectedProfileCard" v-model:search-term="searchTerm"
+                    :loading="updateAvatarMutation.isPending.value" :items="filteredCards"
                     placeholder="Search for a card..." icon="i-lucide-search" class="w-full"
                     @update:model-value="updateProfileCard" />
                   <p class="text-xs text-gray-600 dark:text-zinc-400 mt-2">Search for an MTG card to use as your

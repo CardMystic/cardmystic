@@ -30,7 +30,7 @@ const signUpWithGoogle = async () => {
     return
   }
 
-  localStorage.setItem('oauth_signup_pending', '1')
+  sessionStorage.setItem('pendingOAuthSignup', 'true')
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
@@ -39,6 +39,7 @@ const signUpWithGoogle = async () => {
   loading.value = false
 
   if (error) {
+    sessionStorage.removeItem('pendingOAuthSignup')
     errorMessage.value = error.message
   }
 }

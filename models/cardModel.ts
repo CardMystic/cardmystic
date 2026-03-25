@@ -219,12 +219,17 @@ export const ScryfallCardSchema = z.object({
   purchase_uris: purchaseUrisSchema.optional(),
   preview: previewSchema,
   card_faces: z.array(cardFaceSchema).optional(),
+  game_changer: z.boolean().optional(),
 });
 
 export type Card = z.infer<typeof CardSchema>;
 export const CardSchema = z.object({
   card_name: z.string(),
   card_data: ScryfallCardSchema,
+  partner_card_data: ScryfallCardSchema.optional(),
   rank: z.number().optional(),
-  score: z.number().optional(),
+  als_score: z.number().optional(),
+  ai_raw_score: z.number().optional(),
+  ai_normalized_score: z.number().optional(),
+  popularity: z.number().optional(),
 });
