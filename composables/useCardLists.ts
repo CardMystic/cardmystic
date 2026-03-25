@@ -204,6 +204,59 @@ export const useCardLists = () => {
     },
   });
 
+  const bulkEditList = async (listId: string, cardNames: string[]) => {
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      addedCount: number;
+      removedCount: number;
+      invalidCardNames: string[];
+      message?: string;
+    }>(`${config.public.backendUrl}/supabase/card-lists/bulk-edit`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardNames,
+      },
+    });
+
+    return response;
+  };
+
+  const bulkEditListMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardNames,
+    }: {
+      listId: string;
+      cardNames: string[];
+    }) => {
+      return bulkEditList(listId, cardNames);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
   // Get list items with TanStack Query (can be called from components)
   const useListItems = (listId: Ref<string> | string) => {
     const listIdRef = typeof listId === 'string' ? ref(listId) : listId;
@@ -246,7 +299,6 @@ export const useCardLists = () => {
         return (cardsData || []).map((cardData: any) => ({
           card_name: cardData.name,
           card_data: cardData,
-          score: undefined,
         }));
       },
       enabled: computed(() => cardIds.value.length > 0),
@@ -510,6 +562,7 @@ export const useCardLists = () => {
     createListMutation,
     addCardsToListMutation,
     addCardsByNameToListMutation,
+    bulkEditListMutation,
     removeCardFromListMutation,
     deleteListMutation,
     updateListMutation,

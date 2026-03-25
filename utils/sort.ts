@@ -17,12 +17,12 @@ const rarityOrder: RarityOrder = {
 };
 
 const typeOrder: Record<string, number> = {
-  creature: 1,
-  sorcery: 2,
-  instant: 3,
-  artifact: 4,
-  enchantment: 5,
-  planeswalker: 6,
+  creature: 2,
+  sorcery: 3,
+  instant: 4,
+  artifact: 5,
+  enchantment: 6,
+  planeswalker: 1,
   land: 7,
 };
 
@@ -34,14 +34,78 @@ const colorOrder: Record<string, number> = {
   G: 5,
 };
 
-function scoreTiebreaker(a: Card, b: Card): number {
-  const aScore = a.score ?? 0;
-  const bScore = b.score ?? 0;
-  return bScore - aScore; // higher score first
+function getEffectiveScore(card: Card): number {
+  if (card.ai_normalized_score !== undefined) return card.ai_normalized_score;
+  if (card.als_score !== undefined) return card.als_score;
+  return 0;
 }
 
-function compareWithTiebreaker(primary: number, a: Card, b: Card): number {
-  return primary !== 0 ? primary : scoreTiebreaker(a, b);
+function scoreTiebreaker(a: Card, b: Card): number {
+  const primary = getEffectiveScore(b) - getEffectiveScore(a); // higher score first
+  if (primary !== 0) return primary;
+  // Break effective-score ties: prefer higher popularity, then ALS
+  if (a.popularity !== undefined && b.popularity !== undefined) {
+    const diff = (b.popularity ?? 0) - (a.popularity ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return (b.als_score ?? 0) - (a.als_score ?? 0);
+}
+
+/**
+ * Sort-aware tiebreaker: when the primary sort field ties, use a related
+ * secondary score (e.g. popularity for AI score ties) before falling back
+ * to the generic effective-score tiebreaker.
+ */
+function sortAwareTiebreaker(
+  a: Card,
+  b: Card,
+  sortBy: string | null | undefined,
+): number {
+  switch (sortBy) {
+    case 'ai_score': {
+      // Tie on AI score → prefer higher popularity, then ALS
+      if (a.popularity !== undefined && b.popularity !== undefined) {
+        const diff = (b.popularity ?? 0) - (a.popularity ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return (b.als_score ?? 0) - (a.als_score ?? 0);
+    }
+    case 'popularity': {
+      // Tie on popularity → prefer higher AI score, then ALS
+      if (
+        a.ai_normalized_score !== undefined &&
+        b.ai_normalized_score !== undefined
+      ) {
+        const diff =
+          (b.ai_normalized_score ?? 0) - (a.ai_normalized_score ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return (b.als_score ?? 0) - (a.als_score ?? 0);
+    }
+    case 'deck_score': {
+      // Tie on deck/ALS score → prefer higher AI score, then popularity
+      if (
+        a.ai_normalized_score !== undefined &&
+        b.ai_normalized_score !== undefined
+      ) {
+        const diff =
+          (b.ai_normalized_score ?? 0) - (a.ai_normalized_score ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return (b.popularity ?? 0) - (a.popularity ?? 0);
+    }
+    default:
+      return scoreTiebreaker(a, b);
+  }
+}
+
+function compareWithTiebreaker(
+  primary: number,
+  a: Card,
+  b: Card,
+  sortBy?: string | null,
+): number {
+  return primary !== 0 ? primary : sortAwareTiebreaker(a, b, sortBy);
 }
 
 export function sortSearchResults(
@@ -49,11 +113,17 @@ export function sortSearchResults(
   sortBy: string | null | undefined,
   sortDirection: 'asc' | 'desc',
 ): Array<Card> | null | undefined {
-  if (!searchResults || !sortBy) {
+  if (!searchResults) {
     return searchResults;
   }
 
   const results = [...searchResults];
+
+  if (!sortBy) {
+    // No explicit sort — use default score-based ordering
+    return results.sort(scoreTiebreaker);
+  }
+
   const direction = sortDirection === 'asc' ? 1 : -1;
 
   return results.sort((a, b) => {
@@ -110,6 +180,27 @@ export function sortSearchResults(
         const bValue = new Date(b.card_data.released_at).getTime();
         primary = direction * (aValue - bValue);
         return compareWithTiebreaker(primary, a, b);
+      }
+
+      case 'deck_score': {
+        const aValue = a.als_score ?? 0;
+        const bValue = b.als_score ?? 0;
+        primary = direction * (aValue - bValue);
+        return compareWithTiebreaker(primary, a, b, sortBy);
+      }
+
+      case 'ai_score': {
+        const aValue = a.ai_normalized_score ?? 0;
+        const bValue = b.ai_normalized_score ?? 0;
+        primary = direction * (aValue - bValue);
+        return compareWithTiebreaker(primary, a, b, sortBy);
+      }
+
+      case 'popularity': {
+        const aValue = a.popularity ?? 0;
+        const bValue = b.popularity ?? 0;
+        primary = direction * (aValue - bValue);
+        return compareWithTiebreaker(primary, a, b, sortBy);
       }
 
       default:
@@ -180,8 +271,15 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
         key = getCardTypePrimary(card.card_data.type_line ?? '');
         break;
       case 'color':
-        key = getColorGroupKey(card.card_data.color_identity);
+        key = getColorGroupKey(card.card_data.colors ?? []);
         break;
+      case 'colorIdentity': {
+        const ci = card.partner_card_data
+          ? [...new Set([...card.card_data.color_identity, ...card.partner_card_data.color_identity])]
+          : card.card_data.color_identity;
+        key = getColorGroupKey(ci);
+        break;
+      }
       case 'cmc':
         key = String(Math.floor(card.card_data.cmc ?? 0));
         break;
@@ -203,7 +301,8 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
         const bOrder = typeOrder[b] ?? 99;
         return aOrder - bOrder;
       }
-      case 'color': {
+      case 'color':
+      case 'colorIdentity': {
         // Sort: mono colors in WUBRG, then 2-color, 3-color, etc., then Colorless last
         if (a === 'Colorless' && b === 'Colorless') return 0;
         if (a === 'Colorless') return 1;
@@ -224,7 +323,7 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
     label:
       groupBy === 'type'
         ? `${getCardTypeLabel(key)} (${groupCards.length})`
-        : groupBy === 'color'
+        : groupBy === 'color' || groupBy === 'colorIdentity'
           ? `${getColorLabel(key)} (${groupCards.length})`
           : `Mana Value ${key} (${groupCards.length})`,
     cards: groupCards,

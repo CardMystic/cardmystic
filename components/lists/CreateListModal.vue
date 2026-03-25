@@ -9,11 +9,11 @@
           <UTextarea v-model="newListDescription" placeholder="Enter description" class="w-full" />
         </UFormField>
         <UFormField label="Commander (optional)">
-          <USelectMenu v-model="newListCommander" v-model:search-term="commanderSearchTerm" :items="filteredCommanders"
+          <UInputMenu v-model="newListCommander" v-model:search-term="commanderSearchTerm" :items="filteredCommanders"
             placeholder="Search for a commander..." icon="i-lucide-crown" class="w-full" />
         </UFormField>
         <UFormField v-if="showPartnerField" label="Partner Commander (optional)">
-          <USelectMenu v-model="newListPartnerCommander" v-model:search-term="partnerSearchTerm"
+          <UInputMenu v-model="newListPartnerCommander" v-model:search-term="partnerSearchTerm"
             :items="filteredPartners" placeholder="Search for a partner commander..." icon="i-lucide-crown"
             class="w-full" />
         </UFormField>

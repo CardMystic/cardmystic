@@ -118,7 +118,7 @@ useSeoMeta({
   ogTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
   ogDescription: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
   ogType: 'website',
-  ogImage: 'https://cardmystic.io/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => 'CardMystic - AI Search Engine for Magic: The Gathering',
   twitterCard: 'summary_large_image',
   twitterTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',

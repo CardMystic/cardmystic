@@ -1,14 +1,17 @@
 import type { Router } from 'vue-router';
+import { detectPlatformFromFilters } from '~/utils/platformConfig';
 
 export const rerunSearchHistory = (item: any, router: Router) => {
-  const paths: Record<string, string> = {
-    ai: '/search',
-    similarity: '/search/similarity',
-    keyword: '/search/keyword',
-    commander: '/search/commander',
-    recommend: '/search/recommend',
+  const searchTypeSegments: Record<string, string> = {
+    ai: 'ai',
+    similarity: 'similarity',
+    keyword: 'keyword',
+    commander: 'commander',
+    recommend: 'deckbuilder',
   };
-  const path = paths[item.search_type] || '/search';
+  const segment = searchTypeSegments[item.search_type] || 'ai';
+  const platform = detectPlatformFromFilters(item.filters);
+  const path = `/search/${platform}/${segment}`;
   const query: any = { searchType: item.search_type };
 
   if (item.search_type === 'similarity') {
@@ -19,15 +22,25 @@ export const rerunSearchHistory = (item: any, router: Router) => {
     if (item.filters?.partnerCommander)
       query.partnerCommander = item.filters.partnerCommander;
     if (item.filters?.decklist) query.decklist = item.filters.decklist;
-    if (item.filters?.description) query.description = item.filters.description;
     if (item.filters?.limit) query.limit = item.filters.limit;
     if (item.query) query.description = item.query;
   } else {
     query.query = item.query;
   }
 
-  if (item.filters && item.search_type !== 'recommend') {
-    query.filters = JSON.stringify(item.filters);
+  if (item.filters) {
+    // Strip recommend-specific fields from filters before stringifying
+    const {
+      commander,
+      partnerCommander,
+      decklist,
+      description,
+      limit,
+      ...cardFilters
+    } = item.filters as Record<string, any>;
+    if (Object.keys(cardFilters).length > 0) {
+      query.filters = JSON.stringify(cardFilters);
+    }
   }
 
   router.push({ path, query });

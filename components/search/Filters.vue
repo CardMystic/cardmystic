@@ -1,7 +1,7 @@
 <template>
   <div class="filters-container">
-    <!-- Active Filters Chips or a No Filters Selected chip -->
-    <div class="active-filters-section mb-2">
+    <!-- Active Filters Chips (hidden when controls are hidden and no advanced filters) -->
+    <div v-if="!hideControls || hasAdvancedFilters(modelValue)" class="active-filters-section mb-2">
       <div v-if="hasActiveFilters" class="active-filters-chips">
         <!-- Card Types Chips -->
         <div v-for="cardType in selectedCardTypes || []" :key="`type-${cardType}`">
@@ -11,7 +11,7 @@
         </div>
 
         <!-- Colors: single identity chip -->
-        <div v-if="(selectedColors || []).length > 0">
+        <div v-if="!hideColors && (selectedColors || []).length > 0">
           <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
             icon="i-lucide-circle-x" @click="clearColorChip">
             <span class="flex items-center gap-1">
@@ -51,7 +51,7 @@
         </div>
 
         <!-- Color Filter Option Chip -->
-        <div v-if="selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'">
+        <div v-if="!hideColors && selectedColorFilterOption && selectedColorFilterOption !== 'Match Exactly'">
           <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
             icon="i-lucide-circle-x" @click="clearColorFilterOption()">Color: {{ selectedColorFilterOption }}
           </UButton>
@@ -83,9 +83,15 @@
             icon="i-lucide-circle-x" @click="updateFilters({ isPaper: undefined })">Paper
           </UButton>
         </div>
+        <div v-if="modelValue?.isGameChanger">
+          <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
+            icon="i-lucide-circle-x" @click="updateFilters({ isGameChanger: undefined })">Game Changer
+          </UButton>
+        </div>
 
-        <!-- Clear All Button -->
-        <UButton color="error" size="sm" class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
+        <!-- Clear All Button (when colors are managed externally via hideColors, only show if non-color filters exist) -->
+        <UButton v-if="hideColors ? hasNonColorFilters : hasActiveFilters" color="error" size="sm"
+          class="ma-1 rounded-pill" @click="clearAllFilters" icon="i-lucide-circle-x">
           Clear Filters
         </UButton>
       </div>
@@ -96,7 +102,7 @@
       </div>
     </div>
 
-    <UCollapsible v-model:open="isOpen" class="flex flex-col gap-2">
+    <UCollapsible v-if="!hideControls" v-model:open="isOpen" class="flex flex-col gap-2">
       <UButton class="filters-toggle-btn cursor-pointer" label="Select Filters" color="primary" variant="subtle"
         trailing-icon="i-lucide-chevron-down" icon="i-lucide-list-filter" :ui="{
           trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
@@ -157,7 +163,8 @@
                   <label class="stat-label">Mana Cost</label>
                   <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption" :items="comparisonOperators"
                     :ui="{ base: 'text-base' }" />
-                  <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number" />
+                  <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number"
+                    :ui="{ base: 'text-base' }" />
                 </div>
                 <div class="stat-group">
                   <label class="stat-label">Power</label>
@@ -195,9 +202,13 @@
           <!-- Platform Filter -->
           <template #platform>
             <div class="accordion-item flex flex-wrap gap-4">
-              <UCheckbox v-model="isMTGO" label="MTGO" />
-              <UCheckbox v-model="isArena" label="Arena" />
-              <UCheckbox v-model="isPaper" label="Paper" />
+              <URadioGroup v-model="selectedPlatform" :items="platformOptions" orientation="horizontal" />
+            </div>
+          </template>
+          <!-- Game Changer Filter -->
+          <template #gameChanger>
+            <div class="accordion-item flex flex-wrap gap-4">
+              <UCheckbox v-model="isGameChanger" label="Game Changer" />
             </div>
           </template>
         </UAccordion>
@@ -213,6 +224,7 @@ import type { CardSearchFilters } from '~/models/searchModel';
 import ManaIcon from '../general/ManaIcon.vue';
 import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt/ui';
 import { getColorIdentityName } from '~/utils/colorPairings';
+import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
@@ -239,13 +251,18 @@ const orientation: Ref<'vertical' | 'horizontal'> = computed(() =>
   screenWidth.value < 768 ? 'vertical' : 'horizontal'
 )
 
-const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
+const { modelValue, hideColors, hideFormats, hideControls } = defineProps<{
+  modelValue?: CardSearchFilters
+  hideColors?: boolean
+  hideFormats?: boolean
+  hideControls?: boolean
+}>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: CardSearchFilters]
 }>();
 
-const items = [
+const allItems = [
   {
     label: 'Card Types',
     icon: 'i-lucide-shapes',
@@ -275,8 +292,19 @@ const items = [
     label: 'Platform',
     icon: 'i-lucide-monitor',
     slot: 'platform' as const
+  },
+  {
+    label: 'Game Changer',
+    icon: 'i-lucide-sparkles',
+    slot: 'gameChanger' as const
   }
 ] satisfies AccordionItem[]
+
+const items = computed(() => allItems.filter(item => {
+  if (hideColors && item.slot === 'colors') return false
+  if (hideFormats && item.slot === 'formats') return false
+  return true
+}))
 
 const cardTypes = CardType.options;
 const cardFormats = CardFormat.options;
@@ -285,6 +313,7 @@ const colorFilterOptions = [
   'Match Exactly',
   'Contains At Least',
   'Contains At Most',
+  'Color Identity',
 ];
 const comparisonOperators = [
   'Equal To',
@@ -311,11 +340,31 @@ const hasActiveFilters = computed(() => {
     filters.selectedCMC ||
     filters.selectedPower ||
     filters.selectedToughness ||
-    (filters.selectedColorFilterOption && filters.selectedColorFilterOption !== 'Contains At Least') ||
+    (filters.selectedColorFilterOption && filters.selectedColorFilterOption !== 'Match Exactly') ||
     (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
     filters.isMTGO ||
     filters.isArena ||
-    filters.isPaper
+    filters.isPaper ||
+    filters.isGameChanger
+  );
+});
+
+// Whether non-color filters are active (used to decide if "Clear Filters" button shows)
+const hasNonColorFilters = computed(() => {
+  const filters = modelValue;
+  if (!filters) return false;
+
+  return !!(
+    (filters.selectedCardTypes && filters.selectedCardTypes.length > 0) ||
+    (filters.selectedRarities && filters.selectedRarities.length > 0) ||
+    filters.selectedCMC ||
+    filters.selectedPower ||
+    filters.selectedToughness ||
+    (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
+    filters.isMTGO ||
+    filters.isArena ||
+    filters.isPaper ||
+    filters.isGameChanger
   );
 });
 
@@ -335,8 +384,8 @@ const selectedColorFilterOption = computed({
       return;
     }
 
-    // When changing to Match Exactly or Contains At Least, validate existing color selections
-    if ((value === 'Match Exactly' || value === 'Contains At Least') && modelValue?.selectedColors) {
+    // When changing to Match Exactly, Contains At Least, or Color Identity, validate existing color selections
+    if ((value === 'Match Exactly' || value === 'Contains At Least' || value === 'Color Identity') && modelValue?.selectedColors) {
       const colors = [...modelValue.selectedColors];
       const hasColorless = colors.includes('Colorless');
       const hasOtherColors = colors.some(color => color !== 'Colorless');
@@ -361,7 +410,7 @@ const selectedColors = computed({
     const colorOption = modelValue?.selectedColorFilterOption;
 
     // Only apply validation for these specific filter options
-    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least') {
+    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least' || colorOption === 'Color Identity') {
       const hasColorless = value.includes('Colorless');
       const hasOtherColors = value.some(color => color !== 'Colorless');
 
@@ -430,19 +479,34 @@ const selectedCardFormats = computed({
   set: (value) => updateFilters({ selectedCardFormats: value })
 });
 
-const isMTGO = computed({
-  get: () => modelValue?.isMTGO || false,
-  set: (value) => updateFilters({ isMTGO: value || undefined })
+const platformOptions = [
+  { label: 'Any', value: 'any' },
+  { label: 'Arena', value: 'arena' },
+  { label: 'MTGO', value: 'mtgo' },
+  { label: 'Paper', value: 'paper' },
+];
+
+const selectedPlatform = computed({
+  get: () => {
+    if (modelValue?.isArena) return 'arena';
+    if (modelValue?.isMTGO) return 'mtgo';
+    if (modelValue?.isPaper) return 'paper';
+    return 'any';
+  },
+  set: (value) => {
+    updateFilters({
+      isArena: value === 'arena' ? true : undefined,
+      isMTGO: value === 'mtgo' ? true : undefined,
+      isPaper: value === 'paper' ? true : undefined,
+    });
+  },
 });
 
-const isArena = computed({
-  get: () => modelValue?.isArena || false,
-  set: (value) => updateFilters({ isArena: value || undefined })
-});
-
-const isPaper = computed({
-  get: () => modelValue?.isPaper || false,
-  set: (value) => updateFilters({ isPaper: value || undefined })
+const isGameChanger = computed({
+  get: () => !!modelValue?.isGameChanger,
+  set: (value) => {
+    updateFilters({ isGameChanger: value ? true : undefined });
+  },
 });
 
 function addFormatRow() {
@@ -507,7 +571,7 @@ function clearAllFilters() {
     selectedCMCOption: undefined,
     selectedPowerOption: undefined,
     selectedToughnessOption: undefined,
-    selectedColorFilterOption: "Contains At Least",
+    selectedColorFilterOption: "Match Exactly",
     selectedCardFormats: undefined,
     isMTGO: undefined,
     isArena: undefined,

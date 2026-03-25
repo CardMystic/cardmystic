@@ -1,7 +1,15 @@
 import { ref } from 'vue';
 import type { LocationQuery } from 'vue-router';
 
-type SearchType = 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend';
+type SearchType =
+  | 'ai'
+  | 'similarity'
+  | 'commander'
+  | 'keyword'
+  | 'recommend'
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander';
 
 const searchType = ref<SearchType>('ai');
 
@@ -11,14 +19,21 @@ const storageKeys: Record<SearchType, string> = {
   commander: 'commander_search_query',
   keyword: 'keyword_search_query',
   recommend: 'recommend_search_query',
+  'popular-cards': 'popular_cards_search_query',
+  'popular-commanders': 'popular_commanders_search_query',
+  'popular-by-commander': 'popular_by_commander_search_query',
 };
 
-const paths: Record<SearchType, string> = {
-  ai: '/search',
-  similarity: '/search/similarity',
-  commander: '/search/commander',
-  keyword: '/search/keyword',
-  recommend: '/search/recommend',
+/** Map search type to its sub-path segment under /search/[platform]/... */
+const searchTypeSegments: Record<SearchType, string> = {
+  ai: 'ai',
+  similarity: 'similarity',
+  commander: 'commander',
+  keyword: 'keyword',
+  recommend: 'deckbuilder',
+  'popular-cards': 'popular-cards',
+  'popular-commanders': 'popular-commanders',
+  'popular-by-commander': 'popular-by-commander',
 };
 
 const requiredFields: Record<SearchType, string[]> = {
@@ -27,7 +42,15 @@ const requiredFields: Record<SearchType, string[]> = {
   commander: ['query'],
   keyword: ['query'],
   recommend: ['decklist', 'commander'],
+  'popular-cards': ['query', 'filters'],
+  'popular-commanders': ['query', 'filters'],
+  'popular-by-commander': ['commander'],
 };
+
+/** Build the path for a given search type and platform. */
+function buildPath(type: SearchType, platform: string = 'all'): string {
+  return `/search/${platform}/${searchTypeSegments[type]}`;
+}
 
 export const useSearchType = () => {
   const setSearchType = (type: SearchType) => {
@@ -36,7 +59,15 @@ export const useSearchType = () => {
 
   const getSearchType = () => searchType.value;
 
-  const getPath = (type: SearchType) => paths[type];
+  /** Get the path for a search type. Accepts optional platform (defaults to 'all'). */
+  const getPath = (type: SearchType, platform: string = 'all') =>
+    buildPath(type, platform);
+
+  /** Extract the current platform from a route path like /search/arena/ai/... */
+  const getPlatformFromPath = (path: string): string => {
+    const match = path.match(/^\/search\/([^/]+)\//);
+    return match?.[1] || 'all';
+  };
 
   /** Save the current route query to sessionStorage for a given search type. */
   const saveSearchQuery = (type: SearchType, query: LocationQuery) => {
@@ -77,6 +108,7 @@ export const useSearchType = () => {
     setSearchType,
     getSearchType,
     getPath,
+    getPlatformFromPath,
     saveSearchQuery,
     saveCurrentSearchQuery,
     restoreSearchQuery,

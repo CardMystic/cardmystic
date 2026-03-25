@@ -27,7 +27,7 @@ function closePopover() {
   isOpen.value = false
 }
 
-const mainItems: NavigationMenuItem[] = [
+const searchItems: NavigationMenuItem[] = [
   {
     label: 'Home',
     icon: 'i-lucide-home',
@@ -39,36 +39,63 @@ const mainItems: NavigationMenuItem[] = [
     children: [
       {
         label: 'AI Search',
-        description: 'Search for cards using AI',
+        description: 'Find cards by describing them using AI',
         icon: 'i-lucide-brain',
-        to: '/search',
+        to: '/search/all/ai',
       },
       {
         label: 'Similarity Search',
         description: 'Search for similar cards by name',
         icon: 'i-mdi-cards-outline',
-        to: '/search/similarity',
+        to: '/search/all/similarity',
       },
       {
         label: 'Commander Search',
-        description: 'Search for commanders using AI',
+        description: 'Find commanders by describing them using AI',
         icon: 'i-mdi-crown',
-        to: '/search/commander',
+        to: '/search/all/commander',
       },
       {
         label: 'Keyword Search',
         description: 'Search for cards by keywords and filters',
         icon: 'i-lucide-whole-word',
-        to: '/search/keyword',
+        to: '/search/all/keyword',
       },
       {
         label: 'Deck Recommender',
         description: 'Get decklist recommendations',
         icon: 'i-lucide-box',
-        to: '/search/recommend',
+        to: '/search/all/deckbuilder',
       }
     ]
   },
+  {
+    label: 'Explore',
+    icon: 'i-lucide-compass',
+    children: [
+      {
+        label: 'Popular Commander Cards',
+        description: 'Top cards across all commander decks',
+        icon: 'i-lucide-chart-no-axes-combined',
+        to: '/popular-cards/all',
+      },
+      {
+        label: 'Popular Commanders',
+        description: 'Top commanders across all decks',
+        icon: 'i-mdi-crown',
+        to: '/popular-commanders/all',
+      },
+      {
+        label: 'Popular Cards By Commander',
+        description: 'Most popular cards for each commander',
+        icon: 'i-lucide-flame',
+        to: '/popular-by-commander/all',
+      }
+    ]
+  },
+]
+
+const trailingItems: NavigationMenuItem[] = [
   {
     label: 'About',
     icon: 'i-lucide-info',
@@ -86,31 +113,49 @@ const mainItemsMobile: NavigationMenuItem[] = [
     label: 'AI Search',
     description: 'Search for cards using AI',
     icon: 'i-lucide-brain',
-    to: '/search',
+    to: '/search/all/ai',
   },
   {
     label: 'Similarity Search',
     description: 'Search for similar cards by name',
     icon: 'i-mdi-cards-outline',
-    to: '/search/similarity',
+    to: '/search/all/similarity',
   },
   {
     label: 'Commander Search',
     description: 'Search for commanders using AI',
     icon: 'i-mdi-crown',
-    to: '/search/commander',
+    to: '/search/all/commander',
   },
   {
     label: 'Keyword Search',
     description: 'Search for cards by keywords and filters',
     icon: 'i-lucide-whole-word',
-    to: '/search/keyword',
+    to: '/search/all/keyword',
   },
   {
     label: 'Deck Recommender',
     description: 'Get decklist recommendations',
     icon: 'i-lucide-box',
-    to: '/search/recommend',
+    to: '/search/all/deckbuilder',
+  },
+  {
+    label: 'Popular Commander Cards',
+    description: 'Top cards across all commander decks',
+    icon: 'i-lucide-chart-no-axes-combined',
+    to: '/popular-cards/all',
+  },
+  {
+    label: 'Popular Commanders',
+    description: 'Top commanders across all decks',
+    icon: 'i-mdi-crown',
+    to: '/popular-commanders/all',
+  },
+  {
+    label: 'Cards by Commander',
+    description: 'Popular cards for a commander',
+    icon: 'i-lucide-crown',
+    to: '/popular-by-commander/all',
   },
   {
     label: 'About',
@@ -235,11 +280,12 @@ const externalItems: NavigationMenuItem[] = [
       </NuxtLink>
 
       <!-- Desktop Navigation -->
-      <UNavigationMenu :items="[...mainItems, ...externalItems]" :ui="{
-        viewport: 'w-auto min-w-48 max-w-sm',
+      <UNavigationMenu :items="searchItems" :ui="{
+        viewport: 'w-auto min-w-65 max-w-md left-1/2 -translate-x-1/2',
         childList: 'w-auto flex flex-col items-start p-2 gap-2',
-        content: 'w-auto'
+        content: 'w-auto',
       }" />
+      <UNavigationMenu :items="[...trailingItems, ...externalItems]" />
       <!-- Clipboard Button (always visible, right side) -->
       <ClipboardMenu class="ml-4 h-12.5" />
 

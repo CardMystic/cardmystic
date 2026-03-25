@@ -6,7 +6,7 @@
       class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
       :style="{ backgroundImage: `url(${getListImageUrl(list)})` }"></div>
     <div
-      class="absolute inset-0 bg-gradient-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent">
+      class="absolute inset-0 bg-linear-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent">
     </div>
 
     <!-- Delete Button (visible on hover) -->
@@ -21,7 +21,7 @@
         {{ list.description }}
       </p>
       <div class="flex items-center justify-between text-xs md:text-sm">
-        <span>{{ formatShortDate(list.updated_at) }}</span>
+        <span>{{ formatShortDate(list.updated_at ? list.updated_at : list.created_at) }}</span>
         <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
       </div>
     </div>

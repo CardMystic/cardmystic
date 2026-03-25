@@ -3,8 +3,8 @@
     <UIcon name="i-lucide-group" />
     <span class="text-sm">Group by:</span>
     <USelect v-model="selectedGroupBy" :items="groupByOptions" placeholder="None" class="cursor-pointer min-w-37.5" />
-    <UButton v-if="selectedGroupBy" icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="clearGroupBy"
-      title="Clear grouping" />
+    <UButton v-if="selectedGroupBy" class="cursor-pointer" icon="i-lucide-x" color="neutral" variant="ghost" size="sm"
+      @click="clearGroupBy" title="Clear grouping" />
   </div>
 </template>
 
@@ -20,6 +20,7 @@ const emit = defineEmits<{
 const groupByOptions = [
   { value: 'type', label: 'Card Type' },
   { value: 'color', label: 'Color' },
+  { value: 'colorIdentity', label: 'Color Identity' },
   { value: 'cmc', label: 'Mana Value' },
 ];
 
@@ -31,5 +32,5 @@ function clearGroupBy() {
 
 watch(selectedGroupBy, (val) => {
   emit('update:groupBy', val);
-});
+}, { immediate: true });
 </script>

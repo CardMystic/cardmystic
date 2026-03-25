@@ -3,6 +3,7 @@
   <div class="mt-3 w-full">
     <template v-if="isLoading">
       <div style="height: 32px"></div> <!-- Sort spacer to prevent layout shift -->
+      <div v-if="defaultGroupBy" style="height: 26px"></div> <!-- Spacer for expand all/collapse all buttons -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
       </div>
@@ -11,33 +12,33 @@
     <template v-else-if="searchResults && searchResults.length">
       <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
         <GroupBy :default-value="defaultGroupBy" @update:groupBy="handleGroupBy" />
-        <SortComponent @sort="handleSort" />
+        <SortComponent :has-als-score="hasAlsScore" :has-ai-score="hasAiScore" :has-popularity="hasPopularity"
+          @sort="handleSort" />
       </div>
 
       <!-- Searched card pinned at top when grouped (similarity search) -->
       <div v-if="searchedCard && groupedResults && groupedResults.length > 0 && groupedResults[0].label"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
         <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
-          :hide-progress-bar="false" :hide-thumbs-down-button="true" :score-scale="scoreScale" />
+          :hide-progress-bar="false" :hide-thumbs-down-button="true" />
       </div>
 
       <!-- Grouped results (accordion) -->
       <template v-if="groupedResults && groupedResults.length > 0 && groupedResults[0].label">
         <div class="flex justify-center sm:justify-end gap-1 mb-1">
-          <UButton icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral" variant="ghost"
-            @click="openAccordionValues = accordionItems.map(i => i.value as string)" />
-          <UButton icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral" variant="ghost"
-            @click="openAccordionValues = []" />
+          <UButton class="cursor-pointer" icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral"
+            variant="ghost" @click="openAccordionValues = accordionItems.map(i => i.value as string)" />
+          <UButton class="cursor-pointer" icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral"
+            variant="ghost" @click="openAccordionValues = []" />
         </div>
         <UAccordion type="multiple" v-model="openAccordionValues" :items="accordionItems"
           :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
           <template v-for="group in groupedResults" :key="group.label" #[group.label]>
             <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pb-4">
               <div v-for="(result, index) in group.cards" :key="result.card_data.id">
-                <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
-                  :is-searched="false" :hide-progress-bar="isKeywordSearch"
-                  :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
-                  :score-scale="scoreScale" />
+                <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
+                  :hide-thumbs-down-button="hideThumbsDownButton"
+                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
               </div>
             </div>
           </template>
@@ -48,10 +49,9 @@
       <template v-else>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
-            <Card :card="result" :showCardInfo="true" :is-similarity-search="isSimilaritySearch"
-              :is-searched="isSimilaritySearch && index === 0" :hide-progress-bar="isKeywordSearch"
-              :hide-thumbs-down-button="hideThumbsDownButton || isKeywordSearch || isSimilaritySearch"
-              :score-scale="scoreScale" />
+            <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
+              :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
+              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
           </div>
         </div>
       </template>
@@ -106,10 +106,10 @@ const props = defineProps<{
   helpText?: string;
   errorMessage?: string;
   isSimilaritySearch?: boolean;
-  isKeywordSearch?: boolean;
+  hideProgressBar?: boolean;
+  showAddToDeckbuilderButton?: boolean;
   hideSearchedCard?: boolean;
   hideThumbsDownButton?: boolean;
-  scoreScale?: 'normalized' | 'raw';
   defaultGroupBy?: string;
 }>();
 
@@ -128,6 +128,17 @@ function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
 function handleGroupBy(value: string | undefined) {
   groupBy.value = value;
 }
+
+// Detect which score types are available in the current results
+const hasAlsScore = computed(() =>
+  !!props.searchResults?.some(c => c.als_score !== undefined)
+);
+const hasAiScore = computed(() =>
+  !!props.searchResults?.some(c => c.ai_normalized_score !== undefined)
+);
+const hasPopularity = computed(() =>
+  !!props.searchResults?.some(c => c.popularity !== undefined && c.popularity > 0)
+);
 
 // Computed sorted results for flat display (no grouping, or similarity search)
 const sortedResults = computed(() => {

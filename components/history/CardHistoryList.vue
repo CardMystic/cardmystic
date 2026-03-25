@@ -27,9 +27,8 @@
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        <Card v-for="card in displayedCards" :key="card.id"
-          :card="{ card_name: card.name, card_data: card, score: undefined }" :show-card-info="true"
-          :hide-progress-bar="true" :hide-thumbs-down-button="true" />
+        <Card v-for="card in displayedCards" :key="card.id" :card="{ card_name: card.name, card_data: card }"
+          :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true" />
       </div>
 
       <!-- Show More Button -->

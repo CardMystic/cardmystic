@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Page Background Image (blurred, behind all content) -->
     <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
-      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-10 blur-sm"
+      <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20 blur-sm"
         :style="{ backgroundImage: `url(${bannerImageUrl})` }"></div>
     </div>
 
@@ -16,16 +16,16 @@
             <UButton icon="i-lucide-copy" color="primary" variant="outline" @click="copyCardNames"
               :disabled="!cards || cards.length === 0" class="cursor-pointer" label="Copy" />
           </UTooltip>
-          <UTooltip text="Bulk add cards">
-            <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkAddModalOpen = true"
-              class="cursor-pointer" label="Bulk Add" />
+          <UTooltip text="Bulk edit cards">
+            <UButton icon="i-lucide-list-plus" color="primary" variant="outline" @click="isBulkEditModalOpen = true"
+              class="cursor-pointer" label="Bulk Edit" />
           </UTooltip>
           <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid"
             :label="`Buy ($${totalPrice.toFixed(2)})`" @click="openMassEntry" :disabled="!cards || cards.length === 0"
             class="cursor-pointer" />
         </div>
         <div>
-          <USelectMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm" :loading="addCardLoading"
+          <UInputMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm" :loading="addCardLoading"
             :items="filteredAddCards" placeholder="Search for a card to add..." icon="i-lucide-plus"
             class="flex-1 min-w-90 cursor-pointer" @update:model-value="handleAddCard" />
         </div>
@@ -38,7 +38,7 @@
       <div class="flex gap-2 items-center">
         <UInput v-model="recommendDescription"
           placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
-          icon="i-lucide-box" class="flex-1" :ui="{ base: 'text-sm h-8' }" size="sm" />
+          icon="i-lucide-box" class="flex-1" :ui="{ base: 'text-sm h-8' }" size="sm" @keydown.enter="goToRecommend" />
         <UButton icon="i-lucide-box" color="primary" variant="solid" label="Recommend" @click="goToRecommend"
           class="cursor-pointer h-8" size="sm" />
       </div>
@@ -52,7 +52,7 @@
 
     <!-- Cards Results -->
     <ClientOnly>
-      <CardListResults :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
+      <CardListResults class="mb-8" :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
         :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
         @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
       <template #fallback>
@@ -63,8 +63,8 @@
     </ClientOnly>
   </div>
 
-  <!-- Bulk Add Modal -->
-  <BulkAddCardsModal v-model:open="isBulkAddModalOpen" :list-id="listId" />
+  <!-- Bulk Edit Modal -->
+  <BulkAddCardsModal v-model:open="isBulkEditModalOpen" :list-id="listId" :current-card-names="currentCardNames" />
 
   <BackToTop />
 
@@ -251,22 +251,30 @@ async function handleAddCard(cardName: string) {
     selectedCardToAdd.value = ''
     addCardSearchTerm.value = ''
   } catch (error: any) {
+    const isDuplicate = error?.code === '23505' || error?.statusCode === 409
     toast.add({
-      title: 'Error adding card',
-      description: error.message,
-      color: 'error'
+      title: isDuplicate ? 'Card already in list' : 'Error adding card',
+      description: isDuplicate ? `${cardName} is already in this list.` : error.message,
+      color: isDuplicate ? 'warning' : 'error',
+      icon: isDuplicate ? 'i-lucide-copy-check' : undefined
     })
+    selectedCardToAdd.value = ''
+    addCardSearchTerm.value = ''
   } finally {
     addCardLoading.value = false
   }
 }
 
-// Bulk add state
-const isBulkAddModalOpen = ref(false)
+// Bulk edit state
+const isBulkEditModalOpen = ref(false)
+const currentCardNames = computed(() =>
+  cards.value?.map((card: any) => card.card_data.name).filter(Boolean) || []
+)
 
 // Recommend state
 const recommendDescription = ref('')
 const router = useRouter()
+const { saveSearchMutation } = useSearchHistory()
 
 function goToRecommend() {
   if (!cards.value || cards.value.length === 0) return
@@ -285,9 +293,23 @@ function goToRecommend() {
     })
     .filter(Boolean)
   if (commanderNamesList.length > 0) {
-    query.commanders = commanderNamesList.join(',')
+    query.commander = commanderNamesList[0]
   }
-  router.push({ path: '/search/recommend', query })
+  if (commanderNamesList.length > 1) {
+    query.partnerCommander = commanderNamesList[1]
+  }
+
+  saveSearchMutation.mutate({
+    query: recommendDescription.value.trim() || '',
+    searchType: 'recommend',
+    filters: {
+      commander: commanderNamesList[0] || undefined,
+      partnerCommander: commanderNamesList[1] || undefined,
+      decklist: decklist || undefined,
+    },
+  })
+
+  router.push({ path: '/search/all/deckbuilder', query })
 }
 
 const { data: rawCards, status: cardsQueryStatus } = useCardNames()

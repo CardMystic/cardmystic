@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type ComputedRef, type Ref } from 'vue';
 import type { Card } from '~/models/cardModel';
+import type { CardSearchFilters } from '~/models/searchModel';
 
 export interface AlsRecommendRequest {
   cards?: string[];
   limit: number;
   query?: string;
   commanders?: string[];
+  filters?: CardSearchFilters;
 }
 
 interface AlsRecommendResponse {

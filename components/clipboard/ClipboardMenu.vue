@@ -44,7 +44,7 @@
         </div>
       </template>
     </UPopover>
-    <SaveToListModal v-model="isSaveToListOpen" :card-ids="cardIds" @saved="handleSaved" />
+    <SaveToListModal v-model="isSaveToListOpen" :card-names="clipboardCardNames" @saved="handleSaved" />
   </div>
 </template>
 
@@ -69,8 +69,8 @@ const clipboardLabel = computed(() => {
   return (clipboard.count.value > 0 ? clipboard.count.value + '' : '0')
 })
 
-const cardIds = computed(() => {
-  return clipboard.list.value.map(card => card.id)
+const clipboardCardNames = computed(() => {
+  return clipboard.list.value.map(card => card.name)
 })
 
 function navigateToCard(cardId: string) {

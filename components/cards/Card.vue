@@ -1,7 +1,7 @@
 <template>
   <UCard variant="subtle"
-    :class="['card-root', isSearched ? 'searched-card-bg' : '', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
-    :ui="{ body: 'p-2 sm:p-4' }">
+    :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
+    :ui="{ body: 'p-1 sm:p-4' }">
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -12,93 +12,224 @@
       </template>
     </UModal>
     <div class="card-image-wrapper">
-      <!-- Card content: image + score -->
-      <img :class="sizeClass" :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
-        @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)" loading="lazy" decoding="async"
-        :ui="{}" @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
-      <div v-else class="image-placeholder">
-        <p class="placeholder-text">{{ card.card_data.name }}</p>
-      </div>
+      <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
 
-      <ClipboardButton v-if="showCardInfo" :card="card" />
+      <!-- Partner commanders: two overlapping cards -->
+      <template v-if="hasPartner">
+        <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
+          <div class="partner-card partner-back" :class="{ 'partner-front': partnerFrontIndex === 1 }"
+            @mouseenter="partnerHoveredIndex = 1" @click="navigateToCard(card.partner_card_data!.id)">
+            <img class="card-large cursor-pointer" :src="getCardImageUrl(card.partner_card_data!)"
+              :alt="card.partner_card_data!.name" @error="handleImageError"
+              v-if="getCardImageUrl(card.partner_card_data!)" loading="lazy" decoding="async" />
+          </div>
+          <div class="partner-card" :class="{ 'partner-front': partnerFrontIndex === 0 }"
+            @mouseenter="partnerHoveredIndex = 0" @click="navigateToCard(card.card_data.id)">
+            <img class="card-large cursor-pointer" :src="getCardImageUrl(card.card_data, isFlipped)"
+              :alt="card.card_data.name" @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)"
+              loading="lazy" decoding="async" />
+          </div>
+        </div>
+      </template>
+
+      <!-- Single card (default) -->
+      <template v-else>
+        <img :class="sizeClass" :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
+          @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)" loading="lazy" decoding="async"
+          :ui="{}" @click="navigateToCard(card.card_data.id)" class="cursor-pointer" />
+        <div v-else class="image-placeholder">
+          <p class="placeholder-text">{{ card.card_data.name }}</p>
+        </div>
+      </template>
+
+      <ClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
 
       <!-- Flip Button for Dual-Faced Cards -->
       <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
-        <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
-          square>
-          <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
-        </UButton>
+        <UTooltip text="Flip card">
+          <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
+            square>
+            <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
+          </UButton>
+        </UTooltip>
       </div>
 
-      <!-- Score Bar -->
-      <div v-if="!hideProgressBar" class="mt-1 flex flex-row items-center justify-center text-center w-full">
-        <UProgress v-if="!isSearched" v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
-        <p v-if="!isSearched" class="text-xs">
-          {{ props.card.score !== undefined
-            ? props.isSimilaritySearch
-              ? `${Math.round(normalizedScore)}%`
-              : Math.round(normalizedScore) + '%'
-            : 'N/A' }}
-        </p>
+      <!-- Score Bars -->
+      <div v-if="!hideProgressBar" class="mt-1 w-full" :class="{ invisible: isSearched }">
+        <!-- AI score bar (when AI scores present) -->
+        <template v-if="hasDualScores">
+          <UTooltip text="AI Score: how relevant this card is to your query">
+            <div class="flex flex-row items-center justify-center text-center w-full mt-0.5">
+              <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
+              <p class="text-xs whitespace-nowrap">AI: {{ Math.round(normalizedScore) }}%</p>
+            </div>
+          </UTooltip>
+          <UTooltip text="Synergy score: how relevant this card is to your decklist">
+            <div class="flex flex-row items-center justify-center text-center w-full">
+              <UProgress v-model="alsDisplayScore" class="my-0 mr-2" size="md" :color="alsScoreColor" />
+              <p class="text-xs whitespace-nowrap">Deck: {{ Math.round(alsDisplayScore) }}%</p>
+            </div>
+          </UTooltip>
+        </template>
+        <!-- Single AI/ALS bar -->
+        <template v-else-if="hasAnyScore">
+          <UTooltip
+            :text="isAlsOnly ? 'Synergy score: how relevant this card is to your decklist' : 'AI Score: how relevant this card is to your query'">
+            <div class="flex flex-row items-center justify-center text-center w-full">
+              <UProgress v-model="normalizedScore" class="my-0 mr-2" size="md" :color="scoreColor" />
+              <p class="text-xs whitespace-nowrap">{{ isAlsOnly ? 'Deck' : 'AI' }}: {{ Math.round(normalizedScore) }}%
+              </p>
+            </div>
+          </UTooltip>
+        </template>
+        <!-- Popularity bar -->
+        <template v-if="hasPopularity">
+          <UTooltip :text="`In ${popularityPercent.toFixed(2)}% of decks that match your filters`">
+            <div class="flex flex-row items-center justify-center text-center w-full"
+              :class="{ 'mt-0.5': hasAnyScore }">
+              <UProgress v-model="popularityPercent" class="my-0 mr-2" size="md" :color="popularityColor" />
+              <p class="text-xs whitespace-nowrap">{{ popularityDisplay }}% POP</p>
+            </div>
+          </UTooltip>
+        </template>
+        <!-- No score at all -->
+        <template v-if="!hasAnyScore && !hasPopularity">
+          <div class="flex flex-row items-center justify-center text-center w-full">
+            <UProgress :model-value="0" class="my-0 mr-2" size="md" color="error" />
+            <p class="text-xs"></p>
+          </div>
+        </template>
       </div>
     </div>
 
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
 
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-        <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-          {{ card.card_data.name.split(' // ')[0] }}
-        </p>
-        <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
-          class="manacost-text whitespace-nowrap" />
-      </div>
-      <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
-        <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-          <span
-            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
-            {{ getSimpleCardType(card.card_data.type_line) ?? "N/A" }}
-          </span>
-        </p>
-      </div>
+      <!-- Partner: show both names and combined type line -->
+      <template v-if="hasPartner && showCardInfo">
+        <div v-for="scryfallCard in [card.card_data, card.partner_card_data!]" :key="scryfallCard.id"
+          class="flex flex-row items-center justify-between w-full">
+          <p class="whitespace-nowrap overflow-hidden truncate">
+            {{ scryfallCard.name?.split(' // ')[0] }}
+          </p>
+          <ManaCost v-if="scryfallCard.mana_cost" :manaCost="scryfallCard.mana_cost.split(' // ')[0]"
+            class="manacost-text whitespace-nowrap" />
+        </div>
+        <div class="flex flex-row items-center justify-between w-full text-xs">
+          <p class="whitespace-nowrap overflow-hidden truncate">
+            <span style="color: #ff4500;">
+              {{ getSimpleCardType(card.card_data.type_line) }} &amp; {{
+                getSimpleCardType(card.partner_card_data!.type_line) }}
+            </span>
+          </p>
+        </div>
+      </template>
+
+      <!-- Single card: original layout -->
+      <template v-else>
+        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
+          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
+            {{ card.card_data.name.split(' // ')[0] }}
+          </p>
+          <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
+            class="manacost-text whitespace-nowrap" />
+        </div>
+        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
+          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
+            <span
+              :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
+              {{ getSimpleCardType(card.card_data.type_line) ?? "" }}
+            </span>
+          </p>
+        </div>
+      </template>
 
       <!-- Action Buttons -->
-      <div class="flex flex-row items-center justify-between text-center w-full">
+      <div class="flex flex-row items-center justify-between text-center w-full mt-1">
 
         <!-- Left side buttons-->
         <div class="flex flex-row items-center">
           <!-- Buy on TCGPlayer button -->
-          <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
+          <UTooltip :text="hasPartner ? combinedPriceTooltip : singleBuyTooltip" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton v-if="showCardInfo && card.card_data.tcgplayer_id"
-                :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-                class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank" rel="noopener noreferrer"
+              <!-- Partner: combined price button -->
+              <UButton v-if="hasPartner && showCardInfo && partnerTcgplayerId"
+                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class="mr-1 sm:mr-2"
+                icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank" rel="noopener noreferrer"
                 aria-label="Buy on TCGPlayer">
-                {{
-                  card.card_data.prices.usd ? `$${card.card_data.prices.usd}` :
-                    'Buy' }}
+                {{ combinedPriceLabel }}
+              </UButton>
+              <!-- Single card: original price button -->
+              <UButton v-else-if="!hasPartner && showCardInfo && card.card_data.tcgplayer_id"
+                :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
+                class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank" rel="noopener noreferrer"
+                aria-label="Buy on TCGPlayer">
+                {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
               </UButton>
             </template>
           </UTooltip>
-          <!-- Similarity search button -->
-          <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
-            <template #default>
-              <UButton v-if="showCardInfo && !isSearched" color="neutral" variant="solid"
-                class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"
-                aria-label="Find Similar Cards">
-              </UButton>
+          <!-- More actions popover (mobile only) -->
+          <UPopover v-if="showCardInfo && !isSearched" v-model:open="moreActionsOpen" class="sm:hidden">
+            <UTooltip text="More actions" :popper="{ placement: 'top' }">
+              <UButton color="neutral" variant="solid" class="mr-1 cursor-pointer"
+                icon="i-lucide-ellipsis" size="xs" aria-label="More actions" />
+            </UTooltip>
+            <template #content>
+              <div class="flex flex-col gap-1 p-2 w-48">
+                <UButton color="neutral" variant="ghost" class="cursor-pointer justify-start" size="sm"
+                  icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
+                  Find Similar Cards
+                </UButton>
+                <template v-if="isCommander">
+                  <UButton color="primary" variant="ghost" class="cursor-pointer justify-start" size="sm"
+                    icon="i-lucide-box" @click="getRecommendations(); moreActionsOpen = false">
+                    Deck Recommendations
+                  </UButton>
+                  <UButton color="error" variant="ghost" class="cursor-pointer justify-start" size="sm"
+                    icon="i-lucide-flame" @click="viewPopularCards(); moreActionsOpen = false">
+                    Popular Cards
+                  </UButton>
+                </template>
+              </div>
             </template>
-          </UTooltip>
+          </UPopover>
+          <!-- Desktop buttons (hidden on mobile) -->
+          <template v-if="showCardInfo && !isSearched">
+            <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
+              <UButton v-if="isCommander" color="primary" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+                icon="i-lucide-box" size="sm" @click="getRecommendations"
+                aria-label="Get Deck Recommendations for this Commander" />
+            </UTooltip>
+            <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
+              <UButton v-if="isCommander" color="error" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+                icon="i-lucide-flame" size="sm" @click="viewPopularCards"
+                aria-label="Popular Cards for this Commander" />
+            </UTooltip>
+            <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
+              <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+                icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"
+                aria-label="Find Similar Cards" />
+            </UTooltip>
+          </template>
         </div>
 
         <!-- Right side buttons -->
-        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2">
+        <div v-if="!isSearched && showCardInfo" class="flex flex-row items-center gap-2 justify-center">
 
           <!-- Thumbs down button -->
           <UTooltip v-if="!hideThumbsDownButton" text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
-              <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="soft"
-                icon="i-lucide-thumbs-down" size="sm" aria-label="Disagree with this result" @click="handleDislike" />
+              <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="ghost"
+                icon="i-lucide-thumbs-down" :size="isMobile ? 'xs' : 'sm'" aria-label="Disagree with this result" @click="handleDislike" />
+            </template>
+          </UTooltip>
+
+          <!-- Add to deckbuilding search button -->
+          <UTooltip v-if="showAddToDeckbuilderButton" text="Add to deckbuilding search" :popper="{ placement: 'top' }">
+            <template #default>
+              <UButton class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'" variant="soft"
+                :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" :size="isMobile ? 'xs' : 'sm'"
+                aria-label="Add to deckbuilding search" @click="deckbuilderStore.addCard(card.card_data.name)" />
             </template>
           </UTooltip>
         </div>
@@ -106,7 +237,7 @@
         <!-- Remove from list button -->
         <UTooltip v-if="showRemoveButton" text="Remove from list" :popper="{ placement: 'top' }">
           <template #default>
-            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
+            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" :size="isMobile ? 'xs' : 'sm'"
               aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
           </template>
         </UTooltip>
@@ -116,6 +247,7 @@
           {{ showAllData ? 'Hide Data' : 'Show Data' }}
         </UButton>
       </div>
+
     </div>
   </UCard>
   <div v-if="isDev && showAllData" class="card-data mt-2">
@@ -127,7 +259,7 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
@@ -135,10 +267,28 @@ import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { useCardFeedback } from '~/composables/useCardFeedback';
+import { useDeckbuilder } from '~/composables/useDeckbuilder';
+import { useCommandersSet } from '~/composables/useBulkData';
 
 const router = useRouter();
 const route = useRoute();
-const { saveCurrentSearchQuery } = useSearchType();
+const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
+const { saveSearchMutation } = useSearchHistory();
+
+// Responsive: detect mobile (<640px, matching Tailwind's sm breakpoint)
+const isMobile = ref(false);
+let mediaQuery: MediaQueryList | null = null;
+function updateMobile(e: MediaQueryListEvent | MediaQueryList) {
+  isMobile.value = !e.matches;
+}
+onMounted(() => {
+  mediaQuery = window.matchMedia('(min-width: 640px)');
+  isMobile.value = !mediaQuery.matches;
+  mediaQuery.addEventListener('change', updateMobile);
+});
+onUnmounted(() => {
+  mediaQuery?.removeEventListener('change', updateMobile);
+});
 
 const props = defineProps({
   card: {
@@ -149,27 +299,17 @@ const props = defineProps({
     type: String as PropType<'small' | 'large'>,
     default: 'large',
   },
-  // Optional normalization context - if provided, use this instead of search store
-  normalizationContext: {
-    type: Array as PropType<number[]>,
-    default: undefined,
-  },
-  // If true, treat score as 0-1 range for similarity search
-  isSimilaritySearch: {
-    type: Boolean,
-    default: false,
-  },
-  // Score scale: 'normalized' means 0-1 range (multiply by 100), 'raw' uses default normalization
-  scoreScale: {
-    type: String as PropType<'normalized' | 'raw'>,
-    default: 'raw',
-  },
   // If true, show additional card info (name, type, clipboard button)
   showCardInfo: {
     type: Boolean,
     default: false,
   },
   hideThumbsDownButton: {
+    type: Boolean,
+    default: false,
+  },
+  // If true, show a button to add to deckbuilding search
+  showAddToDeckbuilderButton: {
     type: Boolean,
     default: false,
   },
@@ -186,7 +326,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  isCommander: {
+  goldHighlight: {
     type: Boolean,
     default: false,
   },
@@ -198,9 +338,71 @@ const emit = defineEmits<{
 
 const sizeClass = computed(() => `card-${props.size}`);
 
+// Commander detection
+const { data: commandersSet } = useCommandersSet();
+const isCommander = computed(() => {
+  if (!props.card?.card_data?.name || !commandersSet.value) return false;
+  return commandersSet.value.has(props.card.card_data.name);
+});
+
+// Partner commander support
+const hasPartner = computed(() => !!props.card.partner_card_data);
+const partnerHoveredIndex = ref<number | null>(null);
+const partnerFrontIndex = computed(() => partnerHoveredIndex.value ?? 0);
+
+const combinedUsdPrice = computed(() => {
+  if (!hasPartner.value) return null;
+  let total = 0;
+  let hasPrice = false;
+  for (const card of [props.card.card_data, props.card.partner_card_data!]) {
+    const usd = parseFloat(card.prices?.usd ?? '');
+    if (!isNaN(usd)) {
+      total += usd;
+      hasPrice = true;
+    }
+  }
+  return hasPrice ? total : null;
+});
+
+const combinedPriceLabel = computed(() => {
+  if (combinedUsdPrice.value !== null) return `$${combinedUsdPrice.value.toFixed(2)}`;
+  return 'Buy';
+});
+
+const combinedPriceTooltip = computed(() => {
+  if (!hasPartner.value) return 'Buy on TCGPlayer';
+  const cards = [props.card.card_data, props.card.partner_card_data!];
+  const parts = cards
+    .map((c) => {
+      const price = c.prices?.usd ? `$${c.prices.usd}` : '?';
+      return `${c.name?.split(' // ')[0]}: ${price}`;
+    })
+    .join(' + ');
+  return `Buy on TCGPlayer (${parts})`;
+});
+
+const partnerTcgplayerId = computed(() => {
+  if (props.card.card_data.tcgplayer_id) return props.card.card_data.tcgplayer_id;
+  if (props.card.partner_card_data?.tcgplayer_id) return props.card.partner_card_data.tcgplayer_id;
+  return null;
+});
+
+const singleBuyTooltip = computed(() => {
+  const price = props.card.card_data.prices?.usd;
+  return price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer';
+});
+
+const deckbuilderStore = useDeckbuilder();
+
+const isInDecklist = computed(() => {
+  if (!props.card.card_data?.name) return false;
+  return deckbuilderStore.hasCard(props.card.card_data.name);
+});
+
 const isFlipped = ref(false);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
+const moreActionsOpen = ref(false);
 
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;
@@ -282,49 +484,57 @@ function getSimpleCardType(type_line: string): string {
   }
 }
 
-function normalizeScore(score: number | undefined): number {
-  if (score === undefined) {
-    return 0; // Default to 0 if score is undefined
-  }
+// Whether this card has both ALS and AI scores (dual bar mode)
+const hasDualScores = computed(() =>
+  props.card.als_score !== undefined && props.card.ai_normalized_score !== undefined
+);
 
-  // For similarity search or normalized scores, treat score as 0-1 range and convert to percentage
-  if (props.isSimilaritySearch || props.scoreScale === 'normalized') {
-    return Math.min(Math.max(score * 100, 0), 100);
-  }
+// Whether this card has only an ALS score (no AI)
+const isAlsOnly = computed(() =>
+  props.card.als_score !== undefined && props.card.ai_normalized_score === undefined
+);
 
-  // Use provided normalization context if available, otherwise fall back to search store
-  const allScores =
-    props.normalizationContext ||
-    [props.card.score || 0];
+// Whether any displayable score exists
+const hasAnyScore = computed(() =>
+  props.card.ai_normalized_score !== undefined ||
+  props.card.als_score !== undefined
+);
 
-  // If no context available, return score as-is (assume it's already normalized)
-  if (allScores.length === 0) {
-    return score;
-  }
+// Primary score: prefer ai_normalized_score, fall back to als_score
+const primaryScore = computed(() => {
+  if (props.card.ai_normalized_score !== undefined) return props.card.ai_normalized_score;
+  if (props.card.als_score !== undefined) return props.card.als_score;
+  return undefined;
+});
 
-  const highestScore = Math.max(...allScores);
-
-  // Default range is 30-5, but expand max if scores exceed 30
-  const maxScore = Math.max(30, highestScore);
-  const minScore = maxScore - 25; // Always 25 points below max
-
-  // Clamp the score to the calculated range
-  const clampedScore = Math.min(Math.max(score, minScore), maxScore);
-
-  // Convert to 0-100 percentage
-  const normalizedScore =
-    ((clampedScore - minScore) / (maxScore - minScore)) * 100;
-
-  return normalizedScore;
+function toDisplayPercent(score: number | undefined): number {
+  if (score === undefined) return 0;
+  // All scores are 0-1 normalized, convert to percentage
+  return Math.min(Math.max(score * 100, 0), 100);
 }
 
-const normalizedScore = computed(() => normalizeScore(props.card.score));
+const normalizedScore = computed(() => toDisplayPercent(primaryScore.value));
+const alsDisplayScore = computed(() => toDisplayPercent(props.card.als_score));
 
-const scoreColor = computed(() => {
-  if (normalizedScore.value >= 70) return 'success';
-  if (normalizedScore.value >= 40) return 'warning';
+function scoreToColor(value: number) {
+  if (value >= 70) return 'success';
+  if (value >= 40) return 'warning';
   return 'error';
+}
+
+const scoreColor = computed(() => scoreToColor(normalizedScore.value));
+const alsScoreColor = computed(() => scoreToColor(alsDisplayScore.value));
+
+const hasPopularity = computed(() => props.card.popularity !== undefined);
+const popularityPercent = computed(() => {
+  if (props.card.popularity === undefined) return 0;
+  return Math.min(Math.max(props.card.popularity * 100, 0), 100);
 });
+const popularityDisplay = computed(() => {
+  if (popularityPercent.value < 1) return popularityPercent.value.toFixed(2);
+  return Math.round(popularityPercent.value).toString();
+});
+const popularityColor = computed(() => scoreToColor(popularityPercent.value));
 
 function findSimilarCards() {
   if (!props.card) return;
@@ -338,7 +548,24 @@ function findSimilarCards() {
     filters: undefined, // No additional filters for similarity search
     searchType: 'similarity'
   };
-  router.push({ path: '/search/similarity', query: queryParams });
+  router.push({ path: '/search/all/similarity', query: queryParams });
+}
+
+function getRecommendations() {
+  if (!props.card?.card_data?.name) return;
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('recommend', queryParams);
+  saveSearchMutation.mutate({
+    query: props.card.card_data.name,
+    searchType: 'recommend',
+    filters: { commander: props.card.card_data.name },
+  });
+  router.push({ path: '/search/all/deckbuilder', query: queryParams });
+}
+
+function viewPopularCards() {
+  if (!props.card?.card_data?.name) return;
+  router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
 }
 
 function handleImageError(event: Event) {
@@ -374,6 +601,7 @@ function toggleShowAllData() {
   position: relative;
   width: 100%;
   height: 100%;
+  container-type: inline-size;
 }
 
 /* Small Size Variant */
@@ -491,5 +719,49 @@ function toggleShowAllData() {
 
 .flip-card-icon {
   font-size: 1.2rem;
+}
+
+/* Partner commander stack — 24px shorter than a normal card to leave room for extra text */
+.partner-stack {
+  position: relative;
+  width: 100%;
+  height: calc(100cqw * 7 / 5 - 24px);
+}
+
+.partner-card {
+  position: absolute;
+  width: 72%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.partner-card.partner-back {
+  top: 0;
+}
+
+.partner-card:not(.partner-back) {
+  bottom: 0;
+}
+
+.partner-card.partner-front {
+  z-index: 1;
+}
+
+.partner-card:not(.partner-front) {
+  z-index: 0;
+}
+
+.partner-stack .card-large {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Partner images scale individually on hover */
+.partner-card img {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.partner-card:hover img {
+  transform: scale(1.05);
+  z-index: 2;
 }
 </style>

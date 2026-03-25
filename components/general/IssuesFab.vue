@@ -4,8 +4,8 @@
       side: 'left',
       sideOffset: 8
     }" text="Report an issue with these results">
-      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft" class="border-2 border-secondary"
-        @click="onClick && onClick()" />
+      <UButton icon="i-lucide-circle-alert" color="neutral" size="xl" variant="soft"
+        class="border-2 border-secondary cursor-pointer" @click="onClick && onClick()" />
     </UTooltip>
   </div>
 </template>
@@ -16,14 +16,22 @@ const props = defineProps<{
 }>();
 const onClick = props.onClick;
 
-const bottomOffset = ref(58);
-const minBottom = 58;
+const jumpToVisible = useJumpToVisible();
+const defaultBottom = computed(() => jumpToVisible.value ? 58 : 8);
+
+const bottomOffset = ref(defaultBottom.value);
+const minBottom = computed(() => jumpToVisible.value ? 58 : 8);
 const footerGap = 62;
+
+watch(defaultBottom, (val) => {
+  bottomOffset.value = val;
+  updatePosition();
+});
 
 function updatePosition() {
   const footer = document.querySelector('footer');
   if (!footer) {
-    bottomOffset.value = minBottom;
+    bottomOffset.value = minBottom.value;
     return;
   }
 
@@ -33,7 +41,7 @@ function updatePosition() {
   if (footerRect.top < viewportHeight) {
     bottomOffset.value = viewportHeight - footerRect.top + footerGap;
   } else {
-    bottomOffset.value = minBottom;
+    bottomOffset.value = minBottom.value;
   }
 }
 
