@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -306,8 +306,8 @@
                 </UButton>
               </div>
               <div class="flex justify-end mb-2">
-                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="getRecommendations">Go To Full Search Page</a>
+                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                  @click="getRecommendations">Go To Full Search Page</button>
               </div>
               <ClientOnly>
                 <SearchResults :is-loading="isRecommendedCardsEffectivelyLoading"
@@ -323,8 +323,9 @@
 
             <template #popular>
               <div class="flex justify-end mt-2 mb-2">
-                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="viewPopularCards">Go
-                  To Full Search Page</a>
+                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                  @click="viewPopularCards">Go
+                  To Full Search Page</button>
               </div>
               <ClientOnly>
                 <SearchResults :is-loading="isPopularCardsEffectivelyLoading"
@@ -340,8 +341,9 @@
 
             <template #similar>
               <div class="flex justify-end mt-2 mb-2">
-                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="findSimilarCards">Go
-                  To Full Search Page</a>
+                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                  @click="findSimilarCards">Go
+                  To Full Search Page</button>
               </div>
               <ClientOnly>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
@@ -383,8 +385,9 @@
 
             <template #similar>
               <div class="flex justify-end mt-2 mb-2">
-                <a class="text-xs text-gray-400 underline cursor-pointer hover:text-white" @click="findSimilarCards">Go
-                  To Full Search Page</a>
+                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                  @click="findSimilarCards">Go
+                  To Full Search Page</button>
               </div>
               <ClientOnly>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
