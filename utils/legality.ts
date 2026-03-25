@@ -60,7 +60,6 @@ export function isColorIdentityLegal(
   );
 
   if (invalidColors.length > 0) {
-    const colorNames = invalidColors.map(colorLetterToName).join(', ');
     return {
       legal: false,
       reason: `Outside commander's color identity`,

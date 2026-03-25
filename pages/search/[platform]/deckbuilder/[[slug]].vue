@@ -140,21 +140,6 @@ const decklistCardNames = computed(() => {
   return parseDecklist(deckbuilderDecklist.value);
 });
 
-const allCards = computed(() => {
-  const cards: { id: string, name: string }[] = [];
-  if (commanderCards.value) {
-    for (const cmd of commanderCards.value) {
-      if (cmd.card_data?.id) cards.push({ id: cmd.card_data.id, name: cmd.card_data.name });
-    }
-  }
-  if (searchResults.value) {
-    for (const card of searchResults.value) {
-      if (card.card_data?.id) cards.push({ id: card.card_data.id, name: card.card_data.name });
-    }
-  }
-  return cards;
-});
-
 const { searchResults, isLoading, error: searchError, notFound } = useAlsRecommend(alsRequest);
 
 const { cards: commanderCards, isLoading: commanderCardsLoading } = useCardsByName(commanderNames);
