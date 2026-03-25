@@ -87,7 +87,7 @@ const parsedFilters = computed(() => {
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
   }
-  return { selectedColorFilterOption: 'Contains At Least' as const }
+  return { selectedColorFilterOption: 'Match Exactly' as const }
 })
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
@@ -162,10 +162,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     // Only modify the copy, NEVER the form state
     if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
-      if (requestFilters.selectedColorFilterOption === 'Contains At Least') {
-        delete requestFilters.selectedColors
-        delete requestFilters.selectedColorFilterOption
-      }
+      delete requestFilters.selectedColors
+      delete requestFilters.selectedColorFilterOption
     }
 
     // Remove undefined/null/empty values from filters

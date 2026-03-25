@@ -51,7 +51,7 @@
         </div>
 
         <!-- Color Filter Option Chip -->
-        <div v-if="!hideColors && selectedColorFilterOption && selectedColorFilterOption !== 'Contains At Least'">
+        <div v-if="!hideColors && selectedColorFilterOption && selectedColorFilterOption !== 'Match Exactly'">
           <UButton class="cursor-pointer ma-1 rounded-pill" size="sm" color="neutral" variant="outline"
             icon="i-lucide-circle-x" @click="clearColorFilterOption()">Color: {{ selectedColorFilterOption }}
           </UButton>
@@ -313,6 +313,7 @@ const colorFilterOptions = [
   'Match Exactly',
   'Contains At Least',
   'Contains At Most',
+  'Color Identity',
 ];
 const comparisonOperators = [
   'Equal To',
@@ -339,7 +340,7 @@ const hasActiveFilters = computed(() => {
     filters.selectedCMC ||
     filters.selectedPower ||
     filters.selectedToughness ||
-    (filters.selectedColorFilterOption && filters.selectedColorFilterOption !== 'Contains At Least') ||
+    (filters.selectedColorFilterOption && filters.selectedColorFilterOption !== 'Match Exactly') ||
     (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
     filters.isMTGO ||
     filters.isArena ||
@@ -383,8 +384,8 @@ const selectedColorFilterOption = computed({
       return;
     }
 
-    // When changing to Match Exactly or Contains At Least, validate existing color selections
-    if ((value === 'Match Exactly' || value === 'Contains At Least') && modelValue?.selectedColors) {
+    // When changing to Match Exactly, Contains At Least, or Color Identity, validate existing color selections
+    if ((value === 'Match Exactly' || value === 'Contains At Least' || value === 'Color Identity') && modelValue?.selectedColors) {
       const colors = [...modelValue.selectedColors];
       const hasColorless = colors.includes('Colorless');
       const hasOtherColors = colors.some(color => color !== 'Colorless');
@@ -409,7 +410,7 @@ const selectedColors = computed({
     const colorOption = modelValue?.selectedColorFilterOption;
 
     // Only apply validation for these specific filter options
-    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least') {
+    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least' || colorOption === 'Color Identity') {
       const hasColorless = value.includes('Colorless');
       const hasOtherColors = value.some(color => color !== 'Colorless');
 
@@ -570,7 +571,7 @@ function clearAllFilters() {
     selectedCMCOption: undefined,
     selectedPowerOption: undefined,
     selectedToughnessOption: undefined,
-    selectedColorFilterOption: "Contains At Least",
+    selectedColorFilterOption: "Match Exactly",
     selectedCardFormats: undefined,
     isMTGO: undefined,
     isArena: undefined,

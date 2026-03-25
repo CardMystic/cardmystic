@@ -92,7 +92,7 @@ const queryParam = computed(() => String(route.query.query || ''));
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Contains At Least' as 'Contains At Least' };
+  const base: Record<string, any> = { selectedColorFilterOption: 'Color Identity' as 'Color Identity' };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -109,7 +109,7 @@ function hideFilters() {
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
-  filters: parsedFilters.value || { selectedColorFilterOption: 'Contains At Least' }
+  filters: parsedFilters.value || { selectedColorFilterOption: 'Color Identity' }
 })
 
 watch(queryParam, (newVal) => {
@@ -142,7 +142,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     const selColors = state.filters?.selectedColors;
     if (selColors && selColors.length > 0) {
       formData.filters.selectedColors = [...selColors];
-      formData.filters.selectedColorFilterOption = 'Match Exactly';
+      formData.filters.selectedColorFilterOption = state.filters?.selectedColorFilterOption || 'Color Identity';
     } else {
       // Keep other filters but remove color-related ones
       delete formData.filters.selectedColors;
