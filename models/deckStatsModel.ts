@@ -38,7 +38,7 @@ export const TopCommanderResultSchema = z.object({
   commanders: z.array(z.string()),
   count: z.number(),
   popularity: z.number(),
-  card_data: z.array(ScryfallCardSchema),
+  card_data: z.array(ScryfallCardSchema).min(1).max(2),
   ai_raw_score: z.number().optional(),
   ai_normalized_score: z.number().optional(),
 });
