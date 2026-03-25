@@ -202,7 +202,7 @@ const handleSignOut = async () => {
                   <UInputMenu v-model="selectedProfileCard" v-model:search-term="searchTerm"
                     :loading="updateAvatarMutation.isPending.value" :items="filteredCards"
                     placeholder="Search for a card..." icon="i-lucide-search" class="w-full"
-                    @update:model-value="updateProfileCard" highlight />
+                    @update:model-value="updateProfileCard" />
                   <p class="text-xs text-gray-600 dark:text-zinc-400 mt-2">Search for an MTG card to use as your
                     profile icon</p>
                 </div>

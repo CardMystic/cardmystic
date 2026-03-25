@@ -27,7 +27,7 @@
         <div>
           <UInputMenu v-model="selectedCardToAdd" v-model:search-term="addCardSearchTerm" :loading="addCardLoading"
             :items="filteredAddCards" placeholder="Search for a card to add..." icon="i-lucide-plus"
-            class="flex-1 min-w-90 cursor-pointer" @update:model-value="handleAddCard" highlight />
+            class="flex-1 min-w-90 cursor-pointer" @update:model-value="handleAddCard" />
         </div>
 
       </div>
