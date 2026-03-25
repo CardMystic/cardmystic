@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -297,6 +297,9 @@
         <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
           <UTabs :items="cardTabs">
             <template #recommended>
+              <h3
+                class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-purple-500/20 text-purple-300">
+                Deck Recommendations</h3>
               <div class="recommend-section flex gap-2 mt-2 mb-4">
                 <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..." class="flex-1 text-base"
                   icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
@@ -322,6 +325,8 @@
             </template>
 
             <template #popular>
+              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-red-500/20 text-red-300">
+                Popular Cards</h3>
               <div class="flex justify-end mt-2 mb-2">
                 <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
                   @click="viewPopularCards">Go
@@ -340,6 +345,8 @@
             </template>
 
             <template #similar>
+              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
+                Cards</h3>
               <div class="flex justify-end mt-2 mb-2">
                 <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
                   @click="findSimilarCards">Go
@@ -356,6 +363,29 @@
                 </template>
               </ClientOnly>
             </template>
+
+            <template #popular-commanders>
+              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                Popular Commanders</h3>
+              <div class="flex gap-2 mt-2 mb-4">
+                <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
+                  class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
+                <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
+                  :loading="isPopularCommandersLoading" class="text-base">
+                  Search
+                </UButton>
+              </div>
+              <ClientOnly>
+                <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
+                  :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
+                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
+                <template #fallback>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <CardSkeleton v-for="i in 8" :key="`skeleton-popcmd-cmd-${i}`" :showCardInfo="true" />
+                  </div>
+                </template>
+              </ClientOnly>
+            </template>
           </UTabs>
         </UCard>
 
@@ -363,6 +393,8 @@
         <UCard v-else-if="card" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
           <UTabs :items="nonCommanderTabs">
             <template #popular-commanders>
+              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                Popular Commanders</h3>
               <div class="flex gap-2 mt-2 mb-4">
                 <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
                   class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
@@ -384,6 +416,8 @@
             </template>
 
             <template #similar>
+              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
+                Cards</h3>
               <div class="flex justify-end mt-2 mb-2">
                 <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
                   @click="findSimilarCards">Go
@@ -768,14 +802,15 @@ const isCommander = computed(() => {
 });
 
 const cardTabs = [
-  { key: 'recommended', label: 'Deck Recommendations', icon: 'i-lucide-box', slot: 'recommended' },
-  { key: 'popular', label: 'Popular Commander Cards', icon: 'i-lucide-flame', slot: 'popular' },
-  { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
+  { key: 'recommended', label: 'RCM', icon: 'i-lucide-box', slot: 'recommended' },
+  { key: 'popular', label: 'POP', icon: 'i-lucide-flame', slot: 'popular' },
+  { key: 'similar', label: 'SIM', icon: 'i-mdi-cards-outline', slot: 'similar' },
+  { key: 'popular-commanders', label: 'CMD', icon: 'i-lucide-crown', slot: 'popular-commanders' },
 ];
 
 const nonCommanderTabs = [
-  { key: 'popular-commanders', label: 'Popular Commanders', icon: 'i-lucide-crown', slot: 'popular-commanders' },
   { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
+  { key: 'popular-commanders', label: 'Commanders', icon: 'i-lucide-crown', slot: 'popular-commanders' },
 ];
 
 // ALS Recommend for commanders
@@ -825,7 +860,7 @@ function applyPopularCommandersQuery() {
 }
 
 const popularCommandersForCardRequest = computed(() => {
-  if (isCommander.value || !card.value?.name) return undefined;
+  if (!card.value?.name) return undefined;
   return {
     card_name: card.value.name,
     limit: 40,
@@ -836,7 +871,7 @@ const popularCommandersForCardRequest = computed(() => {
 const { searchResults: popularCommandersForCard, isLoading: isPopularCommandersLoading } = usePopularCommandersForCard(popularCommandersForCardRequest);
 
 const isPopularCommandersEffectivelyLoading = computed(() => {
-  return isPopularCommandersLoading.value || (!popularCommandersForCard.value && !isCommander.value && !!card.value?.name);
+  return isPopularCommandersLoading.value || (!popularCommandersForCard.value && !!card.value?.name);
 });
 
 </script>
