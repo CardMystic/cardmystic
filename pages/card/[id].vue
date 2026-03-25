@@ -372,7 +372,7 @@
               <ClientOnly>
                 <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
                   :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
-                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="none" />
+                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
                 <template #fallback>
                   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <CardSkeleton v-for="i in 8" :key="`skeleton-popcmd-${i}`" :showCardInfo="true" />

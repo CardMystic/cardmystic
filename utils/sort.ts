@@ -271,8 +271,15 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
         key = getCardTypePrimary(card.card_data.type_line ?? '');
         break;
       case 'color':
-        key = getColorGroupKey(card.card_data.color_identity);
+        key = getColorGroupKey(card.card_data.colors ?? []);
         break;
+      case 'colorIdentity': {
+        const ci = card.partner_card_data
+          ? [...new Set([...card.card_data.color_identity, ...card.partner_card_data.color_identity])]
+          : card.card_data.color_identity;
+        key = getColorGroupKey(ci);
+        break;
+      }
       case 'cmc':
         key = String(Math.floor(card.card_data.cmc ?? 0));
         break;
@@ -294,7 +301,8 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
         const bOrder = typeOrder[b] ?? 99;
         return aOrder - bOrder;
       }
-      case 'color': {
+      case 'color':
+      case 'colorIdentity': {
         // Sort: mono colors in WUBRG, then 2-color, 3-color, etc., then Colorless last
         if (a === 'Colorless' && b === 'Colorless') return 0;
         if (a === 'Colorless') return 1;
@@ -315,7 +323,7 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
     label:
       groupBy === 'type'
         ? `${getCardTypeLabel(key)} (${groupCards.length})`
-        : groupBy === 'color'
+        : groupBy === 'color' || groupBy === 'colorIdentity'
           ? `${getColorLabel(key)} (${groupCards.length})`
           : `Mana Value ${key} (${groupCards.length})`,
     cards: groupCards,

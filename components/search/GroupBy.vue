@@ -20,6 +20,7 @@ const emit = defineEmits<{
 const groupByOptions = [
   { value: 'type', label: 'Card Type' },
   { value: 'color', label: 'Color' },
+  { value: 'colorIdentity', label: 'Color Identity' },
   { value: 'cmc', label: 'Mana Value' },
 ];
 
