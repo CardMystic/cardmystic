@@ -73,12 +73,18 @@ import { useRoute } from 'vue-router';
 import { refDebounced } from '@vueuse/core';
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
+import { detectPlatformFromFilters, type Platform } from '~/utils/platformConfig'
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders'
 import Filters from '~/components/search/Filters.vue'
 
 const router = useRouter();
 const route = useRoute();
+
+const currentPlatform = computed(() => {
+  if (route.params.platform) return String(route.params.platform);
+  return 'all';
+});
 
 const input = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
@@ -210,7 +216,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     filtersRef.value?.collapse();
     const { saveSearchQuery } = useSearchType();
     saveSearchQuery('popular-by-commander', query);
-    router.push({ path: '/popular-by-commander/all', query });
+    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
+    router.push({ path: `/popular-by-commander/${targetPlatform}`, query });
   } catch (error) {
     console.error('Form submission error:', error)
   }
