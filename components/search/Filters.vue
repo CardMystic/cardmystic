@@ -163,7 +163,8 @@
                   <label class="stat-label">Mana Cost</label>
                   <USelect placeholder="Mana Cost Comparison" v-model="selectedCMCOption" :items="comparisonOperators"
                     :ui="{ base: 'text-base' }" />
-                  <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number" />
+                  <UInput v-model="selectedCMC" placeholder="Any value, e.g. '3'" type="number"
+                    :ui="{ base: 'text-base' }" />
                 </div>
                 <div class="stat-group">
                   <label class="stat-label">Power</label>
