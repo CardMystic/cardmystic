@@ -6,19 +6,9 @@
 
     <UFormField name="query" class="mb-2">
       <div class="flex gap-2 w-full">
-        <div ref="autocompleteContainer" class="flex-1 relative">
-          <UInput ref="input" v-model="state.query" @input="handleInput" @focus="showDropdown = true"
-            @keydown="handleKeydown" placeholder="Search cards by keywords…" icon="i-lucide-whole-word"
-            :ui="{ trailing: 'pe-1', base: 'text-base h-10' }" class="w-full" />
-          <div v-if="showDropdown && searchTerm.length >= 2 && filteredSuggestions.length > 0"
-            class="text-left absolute top-full left-0 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 max-h-64 overflow-y-auto">
-            <div v-for="(suggestion, index) in filteredSuggestions" :key="suggestion"
-              @click="selectSuggestion(suggestion)"
-              :class="['text-base px-3 py-2 cursor-pointer', index === selectedIndex ? 'bg-gray-200 dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-800']">
-              {{ suggestion }}
-            </div>
-          </div>
-        </div>
+        <UInputMenu ref="input" v-model="state.query" v-model:search-term="searchTerm" :items="filteredSuggestions"
+          placeholder="Search cards by keywords…" icon="i-lucide-whole-word" class="flex-1"
+          :ui="{ base: 'text-base h-10' }" />
         <UButton icon="i-lucide-whole-word" :disabled="state.query?.length == 0" type="submit"
           class="h-10 cursor-pointer">
           Search
@@ -115,9 +105,6 @@ watch(queryParam, (newVal) => {
 });
 
 const searchTerm = ref("");
-const showDropdown = ref(false);
-const selectedIndex = ref(-1);
-const autocompleteContainer = ref<HTMLElement | null>(null);
 // Debounced search term for better performance
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
@@ -125,7 +112,7 @@ const debouncedSearchTerm = refDebounced(searchTerm, 150);
 const { data: rawCards, status: cardNamesStatus } = useCardNames();
 const status = computed(() => cardNamesStatus.value === 'pending' ? 'pending' : 'success');
 
-// Pre-filter cards before passing to USelectMenu
+// Pre-filter cards before passing to UInputMenu
 const filteredSuggestions = computed(() => {
   if (!debouncedSearchTerm.value || debouncedSearchTerm.value.length < 2) {
     if (state.query) {
@@ -159,84 +146,7 @@ const honeypot = ref('')
 const toast = useToast()
 const { saveSearchMutation } = useSearchHistory()
 
-function handleInput(event: Event) {
-  searchTerm.value = (event.target as HTMLInputElement).value;
-  showDropdown.value = true;
-  selectedIndex.value = -1;
-}
-
-function selectSuggestion(suggestion: string) {
-  state.query = suggestion;
-  searchTerm.value = suggestion;
-  showDropdown.value = false;
-  selectedIndex.value = -1;
-}
-
-function handleKeydown(event: KeyboardEvent) {
-  if (!showDropdown.value || filteredSuggestions.value.length === 0) {
-    if (event.key === 'ArrowDown') {
-      showDropdown.value = true;
-    }
-    return;
-  }
-
-  switch (event.key) {
-    case 'ArrowDown':
-      event.preventDefault();
-      selectedIndex.value = Math.min(selectedIndex.value + 1, filteredSuggestions.value.length - 1);
-      break;
-    case 'ArrowUp':
-      event.preventDefault();
-      selectedIndex.value = Math.max(selectedIndex.value - 1, -1);
-      break;
-    case 'Enter':
-      if (selectedIndex.value >= 0 && selectedIndex.value < filteredSuggestions.value.length) {
-        event.preventDefault();
-        selectSuggestion(filteredSuggestions.value[selectedIndex.value]);
-      }
-      break;
-    case 'Escape':
-      event.preventDefault();
-      showDropdown.value = false;
-      selectedIndex.value = -1;
-      break;
-  }
-}
-
-// Click outside to close dropdown
-onMounted(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (autocompleteContainer.value && !autocompleteContainer.value.contains(event.target as Node)) {
-      showDropdown.value = false;
-      selectedIndex.value = -1;
-    }
-  };
-  document.addEventListener('click', handleClickOutside);
-  onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
-  });
-});
-
-// Watch selected index and scroll into view
-watch(selectedIndex, (newIndex) => {
-  if (newIndex >= 0 && autocompleteContainer.value) {
-    const dropdown = autocompleteContainer.value.querySelector('.overflow-y-auto');
-    const selectedItem = dropdown?.children[newIndex] as HTMLElement;
-    if (selectedItem && dropdown) {
-      const dropdownRect = dropdown.getBoundingClientRect();
-      const itemRect = selectedItem.getBoundingClientRect();
-
-      if (itemRect.bottom > dropdownRect.bottom) {
-        selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      } else if (itemRect.top < dropdownRect.top) {
-        selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    }
-  }
-});
-
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  showDropdown.value = false;
   filtersRef.value?.collapse();
   // Bot detection: if honeypot field is filled, reject the submission
   if (honeypot.value) {
