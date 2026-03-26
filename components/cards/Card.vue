@@ -155,15 +155,15 @@
               <!-- Partner: combined price button -->
               <UButton v-if="hasPartner && showCardInfo && partnerTcgplayerId"
                 :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class="mr-1 sm:mr-2"
-                icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank" rel="noopener noreferrer"
-                aria-label="Buy on TCGPlayer">
+                icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
+                rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
                 {{ combinedPriceLabel }}
               </UButton>
               <!-- Single card: original price button -->
               <UButton v-else-if="!hasPartner && showCardInfo && card.card_data.tcgplayer_id"
                 :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-                class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank" rel="noopener noreferrer"
-                aria-label="Buy on TCGPlayer">
+                class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
+                rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
                 {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
               </UButton>
             </template>
@@ -171,8 +171,8 @@
           <!-- More actions popover (mobile only) -->
           <UPopover v-if="showCardInfo && !isSearched" v-model:open="moreActionsOpen" class="sm:hidden">
             <UTooltip text="More actions" :popper="{ placement: 'top' }">
-              <UButton color="neutral" variant="solid" class="mr-1 cursor-pointer"
-                icon="i-lucide-ellipsis" size="xs" aria-label="More actions" />
+              <UButton color="neutral" variant="solid" class="mr-1 cursor-pointer" icon="i-lucide-ellipsis" size="xs"
+                aria-label="More actions" />
             </UTooltip>
             <template #content>
               <div class="flex flex-col gap-1 p-2 w-48">
@@ -196,19 +196,18 @@
           <!-- Desktop buttons (hidden on mobile) -->
           <template v-if="showCardInfo && !isSearched">
             <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
-              <UButton v-if="isCommander" color="primary" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
-                icon="i-lucide-box" size="sm" @click="getRecommendations"
-                aria-label="Get Deck Recommendations for this Commander" />
+              <UButton v-if="isCommander" color="primary" variant="solid"
+                class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
+                @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander" />
             </UTooltip>
             <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
-              <UButton v-if="isCommander" color="error" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
-                icon="i-lucide-flame" size="sm" @click="viewPopularCards"
-                aria-label="Popular Cards for this Commander" />
+              <UButton v-if="isCommander" color="error" variant="solid"
+                class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
+                @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
             </UTooltip>
             <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
               <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
-                icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards"
-                aria-label="Find Similar Cards" />
+                icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
             </UTooltip>
           </template>
         </div>
@@ -220,7 +219,8 @@
           <UTooltip v-if="!hideThumbsDownButton" text="I disagree with this result!" :popper="{ placement: 'top' }">
             <template #default>
               <UButton class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="ghost"
-                icon="i-lucide-thumbs-down" :size="isMobile ? 'xs' : 'sm'" aria-label="Disagree with this result" @click="handleDislike" />
+                icon="i-lucide-thumbs-down" :size="isMobile ? 'xs' : 'sm'" aria-label="Disagree with this result"
+                @click="handleDislike" />
             </template>
           </UTooltip>
 
@@ -237,8 +237,8 @@
         <!-- Remove from list button -->
         <UTooltip v-if="showRemoveButton" text="Remove from list" :popper="{ placement: 'top' }">
           <template #default>
-            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" :size="isMobile ? 'xs' : 'sm'"
-              aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
+            <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2"
+              :size="isMobile ? 'xs' : 'sm'" aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
           </template>
         </UTooltip>
 

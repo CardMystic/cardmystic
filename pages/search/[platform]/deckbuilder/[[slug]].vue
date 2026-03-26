@@ -12,14 +12,14 @@
       <!-- Commander Card(s) -->
       <div v-if="commanderNames.length" class="w-full mt-4 flex flex-wrap gap-4 justify-center">
         <template v-if="commanderCardsLoading">
-          <div v-for="name in commanderNames" :key="name" class="w-full max-w-75">
+          <div v-for="name in commanderNames" :key="name" class="w-full max-w-50 sm:max-w-70">
             <CardSkeleton :show-card-info="true" />
           </div>
         </template>
         <template v-else-if="commanderCards && commanderCards.length">
-          <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-75">
+          <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-50 sm:max-w-70">
             <Card :card="cmd" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
-              :is-commander="true" />
+              :gold-highlight="true" />
           </div>
         </template>
       </div>
