@@ -1,13 +1,27 @@
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
   {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.nuxt/**',
+      '**/.output/**',
+    ],
+  },
+  {
     files: ['**/*.{js,ts,vue}'],
     languageOptions: {
-      parser: tseslint.parser,
+      parser: vueParser,
+      parserOptions: {
+        parser: tseslint.parser,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
       globals: globals.browser,
     },
     plugins: {
@@ -15,7 +29,6 @@ export default defineConfig([
       vue: pluginVue,
     },
     rules: {
-      // optional: turn off ESLint rules that clash with Prettier
       'vue/html-indent': 'off',
       'vue/max-attributes-per-line': 'off',
       'vue/html-self-closing': 'off',
