@@ -34,8 +34,8 @@
 
     </div>
   </UContainer>
-  <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
-  <BackToTop />
+  <LazyIssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
+  <LazyBackToTop />
 
   <SaveToListModal v-model="showSaveAllModal" :card-names="decklistCardNames" :commanders="commanderNames" />
 </template>

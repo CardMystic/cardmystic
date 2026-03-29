@@ -2,15 +2,15 @@
   <UCard variant="subtle"
     :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
     :ui="{ body: 'p-1 sm:p-4' }">
-    <!-- Confirmation Modal -->
-    <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
+    <!-- Confirmation Modal (lazy-loaded, only rendered when opened) -->
+    <LazyUModal v-if="showConfirmModal" v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
       :ui="{ footer: 'justify-end' }">
       <template #footer="{ close }">
         <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
         <UButton label="Yes, This is a Poor Result" color="error" @click="confirmDislike" />
       </template>
-    </UModal>
+    </LazyUModal>
     <div class="card-image-wrapper">
       <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
 
@@ -42,7 +42,7 @@
         </div>
       </template>
 
-      <ClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
+      <LazyClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
 
       <!-- Flip Button for Dual-Faced Cards -->
       <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
@@ -229,7 +229,7 @@
             <template #default>
               <UButton class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'" variant="soft"
                 :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" :size="isMobile ? 'xs' : 'sm'"
-                aria-label="Add to deckbuilding search" @click="deckbuilderStore.addCard(card.card_data.name)" />
+                aria-label="Add to deckbuilding search" @click="deckbuilderStore?.addCard(card.card_data.name)" />
             </template>
           </UTooltip>
         </div>
@@ -259,36 +259,20 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
-import { useCardFeedback } from '~/composables/useCardFeedback';
-import { useDeckbuilder } from '~/composables/useDeckbuilder';
-import { useCommandersSet } from '~/composables/useBulkData';
 
 const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 
-// Responsive: detect mobile (<640px, matching Tailwind's sm breakpoint)
-const isMobile = ref(false);
-let mediaQuery: MediaQueryList | null = null;
-function updateMobile(e: MediaQueryListEvent | MediaQueryList) {
-  isMobile.value = !e.matches;
-}
-onMounted(() => {
-  mediaQuery = window.matchMedia('(min-width: 640px)');
-  isMobile.value = !mediaQuery.matches;
-  mediaQuery.addEventListener('change', updateMobile);
-});
-onUnmounted(() => {
-  mediaQuery?.removeEventListener('change', updateMobile);
-});
+// Shared singleton — one listener for all Card instances
+const isMobile = useIsMobile();
 
 const props = defineProps({
   card: {
@@ -330,6 +314,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isCommander: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits<{
@@ -337,13 +325,6 @@ const emit = defineEmits<{
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
-
-// Commander detection
-const { data: commandersSet } = useCommandersSet();
-const isCommander = computed(() => {
-  if (!props.card?.card_data?.name || !commandersSet.value) return false;
-  return commandersSet.value.has(props.card.card_data.name);
-});
 
 // Partner commander support
 const hasPartner = computed(() => !!props.card.partner_card_data);
@@ -392,10 +373,11 @@ const singleBuyTooltip = computed(() => {
   return price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer';
 });
 
-const deckbuilderStore = useDeckbuilder();
+// Only initialise deckbuilder store when the button is actually shown
+const deckbuilderStore = props.showAddToDeckbuilderButton ? useDeckbuilder() : null;
 
 const isInDecklist = computed(() => {
-  if (!props.card.card_data?.name) return false;
+  if (!deckbuilderStore || !props.card.card_data?.name) return false;
   return deckbuilderStore.hasCard(props.card.card_data.name);
 });
 
@@ -429,8 +411,14 @@ const searchQuery = computed(() => {
   return '';
 });
 
-// Use the dislike mutation from composable
-const { dislikeMutation } = useCardFeedback();
+// Lazily initialise feedback composable — only when user actually dislikes
+let _dislikeMutation: ReturnType<typeof useCardFeedback>['dislikeMutation'] | null = null;
+function getDislikeMutation() {
+  if (!_dislikeMutation) {
+    _dislikeMutation = useCardFeedback().dislikeMutation;
+  }
+  return _dislikeMutation;
+}
 
 // Handle dislike button click - show confirmation modal
 function handleDislike() {
@@ -453,7 +441,7 @@ function confirmDislike() {
   isThumbsDownClicked.value = true;
 
   // Track the dislike
-  dislikeMutation.mutate({
+  getDislikeMutation().mutate({
     query: searchQuery.value,
     cardName: props.card.card_data.name,
   });

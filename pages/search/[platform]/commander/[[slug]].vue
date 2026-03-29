@@ -20,8 +20,8 @@
       </div>
     </div>
   </UContainer>
-  <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
-  <BackToTop />
+  <LazyIssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
+  <LazyBackToTop />
 </template>
 
 <script setup lang="ts">
