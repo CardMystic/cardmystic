@@ -1,5 +1,5 @@
 <template>
-  <CometDog />
+  <LazyCometDog />
   <SpaceBackground :full="true">
     <div class="hero px-0 h-full w-full justify-center flex flex-col items-center">
       <div class="explore-spacer">
@@ -44,14 +44,14 @@
   <UContainer class="mt-10 mb-10">
     <!-- User-specific sections when logged in -->
     <ClientOnly>
-      <RecentLists v-if="isLoggedIn" class="mb-14" />
-      <RecentListsNotLoggedIn v-else class="mb-14" />
+      <LazyRecentLists v-if="isLoggedIn" class="mb-14" />
+      <LazyRecentListsNotLoggedIn v-else class="mb-14" />
       <template #fallback>
-        <RecentListsNotLoggedIn class="mb-14" />
+        <LazyRecentListsNotLoggedIn class="mb-14" />
       </template>
     </ClientOnly>
 
-    <QueryCount class="mb-14"></QueryCount>
+    <LazyQueryCount class="mb-14"></LazyQueryCount>
 
     <!-- How To Use & How It Works Section -->
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -87,23 +87,23 @@
         </div>
       </div>
     </div>
-    <Efficiency class="mb-20" />
+    <LazyEfficiency class="mb-20" />
     <ClientOnly>
-      <ExampleQueries class="mb-10" />
+      <LazyExampleQueries class="mb-10" />
       <template #fallback>
         <ExampleQueriesSkeleton class="mb-10" />
       </template>
     </ClientOnly>
     <ClientOnly>
-      <TopQueries class="mb-10" />
+      <LazyTopQueries class="mb-10" />
       <template #fallback>
         <TopQueriesSkeleton class="mb-10" />
       </template>
     </ClientOnly>
-    <MeetTheDevs class="mb-10" />
-    <Sponsorships class="mb-10" />
-    <JoinUs class="mb-10" />
-    <ProductPromotionButtons />
+    <LazyMeetTheDevs class="mb-10" />
+    <LazySponsorships class="mb-10" />
+    <LazyJoinUs class="mb-10" />
+    <LazyProductPromotionButtons />
   </UContainer>
 </template>
 

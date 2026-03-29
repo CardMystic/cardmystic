@@ -44,7 +44,8 @@
         </div>
       </template>
     </UPopover>
-    <SaveToListModal v-model="isSaveToListOpen" :card-names="clipboardCardNames" @saved="handleSaved" />
+    <LazySaveToListModal v-if="isSaveToListOpen" v-model="isSaveToListOpen" :card-names="clipboardCardNames"
+      @saved="handleSaved" />
   </div>
 </template>
 

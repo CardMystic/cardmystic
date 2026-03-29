@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
-import ClipboardMenu from '~/components/clipboard/ClipboardMenu.vue'
+const ClipboardMenu = defineAsyncComponent(() => import('~/components/clipboard/ClipboardMenu.vue'))
 import { useUserProfile } from '~/composables/useUserProfile'
 
 const isOpen = ref(false)
