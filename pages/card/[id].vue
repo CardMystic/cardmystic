@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -295,7 +295,7 @@
       <div class="lg:col-span-10 flex flex-col items-center">
         <!-- Commander: Tabbed Recommended + Similar Cards -->
         <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
-          <UTabs :items="cardTabs">
+          <UTabs v-model="activeCommanderTab" :items="cardTabs">
             <template #recommended>
               <h3
                 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-purple-500/20 text-purple-300">
@@ -391,7 +391,7 @@
 
         <!-- Non-commander: Popular Commanders + Similar Cards -->
         <UCard v-else-if="card" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
-          <UTabs :items="nonCommanderTabs">
+          <UTabs v-model="activeNonCommanderTab" :items="nonCommanderTabs">
             <template #popular-commanders>
               <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
                 Popular Commanders</h3>
@@ -443,7 +443,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
@@ -459,34 +459,7 @@ const selectedPrinting = ref<string>('');
 const cardIdParam = computed(() => String(route.params.id) || '');
 const { saveCardViewMutation } = useCardHistory();
 
-const { data: cardData, error, pending } = useAsyncData(
-  () => `card-with-printings-${cardIdParam.value}`,
-  async () => {
-    if (!cardIdParam.value || cardIdParam.value === 'undefined') {
-      throw new Error('No card ID provided');
-    }
-
-    const config = useRuntimeConfig();
-    const card = await $fetch<ScryfallCard>(`${config.public.backendUrl}/cards/${cardIdParam.value}`);
-
-    let printings: ScryfallCard[] = [];
-    if (card.prints_search_uri) {
-      try {
-        const result = await $fetch<{ data: ScryfallCard[] }>(card.prints_search_uri);
-        printings = result.data || [];
-      } catch (err) {
-        console.error('Printings fetch failed', err);
-      }
-    }
-
-    return { card, printings };
-  },
-  {
-    server: true,
-    lazy: false,
-    watch: [cardIdParam]
-  }
-);
+const { card, printings, error, pending } = useCardDetails(cardIdParam);
 
 // Check if error is a 404 Not Found
 const isNotFound = computed(() => {
@@ -508,12 +481,8 @@ const errorMessage = computed(() => {
   return err?.data?.message || err?.message || 'An error occurred';
 });
 
-// Extract card and printings from combined data
-const card = computed(() => cardData.value?.card);
-const printings = computed(() => cardData.value?.printings || []);
-
 const canonicalUrl = computed(() =>
-  `https://cardmystic.com/card/${cardData.value?.card.id ?? cardIdParam.value}`
+  `https://cardmystic.com/card/${card.value?.id ?? cardIdParam.value}`
 );
 // Dynamic SEO meta based on card data
 useSeoMeta({
@@ -749,6 +718,14 @@ function flipCard() {
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 
+// Tab activation tracking - only fetch data for tabs the user has viewed
+const activeCommanderTab = ref('recommended');
+const activeNonCommanderTab = ref('similar');
+const activatedTabs = reactive(new Set<string>(['recommended', 'similar']));
+
+watch(activeCommanderTab, (tab) => { activatedTabs.add(tab); });
+watch(activeNonCommanderTab, (tab) => { activatedTabs.add(tab); });
+
 function findSimilarCards() {
   if (!card.value) return;
 
@@ -778,12 +755,13 @@ function viewPopularCards() {
   router.push({ path: '/popular-by-commander/all', query: { commander: card.value.name } });
 }
 
-// Use the similar cards composable
+// Use the similar cards composable - only fetch when 'similar' tab has been activated
 const cardName = computed(() => card.value?.name);
-const { similarCards, isSimilarCardsLoading } = useSimilarCards(cardIdParam, cardName);
+const lazyCardNameForSimilar = computed(() => activatedTabs.has('similar') ? cardName.value : undefined);
+const { similarCards, isSimilarCardsLoading } = useSimilarCards(cardIdParam, lazyCardNameForSimilar);
 
-// Treat "not yet fetched" as loading to avoid a flash of "no results"
 const isSimilarCardsEffectivelyLoading = computed(() => {
+  if (!activatedTabs.has('similar')) return false;
   return isSimilarCardsLoading.value || (!similarCards.value && !!cardName.value);
 });
 
@@ -822,6 +800,7 @@ function applyRecommendQuery() {
 }
 
 const alsRecommendRequest = computed(() => {
+  if (!activatedTabs.has('recommended')) return undefined;
   if (!isCommander.value || !card.value?.name) return undefined;
   return {
     commanders: [card.value.name],
@@ -833,11 +812,13 @@ const alsRecommendRequest = computed(() => {
 const { searchResults: recommendedCards, isLoading: isRecommendedLoading } = useAlsRecommend(alsRecommendRequest);
 
 const isRecommendedCardsEffectivelyLoading = computed(() => {
+  if (!activatedTabs.has('recommended')) return false;
   return isRecommendedLoading.value || (!recommendedCards.value && isCommander.value);
 });
 
 // Popular cards for this commander
 const popularByCommanderRequest = computed(() => {
+  if (!activatedTabs.has('popular')) return undefined;
   if (!isCommander.value || !card.value?.name) return undefined;
   return {
     commanders: [card.value.name],
@@ -848,6 +829,7 @@ const popularByCommanderRequest = computed(() => {
 const { searchResults: popularCards, isLoading: isPopularCardsLoading } = usePopularByCommander(popularByCommanderRequest);
 
 const isPopularCardsEffectivelyLoading = computed(() => {
+  if (!activatedTabs.has('popular')) return false;
   return isPopularCardsLoading.value || (!popularCards.value && isCommander.value);
 });
 
@@ -860,6 +842,7 @@ function applyPopularCommandersQuery() {
 }
 
 const popularCommandersForCardRequest = computed(() => {
+  if (!activatedTabs.has('popular-commanders')) return undefined;
   if (!card.value?.name) return undefined;
   return {
     card_name: card.value.name,
@@ -871,6 +854,7 @@ const popularCommandersForCardRequest = computed(() => {
 const { searchResults: popularCommandersForCard, isLoading: isPopularCommandersLoading } = usePopularCommandersForCard(popularCommandersForCardRequest);
 
 const isPopularCommandersEffectivelyLoading = computed(() => {
+  if (!activatedTabs.has('popular-commanders')) return false;
   return isPopularCommandersLoading.value || (!popularCommandersForCard.value && !!card.value?.name);
 });
 

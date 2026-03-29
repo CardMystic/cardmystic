@@ -3,6 +3,63 @@ import { computed, type ComputedRef, type Ref } from 'vue';
 import type { Card, ScryfallCard } from '~/models/cardModel';
 
 /**
+ * Composable for fetching a single card + its printings (lazy).
+ * The card fetch blocks rendering (SSR); printings load in the background.
+ */
+export function useCardDetails(cardId: ComputedRef<string>) {
+  const config = useRuntimeConfig();
+
+  const {
+    data: card,
+    error,
+    status: asyncStatus,
+  } = useAsyncData(
+    () => `card-${cardId.value}`,
+    async () => {
+      if (!cardId.value || cardId.value === 'undefined') {
+        throw new Error('No card ID provided');
+      }
+
+      return await $fetch<ScryfallCard>(
+        `${config.public.backendUrl}/cards/${cardId.value}`,
+      );
+    },
+    {
+      server: true,
+      lazy: false,
+      watch: [cardId],
+    },
+  );
+
+  const pending = computed(() => asyncStatus.value === 'pending');
+
+  const { data: printings } = useQuery<ScryfallCard[]>({
+    queryKey: computed(() => ['card-printings', card.value?.prints_search_uri]),
+    queryFn: async () => {
+      if (!card.value?.prints_search_uri) return [];
+      try {
+        const result = await $fetch<{ data: ScryfallCard[] }>(
+          card.value.prints_search_uri,
+        );
+        return result.data || [];
+      } catch (err) {
+        console.error('Printings fetch failed', err);
+        return [];
+      }
+    },
+    enabled: computed(() => !!card.value?.prints_search_uri),
+    staleTime: 1000 * 60 * 15,
+  });
+
+  return {
+    card,
+    printings,
+    error,
+    pending,
+  };
+}
+
+/**
  * Composable for fetching card details by IDs
  */
 export function useCardsByIds(
