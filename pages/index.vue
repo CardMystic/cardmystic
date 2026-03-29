@@ -7,7 +7,7 @@
       <UContainer class="flex flex-col items-center justify-center text-center max-w-250 h-full relative z-10">
         <div class="header-layout">
           <div class="title-container">
-            <img src="/wizard.webp" class="image w-30 h-30 object-cover" alt="Wizard" />
+            <img src="/wizard.webp" class="image w-30 h-30 object-cover" alt="Wizard" fetchpriority="high" />
             <h1 class="subtitle text-white">
               <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I.
                 Search
@@ -126,6 +126,15 @@ useSeoMeta({
 })
 
 useHead({
+  link: [
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/wizard.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
+  ],
   script: [
     {
       type: 'application/ld+json',
