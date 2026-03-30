@@ -106,6 +106,7 @@ export default defineNuxtConfig({
           manualChunks: {
             'vue-vendor': ['vue', '@vue/runtime-core'],
             tanstack: ['@tanstack/vue-query'],
+            supabase: ['@supabase/supabase-js'],
           },
         },
       },

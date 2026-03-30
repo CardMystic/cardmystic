@@ -27,13 +27,13 @@
         <!-- Fanned cards at bottom -->
         <div class="bottom-cards">
           <div v-if="heroCards[0]" class="card-wrapper card-left">
-            <CardSimple :card="heroCards[0]" size="small" />
+            <LazyCardSimple :card="heroCards[0]" size="small" />
           </div>
           <div v-if="heroCards[1]" class="card-wrapper card-center">
-            <CardSimple :card="heroCards[1]" size="small" />
+            <LazyCardSimple :card="heroCards[1]" size="small" />
           </div>
           <div v-if="heroCards[2]" class="card-wrapper card-right">
-            <CardSimple :card="heroCards[2]" size="small" />
+            <LazyCardSimple :card="heroCards[2]" size="small" />
           </div>
         </div>
       </div>
