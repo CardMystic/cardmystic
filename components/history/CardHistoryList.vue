@@ -84,10 +84,10 @@ const handleClearAll = async () => {
       icon: 'i-lucide-check-circle'
     })
     isClearAllModalOpen.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error clearing history',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error',
       icon: 'i-lucide-x-circle'
     })

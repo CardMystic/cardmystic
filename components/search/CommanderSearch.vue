@@ -8,11 +8,9 @@
       <div class="flex gap-2">
         <UInput ref="input" v-model="state.query" placeholder="Describe the commander you want..." icon="i-mdi-crown"
           class="flex-1" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
-          <template v-if="state.query?.length" #trailing>
-            <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
-              @click="state.query = ''" />
-          </template>
           <template #trailing>
+            <UButton v-if="state.query?.length" color="neutral" variant="link" size="sm" icon="i-lucide-circle-x"
+              aria-label="Clear input" @click="state.query = ''" />
             <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>
@@ -58,7 +56,7 @@ import { useRoute } from 'vue-router';
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { CardSearchFiltersSchema } from '~/models/searchModel'
+import { CardSearchFiltersSchema, type CardSearchFilters } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
 import CommanderFilters from '~/components/search/CommanderFilters.vue'
 import Filters from './Filters.vue'
@@ -92,7 +90,7 @@ const queryParam = computed(() => String(route.query.query || ''));
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Color Identity' as 'Color Identity' };
+  const base: Partial<CardSearchFilters> = { selectedColorFilterOption: 'Color Identity' };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -164,7 +162,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     saveSearchMutation.mutate({ query: event.data.query, searchType: 'commander', filters: formData.filters })
 
     // Construct query parameters
-    const query: Record<string, any> = {
+    const query: Record<string, string | number | undefined> = {
       query: event.data.query,
       filters: formData.filters && Object.keys(formData.filters).length > 0 ? JSON.stringify(formData.filters) : undefined,
       searchType: 'commander'

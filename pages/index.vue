@@ -143,11 +143,8 @@ useHead({
   ]
 })
 
-import type { Card as CardType } from '~/models/cardModel';
+import type { Card as CardType, ScryfallCard } from '~/models/cardModel';
 import { useUserProfile } from '~/composables/useUserProfile';
-import { useSearchType } from '~/composables/useSearchType';
-// Use search type composable to check if AI search is active
-const { isAiSearch } = useSearchType();
 
 // Check if user is logged in
 const { userProfile } = useUserProfile();
@@ -163,7 +160,7 @@ const heroCards: CardType[] = [
       image_uris: {
         normal: 'https://cards.scryfall.io/normal/front/1/b/1bacda35-bb91-4537-a14d-846650fa85f6.jpg?1594157535',
       }
-    } as any
+    } as unknown as ScryfallCard
   },
   {
     card_name: 'The Ur-Dragon',
@@ -173,7 +170,7 @@ const heroCards: CardType[] = [
       image_uris: {
         normal: 'https://cards.scryfall.io/normal/front/6/2/6270c798-a3ba-4826-b0a9-82f7e12890f6.jpg?1719466632',
       }
-    } as any
+    } as unknown as ScryfallCard
   },
   {
     card_name: 'Teferi, Time Raveler',
@@ -183,7 +180,7 @@ const heroCards: CardType[] = [
       image_uris: {
         normal: 'https://cards.scryfall.io/normal/front/5/a/5a47d968-bba0-4277-b5d7-eb9e1acd7953.jpg?1731704855',
       }
-    } as any
+    } as unknown as ScryfallCard
   }
 ];
 

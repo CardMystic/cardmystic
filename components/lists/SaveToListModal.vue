@@ -189,9 +189,9 @@ const handleSave = async () => {
 
     emit('saved')
     isOpen.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error saving cards:', error)
-    errorMessage.value = error.message || 'An unexpected error occurred'
+    errorMessage.value = (error as Error).message || 'An unexpected error occurred'
   }
 }
 </script>

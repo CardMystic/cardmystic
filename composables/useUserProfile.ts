@@ -62,7 +62,7 @@ export const useUserProfile = () => {
   const userId = computed(() => userProfile.value?.id ?? null);
 
   // Fetch profile data with TanStack Query
-  const { data: profileData, refetch: fetchProfileData } = useQuery({
+  const { data: profileData } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
       if (!supabase || !userId.value) return null;
@@ -221,9 +221,7 @@ export const useUserProfile = () => {
 
     authListenerInitialized = true;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       // After an OAuth redirect, Supabase may have already processed the
       // URL tokens before the listener is registered, so the first event
       // is INITIAL_SESSION rather than SIGNED_IN.  Check both for the

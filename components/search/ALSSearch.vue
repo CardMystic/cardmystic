@@ -93,7 +93,7 @@ import { useRoute } from 'vue-router';
 import { refDebounced } from '@vueuse/core';
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import { CardSearchFiltersSchema } from '~/models/searchModel'
+import { CardSearchFiltersSchema, type CardSearchFilters } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
 import { useDeckbuilder } from '~/composables/useDeckbuilder'
 import Filters from './Filters.vue'
@@ -153,7 +153,7 @@ const limitParam = computed(() => {
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Color Identity' as 'Color Identity' };
+  const base: Partial<CardSearchFilters> = { selectedColorFilterOption: 'Color Identity' };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -191,9 +191,8 @@ watch(() => state.decklist, (newVal) => {
 const commanderSearchTerm = ref('');
 const debouncedCommanderSearch = refDebounced(commanderSearchTerm, 150);
 
-const { data: rawCommanders, status: commanderQueryStatus } = useCommanders();
+const { data: rawCommanders } = useCommanders();
 const { data: partnerCommanders } = usePartnerCommanders();
-const commanderStatus = computed(() => commanderQueryStatus.value === 'pending' ? 'pending' : 'success');
 
 const filteredCommanders = computed(() => {
   if (!debouncedCommanderSearch.value || debouncedCommanderSearch.value.length < 2) {
@@ -289,7 +288,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     });
 
-    const query: Record<string, any> = {
+    const query: Record<string, string | number | undefined> = {
       decklist: event.data.decklist,
       description: event.data.description || undefined,
       commander: event.data.commander || undefined,

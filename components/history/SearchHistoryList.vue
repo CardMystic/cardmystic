@@ -106,7 +106,7 @@
 import { ref, computed } from 'vue'
 import { formatRelativeTimeShort } from '~/utils/dateFormatter'
 import { useSearchHistory } from '~/composables/useSearchHistory'
-import { rerunSearchHistory } from '~/utils/history'
+import { rerunSearchHistory, type SearchHistoryItem } from '~/utils/history'
 import { useToast } from '#imports'
 
 const showMoreThreshold = 7
@@ -118,7 +118,7 @@ const toast = useToast()
 const showAll = ref(false)
 const isDeleteModalOpen = ref(false)
 const isClearAllModalOpen = ref(false)
-const itemToDelete = ref<any>(null)
+const itemToDelete = ref<SearchHistoryItem | null>(null)
 
 const displayedHistory = computed(() => {
   if (showAll.value || !searchHistory.value) return searchHistory.value
@@ -140,10 +140,10 @@ const handleClearAll = async () => {
       icon: 'i-lucide-check-circle'
     })
     isClearAllModalOpen.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error clearing history',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error',
       icon: 'i-lucide-x-circle'
     })
@@ -183,9 +183,9 @@ const getSearchTypeColor = (type: string): 'primary' | 'success' | 'warning' | '
   return colors[type] || 'primary'
 }
 
-const formatFilters = (filters: any) => {
+const formatFilters = (filters: Record<string, unknown> | null | undefined) => {
   if (!filters || typeof filters !== 'object') return 'None'
-  const entries = Object.entries(filters).filter(([_, v]) => v !== null && v !== undefined && v !== '')
+  const entries = Object.entries(filters).filter(([, v]) => v !== null && v !== undefined && v !== '')
   if (entries.length === 0) return 'None'
   return entries.map(([k, v]) => {
     if (k === 'decklist' && typeof v === 'string') {
@@ -196,11 +196,11 @@ const formatFilters = (filters: any) => {
   }).join(', ')
 }
 
-const runSearch = (item: any) => {
+const runSearch = (item: SearchHistoryItem) => {
   rerunSearchHistory(item, router)
 }
 
-const deleteItem = (item: any) => {
+const deleteItem = (item: SearchHistoryItem) => {
   itemToDelete.value = item
   isDeleteModalOpen.value = true
 }
@@ -216,10 +216,10 @@ const handleDeleteSearch = async () => {
     })
     isDeleteModalOpen.value = false
     itemToDelete.value = null
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error deleting search',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error',
       icon: 'i-lucide-x-circle'
     })

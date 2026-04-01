@@ -51,7 +51,7 @@ import { useRoute } from 'vue-router';
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { CardSearchFiltersSchema } from '~/models/searchModel'
+import { CardSearchFiltersSchema, type CardSearchFilters } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
 import { refDebounced } from '@vueuse/core';
 import Filters from './Filters.vue'
@@ -88,7 +88,7 @@ const cardNameParam = computed(() => String(route.query.card_name || ''));
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Match Exactly' as 'Match Exactly' };
+  const base: Partial<CardSearchFilters> = { selectedColorFilterOption: 'Match Exactly' };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -113,8 +113,7 @@ const searchTerm = ref("");
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
 // Raw card data from backend bulk data API
-const { data: rawCards, status: cardNamesStatus } = useCardNames();
-const status = computed(() => cardNamesStatus.value === 'pending' ? 'pending' : 'success');
+const { data: rawCards } = useCardNames();
 
 // Pre-filter cards before passing to UInputMenu
 const filteredCards = computed(() => {
@@ -178,7 +177,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     saveSearchMutation.mutate({ query: event.data.card_name, searchType: 'similarity', filters: requestFilters })
 
     // Construct query parameters
-    const query: Record<string, any> = {
+    const query: Record<string, string | number | undefined> = {
       card_name: event.data.card_name,
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'similarity'

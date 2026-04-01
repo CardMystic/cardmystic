@@ -44,8 +44,7 @@ watch(() => profileData.value?.avatar_card_name, (newVal) => {
 })
 
 // Load card names from backend bulk data API
-const { data: rawCards, status: cardsQueryStatus } = useCardNames()
-const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pending' : 'success')
+const { data: rawCards } = useCardNames()
 
 // Filter cards based on search
 const filteredCards = computed(() => {
@@ -79,8 +78,8 @@ const updateProfileCard = async (cardName: string) => {
     await updateAvatarMutation.mutateAsync(cardName)
     selectedProfileCard.value = cardName
     successMessage.value = 'Profile icon updated successfully!'
-  } catch (e: any) {
-    errorMessage.value = e.message
+  } catch (e: unknown) {
+    errorMessage.value = (e as Error).message
   }
 }
 
@@ -90,8 +89,8 @@ const updateUsername = async () => {
   try {
     await updateUsernameMutation.mutateAsync(username.value)
     successMessage.value = 'Username updated successfully!'
-  } catch (e: any) {
-    errorMessage.value = e.message
+  } catch (e: unknown) {
+    errorMessage.value = (e as Error).message
   }
 }
 
@@ -112,8 +111,8 @@ const updateEmail = async () => {
   try {
     await updateEmailMutation.mutateAsync(newEmail.value.trim())
     successMessage.value = 'Confirmation email sent! Please check your inbox to verify the new email address.'
-  } catch (e: any) {
-    errorMessage.value = e.message
+  } catch (e: unknown) {
+    errorMessage.value = (e as Error).message
   }
 }
 
@@ -143,8 +142,8 @@ const updatePassword = async () => {
     currentPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
-  } catch (e: any) {
-    errorMessage.value = e.message
+  } catch (e: unknown) {
+    errorMessage.value = (e as Error).message
   }
 }
 

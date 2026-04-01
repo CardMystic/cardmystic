@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/vue-query';
-import { computed, type Ref, type ComputedRef } from 'vue';
+import { computed, type ComputedRef } from 'vue';
 import type { Card } from '~/models/cardModel';
 import type {
   WordSearch,
@@ -8,12 +8,6 @@ import type {
 } from '~/models/searchModel';
 
 export type SearchType = 'colbert' | 'similarity' | 'keyword';
-
-interface UseSearchOptions<T> {
-  searchParams: ComputedRef<T | undefined>;
-  searchType: SearchType;
-  staleTime?: number;
-}
 
 /**
  * Composable for AI/Colbert search

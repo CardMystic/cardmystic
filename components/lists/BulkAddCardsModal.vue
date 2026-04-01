@@ -101,10 +101,10 @@ async function handleBulkEdit() {
     if (result.invalidCardNames.length === 0) {
       handleClose()
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error updating list',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     })
   } finally {

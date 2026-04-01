@@ -85,3 +85,9 @@ export const ExampleQueryResponseSchema = z.object({
   query: z.string().min(1).max(100),
   cards: z.array(CardSchema),
 });
+
+export interface SearchHistoryItem {
+  search_type: string;
+  query: string | null;
+  filters: (Partial<CardSearchFilters> & Record<string, unknown>) | null;
+}

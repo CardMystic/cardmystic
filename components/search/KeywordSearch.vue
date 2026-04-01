@@ -109,8 +109,7 @@ const searchTerm = ref("");
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
 // Raw card data from backend bulk data API
-const { data: rawCards, status: cardNamesStatus } = useCardNames();
-const status = computed(() => cardNamesStatus.value === 'pending' ? 'pending' : 'success');
+const { data: rawCards } = useCardNames();
 
 // Pre-filter cards before passing to UInputMenu
 const filteredSuggestions = computed(() => {
@@ -177,7 +176,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     // Save to search history
     saveSearchMutation.mutate({ query: event.data.query, searchType: 'keyword', filters: requestFilters })
 
-    const query: Record<string, any> = {
+    const query: Record<string, string | number | undefined> = {
       query: event.data.query,
       filters: Object.keys(requestFilters).length > 0
         ? JSON.stringify(requestFilters)

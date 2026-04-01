@@ -109,7 +109,11 @@ export function useClipboard() {
   }
 
   function toggle(card: CardClip) {
-    has(card.id) ? remove(card.id) : add(card);
+    if (has(card.id)) {
+      remove(card.id);
+    } else {
+      add(card);
+    }
   }
 
   function clear() {

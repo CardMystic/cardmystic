@@ -105,7 +105,7 @@ const {
   updateListAvatarMutation,
 } = useCardLists()
 
-const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
+const list = computed(() => userLists.value?.find((l) => l.id === listId))
 
 // Banner background image URL
 const bannerImageUrl = computed(() => {
@@ -125,10 +125,10 @@ const error = ref('')
 const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 
 // Computed card IDs from list items - used as dependency for card details query
-const cardIds = computed(() => listItems.value?.map((item: any) => item.card_id) || [])
+const cardIds = computed(() => listItems.value?.map((item) => item.card_id) || [])
 
 // Use TanStack Query to fetch card details
-const { data: cardsData, isLoading: isLoadingCards, isFetching: isFetchingCards } = useListCards(listId, cardIds)
+const { data: cardsData, isLoading: isLoadingCards } = useListCards(listId, cardIds)
 
 const cards = computed(() => cardsData.value || [])
 
@@ -166,10 +166,10 @@ async function handleRemoveCard(cardId: string) {
       title: 'Card removed from list',
       icon: 'i-lucide-check'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error removing card',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     });
   }
@@ -183,13 +183,13 @@ const cardGroups = computed(() => {
 
   const ids = commanderCardIds.value
   const cardsToGroup = ids.length > 0
-    ? cards.value.filter((c: any) => !ids.includes(c.card_data.id))
+    ? cards.value.filter((c) => !ids.includes(c.card_data.id))
     : cards.value
 
   const groups = groupAndSortCards(cardsToGroup, groupBy.value, sortBy.value, sortDirection.value);
 
   // Prepend commanders as their own group if present
-  const commanderCards = cards.value.filter((c: any) => ids.includes(c.card_data.id))
+  const commanderCards = cards.value.filter((c) => ids.includes(c.card_data.id))
   if (commanderCards.length > 0) {
     const commanderGroup = { label: '', cards: commanderCards };
     return groups ? [commanderGroup, ...groups] : [commanderGroup];
@@ -231,7 +231,7 @@ async function handleAddCard(cardName: string) {
   addCardLoading.value = true
   try {
     const config = useRuntimeConfig()
-    const cardData: any = await $fetch(`${config.public.backendUrl}/cards/name/${encodeURIComponent(cardName)}`)
+    const cardData = await $fetch<{ id: string; name: string }>(`${config.public.backendUrl}/cards/name/${encodeURIComponent(cardName)}`)
 
     if (!cardData?.id) {
       throw new Error('Card not found')
@@ -250,11 +250,12 @@ async function handleAddCard(cardName: string) {
     // Clear the selection
     selectedCardToAdd.value = ''
     addCardSearchTerm.value = ''
-  } catch (error: any) {
-    const isDuplicate = error?.code === '23505' || error?.statusCode === 409
+  } catch (error: unknown) {
+    const err = error as Record<string, unknown>
+    const isDuplicate = err?.code === '23505' || err?.statusCode === 409
     toast.add({
       title: isDuplicate ? 'Card already in list' : 'Error adding card',
-      description: isDuplicate ? `${cardName} is already in this list.` : error.message,
+      description: isDuplicate ? `${cardName} is already in this list.` : (error as Error).message,
       color: isDuplicate ? 'warning' : 'error',
       icon: isDuplicate ? 'i-lucide-copy-check' : undefined
     })
@@ -268,7 +269,7 @@ async function handleAddCard(cardName: string) {
 // Bulk edit state
 const isBulkEditModalOpen = ref(false)
 const currentCardNames = computed(() =>
-  cards.value?.map((card: any) => card.card_data.name).filter(Boolean) || []
+  cards.value?.map((card) => card.card_data.name).filter(Boolean) || []
 )
 
 // Recommend state
@@ -278,8 +279,8 @@ const { saveSearchMutation } = useSearchHistory()
 
 function goToRecommend() {
   if (!cards.value || cards.value.length === 0) return
-  const decklist = cards.value.map((card: any) => card.card_data.name).join('\n')
-  const query: Record<string, any> = {
+  const decklist = cards.value.map((card) => card.card_data.name).join('\n')
+  const query: Record<string, string | number | undefined> = {
     decklist,
     searchType: 'recommend',
   }
@@ -287,8 +288,8 @@ function goToRecommend() {
     query.description = recommendDescription.value.trim()
   }
   const commanderNamesList = currentCommanderItems.value
-    .map((item: any) => {
-      const card = cards.value.find((c: any) => c.card_data.id === item.card_id)
+    .map((item) => {
+      const card = cards.value.find((c) => c.card_data.id === item.card_id)
       return card?.card_data?.name
     })
     .filter(Boolean)
@@ -312,33 +313,25 @@ function goToRecommend() {
   router.push({ path: '/search/all/deckbuilder', query })
 }
 
-const { data: rawCards, status: cardsQueryStatus } = useCardNames()
-const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pending' : 'success')
+const { data: rawCards } = useCardNames()
 
 // Commander autocomplete
 const setCommanderLoading = ref(false)
 
 // Find the current commanders from list items (up to 2 for partner)
 const currentCommanderItems = computed(() => {
-  return listItems.value?.filter((item: any) => item.is_commander === true) || []
+  return listItems.value?.filter((item) => item.is_commander === true) || []
 })
 
 const commanderCardIds = computed(() => {
-  return currentCommanderItems.value.map((item: any) => item.card_id)
-})
-
-const currentCommanderName = computed(() => {
-  if (currentCommanderItems.value.length === 0 || !cards.value) return null
-  const first = currentCommanderItems.value[0]
-  const card = cards.value.find((c: any) => c.card_data.id === first.card_id)
-  return card?.card_data?.name || null
+  return currentCommanderItems.value.map((item) => item.card_id)
 })
 
 const commanderColorIdentity = computed(() => {
   if (currentCommanderItems.value.length === 0 || !cards.value) return null
   const colors = new Set<string>()
   for (const item of currentCommanderItems.value) {
-    const card = cards.value.find((c: any) => c.card_data.id === item.card_id)
+    const card = cards.value.find((c) => c.card_data.id === item.card_id)
     if (card?.card_data?.color_identity) {
       for (const c of card.card_data.color_identity) {
         colors.add(c)
@@ -370,10 +363,10 @@ async function handleSetCommander(commanderName: string) {
       title: `${commanderName} set as commander`,
       icon: 'i-lucide-crown'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error setting commander',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     })
   } finally {
@@ -392,10 +385,10 @@ async function handleClearCommander(cardId: string) {
       title: 'Commander cleared',
       icon: 'i-lucide-check'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error clearing commander',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     })
   } finally {
@@ -405,7 +398,7 @@ async function handleClearCommander(cardId: string) {
 
 const totalPrice = computed(() => {
   if (!cards.value || cards.value.length === 0) return 0
-  return cards.value.reduce((sum: number, card: any) => {
+  return cards.value.reduce((sum: number, card) => {
     const price = card.card_data?.prices?.usd
     return sum + (price ? parseFloat(price) : 0)
   }, 0)
@@ -413,7 +406,7 @@ const totalPrice = computed(() => {
 
 function copyCardNames() {
   if (!cards.value || cards.value.length === 0) return
-  const names = cards.value.map((card: any) => card.card_data.name).join('\n')
+  const names = cards.value.map((card) => card.card_data.name).join('\n')
   copy(names)
   toast.add({
     title: 'Card names copied!',
@@ -423,7 +416,7 @@ function copyCardNames() {
 
 function openMassEntry() {
   if (!cards.value || cards.value.length === 0) return
-  const names = cards.value.map((card: any) => card.card_data.name)
+  const names = cards.value.map((card) => card.card_data.name)
   const url = getMassEntryAffiliateLink(names)
   window.open(url, '_blank', 'noopener,noreferrer')
 }

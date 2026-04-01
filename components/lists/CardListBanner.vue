@@ -86,9 +86,12 @@ import { refDebounced } from '@vueuse/core'
 import { useCardLists } from '~/composables/useCardLists'
 import { useCardNames } from '~/composables/useBulkData'
 import { useToast } from '#imports'
+import type { Database } from '~/database.types'
+
+type CardList = Database['public']['Tables']['card_lists']['Row']
 
 const props = defineProps<{
-  list: any | null | undefined
+  list: CardList | null | undefined
   isLoading: boolean
 }>()
 
@@ -110,8 +113,7 @@ const editedTitle = ref('')
 const editedDescription = ref('')
 
 // Load card names from backend bulk data API
-const { data: rawCards, status: cardsQueryStatus } = useCardNames()
-const cardsStatus = computed(() => cardsQueryStatus.value === 'pending' ? 'pending' : 'success')
+const { data: rawCards } = useCardNames()
 
 // Filter cards based on search
 const filteredBannerCards = computed(() => {
@@ -170,10 +172,10 @@ const updateBannerImage = async () => {
       icon: 'i-lucide-check'
     })
     isEditBannerModalOpen.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error updating banner',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     })
   } finally {
@@ -201,10 +203,10 @@ const updateListName = async () => {
       icon: 'i-lucide-check'
     })
     isEditingTitle.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error updating list name',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     })
   }
@@ -230,10 +232,10 @@ const updateListDescription = async () => {
       icon: 'i-lucide-check'
     })
     isEditingDescription.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error updating list description',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     })
   }
@@ -241,7 +243,7 @@ const updateListDescription = async () => {
 
 const startEditingTitle = () => {
   if (props.list) {
-    editedTitle.value = props.list.name
+    editedTitle.value = props.list.name || ''
     isEditingTitle.value = true
   }
 }

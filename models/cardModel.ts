@@ -233,3 +233,10 @@ export const CardSchema = z.object({
   ai_normalized_score: z.number().optional(),
   popularity: z.number().optional(),
 });
+
+export interface FetchError {
+  statusCode?: number;
+  status?: number;
+  message?: string;
+  data?: { statusCode?: number; message?: string };
+}

@@ -32,7 +32,7 @@ const signUpWithGoogle = async () => {
 
   sessionStorage.setItem('pendingOAuthSignup', 'true')
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
   })
 
@@ -97,7 +97,7 @@ const signUpWithEmail = async () => {
     email.value = ''
     password.value = ''
     confirmPassword.value = ''
-  } catch (e) {
+  } catch {
     errorMessage.value = 'An unexpected error occurred.'
   }
 

@@ -125,10 +125,10 @@ const handleCreate = async () => {
       icon: 'i-lucide-check'
     })
     isOpen.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error creating list',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     })
   }

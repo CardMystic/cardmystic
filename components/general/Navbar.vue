@@ -187,7 +187,7 @@ const externalItems: NavigationMenuItem[] = [
 
         <template #content>
           <div class="p-2 w-80 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2">
-            <NuxtLink v-for="item in mainItemsMobile" :to="item.to" class="flex items-center gap-2 "
+            <NuxtLink v-for="item in mainItemsMobile" :key="item.label" :to="item.to" class="flex items-center gap-2 "
               @click="closePopover">
               <UIcon :name="item.icon!" class="w-5 h-5" />
               <div class="flex flex-col">

@@ -76,6 +76,7 @@ import { CardSearchFiltersSchema } from '~/models/searchModel'
 import { detectPlatformFromFilters, type Platform } from '~/utils/platformConfig'
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders'
+import type { LocationQuery } from 'vue-router'
 import Filters from '~/components/search/Filters.vue'
 
 const router = useRouter();
@@ -206,11 +207,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     });
 
-    const query: Record<string, any> = {
+    const query: LocationQuery = {
       commander: event.data.commander,
-      partner: event.data.partnerCommander || undefined,
-      query: event.data.query || undefined,
-      filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
+      partner: event.data.partnerCommander || null,
+      query: event.data.query || null,
+      filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : null,
     };
 
     filtersRef.value?.collapse();

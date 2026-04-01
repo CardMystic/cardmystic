@@ -28,15 +28,27 @@ export default defineConfig([
       '@typescript-eslint': tseslint.plugin,
       vue: pluginVue,
     },
+  },
+  ...tseslint.configs.recommended,
+  ...pluginVue.configs['flat/essential'],
+  {
+    files: ['**/*.{js,ts,vue}'],
     rules: {
       'vue/html-indent': 'off',
       'vue/max-attributes-per-line': 'off',
       'vue/html-self-closing': 'off',
+      'vue/multi-word-component-names': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+        },
+      ],
       semi: 'off',
       quotes: 'off',
       'comma-dangle': 'off',
     },
   },
-  ...tseslint.configs.recommended,
-  ...pluginVue.configs['flat/essential'],
 ]);

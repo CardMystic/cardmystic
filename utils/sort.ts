@@ -1,4 +1,3 @@
-import type { Ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { pairings } from '~/utils/colorPairings';
 
@@ -26,7 +25,7 @@ const typeOrder: Record<string, number> = {
   land: 7,
 };
 
-const colorOrder: Record<string, number> = {
+const _colorOrder: Record<string, number> = {
   W: 1,
   U: 2,
   B: 3,

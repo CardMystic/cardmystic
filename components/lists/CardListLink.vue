@@ -84,10 +84,10 @@ const handleDelete = async () => {
       icon: 'i-lucide-trash-2'
     });
     isDeleteModalOpen.value = false;
-  } catch (error: any) {
+  } catch (error: unknown) {
     toast.add({
       title: 'Error deleting list',
-      description: error.message,
+      description: (error as Error).message,
       color: 'error'
     });
   }

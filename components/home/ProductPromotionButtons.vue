@@ -29,7 +29,7 @@ onMounted(async () => {
     const data = await res.json();
     if (Array.isArray(data.marketplaceButtons)) {
       buttons.value = data.marketplaceButtons.filter(
-        (btn: any) => btn && btn.link && btn.image && btn.text
+        (btn: Record<string, unknown>) => btn && btn.link && btn.image && btn.text
       );
     }
   } catch (e) {

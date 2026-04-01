@@ -7,6 +7,10 @@ import {
   keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
+import type { Card, ScryfallCard } from '~/models/cardModel';
+import type { Database } from '~/database.types';
+
+type CardListItem = Database['public']['Tables']['card_list_items']['Row'];
 
 export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
@@ -288,7 +292,7 @@ export const useCardLists = () => {
       queryFn: async () => {
         if (cardIds.value.length === 0) return [];
 
-        const cardsData: any[] = await $fetch(
+        const cardsData = await $fetch<ScryfallCard[]>(
           `${config.public.backendUrl}/cards/cards-by-ids`,
           {
             method: 'POST',
@@ -296,7 +300,7 @@ export const useCardLists = () => {
           },
         );
 
-        return (cardsData || []).map((cardData: any) => ({
+        return (cardsData || []).map((cardData) => ({
           card_name: cardData.name,
           card_data: cardData,
         }));
@@ -310,7 +314,7 @@ export const useCardLists = () => {
   const removeCardFromList = async (listId: string, cardId: string) => {
     if (!supabase) return;
 
-    const { data, error, count } = await supabase
+    const { data, error } = await supabase
       .from('card_list_items')
       .delete()
       .eq('list_id', listId)
@@ -345,15 +349,15 @@ export const useCardLists = () => {
       await queryClient.cancelQueries({ queryKey: ['list-cards', listId] });
 
       // Optimistically remove the card from list-items cache
-      queryClient.setQueriesData<any[]>(
+      queryClient.setQueriesData<CardListItem[]>(
         { queryKey: ['list-items', listId] },
-        (old) => old?.filter((item: any) => item.card_id !== cardId),
+        (old) => old?.filter((item) => item.card_id !== cardId),
       );
 
       // Optimistically remove the card from list-cards cache
-      queryClient.setQueriesData<any[]>(
+      queryClient.setQueriesData<Pick<Card, 'card_name' | 'card_data'>[]>(
         { queryKey: ['list-cards', listId] },
-        (old) => old?.filter((card: any) => card.card_data.id !== cardId),
+        (old) => old?.filter((card) => card.card_data.id !== cardId),
       );
     },
     onSuccess: (_, { listId }) => {

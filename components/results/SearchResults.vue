@@ -35,7 +35,7 @@
           :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
           <template v-for="group in groupedResults" :key="group.label" #[group.label]>
             <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pb-4">
-              <div v-for="(result, index) in group.cards" :key="result.card_data.id">
+              <div v-for="result in group.cards" :key="result.card_data.id">
                 <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                   :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
@@ -195,7 +195,7 @@ const accordionItems = computed<AccordionItem[]>(() => {
     .map(g => ({
       label: g.label,
       value: g.label,
-      slot: g.label as any,
+      slot: g.label as string,
     }));
 });
 

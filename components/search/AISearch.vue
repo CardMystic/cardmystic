@@ -8,11 +8,9 @@
       <div class="flex gap-2">
         <UInput ref="input" v-model="state.query" placeholder="Describe the cards you want..." icon="i-lucide-search"
           class="flex-1" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
-          <template v-if="state.query?.length" #trailing>
-            <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
-              @click="state.query = ''" />
-          </template>
           <template #trailing>
+            <UButton v-if="state.query?.length" color="neutral" variant="link" size="sm" icon="i-lucide-circle-x"
+              aria-label="Clear input" @click="state.query = ''" />
             <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>
@@ -58,7 +56,7 @@ import { useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { CardSearchFiltersSchema } from '~/models/searchModel'
+import { CardSearchFiltersSchema, type CardSearchFilters } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
 import Filters from './Filters.vue'
 
@@ -95,7 +93,7 @@ const queryParam = computed(() => String(route.query.query || ''));
 import { hasAdvancedFilters } from '~/utils/quickFilters'
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Match Exactly' as 'Match Exactly' };
+  const base: Partial<CardSearchFilters> = { selectedColorFilterOption: 'Match Exactly' };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -150,7 +148,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     saveSearchMutation.mutate({ query: event.data.query, searchType: 'ai', filters: requestFilters })
 
     // Construct query parameters
-    const query: Record<string, any> = {
+    const query: Record<string, string | number | undefined> = {
       query: event.data.query,
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'ai'

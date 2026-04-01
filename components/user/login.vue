@@ -26,7 +26,7 @@ const signInWithGoogle = async () => {
     return
   }
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google'
   })
 
@@ -60,22 +60,22 @@ const signInWithEmail = async () => {
       body: JSON.stringify({ email: email.value, password: password.value }),
     })
 
-    const data = await res.json()
+    const result = await res.json()
 
     if (!res.ok) {
-      errorMessage.value = data.message || 'Login failed.'
+      errorMessage.value = result.message || 'Login failed.'
       loading.value = false
       return
     }
 
     // Set the Supabase session from the tokens returned by the backend
     await supabase.auth.setSession({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
+      access_token: result.access_token,
+      refresh_token: result.refresh_token,
     })
 
     router.push('/')
-  } catch (e) {
+  } catch {
     errorMessage.value = 'An unexpected error occurred.'
   }
 

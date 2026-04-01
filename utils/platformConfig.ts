@@ -69,7 +69,7 @@ export function getSearchPlatformProp(
 
 /** Detect the platform from a filters object. Falls back to 'all' when filters are present but have no platform flag. */
 export function detectPlatformFromFilters(
-  filters: Record<string, any> | undefined | null,
+  filters: Partial<CardSearchFilters> | undefined | null,
   fallback: Platform = 'all',
 ): Platform {
   if (!filters) return fallback;
@@ -77,18 +77,14 @@ export function detectPlatformFromFilters(
   if (filters.isMTGO) return 'mtgo';
   if (filters.isPaper) return 'paper';
   if (
-    filters.selectedCardFormats?.some((f: any) =>
-      typeof f === 'string'
-        ? f.toLowerCase().includes('modern')
-        : f?.format?.toLowerCase() === 'modern',
+    filters.selectedCardFormats?.some(
+      (f) => f?.format?.toLowerCase() === 'modern',
     )
   )
     return 'modern';
   if (
-    filters.selectedCardFormats?.some((f: any) =>
-      typeof f === 'string'
-        ? f.toLowerCase().includes('commander')
-        : f?.format?.toLowerCase() === 'commander',
+    filters.selectedCardFormats?.some(
+      (f) => f?.format?.toLowerCase() === 'commander',
     )
   )
     return 'commander';

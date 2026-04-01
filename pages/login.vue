@@ -7,7 +7,7 @@
 <script setup lang="ts">
 definePageMeta({
   layout: 'fullscreen',
-  middleware: (to) => {
+  middleware: () => {
     // Redirect if already logged in
     const { userProfile } = useUserProfile()
     if (userProfile.value?.id) {
@@ -38,6 +38,4 @@ useSeoMeta({
   twitterDescription: () => 'Sign in to your CardMystic account to access your saved card lists and personalized MTG search.',
   twitterImage: () => 'https://cardmystic.com/cardmystic_cards.png'
 })
-
-const { userProfile } = useUserProfile()
 </script>

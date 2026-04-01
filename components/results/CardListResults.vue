@@ -72,7 +72,6 @@
 </template>
 
 <script lang="ts" setup>
-import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import type { AccordionItem } from '@nuxt/ui';
 
@@ -98,7 +97,7 @@ const accordionItems = computed<AccordionItem[]>(() => {
   return labeledGroups.value.map(g => ({
     label: g.label,
     value: g.label,
-    slot: g.label as any,
+    slot: g.label as string,
   }));
 });
 

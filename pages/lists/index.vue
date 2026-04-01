@@ -49,12 +49,10 @@ definePageMeta({
 })
 
 import { useCardLists } from '~/composables/useCardLists'
-import { useToast } from '#imports'
 import CardListLink from '~/components/lists/CardListLink.vue'
 import CreateListModal from '~/components/lists/CreateListModal.vue'
 
 const { userLists, isLoadingLists, listsError } = useCardLists()
-const toast = useToast()
 
 const lists = computed(() => userLists.value || [])
 const loading = computed(() => isLoadingLists.value)

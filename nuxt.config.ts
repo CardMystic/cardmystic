@@ -92,7 +92,7 @@ export default defineNuxtConfig({
     ssr: {},
     plugins: [
       ...(process.env.NODE_ENV === 'development'
-        ? [devtoolsJson() as any]
+        ? [devtoolsJson() as unknown as undefined]
         : []),
     ],
     css: {

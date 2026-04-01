@@ -74,7 +74,7 @@ function isBasicLand(typeLine: string): boolean {
   return /\bBasic\b/.test(typeLine) && /\bLand\b/.test(typeLine);
 }
 
-function colorLetterToName(letter: string): string {
+export function colorLetterToName(letter: string): string {
   const map: Record<string, string> = {
     W: 'White',
     U: 'Blue',

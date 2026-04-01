@@ -445,7 +445,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
+import type { CardFormatType, FetchError, ScryfallCard } from '~/models/cardModel';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
@@ -464,20 +464,20 @@ const { card, printings, error, pending } = useCardDetails(cardIdParam);
 // Check if error is a 404 Not Found
 const isNotFound = computed(() => {
   if (!error.value) return false;
-  const err = error.value as any;
+  const err = error.value as FetchError;
   return err?.statusCode === 404 || err?.status === 404 || err?.data?.statusCode === 404;
 });
 
 // Check if error is a 400 Bad Request and get its message
 const isBadRequest = computed(() => {
   if (!error.value) return false;
-  const err = error.value as any;
+  const err = error.value as FetchError;
   return err?.statusCode === 400 || err?.status === 400 || err?.data?.statusCode === 400;
 });
 
 const errorMessage = computed(() => {
   if (!error.value) return '';
-  const err = error.value as any;
+  const err = error.value as FetchError;
   return err?.data?.message || err?.message || 'An error occurred';
 });
 

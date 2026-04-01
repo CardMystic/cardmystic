@@ -222,7 +222,7 @@ import { z } from 'zod';
 import { CardType, CardColor, CardRarity, CardFormat, CardFormatStatus, cardColorToSymbol } from '~/models/cardModel';
 import type { CardSearchFilters } from '~/models/searchModel';
 import ManaIcon from '../general/ManaIcon.vue';
-import type { AccordionItem, CheckboxGroupItem, CheckboxGroupValue } from '@nuxt/ui';
+import type { AccordionItem, CheckboxGroupItem } from '@nuxt/ui';
 import { getColorIdentityName } from '~/utils/colorPairings';
 import { hasAdvancedFilters } from '~/utils/quickFilters';
 
@@ -518,7 +518,7 @@ function addFormatRow() {
 // Chip removal functions
 function removeCardType(cardType: string) {
   const currentTypes = [...(modelValue?.selectedCardTypes || [])];
-  const index = currentTypes.indexOf(cardType as any);
+  const index = currentTypes.findIndex(t => t === cardType);
   if (index !== -1) {
     currentTypes.splice(index, 1);
     updateFilters({ selectedCardTypes: currentTypes.length > 0 ? currentTypes : undefined });

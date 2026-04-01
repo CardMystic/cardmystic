@@ -20,7 +20,7 @@
       </div>
       <!-- Horizontal scrolling results -->
       <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results.cards" :ui="{
-        item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
+        item: 'flex-[1_0_20%] max-w-45 min-w-38.75 shrink-0'
       }">
         <Card :card="item" size="small" />
       </UCarousel>
@@ -29,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useExampleQueries } from '~/composables/useExampleQueries';
 
 const router = useRouter();

@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware(async (to, from) => {
+export default defineNuxtRouteMiddleware(async () => {
   if (import.meta.server) return; // don't redirect during SSR
   const { userProfile, loading } = useUserProfile();
 

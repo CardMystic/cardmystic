@@ -1,4 +1,4 @@
-import type { Tables, TablesInsert } from '~/database.types';
+import type { Tables, TablesInsert, Json } from '~/database.types';
 
 type SearchHistory = Tables<'search_history'>;
 type SearchHistoryInsert = TablesInsert<'search_history'>;
@@ -42,7 +42,7 @@ export const useSearchHistory = () => {
   const saveSearch = async (
     query: string,
     searchType: 'ai' | 'similarity' | 'keyword' | 'commander' | 'recommend',
-    filters?: any,
+    filters?: Json,
   ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
@@ -69,7 +69,7 @@ export const useSearchHistory = () => {
     }: {
       query: string;
       searchType: 'ai' | 'similarity' | 'keyword' | 'commander' | 'recommend';
-      filters?: any;
+      filters?: Json;
     }) => {
       if (!supabase) return;
       return await saveSearch(query, searchType, filters);

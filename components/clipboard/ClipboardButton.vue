@@ -15,7 +15,7 @@ import { computed } from 'vue';
 import { useClipboard } from '~/composables/useClipboard';
 import { useToast } from '#imports';
 
-const props = defineProps<{ card: Record<string, any> | null }>();
+const props = defineProps<{ card: Record<string, unknown> | null }>();
 
 const clipboard = useClipboard();
 const toast = useToast();
