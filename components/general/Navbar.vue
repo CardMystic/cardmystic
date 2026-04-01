@@ -105,11 +105,6 @@ const trailingItems: NavigationMenuItem[] = [
 
 const mainItemsMobile: NavigationMenuItem[] = [
   {
-    label: 'Home',
-    icon: 'i-lucide-home',
-    to: '/'
-  },
-  {
     label: 'AI Search',
     description: 'Search for cards using AI',
     icon: 'i-lucide-brain',
@@ -191,23 +186,24 @@ const externalItems: NavigationMenuItem[] = [
         <UButton color="neutral" variant="subtle" icon="i-lucide-menu" />
 
         <template #content>
-          <div class="p-4 w-64 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2">
-            <NuxtLink v-for="item in mainItemsMobile" :to="item.to" class="flex items-center gap-2"
+          <div class="p-2 w-80 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2">
+            <NuxtLink v-for="item in mainItemsMobile" :to="item.to" class="flex items-center gap-2 "
               @click="closePopover">
               <UIcon :name="item.icon!" class="w-5 h-5" />
               <div class="flex flex-col">
                 <span>{{ item.label }}</span>
                 <span class="text-sm text-gray-500" v-if="item.description">{{ item.description }}</span>
               </div>
+
             </NuxtLink>
-            <a v-for="item in externalItems" @click="closePopover" :key="String(item.to)" :href="String(item.to)"
+            <!-- <a v-for="item in externalItems" @click="closePopover" :key="String(item.to)" :href="String(item.to)"
               :target="item.target!" rel="noopener noreferrer" class="flex items-center gap-2">
               <UIcon :name="item.icon!" class="w-5 h-5" />
               <div class="flex flex-col">
                 <span>{{ item.label }}</span>
                 <span v-if="item.description" class="text-sm text-gray-500">{{ item.description }}</span>
               </div>
-            </a>
+            </a> -->
           </div>
         </template>
       </UPopover>
