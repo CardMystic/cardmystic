@@ -1,9 +1,9 @@
 <template>
-  <div class="flex flex-wrap justify-center gap-2 mb-2">
+  <div class="flex flex-wrap justify-center gap-1">
     <UButton v-for="filter in visibleFilters" :key="filter.key" size="sm"
       :variant="isActive(filter) ? 'solid' : 'outline'" :color="isActive(filter) ? 'primary' : 'primary'"
       class="cursor-pointer rounded-pill" @click="toggle(filter)">
-      <UIcon :name="filter.icon" class="w-3.5 h-3.5 mr-1" />
+      <UIcon :name="filter.icon" class="w-3.5 h-3.5" />
       {{ filter.label }}
     </UButton>
   </div>
@@ -44,14 +44,14 @@ const quickFilters: QuickFilter[] = [
     remove: (f) => ({ ...f, isMTGO: undefined }),
     check: (f) => !!f.isMTGO,
   },
-  {
-    key: 'paper',
-    label: 'Paper',
-    icon: 'i-lucide-scroll-text',
-    apply: (f) => ({ ...f, isPaper: true, isArena: undefined, isMTGO: undefined }),
-    remove: (f) => ({ ...f, isPaper: undefined }),
-    check: (f) => !!f.isPaper,
-  },
+  // {
+  //   key: 'paper',
+  //   label: 'Paper',
+  //   icon: 'i-lucide-scroll-text',
+  //   apply: (f) => ({ ...f, isPaper: true, isArena: undefined, isMTGO: undefined }),
+  //   remove: (f) => ({ ...f, isPaper: undefined }),
+  //   check: (f) => !!f.isPaper,
+  // },
   {
     key: 'modern',
     label: 'Modern',

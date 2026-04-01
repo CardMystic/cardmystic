@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <div class="flex gap-3 max-md:hidden mb-4 justify-center">
+    <div class="flex gap-3 max-lg:hidden mb-4 justify-center">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
         <UIcon name="i-lucide-search" class="icon" size="18" />
@@ -33,7 +33,7 @@
     </div>
 
     <!-- Mobile dropdown -->
-    <div class="mb-2 md:hidden flex flex-col justify-center items-center">
+    <div class="mb-2 lg:hidden flex flex-col justify-center items-center">
       <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
       <USelect label="select" class="w-50" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
         variant="outline"

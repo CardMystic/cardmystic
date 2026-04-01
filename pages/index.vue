@@ -7,7 +7,7 @@
       <UContainer class="flex flex-col items-center justify-center text-center max-w-250 h-full relative z-10">
         <div class="header-layout">
           <div class="title-container">
-            <img src="/wizard.webp" class="image w-30 h-30 object-cover" alt="Wizard" fetchpriority="high" />
+            <img src="/wizard.webp" class="image object-cover" alt="Wizard" fetchpriority="high" />
             <h1 class="subtitle text-white">
               <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I.
                 Search
@@ -220,8 +220,8 @@ setPageInfo({
   z-index: 10
   @media (max-width: 768px)
     top: -10px
-    width: 130px
-    height: 130px
+    width: 80px
+    height: 80px
 
 .explore-spacer
   flex-grow: 1
@@ -241,18 +241,6 @@ setPageInfo({
   text-align: center
   min-width: 372px
   position: relative
-
-.logo-container
-  position: relative
-  width: 200px
-  height: 200px
-  display: flex
-  align-items: center
-  justify-content: center
-  margin-bottom: -10px
-  @media (max-width: 768px)
-    width: 150px
-    height: 150px
 
 .bottom-cards
   position: absolute

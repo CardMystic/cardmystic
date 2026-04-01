@@ -21,10 +21,10 @@ function dismissTooltip() {
 
 <template>
   <div v-if="showTooltip"
-    class="min-w-[256px] absolute top-full right-0 mt-4 w-64 bg-secondary text-white p-3 rounded-lg shadow-lg z-50 flex flex-row items-center">
+    class="absolute top-full right-0 mt-4 bg-secondary text-white p-3 rounded-lg shadow-lg z-50 flex flex-row items-center">
 
-    <div class="text-[13px] font-medium">
-      <span class="font-bold animate-rainbow">NEW!</span> Create an account for card lists, search history, and more!
+    <div class="text-[12px] font-medium mr-2 whitespace-nowrap">
+      <span class="font-bold animate-rainbow">NEW!</span> Login for more features!
     </div>
     <UButton @click="dismissTooltip" icon="i-lucide-x" size="xs" color="neutral" variant="solid"
       class=" rounded-full shadow-md cursor-pointer" />
