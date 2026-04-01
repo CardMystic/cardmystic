@@ -211,8 +211,8 @@ setPageInfo({
   overflow: hidden
 
 .image
-  width: 200px
-  height: 200px
+  width: 160px
+  height: 160px
   position: relative
   z-index: 10
   @media (max-width: 768px)
