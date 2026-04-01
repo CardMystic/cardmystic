@@ -1,5 +1,5 @@
 <template>
-  <CometDog />
+  <LazyCometDog />
   <SpaceBackground :full="true">
     <div class="hero px-0 h-full w-full justify-center flex flex-col items-center">
       <div class="explore-spacer">
@@ -7,7 +7,7 @@
       <UContainer class="flex flex-col items-center justify-center text-center max-w-250 h-full relative z-10">
         <div class="header-layout">
           <div class="title-container">
-            <img src="/wizard.webp" class="image w-30 h-30 object-cover" alt="Wizard" />
+            <img src="/wizard.webp" class="image object-cover" alt="Wizard" fetchpriority="high" />
             <h1 class="subtitle text-white">
               <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I.
                 Search
@@ -27,13 +27,13 @@
         <!-- Fanned cards at bottom -->
         <div class="bottom-cards">
           <div v-if="heroCards[0]" class="card-wrapper card-left">
-            <CardSimple :card="heroCards[0]" size="small" />
+            <LazyCardSimple :card="heroCards[0]" size="small" />
           </div>
           <div v-if="heroCards[1]" class="card-wrapper card-center">
-            <CardSimple :card="heroCards[1]" size="small" />
+            <LazyCardSimple :card="heroCards[1]" size="small" />
           </div>
           <div v-if="heroCards[2]" class="card-wrapper card-right">
-            <CardSimple :card="heroCards[2]" size="small" />
+            <LazyCardSimple :card="heroCards[2]" size="small" />
           </div>
         </div>
       </div>
@@ -44,14 +44,14 @@
   <UContainer class="mt-10 mb-10">
     <!-- User-specific sections when logged in -->
     <ClientOnly>
-      <RecentLists v-if="isLoggedIn" class="mb-14" />
-      <RecentListsNotLoggedIn v-else class="mb-14" />
+      <LazyRecentLists v-if="isLoggedIn" class="mb-14" />
+      <LazyRecentListsNotLoggedIn v-else class="mb-14" />
       <template #fallback>
-        <RecentListsNotLoggedIn class="mb-14" />
+        <LazyRecentListsNotLoggedIn class="mb-14" />
       </template>
     </ClientOnly>
 
-    <QueryCount class="mb-14"></QueryCount>
+    <LazyQueryCount class="mb-14"></LazyQueryCount>
 
     <!-- How To Use & How It Works Section -->
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -87,23 +87,23 @@
         </div>
       </div>
     </div>
-    <Efficiency class="mb-20" />
+    <LazyEfficiency class="mb-20" />
     <ClientOnly>
-      <ExampleQueries class="mb-10" />
+      <LazyExampleQueries class="mb-10" />
       <template #fallback>
         <ExampleQueriesSkeleton class="mb-10" />
       </template>
     </ClientOnly>
     <ClientOnly>
-      <TopQueries class="mb-10" />
+      <LazyTopQueries class="mb-10" />
       <template #fallback>
         <TopQueriesSkeleton class="mb-10" />
       </template>
     </ClientOnly>
-    <MeetTheDevs class="mb-10" />
-    <Sponsorships class="mb-10" />
-    <JoinUs class="mb-10" />
-    <ProductPromotionButtons />
+    <LazyMeetTheDevs class="mb-10" />
+    <LazySponsorships class="mb-10" />
+    <LazyJoinUs class="mb-10" />
+    <LazyProductPromotionButtons />
   </UContainer>
 </template>
 
@@ -126,6 +126,15 @@ useSeoMeta({
 })
 
 useHead({
+  link: [
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/wizard.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
+  ],
   script: [
     {
       type: 'application/ld+json',
@@ -190,9 +199,6 @@ setPageInfo({
 </script>
 
 <style lang="sass" scoped>
-.secondary
-  color: rgb(var(--color-secondary-500))
-
 .hero
   position: relative
   min-height:  100vh
@@ -205,14 +211,14 @@ setPageInfo({
   overflow: hidden
 
 .image
-  width: 200px
-  height: 200px
+  width: 160px
+  height: 160px
   position: relative
   z-index: 10
   @media (max-width: 768px)
     top: -10px
-    width: 130px
-    height: 130px
+    width: 80px
+    height: 80px
 
 .explore-spacer
   flex-grow: 1
@@ -232,18 +238,6 @@ setPageInfo({
   text-align: center
   min-width: 372px
   position: relative
-
-.logo-container
-  position: relative
-  width: 200px
-  height: 200px
-  display: flex
-  align-items: center
-  justify-content: center
-  margin-bottom: -10px
-  @media (max-width: 768px)
-    width: 150px
-    height: 150px
 
 .bottom-cards
   position: absolute

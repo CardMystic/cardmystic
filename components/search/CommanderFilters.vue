@@ -116,22 +116,4 @@ function updateFilters(updates: Partial<CardSearchFilters>) {
   margin-top: 8px;
   width: 100%;
 }
-
-.fade-out {
-  animation: fadeOut 3s forwards;
-}
-
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-  }
-
-  80% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
 </style>

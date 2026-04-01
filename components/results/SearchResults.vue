@@ -20,7 +20,7 @@
       <div v-if="searchedCard && groupedResults && groupedResults.length > 0 && groupedResults[0].label"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
         <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
-          :hide-progress-bar="false" :hide-thumbs-down-button="true" />
+          :hide-progress-bar="false" :hide-thumbs-down-button="true" :is-commander="checkIsCommander(searchedCard)" />
       </div>
 
       <!-- Grouped results (accordion) -->
@@ -38,7 +38,8 @@
               <div v-for="(result, index) in group.cards" :key="result.card_data.id">
                 <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                   :hide-thumbs-down-button="hideThumbsDownButton"
-                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
+                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
+                  :is-commander="checkIsCommander(result)" />
               </div>
             </div>
           </template>
@@ -51,7 +52,7 @@
           <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
             <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
               :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
-              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
+              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :is-commander="checkIsCommander(result)" />
           </div>
         </div>
       </template>
@@ -83,7 +84,7 @@
   </div>
 
   <Teleport to="body">
-    <JumpTo :groups="(groupedResults || []).filter(g => g.label).map(g => g.label)" />
+    <LazyJumpTo :groups="(groupedResults || []).filter(g => g.label).map(g => g.label)" />
   </Teleport>
 </template>
 
@@ -92,11 +93,19 @@ import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import type { AccordionItem } from '@nuxt/ui';
 import SortComponent from '~/components/search/Sort.vue';
-import GroupBy from '~/components/search/GroupBy.vue';
+const GroupBy = defineAsyncComponent(() => import('~/components/search/GroupBy.vue'));
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
+import { useCommandersSet } from '~/composables/useBulkData';
 
 const { getPageInfo } = usePageInfo();
+
+// Hoisted commander detection — single subscription shared by all Card children
+const { data: commandersSet } = useCommandersSet();
+function checkIsCommander(card: Card): boolean {
+  if (!card?.card_data?.name || !commandersSet.value) return false;
+  return commandersSet.value.has(card.card_data.name);
+}
 
 const props = defineProps<{
   isLoading: boolean;

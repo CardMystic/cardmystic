@@ -42,7 +42,7 @@
         </div>
       </template>
 
-      <ClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
+      <LazyClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
 
       <!-- Flip Button for Dual-Faced Cards -->
       <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
@@ -169,15 +169,15 @@
             </template>
           </UTooltip>
           <!-- More actions popover (mobile only) -->
-          <UPopover v-if="showCardInfo && !isSearched" v-model:open="moreActionsOpen" class="sm:hidden">
+          <UPopover v-if="showCardInfo" v-model:open="moreActionsOpen" class="sm:hidden">
             <UTooltip text="More actions" :popper="{ placement: 'top' }">
               <UButton color="neutral" variant="solid" class="mr-1 cursor-pointer" icon="i-lucide-ellipsis" size="xs"
                 aria-label="More actions" />
             </UTooltip>
             <template #content>
               <div class="flex flex-col gap-1 p-2 w-48">
-                <UButton color="neutral" variant="ghost" class="cursor-pointer justify-start" size="sm"
-                  icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
+                <UButton v-if="!isSearched" color="neutral" variant="ghost" class="cursor-pointer justify-start"
+                  size="sm" icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
                   Find Similar Cards
                 </UButton>
                 <template v-if="isCommander">
@@ -194,7 +194,7 @@
             </template>
           </UPopover>
           <!-- Desktop buttons (hidden on mobile) -->
-          <template v-if="showCardInfo && !isSearched">
+          <template v-if="showCardInfo">
             <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
               <UButton v-if="isCommander" color="primary" variant="solid"
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
@@ -205,7 +205,7 @@
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
                 @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
             </UTooltip>
-            <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
+            <UTooltip v-if="!isSearched" text="Find similar cards" :popper="{ placement: 'top' }">
               <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
                 icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
             </UTooltip>
@@ -229,7 +229,7 @@
             <template #default>
               <UButton class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'" variant="soft"
                 :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" :size="isMobile ? 'xs' : 'sm'"
-                aria-label="Add to deckbuilding search" @click="deckbuilderStore.addCard(card.card_data.name)" />
+                aria-label="Add to deckbuilding search" @click="deckbuilderStore?.addCard(card.card_data.name)" />
             </template>
           </UTooltip>
         </div>
@@ -259,36 +259,20 @@
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
-import { useCardFeedback } from '~/composables/useCardFeedback';
-import { useDeckbuilder } from '~/composables/useDeckbuilder';
-import { useCommandersSet } from '~/composables/useBulkData';
 
 const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 
-// Responsive: detect mobile (<640px, matching Tailwind's sm breakpoint)
-const isMobile = ref(false);
-let mediaQuery: MediaQueryList | null = null;
-function updateMobile(e: MediaQueryListEvent | MediaQueryList) {
-  isMobile.value = !e.matches;
-}
-onMounted(() => {
-  mediaQuery = window.matchMedia('(min-width: 640px)');
-  isMobile.value = !mediaQuery.matches;
-  mediaQuery.addEventListener('change', updateMobile);
-});
-onUnmounted(() => {
-  mediaQuery?.removeEventListener('change', updateMobile);
-});
+// Shared singleton — one listener for all Card instances
+const isMobile = useIsMobile();
 
 const props = defineProps({
   card: {
@@ -330,6 +314,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isCommander: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits<{
@@ -337,13 +325,6 @@ const emit = defineEmits<{
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
-
-// Commander detection
-const { data: commandersSet } = useCommandersSet();
-const isCommander = computed(() => {
-  if (!props.card?.card_data?.name || !commandersSet.value) return false;
-  return commandersSet.value.has(props.card.card_data.name);
-});
 
 // Partner commander support
 const hasPartner = computed(() => !!props.card.partner_card_data);
@@ -392,10 +373,11 @@ const singleBuyTooltip = computed(() => {
   return price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer';
 });
 
-const deckbuilderStore = useDeckbuilder();
+// Only initialise deckbuilder store when the button is actually shown
+const deckbuilderStore = props.showAddToDeckbuilderButton ? useDeckbuilder() : null;
 
 const isInDecklist = computed(() => {
-  if (!props.card.card_data?.name) return false;
+  if (!deckbuilderStore || !props.card.card_data?.name) return false;
   return deckbuilderStore.hasCard(props.card.card_data.name);
 });
 
@@ -429,8 +411,14 @@ const searchQuery = computed(() => {
   return '';
 });
 
-// Use the dislike mutation from composable
-const { dislikeMutation } = useCardFeedback();
+// Lazily initialise feedback composable — only when user actually dislikes
+let _dislikeMutation: ReturnType<typeof useCardFeedback>['dislikeMutation'] | null = null;
+function getDislikeMutation() {
+  if (!_dislikeMutation) {
+    _dislikeMutation = useCardFeedback().dislikeMutation;
+  }
+  return _dislikeMutation;
+}
 
 // Handle dislike button click - show confirmation modal
 function handleDislike() {
@@ -453,7 +441,7 @@ function confirmDislike() {
   isThumbsDownClicked.value = true;
 
   // Track the dislike
-  dislikeMutation.mutate({
+  getDislikeMutation().mutate({
     query: searchQuery.value,
     cardName: props.card.card_data.name,
   });
@@ -652,14 +640,6 @@ function toggleShowAllData() {
 
 .commander-card-bg {
   border: 1.5px solid rgba(234, 179, 8, 0.4);
-}
-
-@media (max-width: 767px) {
-
-  .searched-plus-btn,
-  .searched-plus-btn.clipboard-added {
-    opacity: 0.7 !important;
-  }
 }
 
 .card-image-wrapper img {
