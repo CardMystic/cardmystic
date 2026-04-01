@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <div class="flex gap-3 max-md:hidden mb-4 justify-center">
+    <div class="flex gap-3 max-lg:hidden mb-4 justify-center">
       <button type="button" :class="['search-tab-button-new', { active: searchType === 'ai' }]"
         @click="setSearchType('ai')">
         <UIcon name="i-lucide-search" class="icon" size="18" />
@@ -33,7 +33,7 @@
     </div>
 
     <!-- Mobile dropdown -->
-    <div class="mb-2 md:hidden flex flex-col justify-center items-center">
+    <div class="mb-2 lg:hidden flex flex-col justify-center items-center">
       <p class="text-sm text-gray-400 mb-1 text-center">Select Search Type</p>
       <USelect label="select" class="w-50" :modelValue="searchType" placeholder="Select status" :icon="searchIcon"
         variant="outline"
@@ -69,10 +69,10 @@ import type { SelectItem } from '@nuxt/ui'
 import { useRoute } from 'vue-router';
 
 import AISearch from './AISearch.vue';
-import SimilaritySearch from './SimilaritySearch.vue';
-import CommanderSearch from './CommanderSearch.vue';
-import KeywordSearch from './KeywordSearch.vue';
-import ALSSearch from './ALSSearch.vue';
+const SimilaritySearch = defineAsyncComponent(() => import('./SimilaritySearch.vue'));
+const CommanderSearch = defineAsyncComponent(() => import('./CommanderSearch.vue'));
+const KeywordSearch = defineAsyncComponent(() => import('./KeywordSearch.vue'));
+const ALSSearch = defineAsyncComponent(() => import('./ALSSearch.vue'));
 import { detectPlatformFromFilters, type Platform } from '~/utils/platformConfig';
 
 // Define props
@@ -255,14 +255,6 @@ watch(searchType, (newType) => {
 }
 
 @media (max-width: 768px) {
-  .search-tabs-container {
-    gap: 14px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    /* Ensure wrapping on mobile */
-    justify-content: flex-start;
-  }
-
   .search-tab-button-new {
     padding: 6px 10px;
     font-size: 0.92rem;
@@ -272,29 +264,11 @@ watch(searchType, (newType) => {
   }
 }
 
-.search-btn {
-  margin-top: 0;
-  align-self: flex-start;
-  cursor: pointer;
-}
-
-.filters-section {
-  width: 100%;
-}
-
 @media (max-width: 768px) {
   .search-input-row {
     flex-direction: column;
     gap: 12px;
     width: 100%;
-  }
-
-  .search-btn {
-    width: 100%;
-    margin-left: 0 !important;
-    align-self: flex-start;
-    font-size: 18px;
-    font-weight: 500;
   }
 
   .search-container {

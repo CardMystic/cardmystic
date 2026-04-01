@@ -47,7 +47,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     heading: 'MTG AI Card Search',
     paragraphs: [
       'Search for Magic: The Gathering cards using natural language. Describe the card, mechanic, or effect you are looking for and CardMystic\'s AI-powered MTG card search will find the best matches.',
-      'Instead of memorizing exact card names, you can search using plain English. Our AI understands card mechanics, abilities, and gameplay interactions.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Try searches like "creatures that double tokens", "instant speed enchantment removal", or "lands that produce any color of mana" to quickly discover powerful cards for your deck.',
       'Level up your next deck whether you\'re playing Commander, MTGO, MTG Arena, or any other Magic: The Gathering format!'
     ],

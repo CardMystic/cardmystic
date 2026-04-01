@@ -25,7 +25,8 @@
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
       <div v-for="result in displayedResults" :key="result.card_data.id">
-        <Card :card="result" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true" />
+        <Card :card="result" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true"
+          :is-commander="checkIsCommander(result)" />
       </div>
     </div>
     <div v-if="hasMoreCards && !showAll" class="flex justify-center mt-6">
@@ -56,6 +57,12 @@
 import type { Card } from '~/models/cardModel';
 import SortComponent from '~/components/search/Sort.vue';
 import { sortSearchResults } from '~/utils/sort';
+
+const { data: commandersSet } = useCommandersSet();
+function checkIsCommander(card: Card): boolean {
+  if (!card?.card_data?.name || !commandersSet.value) return false;
+  return commandersSet.value.has(card.card_data.name);
+}
 
 const props = defineProps<{
   isLoading: boolean;
