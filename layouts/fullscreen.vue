@@ -22,7 +22,4 @@
 
 .main-content
   flex: 1
-
-.responsive-align
-  align-items: flex-start
 </style>

@@ -199,9 +199,6 @@ setPageInfo({
 </script>
 
 <style lang="sass" scoped>
-.secondary
-  color: rgb(var(--color-secondary-500))
-
 .hero
   position: relative
   min-height:  100vh

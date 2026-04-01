@@ -642,14 +642,6 @@ function toggleShowAllData() {
   border: 1.5px solid rgba(234, 179, 8, 0.4);
 }
 
-@media (max-width: 767px) {
-
-  .searched-plus-btn,
-  .searched-plus-btn.clipboard-added {
-    opacity: 0.7 !important;
-  }
-}
-
 .card-image-wrapper img {
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

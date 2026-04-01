@@ -109,7 +109,7 @@
         }" block />
 
       <!-- Filters Content -->
-      <template #content class="filters-content">
+      <template #content>
         <UAccordion type="multiple" :unmount-on-hide="false" :items="items">
           <!-- Types Filter -->
           <template #types>
@@ -597,22 +597,6 @@ function clearColorChip() {
   gap: 8px;
 }
 
-.filters-toggle-btn .v-icon {
-  transition: transform 0.3s ease-in-out;
-}
-
-.rotate-180 {
-  transform: rotate(180deg);
-}
-
-.transition-transform {
-  transition: transform 0.3s ease-in-out;
-}
-
-.filters-content {
-  margin-top: 8px;
-}
-
 .active-filters-chips {
   display: flex;
   flex-wrap: wrap;
@@ -653,23 +637,5 @@ function clearColorChip() {
   color: rgba(255, 255, 255, 0.87);
   margin-bottom: 0;
   display: block;
-}
-
-.fade-out {
-  animation: fadeOut 3s forwards;
-}
-
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-  }
-
-  80% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
 }
 </style>

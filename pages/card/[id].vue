@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -96,7 +96,7 @@
             Buy {{ tcgPriceLabel }}
           </UButton>
           <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
+            variant="solid" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
             aria-label="Search on TCGPlayer">
             Search on TCGPlayer
           </UButton>
@@ -220,7 +220,7 @@
             Buy {{ tcgPriceLabel }}
           </UButton>
           <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-            variant="outline" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
+            variant="solid" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
             aria-label="Search on TCGPlayer">
             Search on TCGPlayer
           </UButton>
@@ -780,15 +780,15 @@ const isCommander = computed(() => {
 });
 
 const cardTabs = [
-  { key: 'recommended', label: 'RCM', icon: 'i-lucide-box', slot: 'recommended' },
-  { key: 'popular', label: 'POP', icon: 'i-lucide-flame', slot: 'popular' },
-  { key: 'similar', label: 'SIM', icon: 'i-mdi-cards-outline', slot: 'similar' },
-  { key: 'popular-commanders', label: 'CMD', icon: 'i-lucide-crown', slot: 'popular-commanders' },
+  { value: 'recommended', label: 'RCM', icon: 'i-lucide-box', slot: 'recommended' },
+  { value: 'popular', label: 'POP', icon: 'i-lucide-flame', slot: 'popular' },
+  { value: 'similar', label: 'SIM', icon: 'i-mdi-cards-outline', slot: 'similar' },
+  { value: 'popular-commanders', label: 'CMD', icon: 'i-lucide-crown', slot: 'popular-commanders' },
 ];
 
 const nonCommanderTabs = [
-  { key: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
-  { key: 'popular-commanders', label: 'Commanders', icon: 'i-lucide-crown', slot: 'popular-commanders' },
+  { value: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
+  { value: 'popular-commanders', label: 'Commanders', icon: 'i-lucide-crown', slot: 'popular-commanders' },
 ];
 
 // ALS Recommend for commanders
@@ -982,16 +982,6 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     content: ""
     margin-top: 0.5em
 
-.flavor-text
-  color: rgba(147, 114, 255, 0.9)
-  font-style: italic
-  font-size: 1rem
-  line-height: 1.5
-  display: block
-  margin-top: 16px
-  padding-top: 16px
-  border-top: 1px solid rgba(147, 114, 255, 0.2)
-
 // Stats and Artist Info
 .stats-container
   margin-top: 20px
@@ -1110,35 +1100,11 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     box-shadow: 0 6px 16px rgba(33, 150, 243, 0.5)
     transform: translateY(-2px)
 
-// Similar Cards Button Styling
-.similar-cards-btn
-  width: 100%
-  max-width: 280px
-  font-weight: 600
-  text-transform: none
-  letter-spacing: 0.5px
-  box-shadow: 0 4px 12px rgba(147, 114, 255, 0.3)
-
-  &:hover
-    box-shadow: 0 6px 16px rgba(147, 114, 255, 0.5)
-    transform: translateY(-2px)
-
-.similar-cards-btn-desktop
-  width: 100%
-  max-width: 280px
-
 // Price Card Mobile Styling
 @media (max-width: 1023px)
   .price-card
     max-width: none !important
     width: 100%
-
-.back-button-container-aligned
-  display: flex
-  justify-content: center
-  width: 100%
-  max-width: 300px
-  align-self: center
 
 .printing-select
   width: 100%
@@ -1217,15 +1183,6 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     :deep(> div)
       padding-left: 1px
       padding-right: 1px
-
-.similar-cards-header
-  display: flex
-  align-items: center
-  margin-bottom: 16px
-
-.similar-cards-title
-  font-size: 1.3rem
-  font-weight: 600
 
 // Recommend section font sizing
 .recommend-section

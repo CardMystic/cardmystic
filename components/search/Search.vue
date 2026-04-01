@@ -255,14 +255,6 @@ watch(searchType, (newType) => {
 }
 
 @media (max-width: 768px) {
-  .search-tabs-container {
-    gap: 14px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    /* Ensure wrapping on mobile */
-    justify-content: flex-start;
-  }
-
   .search-tab-button-new {
     padding: 6px 10px;
     font-size: 0.92rem;
@@ -272,29 +264,11 @@ watch(searchType, (newType) => {
   }
 }
 
-.search-btn {
-  margin-top: 0;
-  align-self: flex-start;
-  cursor: pointer;
-}
-
-.filters-section {
-  width: 100%;
-}
-
 @media (max-width: 768px) {
   .search-input-row {
     flex-direction: column;
     gap: 12px;
     width: 100%;
-  }
-
-  .search-btn {
-    width: 100%;
-    margin-left: 0 !important;
-    align-self: flex-start;
-    font-size: 18px;
-    font-weight: 500;
   }
 
   .search-container {
