@@ -169,15 +169,15 @@
             </template>
           </UTooltip>
           <!-- More actions popover (mobile only) -->
-          <UPopover v-if="showCardInfo && !isSearched" v-model:open="moreActionsOpen" class="sm:hidden">
+          <UPopover v-if="showCardInfo" v-model:open="moreActionsOpen" class="sm:hidden">
             <UTooltip text="More actions" :popper="{ placement: 'top' }">
               <UButton color="neutral" variant="solid" class="mr-1 cursor-pointer" icon="i-lucide-ellipsis" size="xs"
                 aria-label="More actions" />
             </UTooltip>
             <template #content>
               <div class="flex flex-col gap-1 p-2 w-48">
-                <UButton color="neutral" variant="ghost" class="cursor-pointer justify-start" size="sm"
-                  icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
+                <UButton v-if="!isSearched" color="neutral" variant="ghost" class="cursor-pointer justify-start"
+                  size="sm" icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
                   Find Similar Cards
                 </UButton>
                 <template v-if="isCommander">
@@ -194,7 +194,7 @@
             </template>
           </UPopover>
           <!-- Desktop buttons (hidden on mobile) -->
-          <template v-if="showCardInfo && !isSearched">
+          <template v-if="showCardInfo">
             <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
               <UButton v-if="isCommander" color="primary" variant="solid"
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
@@ -205,7 +205,7 @@
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
                 @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
             </UTooltip>
-            <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
+            <UTooltip v-if="!isSearched" text="Find similar cards" :popper="{ placement: 'top' }">
               <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
                 icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
             </UTooltip>
