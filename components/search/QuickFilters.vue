@@ -44,14 +44,6 @@ const quickFilters: QuickFilter[] = [
     remove: (f) => ({ ...f, isMTGO: undefined }),
     check: (f) => !!f.isMTGO,
   },
-  // {
-  //   key: 'paper',
-  //   label: 'Paper',
-  //   icon: 'i-lucide-scroll-text',
-  //   apply: (f) => ({ ...f, isPaper: true, isArena: undefined, isMTGO: undefined }),
-  //   remove: (f) => ({ ...f, isPaper: undefined }),
-  //   check: (f) => !!f.isPaper,
-  // },
   {
     key: 'modern',
     label: 'Modern',

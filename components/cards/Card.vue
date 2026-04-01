@@ -2,15 +2,15 @@
   <UCard variant="subtle"
     :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
     :ui="{ body: 'p-1 sm:p-4' }">
-    <!-- Confirmation Modal (lazy-loaded, only rendered when opened) -->
-    <LazyUModal v-if="showConfirmModal" v-model:open="showConfirmModal" title="Confirm Poor Result?"
+    <!-- Confirmation Modal -->
+    <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
       :ui="{ footer: 'justify-end' }">
       <template #footer="{ close }">
         <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
         <UButton label="Yes, This is a Poor Result" color="error" @click="confirmDislike" />
       </template>
-    </LazyUModal>
+    </UModal>
     <div class="card-image-wrapper">
       <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
 
@@ -169,15 +169,15 @@
             </template>
           </UTooltip>
           <!-- More actions popover (mobile only) -->
-          <UPopover v-if="showCardInfo && !isSearched" v-model:open="moreActionsOpen" class="sm:hidden">
+          <UPopover v-if="showCardInfo" v-model:open="moreActionsOpen" class="sm:hidden">
             <UTooltip text="More actions" :popper="{ placement: 'top' }">
               <UButton color="neutral" variant="solid" class="mr-1 cursor-pointer" icon="i-lucide-ellipsis" size="xs"
                 aria-label="More actions" />
             </UTooltip>
             <template #content>
               <div class="flex flex-col gap-1 p-2 w-48">
-                <UButton color="neutral" variant="ghost" class="cursor-pointer justify-start" size="sm"
-                  icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
+                <UButton v-if="!isSearched" color="neutral" variant="ghost" class="cursor-pointer justify-start"
+                  size="sm" icon="i-mdi-cards-outline" @click="findSimilarCards(); moreActionsOpen = false">
                   Find Similar Cards
                 </UButton>
                 <template v-if="isCommander">
@@ -194,7 +194,7 @@
             </template>
           </UPopover>
           <!-- Desktop buttons (hidden on mobile) -->
-          <template v-if="showCardInfo && !isSearched">
+          <template v-if="showCardInfo">
             <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
               <UButton v-if="isCommander" color="primary" variant="solid"
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
@@ -205,7 +205,7 @@
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
                 @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
             </UTooltip>
-            <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
+            <UTooltip v-if="!isSearched" text="Find similar cards" :popper="{ placement: 'top' }">
               <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
                 icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
             </UTooltip>

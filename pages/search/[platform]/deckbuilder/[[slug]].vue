@@ -19,7 +19,7 @@
         <template v-else-if="commanderCards && commanderCards.length">
           <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-50 sm:max-w-70">
             <Card :card="cmd" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
-              :gold-highlight="true" />
+              :gold-highlight="true" :is-commander="true" />
           </div>
         </template>
       </div>
