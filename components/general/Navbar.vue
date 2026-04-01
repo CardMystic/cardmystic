@@ -196,14 +196,6 @@ const externalItems: NavigationMenuItem[] = [
               </div>
 
             </NuxtLink>
-            <!-- <a v-for="item in externalItems" @click="closePopover" :key="String(item.to)" :href="String(item.to)"
-              :target="item.target!" rel="noopener noreferrer" class="flex items-center gap-2">
-              <UIcon :name="item.icon!" class="w-5 h-5" />
-              <div class="flex flex-col">
-                <span>{{ item.label }}</span>
-                <span v-if="item.description" class="text-sm text-gray-500">{{ item.description }}</span>
-              </div>
-            </a> -->
           </div>
         </template>
       </UPopover>
