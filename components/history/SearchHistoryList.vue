@@ -183,9 +183,9 @@ const getSearchTypeColor = (type: string): 'primary' | 'success' | 'warning' | '
   return colors[type] || 'primary'
 }
 
-const formatFilters = (filters: Record<string, unknown> | null | undefined) => {
-  if (!filters || typeof filters !== 'object') return 'None'
-  const entries = Object.entries(filters).filter(([, v]) => v !== null && v !== undefined && v !== '')
+const formatFilters = (filters: unknown) => {
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) return 'None'
+  const entries = Object.entries(filters as Record<string, unknown>).filter(([, v]) => v !== null && v !== undefined && v !== '')
   if (entries.length === 0) return 'None'
   return entries.map(([k, v]) => {
     if (k === 'decklist' && typeof v === 'string') {

@@ -125,7 +125,7 @@ const error = ref('')
 const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 
 // Computed card IDs from list items - used as dependency for card details query
-const cardIds = computed(() => listItems.value?.map((item) => item.card_id) || [])
+const cardIds = computed(() => listItems.value?.map((item) => item.card_id).filter((id): id is string => id !== null) || [])
 
 // Use TanStack Query to fetch card details
 const { data: cardsData, isLoading: isLoadingCards } = useListCards(listId, cardIds)
@@ -324,7 +324,7 @@ const currentCommanderItems = computed(() => {
 })
 
 const commanderCardIds = computed(() => {
-  return currentCommanderItems.value.map((item) => item.card_id)
+  return currentCommanderItems.value.map((item) => item.card_id).filter((id): id is string => id !== null)
 })
 
 const commanderColorIdentity = computed(() => {

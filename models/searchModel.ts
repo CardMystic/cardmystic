@@ -86,8 +86,11 @@ export const ExampleQueryResponseSchema = z.object({
   cards: z.array(CardSchema),
 });
 
+import type { Json } from '~/database.types';
+
 export interface SearchHistoryItem {
+  id: string;
   search_type: string;
   query: string | null;
-  filters: (Partial<CardSearchFilters> & Record<string, unknown>) | null;
+  filters: Json | null;
 }

@@ -1,5 +1,6 @@
 import type { Router } from 'vue-router';
 import { detectPlatformFromFilters } from '~/utils/platformConfig';
+import type { CardSearchFilters } from '~/models/searchModel';
 import type { SearchHistoryItem } from '~/models/searchModel';
 
 export type { SearchHistoryItem };
@@ -13,7 +14,9 @@ export const rerunSearchHistory = (item: SearchHistoryItem, router: Router) => {
     recommend: 'deckbuilder',
   };
   const segment = searchTypeSegments[item.search_type] || 'ai';
-  const platform = detectPlatformFromFilters(item.filters);
+  const platform = detectPlatformFromFilters(
+    item.filters as Partial<CardSearchFilters>,
+  );
   const path = `/search/${platform}/${segment}`;
   const query: Record<string, string | number | undefined> = {
     searchType: item.search_type,
@@ -23,12 +26,12 @@ export const rerunSearchHistory = (item: SearchHistoryItem, router: Router) => {
     query.card_name = item.query ?? undefined;
   } else if (item.search_type === 'recommend') {
     // Reconstruct recommend query from filters
-    if (item.filters?.commander)
-      query.commander = String(item.filters.commander);
-    if (item.filters?.partnerCommander)
-      query.partnerCommander = String(item.filters.partnerCommander);
-    if (item.filters?.decklist) query.decklist = String(item.filters.decklist);
-    if (item.filters?.limit) query.limit = String(item.filters.limit);
+    const f = item.filters as Record<string, unknown> | null;
+    if (f?.commander) query.commander = String(f.commander);
+    if (f?.partnerCommander)
+      query.partnerCommander = String(f.partnerCommander);
+    if (f?.decklist) query.decklist = String(f.decklist);
+    if (f?.limit) query.limit = String(f.limit);
     if (item.query) query.description = item.query;
   } else {
     query.query = item.query ?? undefined;

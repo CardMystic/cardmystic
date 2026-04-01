@@ -14,8 +14,9 @@
 import { computed } from 'vue';
 import { useClipboard } from '~/composables/useClipboard';
 import { useToast } from '#imports';
+import type { Card, ScryfallCard } from '~/models/cardModel';
 
-const props = defineProps<{ card: Record<string, unknown> | null }>();
+const props = defineProps<{ card: Card | ScryfallCard | null }>();
 
 const clipboard = useClipboard();
 const toast = useToast();
@@ -25,12 +26,12 @@ const toast = useToast();
  * - If parent passed a wrapper with `.card_data`, use that.
  * - Otherwise assume the passed object is already the Scryfall card.
  */
-const resolvedCardData = computed(() => {
+const resolvedCardData = computed((): ScryfallCard | null => {
   if (!props.card) return null;
   // card wrapper (e.g., from search results) might have .card_data
-  if (props.card.card_data) return props.card.card_data;
+  if ('card_data' in props.card) return (props.card as Card).card_data;
   // page-level card pages may pass a ScryfallCard directly
-  return props.card;
+  return props.card as ScryfallCard;
 });
 
 // Create the clipboard card data structure for this card
