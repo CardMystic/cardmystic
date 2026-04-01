@@ -274,7 +274,12 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
         break;
       case 'colorIdentity': {
         const ci = card.partner_card_data
-          ? [...new Set([...card.card_data.color_identity, ...card.partner_card_data.color_identity])]
+          ? [
+              ...new Set([
+                ...card.card_data.color_identity,
+                ...card.partner_card_data.color_identity,
+              ]),
+            ]
           : card.card_data.color_identity;
         key = getColorGroupKey(ci);
         break;

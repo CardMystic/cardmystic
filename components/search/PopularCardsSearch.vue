@@ -6,8 +6,8 @@
           placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for all popular commander cards."
           icon="i-lucide-chart-no-axes-combined" class="flex-1" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
           <template #trailing>
-            <UButton v-if="state.query?.length" color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
-              @click="state.query = ''" />
+            <UButton v-if="state.query?.length" color="neutral" variant="link" size="sm" icon="i-lucide-circle-x"
+              aria-label="Clear input" @click="state.query = ''" />
             <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>

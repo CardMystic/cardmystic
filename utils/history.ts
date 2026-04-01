@@ -15,13 +15,16 @@ export const rerunSearchHistory = (item: SearchHistoryItem, router: Router) => {
   const segment = searchTypeSegments[item.search_type] || 'ai';
   const platform = detectPlatformFromFilters(item.filters);
   const path = `/search/${platform}/${segment}`;
-  const query: Record<string, string | number | undefined> = { searchType: item.search_type };
+  const query: Record<string, string | number | undefined> = {
+    searchType: item.search_type,
+  };
 
   if (item.search_type === 'similarity') {
     query.card_name = item.query ?? undefined;
   } else if (item.search_type === 'recommend') {
     // Reconstruct recommend query from filters
-    if (item.filters?.commander) query.commander = String(item.filters.commander);
+    if (item.filters?.commander)
+      query.commander = String(item.filters.commander);
     if (item.filters?.partnerCommander)
       query.partnerCommander = String(item.filters.partnerCommander);
     if (item.filters?.decklist) query.decklist = String(item.filters.decklist);
