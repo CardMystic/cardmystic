@@ -721,10 +721,10 @@ const { saveSearchMutation } = useSearchHistory();
 // Tab activation tracking - only fetch data for tabs the user has viewed
 const activeCommanderTab = ref('recommended');
 const activeNonCommanderTab = ref('similar');
-const activatedTabs = reactive(new Set<string>(['recommended', 'similar']));
+const activatedTabs = reactive(new Set<string>());
 
-watch(activeCommanderTab, (tab) => { activatedTabs.add(tab); });
-watch(activeNonCommanderTab, (tab) => { activatedTabs.add(tab); });
+watch(activeCommanderTab, (tab) => { activatedTabs.add(tab); }, { immediate: true });
+watch(activeNonCommanderTab, (tab) => { activatedTabs.add(tab); }, { immediate: true });
 
 function findSimilarCards() {
   if (!card.value) return;

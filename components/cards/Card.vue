@@ -2,15 +2,15 @@
   <UCard variant="subtle"
     :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
     :ui="{ body: 'p-1 sm:p-4' }">
-    <!-- Confirmation Modal (lazy-loaded, only rendered when opened) -->
-    <LazyUModal v-if="showConfirmModal" v-model:open="showConfirmModal" title="Confirm Poor Result?"
+    <!-- Confirmation Modal -->
+    <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
       :ui="{ footer: 'justify-end' }">
       <template #footer="{ close }">
         <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
         <UButton label="Yes, This is a Poor Result" color="error" @click="confirmDislike" />
       </template>
-    </LazyUModal>
+    </UModal>
     <div class="card-image-wrapper">
       <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
 
