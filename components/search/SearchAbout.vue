@@ -59,7 +59,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Find Magic: The Gathering cards similar to any card in the game. CardMystic\'s MTG similarity search helps you discover alternatives, budget replacements, and cards with similar mechanics or abilities.',
       'Enter a card name and our AI model analyzes card text, mana cost, card type, and gameplay effects to find similar cards.',
-      'Use filters like color identity, card type, mana value, and format legality to narrow results and quickly find cards that fit perfectly into your deck.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Level up your next deck whether you\'re playing Commander, MTGO, MTG Arena, or any other Magic: The Gathering format!'
     ],
   },
@@ -135,6 +135,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     heading: 'MTG Arena AI Card Search',
     paragraphs: [
       'Search for MTG Arena cards using natural language. CardMystic\'s AI-powered search helps you find Arena-legal cards by describing the mechanic, effect, or strategy you need.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Results are filtered to cards available on MTG Arena, so every suggestion is ready for your next Arena deck. Perfect for Standard, Explorer, Historic, Brawl, and other Arena formats.',
       'Try searches like "creatures that draw cards on ETB", "cheap instant speed removal", or "multicolor lands" to discover powerful Arena-legal cards for your deck.',
     ],
@@ -146,6 +147,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Find MTG Arena cards similar to any card in Magic: The Gathering. Discover Arena-legal alternatives, budget replacements, and cards with similar effects.',
       'Enter a card name and our engine finds the most similar cards available on MTG Arena. Ideal for finding substitutes when a card isn\'t available on Arena or when you need budget-friendly options.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Use additional filters like color identity, card type, and mana value to narrow results for the perfect Arena deck fit.',
     ],
   },
@@ -166,6 +168,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     heading: 'MTGO AI Card Search',
     paragraphs: [
       'Search for Magic: The Gathering Online cards using natural language. CardMystic\'s AI search helps you find MTGO-legal cards by describing the effect, mechanic, or strategy you\'re looking for.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Results are filtered to cards available on Magic: The Gathering Online, covering formats like Vintage, Legacy, Modern, Pauper, and more.',
       'Try searches like "efficient graveyard hate", "fast mana rocks", or "win conditions for control decks" to find powerful cards for your MTGO deck.',
     ],
@@ -177,6 +180,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Find MTGO cards similar to any card in Magic: The Gathering. Discover alternatives and replacements available on Magic: The Gathering Online.',
       'Enter a card name and our engine finds the most similar cards available on MTGO. Great for finding budget alternatives or discovering cards with similar effects for competitive and casual play.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Filter by color identity, card type, mana value, and format legality to find the perfect MTGO card for your deck.',
     ],
   },
@@ -217,6 +221,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     heading: 'MTG Modern AI Card Search',
     paragraphs: [
       'Search for Modern-legal Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards legal in Modern by describing the mechanic, effect, or strategy you need.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Results are filtered to cards legal in the Modern format, so every suggestion is tournament-ready. Perfect for building competitive Modern decks or exploring new strategies.',
       'Try searches like "efficient graveyard hate", "one mana cantrips", or "creatures that generate card advantage" to discover powerful Modern-legal cards for your deck.',
     ],
@@ -228,6 +233,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Find Modern-legal cards similar to any card in Magic: The Gathering. Discover alternatives, budget replacements, and cards with similar effects that are legal in Modern.',
       'Enter a card name and our AI finds the most similar cards legal in the Modern format. Ideal for finding substitutes, budget-friendly options, or sideboard alternatives for your Modern deck.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Use additional filters like color identity, card type, and mana value to narrow results for the perfect Modern deck fit.',
     ],
   },
@@ -288,6 +294,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     heading: 'Paper MTG AI Card Search',
     paragraphs: [
       'Search for paper Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards available in paper by describing the mechanic, effect, or strategy you need.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Results are filtered to cards printed in paper, so every suggestion is available for tabletop play. Perfect for Commander, Legacy, Modern, Pioneer, Standard, and casual kitchen-table formats.',
       'Try searches like "board wipes that leave my creatures", "efficient card draw in green", or "tribal lords" to discover powerful paper cards for your deck.',
     ],
@@ -299,6 +306,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Find paper Magic: The Gathering cards similar to any card in the game. Discover alternatives, budget replacements, and cards with similar effects available in paper.',
       'Enter a card name and our AI finds the most similar cards available in paper. Ideal for finding substitutes or budget-friendly options for your tabletop deck.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Use additional filters like color identity, card type, and mana value to narrow results for the perfect paper deck fit.',
     ],
   },
@@ -339,6 +347,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     heading: 'Commander MTG Card Search',
     paragraphs: [
       'Search for Commander-legal Magic: The Gathering cards using natural language. CardMystic\'s AI-powered search helps you find cards legal in Commander by describing the mechanic, effect, or strategy you need.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Results are filtered to cards legal in the Commander format, so every suggestion is ready for your next EDH deck.',
       'Try searches like "board wipes that leave my creatures", "efficient card draw in green", or "combo pieces for infinite mana" to discover powerful Commander-legal cards for your deck.',
     ],
@@ -350,6 +359,7 @@ const content: Record<SearchAboutType, { title: string; heading: string; paragra
     paragraphs: [
       'Find Commander-legal cards similar to any card in Magic: The Gathering. Discover alternatives, budget replacements, and cards with similar effects that are legal in Commander.',
       'Enter a card name and our AI finds the most similar cards legal in the Commander format. Ideal for finding substitutes or budget-friendly options for your EDH deck.',
+      'Our custom AI models are specially trained to understand the nuances of Magic: The Gathering cards, including mechanics, abilities, and gameplay interactions.',
       'Use additional filters like color identity, card type, and mana value to narrow results for the perfect Commander deck fit.',
     ],
   },
