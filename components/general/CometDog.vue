@@ -1,11 +1,13 @@
 <template>
-  <img v-if="visible" src="/comet_dog.webp" alt="" class="comet-dog" :style="{
-    '--start-x': startX + 'vw',
-    '--start-y': startY + 'vh',
-    '--end-x': endX + 'vw',
-    '--end-y': endY + 'vh',
-    '--duration': duration + 's',
-  }" @animationend="visible = false" />
+  <div v-if="visible" class="comet-container">
+    <img src="/comet_dog.webp" alt="" class="comet-dog" :style="{
+      '--start-x': startX + 'vw',
+      '--start-y': startY + 'vh',
+      '--end-x': endX + 'vw',
+      '--end-y': endY + 'vh',
+      '--duration': duration + 's',
+    }" @animationend="visible = false" />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -75,9 +77,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.comet-dog {
-  position: fixed;
+.comet-container {
+  position: absolute;
+  inset: 0;
   z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.comet-dog {
+  position: absolute;
   width: 120px;
   height: 120px;
   object-fit: contain;
