@@ -1,6 +1,6 @@
 <template>
-  <LazyCometDog />
   <SpaceBackground :full="true">
+    <LazyCometDog />
     <div class="hero px-0 h-full w-full justify-center flex flex-col items-center">
       <div class="explore-spacer">
       </div>
