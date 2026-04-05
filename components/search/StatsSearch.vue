@@ -14,7 +14,7 @@
       </button>
       <button type="button" :class="['search-tab-button-new', { active: statsType === 'popular-by-commander' }]"
         @click="switchType('popular-by-commander')">
-        <UIcon name="i-lucide-crown" class="icon" size="18" />
+        <UIcon name="i-lucide-flame" class="icon" size="18" />
         Cards by Commander
       </button>
     </div>
