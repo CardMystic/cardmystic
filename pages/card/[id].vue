@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -779,17 +779,24 @@ const isCommander = computed(() => {
   return commandersSet.value.has(card.value.name);
 });
 
-const cardTabs = [
-  { value: 'recommended', label: 'RCM', icon: 'i-lucide-box', slot: 'recommended' },
-  { value: 'popular', label: 'POP', icon: 'i-lucide-flame', slot: 'popular' },
-  { value: 'similar', label: 'SIM', icon: 'i-mdi-cards-outline', slot: 'similar' },
-  { value: 'popular-commanders', label: 'CMD', icon: 'i-lucide-crown', slot: 'popular-commanders' },
-];
+const isLgScreen = ref(false);
+if (import.meta.client) {
+  const mq = window.matchMedia('(min-width: 1024px)');
+  isLgScreen.value = mq.matches;
+  mq.addEventListener('change', (e) => { isLgScreen.value = e.matches; });
+}
 
-const nonCommanderTabs = [
-  { value: 'similar', label: 'Similar Cards', icon: 'i-mdi-cards-outline', slot: 'similar' },
-  { value: 'popular-commanders', label: 'Commanders', icon: 'i-lucide-crown', slot: 'popular-commanders' },
-];
+const cardTabs = computed(() => [
+  { value: 'recommended', label: isLgScreen.value ? 'Recommender' : 'RCM', icon: 'i-lucide-box', slot: 'recommended' },
+  { value: 'popular', label: isLgScreen.value ? 'Popular' : 'POP', icon: 'i-lucide-flame', slot: 'popular' },
+  { value: 'similar', label: isLgScreen.value ? 'Similar' : 'SIM', icon: 'i-mdi-cards-outline', slot: 'similar' },
+  { value: 'popular-commanders', label: isLgScreen.value ? 'Commanders' : 'CMD', icon: 'i-lucide-crown', slot: 'popular-commanders' },
+]);
+
+const nonCommanderTabs = computed(() => [
+  { value: 'similar', label: isLgScreen.value ? 'Similar Cards' : 'SIM', icon: 'i-mdi-cards-outline', slot: 'similar' },
+  { value: 'popular-commanders', label: isLgScreen.value ? 'Commanders' : 'CMD', icon: 'i-lucide-crown', slot: 'popular-commanders' },
+]);
 
 // ALS Recommend for commanders
 const recommendQuery = ref('');
