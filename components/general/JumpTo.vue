@@ -41,7 +41,9 @@ const jumpToVisible = useJumpToVisible();
 
 watch(() => props.groups, (groups) => {
   jumpToVisible.value = groups.length > 0;
-  nextTick(updatePosition);
+  if (import.meta.client) {
+    nextTick(updatePosition);
+  }
 }, { immediate: true });
 
 onUnmounted(() => {
