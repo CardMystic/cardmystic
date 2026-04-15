@@ -63,7 +63,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -780,11 +780,11 @@ const isCommander = computed(() => {
 });
 
 const isLgScreen = ref(false);
-if (import.meta.client) {
+onMounted(() => {
   const mq = window.matchMedia('(min-width: 1024px)');
   isLgScreen.value = mq.matches;
   mq.addEventListener('change', (e) => { isLgScreen.value = e.matches; });
-}
+});
 
 const cardTabs = computed(() => [
   { value: 'recommended', label: isLgScreen.value ? 'Recommender' : 'RCM', icon: 'i-lucide-box', slot: 'recommended' },
