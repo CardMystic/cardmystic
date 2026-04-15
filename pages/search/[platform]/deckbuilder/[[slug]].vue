@@ -80,7 +80,9 @@ const limitParam = computed(() => {
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
-    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    try {
+      return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    } catch { /* fall through to defaults on malformed input */ }
   }
   return platformFilters;
 });

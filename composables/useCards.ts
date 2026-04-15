@@ -22,6 +22,7 @@ export function useCardDetails(cardId: ComputedRef<string>) {
 
       return await $fetch<ScryfallCard>(
         `${config.public.backendUrl}/cards/${cardId.value}`,
+        { signal: AbortSignal.timeout(10000) },
       );
     },
     {
