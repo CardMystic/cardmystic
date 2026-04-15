@@ -48,20 +48,44 @@ import { defineNuxtPlugin, useState } from '#imports';
 export default defineNuxtPlugin((nuxt) => {
   const vueQueryState = useState<DehydratedState | null>('vue-query');
 
-  const persister = import.meta.client
-    ? experimental_createQueryPersister({
-        storage: localStorage,
-        maxAge: 1000 * 60 * 60 * 6, // 6 hours
-        // Don't persist auth-related queries - they need fresh data
-        filters: {
-          predicate: (query) => {
-            const key = query.queryKey[0];
-            // Exclude user auth and profile queries from persistence (stale identity can cause issues)
-            return key !== 'user' && key !== 'profile';
-          },
+  // Wrap localStorage to swallow quota errors instead of throwing
+  const safeStorage = import.meta.client
+    ? {
+        getItem: (key: string) => localStorage.getItem(key),
+        setItem: (key: string, value: string) => {
+          try {
+            localStorage.setItem(key, value);
+          } catch {
+            // Quota exceeded — clear stale query cache and retry once
+            try {
+              Object.keys(localStorage)
+                .filter((k) => k.startsWith('tsqd-'))
+                .forEach((k) => localStorage.removeItem(k));
+              localStorage.setItem(key, value);
+            } catch {
+              // Still full — silently skip persistence
+            }
+          }
         },
-      })
+        removeItem: (key: string) => localStorage.removeItem(key),
+      }
     : undefined;
+
+  const persister =
+    import.meta.client && safeStorage
+      ? experimental_createQueryPersister({
+          storage: safeStorage,
+          maxAge: 1000 * 60 * 60 * 6, // 6 hours
+          // Don't persist auth-related queries - they need fresh data
+          filters: {
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              // Exclude user auth and profile queries from persistence (stale identity can cause issues)
+              return key !== 'user' && key !== 'profile';
+            },
+          },
+        })
+      : undefined;
 
   const queryClient = new QueryClient({
     defaultOptions: {
