@@ -1,5 +1,12 @@
 <template>
-  <div class="page-wrapper py-4 flex justify-center w-full">
+  <div class="page-wrapper py-4 flex flex-col items-center w-full">
+    <!-- Navigation tabs (client-only: depends on sessionStorage state) -->
+    <ClientOnly>
+      <div class="card-page-nav w-full max-w-7xl px-4">
+        <SearchTabs v-if="cardOrigin === 'search'" :card-active="true" @select="navigateToSearch" />
+        <ExploreTabs v-else :stats-type="lastExploreType" :card-active="true" @select="navigateToExplore" />
+      </div>
+    </ClientOnly>
     <!-- Background Image -->
     <div v-if="cardArtUrl" class="fixed inset-0 z-0">
       <div class="absolute inset-0 bg-cover bg-center opacity-80 dark:opacity-60 blur-sm"
@@ -63,7 +70,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -293,149 +300,119 @@
         </UCard>
       </div>
       <div class="lg:col-span-10 flex flex-col items-center">
-        <!-- Commander: Tabbed Recommended + Similar Cards -->
-        <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
-          <UTabs v-model="activeCommanderTab" :items="cardTabs">
-            <template #recommended>
-              <h3
-                class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-purple-500/20 text-purple-300">
-                Deck Recommendations</h3>
-              <div class="recommend-section flex gap-2 mt-2 mb-4">
-                <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..." class="flex-1 text-base"
-                  icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
-                <UButton color="primary" icon="i-lucide-box" @click="applyRecommendQuery"
-                  :loading="isRecommendedLoading" class="text-base">
-                  Recommend
-                </UButton>
-              </div>
-              <div class="flex justify-end mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="getRecommendations">Go To Full Search Page</button>
-              </div>
-              <ClientOnly>
+        <!-- Commander vs Non-commander tabs: wrapped in ClientOnly because isCommander
+             depends on TanStack Query data that may differ between SSR and client hydration -->
+        <ClientOnly>
+          <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
+            <UTabs v-model="activeCommanderTab" :items="cardTabs">
+              <template #recommended>
+                <h3
+                  class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-purple-500/20 text-purple-300">
+                  Deck Recommendations</h3>
+                <div class="recommend-section flex gap-2 mt-2 mb-4">
+                  <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..."
+                    class="flex-1 text-base" icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
+                  <UButton color="primary" icon="i-lucide-box" @click="applyRecommendQuery"
+                    :loading="isRecommendedLoading" class="text-base">
+                    Recommend
+                  </UButton>
+                </div>
+                <div class="flex justify-end mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="getRecommendations">Go To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isRecommendedCardsEffectivelyLoading"
                   :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
                   :hide-thumbs-down-button="true" default-group-by="type" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-rec-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+              </template>
 
-            <template #popular>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-red-500/20 text-red-300">
-                Popular Cards</h3>
-              <div class="flex justify-end mt-2 mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="viewPopularCards">Go
-                  To Full Search Page</button>
-              </div>
-              <ClientOnly>
+              <template #popular>
+                <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-red-500/20 text-red-300">
+                  Popular Cards</h3>
+                <div class="flex justify-end mt-2 mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="viewPopularCards">Go
+                    To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isPopularCardsEffectivelyLoading"
                   :search-results="popularCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
                   :hide-thumbs-down-button="true" default-group-by="type" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-pop-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+              </template>
 
-            <template #similar>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
-                Cards</h3>
-              <div class="flex justify-end mt-2 mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="findSimilarCards">Go
-                  To Full Search Page</button>
-              </div>
-              <ClientOnly>
+              <template #similar>
+                <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
+                  Cards</h3>
+                <div class="flex justify-end mt-2 mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="findSimilarCards">Go
+                    To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
                   default-group-by="type" :is-similarity-search="true" hide-searched-card />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-sim-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+              </template>
 
-            <template #popular-commanders>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
-                Popular Commanders</h3>
-              <div class="flex gap-2 mt-2 mb-4">
-                <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
-                  class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
-                <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
-                  :loading="isPopularCommandersLoading" class="text-base">
-                  Search
-                </UButton>
-              </div>
-              <ClientOnly>
+              <template #popular-commanders>
+                <h3
+                  class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                  Popular Commanders</h3>
+                <div class="flex gap-2 mt-2 mb-4">
+                  <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
+                    class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
+                  <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
+                    :loading="isPopularCommandersLoading" class="text-base">
+                    Search
+                  </UButton>
+                </div>
                 <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
                   :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
                   :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-popcmd-cmd-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
-          </UTabs>
-        </UCard>
+              </template>
+            </UTabs>
+          </UCard>
 
-        <!-- Non-commander: Popular Commanders + Similar Cards -->
-        <UCard v-else-if="card" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
-          <UTabs v-model="activeNonCommanderTab" :items="nonCommanderTabs">
-            <template #popular-commanders>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
-                Popular Commanders</h3>
-              <div class="flex gap-2 mt-2 mb-4">
-                <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
-                  class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
-                <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
-                  :loading="isPopularCommandersLoading" class="text-base">
-                  Search
-                </UButton>
-              </div>
-              <ClientOnly>
+          <!-- Non-commander: Popular Commanders + Similar Cards -->
+          <UCard v-else-if="card" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
+            <UTabs v-model="activeNonCommanderTab" :items="nonCommanderTabs">
+              <template #popular-commanders>
+                <h3
+                  class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                  Popular Commanders</h3>
+                <div class="flex gap-2 mt-2 mb-4">
+                  <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
+                    class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
+                  <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
+                    :loading="isPopularCommandersLoading" class="text-base">
+                    Search
+                  </UButton>
+                </div>
                 <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
                   :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
                   :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-popcmd-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+              </template>
 
-            <template #similar>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
-                Cards</h3>
-              <div class="flex justify-end mt-2 mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="findSimilarCards">Go
-                  To Full Search Page</button>
-              </div>
-              <ClientOnly>
+              <template #similar>
+                <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
+                  Cards</h3>
+                <div class="flex justify-end mt-2 mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="findSimilarCards">Go
+                    To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
                   default-group-by="type" :is-similarity-search="true" hide-searched-card />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
-          </UTabs>
-        </UCard>
+              </template>
+            </UTabs>
+          </UCard>
+          <template #fallback>
+            <UCard class="similar-cards-section w-full px-1 lg:px-0 mb-12">
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <CardSkeleton v-for="i in 8" :key="`skeleton-tab-${i}`" :showCardInfo="true" />
+              </div>
+            </UCard>
+          </template>
+        </ClientOnly>
       </div>
     </div>
   </div>
@@ -458,6 +435,34 @@ const selectedPrinting = ref<string>('');
 
 const cardIdParam = computed(() => String(route.params.id) || '');
 const { saveCardViewMutation } = useCardHistory();
+const { lastCard, setLastOpenedCard } = useLastOpenedCard();
+const { searchType, getPath, restoreSearchQuery } = useSearchType();
+
+// Determine origin: was the user on a search or explore page before?
+const cardOrigin = computed(() => lastCard.value?.origin ?? 'search');
+const lastExploreType = ref<'popular-cards' | 'popular-commanders' | 'popular-by-commander'>('popular-cards');
+
+// Detect origin from referring route on mount
+onMounted(() => {
+  const referrer = router.options.history.state?.back as string | undefined;
+  if (referrer) {
+    if (referrer.startsWith('/popular-cards')) lastExploreType.value = 'popular-cards';
+    else if (referrer.startsWith('/popular-commanders')) lastExploreType.value = 'popular-commanders';
+    else if (referrer.startsWith('/popular-by-commander')) lastExploreType.value = 'popular-by-commander';
+  }
+});
+
+function navigateToSearch(type: 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend') {
+  const saved = restoreSearchQuery(type);
+  // Strip limit from restored queries — each page applies its own default/cap
+  if (saved) delete saved.limit;
+  router.push({ path: getPath(type), query: saved ?? undefined });
+}
+
+function navigateToExplore(type: 'popular-cards' | 'popular-commanders' | 'popular-by-commander') {
+  const saved = restoreSearchQuery(type);
+  router.push({ path: `/${type}/all`, query: saved ?? undefined });
+}
 
 const { card, printings, error, pending } = useCardDetails(cardIdParam);
 
@@ -557,12 +562,21 @@ useHead({
   ]
 });
 
-// Save card view to history when card is loaded
-watch(card, (newCard) => {
-  if (newCard?.id) {
-    saveCardViewMutation.mutate(newCard.id);
-  }
-}, { immediate: true });
+// Save card view to history when card is loaded.
+// Deferred to onMounted so lastCard stays null during hydration (matches SSR).
+onMounted(() => {
+  watch(card, (newCard) => {
+    if (newCard?.id) {
+      saveCardViewMutation.mutate(newCard.id);
+      // Detect origin from route history
+      const referrer = router.options.history.state?.back as string | undefined;
+      const origin = referrer && (referrer.startsWith('/popular-cards') || referrer.startsWith('/popular-commanders') || referrer.startsWith('/popular-by-commander'))
+        ? 'explore' as const
+        : 'search' as const;
+      setLastOpenedCard(newCard.id, newCard.name, origin);
+    }
+  }, { immediate: true });
+});
 
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {
@@ -772,15 +786,19 @@ const filteredSimilarCards = computed(() => {
   return rest;
 });
 
-// Commander detection
+// Commander detection — deferred to post-mount so SSR and client hydration both start as false,
+// avoiding mismatch when commandersSet loads from TanStack Query localStorage cache on client.
 const { data: commandersSet } = useCommandersSet();
+const isCommanderReady = ref(false);
 const isCommander = computed(() => {
+  if (!isCommanderReady.value) return false;
   if (!card.value?.name || !commandersSet.value) return false;
   return commandersSet.value.has(card.value.name);
 });
 
 const isLgScreen = ref(false);
 onMounted(() => {
+  isCommanderReady.value = true;
   const mq = window.matchMedia('(min-width: 1024px)');
   isLgScreen.value = mq.matches;
   mq.addEventListener('change', (e) => { isLgScreen.value = e.matches; });
@@ -1177,6 +1195,11 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
 .page-wrapper
   position: relative
   min-height: 100vh
+
+// Card page navigation tabs
+.card-page-nav
+  position: relative
+  z-index: 20
   
 // Similar Cards Section Styling
 .similar-cards-section

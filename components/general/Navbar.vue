@@ -149,7 +149,7 @@ const mainItemsMobile: NavigationMenuItem[] = [
   {
     label: 'Cards by Commander',
     description: 'Popular cards for a commander',
-    icon: 'i-lucide-crown',
+    icon: 'i-lucide-flame',
     to: '/popular-by-commander/all',
   },
   {
