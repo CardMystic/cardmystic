@@ -27,15 +27,15 @@ useHead({
 
 useSeoMeta({
   title: () => 'Login - CardMystic',
-  description: () => 'Sign in to your CardMystic account to access your saved card lists, search history, and personalized Magic: The Gathering card search experience.',
+  description: () => 'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
   ogTitle: () => 'Login - CardMystic',
-  ogDescription: () => 'Sign in to your CardMystic account to access your saved card lists, search history, and personalized Magic: The Gathering card search experience.',
+  ogDescription: () => 'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
   ogType: 'website',
   ogImage: () => 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => 'CardMystic - Magic: The Gathering card search',
   twitterCard: 'summary',
   twitterTitle: () => 'Login - CardMystic',
-  twitterDescription: () => 'Sign in to your CardMystic account to access your saved card lists and personalized MTG search.',
+  twitterDescription: () => 'Sign in to your CardMystic account to access your saved decklists and personalized MTG search.',
   twitterImage: () => 'https://cardmystic.com/cardmystic_cards.png'
 })
 

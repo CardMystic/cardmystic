@@ -1,6 +1,6 @@
 <template>
   <div class="relative">
-    <h2 class="section-title">Recent Lists</h2>
+    <h2 class="section-title">Recent Decklists</h2>
 
     <!-- Fake real-looking list cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
@@ -50,7 +50,7 @@
       <div class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer backdrop-blur-[1px] ">
         <UIcon name="i-lucide-lock" class="text-4xl mb-3 text-primary" />
         <div class="login-container">
-          <p class="text-lg font-bold text-white drop-shadow">Login To Create Card Lists!</p>
+          <p class="text-lg font-bold text-white drop-shadow">Login To Create Decklists!</p>
         </div>
 
       </div>

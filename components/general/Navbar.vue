@@ -226,7 +226,7 @@ const externalItems: NavigationMenuItem[] = [
             </div>
             <template #content>
               <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
-                <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+                <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Decklists"
                   block @click="router.push('/lists'); isMobileProfilePopoverOpen = false" />
                 <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
                   block @click="router.push('/history'); isMobileProfilePopoverOpen = false" />
@@ -300,7 +300,7 @@ const externalItems: NavigationMenuItem[] = [
           </div>
           <template #content>
             <div class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1">
-              <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Card Lists"
+              <UButton class="cursor-pointer" icon="i-lucide-list" color="neutral" variant="ghost" label="Decklists"
                 block @click="router.push('/lists'); isDesktopProfilePopoverOpen = false" />
               <UButton class="cursor-pointer" icon="i-lucide-history" color="neutral" variant="ghost" label="History"
                 block @click="router.push('/history'); isDesktopProfilePopoverOpen = false" />

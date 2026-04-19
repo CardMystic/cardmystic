@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
     <!-- Header -->
     <div class="mb-8 flex items-center justify-between">
-      <h1 class="text-3xl font-bold">My Card Lists</h1>
+      <h1 class="text-3xl font-bold">My Decklists</h1>
       <UButton icon="i-lucide-plus" label="New List" @click="isCreateModalOpen = true" class="cursor-pointer" />
     </div>
 

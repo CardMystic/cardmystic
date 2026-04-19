@@ -37,25 +37,31 @@ export type Database = {
       }
       card_list_items: {
         Row: {
+          board: string
           card_id: string | null
           created_at: string
           id: string
           is_commander: boolean
           list_id: string | null
+          num_copies: number
         }
         Insert: {
+          board?: string
           card_id?: string | null
           created_at?: string
           id?: string
           is_commander?: boolean
           list_id?: string | null
+          num_copies?: number
         }
         Update: {
+          board?: string
           card_id?: string | null
           created_at?: string
           id?: string
           is_commander?: boolean
           list_id?: string | null
+          num_copies?: number
         }
         Relationships: [
           {
@@ -72,6 +78,7 @@ export type Database = {
           avatar_card_name: string | null
           created_at: string
           description: string | null
+          format: string
           id: string
           name: string | null
           updated_at: string | null
@@ -81,6 +88,7 @@ export type Database = {
           avatar_card_name?: string | null
           created_at?: string
           description?: string | null
+          format?: string
           id?: string
           name?: string | null
           updated_at?: string | null
@@ -90,6 +98,7 @@ export type Database = {
           avatar_card_name?: string | null
           created_at?: string
           description?: string | null
+          format?: string
           id?: string
           name?: string | null
           updated_at?: string | null
@@ -121,7 +130,7 @@ export type Database = {
           filters: Json | null
           id: string
           query: string | null
-          search_type: string | null
+          search_type: string
           user_id: string
         }
         Insert: {
@@ -129,7 +138,7 @@ export type Database = {
           filters?: Json | null
           id?: string
           query?: string | null
-          search_type?: string | null
+          search_type?: string
           user_id?: string
         }
         Update: {
@@ -137,7 +146,7 @@ export type Database = {
           filters?: Json | null
           id?: string
           query?: string | null
-          search_type?: string | null
+          search_type?: string
           user_id?: string
         }
         Relationships: []

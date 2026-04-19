@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="section-title">Recent Lists</h2>
+    <h2 class="section-title">Recent Decklists</h2>
 
     <div v-if="isLoadingLists" class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
       <USkeleton v-for="i in 3" :key="i" class="list-skeleton" />

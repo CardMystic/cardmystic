@@ -4,7 +4,7 @@
 
       <!-- If not logged in show message -->
       <div v-if="!isLoggedIn" class="p-4 text-center text-red-500">
-        Login to create card lists!
+        Login to create decklists!
       </div>
 
       <div v-if="isLoggedIn" class="p-4 space-y-4">

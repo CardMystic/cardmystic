@@ -13,7 +13,7 @@
         </p>
         <p class="mt-4">
           CardMystic collects analytics data through Microsoft Clarity and stores user
-          account information, card lists, and search data in our Supabase database.
+          account information, decklists, and search data in our Supabase database.
         </p>
       </div>
     </UCard>
@@ -61,13 +61,13 @@
         </ul>
 
         <p class="mt-6 font-semibold">
-          3. Card Lists & User Content
+          3. Decklists & User Content
         </p>
         <p class="mt-2">
-          When you use our card list feature, we store:
+          When you use our decklist feature, we store:
         </p>
         <ul class="list-disc ml-6 mt-4">
-          <li>Card list names and descriptions</li>
+          <li>Decklist names and descriptions</li>
           <li>Cards saved to your lists (referenced by card ID)</li>
           <li>Commander designations within your lists</li>
           <li>Search and card view history</li>
@@ -109,7 +109,7 @@
         <ul class="list-disc ml-6 mt-4">
           <li>Creating and managing your user profile</li>
           <li>Authenticating and securing your account</li>
-          <li>Storing and organizing your card lists and collections</li>
+          <li>Storing and organizing your decklists and collections</li>
           <li>Providing personalized site features and recommendations</li>
           <li>Communicating with you about your account or service updates</li>
         </ul>
@@ -133,7 +133,7 @@
           disclosure, or misuse.
         </p>
         <p class="mt-4">
-          User data including account information, card lists, and search history is
+          User data including account information, decklists, and search history is
           stored securely in our Supabase database with row-level security policies
           ensuring users can only access their own data.
         </p>
