@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8 relative z-10">
+  <div class="mx-auto px-4 py-8 relative z-10">
     <!-- Header -->
     <div class="mb-8 flex items-center justify-between">
       <h1 class="text-3xl font-bold">My Decklists</h1>

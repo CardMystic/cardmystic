@@ -2,7 +2,7 @@
   <div class="page-wrapper py-4 flex flex-col items-center w-full">
     <!-- Navigation tabs (client-only: depends on sessionStorage state) -->
     <ClientOnly>
-      <div class="card-page-nav w-full max-w-7xl px-4">
+      <div class="card-page-nav w-full px-4">
         <SearchTabs v-if="cardOrigin === 'search'" :card-active="true" @select="navigateToSearch" />
         <ExploreTabs v-else :stats-type="lastExploreType" :card-active="true" @select="navigateToExplore" />
       </div>
@@ -34,7 +34,7 @@
       <UButton to="/search/all/ai" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-2 max-w-7xl relative z-10 items-center">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-2 relative z-10 items-center">
       <!-- Left: Card Image -->
       <div class="lg:col-span-3 flex flex-col items-center">
         <div class="card-image-container">
@@ -70,7 +70,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
