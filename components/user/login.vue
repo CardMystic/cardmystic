@@ -15,6 +15,33 @@ const errorMessage = ref<string | null>(null)
 const honeypot = ref('')
 const showPassword = ref(false)
 
+const applyPendingSignupAvatar = async (emailAddress: string) => {
+  if (!import.meta.client || !emailAddress) return
+
+  const key = `pendingSignupAvatar:${emailAddress.trim().toLowerCase()}`
+  const pendingAvatar = localStorage.getItem(key)
+  if (!pendingAvatar) return
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user?.id) return
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_card_name: pendingAvatar })
+      .eq('id', user.id)
+
+    if (!error) {
+      localStorage.removeItem(key)
+    }
+  } catch {
+    // Non-critical: leave pending value for next successful login.
+  }
+}
+
 const signInWithGoogle = async () => {
   errorMessage.value = null
   loading.value = true
@@ -73,6 +100,8 @@ const signInWithEmail = async () => {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
     })
+
+    await applyPendingSignupAvatar(email.value)
 
     router.push('/')
   } catch (e) {
