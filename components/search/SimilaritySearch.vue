@@ -11,7 +11,7 @@
           :ui="{ base: 'text-base h-10 truncate' }" />
         <UButton icon="i-mdi-cards-outline" :disabled="state.card_name?.length == 0" type="submit"
           class="h-10 cursor-pointer">
-          Search
+          <span class="hidden sm:inline">Search</span>
         </UButton>
       </div>
     </UFormField>
