@@ -42,7 +42,20 @@
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
 
-      <ClipboardButton :card="card" />
+      <ClipboardButton :card="card" :isDualFaced="isDualFaced" @flip="flipCard" />
+
+      <!-- Copy Count Badge (left side, hidden for commanders) -->
+      <span v-if="!isCommander" class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{ numCopies
+        ?? 1
+      }}</span>
+
+      <!-- Menu Overlay (left side, below badge) -->
+      <div v-if="!isCommander" class="list-card-menu-overlay">
+        <UDropdownMenu :items="cardOverlayMenuItems">
+          <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
+            size="xs" square icon="i-lucide-ellipsis-vertical" />
+        </UDropdownMenu>
+      </div>
 
       <!-- Legality Warning Overlay -->
       <div v-if="legalityWarning" class="legality-overlay">
@@ -50,14 +63,6 @@
           <UIcon name="i-lucide-triangle-alert" class="text-amber-400" size="28" />
           <span class="text-xs text-amber-400 text-center font-medium leading-tight">{{ legalityWarning }}</span>
         </div>
-      </div>
-
-      <!-- Flip Button for Dual-Faced Cards -->
-      <div v-if="isDualFaced" class="flip-card-btn" @click.stop="flipCard">
-        <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
-          square>
-          <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
-        </UButton>
       </div>
     </div>
 
@@ -80,36 +85,20 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-row items-center justify-between text-center w-full">
-        <!-- Left side buttons -->
-        <div class="flex flex-row items-center">
-          <!-- Buy on TCGPlayer -->
-          <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
-            <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
-              color="success" variant="solid" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm"
-              target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
-              {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
-            </UButton>
-          </UTooltip>
+      <div class="flex flex-row items-center text-center w-full">
+        <!-- Buy on TCGPlayer -->
+        <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
+          <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
+            color="success" variant="solid" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank"
+            rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
+            {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
+          </UButton>
+        </UTooltip>
 
-          <!-- Set as Commander -->
-          <UTooltip v-if="isEligibleCommander || isCommander"
-            :text="isCommander ? 'Current commander' : 'Set as commander'" :popper="{ placement: 'top' }">
-            <UButton class="mt-1 mr-2 cursor-pointer" :color="isCommander ? 'warning' : 'neutral'" variant="solid"
-              icon="i-lucide-crown" size="sm" aria-label="Set as commander" @click="handleCrownClick" />
-          </UTooltip>
-
-          <!-- Similarity search -->
-          <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
-            <UButton color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline"
-              size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
-          </UTooltip>
-        </div>
-
-        <!-- Right side: Remove from list -->
-        <UTooltip text="Remove from list" :popper="{ placement: 'top' }">
-          <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
-            aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
+        <!-- Similarity search -->
+        <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
+          <UButton color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline" size="sm"
+            @click="findSimilarCards" aria-label="Find Similar Cards" />
         </UTooltip>
       </div>
     </div>
@@ -122,7 +111,7 @@ import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
-import { isLegal, isColorIdentityLegal } from '~/utils/legality';
+import { isLegal, isColorIdentityLegal, formatToLegalityKey } from '~/utils/legality';
 import { useCommandersSet } from '~/composables/useBulkData';
 
 const router = useRouter();
@@ -133,20 +122,107 @@ const props = defineProps<{
   card: Card;
   isCommander: boolean;
   commanderColorIdentity?: string[] | null;
+  numCopies?: number;
+  board?: string;
+  format?: string;
 }>();
 
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
+  (e: 'updateNumCopies', cardName: string, numCopies: number): void;
+  (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
 }>();
 
 const isFlipped = ref(false);
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
 
+const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
+type Board = typeof boardOptions[number];
+const currentBoard = ref<Board>((props.board as Board) || 'Mainboard');
+
+watch(() => props.board, (val) => {
+  currentBoard.value = (val as Board) || 'Mainboard';
+});
+
+const boardMenuItems = computed(() =>
+  boardOptions
+    .filter(b => b !== currentBoard.value)
+    .map(b => [{
+      label: `Move to ${b}`,
+      onSelect() {
+        emit('changeBoard', props.card.card_data.name, b);
+      },
+    }])
+);
+
+const cardOverlayMenuItems = computed(() => {
+  const copies = props.numCopies ?? 1;
+  const copyActions = props.isCommander ? [] : [
+    {
+      label: 'Add a copy',
+      icon: 'i-lucide-plus',
+      disabled: copies >= 100,
+      onSelect() {
+        emit('updateNumCopies', props.card.card_data.name, copies + 1);
+      },
+    },
+    {
+      label: 'Remove a copy',
+      icon: 'i-lucide-minus',
+      disabled: copies <= 1,
+      onSelect() {
+        emit('updateNumCopies', props.card.card_data.name, copies - 1);
+      },
+    },
+  ];
+
+  const boardActions = boardOptions
+    .filter(b => b !== currentBoard.value)
+    .map(b => ({
+      label: `Move to ${b}`,
+      icon: b === 'Mainboard' ? 'i-lucide-layout-grid' : b === 'Sideboard' ? 'i-lucide-columns-2' : 'i-lucide-help-circle',
+      onSelect() {
+        emit('changeBoard', props.card.card_data.name, b);
+      },
+    }));
+
+  const commanderActions = isEligibleCommander.value && !props.isCommander
+    ? [{
+      label: 'Set as Commander',
+      icon: 'i-lucide-crown',
+      onSelect() {
+        showCommanderModal.value = true;
+      },
+    }]
+    : [];
+
+  const removeAction = [{
+    label: 'Remove',
+    icon: 'i-lucide-trash-2',
+    color: 'error' as const,
+    onSelect() {
+      emit('remove', props.card.card_data.id);
+    },
+  }];
+
+  return [copyActions, boardActions, commanderActions, removeAction].filter(g => g.length > 0);
+});
+
+const legalityKey = computed(() => {
+  return props.format ? formatToLegalityKey(props.format) : 'commander';
+});
+
 const formatLegality = computed(() => {
-  return isLegal(props.card.card_data.legalities, 'commander');
+  return isLegal(
+    props.card.card_data.legalities,
+    legalityKey.value,
+    props.numCopies ?? 1,
+    props.card.card_data.type_line,
+    props.card.card_data.oracle_text,
+  );
 });
 
 const colorLegality = computed(() => {
@@ -315,45 +391,65 @@ function handleImageError(event: Event) {
   transform: scale(1.03);
 }
 
-.flip-card-btn {
+/* Copy count badge */
+.copy-count-badge {
   position: absolute;
-  right: 30px;
-  top: 88px;
-  opacity: 0;
-  pointer-events: auto;
+  left: 12px;
+  top: 30px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: white;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 6px;
+  padding: 1px 7px;
+  line-height: 1.4;
+  text-align: center;
+  min-width: 24px;
+  user-select: none;
+  pointer-events: none;
   z-index: 2;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  max-width: 30px;
-  max-height: 30px;
+  opacity: 0;
   transition: opacity 0.2s;
 }
 
-.card-image-wrapper:hover .flip-card-btn {
-  opacity: 0.7;
+/* Always visible when >1 copy */
+.copy-count-badge.multi-copy {
+  opacity: 1;
+}
+
+/* Show on hover */
+.card-image-wrapper:hover .copy-count-badge {
+  opacity: 1;
 }
 
 @media (max-width: 767px) {
-  .flip-card-btn {
-    opacity: 0.7 !important;
-    right: 20px;
-    top: 80px;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    max-width: 28px;
-    max-height: 28px;
-  }
-
-  .flip-card-icon {
-    font-size: 1rem;
+  .copy-count-badge {
+    opacity: 1 !important;
+    left: 12px;
+    top: 20px;
   }
 }
 
-.flip-card-icon {
-  font-size: 1.2rem;
+/* Menu overlay — shown on hover only */
+.list-card-menu-overlay {
+  position: absolute;
+  left: 12px;
+  top: 54px;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 0.2s;
+}
+
+.card-image-wrapper:hover .list-card-menu-overlay {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .list-card-menu-overlay {
+    opacity: 1 !important;
+    left: 12px;
+    top: 44px;
+  }
 }
 </style>

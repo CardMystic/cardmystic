@@ -4,7 +4,7 @@
     <template v-if="isLoading">
       <div style="height: 32px"></div> <!-- Sort spacer to prevent layout shift -->
       <div v-if="defaultGroupBy" style="height: 26px"></div> <!-- Spacer for expand all/collapse all buttons -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
         <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
       </div>
     </template>
@@ -18,7 +18,7 @@
 
       <!-- Searched card pinned at top when grouped (similarity search) -->
       <div v-if="searchedCard && groupedResults && groupedResults.length > 0 && groupedResults[0].label"
-        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-3">
         <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
           :hide-progress-bar="false" :hide-thumbs-down-button="true" :is-commander="checkIsCommander(searchedCard)" />
       </div>
@@ -34,7 +34,7 @@
         <UAccordion type="multiple" v-model="openAccordionValues" :items="accordionItems"
           :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
           <template v-for="group in groupedResults" :key="group.label" #[group.label]>
-            <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pb-4">
+            <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-4">
               <div v-for="(result, index) in group.cards" :key="result.card_data.id">
                 <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                   :hide-thumbs-down-button="hideThumbsDownButton"
@@ -48,7 +48,7 @@
 
       <!-- Flat results (no grouping) -->
       <template v-else>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
           <div v-for="(result, index) in sortedResults" :key="result.card_data.id">
             <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
               :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"

@@ -261,7 +261,12 @@ function getColorLabel(key: string): string {
   return key; // fallback to raw letters
 }
 
-export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
+export function groupCards(
+  cards: Card[],
+  groupBy: string,
+  copiesMap?: Record<string, number>,
+  allCards?: Card[],
+): CardGroup[] {
   const groupMap = new Map<string, Card[]>();
 
   for (const card of cards) {
@@ -275,7 +280,12 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
         break;
       case 'colorIdentity': {
         const ci = card.partner_card_data
-          ? [...new Set([...card.card_data.color_identity, ...card.partner_card_data.color_identity])]
+          ? [
+              ...new Set([
+                ...card.card_data.color_identity,
+                ...card.partner_card_data.color_identity,
+              ]),
+            ]
           : card.card_data.color_identity;
         key = getColorGroupKey(ci);
         break;
@@ -319,15 +329,53 @@ export function groupCards(cards: Card[], groupBy: string): CardGroup[] {
     }
   });
 
-  return entries.map(([key, groupCards]) => ({
-    label:
-      groupBy === 'type'
-        ? `${getCardTypeLabel(key)} (${groupCards.length})`
-        : groupBy === 'color' || groupBy === 'colorIdentity'
-          ? `${getColorLabel(key)} (${groupCards.length})`
-          : `Mana Value ${key} (${groupCards.length})`,
-    cards: groupCards,
-  }));
+  return entries.map(([key, groupCards]) => {
+    const count = copiesMap
+      ? groupCards.reduce((sum, c) => sum + (copiesMap[c.card_data.id] ?? 1), 0)
+      : groupCards.length;
+
+    let label: string;
+    if (groupBy === 'type') {
+      const pluralType =
+        getCardTypeLabel(key) == 'Sorcery'
+          ? 'Sorceries'
+          : `${getCardTypeLabel(key)}s`;
+      label = `${pluralType} (${count})`;
+      // For the land group, count MDFCs from other groups that have a land back face
+      if (key === 'land' && allCards) {
+        const mdfcLandCount = allCards.reduce((sum, c) => {
+          // Skip cards already in the land group
+          if (getCardTypePrimary(c.card_data.type_line ?? '') === 'land')
+            return sum;
+          // Check if it's an MDFC with a land on the back face
+          const faces = c.card_data.card_faces;
+          if (
+            faces &&
+            faces.length >= 2 &&
+            c.card_data.layout === 'modal_dfc'
+          ) {
+            const backType = faces[1].type_line ?? '';
+            if (backType.toLowerCase().includes('land')) {
+              return sum + (copiesMap ? (copiesMap[c.card_data.id] ?? 1) : 1);
+            }
+          }
+          return sum;
+        }, 0);
+        if (mdfcLandCount > 0) {
+          label = `${getCardTypeLabel(key)}s (${count} · ${count + mdfcLandCount} with MDFC)`;
+        }
+      }
+    } else if (groupBy === 'color' || groupBy === 'colorIdentity') {
+      label = `${getColorLabel(key)} (${count})`;
+    } else {
+      label = `Mana Value ${key} (${count})`;
+    }
+
+    return {
+      label,
+      cards: groupCards,
+    };
+  });
 }
 
 export function groupAndSortCards(
@@ -335,6 +383,8 @@ export function groupAndSortCards(
   groupBy: string | null | undefined,
   sortBy: string | null | undefined,
   sortDirection: 'asc' | 'desc',
+  copiesMap?: Record<string, number>,
+  allCards?: Card[],
 ): CardGroup[] | null {
   if (!cards || cards.length === 0) return null;
 
@@ -344,7 +394,7 @@ export function groupAndSortCards(
     return [{ label: '', cards: sorted }];
   }
 
-  const groups = groupCards(cards, groupBy);
+  const groups = groupCards(cards, groupBy, copiesMap, allCards ?? cards);
 
   // Sort cards within each group (default to score descending when no sortBy)
   return groups.map((group) => {

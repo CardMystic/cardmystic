@@ -2,34 +2,34 @@
   <div class="mt-3 w-full">
     <!-- Loading State -->
     <template v-if="isLoading">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
         <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
       </div>
     </template>
 
     <!-- Cards display -->
     <template v-else-if="groups && groups.length > 0">
+      <!-- Mainboard header -->
+      <div v-if="(sideboardGroups && sideboardGroups.length > 0) || (consideringGroups && consideringGroups.length > 0)"
+        class="board-divider mb-2">
+        <div class="board-divider-line"></div>
+        <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' : 'cards'
+        }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+        <div class="board-divider-line"></div>
+      </div>
       <!-- Commander card(s) at the top (groups with empty label) -->
       <template v-for="(group, index) in ungroupedGroups" :key="'ungrouped-' + index">
-        <!-- Commander cards: centered flex -->
-        <div v-if="group.cards.every(c => commanderCardIds?.includes(c.card_data.id))"
-          class="flex flex-wrap justify-center gap-2 mb-4">
-          <div v-for="card in group.cards" :key="card.card_data.id" class="max-w-75">
-            <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
-              :commander-color-identity="commanderColorIdentity"
-              @remove="(cardId: string) => emit('removeCard', cardId)"
-              @set-commander="(cardName: string) => emit('setCommander', cardName)"
-              @clear-commander="(cardId: string) => emit('clearCommander', cardId)" />
-          </div>
-        </div>
-        <!-- Ungrouped cards: grid layout -->
-        <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
           <div v-for="card in group.cards" :key="card.card_data.id">
             <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
               :commander-color-identity="commanderColorIdentity"
+              :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
+              :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
               @remove="(cardId: string) => emit('removeCard', cardId)"
               @set-commander="(cardName: string) => emit('setCommander', cardName)"
-              @clear-commander="(cardId: string) => emit('clearCommander', cardId)" />
+              @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
+              @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
+              @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
           </div>
         </div>
       </template>
@@ -44,13 +44,18 @@
       <UAccordion v-if="labeledGroups.length > 0" type="multiple" v-model="openAccordionValues" :items="accordionItems"
         :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
         <template v-for="group in labeledGroups" :key="group.label" #[group.label]>
-          <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-2">
+          <div :id="groupToId(group.label)"
+            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
             <div v-for="card in group.cards" :key="card.card_data.id">
               <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
                 :commander-color-identity="commanderColorIdentity"
+                :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
+                :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
                 @remove="(cardId: string) => emit('removeCard', cardId)"
                 @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                @clear-commander="(cardId: string) => emit('clearCommander', cardId)" />
+                @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
+                @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
+                @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
             </div>
           </div>
         </template>
@@ -68,6 +73,105 @@
         </p>
       </div>
     </template>
+
+    <!-- Sideboard Section -->
+    <template v-if="sideboardGroups && sideboardGroups.length > 0">
+      <div id="board-sideboard" class="board-divider cursor-pointer" @click="sideboardExpanded = !sideboardExpanded">
+        <div class="board-divider-line"></div>
+        <span class="board-divider-label">
+          <UIcon :name="sideboardExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="w-4 h-4" />
+          Sideboard ({{ sideboardCount }} {{ sideboardCount === 1 ? 'card' : 'cards' }}) <span
+            class="board-divider-price">${{ sideboardPrice.toFixed(2) }}</span>
+        </span>
+        <div class="board-divider-line"></div>
+      </div>
+      <div v-show="sideboardExpanded" class="board-section board-section-sideboard rounded-lg p-3 mb-4">
+        <!-- Ungrouped sideboard cards -->
+        <template v-for="(group, index) in sideboardUngrouped" :key="'sb-ungrouped-' + index">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
+            <div v-for="card in group.cards" :key="card.card_data.id">
+              <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+                :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
+                :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                @remove="(cardId: string) => emit('removeCard', cardId)"
+                @set-commander="(cardName: string) => emit('setCommander', cardName)"
+                @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
+                @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
+                @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+            </div>
+          </div>
+        </template>
+        <!-- Grouped sideboard cards -->
+        <UAccordion v-if="sideboardLabeled.length > 0" type="multiple" v-model="openSideboardValues"
+          :items="sideboardAccordionItems"
+          :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
+          <template v-for="group in sideboardLabeled" :key="group.label" #[group.label]>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
+              <div v-for="card in group.cards" :key="card.card_data.id">
+                <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+                  :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
+                  :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                  @remove="(cardId: string) => emit('removeCard', cardId)"
+                  @set-commander="(cardName: string) => emit('setCommander', cardName)"
+                  @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
+                  @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
+                  @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+              </div>
+            </div>
+          </template>
+        </UAccordion>
+      </div>
+    </template>
+
+    <!-- Considering Section -->
+    <template v-if="consideringGroups && consideringGroups.length > 0">
+      <div id="board-considering" class="board-divider cursor-pointer"
+        @click="consideringExpanded = !consideringExpanded">
+        <div class="board-divider-line"></div>
+        <span class="board-divider-label">
+          <UIcon :name="consideringExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="w-4 h-4" />
+          Considering ({{ consideringCount }} {{ consideringCount === 1 ? 'card' : 'cards' }}) <span
+            class="board-divider-price">${{ consideringPrice.toFixed(2) }}</span>
+        </span>
+        <div class="board-divider-line"></div>
+      </div>
+      <div v-show="consideringExpanded" class="board-section board-section-considering rounded-lg p-3 mb-4">
+        <!-- Ungrouped considering cards -->
+        <template v-for="(group, index) in consideringUngrouped" :key="'con-ungrouped-' + index">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
+            <div v-for="card in group.cards" :key="card.card_data.id">
+              <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+                :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
+                :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                @remove="(cardId: string) => emit('removeCard', cardId)"
+                @set-commander="(cardName: string) => emit('setCommander', cardName)"
+                @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
+                @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
+                @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+            </div>
+          </div>
+        </template>
+        <!-- Grouped considering cards -->
+        <UAccordion v-if="consideringLabeled.length > 0" type="multiple" v-model="openConsideringValues"
+          :items="consideringAccordionItems"
+          :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
+          <template v-for="group in consideringLabeled" :key="group.label" #[group.label]>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
+              <div v-for="card in group.cards" :key="card.card_data.id">
+                <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+                  :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
+                  :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                  @remove="(cardId: string) => emit('removeCard', cardId)"
+                  @set-commander="(cardName: string) => emit('setCommander', cardName)"
+                  @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
+                  @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
+                  @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+              </div>
+            </div>
+          </template>
+        </UAccordion>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -82,6 +186,10 @@ const props = defineProps<{
   skeletonCount?: number;
   commanderCardIds?: string[] | null;
   commanderColorIdentity?: string[] | null;
+  listItemsMap?: Record<string, { num_copies: number; board: string }>;
+  format?: string;
+  sideboardGroups?: CardGroup[] | null;
+  consideringGroups?: CardGroup[] | null;
 }>();
 
 const ungroupedGroups = computed(() => {
@@ -108,13 +216,139 @@ watch(labeledGroups, (groups) => {
   openAccordionValues.value = groups.map(g => g.label);
 }, { immediate: true });
 
+// Sideboard accordion
+const sideboardLabeled = computed(() => {
+  if (!props.sideboardGroups) return [];
+  return props.sideboardGroups.filter(g => g.label);
+});
+const sideboardUngrouped = computed(() => {
+  if (!props.sideboardGroups) return [];
+  return props.sideboardGroups.filter(g => !g.label);
+});
+const sideboardAccordionItems = computed<AccordionItem[]>(() => {
+  return sideboardLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label as any }));
+});
+const sideboardExpanded = ref(false);
+const openSideboardValues = ref<string[]>([]);
+watch(sideboardLabeled, (groups) => {
+  openSideboardValues.value = groups.map(g => g.label);
+}, { immediate: true });
+
+// Considering accordion
+const consideringLabeled = computed(() => {
+  if (!props.consideringGroups) return [];
+  return props.consideringGroups.filter(g => g.label);
+});
+const consideringUngrouped = computed(() => {
+  if (!props.consideringGroups) return [];
+  return props.consideringGroups.filter(g => !g.label);
+});
+const consideringAccordionItems = computed<AccordionItem[]>(() => {
+  return consideringLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label as any }));
+});
+const consideringExpanded = ref(false);
+const openConsideringValues = ref<string[]>([]);
+watch(consideringLabeled, (groups) => {
+  openConsideringValues.value = groups.map(g => g.label);
+}, { immediate: true });
+
 const emit = defineEmits<{
   (e: 'removeCard', cardId: string): void;
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
+  (e: 'updateNumCopies', cardName: string, numCopies: number): void;
+  (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
 }>();
+
+function countCards(groups: CardGroup[] | null | undefined): number {
+  if (!groups) return 0;
+  return groups.reduce((total, g) => total + g.cards.reduce((sum, c) => {
+    const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
+    return sum + copies;
+  }, 0), 0);
+}
+
+function sumPrice(groups: CardGroup[] | null | undefined): number {
+  if (!groups) return 0;
+  return groups.reduce((total, g) => total + g.cards.reduce((sum, c) => {
+    const price = c.card_data?.prices?.usd;
+    const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
+    return sum + (price ? parseFloat(price) * copies : 0);
+  }, 0), 0);
+}
+
+const mainboardCount = computed(() => countCards(props.groups));
+const sideboardCount = computed(() => countCards(props.sideboardGroups));
+const consideringCount = computed(() => countCards(props.consideringGroups));
+
+const mainboardPrice = computed(() => sumPrice(props.groups));
+const sideboardPrice = computed(() => sumPrice(props.sideboardGroups));
+const consideringPrice = computed(() => sumPrice(props.consideringGroups));
 
 function groupToId(label: string): string {
   return 'group-' + label.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '').toLowerCase();
 }
+
+function expandBoard(board: 'Sideboard' | 'Considering') {
+  if (board === 'Sideboard') sideboardExpanded.value = true;
+  else if (board === 'Considering') consideringExpanded.value = true;
+}
+
+defineExpose({ expandBoard });
 </script>
+
+<style scoped>
+.board-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 12px;
+}
+
+.board-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(150, 150, 150, 0.3);
+}
+
+.board-divider-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(180, 180, 180, 0.8);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.board-divider-price {
+  color: rgba(120, 200, 120, 0.9);
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.board-section {
+  border: 1px solid rgba(150, 150, 150, 0.15);
+}
+
+.board-section-sideboard {
+  background: rgba(59, 130, 246, 0.04);
+}
+
+:root.dark .board-section-sideboard,
+.dark .board-section-sideboard {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.board-section-considering {
+  background: rgba(234, 179, 8, 0.04);
+}
+
+:root.dark .board-section-considering,
+.dark .board-section-considering {
+  background: rgba(234, 179, 8, 0.06);
+}
+</style>

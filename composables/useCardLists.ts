@@ -7,6 +7,7 @@ import {
   keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
+import type { CardFormatType } from '~/models/cardModel';
 
 export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
@@ -43,6 +44,7 @@ export const useCardLists = () => {
     name: string,
     description?: string,
     commanders?: string[],
+    format?: CardFormatType,
   ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
@@ -71,6 +73,7 @@ export const useCardLists = () => {
         body: {
           name: name.trim(),
           description: description?.trim() || undefined,
+          format: format || 'Commander',
           commanders: commanders?.filter((c) => c.trim()) || [],
         },
       },
@@ -84,13 +87,15 @@ export const useCardLists = () => {
       name,
       description,
       commanders,
+      format,
     }: {
       name: string;
       description?: string;
       commanders?: string[];
+      format?: CardFormatType;
     }) => {
       if (!supabase) return;
-      return createList(name, description, commanders);
+      return createList(name, description, commanders, format);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
@@ -111,6 +116,8 @@ export const useCardLists = () => {
     const items = cardIds.map((cardId) => ({
       list_id: listId,
       card_id: cardId,
+      board: 'Mainboard',
+      num_copies: 1,
     }));
 
     const { error: insertError } = await supabase
@@ -170,7 +177,7 @@ export const useCardLists = () => {
     const config = useRuntimeConfig();
     const response = await $fetch<{
       addedCount: number;
-      duplicatesSkipped: number;
+      updatedCount: number;
       invalidCardNames: string[];
       message?: string;
     }>(`${config.public.backendUrl}/supabase/card-lists/add-cards`, {
@@ -551,6 +558,165 @@ export const useCardLists = () => {
     },
   });
 
+  const updateFormat = async (listId: string, format: CardFormatType) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      format: string;
+      commandersCleared: boolean;
+    }>(`${config.public.backendUrl}/supabase/card-lists/update-format`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        format,
+      },
+    });
+
+    return response;
+  };
+
+  const updateFormatMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      format,
+    }: {
+      listId: string;
+      format: CardFormatType;
+    }) => {
+      if (!supabase) return;
+      return updateFormat(listId, format);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
+  const updateNumCopies = async (
+    listId: string,
+    cardName: string,
+    numCopies: number,
+  ) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      cardName: string;
+      numCopies: number;
+    }>(`${config.public.backendUrl}/supabase/card-lists/update-num-copies`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardName,
+        numCopies,
+      },
+    });
+
+    return response;
+  };
+
+  const updateNumCopiesMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardName,
+      numCopies,
+    }: {
+      listId: string;
+      cardName: string;
+      numCopies: number;
+    }) => {
+      if (!supabase) return;
+      return updateNumCopies(listId, cardName, numCopies);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
+  const changeBoard = async (
+    listId: string,
+    cardName: string,
+    board: 'Mainboard' | 'Sideboard' | 'Considering',
+  ) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      cardName: string;
+      board: string;
+    }>(`${config.public.backendUrl}/supabase/card-lists/change-board`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardName,
+        board,
+      },
+    });
+
+    return response;
+  };
+
+  const changeBoardMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardName,
+      board,
+    }: {
+      listId: string;
+      cardName: string;
+      board: 'Mainboard' | 'Sideboard' | 'Considering';
+    }) => {
+      if (!supabase) return;
+      return changeBoard(listId, cardName, board);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
   return {
     // Query data and states
     userLists,
@@ -569,6 +735,9 @@ export const useCardLists = () => {
     updateListAvatarMutation,
     setCommanderMutation,
     clearCommanderMutation,
+    updateFormatMutation,
+    updateNumCopiesMutation,
+    changeBoardMutation,
 
     // For nested queries (list items)
     useListItems,

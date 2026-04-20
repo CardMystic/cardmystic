@@ -5,14 +5,60 @@ export type LegalityResult = {
   reason?: string;
 };
 
+/** Formats where decks are singleton (1 copy max, except basics/exemptions) */
+const singletonFormats = new Set([
+  'commander',
+  'duel',
+  'brawl',
+  'standardbrawl',
+  'oathbreaker',
+  'paupercommander',
+  'predh',
+]);
+
+/** Default max copies for non-singleton constructed formats */
+const DEFAULT_MAX_COPIES = 4;
+
+/**
+ * Map a display format name (e.g. "Pauper Commander") to the Scryfall legality key (e.g. "paupercommander").
+ */
+export function formatToLegalityKey(format: string): string {
+  return format.toLowerCase().replace(/\s+/g, '');
+}
+
+/**
+ * Returns true if the card is exempt from copy limits
+ * (basic lands, or cards with "A deck can have any number of cards named" text).
+ */
+function isUnlimitedCopies(typeLine?: string, oracleText?: string): boolean {
+  if (typeLine && /\bBasic\b/.test(typeLine) && /\bLand\b/.test(typeLine)) {
+    return true;
+  }
+  if (
+    oracleText &&
+    /a deck can have any number of cards named/i.test(oracleText)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Checks if a card is legal in a given format considering its legality status and quantity.
  * Does NOT check color identity — use `isColorIdentityLegal` for that.
+ *
+ * @param legalities - The card's legality map from Scryfall
+ * @param format - The Scryfall legality key (e.g. "commander", "modern")
+ * @param quantity - Number of copies in the deck (default 1)
+ * @param typeLine - The card's type line (for basic land detection)
+ * @param oracleText - The card's oracle text (for "any number" detection)
  */
 export function isLegal(
   legalities: Legalities | undefined,
   format: string,
   quantity: number = 1,
+  typeLine?: string,
+  oracleText?: string,
 ): LegalityResult {
   if (!legalities) {
     return { legal: true };
@@ -27,6 +73,19 @@ export function isLegal(
   }
   if (status === 'restricted' && quantity > 1) {
     return { legal: false, reason: `Restricted to 1 copy in ${format}` };
+  }
+
+  // Check quantity limits (skip for unlimited-copies cards)
+  if (quantity > 1 && !isUnlimitedCopies(typeLine, oracleText)) {
+    if (singletonFormats.has(format) && quantity > 1) {
+      return { legal: false, reason: `Only 1 copy allowed in ${format}` };
+    }
+    if (!singletonFormats.has(format) && quantity > DEFAULT_MAX_COPIES) {
+      return {
+        legal: false,
+        reason: `Max ${DEFAULT_MAX_COPIES} copies allowed in ${format}`,
+      };
+    }
   }
 
   return { legal: true };

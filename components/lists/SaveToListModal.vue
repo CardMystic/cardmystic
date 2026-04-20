@@ -179,7 +179,7 @@ const handleSave = async () => {
 
     const messages: string[] = []
     if (result.addedCount > 0) messages.push(`Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`)
-    if (result.duplicatesSkipped > 0) messages.push(`${result.duplicatesSkipped} duplicate${result.duplicatesSkipped === 1 ? '' : 's'} skipped`)
+    if (result.updatedCount > 0) messages.push(`${result.updatedCount} card${result.updatedCount === 1 ? '' : 's'} updated`)
     if (result.invalidCardNames?.length > 0) messages.push(`${result.invalidCardNames.length} not found: ${result.invalidCardNames.join(', ')}`)
 
     toast.add({

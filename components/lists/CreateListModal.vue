@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="isOpen" title="Create New List">
+  <UModal v-model:open="isOpen" title="Create New Decklist">
     <template #content>
       <div class="p-4 space-y-4">
         <UFormField label="List Name">
@@ -8,11 +8,14 @@
         <UFormField label="Description (optional)">
           <UTextarea v-model="newListDescription" placeholder="Enter description" class="w-full" />
         </UFormField>
-        <UFormField label="Commander (optional)">
+        <UFormField label="Format">
+          <USelect v-model="newListFormat" :items="formatOptions" class="w-full" />
+        </UFormField>
+        <UFormField v-if="isCommanderFormat" label="Commander (optional)">
           <UInputMenu v-model="newListCommander" v-model:search-term="commanderSearchTerm" :items="filteredCommanders"
             placeholder="Search for a commander..." icon="i-lucide-crown" class="w-full" />
         </UFormField>
-        <UFormField v-if="showPartnerField" label="Partner Commander (optional)">
+        <UFormField v-if="isCommanderFormat && showPartnerField" label="Partner Commander (optional)">
           <UInputMenu v-model="newListPartnerCommander" v-model:search-term="partnerSearchTerm"
             :items="filteredPartners" placeholder="Search for a partner commander..." icon="i-lucide-crown"
             class="w-full" />
@@ -31,6 +34,7 @@
 import { useCardLists } from '~/composables/useCardLists'
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData'
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders'
+import { CardFormat, type CardFormatType } from '~/models/cardModel'
 import { useToast } from '#imports'
 
 const props = defineProps<{
@@ -53,11 +57,15 @@ const toast = useToast()
 
 const newListName = ref('')
 const newListDescription = ref('')
+const newListFormat = ref<CardFormatType>('Commander')
 const newListCommander = ref('')
 const newListPartnerCommander = ref('')
 const commanderSearchTerm = ref('')
 const partnerSearchTerm = ref('')
 const createLoading = computed(() => createListMutation.isPending.value)
+
+const formatOptions = CardFormat.options
+const isCommanderFormat = computed(() => newListFormat.value === 'Commander')
 
 // Determine which partner category the selected commander belongs to
 const selectedCommanderPartnerType = computed(() => {
@@ -89,6 +97,16 @@ const filteredPartners = computed(() => {
     .slice(0, 100)
 })
 
+// Clear commander when format changes away from Commander
+watch(newListFormat, (format) => {
+  if (format !== 'Commander') {
+    newListCommander.value = ''
+    newListPartnerCommander.value = ''
+    commanderSearchTerm.value = ''
+    partnerSearchTerm.value = ''
+  }
+})
+
 // Clear partner when commander changes
 watch(newListCommander, () => {
   newListPartnerCommander.value = ''
@@ -100,6 +118,7 @@ watch(isOpen, (opened) => {
   if (!opened) {
     newListName.value = ''
     newListDescription.value = ''
+    newListFormat.value = 'Commander'
     newListCommander.value = ''
     newListPartnerCommander.value = ''
     commanderSearchTerm.value = ''
@@ -118,6 +137,7 @@ const handleCreate = async () => {
     await createListMutation.mutateAsync({
       name: newListName.value.trim(),
       description: newListDescription.value.trim() || undefined,
+      format: newListFormat.value,
       commanders: commandersList.length > 0 ? commandersList : undefined,
     })
     toast.add({

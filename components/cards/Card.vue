@@ -42,17 +42,8 @@
         </div>
       </template>
 
-      <LazyClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
-
-      <!-- Flip Button for Dual-Faced Cards -->
-      <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
-        <UTooltip text="Flip card">
-          <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
-            square>
-            <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
-          </UButton>
-        </UTooltip>
-      </div>
+      <LazyClipboardButton v-if="showCardInfo && !hasPartner" :card="card" :isDualFaced="isDualFaced"
+        @flip="flipCard" />
 
       <!-- Score Bars -->
       <div v-if="!hideProgressBar" class="mt-1 w-full" :class="{ invisible: isSearched }">
@@ -657,48 +648,6 @@ function toggleShowAllData() {
   /* center horizontally within container */
   display: block;
   box-sizing: border-box;
-}
-
-.flip-card-btn {
-  position: absolute;
-  right: 30px;
-  top: 88px;
-  opacity: 0;
-  pointer-events: auto;
-  z-index: 2;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  max-width: 30px;
-  max-height: 30px;
-  transition: opacity 0.2s;
-}
-
-.card-image-wrapper:hover .flip-card-btn {
-  opacity: 0.7;
-}
-
-@media (max-width: 767px) {
-  .flip-card-btn {
-    opacity: 0.7 !important;
-    right: 20px;
-    top: 80px;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    max-width: 28px;
-    max-height: 28px;
-  }
-
-  .flip-card-icon {
-    font-size: 1rem;
-  }
-}
-
-.flip-card-icon {
-  font-size: 1.2rem;
 }
 
 /* Partner commander stack — 24px shorter than a normal card to leave room for extra text */

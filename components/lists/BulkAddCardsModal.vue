@@ -4,7 +4,7 @@
     <template #content>
       <div class="p-4 space-y-4">
         <UTextarea v-model="bulkEditCardNames"
-          placeholder="Enter card names, one per line...&#10;&#10;Example:&#10;Lightning Bolt&#10;Counterspell&#10;Sol Ring"
+          placeholder="Enter card names, one per line...&#10;&#10;Example:&#10;4 Lightning Bolt&#10;2 Counterspell&#10;Sol Ring&#10;&#10;Sideboard&#10;Negate&#10;&#10;Considering&#10;Ragavan, Nimble Pilferer"
           :rows="10" class="w-full" autofocus />
         <p class="text-xs text-gray-500 dark:text-gray-400">
           {{ bulkEditCardCount }} card{{ bulkEditCardCount === 1 ? '' : 's' }} in list
@@ -41,7 +41,6 @@
 <script setup lang="ts">
 import { useCardLists } from '~/composables/useCardLists'
 import { useToast } from '#imports'
-import { parseDecklist } from '~/utils/decklist'
 
 const props = defineProps<{
   listId: string
@@ -64,15 +63,25 @@ watch(isOpen, (open) => {
   }
 })
 
+const sectionHeaders = new Set(['mainboard', 'sideboard', 'considering'])
+
 const bulkEditCardCount = computed(() => {
   if (!bulkEditCardNames.value.trim()) return 0
-  return parseDecklist(bulkEditCardNames.value).length
+  const lines = bulkEditCardNames.value.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+  return lines.reduce((sum, line) => {
+    if (sectionHeaders.has(line.toLowerCase())) return sum
+    const match = line.match(/^(\d+)x?\s+/i)
+    return sum + (match ? parseInt(match[1]) : 1)
+  }, 0)
 })
 
 async function handleBulkEdit() {
   if (bulkEditCardCount.value === 0) return
 
-  const cardNames = parseDecklist(bulkEditCardNames.value)
+  const cardNames = bulkEditCardNames.value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
 
   bulkEditLoading.value = true
   bulkEditResult.value = null

@@ -1,22 +1,33 @@
 <template>
-  <div v-if="groups.length > 0"
-    class="jump-to-container sm:ml-2 sm:bg-elevated sm:p-2 sm:rounded-md sm:border-2 sm:border-secondary"
+  <div v-if="groups.length > 0 || boardSections.length > 1"
+    class="jump-to-container xl:ml-2 xl:bg-elevated xl:p-2 xl:rounded-md xl:border-2 xl:border-secondary"
     :style="{ bottom: bottomOffset + 'px' }">
     <!-- Desktop: show all group buttons inline -->
-    <div class="hidden sm:flex items-center gap-1 flex-wrap">
+    <div class="hidden xl:flex items-center gap-1 flex-wrap max-w-[500px]">
       <UIcon name="i-lucide-map-pin" class="text-primary mr-0" />
+      <template v-if="boardSections.length > 1">
+        <UButton v-for="section in boardSections" :key="'board-' + section" :label="section" size="xs" color="primary"
+          variant="soft" class="cursor-pointer" @click="scrollToBoard(section)" />
+        <div v-if="groups.length > 0" class="w-px h-4 bg-gray-500/30 mx-0.5"></div>
+      </template>
       <UButton v-for="group in groups" :key="group" :label="group" size="xs" color="neutral" variant="soft"
         class="cursor-pointer" @click="scrollToGroup(group)" />
     </div>
 
     <!-- Mobile: collapsed dropdown -->
-    <div class="sm:hidden relative" ref="mobileContainer">
+    <div class="xl:hidden relative" ref="mobileContainer">
       <UButton icon="i-lucide-map-pin" color="neutral" variant="soft" size="xl"
         class="cursor-pointer border-2 border-secondary" aria-label="Jump to group" @click="mobileOpen = !mobileOpen" />
       <Transition name="fade">
         <div v-if="mobileOpen"
           class="absolute right-0 bottom-full mb-2 bg-elevated rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-40 z-999">
           <span class="text-xs font-medium text-muted px-2 pb-1">Jump to:</span>
+          <template v-if="boardSections.length > 1">
+            <UButton v-for="section in boardSections" :key="'board-' + section" :label="section" size="xs"
+              color="primary" variant="soft" class="cursor-pointer w-full justify-start"
+              @click="scrollToBoard(section); mobileOpen = false" />
+            <div v-if="groups.length > 0" class="border-t border-gray-500/30 my-1"></div>
+          </template>
           <UButton v-for="group in groups" :key="group" :label="group" size="xs" color="neutral" variant="soft"
             class="cursor-pointer w-full justify-start" @click="scrollToGroup(group); mobileOpen = false" />
         </div>
@@ -26,8 +37,15 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   groups: string[];
+  boardSections?: string[];
+}>(), {
+  boardSections: () => [],
+});
+
+const emit = defineEmits<{
+  (e: 'jumpBoard', board: string): void;
 }>();
 
 const mobileOpen = ref(false);
@@ -40,7 +58,7 @@ const footerGap = 12;
 const jumpToVisible = useJumpToVisible();
 
 watch(() => props.groups, (groups) => {
-  jumpToVisible.value = groups.length > 0;
+  jumpToVisible.value = groups.length > 0 || (props.boardSections?.length ?? 0) > 1;
   if (import.meta.client) {
     nextTick(updatePosition);
   }
@@ -74,6 +92,18 @@ function scrollToGroup(label: string) {
   );
   if (triggerBtn) {
     scrollToElement(triggerBtn);
+  }
+}
+
+function scrollToBoard(board: string) {
+  emit('jumpBoard', board);
+  if (board === 'Mainboard') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  const el = document.getElementById('board-' + board.toLowerCase());
+  if (el) {
+    scrollToElement(el);
   }
 }
 
