@@ -1,6 +1,6 @@
 <template>
   <UCard variant="subtle"
-    :class="['card-root', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '', legalityWarning ? 'illegal-card-bg' : '']"
+    :class="['card-root', isDeckCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '', legalityWarning ? 'illegal-card-bg' : '']"
     :ui="{ body: 'p-4 sm:p-4' }">
 
     <!-- Set Commander Confirmation Modal -->
@@ -14,6 +14,21 @@
         <div class="flex justify-end gap-2">
           <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
           <UButton label="Set Commander" color="primary" icon="i-lucide-crown" @click="confirmSetCommander(close)" />
+        </div>
+      </template>
+    </UModal>
+
+    <!-- Set Copies Modal -->
+    <UModal v-model:open="showSetCopiesInput" title="Set Copies">
+      <template #body>
+        <p class="text-sm mb-3">How many copies of <span class="font-bold">{{ card.card_data.name }}</span>?</p>
+        <UInput v-model="setCopiesInputValue" type="number" min="1" max="100" autofocus @keyup.enter="confirmSetCopies"
+          @keyup.escape="showSetCopiesInput = false" />
+      </template>
+      <template #footer="{ close }">
+        <div class="flex justify-end gap-2">
+          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
+          <UButton label="Set Copies" color="primary" icon="i-lucide-hash" @click="confirmSetCopies" />
         </div>
       </template>
     </UModal>
@@ -45,12 +60,13 @@
       <ClipboardButton :card="card" :isDualFaced="isDualFaced" @flip="flipCard" />
 
       <!-- Copy Count Badge (left side, hidden for commanders) -->
-      <span v-if="!isCommander" class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{ numCopies
+      <span v-if="!isDeckCommander" class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{
+        numCopies
         ?? 1
         }}</span>
 
       <!-- Menu Overlay (left side, below badge) -->
-      <div v-if="!isCommander" class="list-card-menu-overlay">
+      <div v-if="!isDeckCommander" class="list-card-menu-overlay">
         <UDropdownMenu :items="cardOverlayMenuItems">
           <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
             size="xs" square icon="i-lucide-ellipsis-vertical" />
@@ -100,7 +116,20 @@
           <UButton color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline" size="sm"
             @click="findSimilarCards" aria-label="Find Similar Cards" />
         </UTooltip>
+
+        <!-- Commander-card buttons -->
+        <template v-if="isCommanderCardComputed">
+          <UTooltip text="Get Deck Recommendations" :popper="{ placement: 'top' }">
+            <UButton color="primary" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
+              @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander" />
+          </UTooltip>
+          <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
+            <UButton color="error" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
+              @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
+          </UTooltip>
+        </template>
       </div>
+
     </div>
   </UCard>
 </template>
@@ -113,14 +142,19 @@ import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { isLegal, isColorIdentityLegal, formatToLegalityKey } from '~/utils/legality';
 import { useCommandersSet } from '~/composables/useBulkData';
+import { useSearchType } from '~/composables/useSearchType';
+import { useSearchHistory } from '~/composables/useSearchHistory';
 
 const router = useRouter();
+const { saveSearchQuery } = useSearchType();
+const { saveSearchMutation } = useSearchHistory();
 
 const { data: commanders } = useCommandersSet();
 
 const props = defineProps<{
   card: Card;
-  isCommander: boolean;
+  isDeckCommander: boolean;
+  isCommanderCard?: boolean;
   commanderColorIdentity?: string[] | null;
   numCopies?: number;
   board?: string;
@@ -138,6 +172,16 @@ const emit = defineEmits<{
 const isFlipped = ref(false);
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
+const showSetCopiesInput = ref(false);
+const setCopiesInputValue = ref('');
+
+function confirmSetCopies() {
+  const n = parseInt(setCopiesInputValue.value);
+  if (!isNaN(n) && n >= 1 && n <= 100) {
+    emit('updateNumCopies', props.card.card_data.name, n);
+  }
+  showSetCopiesInput.value = false;
+}
 
 const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
 type Board = typeof boardOptions[number];
@@ -145,6 +189,11 @@ const currentBoard = ref<Board>((props.board as Board) || 'Mainboard');
 
 watch(() => props.board, (val) => {
   currentBoard.value = (val as Board) || 'Mainboard';
+});
+
+const isCommanderCardComputed = computed(() => {
+  if (props.isCommanderCard !== undefined) return props.isCommanderCard;
+  return isEligibleCommander.value;
 });
 
 const boardMenuItems = computed(() =>
@@ -160,7 +209,7 @@ const boardMenuItems = computed(() =>
 
 const cardOverlayMenuItems = computed(() => {
   const copies = props.numCopies ?? 1;
-  const copyActions = props.isCommander ? [] : [
+  const copyActions = props.isDeckCommander ? [] : [
     {
       label: 'Add a copy',
       icon: 'i-lucide-plus',
@@ -177,6 +226,14 @@ const cardOverlayMenuItems = computed(() => {
         emit('updateNumCopies', props.card.card_data.name, copies - 1);
       },
     },
+    {
+      label: 'Set Copies',
+      icon: 'i-lucide-hash',
+      onSelect() {
+        setCopiesInputValue.value = String(copies);
+        showSetCopiesInput.value = true;
+      },
+    },
   ];
 
   const boardActions = boardOptions
@@ -189,7 +246,7 @@ const cardOverlayMenuItems = computed(() => {
       },
     }));
 
-  const commanderActions = isEligibleCommander.value && !props.isCommander
+  const commanderActions = isCommanderCardComputed.value && !props.isDeckCommander
     ? [{
       label: 'Set as Commander',
       icon: 'i-lucide-crown',
@@ -226,7 +283,7 @@ const formatLegality = computed(() => {
 });
 
 const colorLegality = computed(() => {
-  if (!props.commanderColorIdentity || props.isCommander) return { legal: true };
+  if (!props.commanderColorIdentity || props.isDeckCommander) return { legal: true };
   return isColorIdentityLegal(
     props.card.card_data.color_identity,
     props.commanderColorIdentity,
@@ -257,14 +314,6 @@ function flipCard() {
   isFlipped.value = !isFlipped.value;
 }
 
-function handleCrownClick() {
-  if (props.isCommander) {
-    showClearCommanderModal.value = true;
-  } else {
-    showCommanderModal.value = true;
-  }
-}
-
 function confirmSetCommander(close: () => void) {
   emit('setCommander', props.card.card_data.name);
   close();
@@ -289,6 +338,23 @@ function findSimilarCards() {
     searchType: 'similarity'
   };
   router.push({ path: '/search/all/similarity', query: queryParams });
+}
+
+function getRecommendations() {
+  if (!props.card?.card_data?.name) return;
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('recommend', queryParams);
+  saveSearchMutation.mutate({
+    query: props.card.card_data.name,
+    searchType: 'recommend',
+    filters: { commander: props.card.card_data.name },
+  });
+  router.push({ path: '/search/all/deckbuilder', query: queryParams });
+}
+
+function viewPopularCards() {
+  if (!props.card?.card_data?.name) return;
+  router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
 }
 
 function getSimpleCardType(type_line: string): string {

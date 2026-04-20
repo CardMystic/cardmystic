@@ -14,15 +14,15 @@
         class="board-divider mb-2">
         <div class="board-divider-line"></div>
         <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' : 'cards'
-          }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+        }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
         <div class="board-divider-line"></div>
       </div>
       <!-- Commander card(s) at the top (groups with empty label) -->
       <template v-for="(group, index) in ungroupedGroups" :key="'ungrouped-' + index">
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
           <div v-for="card in group.cards" :key="card.card_data.id">
-            <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
-              :commander-color-identity="commanderColorIdentity"
+            <ListCard :card="card" :is-deck-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
+              :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
               :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
               :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
               @remove="(cardId: string) => emit('removeCard', cardId)"
@@ -47,8 +47,8 @@
           <div :id="groupToId(group.label)"
             class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
             <div v-for="card in group.cards" :key="card.card_data.id">
-              <ListCard :card="card" :is-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
-                :commander-color-identity="commanderColorIdentity"
+              <ListCard :card="card" :is-deck-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
+                :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
                 :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
                 :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
                 @remove="(cardId: string) => emit('removeCard', cardId)"
@@ -90,7 +90,8 @@
         <template v-for="(group, index) in sideboardUngrouped" :key="'sb-ungrouped-' + index">
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
             <div v-for="card in group.cards" :key="card.card_data.id">
-              <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+              <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+                :commander-color-identity="commanderColorIdentity"
                 :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
                 :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
                 @remove="(cardId: string) => emit('removeCard', cardId)"
@@ -108,7 +109,8 @@
           <template v-for="group in sideboardLabeled" :key="group.label" #[group.label]>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
               <div v-for="card in group.cards" :key="card.card_data.id">
-                <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+                <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+                  :commander-color-identity="commanderColorIdentity"
                   :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
                   :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
                   @remove="(cardId: string) => emit('removeCard', cardId)"
@@ -140,7 +142,8 @@
         <template v-for="(group, index) in consideringUngrouped" :key="'con-ungrouped-' + index">
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
             <div v-for="card in group.cards" :key="card.card_data.id">
-              <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+              <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+                :commander-color-identity="commanderColorIdentity"
                 :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
                 :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
                 @remove="(cardId: string) => emit('removeCard', cardId)"
@@ -158,7 +161,8 @@
           <template v-for="group in consideringLabeled" :key="group.label" #[group.label]>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
               <div v-for="card in group.cards" :key="card.card_data.id">
-                <ListCard :card="card" :is-commander="false" :commander-color-identity="commanderColorIdentity"
+                <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+                  :commander-color-identity="commanderColorIdentity"
                   :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
                   :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
                   @remove="(cardId: string) => emit('removeCard', cardId)"
@@ -179,6 +183,7 @@
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import type { AccordionItem } from '@nuxt/ui';
+import { useCommandersSet } from '~/composables/useBulkData';
 
 const props = defineProps<{
   isLoading: boolean;
@@ -191,6 +196,13 @@ const props = defineProps<{
   sideboardGroups?: CardGroup[] | null;
   consideringGroups?: CardGroup[] | null;
 }>();
+
+const { data: commandersSet } = useCommandersSet();
+
+function isCommanderCard(card: Card): boolean {
+  if (!card?.card_data?.name || !commandersSet.value) return false;
+  return commandersSet.value.has(card.card_data.name);
+}
 
 const ungroupedGroups = computed(() => {
   if (!props.groups) return [];
