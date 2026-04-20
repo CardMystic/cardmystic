@@ -8,7 +8,7 @@
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults ?? []" :query-param="queryParam || 'top'"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="`Showing the most popular ${platformName} commanders across all decks.`"
           :hide-thumbs-down-button="true" />
       </div>
@@ -90,6 +90,5 @@ const topCommandersSearch = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || 100);
 const { searchResults, isLoading, error: searchError } = useTopCommandersSearch(topCommandersSearch);
 </script>

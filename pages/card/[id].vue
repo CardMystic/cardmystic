@@ -322,7 +322,7 @@
                     @click="getRecommendations">Go To Full Search Page</button>
                 </div>
                 <SearchResults :is-loading="isRecommendedCardsEffectivelyLoading"
-                  :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
+                  :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true" default-group-by="type" />
               </template>
 
@@ -335,7 +335,7 @@
                     To Full Search Page</button>
                 </div>
                 <SearchResults :is-loading="isPopularCardsEffectivelyLoading"
-                  :search-results="popularCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
+                  :search-results="popularCards ?? undefined" :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true" default-group-by="type" />
               </template>
 
@@ -348,8 +348,8 @@
                     To Full Search Page</button>
                 </div>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
-                  :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-                  default-group-by="type" :is-similarity-search="true" hide-searched-card />
+                  :query-param="cardName ?? null" :hide-thumbs-down-button="true" default-group-by="type"
+                  :is-similarity-search="true" hide-searched-card />
               </template>
 
               <template #popular-commanders>
@@ -366,7 +366,7 @@
                 </div>
                 <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
                   :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
-                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
+                  :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
               </template>
             </UTabs>
           </UCard>
@@ -388,7 +388,7 @@
                 </div>
                 <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
                   :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
-                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
+                  :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
               </template>
 
               <template #similar>
@@ -400,8 +400,8 @@
                     To Full Search Page</button>
                 </div>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
-                  :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-                  default-group-by="type" :is-similarity-search="true" hide-searched-card />
+                  :query-param="cardName ?? null" :hide-thumbs-down-button="true" default-group-by="type"
+                  :is-similarity-search="true" hide-searched-card />
               </template>
             </UTabs>
           </UCard>

@@ -8,8 +8,8 @@
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="commanderParam || ''"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message" :help-text="helpText"
-          :hide-thumbs-down-button="true" default-group-by="type" />
+          :error-message="searchError?.message" :help-text="helpText" :hide-thumbs-down-button="true"
+          default-group-by="type" />
       </div>
     </div>
   </UContainer>
@@ -111,6 +111,5 @@ const searchParams = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || 100);
 const { searchResults, isLoading, error: searchError } = usePopularByCommander(searchParams);
 </script>

@@ -34,7 +34,8 @@
         <UAccordion type="multiple" v-model="openAccordionValues" :items="accordionItems"
           :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
           <template v-for="group in groupedResults" :key="group.label" #[group.label]>
-            <div :id="groupToId(group.label)" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-4">
+            <div :id="groupToId(group.label)"
+              class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 pb-4">
               <div v-for="(result, index) in group.cards" :key="result.card_data.id">
                 <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                   :hide-thumbs-down-button="hideThumbsDownButton"
@@ -107,11 +108,11 @@ function checkIsCommander(card: Card): boolean {
   return commandersSet.value.has(card.card_data.name);
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   isLoading: boolean;
   searchResults: undefined | Card[];
   queryParam: string | null;
-  skeletonCount: number;
+  skeletonCount?: number;
   helpText?: string;
   errorMessage?: string;
   isSimilaritySearch?: boolean;
@@ -120,7 +121,9 @@ const props = defineProps<{
   hideSearchedCard?: boolean;
   hideThumbsDownButton?: boolean;
   defaultGroupBy?: string;
-}>();
+}>(), {
+  skeletonCount: 40,
+});
 
 // Sorting state
 const sortBy = ref<string | undefined>(undefined);

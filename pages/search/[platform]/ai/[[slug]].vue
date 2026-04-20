@@ -15,7 +15,7 @@
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading ${platformName} results...` : `Please enter a search query to find ${platformName} cards.`" />
       </div>
 
@@ -124,7 +124,6 @@ const wordSearch = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || (seoEntry ? 40 : 20));
 const { searchResults, isLoading, error: searchError } = useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();

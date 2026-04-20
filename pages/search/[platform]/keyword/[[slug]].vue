@@ -15,7 +15,7 @@
       <div class="mb-10 w-full">
         <!-- Results -->
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading ${platformName} keyword results...` : `Try describing what the card does or listing mechanics or types.`"
           :hide-thumbs-down-button="true" :hide-progress-bar="true" />
       </div>
@@ -124,7 +124,6 @@ const keywordSearch = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || (seoEntry ? 40 : 20));
 const { searchResults, isLoading, error: searchError } = useKeywordSearch(keywordSearch);
 
 const { saveSearchQuery } = useSearchType();

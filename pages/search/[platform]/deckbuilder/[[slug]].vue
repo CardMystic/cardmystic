@@ -27,8 +27,7 @@
       <div class="mb-10 w-full">
         <!-- Results -->
         <SearchResults :show-add-to-deckbuilder-button="true" :is-loading="isLoading" :search-results="searchResults"
-          :query-param="decklistParam" :skeleton-count="skeletonCount" :hide-thumbs-down-button="true"
-          :error-message="searchError?.message"
+          :query-param="decklistParam" :hide-thumbs-down-button="true" :error-message="searchError?.message"
           :help-text="`Paste a decklist above to get ${platformName} card recommendations.`" default-group-by="type" />
       </div>
 
@@ -130,8 +129,6 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
     filters: parsedFilters.value,
   };
 });
-
-const skeletonCount = ref(20);
 
 // Seed the deckbuilder with the initial decklist from the URL
 if (decklistParam.value) deckbuilderDecklist.value = decklistParam.value;

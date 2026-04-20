@@ -15,7 +15,7 @@
       <div class="mb-10 w-full">
         <!-- Results -->
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading similar cards...` : `Please enter a card name to search for similar ${platformName} cards.`"
           :is-similarity-search="true" :hide-thumbs-down-button="true" />
       </div>
@@ -125,7 +125,6 @@ const similaritySearch = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || 20);
 const { searchResults, isLoading, error: searchError } = useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
