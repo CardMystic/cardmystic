@@ -47,7 +47,7 @@
       <!-- Copy Count Badge (left side, hidden for commanders) -->
       <span v-if="!isCommander" class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{ numCopies
         ?? 1
-      }}</span>
+        }}</span>
 
       <!-- Menu Overlay (left side, below badge) -->
       <div v-if="!isCommander" class="list-card-menu-overlay">
