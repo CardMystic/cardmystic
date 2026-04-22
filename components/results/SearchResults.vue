@@ -1,6 +1,6 @@
 <template>
   <!-- Results -->
-  <div class="mt-3 w-full">
+  <div class="mt-3 w-full" :class="{ 'pb-24': jumpToGroups.length > 0 }">
     <template v-if="isLoading">
       <div style="height: 32px"></div> <!-- Sort spacer to prevent layout shift -->
       <div v-if="defaultGroupBy" style="height: 26px"></div> <!-- Spacer for expand all/collapse all buttons -->
@@ -116,9 +116,11 @@
     </template>
   </div>
 
-  <Teleport to="body">
-    <LazyJumpTo :groups="(groupedResults || []).filter(g => g.label).map(g => g.label)" />
-  </Teleport>
+  <LazyStickyActionFooter :show="jumpToGroups.length > 0">
+    <template #right>
+      <LazyJumpTo :groups="jumpToGroups" />
+    </template>
+  </LazyStickyActionFooter>
 </template>
 
 <script lang="ts" setup>
@@ -222,6 +224,10 @@ const groupedResults = computed<CardGroup[] | null>(() => {
 
   return groupAndSortCards(props.searchResults, groupBy.value, sortBy.value, sortDirection.value);
 });
+
+const jumpToGroups = computed(() =>
+  (groupedResults.value || []).filter(group => group.label).map(group => group.label)
+);
 
 const accordionItems = computed<AccordionItem[]>(() => {
   if (!groupedResults.value) return [];

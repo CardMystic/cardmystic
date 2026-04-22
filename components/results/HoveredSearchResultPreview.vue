@@ -231,15 +231,18 @@ function findSimilarCards() {
 }
 
 function getRecommendations() {
-  if (!props.card?.card_data?.name) return;
-  const queryParams = { commander: props.card.card_data.name };
+  const commanderName = props.card?.card_data?.name;
+  if (!commanderName) return;
+  const queryParams = { commander: commanderName };
   saveSearchQuery('recommend', queryParams);
-  saveSearchMutation.mutate({
-    query: props.card.card_data.name,
-    searchType: 'recommend',
-    filters: { commander: props.card.card_data.name },
-  });
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: commanderName,
+      searchType: 'recommend',
+      filters: { commander: commanderName },
+    });
+  });
 }
 
 function viewPopularCards() {

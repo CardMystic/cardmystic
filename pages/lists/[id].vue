@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto py-8 relative z-10">
+  <div class="mx-auto py-8 relative z-10" :class="{ 'pb-24': showStickyFooter }">
     <!-- Page Background Image (blurred, behind all content) -->
     <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
       <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20 blur-sm"
@@ -88,9 +88,14 @@
 
   <BackToTop />
 
-  <DeckStats :card-count="totalCardCount" :total-price="totalPrice" @buy="openMassEntry" />
-
-  <JumpTo :groups="jumpToGroups" :board-sections="jumpToBoardSections" @jump-board="handleJumpBoard" />
+  <StickyActionFooter :show="showStickyFooter">
+    <template #left>
+      <DeckStats :card-count="mainDeckCardCount" :total-price="totalPrice" @buy="openMassEntry" />
+    </template>
+    <template #right>
+      <JumpTo :groups="jumpToGroups" :board-sections="jumpToBoardSections" @jump-board="handleJumpBoard" />
+    </template>
+  </StickyActionFooter>
 
 
 </template>
@@ -279,6 +284,10 @@ const jumpToBoardSections = computed(() => {
   return sections;
 });
 
+const showStickyFooter = computed(() => {
+  return totalCardCount.value > 0 || jumpToGroups.value.length > 0 || jumpToBoardSections.value.length > 1;
+});
+
 const cardListResultsRef = ref<{ expandBoard: (board: 'Sideboard' | 'Considering') => void } | null>(null);
 
 function handleJumpBoard(board: string) {
@@ -436,17 +445,18 @@ function goToRecommend() {
     query.partnerCommander = commanderNamesList[1]
   }
 
-  saveSearchMutation.mutate({
-    query: recommendDescription.value.trim() || '',
-    searchType: 'recommend',
-    filters: {
-      commander: commanderNamesList[0] || undefined,
-      partnerCommander: commanderNamesList[1] || undefined,
-      decklist: decklist || undefined,
-    },
-  })
-
   router.push({ path: '/search/all/deckbuilder', query })
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: recommendDescription.value.trim() || '',
+      searchType: 'recommend',
+      filters: {
+        commander: commanderNamesList[0] || undefined,
+        partnerCommander: commanderNamesList[1] || undefined,
+        decklist: decklist || undefined,
+      },
+    })
+  })
 }
 
 const { data: rawCards, status: cardsQueryStatus } = useCardNames()
@@ -587,6 +597,15 @@ const totalCardCount = computed(() => {
   if (!cards.value || cards.value.length === 0) return 0
   return cards.value.reduce((sum: number, card: any) => {
     return sum + (listItemsMap.value[card.card_data.id]?.num_copies ?? 1)
+  }, 0)
+})
+
+const mainDeckCardCount = computed(() => {
+  if (!cards.value || cards.value.length === 0) return 0
+  return cards.value.reduce((sum: number, card: any) => {
+    const board = listItemsMap.value[card.card_data.id]?.board ?? 'Mainboard'
+    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1
+    return board === 'Mainboard' ? sum + copies : sum
   }, 0)
 })
 

@@ -71,7 +71,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -765,15 +765,18 @@ function findSimilarCards() {
 }
 
 function getRecommendations() {
-  if (!card.value?.name) return;
-  const queryParams = { commander: card.value.name };
+  const commanderName = card.value?.name;
+  if (!commanderName) return;
+  const queryParams = { commander: commanderName };
   saveSearchQuery('recommend', queryParams);
-  saveSearchMutation.mutate({
-    query: card.value.name,
-    searchType: 'recommend',
-    filters: { commander: card.value.name },
-  });
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: commanderName,
+      searchType: 'recommend',
+      filters: { commander: commanderName },
+    });
+  });
 }
 
 function viewPopularCards() {

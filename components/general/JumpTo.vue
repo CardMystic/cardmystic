@@ -1,9 +1,7 @@
 <template>
-  <div v-if="groups.length > 0 || boardSections.length > 1"
-    class="jump-to-container xl:ml-2 xl:bg-elevated xl:p-2 xl:rounded-md xl:border-2 xl:border-secondary"
-    :style="{ bottom: bottomOffset + 'px' }">
+  <div v-if="hasJumpTargets" class="jump-to-content xl:ml-2">
     <!-- Desktop: show all group buttons inline -->
-    <div class="hidden xl:flex items-center gap-1 flex-wrap max-w-[500px]">
+    <div class="hidden xl:flex items-center gap-1 flex-wrap">
       <UIcon name="i-lucide-map-pin" class="text-primary mr-0" />
       <template v-if="boardSections.length > 1">
         <UButton v-for="section in boardSections" :key="'board-' + section" :label="section" size="xs" color="primary"
@@ -50,18 +48,12 @@ const emit = defineEmits<{
 
 const mobileOpen = ref(false);
 const mobileContainer = ref<HTMLElement | null>(null);
-const visible = ref(false);
-const bottomOffset = ref(8);
-const minBottom = 8;
-const footerGap = 12;
+const hasJumpTargets = computed(() => props.groups.length > 0 || props.boardSections.length > 1);
 
 const jumpToVisible = useJumpToVisible();
 
-watch(() => props.groups, (groups) => {
-  jumpToVisible.value = groups.length > 0 || (props.boardSections?.length ?? 0) > 1;
-  if (import.meta.client) {
-    nextTick(updatePosition);
-  }
+watch(hasJumpTargets, (value) => {
+  jumpToVisible.value = value;
 }, { immediate: true });
 
 onUnmounted(() => {
@@ -113,27 +105,6 @@ function scrollToElement(el: Element) {
   window.scrollTo({ top, behavior: 'smooth' });
 }
 
-function updatePosition() {
-  const scrollY = window.scrollY;
-  visible.value = scrollY > 300;
-
-  const footer = document.querySelector('footer');
-  if (!footer) {
-    bottomOffset.value = minBottom;
-    return;
-  }
-
-  const footerRect = footer.getBoundingClientRect();
-  const viewportHeight = window.innerHeight;
-
-  // If footer is visible in viewport, push JumpTo above it
-  if (footerRect.top < viewportHeight) {
-    bottomOffset.value = viewportHeight - footerRect.top + footerGap;
-  } else {
-    bottomOffset.value = minBottom;
-  }
-}
-
 function handleClickOutside(e: MouseEvent) {
   if (mobileContainer.value && !mobileContainer.value.contains(e.target as Node)) {
     mobileOpen.value = false;
@@ -142,27 +113,20 @@ function handleClickOutside(e: MouseEvent) {
 
 onMounted(() => {
   if (import.meta.client) {
-    window.addEventListener('scroll', updatePosition, { passive: true });
-    window.addEventListener('resize', updatePosition, { passive: true });
     document.addEventListener('click', handleClickOutside);
-    updatePosition();
   }
 });
 
 onUnmounted(() => {
   if (import.meta.client) {
-    window.removeEventListener('scroll', updatePosition);
-    window.removeEventListener('resize', updatePosition);
     document.removeEventListener('click', handleClickOutside);
   }
 });
 </script>
 
 <style scoped>
-.jump-to-container {
-  position: fixed;
-  right: 8px;
-  z-index: 9998;
-  transition: bottom 0.15s ease;
+.jump-to-content {
+  width: max-content;
+  max-width: 100%;
 }
 </style>

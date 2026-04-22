@@ -30,7 +30,7 @@
         <span class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{
           numCopies
           ?? 1
-        }}</span>
+          }}</span>
 
 
         <UDropdownMenu :items="cardOverlayMenuItems">
@@ -276,12 +276,14 @@ function getRecommendations() {
   if (!props.card?.card_data?.name) return;
   const queryParams = { commander: props.card.card_data.name };
   saveSearchQuery('recommend', queryParams);
-  saveSearchMutation.mutate({
-    query: props.card.card_data.name,
-    searchType: 'recommend',
-    filters: { commander: props.card.card_data.name },
-  });
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: props.card.card_data.name,
+      searchType: 'recommend',
+      filters: { commander: props.card.card_data.name },
+    });
+  });
 }
 
 function viewPopularCards() {
