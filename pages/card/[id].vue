@@ -71,7 +71,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -791,11 +791,29 @@ const isSimilarCardsEffectivelyLoading = computed(() => {
   return isSimilarCardsLoading.value || (!similarCards.value && !!cardName.value);
 });
 
-// Filter out the first card (the card being viewed) from similar cards
+// Filter out the currently viewed card from similar cards.
+// Do not rely on API ordering; exclude by ID and fallback by exact name.
 const filteredSimilarCards = computed(() => {
-  if (!similarCards.value || similarCards.value.length <= 1) return undefined;
-  const [, ...rest] = similarCards.value;
-  return rest;
+  if (!similarCards.value?.length) return undefined;
+
+  const currentCardId = card.value?.id;
+  const currentCardName = card.value?.name?.toLowerCase();
+
+  const filtered = similarCards.value.filter((result) => {
+    const resultId = result.card_data?.id;
+    if (currentCardId && resultId === currentCardId) {
+      return false;
+    }
+
+    const resultName = (result.card_data?.name || result.card_name || '').toLowerCase();
+    if (currentCardName && resultName === currentCardName) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return filtered.length ? filtered : undefined;
 });
 
 // Commander detection — deferred to post-mount so SSR and client hydration both start as false,
