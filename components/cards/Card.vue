@@ -1,7 +1,7 @@
 <template>
   <UCard variant="subtle"
     :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
-    :ui="{ body: 'p-1 sm:p-4' }">
+    :ui="{ body: 'p-1 sm:p-2' }">
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -95,46 +95,6 @@
 
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
-
-      <!-- Partner: show both names and combined type line -->
-      <template v-if="hasPartner && showCardInfo">
-        <div v-for="scryfallCard in [card.card_data, card.partner_card_data!]" :key="scryfallCard.id"
-          class="flex flex-row items-center justify-between w-full">
-          <p class="whitespace-nowrap overflow-hidden truncate">
-            {{ scryfallCard.name?.split(' // ')[0] }}
-          </p>
-          <ManaCost v-if="scryfallCard.mana_cost" :manaCost="scryfallCard.mana_cost.split(' // ')[0]"
-            class="manacost-text whitespace-nowrap" />
-        </div>
-        <div class="flex flex-row items-center justify-between w-full text-xs">
-          <p class="whitespace-nowrap overflow-hidden truncate">
-            <span style="color: #ff4500;">
-              {{ getSimpleCardType(card.card_data.type_line) }} &amp; {{
-                getSimpleCardType(card.partner_card_data!.type_line) }}
-            </span>
-          </p>
-        </div>
-      </template>
-
-      <!-- Single card: original layout -->
-      <template v-else>
-        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-            {{ card.card_data.name.split(' // ')[0] }}
-          </p>
-          <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
-            class="manacost-text whitespace-nowrap" />
-        </div>
-        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
-          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-            <span
-              :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
-              {{ getSimpleCardType(card.card_data.type_line) ?? "" }}
-            </span>
-          </p>
-        </div>
-      </template>
-
       <!-- Action Buttons -->
       <div class="flex flex-row items-center justify-between text-center w-full mt-1">
 

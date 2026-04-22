@@ -2,15 +2,14 @@
   <div class="mt-3 w-full">
     <!-- Loading State -->
     <template v-if="isLoading">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
-        <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
-      </div>
+      <CardListResultsSkeleton />
     </template>
 
     <!-- Cards display -->
     <template v-else-if="hasAnyCards">
       <div class="results-layout xl:flex xl:items-start xl:gap-6">
-        <aside v-if="previewCard" class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start">
+        <aside v-if="previewCard" class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
+          @mouseenter="clearPendingPreviewCard()">
           <div class="preview-sticky">
             <HoveredListCardPreview :card="previewCard"
               :is-deck-commander="commanderCardIds?.includes(previewCard.card_data.id) ?? false"
@@ -34,14 +33,14 @@
               <div class="board-divider-line"></div>
               <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' :
                 'cards'
-                }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+              }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
               <div class="board-divider-line"></div>
             </div>
             <!-- Commander card(s) at the top (groups with empty label) -->
             <template v-for="(group, index) in ungroupedGroups" :key="'ungrouped-' + index">
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4">
                 <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                  @focusin="setPreviewCard(card)">
+                  @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
                   <ListCard :card="card" :is-deck-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
                     :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
                     :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
@@ -67,9 +66,9 @@
               :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
               <template v-for="group in labeledGroups" :key="group.label" #[group.label]>
                 <div :id="groupToId(group.label)"
-                  class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2">
                   <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)">
+                    @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
                     <ListCard :card="card" :is-deck-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
                       :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
                       :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
@@ -100,9 +99,9 @@
             <UCard variant="outline" v-show="sideboardExpanded" class="mb-4">
               <!-- Ungrouped sideboard cards -->
               <template v-for="(group, index) in sideboardUngrouped" :key="'sb-ungrouped-' + index">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4">
                   <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)">
+                    @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
                     <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
                       :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
@@ -120,9 +119,9 @@
                 :items="sideboardAccordionItems"
                 :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
                 <template v-for="group in sideboardLabeled" :key="group.label" #[group.label]>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2">
                     <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                      @focusin="setPreviewCard(card)">
+                      @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
                       <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
                         :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
@@ -155,9 +154,9 @@
             <UCard variant="outline" v-show="consideringExpanded" class="mb-4">
               <!-- Ungrouped considering cards -->
               <template v-for="(group, index) in consideringUngrouped" :key="'con-ungrouped-' + index">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4">
                   <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)">
+                    @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
                     <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
                       :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
@@ -175,9 +174,9 @@
                 :items="consideringAccordionItems"
                 :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
                 <template v-for="group in consideringLabeled" :key="group.label" #[group.label]>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 p-2">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2">
                     <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                      @focusin="setPreviewCard(card)">
+                      @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
                       <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
                         :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
@@ -221,7 +220,6 @@ import { useCommandersSet } from '~/composables/useBulkData';
 const props = defineProps<{
   isLoading: boolean;
   groups: CardGroup[] | null;
-  skeletonCount?: number;
   commanderCardIds?: string[] | null;
   commanderColorIdentity?: string[] | null;
   listItemsMap?: Record<string, { num_copies: number; board: string }>;
@@ -256,7 +254,7 @@ const accordionItems = computed<AccordionItem[]>(() => {
   return labeledGroups.value.map(g => ({
     label: g.label,
     value: g.label,
-    slot: g.label as any,
+    slot: g.label,
   }));
 });
 
@@ -276,7 +274,7 @@ const sideboardUngrouped = computed(() => {
   return props.sideboardGroups.filter(g => !g.label);
 });
 const sideboardAccordionItems = computed<AccordionItem[]>(() => {
-  return sideboardLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label as any }));
+  return sideboardLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label }));
 });
 const sideboardExpanded = ref(false);
 const openSideboardValues = ref<string[]>([]);
@@ -294,7 +292,7 @@ const consideringUngrouped = computed(() => {
   return props.consideringGroups.filter(g => !g.label);
 });
 const consideringAccordionItems = computed<AccordionItem[]>(() => {
-  return consideringLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label as any }));
+  return consideringLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label }));
 });
 const consideringExpanded = ref(false);
 const openConsideringValues = ref<string[]>([]);
@@ -333,9 +331,51 @@ watch(previewCandidates, (cards) => {
   }
 }, { immediate: true });
 
-function setPreviewCard(card: Card) {
-  hoveredCardId.value = card.card_data.id;
+const HOVER_PREVIEW_DELAY_MS = 200;
+let _hoverRafId: number | null = null;
+let _hoverDelayId: ReturnType<typeof setTimeout> | null = null;
+let _pendingPreviewCardId: string | null = null;
+
+function clearPendingPreviewCard(cardId?: string) {
+  if (cardId && _pendingPreviewCardId !== cardId) return;
+
+  if (_hoverDelayId !== null) {
+    clearTimeout(_hoverDelayId);
+    _hoverDelayId = null;
+  }
+  if (_hoverRafId !== null) {
+    cancelAnimationFrame(_hoverRafId);
+    _hoverRafId = null;
+  }
+  _pendingPreviewCardId = null;
 }
+
+function setPreviewCard(card: Card) {
+  const nextCardId = card.card_data.id;
+  // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
+  if (nextCardId === hoveredCardId.value) return;
+
+  _pendingPreviewCardId = nextCardId;
+
+  // Keep a short hover-intent delay so moving toward the preview rail doesn't swap cards instantly.
+  if (_hoverDelayId !== null) clearTimeout(_hoverDelayId);
+  _hoverDelayId = setTimeout(() => {
+    if (_pendingPreviewCardId !== nextCardId) return;
+    // Coalesce committed updates to one paint frame.
+    if (_hoverRafId !== null) cancelAnimationFrame(_hoverRafId);
+    _hoverRafId = requestAnimationFrame(() => {
+      if (_pendingPreviewCardId !== nextCardId) return;
+      hoveredCardId.value = nextCardId;
+      _pendingPreviewCardId = null;
+      _hoverRafId = null;
+    });
+    _hoverDelayId = null;
+  }, HOVER_PREVIEW_DELAY_MS);
+}
+
+onUnmounted(() => {
+  clearPendingPreviewCard();
+});
 
 const emit = defineEmits<{
   (e: 'removeCard', cardId: string): void;

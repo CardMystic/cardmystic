@@ -53,15 +53,13 @@
     <!-- Cards Results -->
     <ClientOnly>
       <CardListResults ref="cardListResultsRef" class="mb-8" :isLoading="loading" :groups="cardGroups"
-        :skeletonCount="20" :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
+        :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
         :list-items-map="listItemsMap" :format="list?.format" :sideboard-groups="sideboardGroups"
         :considering-groups="consideringGroups" @removeCard="handleRemoveCard" @setCommander="handleSetCommander"
         @clearCommander="handleClearCommander" @updateNumCopies="handleUpdateNumCopies"
         @changeBoard="handleChangeBoard" />
       <template #fallback>
-        <div class="mt-3 w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
-          <CardSkeleton v-for="i in 20" :key="`skeleton-${i}`" :showCardInfo="true" />
-        </div>
+        <CardListResultsSkeleton />
       </template>
     </ClientOnly>
   </div>

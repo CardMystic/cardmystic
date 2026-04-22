@@ -1,7 +1,7 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full pt-4 flex flex-col items-center">
-      <StatsSearch default-stats-type="popular-by-commander" class="mt-6 max-w-7xl" />
+      <StatsSearch default-stats-type="popular-by-commander" class="mt-6 max-w-5xl" />
 
       <SearchAbout type="popular-by-commander" />
 

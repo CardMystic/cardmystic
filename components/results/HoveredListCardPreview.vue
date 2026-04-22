@@ -141,6 +141,11 @@ const emit = defineEmits<{
 
 const isFlipped = ref(false);
 const showCommanderModal = ref(false);
+
+// Reset flip state when the previewed card changes
+watch(() => props.card?.card_data.id, () => {
+  isFlipped.value = false;
+});
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
 const setCopiesInputValue = ref('');
