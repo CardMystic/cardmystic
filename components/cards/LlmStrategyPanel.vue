@@ -58,10 +58,13 @@
       <div v-if="combinedSummary">
         <p class="summary-text">{{ combinedSummary }}</p>
 
-        <div v-if="summaryRoles.length" class="roles-wrap">
-          <UBadge v-for="role in summaryRoles" :key="role" color="primary" variant="subtle" size="sm"
-            class="role-badge">
+        <div v-if="cardRoles.length" class="roles-wrap">
+          <UBadge v-for="role in cardRoles" :key="role" color="primary" variant="subtle" size="sm" class="role-badge">
             {{ role }}
+          </UBadge>
+          <UBadge v-for="sentiment in cardSentiment" :key="sentiment" color="info" variant="subtle" size="sm"
+            class="role-badge">
+            {{ sentiment }}
           </UBadge>
         </div>
       </div>
@@ -152,9 +155,16 @@ const formatMeters = computed(() => {
     .slice(0, 3);
 });
 
-const summaryRoles = computed(() => {
+const cardRoles = computed(() => {
   return (props.llm.roles || [])
     .map(role => role.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+});
+
+const cardSentiment = computed(() => {
+  return (props.llm.community_sentiment || [])
+    .map(sentiment => sentiment.trim())
     .filter(Boolean)
     .slice(0, 5);
 });
