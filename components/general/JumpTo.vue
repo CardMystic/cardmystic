@@ -2,13 +2,13 @@
   <div v-if="hasJumpTargets" class="jump-to-content xl:ml-2">
     <!-- Desktop: show all group buttons inline -->
     <div class="hidden xl:flex items-center gap-1 flex-wrap">
-      <UIcon name="i-lucide-map-pin" class="text-primary mr-0" />
+      <UIcon name="i-lucide-map-pin" size="20" class="text-primary mr-0" />
       <template v-if="boardSections.length > 1">
-        <UButton v-for="section in boardSections" :key="'board-' + section" :label="section" size="xs" color="primary"
+        <UButton v-for="section in boardSections" :key="'board-' + section" :label="section" size="sm" color="primary"
           variant="soft" class="cursor-pointer" @click="scrollToBoard(section)" />
         <div v-if="groups.length > 0" class="w-px h-4 bg-gray-500/30 mx-0.5"></div>
       </template>
-      <UButton v-for="group in groups" :key="group" :label="group" size="xs" color="neutral" variant="soft"
+      <UButton v-for="group in groups" :key="group" :label="group" size="sm" color="neutral" variant="soft"
         class="cursor-pointer" @click="scrollToGroup(group)" />
     </div>
 

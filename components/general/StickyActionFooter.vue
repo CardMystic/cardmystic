@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="show" class="sticky-footer-wrap">
+    <div v-if="show && !nearPageBottom" class="sticky-footer-wrap">
       <div class="sticky-footer-shell" :class="shellLayoutClass">
         <div class="max-w-[1900px] flex justify-center items-center gap-8">
           <div v-if="hasLeftSlot" class="flex grow justify-end">
@@ -31,6 +31,33 @@ const shellLayoutClass = computed(() => {
   if (hasLeftSlot.value) return 'justify-start';
   return 'justify-end';
 });
+
+const nearPageBottom = ref(false);
+const BOTTOM_THRESHOLD = 250;
+
+function checkScrollPosition() {
+  if (!import.meta.client) return;
+
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight;
+  const windowHeight = window.innerHeight;
+  const distanceFromBottom = docHeight - (scrollTop + windowHeight);
+
+  nearPageBottom.value = distanceFromBottom < BOTTOM_THRESHOLD;
+}
+
+onMounted(() => {
+  if (import.meta.client) {
+    window.addEventListener('scroll', checkScrollPosition, { passive: true });
+    checkScrollPosition();
+  }
+});
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('scroll', checkScrollPosition);
+  }
+});
 </script>
 
 <style scoped>
@@ -53,15 +80,13 @@ const shellLayoutClass = computed(() => {
   background: color-mix(in oklab, var(--ui-bg) 92%, transparent);
   backdrop-filter: blur(10px);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);
-  padding: 8px max(8px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 8px) max(8px, env(safe-area-inset-left));
+  padding: 12px 16px;
   pointer-events: auto;
 }
 
 @media (max-width: 639px) {
   .sticky-footer-shell {
-    gap: 8px;
-    padding-top: 6px;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 6px);
+    padding: 10px 12px;
   }
 }
 </style>
