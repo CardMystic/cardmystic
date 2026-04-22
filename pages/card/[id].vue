@@ -70,7 +70,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -157,147 +157,155 @@
 
       </div>
 
-      <!-- Center: Card Details -->
-      <div class="lg:col-span-7 flex flex-col">
-        <UCard class="card-details-card">
-          <h2 class="card-title">
-            <span class="card-title-text">{{ currentName }}</span>
-            <span v-if="currentManaCost">
-              <ManaCost :manaCost="currentManaCost" class="ml-2" />
-            </span>
-          </h2>
-          <div class="set-rarity-info">
-            <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
-            <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
-            <UTooltip v-if="card.game_changer" text="Is a Commander Game Changer">
-              <UBadge size="xl" color="primary" variant="subtle">Game Changer</UBadge>
-            </UTooltip>
-          </div>
-          <p class="card-type">
-            {{ currentTypeLine }}
-          </p>
-
-          <!-- Mobile toggle button -->
-          <UButton class="lg:hidden mt-2 w-full" variant="ghost" color="neutral" size="sm"
-            :icon="showMobileDetails ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
-            @click="showMobileDetails = !showMobileDetails">
-            {{ showMobileDetails ? 'Hide Card Details' : 'Show Card Details' }}
-          </UButton>
-
-          <div v-if="currentOracleText" class="oracle-section" :class="{ 'hidden lg:block': !showMobileDetails }">
-            <div class="oracle-text">
-              <template v-for="(part, index) in formattedOracleText" :key="index">
-                <template v-if="typeof part === 'string'">{{ part }}</template>
-                <component v-else :is="part" />
-              </template>
-            </div>
-
-            <div class="stats-container" v-if="currentPower && currentToughness">
-              <div class="power-toughness">
-                Power / Toughness:
-                <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
+      <!-- Center: Card Details + LLM -->
+      <div class="lg:col-span-7">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-2">
+          <div class="lg:col-span-7 flex flex-col">
+            <UCard class="card-details-card">
+              <h2 class="card-title">
+                <span class="card-title-text">{{ currentName }}</span>
+                <span v-if="currentManaCost">
+                  <ManaCost :manaCost="currentManaCost" class="ml-2" />
+                </span>
+              </h2>
+              <div class="set-rarity-info">
+                <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
+                <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
+                <UTooltip v-if="card.game_changer" text="Is a Commander Game Changer">
+                  <UBadge size="xl" color="primary" variant="subtle">Game Changer</UBadge>
+                </UTooltip>
               </div>
+              <p class="card-type">
+                {{ currentTypeLine }}
+              </p>
+
+              <!-- Mobile toggle button -->
+              <UButton class="lg:hidden mt-2 w-full" variant="ghost" color="neutral" size="sm"
+                :icon="showMobileDetails ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                @click="showMobileDetails = !showMobileDetails">
+                {{ showMobileDetails ? 'Hide Card Details' : 'Show Card Details' }}
+              </UButton>
+
+              <div v-if="currentOracleText" class="oracle-section" :class="{ 'hidden lg:block': !showMobileDetails }">
+                <div class="oracle-text">
+                  <template v-for="(part, index) in formattedOracleText" :key="index">
+                    <template v-if="typeof part === 'string'">{{ part }}</template>
+                    <component v-else :is="part" />
+                  </template>
+                </div>
+
+                <div class="stats-container" v-if="currentPower && currentToughness">
+                  <div class="power-toughness">
+                    Power / Toughness:
+                    <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
+                  </div>
+                </div>
+
+                <div v-if="currentPrinting && card.artist" class="artist-info">
+                  <span class="artist-label">Illustrated by </span>
+                  <strong class="artist-name">{{ currentPrinting.artist }}</strong>
+                </div>
+              </div>
+            </UCard>
+
+            <!-- Action Buttons + TCGPlayer - Mobile only -->
+            <div class="flex flex-row gap-2 mt-0 mb-0 lg:hidden items-center">
+              <UTooltip v-if="isCommander" text="Get Deck Recommendations for this Commander">
+                <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
+                  class="cursor-pointer" aria-label="Get Deck Recommendations for this Commander" />
+              </UTooltip>
+              <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
+                <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
+                  class="cursor-pointer" aria-label="Popular Cards for this Commander" />
+              </UTooltip>
+              <UTooltip text="Find similar cards">
+                <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
+                  class="cursor-pointer" aria-label="Find similar cards" />
+              </UTooltip>
+              <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
+                :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
+                class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
+                rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
+                Buy {{ tcgPriceLabel }}
+              </UButton>
+              <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
+                variant="solid" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
+                aria-label="Search on TCGPlayer">
+                Search on TCGPlayer
+              </UButton>
             </div>
 
-            <div v-if="currentPrinting && card.artist" class="artist-info">
-              <span class="artist-label">Illustrated by </span>
-              <strong class="artist-name">{{ currentPrinting.artist }}</strong>
-            </div>
-          </div>
-        </UCard>
+            <!-- Price Information - Mobile only -->
+            <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card lg:hidden"
+              :class="{ 'hidden': !showMobileDetails }">
+              <div class="price-header">
+                <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
+                <h4 class="price-title">Current Prices</h4>
+              </div>
 
-        <!-- Action Buttons + TCGPlayer - Mobile only -->
-        <div class="flex flex-row gap-2 mt-0 mb-0 lg:hidden items-center">
-          <UTooltip v-if="isCommander" text="Get Deck Recommendations for this Commander">
-            <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
-              class="cursor-pointer" aria-label="Get Deck Recommendations for this Commander" />
-          </UTooltip>
-          <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
-            <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
-              class="cursor-pointer" aria-label="Popular Cards for this Commander" />
-          </UTooltip>
-          <UTooltip text="Find similar cards">
-            <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-              class="cursor-pointer" aria-label="Find similar cards" />
-          </UTooltip>
-          <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-            :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
-            class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
-            rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
-            Buy {{ tcgPriceLabel }}
-          </UButton>
-          <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-            variant="solid" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
-            aria-label="Search on TCGPlayer">
-            Search on TCGPlayer
-          </UButton>
-        </div>
-
-        <!-- Price Information - Mobile only -->
-        <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card lg:hidden"
-          :class="{ 'hidden': !showMobileDetails }">
-          <div class="price-header">
-            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
-            <h4 class="price-title">Current Prices</h4>
-          </div>
-
-          <div class="price-list">
-            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
-              <span class="currency-label">USD:</span>
-              <span class="price-value">
-                <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
-                  currentPrinting.prices.usd
-                }}
-                <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="dark:text-yellow-300 text-yellow-500">
+              <div class="price-list">
+                <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
+                  <span class="currency-label">USD:</span>
+                  <span class="price-value">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
-                      currentPrinting.prices.usd_foil
-                    }} <span class="text-sm">(Foil)</span>
+                      currentPrinting.prices.usd
+                    }}
+                    <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
+                      <span class="dark:text-yellow-300 text-yellow-500">
+                        <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
+                          currentPrinting.prices.usd_foil
+                        }} <span class="text-sm">(Foil)</span>
+                      </span>
+                    </span>
                   </span>
-                </span>
-              </span>
-            </div>
+                </div>
 
-            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
-              <span class="currency-label">EUR:</span>
-              <span class="price-value">
-                <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
-                  currentPrinting.prices.eur
-                }}
-                <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="dark:text-yellow-300 text-yellow-500">
-                    <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
-                      currentPrinting.prices.eur_foil
-                    }} <span class="text-sm">(Foil)</span>
+                <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
+                  <span class="currency-label">EUR:</span>
+                  <span class="price-value">
+                    <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
+                      currentPrinting.prices.eur
+                    }}
+                    <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
+                      <span class="dark:text-yellow-300 text-yellow-500">
+                        <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
+                          currentPrinting.prices.eur_foil
+                        }} <span class="text-sm">(Foil)</span>
+                      </span>
+                    </span>
                   </span>
-                </span>
-              </span>
-            </div>
+                </div>
 
-            <div v-if="currentPrinting.prices.tix" class="price-item">
-              <span class="currency-label">MTGO Tix:</span>
-              <span class="price-value">{{ currentPrinting.prices.tix }}</span>
-            </div>
-          </div>
-        </UCard>
-
-        <UCard class="legalities-card" :class="{ 'hidden lg:block': !showMobileDetails }">
-          <div class="legalities-header">
-            <UIcon name="i-heroicons-scale" class="w-6 h-6 text-primary mr-2" />
-            <h3 class="legalities-title">Legalities</h3>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1">
-            <div v-for="(format, name) in legalities" :key="name">
-              <div class="legality-item">
-                <UBadge class="legality-chip" :color="getLegalityColor(format)" variant="solid" size="xs">
-                  {{ format }}
-                </UBadge>
-                <span class="format-name">{{ standardizeFormatName(name) }}</span>
+                <div v-if="currentPrinting.prices.tix" class="price-item">
+                  <span class="currency-label">MTGO Tix:</span>
+                  <span class="price-value">{{ currentPrinting.prices.tix }}</span>
+                </div>
               </div>
-            </div>
+            </UCard>
+
+            <UCard class="legalities-card" :class="{ 'hidden lg:block': !showMobileDetails }">
+              <div class="legalities-header">
+                <UIcon name="i-heroicons-scale" class="w-6 h-6 text-primary mr-2" />
+                <h3 class="legalities-title">Legalities</h3>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1">
+                <div v-for="(format, name) in legalities" :key="name">
+                  <div class="legality-item">
+                    <UBadge class="legality-chip" :color="getLegalityColor(format)" variant="solid" size="xs">
+                      {{ format }}
+                    </UBadge>
+                    <span class="format-name">{{ standardizeFormatName(name) }}</span>
+                  </div>
+                </div>
+              </div>
+            </UCard>
           </div>
-        </UCard>
+
+          <div v-if="llmDetails" class="lg:col-span-5 mt-2 lg:mt-0">
+            <LlmStrategyPanel :llm="llmDetails" />
+          </div>
+        </div>
       </div>
       <div class="lg:col-span-10 flex flex-col items-center">
         <!-- Commander vs Non-commander tabs: wrapped in ClientOnly because isCommander
@@ -423,6 +431,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
+import type { LlmCardAttributes } from '~/models/llmModel';
 import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
@@ -464,7 +473,9 @@ function navigateToExplore(type: 'popular-cards' | 'popular-commanders' | 'popul
   router.push({ path: `/${type}/all`, query: saved ?? undefined });
 }
 
-const { card, printings, error, pending } = useCardDetails(cardIdParam);
+const { card, llm, printings, error, pending } = useCardDetails(cardIdParam);
+
+const llmDetails = computed<LlmCardAttributes | null>(() => llm.value?.llm ?? null);
 
 // Check if error is a 404 Not Found
 const isNotFound = computed(() => {
