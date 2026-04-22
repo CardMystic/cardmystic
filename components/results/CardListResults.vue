@@ -33,7 +33,7 @@
               <div class="board-divider-line"></div>
               <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' :
                 'cards'
-              }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+                }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
               <div class="board-divider-line"></div>
             </div>
             <!-- Commander card(s) at the top (groups with empty label) -->
