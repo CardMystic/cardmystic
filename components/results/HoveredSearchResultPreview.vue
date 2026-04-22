@@ -1,5 +1,5 @@
 <template>
-  <UCard v-if="card" variant="outline" class="preview-root" :ui="{ body: 'p-4' }">
+  <UCard v-if="card" variant="subtle" class="preview-root" :ui="{ body: 'p-4' }">
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
       :ui="{ footer: 'justify-end' }">
@@ -57,21 +57,19 @@
             </div>
           </template>
         </div>
-
-        <p v-if="priceLabel" class="preview-price">{{ priceLabel }}</p>
       </div>
 
       <div class="preview-actions">
         <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
           color="success" variant="solid" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
           rel="noopener noreferrer" :label="'Buy on TCGPlayer (' + priceLabel + ')'" block />
-        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" external color="primary" variant="outline"
+        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" external color="primary" variant="solid"
           icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer" block />
-        <UButton color="neutral" variant="outline" icon="i-mdi-cards-outline" size="lg" label="Find Similar Cards" block
+        <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" label="Find Similar Cards" block
           :disabled="isSearched" @click="findSimilarCards" />
-        <UButton v-if="isCommander" color="primary" variant="outline" icon="i-lucide-box" size="lg"
+        <UButton v-if="isCommander" color="primary" variant="solid" icon="i-lucide-box" size="lg"
           label="Get Deck Recommendations" block @click="getRecommendations" />
-        <UButton v-if="isCommander" color="error" variant="outline" icon="i-lucide-flame" size="lg"
+        <UButton v-if="isCommander" color="error" variant="solid" icon="i-lucide-flame" size="lg"
           label="Popular Cards For Commander" block @click="viewPopularCards" />
       </div>
 
@@ -270,6 +268,11 @@ function viewPopularCards() {
   aspect-ratio: 5 / 7;
   object-fit: cover;
   border-radius: 16px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.preview-image-wrapper:hover .preview-image {
+  transform: scale(1.03);
 }
 
 .preview-title {

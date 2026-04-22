@@ -1,46 +1,13 @@
 <template>
   <UCard v-if="card" variant="outline" class="preview-root" :ui="{ body: 'p-4' }">
-    <UModal v-model:open="showCommanderModal" title="Set Commander">
-      <template #body>
-        <p class="text-sm">
-          Set <span class="font-bold">{{ card.card_data.name }}</span> as your commander?
-        </p>
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Set Commander" color="primary" icon="i-lucide-crown" @click="confirmSetCommander(close)" />
-        </div>
-      </template>
-    </UModal>
+    <SetCommanderModal :open="showCommanderModal" :card-name="card.card_data.name"
+      @update:open="showCommanderModal = $event" @confirm="confirmSetCommander" />
 
-    <UModal v-model:open="showClearCommanderModal" title="Remove Commander">
-      <template #body>
-        <p class="text-sm">
-          Remove <span class="font-bold">{{ card.card_data.name }}</span> as your commander?
-        </p>
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Remove Commander" color="error" icon="i-lucide-crown" @click="confirmClearCommander(close)" />
-        </div>
-      </template>
-    </UModal>
+    <RemoveCommanderModal :open="showClearCommanderModal" :card-name="card.card_data.name"
+      @update:open="showClearCommanderModal = $event" @confirm="confirmClearCommander" />
 
-    <UModal v-model:open="showSetCopiesInput" title="Set Copies">
-      <template #body>
-        <p class="text-sm mb-3">How many copies of <span class="font-bold">{{ card.card_data.name }}</span>?</p>
-        <UInput v-model="setCopiesInputValue" type="number" min="1" max="100" autofocus @keyup.enter="confirmSetCopies"
-          @keyup.escape="showSetCopiesInput = false" />
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Set Copies" color="primary" icon="i-lucide-hash" @click="confirmSetCopies" />
-        </div>
-      </template>
-    </UModal>
+    <SetCopiesModal :open="showSetCopiesInput" :card-name="card.card_data.name" :initial-copies="numCopies ?? 1"
+      @update:open="showSetCopiesInput = $event" @confirm="confirmSetCopies" />
 
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
@@ -59,31 +26,28 @@
 
         <div class="flex flex-wrap gap-2 text-xs">
           <UBadge color="neutral" variant="subtle">{{ currentBoard }}</UBadge>
-          <UBadge v-if="isDeckCommander" color="warning" variant="subtle">Commander</UBadge>
-          <UBadge v-else-if="isCommanderCardComputed" color="primary" variant="subtle">Commander Eligible</UBadge>
-          <UBadge v-if="format" color="neutral" variant="outline">{{ format }}</UBadge>
         </div>
-
-        <p v-if="priceLabel" class="preview-price">{{ priceLabel }}</p>
       </div>
 
       <div class="preview-actions">
         <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
           color="success" variant="solid" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
-          rel="noopener noreferrer" label="Buy on TCGPlayer" block />
-        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" external color="primary" variant="outline"
+          rel="noopener noreferrer"
+          :label="card.card_data.prices.usd ? `Buy on TCGPlayer ($${card.card_data.prices.usd})` : 'Buy on TCGPlayer'"
+          block />
+        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" external color="primary" variant="solid"
           icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer" block />
-        <UButton color="neutral" variant="outline" icon="i-mdi-cards-outline" size="lg" label="Find Similar Cards" block
+        <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" label="Find Similar Cards" block
           @click="findSimilarCards" />
-        <UButton v-if="isCommanderCardComputed" color="primary" variant="outline" icon="i-lucide-box" size="lg"
+        <UButton v-if="isCommanderCardComputed" color="primary" variant="solid" icon="i-lucide-box" size="lg"
           label="Get Deck Recommendations" block @click="getRecommendations" />
-        <UButton v-if="isCommanderCardComputed" color="error" variant="outline" icon="i-lucide-flame" size="lg"
+        <UButton v-if="isCommanderCardComputed" color="error" variant="solid" icon="i-lucide-flame" size="lg"
           label="Popular Cards For Commander" block @click="viewPopularCards" />
       </div>
 
       <div class="preview-actions">
         <p class="preview-section-label">List Actions</p>
-        <div v-if="!isDeckCommander" class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <UButton color="neutral" variant="outline" icon="i-lucide-plus" label="Add Copy"
             :disabled="(numCopies ?? 1) >= 100"
             @click="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) + 1)" />
@@ -91,7 +55,7 @@
             :disabled="(numCopies ?? 1) <= 1"
             @click="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) - 1)" />
         </div>
-        <UButton v-if="!isDeckCommander" color="neutral" variant="outline" icon="i-lucide-hash" label="Set Copies" block
+        <UButton color="neutral" variant="outline" icon="i-lucide-hash" label="Set Copies" block
           @click="openSetCopiesModal" />
         <UButton v-for="boardOption in availableBoards" :key="boardOption" color="neutral" variant="outline"
           :icon="boardIcon(boardOption)" :label="`Move to ${boardOption}`" block
@@ -116,6 +80,9 @@ import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCommandersSet } from '~/composables/useBulkData';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
+import SetCommanderModal from '~/components/cards/modals/SetCommanderModal.vue';
+import RemoveCommanderModal from '~/components/cards/modals/RemoveCommanderModal.vue';
+import SetCopiesModal from '~/components/cards/modals/SetCopiesModal.vue';
 
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();
@@ -128,7 +95,6 @@ const props = defineProps<{
   isCommanderCard?: boolean;
   numCopies?: number;
   board?: string;
-  format?: string;
 }>();
 
 const emit = defineEmits<{
@@ -148,7 +114,6 @@ watch(() => props.card?.card_data.id, () => {
 });
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
-const setCopiesInputValue = ref('');
 
 const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
 
@@ -176,43 +141,27 @@ const simpleType = computed(() => {
   return `${faces[0].split(' — ')[0].trim()} // ${faces[1].split(' — ')[0].trim()}`;
 });
 
-const priceLabel = computed(() => {
-  const prices = props.card?.card_data.prices;
-  if (!prices) return '';
-  if (prices.usd) return `$${prices.usd}`;
-  if (prices.usd_foil) return `$${prices.usd_foil} foil`;
-  if (prices.eur) return `EUR ${prices.eur}`;
-  return '';
-});
-
 function flipCard() {
   isFlipped.value = !isFlipped.value;
 }
 
 function openSetCopiesModal() {
-  setCopiesInputValue.value = String(props.numCopies ?? 1);
   showSetCopiesInput.value = true;
 }
 
-function confirmSetCopies() {
+function confirmSetCopies(nextValue: number) {
   if (!props.card) return;
-  const nextValue = parseInt(setCopiesInputValue.value, 10);
-  if (!Number.isNaN(nextValue) && nextValue >= 1 && nextValue <= 100) {
-    emit('updateNumCopies', props.card.card_data.name, nextValue);
-  }
-  showSetCopiesInput.value = false;
+  emit('updateNumCopies', props.card.card_data.name, nextValue);
 }
 
-function confirmSetCommander(close: () => void) {
+function confirmSetCommander() {
   if (!props.card) return;
   emit('setCommander', props.card.card_data.name);
-  close();
 }
 
-function confirmClearCommander(close: () => void) {
+function confirmClearCommander() {
   if (!props.card) return;
   emit('clearCommander', props.card.card_data.id);
-  close();
 }
 
 function boardIcon(board: 'Mainboard' | 'Sideboard' | 'Considering') {
@@ -275,12 +224,17 @@ function viewPopularCards() {
   aspect-ratio: 5 / 7;
   object-fit: cover;
   border-radius: 16px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.preview-image-wrapper:hover .preview-image {
+  transform: scale(1.03);
 }
 
 .copy-count-pill {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 45px;
+  left: 22px;
   padding: 3px 10px;
   font-size: 0.9rem;
   font-weight: 700;

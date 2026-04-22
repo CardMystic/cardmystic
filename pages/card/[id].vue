@@ -34,7 +34,8 @@
       <UButton to="/search/all/ai" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-[max-content_minmax(0,1fr)] gap-2 relative z-10 items-start">
+    <div v-else-if="card"
+      class="grid grid-cols-1 lg:grid-cols-[max-content_minmax(0,1fr)] gap-2 relative z-10 items-start">
       <!-- Left: Card Image -->
       <div class="flex flex-col items-center lg:items-start">
         <div class="card-image-container">
@@ -70,7 +71,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -162,7 +163,7 @@
         <div class="lg:grid lg:grid-cols-12 lg:gap-2">
           <div class="lg:col-span-7 flex flex-col">
             <UCard class="card-details-card">
-              <h2 class="card-title">
+              <h2 class="card-title flex flex-row">
                 <span class="card-title-text">{{ currentName }}</span>
                 <span v-if="currentManaCost">
                   <ManaCost :manaCost="currentManaCost" class="ml-2" />
@@ -1219,6 +1220,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   position: relative
   background: var(--ui-bg)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
+  overflow: visible !important
 
   @media (max-width: 1023px)
     :deep(> div)

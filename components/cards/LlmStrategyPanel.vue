@@ -1,59 +1,72 @@
 <template>
-  <UCard class="llm-card">
-    <h3 class="llm-title">AI Strategy</h3>
+  <div class="llm-stack">
+    <UCard class="llm-card">
+      <h3 class="llm-title flex items-center gap-2">
+        <UIcon name="i-lucide-biceps-flexed" />AI Power Level
+      </h3>
 
-    <div class="power-section">
-      <div class="meter-block">
-        <div class="meter-header">
-          <span class="meter-label">Overall Power Level</span>
-          <span class="meter-value">{{ props.llm.power_level }}</span>
-        </div>
-        <UProgress :model-value="overallPowerPercent" :color="meterColor(overallPowerPercent)" size="lg" />
-      </div>
-
-      <div v-if="formatMeters.length" class="format-meters">
-        <div v-for="formatMeter in formatMeters" :key="formatMeter.name" class="meter-block">
+      <div class="power-section">
+        <div class="meter-block">
           <div class="meter-header">
-            <span class="meter-label">{{ formatMeter.name }}</span>
-            <span class="meter-value">{{ formatMeter.value }}</span>
+            <span class="meter-label">Overall Power Level</span>
+            <span class="meter-value">{{ props.llm.power_level }}</span>
           </div>
-          <UProgress :model-value="formatMeter.percent" :color="meterColor(formatMeter.percent)" size="sm" />
+          <UProgress :model-value="overallPowerPercent" :color="meterColor(overallPowerPercent)" size="lg" />
+        </div>
+
+        <div v-if="formatMeters.length" class="format-meters">
+          <div v-for="formatMeter in formatMeters" :key="formatMeter.name" class="meter-block">
+            <div class="meter-header">
+              <span class="meter-label">{{ formatMeter.name }}</span>
+              <span class="meter-value">{{ formatMeter.value }}</span>
+            </div>
+            <UProgress :model-value="formatMeter.percent" :color="meterColor(formatMeter.percent)" size="sm" />
+          </div>
         </div>
       </div>
-    </div>
+    </UCard>
 
-    <div class="chart-wrap">
-      <svg :viewBox="`0 0 ${size} ${size}`" class="radar-chart" role="img" aria-label="AI strategy radar chart">
-        <g>
-          <polygon v-for="(ring, i) in ringPolygons" :key="`ring-${i}`" :points="ring" class="ring"
-            :class="{ 'ring-outer': i === ringPolygons.length - 1 }" />
-        </g>
-
-        <g>
-          <line v-for="(pt, i) in axisPoints" :key="`axis-${i}`" :x1="center" :y1="center" :x2="pt.x" :y2="pt.y"
-            class="axis" />
-        </g>
-
-        <polygon :points="valuePolygon" class="value-fill" />
-        <polygon :points="valuePolygon" class="value-line" />
-
-        <circle v-for="(pt, i) in valuePoints" :key="`dot-${i}`" :cx="pt.x" :cy="pt.y" r="3.2" class="value-dot" />
-
-        <text v-for="(label, i) in labels" :key="`label-${i}`" :x="labelPoints[i].x" :y="labelPoints[i].y"
-          text-anchor="middle" dominant-baseline="middle" class="label">
-          {{ label }}
-        </text>
-      </svg>
-    </div>
-
-    <div v-if="combinedSummary">
-      <h4 class="summary-title flex items-center gap-2">
+    <UCard class="llm-card">
+      <h3 class="llm-title flex items-center gap-2">
         <UIcon name="i-lucide-brain" />AI Summary
-      </h4>
-      <p class="summary-text">{{ combinedSummary }}</p>
-    </div>
+      </h3>
 
-  </UCard>
+      <div class="chart-wrap">
+        <svg :viewBox="`0 0 ${size} ${size}`" class="radar-chart" role="img" aria-label="AI strategy radar chart">
+          <g>
+            <polygon v-for="(ring, i) in ringPolygons" :key="`ring-${i}`" :points="ring" class="ring"
+              :class="{ 'ring-outer': i === ringPolygons.length - 1 }" />
+          </g>
+
+          <g>
+            <line v-for="(pt, i) in axisPoints" :key="`axis-${i}`" :x1="center" :y1="center" :x2="pt.x" :y2="pt.y"
+              class="axis" />
+          </g>
+
+          <polygon :points="valuePolygon" class="value-fill" />
+          <polygon :points="valuePolygon" class="value-line" />
+
+          <circle v-for="(pt, i) in valuePoints" :key="`dot-${i}`" :cx="pt.x" :cy="pt.y" r="3.2" class="value-dot" />
+
+          <text v-for="(label, i) in labels" :key="`label-${i}`" :x="labelPoints[i].x" :y="labelPoints[i].y"
+            text-anchor="middle" dominant-baseline="middle" class="label">
+            {{ label }}
+          </text>
+        </svg>
+      </div>
+
+      <div v-if="combinedSummary">
+        <p class="summary-text">{{ combinedSummary }}</p>
+
+        <div v-if="summaryRoles.length" class="roles-wrap">
+          <UBadge v-for="role in summaryRoles" :key="role" color="primary" variant="subtle" size="sm"
+            class="role-badge">
+            {{ role }}
+          </UBadge>
+        </div>
+      </div>
+    </UCard>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -73,10 +86,13 @@ const values = computed(() => [
 
 const combinedSummary = computed(() => {
   const parts = [props.llm.one_line_summary?.trim(), props.llm.why_to_play?.trim()].filter(Boolean);
-  return parts.join(' ');
+  const summary = parts.join(' ');
+  if (summary.length <= 500) return summary;
+  return `${summary.slice(0, 497).trimEnd()}...`;
 });
 
-const size = 240;
+const chartPadding = 18;
+const size = 240 + chartPadding * 2;
 const center = size / 2;
 const radius = 78;
 const ringCount = 5;
@@ -129,7 +145,15 @@ const formatMeters = computed(() => {
       value,
       percent: toMeterPercent(value),
     }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 3);
+});
+
+const summaryRoles = computed(() => {
+  return (props.llm.roles || [])
+    .map(role => role.trim())
+    .filter(Boolean)
+    .slice(0, 5);
 });
 
 function meterColor(percent: number) {
@@ -140,17 +164,20 @@ function meterColor(percent: number) {
 </script>
 
 <style scoped lang="sass">
+.llm-stack
+  display: flex
+  flex-direction: column
+  gap: 8px
+
 .llm-card
   border-radius: 24px
   border: 1px solid rgba(147, 114, 255, 0.3)
   background: var(--ui-bg)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
-  height: 100%
 
 .llm-title
   font-size: 1.6rem
   font-weight: 700
-  margin-bottom: 8px
 
 .power-section
   display: flex
@@ -188,7 +215,6 @@ function meterColor(percent: number) {
   display: flex
   justify-content: center
   align-items: center
-  margin-bottom: 10px
 
 .radar-chart
   width: 100%
@@ -225,23 +251,24 @@ function meterColor(percent: number) {
   font-size: 11px
   font-weight: 600
 
-.summary-title
-  font-size: 1.35rem
-  font-weight: 700
-  margin-bottom: 6px
-
 .summary-text
-  font-size: 1.28rem
+  font-size: 1rem
   line-height: 1.35
   color: rgba(255, 255, 255, 0.95)
+
+.roles-wrap
+  display: flex
+  flex-wrap: wrap
+  gap: 6px
+  margin-top: 10px
+
+.role-badge
+  font-weight: 600
 
 @media (max-width: 1023px)
   .llm-title
     font-size: 1.25rem
 
-  .summary-title
-    font-size: 1.1rem
-
   .summary-text
-    font-size: 1rem
+    font-size: 0.9rem
 </style>

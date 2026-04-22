@@ -20,9 +20,10 @@
 import { computed } from 'vue';
 import { useClipboard } from '~/composables/useClipboard';
 import { useToast } from '#imports';
+import type { Card, ScryfallCard } from '~/models/cardModel';
 
 const props = defineProps<{
-  card: Record<string, any> | null;
+  card: Card | ScryfallCard | null;
   isDualFaced?: boolean;
 }>();
 
@@ -41,7 +42,7 @@ const toast = useToast();
 const resolvedCardData = computed(() => {
   if (!props.card) return null;
   // card wrapper (e.g., from search results) might have .card_data
-  if (props.card.card_data) return props.card.card_data;
+  if ('card_data' in props.card) return props.card.card_data;
   // page-level card pages may pass a ScryfallCard directly
   return props.card;
 });
@@ -92,9 +93,10 @@ function handleClipboardClick() {
   transition: opacity 0.2s;
 }
 
-/* show on parent hover */
-.card-image-container:hover .card-action-overlay:not(.clipboard-added),
-.card-image-wrapper:hover .card-action-overlay:not(.clipboard-added) {
+/* show on parent hover (parent classes live outside this scoped component) */
+:global(.card-image-container:hover .card-action-overlay:not(.clipboard-added)),
+:global(.card-image-wrapper:hover .card-action-overlay:not(.clipboard-added)),
+:global(.preview-image-wrapper:hover .card-action-overlay:not(.clipboard-added)) {
   opacity: 0.7;
 }
 

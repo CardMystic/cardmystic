@@ -3,50 +3,14 @@
     :class="['card-root', isDeckCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '', legalityWarning ? 'illegal-card-bg' : '']"
     :ui="{ body: 'p-1 sm:p-2' }">
 
-    <!-- Set Commander Confirmation Modal -->
-    <UModal v-model:open="showCommanderModal" title="Set Commander">
-      <template #body>
-        <p class="text-sm">
-          Set <span class="font-bold">{{ card.card_data.name }}</span> as your commander?
-        </p>
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Set Commander" color="primary" icon="i-lucide-crown" @click="confirmSetCommander(close)" />
-        </div>
-      </template>
-    </UModal>
+    <SetCommanderModal :open="showCommanderModal" :card-name="card.card_data.name"
+      @update:open="showCommanderModal = $event" @confirm="confirmSetCommander" />
 
-    <!-- Set Copies Modal -->
-    <UModal v-model:open="showSetCopiesInput" title="Set Copies">
-      <template #body>
-        <p class="text-sm mb-3">How many copies of <span class="font-bold">{{ card.card_data.name }}</span>?</p>
-        <UInput v-model="setCopiesInputValue" type="number" min="1" max="100" autofocus @keyup.enter="confirmSetCopies"
-          @keyup.escape="showSetCopiesInput = false" />
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Set Copies" color="primary" icon="i-lucide-hash" @click="confirmSetCopies" />
-        </div>
-      </template>
-    </UModal>
+    <SetCopiesModal :open="showSetCopiesInput" :card-name="card.card_data.name" :initial-copies="numCopies ?? 1"
+      @update:open="showSetCopiesInput = $event" @confirm="confirmSetCopies" />
 
-    <!-- Clear Commander Confirmation Modal -->
-    <UModal v-model:open="showClearCommanderModal" title="Remove Commander">
-      <template #body>
-        <p class="text-sm">
-          Remove <span class="font-bold">{{ card.card_data.name }}</span> as your commander?
-        </p>
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Remove Commander" color="error" icon="i-lucide-crown" @click="confirmClearCommander(close)" />
-        </div>
-      </template>
-    </UModal>
+    <RemoveCommanderModal :open="showClearCommanderModal" :card-name="card.card_data.name"
+      @update:open="showClearCommanderModal = $event" @confirm="confirmClearCommander" />
 
     <div class="card-image-wrapper">
       <!-- Card image -->
@@ -86,21 +50,6 @@
 
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center mt-1">
-      <div class="flex flex-row items-center justify-between w-full">
-        <p class="whitespace-nowrap overflow-hidden truncate">
-          {{ card.card_data.name.split(' // ')[0] }}
-        </p>
-        <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
-          class="manacost-text whitespace-nowrap" />
-      </div>
-      <div class="flex flex-row items-center justify-between w-full text-xs">
-        <p class="whitespace-nowrap overflow-hidden truncate">
-          <span
-            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
-            {{ getSimpleCardType(card.card_data.type_line) ?? "" }}
-          </span>
-        </p>
-      </div>
 
       <!-- Action Buttons -->
       <div class="flex flex-row items-center text-center w-full">
@@ -146,6 +95,9 @@ import { isLegal, isColorIdentityLegal, formatToLegalityKey } from '~/utils/lega
 import { useCommandersSet } from '~/composables/useBulkData';
 import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
+import SetCommanderModal from '~/components/cards/modals/SetCommanderModal.vue';
+import RemoveCommanderModal from '~/components/cards/modals/RemoveCommanderModal.vue';
+import SetCopiesModal from '~/components/cards/modals/SetCopiesModal.vue';
 
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();
@@ -175,14 +127,9 @@ const isFlipped = ref(false);
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
-const setCopiesInputValue = ref('');
 
-function confirmSetCopies() {
-  const n = parseInt(setCopiesInputValue.value);
-  if (!isNaN(n) && n >= 1 && n <= 100) {
-    emit('updateNumCopies', props.card.card_data.name, n);
-  }
-  showSetCopiesInput.value = false;
+function confirmSetCopies(numCopies: number) {
+  emit('updateNumCopies', props.card.card_data.name, numCopies);
 }
 
 const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
@@ -197,17 +144,6 @@ const isCommanderCardComputed = computed(() => {
   if (props.isCommanderCard !== undefined) return props.isCommanderCard;
   return isEligibleCommander.value;
 });
-
-const boardMenuItems = computed(() =>
-  boardOptions
-    .filter(b => b !== currentBoard.value)
-    .map(b => [{
-      label: `Move to ${b}`,
-      onSelect() {
-        emit('changeBoard', props.card.card_data.name, b);
-      },
-    }])
-);
 
 const cardOverlayMenuItems = computed(() => {
   const copies = props.numCopies ?? 1;
@@ -232,7 +168,6 @@ const cardOverlayMenuItems = computed(() => {
       label: 'Set Copies',
       icon: 'i-lucide-hash',
       onSelect() {
-        setCopiesInputValue.value = String(copies);
         showSetCopiesInput.value = true;
       },
     },
@@ -316,14 +251,12 @@ function flipCard() {
   isFlipped.value = !isFlipped.value;
 }
 
-function confirmSetCommander(close: () => void) {
+function confirmSetCommander() {
   emit('setCommander', props.card.card_data.name);
-  close();
 }
 
-function confirmClearCommander(close: () => void) {
+function confirmClearCommander() {
   emit('clearCommander', props.card.card_data.id);
-  close();
 }
 
 function navigateToCard(cardId: string | undefined) {
@@ -357,18 +290,6 @@ function getRecommendations() {
 function viewPopularCards() {
   if (!props.card?.card_data?.name) return;
   router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
-}
-
-function getSimpleCardType(type_line: string): string {
-  if (!type_line) return 'Unknown';
-  const faces = type_line.split('//');
-  if (faces.length === 1) {
-    return faces[0].split(' — ')[0].trim();
-  } else {
-    const frontType = faces[0].split(' — ')[0].trim();
-    const backType = faces[1].split(' — ')[0].trim();
-    return `${frontType} // ${backType}`;
-  }
 }
 
 function handleImageError(event: Event) {
