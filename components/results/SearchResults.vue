@@ -20,6 +20,12 @@
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
+        <GroupBy :default-value="defaultGroupBy" @update:groupBy="handleGroupBy" />
+        <SortComponent :has-als-score="hasAlsScore" :has-ai-score="hasAiScore" :has-popularity="hasPopularity"
+          @sort="handleSort" />
+      </div>
+
       <div class="results-layout xl:flex xl:items-start xl:gap-6">
         <aside v-if="previewCard" class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
           @mouseenter="clearPendingPreviewCard()">
@@ -32,11 +38,6 @@
         </aside>
 
         <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
-            <GroupBy :default-value="defaultGroupBy" @update:groupBy="handleGroupBy" />
-            <SortComponent :has-als-score="hasAlsScore" :has-ai-score="hasAiScore" :has-popularity="hasPopularity"
-              @sort="handleSort" />
-          </div>
 
           <!-- Searched card pinned at top when grouped (similarity search) -->
           <div v-if="searchedCard && groupedResults && groupedResults.length > 0 && groupedResults[0].label"
