@@ -85,7 +85,7 @@
         </span>
         <div class="board-divider-line"></div>
       </div>
-      <div v-show="sideboardExpanded" class="board-section board-section-sideboard rounded-lg p-3 mb-4">
+      <UCard variant="outline" v-show="sideboardExpanded" class="mb-4">
         <!-- Ungrouped sideboard cards -->
         <template v-for="(group, index) in sideboardUngrouped" :key="'sb-ungrouped-' + index">
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
@@ -122,7 +122,7 @@
             </div>
           </template>
         </UAccordion>
-      </div>
+      </UCard>
     </template>
 
     <!-- Considering Section -->
@@ -137,7 +137,7 @@
         </span>
         <div class="board-divider-line"></div>
       </div>
-      <div v-show="consideringExpanded" class="board-section board-section-considering rounded-lg p-3 mb-4">
+      <UCard variant="outline" v-show="consideringExpanded" class="mb-4">
         <!-- Ungrouped considering cards -->
         <template v-for="(group, index) in consideringUngrouped" :key="'con-ungrouped-' + index">
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 mb-4">
@@ -174,7 +174,7 @@
             </div>
           </template>
         </UAccordion>
-      </div>
+      </UCard>
     </template>
   </div>
 </template>
@@ -340,27 +340,5 @@ defineExpose({ expandBoard });
   color: rgba(120, 200, 120, 0.9);
   font-weight: 500;
   margin-left: 2px;
-}
-
-.board-section {
-  border: 1px solid rgba(150, 150, 150, 0.15);
-}
-
-.board-section-sideboard {
-  background: rgba(59, 130, 246, 0.04);
-}
-
-:root.dark .board-section-sideboard,
-.dark .board-section-sideboard {
-  background: rgba(59, 130, 246, 0.08);
-}
-
-.board-section-considering {
-  background: rgba(234, 179, 8, 0.04);
-}
-
-:root.dark .board-section-considering,
-.dark .board-section-considering {
-  background: rgba(234, 179, 8, 0.06);
 }
 </style>
