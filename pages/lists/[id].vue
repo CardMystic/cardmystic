@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8 relative z-10">
+  <div class="mx-auto py-8 relative z-10">
     <!-- Page Background Image (blurred, behind all content) -->
     <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
       <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20 blur-sm"

@@ -1,7 +1,7 @@
 <template>
   <UCard variant="subtle"
     :class="['card-root', isDeckCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '', legalityWarning ? 'illegal-card-bg' : '']"
-    :ui="{ body: 'p-4 sm:p-4' }">
+    :ui="{ body: 'p-1 sm:p-2' }">
 
     <!-- Set Commander Confirmation Modal -->
     <UModal v-model:open="showCommanderModal" title="Set Commander">
@@ -63,7 +63,7 @@
       <span v-if="!isDeckCommander" class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{
         numCopies
         ?? 1
-        }}</span>
+      }}</span>
 
       <!-- Menu Overlay (left side, below badge) -->
       <div v-if="!isDeckCommander" class="list-card-menu-overlay">
@@ -83,7 +83,7 @@
     </div>
 
     <!-- Card Name and mana cost -->
-    <div class="flex flex-col items-center justify-center text-center">
+    <div class="flex flex-col items-center justify-center text-center mt-1">
       <div class="flex flex-row items-center justify-between w-full">
         <p class="whitespace-nowrap overflow-hidden truncate">
           {{ card.card_data.name.split(' // ')[0] }}
