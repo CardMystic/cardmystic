@@ -34,9 +34,9 @@
       <UButton to="/search/all/ai" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-2 relative z-10 items-center">
+    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-[max-content_minmax(0,1fr)] gap-2 relative z-10 items-start">
       <!-- Left: Card Image -->
-      <div class="lg:col-span-3 flex flex-col items-center">
+      <div class="flex flex-col items-center lg:items-start">
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
@@ -158,7 +158,7 @@
       </div>
 
       <!-- Center: Card Details + LLM -->
-      <div class="lg:col-span-7">
+      <div class="min-w-0">
         <div class="lg:grid lg:grid-cols-12 lg:gap-2">
           <div class="lg:col-span-7 flex flex-col">
             <UCard class="card-details-card">
@@ -307,7 +307,7 @@
           </div>
         </div>
       </div>
-      <div class="lg:col-span-10 flex flex-col items-center">
+      <div class="lg:col-span-2 flex flex-col items-center">
         <!-- Commander vs Non-commander tabs: wrapped in ClientOnly because isCommander
              depends on TanStack Query data that may differ between SSR and client hydration -->
         <ClientOnly>
