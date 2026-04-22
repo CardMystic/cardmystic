@@ -37,11 +37,11 @@
           block />
         <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" external color="primary" variant="solid"
           icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer" block />
-        <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" label="Find Similar Cards" block
+        <UButton color="neutral" variant="outline" icon="i-mdi-cards-outline" size="lg" label="Find Similar Cards" block
           @click="findSimilarCards" />
-        <UButton v-if="isCommanderCardComputed" color="primary" variant="solid" icon="i-lucide-box" size="lg"
+        <UButton v-if="isCommanderCardComputed" color="primary" variant="outline" icon="i-lucide-box" size="lg"
           label="Get Deck Recommendations" block @click="getRecommendations" />
-        <UButton v-if="isCommanderCardComputed" color="error" variant="solid" icon="i-lucide-flame" size="lg"
+        <UButton v-if="isCommanderCardComputed" color="error" variant="outline" icon="i-lucide-flame" size="lg"
           label="Popular Cards For Commander" block @click="viewPopularCards" />
       </div>
 

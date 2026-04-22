@@ -105,14 +105,14 @@
             <template #default>
               <!-- Partner: combined price button -->
               <UButton v-if="hasPartner && showCardInfo && partnerTcgplayerId"
-                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class="mr-1 sm:mr-2"
-                icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
+                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="outline"
+                class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
                 rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
                 {{ combinedPriceLabel }}
               </UButton>
               <!-- Single card: original price button -->
               <UButton v-else-if="!hasPartner && showCardInfo && card.card_data.tcgplayer_id"
-                :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
+                :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="outline"
                 class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
                 rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
                 {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
@@ -147,17 +147,17 @@
           <!-- Desktop buttons (hidden on mobile) -->
           <template v-if="showCardInfo">
             <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
-              <UButton v-if="isCommander" color="primary" variant="solid"
+              <UButton v-if="isCommander" color="primary" variant="outline"
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
                 @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander" />
             </UTooltip>
             <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
-              <UButton v-if="isCommander" color="error" variant="solid"
+              <UButton v-if="isCommander" color="error" variant="outline"
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
                 @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
             </UTooltip>
             <UTooltip v-if="!isSearched" text="Find similar cards" :popper="{ placement: 'top' }">
-              <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+              <UButton color="neutral" variant="outline" class="hidden sm:inline-flex mr-2 cursor-pointer"
                 icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
             </UTooltip>
           </template>

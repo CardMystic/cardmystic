@@ -30,7 +30,7 @@
         <span class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{
           numCopies
           ?? 1
-          }}</span>
+        }}</span>
 
 
         <UDropdownMenu :items="cardOverlayMenuItems">
@@ -56,26 +56,26 @@
         <!-- Buy on TCGPlayer -->
         <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
           <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
-            color="success" variant="solid" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm" target="_blank"
-            rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
+            color="success" variant="outline" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm"
+            target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
             {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
           </UButton>
         </UTooltip>
 
         <!-- Similarity search -->
         <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
-          <UButton color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline" size="sm"
-            @click="findSimilarCards" aria-label="Find Similar Cards" />
+          <UButton color="neutral" variant="outline" class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline"
+            size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
         </UTooltip>
 
         <!-- Commander-card buttons -->
         <template v-if="isCommanderCardComputed">
           <UTooltip text="Get Deck Recommendations" :popper="{ placement: 'top' }">
-            <UButton color="primary" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
+            <UButton color="primary" variant="outline" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
               @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander" />
           </UTooltip>
           <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
-            <UButton color="error" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
+            <UButton color="error" variant="outline" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
               @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
           </UTooltip>
         </template>
