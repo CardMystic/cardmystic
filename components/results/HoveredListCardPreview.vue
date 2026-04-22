@@ -80,9 +80,6 @@ import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCommandersSet } from '~/composables/useBulkData';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import SetCommanderModal from '~/components/cards/modals/SetCommanderModal.vue';
-import RemoveCommanderModal from '~/components/cards/modals/RemoveCommanderModal.vue';
-import SetCopiesModal from '~/components/cards/modals/SetCopiesModal.vue';
 
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();

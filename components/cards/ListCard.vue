@@ -30,7 +30,7 @@
         <span class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{
           numCopies
           ?? 1
-          }}</span>
+        }}</span>
 
 
         <UDropdownMenu :items="cardOverlayMenuItems">
@@ -95,9 +95,6 @@ import { isLegal, isColorIdentityLegal, formatToLegalityKey } from '~/utils/lega
 import { useCommandersSet } from '~/composables/useBulkData';
 import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
-import SetCommanderModal from '~/components/cards/modals/SetCommanderModal.vue';
-import RemoveCommanderModal from '~/components/cards/modals/RemoveCommanderModal.vue';
-import SetCopiesModal from '~/components/cards/modals/SetCopiesModal.vue';
 
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();

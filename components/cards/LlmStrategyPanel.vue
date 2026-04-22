@@ -8,7 +8,7 @@
       <div class="power-section">
         <div class="meter-block">
           <div class="meter-header">
-            <span class="meter-label">Overall Power Level</span>
+            <span class="meter-label">Overall</span>
             <span class="meter-value">{{ props.llm.power_level }}</span>
           </div>
           <UProgress :model-value="overallPowerPercent" :color="meterColor(overallPowerPercent)" size="lg" />
@@ -127,7 +127,10 @@ const valuePoints = computed(() => {
 
 const valuePolygon = computed(() => valuePoints.value.map((p) => `${p.x},${p.y}`).join(' '));
 
-const labelPoints = computed(() => labels.map((_, i) => pointAt(i, radius + 20)));
+const labelPoints = computed(() => labels.map((_, i) => {
+  const extraOffset = i === 1 || i === 3 ? 8 : 0; // Midrange + Combo
+  return pointAt(i, radius + 20 + extraOffset);
+}));
 
 function toMeterPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
