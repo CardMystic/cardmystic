@@ -1,5 +1,8 @@
 <template>
   <UCard v-if="card" variant="outline" class="preview-root" :ui="{ body: 'p-4' }">
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
+      :card-name="card.card_data.name" />
+
     <SetCommanderModal :open="showCommanderModal" :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event" @confirm="confirmSetCommander" />
 
@@ -15,6 +18,12 @@
           class="preview-image cursor-pointer" loading="eager" decoding="async"
           @click="navigateToCard(card.card_data.id)" />
         <ClipboardButton :card="card" :isDualFaced="isDualFaced" @flip="flipCard" />
+        <div v-if="canShowDeckMenu" class="preview-menu-overlay">
+          <UDropdownMenu :items="cardOverlayMenuItems">
+            <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
+              size="xs" square icon="i-lucide-ellipsis-vertical" />
+          </UDropdownMenu>
+        </div>
         <span v-if="!isDeckCommander" class="copy-count-pill">x{{ numCopies ?? 1 }}</span>
       </div>
 
@@ -85,6 +94,7 @@ const router = useRouter();
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const { data: commanders } = useCommandersSet();
+const { userProfile } = useUserProfile();
 
 const props = defineProps<{
   card: Card | null;
@@ -104,10 +114,30 @@ const emit = defineEmits<{
 
 const isFlipped = ref(false);
 const showCommanderModal = ref(false);
+const showAddToDeckModal = ref(false);
+const hasMounted = ref(false);
+
+const cardOverlayMenuItems = computed(() => [[
+  {
+    label: 'Add to Deck',
+    icon: 'i-lucide-library-big',
+    onSelect() {
+      showAddToDeckModal.value = true;
+    },
+  },
+]]);
+
+const canShowDeckMenu = computed(() =>
+  hasMounted.value && Boolean(userProfile.value) && Boolean(props.card)
+);
 
 // Reset flip state when the previewed card changes
 watch(() => props.card?.card_data.id, () => {
   isFlipped.value = false;
+});
+
+onMounted(() => {
+  hasMounted.value = true;
 });
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
@@ -231,6 +261,19 @@ function viewPopularCards() {
   transform: scale(1.03);
 }
 
+.preview-menu-overlay {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.preview-image-wrapper:hover .preview-menu-overlay {
+  opacity: 1;
+}
+
 .copy-count-pill {
   position: absolute;
   top: 45px;
@@ -272,5 +315,13 @@ function viewPopularCards() {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(160, 160, 160, 0.9);
+}
+
+@media (max-width: 767px) {
+  .preview-menu-overlay {
+    opacity: 1;
+    left: 12px;
+    top: 12px;
+  }
 }
 </style>

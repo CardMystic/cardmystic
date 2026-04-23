@@ -55,12 +55,16 @@
         </svg>
       </div>
 
-      <div v-if="combinedSummary">
-        <p class="summary-text">{{ combinedSummary }}</p>
+      <div v-if="longSummary">
+        <p class="summary-text">{{ longSummary }}</p>
 
-        <div v-if="cardRoles.length" class="roles-wrap">
+        <div v-if="cardRoles.length || cardThemes.length || cardSentiment.length" class="roles-wrap">
           <UBadge v-for="role in cardRoles" :key="role" color="primary" variant="subtle" size="sm" class="role-badge">
             {{ role }}
+          </UBadge>
+          <UBadge v-for="theme in cardThemes" :key="theme" color="secondary" variant="subtle" size="sm"
+            class="role-badge">
+            {{ theme }}
           </UBadge>
           <UBadge v-for="sentiment in cardSentiment" :key="sentiment" color="info" variant="subtle" size="sm"
             class="role-badge">
@@ -87,11 +91,10 @@ const values = computed(() => [
   props.llm.strategy_rankings.combo,
 ]);
 
-const combinedSummary = computed(() => {
-  const parts = [props.llm.one_line_summary?.trim(), props.llm.why_to_play?.trim()].filter(Boolean);
-  const summary = parts.join(' ');
-  if (summary.length <= 500) return summary;
-  return `${summary.slice(0, 497).trimEnd()}...`;
+const longSummary = computed(() => {
+  const s = props.llm.long_summary?.trim() ?? '';
+  if (s.length <= 500) return s;
+  return `${s.slice(0, 497).trimEnd()}...`;
 });
 
 const chartPadding = 18;
@@ -158,6 +161,13 @@ const formatMeters = computed(() => {
 const cardRoles = computed(() => {
   return (props.llm.roles || [])
     .map(role => role.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+});
+
+const cardThemes = computed(() => {
+  return (props.llm.themes || [])
+    .map(theme => theme.trim())
     .filter(Boolean)
     .slice(0, 5);
 });

@@ -11,10 +11,10 @@ export const LlmCardAttributesSchema = z.object({
   power_level: z.coerce.number().int(),
   community_sentiment: z.array(z.string()).default([]),
   format_strength: z.record(z.string(), z.coerce.number().int()).default({}),
+  themes: z.array(z.string()).default([]),
   roles: z.array(z.string()).default([]),
-  one_line_summary: z.string().default(''),
+  long_summary: z.string().default(''),
   strategy_rankings: StrategyRankingsSchema,
-  why_to_play: z.string().default(''),
 });
 
 export const CardLlmResponseSchema = z.object({

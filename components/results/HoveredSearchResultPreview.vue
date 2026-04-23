@@ -1,5 +1,8 @@
 <template>
   <UCard v-if="card" variant="subtle" class="preview-root" :ui="{ body: 'p-4' }">
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
+      :card-name="card.card_data.name" />
+
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
       :ui="{ footer: 'justify-end' }">
@@ -15,6 +18,12 @@
           class="preview-image cursor-pointer" loading="eager" decoding="async"
           @click="navigateToCard(card.card_data.id)" />
         <ClipboardButton :card="card" :isDualFaced="isDualFaced" @flip="flipCard" />
+        <div v-if="canShowDeckMenu" class="preview-menu-overlay">
+          <UDropdownMenu :items="cardOverlayMenuItems">
+            <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
+              size="xs" square icon="i-lucide-ellipsis-vertical" />
+          </UDropdownMenu>
+        </div>
       </div>
 
       <div class="space-y-2">
@@ -100,6 +109,7 @@ const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const deckbuilderStore = useDeckbuilder();
+const { userProfile } = useUserProfile();
 
 const props = defineProps<{
   card: Card | null;
@@ -114,11 +124,31 @@ const props = defineProps<{
 const isFlipped = ref(false);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
+const showAddToDeckModal = ref(false);
+const hasMounted = ref(false);
+
+const cardOverlayMenuItems = computed(() => [[
+  {
+    label: 'Add to Deck',
+    icon: 'i-lucide-library-big',
+    onSelect() {
+      showAddToDeckModal.value = true;
+    },
+  },
+]]);
+
+const canShowDeckMenu = computed(() =>
+  hasMounted.value && Boolean(userProfile.value) && Boolean(props.card)
+);
 
 // Reset per-card transient state when the previewed card changes
 watch(() => props.card?.card_data.id, () => {
   isFlipped.value = false;
   isThumbsDownClicked.value = false;
+});
+
+onMounted(() => {
+  hasMounted.value = true;
 });
 
 const isDualFaced = computed(() => {
@@ -278,6 +308,19 @@ function viewPopularCards() {
   transform: scale(1.03);
 }
 
+.preview-menu-overlay {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.preview-image-wrapper:hover .preview-menu-overlay {
+  opacity: 1;
+}
+
 .preview-title {
   font-size: 1.15rem;
   font-weight: 700;
@@ -334,5 +377,13 @@ function viewPopularCards() {
   text-align: right;
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .preview-menu-overlay {
+    opacity: 1;
+    left: 12px;
+    top: 12px;
+  }
 }
 </style>

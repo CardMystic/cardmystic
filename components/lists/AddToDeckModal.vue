@@ -1,0 +1,181 @@
+<template>
+  <UModal v-model:open="isOpen" :title="`Add ${cardName} to Deck`"
+    description="Pick a recently edited deck or search your decks by name.">
+    <template #content>
+      <div v-if="!isLoggedIn" class="p-4 space-y-3 text-center">
+        <p class="text-sm text-muted">Log in to save cards to your decks.</p>
+        <UButton to="/login" color="primary" variant="solid">Log In</UButton>
+      </div>
+
+      <div v-else class="p-4 space-y-4">
+        <div v-if="recentLists.length > 0" class="space-y-2">
+          <div class="text-sm font-medium">Recently Edited Decks</div>
+          <div class="flex flex-wrap gap-2">
+            <UButton v-for="list in recentLists" :key="list.id" color="primary"
+              :variant="selectedListId === list.id ? 'solid' : 'outline'" size="sm" class="cursor-pointer"
+              @click="selectRecentList(list.id)">
+              {{ listLabel(list) }}
+            </UButton>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-sm font-medium">Search Decks</div>
+          <UInputMenu v-model="selectedListLabel" v-model:search-term="deckSearchTerm" :items="filteredDeckLabels"
+            placeholder="Find a deck..." icon="i-lucide-search" class="w-full" @update:model-value="handleSelectDeck" />
+        </div>
+
+        <div v-if="selectedList" class="rounded-lg border border-secondary/40 bg-elevated/40 px-3 py-2 text-sm">
+          <div class="font-medium">Selected Deck</div>
+          <div class="text-muted">{{ listLabel(selectedList) }}</div>
+        </div>
+
+        <UAlert v-if="alreadyInSelectedDeck" color="warning" icon="i-lucide-triangle-alert"
+          title="Card already in this deck" description="Adding it again will increase the copies in that deck." />
+
+        <div v-if="errorMessage" class="text-sm text-red-400">
+          {{ errorMessage }}
+        </div>
+      </div>
+
+      <div class="mx-2 my-2 flex justify-end gap-2">
+        <UButton color="neutral" variant="outline" :disabled="loading" @click="isOpen = false">
+          Cancel
+        </UButton>
+        <UButton color="primary" variant="solid" :loading="loading" :disabled="!selectedListId"
+          @click="handleAddToDeck">
+          Add to Deck
+        </UButton>
+      </div>
+    </template>
+  </UModal>
+</template>
+
+<script setup lang="ts">
+import type { Database } from '~/database.types';
+import { useToast } from '#imports';
+import { useCardLists } from '~/composables/useCardLists';
+
+const props = defineProps<{
+  open: boolean;
+  cardId: string;
+  cardName: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:open', value: boolean): void;
+}>();
+
+type CardListRow = Database['public']['Tables']['card_lists']['Row'];
+
+const { userProfile } = useUserProfile();
+const { userLists, addCardsToListMutation, useListItems } = useCardLists();
+const toast = useToast();
+
+const isLoggedIn = computed(() => Boolean(userProfile.value));
+const isOpen = computed({
+  get: () => props.open,
+  set: (value: boolean) => emit('update:open', value),
+});
+
+const selectedListId = ref('');
+const selectedListLabel = ref('');
+const deckSearchTerm = ref('');
+const errorMessage = ref('');
+
+const recentLists = computed(() => {
+  if (!userLists.value) return [];
+  return [...userLists.value].slice(0, 4);
+});
+
+function listLabel(list: CardListRow): string {
+  const name = list.name?.trim() || 'Untitled Deck';
+  const format = list.format?.trim();
+  return format ? `${name} · ${format}` : name;
+}
+
+const filteredDeckLabels = computed(() => {
+  const searchLower = deckSearchTerm.value.trim().toLowerCase();
+  const lists = userLists.value || [];
+  return lists
+    .filter((list) => {
+      if (!searchLower) return true;
+      return listLabel(list).toLowerCase().includes(searchLower);
+    })
+    .slice(0, 50)
+    .map((list) => listLabel(list));
+});
+
+function syncSelectedLabel() {
+  const selected = (userLists.value || []).find((list) => list.id === selectedListId.value);
+  selectedListLabel.value = selected ? listLabel(selected) : '';
+}
+
+function handleSelectDeck(label: string) {
+  const selected = (userLists.value || []).find((list) => listLabel(list) === label);
+  selectedListId.value = selected?.id || '';
+  syncSelectedLabel();
+}
+
+function selectRecentList(listId: string) {
+  selectedListId.value = listId;
+  syncSelectedLabel();
+}
+
+const selectedList = computed(() =>
+  (userLists.value || []).find((list) => list.id === selectedListId.value)
+);
+
+const selectedListIdRef = computed(() => selectedListId.value);
+const { data: selectedListItems } = useListItems(selectedListIdRef);
+
+const alreadyInSelectedDeck = computed(() => {
+  if (!selectedListItems.value?.length) return false;
+  return selectedListItems.value.some((item) => item.card_id === props.cardId);
+});
+
+const loading = computed(() => addCardsToListMutation.isPending.value);
+
+watch(isOpen, (opened) => {
+  if (opened) {
+    errorMessage.value = '';
+    selectedListId.value = '';
+    selectedListLabel.value = '';
+    deckSearchTerm.value = '';
+    return;
+  }
+
+  errorMessage.value = '';
+});
+
+async function handleAddToDeck() {
+  errorMessage.value = '';
+
+  if (!selectedListId.value) {
+    errorMessage.value = 'Pick a deck first.';
+    return;
+  }
+
+  try {
+    const result = await addCardsToListMutation.mutateAsync({
+      listId: selectedListId.value,
+      cardIds: [props.cardId],
+    });
+
+    const title = alreadyInSelectedDeck.value
+      ? `${props.cardName} count updated in ${selectedList.value?.name || 'deck'}`
+      : `${props.cardName} added to ${selectedList.value?.name || 'deck'}`;
+
+    toast.add({
+      title,
+      icon: 'i-lucide-check',
+    });
+
+    void result;
+    isOpen.value = false;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to add card to deck.';
+    errorMessage.value = message;
+  }
+}
+</script>

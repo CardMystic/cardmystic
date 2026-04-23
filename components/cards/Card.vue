@@ -2,6 +2,8 @@
   <UCard variant="subtle"
     :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
     :ui="{ body: 'p-1 sm:p-2' }">
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
+      :card-name="card.card_data.name" />
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -44,6 +46,13 @@
 
       <LazyClipboardButton v-if="showCardInfo && !hasPartner" :card="card" :isDualFaced="isDualFaced"
         @flip="flipCard" />
+
+      <div v-if="canShowDeckMenu" class="card-menu-overlay">
+        <UDropdownMenu :items="cardOverlayMenuItems">
+          <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
+            size="xs" square icon="i-lucide-ellipsis-vertical" />
+        </UDropdownMenu>
+      </div>
 
       <!-- Score Bars -->
       <div v-if="!hideProgressBar" class="mt-1 w-full" :class="{ invisible: isSearched }">
@@ -221,6 +230,7 @@ const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
+const { userProfile } = useUserProfile();
 
 // Shared singleton — one listener for all Card instances
 const isMobile = useIsMobile();
@@ -336,6 +346,26 @@ const isFlipped = ref(false);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const moreActionsOpen = ref(false);
+const showAddToDeckModal = ref(false);
+const hasMounted = ref(false);
+
+const cardOverlayMenuItems = computed(() => [[
+  {
+    label: 'Add to Deck',
+    icon: 'i-lucide-library-big',
+    onSelect() {
+      showAddToDeckModal.value = true;
+    },
+  },
+]]);
+
+const canShowDeckMenu = computed(() =>
+  hasMounted.value && props.showCardInfo && Boolean(userProfile.value)
+);
+
+onMounted(() => {
+  hasMounted.value = true;
+});
 
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;
@@ -406,21 +436,6 @@ function navigateToCard(cardId: string | undefined) {
     return;
   }
   router.push(`/card/${cardId}`);
-}
-
-function getSimpleCardType(type_line: string): string {
-  if (!type_line) return 'Unknown';
-  const faces = type_line.split('//');
-
-  if (faces.length === 1) {
-    // Single-faced card: get type before em-dash
-    return faces[0].split(' — ')[0].trim();
-  } else {
-    // Double-faced card: get type before em-dash for both faces
-    const frontType = faces[0].split(' — ')[0].trim();
-    const backType = faces[1].split(' — ')[0].trim();
-    return `${frontType} // ${backType}`;
-  }
 }
 
 // Whether this card has both ALS and AI scores (dual bar mode)
@@ -603,6 +618,29 @@ function toggleShowAllData() {
   transform: scale(1.03);
 }
 
+/* Menu overlay — shown on hover only */
+.card-menu-overlay {
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 0.2s;
+}
+
+.card-image-wrapper:hover .card-menu-overlay {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .card-menu-overlay {
+    opacity: 1 !important;
+    left: 12px;
+    top: 30px;
+  }
+}
+
 .card-root {
   max-width: 330px;
   width: 100%;
@@ -654,5 +692,13 @@ function toggleShowAllData() {
 .partner-card:hover img {
   transform: scale(1.05);
   z-index: 2;
+}
+
+@media (max-width: 767px) {
+  .card-menu-overlay {
+    left: 12px;
+    top: 12px;
+    opacity: 1;
+  }
 }
 </style>
