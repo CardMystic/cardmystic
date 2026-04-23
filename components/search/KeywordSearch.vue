@@ -6,9 +6,8 @@
 
     <UFormField name="query" class="mb-2">
       <div class="flex gap-2 w-full">
-        <UInputMenu ref="input" v-model="state.query" v-model:search-term="searchTerm" :items="filteredSuggestions"
-          placeholder="Search cards by keywords…" icon="i-lucide-whole-word" class="flex-1"
-          :ui="{ base: 'text-base h-10' }" />
+        <UInput ref="input" v-model="state.query" placeholder="Search cards by keywords…" icon="i-lucide-whole-word"
+          class="flex-1" :ui="{ base: 'text-base h-10' }" />
         <UButton icon="i-lucide-whole-word" :disabled="state.query?.length == 0" type="submit"
           class="h-10 cursor-pointer">
           Search
@@ -53,9 +52,7 @@ const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { CardSearchFiltersSchema } from '~/models/searchModel'
 import type { Platform } from '~/utils/platformConfig'
-import { refDebounced } from '@vueuse/core'
 import Filters from './Filters.vue'
-import { useCardNames } from '~/composables/useBulkData'
 
 const { getPath, getPlatformFromPath } = useSearchType();
 
@@ -104,41 +101,7 @@ watch(queryParam, (newVal) => {
   if (newVal !== state.query) state.query = newVal;
 });
 
-const searchTerm = ref("");
-// Debounced search term for better performance
-const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
-// Raw card data from backend bulk data API
-const { data: rawCards, status: cardNamesStatus } = useCardNames();
-const status = computed(() => cardNamesStatus.value === 'pending' ? 'pending' : 'success');
-
-// Pre-filter cards before passing to UInputMenu
-const filteredSuggestions = computed(() => {
-  if (!debouncedSearchTerm.value || debouncedSearchTerm.value.length < 2) {
-    if (state.query) {
-      return [state.query as string];
-    }
-    return [];
-  }
-
-  const searchLower = debouncedSearchTerm.value.toLowerCase();
-  const filtered: string[] = [];
-
-  if (state.query) {
-    filtered.push(state.query as string);
-  }
-
-  // Only process first 100 matches for performance
-  const cards = rawCards.value ?? [];
-  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
-    const card = cards[i];
-    if (card.toLowerCase().includes(searchLower)) {
-      filtered.push(card);
-    }
-  }
-
-  return filtered;
-});
 
 // Honeypot field for bot detection
 const honeypot = ref('')
