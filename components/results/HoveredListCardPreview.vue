@@ -86,7 +86,6 @@
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCommandersSet } from '~/composables/useBulkData';
@@ -211,7 +210,6 @@ function findSimilarCards() {
     path: '/search/all/similarity',
     query: {
       card_name: props.card.card_data.name,
-      limit: DefaultLimitSimilarity,
     },
   });
 }

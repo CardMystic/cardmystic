@@ -175,7 +175,6 @@ export function useSimilarCards(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             card_name: cardName.value,
-            limit: 41, // Request 41 so we have 40 after removing the first card
             filters: undefined,
             exclude_card_data: false,
           }),

@@ -222,7 +222,6 @@ import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 
@@ -498,7 +497,6 @@ function findSimilarCards() {
   // Navigate to search page with similarity search endpoint
   const queryParams = {
     card_name: props.card.card_name,
-    limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
     searchType: 'similarity'
   };

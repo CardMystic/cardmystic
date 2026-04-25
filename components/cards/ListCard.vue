@@ -30,7 +30,7 @@
         <span class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{
           numCopies
           ?? 1
-        }}</span>
+          }}</span>
 
 
         <UDropdownMenu :items="cardOverlayMenuItems">
@@ -90,7 +90,6 @@ import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { isLegal, isColorIdentityLegal, formatToLegalityKey } from '~/utils/legality';
 import { useCommandersSet } from '~/composables/useBulkData';
 import { useSearchType } from '~/composables/useSearchType';
@@ -265,7 +264,6 @@ function findSimilarCards() {
   if (!props.card) return;
   const queryParams = {
     card_name: props.card.card_name,
-    limit: DefaultLimitSimilarity,
     filters: undefined,
     searchType: 'similarity'
   };

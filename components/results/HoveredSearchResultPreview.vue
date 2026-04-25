@@ -7,8 +7,9 @@
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
       :ui="{ footer: 'justify-end' }">
       <template #footer="{ close }">
-        <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-        <UButton label="Yes, This is a Poor Result" color="error" @click="confirmDislike(close)" />
+        <UButton label="Cancel" class="cursor-pointer" color="neutral" variant="outline" @click="close" />
+        <UButton label="Yes, This is a Poor Result" class="cursor-pointer" color="error"
+          @click="confirmDislike(close)" />
       </template>
     </UModal>
 
@@ -88,12 +89,12 @@
 
       <div v-if="!isSearched && (showAddToDeckbuilderButton || !hideThumbsDownButton)" class="preview-actions">
         <p class="preview-section-label">Search Actions</p>
-        <UButton v-if="!hideThumbsDownButton" :color="isThumbsDownClicked ? 'error' : 'primary'" variant="outline"
-          icon="i-lucide-thumbs-down" size="lg"
+        <UButton v-if="!hideThumbsDownButton" class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'"
+          variant="outline" icon="i-lucide-thumbs-down" size="lg"
           :label="isThumbsDownClicked ? 'Feedback Submitted' : 'Mark As Poor Result'" block
           :disabled="isThumbsDownClicked" @click="handleDislike" />
-        <UButton v-if="showAddToDeckbuilderButton" :color="isInDecklist ? 'success' : 'primary'" variant="outline"
-          :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" size="lg"
+        <UButton v-if="showAddToDeckbuilderButton" class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'"
+          variant="outline" :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" size="lg"
           :label="isInDecklist ? 'Added To Deckbuilder' : 'Add To Deckbuilder'" block
           @click="deckbuilderStore.addCard(card.card_data.name)" />
       </div>
@@ -104,7 +105,6 @@
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
 import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 
@@ -257,7 +257,6 @@ function findSimilarCards() {
     path: '/search/all/similarity',
     query: {
       card_name: props.card.card_name,
-      limit: DefaultLimitSimilarity,
       filters: undefined,
       searchType: 'similarity',
     },

@@ -5,6 +5,11 @@
   visibility: hidden;
 }
 
+button:not(:disabled),
+[role='button']:not(:disabled) {
+  cursor: pointer;
+}
+
 :root {
   --ui-primary: #8f6edf;
   --ui-secondary: #383d7a;
