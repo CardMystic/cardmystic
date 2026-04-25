@@ -27,7 +27,7 @@ export function useColbertSearch(
 
   const {
     data: searchResults,
-    isLoading,
+    isLoading: isQueryLoading,
     error,
     refetch,
   } = useQuery({
@@ -51,6 +51,10 @@ export function useColbertSearch(
     enabled: queryEnabled,
   });
 
+  const isLoading = computed(
+    () => isQueryLoading.value || (queryEnabled.value && !searchResults.value),
+  );
+
   return {
     searchResults,
     isLoading,
@@ -71,7 +75,7 @@ export function useSimilaritySearch(
 
   const {
     data: searchResults,
-    isLoading,
+    isLoading: isQueryLoading,
     error,
     refetch,
   } = useQuery({
@@ -95,6 +99,10 @@ export function useSimilaritySearch(
     enabled: queryEnabled,
   });
 
+  const isLoading = computed(
+    () => isQueryLoading.value || (queryEnabled.value && !searchResults.value),
+  );
+
   return {
     searchResults,
     isLoading,
@@ -115,7 +123,7 @@ export function useKeywordSearch(
 
   const {
     data: searchResults,
-    isLoading,
+    isLoading: isQueryLoading,
     error,
     refetch,
   } = useQuery({
@@ -138,6 +146,10 @@ export function useKeywordSearch(
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: queryEnabled,
   });
+
+  const isLoading = computed(
+    () => isQueryLoading.value || (queryEnabled.value && !searchResults.value),
+  );
 
   return {
     searchResults,

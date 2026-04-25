@@ -71,7 +71,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                    }}</span>
+                      }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -442,7 +442,11 @@ const isFlipped = ref(false);
 const showMobileDetails = ref(false);
 const selectedPrinting = ref<string>('');
 
-const cardIdParam = computed(() => String(route.params.id) || '');
+// Keep last valid card ID so the page doesn't flicker to an empty/loading state
+// when navigating away (route param briefly becomes empty during transition).
+const _lastValidCardId = ref(String(route.params.id) || '');
+watch(() => route.params.id, (id) => { if (id) _lastValidCardId.value = String(id); });
+const cardIdParam = computed(() => _lastValidCardId.value);
 const { saveCardViewMutation } = useCardHistory();
 const { lastCard, setLastOpenedCard } = useLastOpenedCard();
 const { searchType, getPath, restoreSearchQuery } = useSearchType();
