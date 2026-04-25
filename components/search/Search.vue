@@ -69,10 +69,10 @@ import type { SelectItem } from '@nuxt/ui'
 import { useRoute } from 'vue-router';
 
 import AISearch from './AISearch.vue';
-const SimilaritySearch = defineAsyncComponent(() => import('./SimilaritySearch.vue'));
-const CommanderSearch = defineAsyncComponent(() => import('./CommanderSearch.vue'));
-const KeywordSearch = defineAsyncComponent(() => import('./KeywordSearch.vue'));
-const ALSSearch = defineAsyncComponent(() => import('./ALSSearch.vue'));
+import SimilaritySearch from './SimilaritySearch.vue';
+import CommanderSearch from './CommanderSearch.vue';
+import KeywordSearch from './KeywordSearch.vue';
+import ALSSearch from './ALSSearch.vue';
 import { detectPlatformFromFilters, type Platform } from '~/utils/platformConfig';
 
 // Define props
