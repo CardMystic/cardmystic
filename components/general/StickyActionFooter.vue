@@ -34,16 +34,19 @@ const shellLayoutClass = computed(() => {
 
 const nearPageBottom = ref(false);
 const BOTTOM_THRESHOLD = 250;
+let _rafPending = false;
 
 function checkScrollPosition() {
-  if (!import.meta.client) return;
-
-  const scrollTop = window.scrollY;
-  const docHeight = document.documentElement.scrollHeight;
-  const windowHeight = window.innerHeight;
-  const distanceFromBottom = docHeight - (scrollTop + windowHeight);
-
-  nearPageBottom.value = distanceFromBottom < BOTTOM_THRESHOLD;
+  if (!import.meta.client || _rafPending) return;
+  _rafPending = true;
+  requestAnimationFrame(() => {
+    _rafPending = false;
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight;
+    const windowHeight = window.innerHeight;
+    const distanceFromBottom = docHeight - (scrollTop + windowHeight);
+    nearPageBottom.value = distanceFromBottom < BOTTOM_THRESHOLD;
+  });
 }
 
 onMounted(() => {
