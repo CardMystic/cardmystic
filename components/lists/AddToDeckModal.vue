@@ -14,7 +14,10 @@
             <UButton v-for="list in recentLists" :key="list.id" color="primary"
               :variant="selectedListId === list.id ? 'solid' : 'outline'" size="sm" class="cursor-pointer"
               @click="selectRecentList(list.id)">
-              {{ listLabel(list) }}
+              <span class="flex flex-col items-start leading-tight">
+                <span>{{ listName(list) }}</span>
+                <span v-if="listFormat(list)" class="text-xs opacity-70">{{ listFormat(list) }}</span>
+              </span>
             </UButton>
           </div>
         </div>
@@ -27,7 +30,8 @@
 
         <div v-if="selectedList" class="rounded-lg border border-secondary/40 bg-elevated/40 px-3 py-2 text-sm">
           <div class="font-medium">Selected Deck</div>
-          <div class="text-muted">{{ listLabel(selectedList) }}</div>
+          <div class="text-muted">{{ listName(selectedList) }}</div>
+          <div v-if="listFormat(selectedList)" class="text-xs text-muted/70">{{ listFormat(selectedList) }}</div>
         </div>
 
         <UAlert v-if="alreadyInSelectedDeck" color="warning" icon="i-lucide-triangle-alert"
@@ -88,6 +92,14 @@ const recentLists = computed(() => {
   return [...userLists.value].slice(0, 4);
 });
 
+function listName(list: CardListRow): string {
+  return list.name?.trim() || 'Untitled Deck';
+}
+
+function listFormat(list: CardListRow): string {
+  return list.format?.trim() || '';
+}
+
 function listLabel(list: CardListRow): string {
   const name = list.name?.trim() || 'Untitled Deck';
   const format = list.format?.trim();
@@ -103,16 +115,16 @@ const filteredDeckLabels = computed(() => {
       return listLabel(list).toLowerCase().includes(searchLower);
     })
     .slice(0, 50)
-    .map((list) => listLabel(list));
+    .map((list) => listName(list));
 });
 
 function syncSelectedLabel() {
   const selected = (userLists.value || []).find((list) => list.id === selectedListId.value);
-  selectedListLabel.value = selected ? listLabel(selected) : '';
+  selectedListLabel.value = selected ? listName(selected) : '';
 }
 
-function handleSelectDeck(label: string) {
-  const selected = (userLists.value || []).find((list) => listLabel(list) === label);
+function handleSelectDeck(name: string) {
+  const selected = (userLists.value || []).find((list) => listName(list) === name);
   selectedListId.value = selected?.id || '';
   syncSelectedLabel();
 }

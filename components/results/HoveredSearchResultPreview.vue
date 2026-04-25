@@ -69,17 +69,21 @@
       </div>
 
       <div class="preview-actions">
-        <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
-          color="success" variant="solid" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
-          rel="noopener noreferrer" :label="'Buy on TCGPlayer (' + priceLabel + ')'" block />
-        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" external color="primary" variant="solid"
-          icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer" block />
-        <UButton color="neutral" variant="outline" icon="i-mdi-cards-outline" size="lg" label="Find Similar Cards" block
-          :disabled="isSearched" @click="findSimilarCards" />
-        <UButton v-if="isCommander" color="primary" variant="outline" icon="i-lucide-box" size="lg"
-          label="Get Deck Recommendations" block @click="getRecommendations" />
-        <UButton v-if="isCommander" color="error" variant="outline" icon="i-lucide-flame" size="lg"
-          label="Popular Cards For Commander" block @click="viewPopularCards" />
+        <UButton v-if="card.card_data.tcgplayer_id" class="cursor-pointer"
+          :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
+          icon="i-heroicons-shopping-cart" size="lg" target="_blank" rel="noopener noreferrer"
+          :label="'Buy on TCGPlayer (' + priceLabel + ')'" block />
+        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" class="cursor-pointer" external
+          color="primary" variant="solid" icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer"
+          block />
+        <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-mdi-cards-outline" size="lg"
+          label="Find Similar Cards" block :disabled="isSearched" @click="findSimilarCards" />
+        <UButton v-if="canShowDeckMenu" class="cursor-pointer" color="primary" variant="outline"
+          icon="i-lucide-library-big" size="lg" label="Add to Deck" block @click="showAddToDeckModal = true" />
+        <UButton v-if="isCommander" class="cursor-pointer" color="primary" variant="outline" icon="i-lucide-box"
+          size="lg" label="Get Deck Recommendations" block @click="getRecommendations" />
+        <UButton v-if="isCommander" class="cursor-pointer" color="error" variant="outline" icon="i-lucide-flame"
+          size="lg" label="Popular Cards For Commander" block @click="viewPopularCards" />
       </div>
 
       <div v-if="!isSearched && (showAddToDeckbuilderButton || !hideThumbsDownButton)" class="preview-actions">
