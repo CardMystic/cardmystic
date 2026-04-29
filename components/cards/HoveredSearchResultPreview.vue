@@ -62,47 +62,22 @@
         </div>
       </div>
 
-      <div class="preview-actions">
-        <UButton v-if="card.card_data.tcgplayer_id" class="cursor-pointer"
-          :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-          icon="i-heroicons-shopping-cart" size="lg" target="_blank" rel="noopener noreferrer"
-          :label="'Buy on TCGPlayer (' + priceLabel + ')'" block />
-        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" class="cursor-pointer" external
-          color="primary" variant="solid" icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer"
-          block />
-        <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-mdi-cards-outline" size="lg"
-          label="Find Similar Cards" block :disabled="isSearched" @click="findSimilarCards" />
-        <UButton v-if="canShowDeckMenu" class="cursor-pointer" color="primary" variant="outline"
-          icon="i-lucide-library-big" size="lg" label="Add to Deck" block @click="showAddToDeckModal = true" />
-        <UButton class="cursor-pointer" :color="isInClipboard ? 'success' : 'neutral'" variant="outline"
-          :icon="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" size="lg"
-          :label="isInClipboard ? 'Remove From Clipboard' : 'Add To Clipboard'" block @click="toggleClipboard" />
-        <UButton v-if="isDualFaced" class="cursor-pointer" color="neutral" variant="outline"
-          icon="i-heroicons-arrow-path" size="lg" label="Flip Card" block @click="flipCard" />
-        <UButton v-if="isCommander" class="cursor-pointer" color="primary" variant="outline" icon="i-lucide-box"
-          size="lg" label="Get Deck Recommendations" block @click="getRecommendations" />
-        <UButton v-if="isCommander" class="cursor-pointer" color="error" variant="outline" icon="i-lucide-flame"
-          size="lg" label="Popular Cards For Commander" block @click="viewPopularCards" />
-      </div>
-
-      <div v-if="!isSearched && (showAddToDeckbuilderButton || !hideThumbsDownButton)" class="preview-actions">
-        <p class="preview-section-label">Search Actions</p>
-        <UButton v-if="!hideThumbsDownButton" class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'"
-          variant="outline" icon="i-lucide-thumbs-down" size="lg"
-          :label="isThumbsDownClicked ? 'Feedback Submitted' : 'Mark As Poor Result'" block
-          :disabled="isThumbsDownClicked" @click="handleDislike" />
-        <UButton v-if="showAddToDeckbuilderButton" class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'"
-          variant="outline" :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" size="lg"
-          :label="isInDecklist ? 'Added To Deckbuilder' : 'Add To Deckbuilder'" block
-          @click="deckbuilderStore.addCard(card.card_data.name)" />
-      </div>
+      <HoveredCardActions :card="card" :buy-label="'Buy on TCGPlayer (' + priceLabel + ')'"
+        :can-show-deck-menu="canShowDeckMenu" :find-similar-disabled="isSearched" :is-in-clipboard="isInClipboard"
+        :is-dual-faced="isDualFaced" :show-commander-buttons="isCommander"
+        :show-search-actions="!isSearched && (showAddToDeckbuilderButton || !hideThumbsDownButton)"
+        :hide-thumbs-down-button="hideThumbsDownButton" :is-thumbs-down-clicked="isThumbsDownClicked"
+        :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :is-in-decklist="isInDecklist"
+        @find-similar="findSimilarCards" @open-add-to-deck="showAddToDeckModal = true"
+        @toggle-clipboard="toggleClipboard" @flip-card="flipCard" @get-recommendations="getRecommendations"
+        @view-popular-cards="viewPopularCards" @dislike="handleDislike"
+        @add-to-deckbuilder="deckbuilderStore.addCard(card.card_data.name)" />
     </div>
   </UCard>
 </template>
 
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
-import { getAffiliateLink, generateTCGPlayerSearchUrl } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import { useClipboard } from '~/composables/useClipboard';
 import { useToast } from '#imports';
@@ -348,20 +323,6 @@ function viewPopularCards() {
   font-size: 1.1rem;
   font-weight: 700;
   color: rgba(120, 200, 120, 0.95);
-}
-
-.preview-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.preview-section-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(160, 160, 160, 0.9);
 }
 
 .preview-scores {

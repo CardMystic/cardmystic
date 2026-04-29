@@ -31,52 +31,18 @@
         </div>
       </div>
 
-      <div class="preview-actions">
-        <UButton v-if="card.card_data.tcgplayer_id" class="cursor-pointer"
-          :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-          icon="i-heroicons-shopping-cart" size="lg" target="_blank" rel="noopener noreferrer"
-          :label="card.card_data.prices.usd ? `Buy on TCGPlayer ($${card.card_data.prices.usd})` : 'Buy on TCGPlayer'"
-          block />
-        <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" class="cursor-pointer" external
-          color="primary" variant="solid" icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer"
-          block />
-        <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-mdi-cards-outline" size="lg"
-          label="Find Similar Cards" block @click="findSimilarCards" />
-        <UButton v-if="canShowDeckMenu" class="cursor-pointer" color="primary" variant="outline"
-          icon="i-lucide-library-big" size="lg" label="Add to Deck" block @click="showAddToDeckModal = true" />
-        <UButton class="cursor-pointer" :color="isInClipboard ? 'success' : 'neutral'" variant="outline"
-          :icon="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" size="lg"
-          :label="isInClipboard ? 'Remove From Clipboard' : 'Add To Clipboard'" block @click="toggleClipboard" />
-        <UButton v-if="isDualFaced" class="cursor-pointer" color="neutral" variant="outline"
-          icon="i-heroicons-arrow-path" size="lg" label="Flip Card" block @click="flipCard" />
-        <UButton v-if="isCommanderCardComputed" class="cursor-pointer" color="primary" variant="outline"
-          icon="i-lucide-box" size="lg" label="Get Deck Recommendations" block @click="getRecommendations" />
-        <UButton v-if="isCommanderCardComputed" class="cursor-pointer" color="error" variant="outline"
-          icon="i-lucide-flame" size="lg" label="Popular Cards For Commander" block @click="viewPopularCards" />
-      </div>
-
-      <div class="preview-actions">
-        <p class="preview-section-label">List Actions</p>
-        <div class="grid grid-cols-2 gap-2">
-          <UButton color="neutral" variant="outline" icon="i-lucide-plus" label="Add Copy"
-            :disabled="(numCopies ?? 1) >= 100"
-            @click="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) + 1)" />
-          <UButton color="neutral" variant="outline" icon="i-lucide-minus" label="Remove Copy"
-            :disabled="(numCopies ?? 1) <= 1"
-            @click="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) - 1)" />
-        </div>
-        <UButton color="neutral" variant="outline" icon="i-lucide-hash" label="Set Copies" block
-          @click="openSetCopiesModal" />
-        <UButton v-for="boardOption in availableBoards" :key="boardOption" color="neutral" variant="outline"
-          :icon="boardIcon(boardOption)" :label="`Move to ${boardOption}`" block
-          @click="emit('changeBoard', card.card_data.name, boardOption)" />
-        <UButton v-if="isCommanderCardComputed && !isDeckCommander" color="warning" variant="outline"
-          icon="i-lucide-crown" label="Set As Commander" block @click="showCommanderModal = true" />
-        <UButton v-if="isDeckCommander" color="warning" variant="outline" icon="i-lucide-crown" label="Remove Commander"
-          block @click="showClearCommanderModal = true" />
-        <UButton color="error" variant="outline" icon="i-lucide-trash-2" label="Remove From List" block
-          @click="emit('remove', card.card_data.id)" />
-      </div>
+      <HoveredCardActions :card="card"
+        :buy-label="card.card_data.prices.usd ? `Buy on TCGPlayer ($${card.card_data.prices.usd})` : 'Buy on TCGPlayer'"
+        :can-show-deck-menu="canShowDeckMenu" :is-in-clipboard="isInClipboard" :is-dual-faced="isDualFaced"
+        :show-commander-buttons="isCommanderCardComputed" :show-list-actions="true" :num-copies="numCopies ?? 1"
+        :available-boards="availableBoards" :show-set-commander="isCommanderCardComputed && !isDeckCommander"
+        :show-clear-commander="isDeckCommander" @find-similar="findSimilarCards"
+        @open-add-to-deck="showAddToDeckModal = true" @toggle-clipboard="toggleClipboard" @flip-card="flipCard"
+        @get-recommendations="getRecommendations" @view-popular-cards="viewPopularCards"
+        @add-copy="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) + 1)"
+        @remove-copy="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) - 1)"
+        @set-copies="openSetCopiesModal" @change-board="handleChangeBoard" @set-commander="showCommanderModal = true"
+        @clear-commander="showClearCommanderModal = true" @remove-from-list="emit('remove', card.card_data.id)" />
     </div>
   </UCard>
 </template>
@@ -87,7 +53,6 @@ import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCommandersSet } from '~/composables/useBulkData';
 import { useClipboard } from '~/composables/useClipboard';
-import { getAffiliateLink, generateTCGPlayerSearchUrl } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import { useToast } from '#imports';
 
@@ -215,12 +180,6 @@ function confirmClearCommander() {
   emit('clearCommander', props.card.card_data.id);
 }
 
-function boardIcon(board: 'Mainboard' | 'Sideboard' | 'Considering') {
-  if (board === 'Mainboard') return 'i-lucide-layout-grid';
-  if (board === 'Sideboard') return 'i-lucide-columns-2';
-  return 'i-lucide-help-circle';
-}
-
 function navigateToCard(cardId: string | undefined) {
   if (!cardId) return;
   router.push(`/card/${cardId}`);
@@ -254,6 +213,11 @@ function getRecommendations() {
 function viewPopularCards() {
   if (!props.card?.card_data.name) return;
   router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
+}
+
+function handleChangeBoard(board: 'Mainboard' | 'Sideboard' | 'Considering') {
+  if (!props.card) return;
+  emit('changeBoard', props.card.card_data.name, board);
 }
 </script>
 
@@ -311,19 +275,5 @@ function viewPopularCards() {
   font-size: 1.1rem;
   font-weight: 700;
   color: rgba(120, 200, 120, 0.95);
-}
-
-.preview-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.preview-section-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(160, 160, 160, 0.9);
 }
 </style>

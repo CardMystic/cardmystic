@@ -2,7 +2,7 @@
   <div class="results-layout xl:flex xl:items-start xl:gap-6">
     <aside class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start">
       <div class="preview-sticky">
-        <HoveredListCardPreviewSkeleton />
+        <HoveredPreviewSkeleton />
       </div>
     </aside>
 
