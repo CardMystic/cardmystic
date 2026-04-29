@@ -87,7 +87,6 @@ const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const deckbuilderStore = useDeckbuilder();
-const { userProfile } = useUserProfile();
 const clipboard = useClipboard();
 const toast = useToast();
 

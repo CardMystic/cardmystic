@@ -60,7 +60,6 @@ const router = useRouter();
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const { data: commanders } = useCommandersSet();
-const { userProfile } = useUserProfile();
 const clipboard = useClipboard();
 const toast = useToast();
 

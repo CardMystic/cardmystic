@@ -15,7 +15,7 @@
               :is-deck-commander="commanderCardIds?.includes(previewCard.card_data.id) ?? false"
               :is-commander-card="isCommanderCard(previewCard)"
               :num-copies="listItemsMap?.[previewCard.card_data.id]?.num_copies"
-              :board="listItemsMap?.[previewCard.card_data.id]?.board" :format="format"
+              :board="listItemsMap?.[previewCard.card_data.id]?.board"
               @remove="(cardId: string) => emit('removeCard', cardId)"
               @set-commander="(cardName: string) => emit('setCommander', cardName)"
               @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
@@ -33,7 +33,7 @@
               <div class="board-divider-line"></div>
               <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' :
                 'cards'
-              }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+                }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
               <div class="board-divider-line"></div>
             </div>
             <!-- Commander card(s) at the top (groups with empty label) -->
