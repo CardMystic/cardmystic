@@ -231,7 +231,6 @@ export const useCardLists = () => {
     }
 
     const config = useRuntimeConfig();
-    console.log('[bulkEditList] request body:', JSON.stringify(request, null, 2));
     const response = await $fetch<BulkEditResponse>(
       `${config.public.backendUrl}/supabase/card-lists/bulk-edit`,
       {

@@ -14,6 +14,7 @@ const singletonFormats = new Set([
   'oathbreaker',
   'paupercommander',
   'predh',
+  'historicbrawl',
 ]);
 
 /** Default max copies for non-singleton constructed formats */

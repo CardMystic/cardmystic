@@ -17,13 +17,4 @@ const emit = defineEmits<{
 }>()
 </script>
 
-<style scoped lang="scss">
-.deck-stats-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  flex-shrink: 0;
-  min-width: 196px;
-}
-</style>
+<style scoped lang="scss"></style>
