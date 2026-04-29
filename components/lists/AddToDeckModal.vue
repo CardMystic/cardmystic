@@ -16,7 +16,7 @@
               @click="selectRecentList(list.id)">
               <span class="flex flex-col items-start leading-tight">
                 <span>{{ listName(list) }}</span>
-                <span v-if="listFormat(list)" class="text-xs opacity-70">{{ listFormat(list) }}</span>
+                <span class="text-xs opacity-70">{{ [listFormat(list), listDate(list)].filter(Boolean).join(' · ') }}</span>
               </span>
             </UButton>
           </div>
@@ -24,14 +24,21 @@
 
         <div class="space-y-2">
           <div class="text-sm font-medium">Search Decks</div>
-          <UInputMenu v-model="selectedListLabel" v-model:search-term="deckSearchTerm" :items="filteredDeckLabels"
-            placeholder="Find a deck..." icon="i-lucide-search" class="w-full" @update:model-value="handleSelectDeck" />
+          <UInputMenu v-model="selectedListItem" v-model:search-term="deckSearchTerm" :items="filteredDeckLabels"
+            placeholder="Find a deck..." icon="i-lucide-search" class="w-full" @update:model-value="handleSelectDeck">
+            <template #item="{ item }">
+              <div class="flex flex-col leading-tight py-0.5">
+                <span>{{ item.label }}</span>
+                <span v-if="item.description" class="text-xs text-muted/70">{{ item.description }}</span>
+              </div>
+            </template>
+          </UInputMenu>
         </div>
 
         <div v-if="selectedList" class="rounded-lg border border-secondary/40 bg-elevated/40 px-3 py-2 text-sm">
           <div class="font-medium">Selected Deck</div>
           <div class="text-muted">{{ listName(selectedList) }}</div>
-          <div v-if="listFormat(selectedList)" class="text-xs text-muted/70">{{ listFormat(selectedList) }}</div>
+          <div class="text-xs text-muted/70">{{ [listFormat(selectedList), listDate(selectedList)].filter(Boolean).join(' · ') }}</div>
         </div>
 
         <UAlert v-if="alreadyInSelectedDeck" color="warning" icon="i-lucide-triangle-alert"
@@ -58,6 +65,8 @@
 <script setup lang="ts">
 import type { Database } from '~/database.types';
 import { useToast } from '#imports';
+import { formatRelativeTimeShort } from '~/utils/dateFormatter';
+
 import { useCardLists } from '~/composables/useCardLists';
 
 const props = defineProps<{
@@ -83,7 +92,7 @@ const isOpen = computed({
 });
 
 const selectedListId = ref('');
-const selectedListLabel = ref('');
+const selectedListItem = ref<{ label: string; value: string; description: string } | undefined>(undefined);
 const deckSearchTerm = ref('');
 const errorMessage = ref('');
 
@@ -98,6 +107,11 @@ function listName(list: CardListRow): string {
 
 function listFormat(list: CardListRow): string {
   return list.format?.trim() || '';
+}
+
+function listDate(list: CardListRow): string {
+  const date = list.updated_at || list.created_at;
+  return date ? formatRelativeTimeShort(date) : '';
 }
 
 function listLabel(list: CardListRow): string {
@@ -115,17 +129,26 @@ const filteredDeckLabels = computed(() => {
       return listLabel(list).toLowerCase().includes(searchLower);
     })
     .slice(0, 50)
-    .map((list) => listName(list));
+    .map((list) => ({
+      label: listName(list),
+      value: list.id,
+      description: [listFormat(list), listDate(list)].filter(Boolean).join(' · '),
+    }));
 });
 
 function syncSelectedLabel() {
   const selected = (userLists.value || []).find((list) => list.id === selectedListId.value);
-  selectedListLabel.value = selected ? listName(selected) : '';
+  selectedListItem.value = selected
+    ? {
+        label: listName(selected),
+        value: selected.id,
+        description: [listFormat(selected), listDate(selected)].filter(Boolean).join(' · '),
+      }
+    : undefined;
 }
 
-function handleSelectDeck(name: string) {
-  const selected = (userLists.value || []).find((list) => listName(list) === name);
-  selectedListId.value = selected?.id || '';
+function handleSelectDeck(item: { label: string; value: string } | string) {
+  selectedListId.value = typeof item === 'string' ? item : item.value;
   syncSelectedLabel();
 }
 
@@ -152,7 +175,7 @@ watch(isOpen, (opened) => {
   if (opened) {
     errorMessage.value = '';
     selectedListId.value = '';
-    selectedListLabel.value = '';
+    selectedListItem.value = undefined;
     deckSearchTerm.value = '';
     return;
   }
