@@ -2,53 +2,54 @@
   <div class="preview-actions">
     <UButton v-if="card.card_data.tcgplayer_id" class="cursor-pointer"
       :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
-      icon="i-heroicons-shopping-cart" size="lg" target="_blank" rel="noopener noreferrer" :label="buyLabel" block />
+      icon="i-heroicons-shopping-cart" size="md" target="_blank" rel="noopener noreferrer" :label="buyLabel" block />
     <UButton v-else :to="generateTCGPlayerSearchUrl(card.card_data.name)" class="cursor-pointer" external
-      color="primary" variant="solid" icon="i-heroicons-magnifying-glass" size="lg" label="Search on TCGPlayer" block />
-    <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-mdi-cards-outline" size="lg"
-      label="Find Similar Cards" block :disabled="findSimilarDisabled" @click="emit('findSimilar')" />
-    <UButton v-if="canShowDeckMenu" class="cursor-pointer" color="primary" variant="outline" icon="i-lucide-library-big"
-      size="lg" label="Add to Deck" block @click="emit('openAddToDeck')" />
-    <UButton class="cursor-pointer" :color="isInClipboard ? 'success' : 'primary'" variant="outline"
-      :icon="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" size="lg"
+      color="primary" variant="solid" icon="i-heroicons-magnifying-glass" size="md" label="Search on TCGPlayer" block />
+
+    <UButton v-if="canShowDeckMenu" class="cursor-pointer" color="info" variant="outline" icon="i-lucide-library-big"
+      size="md" label="Add to Deck" block @click="emit('openAddToDeck')" />
+    <UButton class="cursor-pointer" :color="isInClipboard ? 'success' : 'info'" variant="outline"
+      :icon="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" size="md"
       :label="isInClipboard ? 'Remove From Clipboard' : 'Add To Clipboard'" block @click="emit('toggleClipboard')" />
     <UButton v-if="isDualFaced" class="cursor-pointer" color="neutral" variant="outline" icon="i-heroicons-arrow-path"
-      size="lg" label="Flip Card" block @click="emit('flipCard')" />
+      size="md" label="Flip Card" block @click="emit('flipCard')" />
     <UButton v-if="showCommanderButtons" class="cursor-pointer" color="primary" variant="outline" icon="i-lucide-box"
-      size="lg" label="Get Deck Recommendations" block @click="emit('getRecommendations')" />
+      size="md" label="Get Deck Recommendations" block @click="emit('getRecommendations')" />
     <UButton v-if="showCommanderButtons" class="cursor-pointer" color="error" variant="outline" icon="i-lucide-flame"
-      size="lg" label="Popular Cards For Commander" block @click="emit('viewPopularCards')" />
+      size="md" label="Popular Cards For Commander" block @click="emit('viewPopularCards')" />
+    <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-mdi-cards-outline" size="md"
+      label="Find Similar Cards" block :disabled="findSimilarDisabled" @click="emit('findSimilar')" />
   </div>
 
   <div v-if="showListActions" class="preview-actions">
     <p class="preview-section-label">List Actions</p>
     <div class="grid grid-cols-2 gap-2">
-      <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-plus" label="Add Copy"
+      <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-plus" size="md" label="Add Copy"
         :disabled="(numCopies ?? 1) >= 100" @click="emit('addCopy')" />
-      <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-minus" label="Remove Copy"
-        :disabled="(numCopies ?? 1) <= 1" @click="emit('removeCopy')" />
+      <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-minus" size="md"
+        label="Remove Copy" :disabled="(numCopies ?? 1) <= 1" @click="emit('removeCopy')" />
     </div>
-    <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-hash" label="Set Copies" block
-      @click="emit('setCopies')" />
-    <UButton v-for="boardOption in availableBoards" :key="boardOption" color="neutral" class="cursor-pointer"
+    <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-hash" size="md" label="Set Copies"
+      block @click="emit('setCopies')" />
+    <UButton v-for="boardOption in availableBoards" size="md" :key="boardOption" color="neutral" class="cursor-pointer"
       variant="outline" :icon="boardIcon(boardOption)" :label="`Move to ${boardOption}`" block
       @click="emit('changeBoard', boardOption)" />
     <UButton v-if="showSetCommander" color="warning" class="cursor-pointer" variant="outline" icon="i-lucide-crown"
-      label="Set As Commander" block @click="emit('setCommander')" />
+      size="md" label="Set As Commander" block @click="emit('setCommander')" />
     <UButton v-if="showClearCommander" color="warning" class="cursor-pointer" variant="outline" icon="i-lucide-crown"
-      label="Remove Commander" block @click="emit('clearCommander')" />
-    <UButton color="error" class="cursor-pointer" variant="outline" icon="i-lucide-trash-2" label="Remove From List"
-      block @click="emit('removeFromList')" />
+      size="md" label="Remove Commander" block @click="emit('clearCommander')" />
+    <UButton color="error" class="cursor-pointer" variant="outline" icon="i-lucide-trash-2" size="md"
+      label="Remove From List" block @click="emit('removeFromList')" />
   </div>
 
   <div v-if="showSearchActions" class="preview-actions">
     <p class="preview-section-label">Search Actions</p>
     <UButton v-if="!hideThumbsDownButton" class="cursor-pointer" :color="isThumbsDownClicked ? 'error' : 'primary'"
-      variant="outline" icon="i-lucide-thumbs-down" size="lg"
+      variant="outline" icon="i-lucide-thumbs-down" size="md"
       :label="isThumbsDownClicked ? 'Feedback Submitted' : 'Mark As Poor Result'" block :disabled="isThumbsDownClicked"
       @click="emit('dislike')" />
     <UButton v-if="showAddToDeckbuilderButton" class="cursor-pointer" :color="isInDecklist ? 'success' : 'primary'"
-      variant="outline" :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" size="lg"
+      variant="outline" :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'" size="md"
       :label="isInDecklist ? 'Added To Deckbuilder' : 'Add To Deckbuilder'" block @click="emit('addToDeckbuilder')" />
   </div>
 </template>
