@@ -16,7 +16,8 @@
               @click="selectRecentList(list.id)">
               <span class="flex flex-col items-start leading-tight">
                 <span>{{ listName(list) }}</span>
-                <span class="text-xs opacity-70">{{ [listFormat(list), listDate(list)].filter(Boolean).join(' · ') }}</span>
+                <span class="text-xs opacity-70">{{ [listFormat(list), listDate(list)].filter(Boolean).join(' · ')
+                  }}</span>
               </span>
             </UButton>
           </div>
@@ -38,7 +39,9 @@
         <div v-if="selectedList" class="rounded-lg border border-secondary/40 bg-elevated/40 px-3 py-2 text-sm">
           <div class="font-medium">Selected Deck</div>
           <div class="text-muted">{{ listName(selectedList) }}</div>
-          <div class="text-xs text-muted/70">{{ [listFormat(selectedList), listDate(selectedList)].filter(Boolean).join(' · ') }}</div>
+          <div class="text-xs text-muted/70">{{ [listFormat(selectedList),
+          listDate(selectedList)].filter(Boolean).join(' · ')
+            }}</div>
         </div>
 
         <UAlert v-if="alreadyInSelectedDeck" color="warning" icon="i-lucide-triangle-alert"
@@ -140,10 +143,10 @@ function syncSelectedLabel() {
   const selected = (userLists.value || []).find((list) => list.id === selectedListId.value);
   selectedListItem.value = selected
     ? {
-        label: listName(selected),
-        value: selected.id,
-        description: [listFormat(selected), listDate(selected)].filter(Boolean).join(' · '),
-      }
+      label: listName(selected),
+      value: selected.id,
+      description: [listFormat(selected), listDate(selected)].filter(Boolean).join(' · '),
+    }
     : undefined;
 }
 
