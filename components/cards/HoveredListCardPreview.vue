@@ -86,7 +86,7 @@ const showAddToDeckModal = ref(false);
 const hasMounted = ref(false);
 
 const canShowDeckMenu = computed(() =>
-  hasMounted.value && Boolean(userProfile.value) && Boolean(props.card)
+  hasMounted.value && Boolean(props.card)
 );
 
 // Reset flip state when the previewed card changes

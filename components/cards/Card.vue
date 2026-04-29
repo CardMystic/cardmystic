@@ -353,7 +353,7 @@ const cardOverlayMenuItems = computed(() => [[
 ]]);
 
 const canShowDeckMenu = computed(() =>
-  hasMounted.value && props.showCardInfo && Boolean(userProfile.value)
+  hasMounted.value && props.showCardInfo
 );
 
 onMounted(() => {

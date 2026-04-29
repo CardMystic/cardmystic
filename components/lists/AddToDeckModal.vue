@@ -3,7 +3,7 @@
     description="Pick a recently edited deck or search your decks by name.">
     <template #content>
       <div v-if="!isLoggedIn" class="p-4 space-y-3 text-center">
-        <p class="text-sm text-muted">Log in to save cards to your decks.</p>
+        <p class="text-lg">Login To Create Decks!</p>
         <UButton to="/login" color="primary" variant="solid">Log In</UButton>
       </div>
 
@@ -42,7 +42,7 @@
         </div>
       </div>
 
-      <div class="mx-2 my-2 flex justify-end gap-2">
+      <div class="mx-2 my-2 flex justify-end gap-2" v-if="isLoggedIn">
         <UButton color="neutral" variant="outline" :disabled="loading" @click="isOpen = false">
           Cancel
         </UButton>

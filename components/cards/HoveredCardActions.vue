@@ -9,7 +9,7 @@
       label="Find Similar Cards" block :disabled="findSimilarDisabled" @click="emit('findSimilar')" />
     <UButton v-if="canShowDeckMenu" class="cursor-pointer" color="primary" variant="outline" icon="i-lucide-library-big"
       size="lg" label="Add to Deck" block @click="emit('openAddToDeck')" />
-    <UButton class="cursor-pointer" :color="isInClipboard ? 'success' : 'neutral'" variant="outline"
+    <UButton class="cursor-pointer" :color="isInClipboard ? 'success' : 'primary'" variant="outline"
       :icon="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" size="lg"
       :label="isInClipboard ? 'Remove From Clipboard' : 'Add To Clipboard'" block @click="emit('toggleClipboard')" />
     <UButton v-if="isDualFaced" class="cursor-pointer" color="neutral" variant="outline" icon="i-heroicons-arrow-path"
