@@ -18,13 +18,6 @@
         <img :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
           class="preview-image cursor-pointer" loading="eager" decoding="async"
           @click="navigateToCard(card.card_data.id)" />
-        <ClipboardButton :card="card" :isDualFaced="isDualFaced" @flip="flipCard" />
-        <div v-if="canShowDeckMenu" class="preview-menu-overlay">
-          <UDropdownMenu :items="cardOverlayMenuItems">
-            <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
-              size="xs" square icon="i-lucide-ellipsis-vertical" />
-          </UDropdownMenu>
-        </div>
       </div>
 
       <div class="space-y-2">
@@ -81,6 +74,11 @@
           label="Find Similar Cards" block :disabled="isSearched" @click="findSimilarCards" />
         <UButton v-if="canShowDeckMenu" class="cursor-pointer" color="primary" variant="outline"
           icon="i-lucide-library-big" size="lg" label="Add to Deck" block @click="showAddToDeckModal = true" />
+        <UButton class="cursor-pointer" :color="isInClipboard ? 'success' : 'neutral'" variant="outline"
+          :icon="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" size="lg"
+          :label="isInClipboard ? 'Remove From Clipboard' : 'Add To Clipboard'" block @click="toggleClipboard" />
+        <UButton v-if="isDualFaced" class="cursor-pointer" color="neutral" variant="outline"
+          icon="i-heroicons-arrow-path" size="lg" label="Flip Card" block @click="flipCard" />
         <UButton v-if="isCommander" class="cursor-pointer" color="primary" variant="outline" icon="i-lucide-box"
           size="lg" label="Get Deck Recommendations" block @click="getRecommendations" />
         <UButton v-if="isCommander" class="cursor-pointer" color="error" variant="outline" icon="i-lucide-flame"
@@ -104,9 +102,10 @@
 
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
-import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
+import { useClipboard } from '~/composables/useClipboard';
+import { useToast } from '#imports';
 
 const router = useRouter();
 const route = useRoute();
@@ -114,6 +113,8 @@ const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const deckbuilderStore = useDeckbuilder();
 const { userProfile } = useUserProfile();
+const clipboard = useClipboard();
+const toast = useToast();
 
 const props = defineProps<{
   card: Card | null;
@@ -130,16 +131,6 @@ const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const showAddToDeckModal = ref(false);
 const hasMounted = ref(false);
-
-const cardOverlayMenuItems = computed(() => [[
-  {
-    label: 'Add to Deck',
-    icon: 'i-lucide-library-big',
-    onSelect() {
-      showAddToDeckModal.value = true;
-    },
-  },
-]]);
 
 const canShowDeckMenu = computed(() =>
   hasMounted.value && Boolean(userProfile.value) && Boolean(props.card)
@@ -164,6 +155,24 @@ const isDualFaced = computed(() => {
 const isInDecklist = computed(() => {
   if (!props.card?.card_data?.name) return false;
   return deckbuilderStore.hasCard(props.card.card_data.name);
+});
+
+const clipboardCard = computed(() => {
+  const cardData = props.card?.card_data;
+  if (!cardData) return null;
+
+  return {
+    id: cardData.id || '',
+    name: cardData.name || '',
+    set: cardData.set || '',
+    imageUrl: getCardImageUrl(cardData),
+    price: cardData.prices?.usd || '0',
+  };
+});
+
+const isInClipboard = computed(() => {
+  if (!clipboardCard.value) return false;
+  return clipboard.has(clipboardCard.value.id);
 });
 
 const hasDualScores = computed(() =>
@@ -226,6 +235,19 @@ const priceLabel = computed(() => {
 
 function flipCard() {
   isFlipped.value = !isFlipped.value;
+}
+
+function toggleClipboard() {
+  if (!clipboardCard.value) return;
+
+  if (isInClipboard.value) {
+    toast.add({ title: 'Card removed from clipboard', icon: 'i-lucide-clipboard-minus' });
+    clipboard.remove(clipboardCard.value.id);
+    return;
+  }
+
+  toast.add({ title: 'Card added to clipboard', icon: 'i-lucide-clipboard-check' });
+  clipboard.add(clipboardCard.value);
 }
 
 function navigateToCard(cardId: string | undefined) {
@@ -311,19 +333,6 @@ function viewPopularCards() {
   transform: scale(1.03);
 }
 
-.preview-menu-overlay {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.preview-image-wrapper:hover .preview-menu-overlay {
-  opacity: 1;
-}
-
 .preview-title {
   font-size: 1.15rem;
   font-weight: 700;
@@ -380,13 +389,5 @@ function viewPopularCards() {
   text-align: right;
   font-size: 0.85rem;
   font-weight: 700;
-}
-
-@media (max-width: 767px) {
-  .preview-menu-overlay {
-    opacity: 1;
-    left: 12px;
-    top: 12px;
-  }
 }
 </style>

@@ -21,23 +21,9 @@
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
 
-      <ClipboardButton :card="card" :isDualFaced="isDualFaced" @flip="flipCard" />
-
-
-      <!-- Menu Overlay (left side, below badge) -->
-      <div v-if="!isDeckCommander" class="flex flex-col gap-1 list-card-menu-overlay">
-        <!-- Copy Count Badge (left side, hidden for commanders) -->
-        <span class="copy-count-badge" :class="{ 'multi-copy': (numCopies ?? 1) > 1 }">x{{
-          numCopies
-          ?? 1
-          }}</span>
-
-
-        <UDropdownMenu :items="cardOverlayMenuItems">
-          <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
-            size="xs" square icon="i-lucide-ellipsis-vertical" />
-        </UDropdownMenu>
-      </div>
+      <LazyCardOverlayButtons :card="card" :isDualFaced="isDualFaced" :show-menu-button="true"
+        :show-copy-count="!isDeckCommander" :num-copies="numCopies ?? 1" :menu-items="cardOverlayMenuItems"
+        @flip="flipCard" />
 
       <!-- Legality Warning Overlay -->
       <div v-if="legalityWarning" class="legality-overlay">
@@ -89,7 +75,6 @@
 import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
 import { isLegal, isColorIdentityLegal, formatToLegalityKey } from '~/utils/legality';
 import { useCommandersSet } from '~/composables/useBulkData';
 import { useSearchType } from '~/composables/useSearchType';
@@ -375,61 +360,5 @@ function handleImageError(event: Event) {
 
 .card-image-wrapper:hover img {
   transform: scale(1.03);
-}
-
-/* Copy count badge */
-.copy-count-badge {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: white;
-  background: rgba(0, 0, 0, 0.65);
-  border-radius: 6px;
-  line-height: 1.4;
-  text-align: center;
-  min-width: 24px;
-  user-select: none;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-/* Always visible when >1 copy */
-.copy-count-badge.multi-copy {
-  opacity: 1;
-}
-
-/* Show on hover */
-.card-image-wrapper:hover .copy-count-badge {
-  opacity: 1;
-}
-
-@media (max-width: 767px) {
-  .copy-count-badge {
-    opacity: 1 !important;
-  }
-}
-
-/* Menu overlay — shown on hover only */
-.list-card-menu-overlay {
-  position: absolute;
-  left: 14px;
-  top: 30px;
-  z-index: 2;
-  opacity: 0;
-  pointer-events: auto;
-  transition: opacity 0.2s;
-}
-
-.card-image-wrapper:hover .list-card-menu-overlay {
-  opacity: 1;
-}
-
-@media (max-width: 767px) {
-  .list-card-menu-overlay {
-    opacity: 1 !important;
-    left: 12px;
-    top: 30px;
-  }
 }
 </style>

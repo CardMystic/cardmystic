@@ -49,8 +49,7 @@
             <div class="card-sheen"></div>
           </div>
 
-          <!-- use ClipboardButton component -->
-          <ClipboardButton v-if="card" :card="card" />
+          <LazyCardOverlayButtons v-if="card" :card="card" />
         </div>
 
         <!-- Flip Button for Dual-Faced Cards -->

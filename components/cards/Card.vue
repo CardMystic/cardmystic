@@ -44,15 +44,9 @@
         </div>
       </template>
 
-      <LazyClipboardButton v-if="showCardInfo && !hasPartner" :card="card" :isDualFaced="isDualFaced"
-        @flip="flipCard" />
-
-      <div v-if="canShowDeckMenu" class="card-menu-overlay">
-        <UDropdownMenu :items="cardOverlayMenuItems">
-          <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid"
-            size="xs" square icon="i-lucide-ellipsis-vertical" />
-        </UDropdownMenu>
-      </div>
+      <LazyCardOverlayButtons :card="card" :isDualFaced="isDualFaced"
+        :show-clipboard-button="showCardInfo && !hasPartner" :show-flip-button="showCardInfo && !hasPartner"
+        :show-menu-button="canShowDeckMenu" :menu-items="cardOverlayMenuItems" @flip="flipCard" />
 
       <!-- Score Bars -->
       <div v-if="!hideProgressBar" class="mt-1 w-full" :class="{ invisible: isSearched }">
@@ -616,29 +610,6 @@ function toggleShowAllData() {
   transform: scale(1.03);
 }
 
-/* Menu overlay — shown on hover only */
-.card-menu-overlay {
-  position: absolute;
-  left: 14px;
-  top: 30px;
-  z-index: 2;
-  opacity: 0;
-  pointer-events: auto;
-  transition: opacity 0.2s;
-}
-
-.card-image-wrapper:hover .card-menu-overlay {
-  opacity: 1;
-}
-
-@media (max-width: 767px) {
-  .card-menu-overlay {
-    opacity: 1 !important;
-    left: 12px;
-    top: 30px;
-  }
-}
-
 .card-root {
   max-width: 330px;
   width: 100%;
@@ -690,13 +661,5 @@ function toggleShowAllData() {
 .partner-card:hover img {
   transform: scale(1.05);
   z-index: 2;
-}
-
-@media (max-width: 767px) {
-  .card-menu-overlay {
-    left: 12px;
-    top: 12px;
-    opacity: 1;
-  }
 }
 </style>
