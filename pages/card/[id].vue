@@ -161,7 +161,7 @@
       <!-- Center: Card Details + LLM -->
       <div class="min-w-0">
         <div class="lg:grid lg:grid-cols-12 lg:gap-2">
-          <div class="lg:col-span-7 flex flex-col">
+          <div :class="hasLlmContent ? 'lg:col-span-7' : 'lg:col-span-12'" class="flex flex-col">
             <UCard class="card-details-card">
               <h2 class="card-title flex flex-row">
                 <span class="card-title-text">{{ currentName }}</span>
@@ -303,8 +303,8 @@
             </UCard>
           </div>
 
-          <div v-if="llmDetails" class="lg:col-span-5 mt-2 lg:mt-0">
-            <LlmStrategyPanel :llm="llmDetails" />
+          <div v-if="hasLlmContent" class="lg:col-span-5 mt-2 lg:mt-0">
+            <LlmStrategyPanel :llm="llmDetails!" />
           </div>
         </div>
       </div>
@@ -480,6 +480,16 @@ function navigateToExplore(type: 'popular-cards' | 'popular-commanders' | 'popul
 const { card, llm, printings, error, pending } = useCardDetails(cardIdParam);
 
 const llmDetails = computed<LlmCardAttributes | null>(() => llm.value?.llm ?? null);
+
+const hasLlmContent = computed(() => {
+  const l = llmDetails.value;
+  if (!l) return false;
+  const hasPower = l.power_level > 0;
+  const hasStrategy = [l.strategy_rankings.aggro, l.strategy_rankings.midrange, l.strategy_rankings.control, l.strategy_rankings.combo].some(v => v > 0);
+  const hasSummary = !!l.long_summary?.trim();
+  const hasBadges = (l.roles?.length ?? 0) > 0 || (l.themes?.length ?? 0) > 0 || (l.community_sentiment?.length ?? 0) > 0;
+  return hasPower || hasStrategy || hasSummary || hasBadges;
+});
 
 // Check if error is a 404 Not Found
 const isNotFound = computed(() => {

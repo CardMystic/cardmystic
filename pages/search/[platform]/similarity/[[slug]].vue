@@ -88,7 +88,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Similarity Search' });
 
-const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : 40; });
+const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : undefined; });
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -119,7 +119,7 @@ const similaritySearch = computed(() => {
   if (!cardName) return undefined;
   return SimilaritySearchSchema.parse({
     card_name: cardName,
-    limit: limitParam.value || 40,
+    limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false,
   });

@@ -1,6 +1,6 @@
 <template>
-  <div class="llm-stack">
-    <UCard class="llm-card">
+  <div v-if="hasAnyData" class="llm-stack">
+    <UCard v-if="hasPowerLevelData" class="llm-card">
       <h3 class="llm-title flex items-center gap-2">
         <UIcon name="i-lucide-biceps-flexed" />AI Power Level
       </h3>
@@ -26,12 +26,12 @@
       </div>
     </UCard>
 
-    <UCard class="llm-card">
+    <UCard v-if="hasSummaryData" class="llm-card">
       <h3 class="llm-title flex items-center gap-2">
         <UIcon name="i-lucide-brain" />AI Summary
       </h3>
 
-      <div class="chart-wrap">
+      <div v-if="hasStrategyData" class="chart-wrap">
         <svg :viewBox="`0 0 ${size} ${size}`" class="radar-chart" role="img" aria-label="AI strategy radar chart">
           <g>
             <polygon v-for="(ring, i) in ringPolygons" :key="`ring-${i}`" :points="ring" class="ring"
@@ -178,6 +178,20 @@ const cardSentiment = computed(() => {
     .filter(Boolean)
     .slice(0, 5);
 });
+
+const hasPowerLevelData = computed(() =>
+  props.llm.power_level > 0
+);
+
+const hasStrategyData = computed(() =>
+  values.value.some(v => v > 0)
+);
+
+const hasSummaryData = computed(() =>
+  hasStrategyData.value || !!longSummary.value || cardRoles.value.length > 0 || cardThemes.value.length > 0 || cardSentiment.value.length > 0
+);
+
+const hasAnyData = computed(() => hasPowerLevelData.value || hasSummaryData.value);
 
 function meterColor(percent: number) {
   if (percent >= 70) return 'success';
