@@ -17,15 +17,18 @@
     </UTooltip>
   </div>
 
-  <div v-if="showLeftOverlay" class="card-menu-overlay" :class="{ 'with-copy-count': showCopyCountBadge }">
-    <span v-if="showCopyCountBadge" class="copy-count-badge" :class="{ 'multi-copy': copyCount > 1 }">
-      x{{ copyCount }}
-    </span>
+  <div v-if="showMenuControl && hasMenuItems || showCopyCountBadge" class="card-menu-overlay"
+    :class="{ 'with-copy-count': showCopyCountBadge }">
+    <div v-if="showCopyCountBadge" class="copy-count-wrapper" :class="{ 'multi-copy': copyCount > 1 }">
+      <span class="copy-count-badge p-1">x{{ copyCount }}</span>
+    </div>
 
-    <UDropdownMenu v-if="showMenuControl && hasMenuItems" :items="menuItems ?? []">
-      <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid" size="xs"
-        square icon="i-lucide-ellipsis-vertical" />
-    </UDropdownMenu>
+    <div v-if="showMenuControl && hasMenuItems" class="menu-wrapper">
+      <UDropdownMenu :items="menuItems ?? []">
+        <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid" size="xs"
+          square icon="i-lucide-ellipsis-vertical" />
+      </UDropdownMenu>
+    </div>
   </div>
 </template>
 
@@ -76,7 +79,6 @@ const showFlipControl = computed(() => Boolean(resolvedCardData.value) && props.
 const showCopyCountBadge = computed(() => props.showCopyCount && copyCount.value > 0);
 const hasMenuItems = computed(() => (props.menuItems?.length ?? 0) > 0);
 const showMenuControl = computed(() => props.showMenuButton && hasMenuItems.value);
-const showLeftOverlay = computed(() => showCopyCountBadge.value || showMenuControl.value);
 
 const cardClipData = computed(() => {
   const cardData = resolvedCardData.value;
@@ -142,17 +144,34 @@ function handleClipboardClick() {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  opacity: 0;
   pointer-events: auto;
-  transition: opacity 0.2s;
 }
 
 .card-menu-overlay.with-copy-count {
   top: 30px;
 }
 
-:global(.card-image-container:hover .card-menu-overlay),
-:global(.card-image-wrapper:hover .card-menu-overlay) {
+.copy-count-wrapper {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.copy-count-wrapper.multi-copy {
+  opacity: 1;
+}
+
+:global(.card-image-container:hover .copy-count-wrapper),
+:global(.card-image-wrapper:hover .copy-count-wrapper) {
+  opacity: 1;
+}
+
+.menu-wrapper {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+:global(.card-image-container:hover .menu-wrapper),
+:global(.card-image-wrapper:hover .menu-wrapper) {
   opacity: 1;
 }
 
@@ -167,17 +186,6 @@ function handleClipboardClick() {
   min-width: 24px;
   user-select: none;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.copy-count-badge.multi-copy {
-  opacity: 1;
-}
-
-:global(.card-image-container:hover .copy-count-badge),
-:global(.card-image-wrapper:hover .copy-count-badge) {
-  opacity: 1;
 }
 
 .action-icon {
@@ -198,12 +206,12 @@ function handleClipboardClick() {
 
   .card-menu-overlay,
   .card-menu-overlay.with-copy-count {
-    opacity: 1 !important;
     left: 12px;
     top: 30px;
   }
 
-  .copy-count-badge {
+  .copy-count-wrapper,
+  .menu-wrapper {
     opacity: 1 !important;
   }
 

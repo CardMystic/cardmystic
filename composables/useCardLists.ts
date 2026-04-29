@@ -8,6 +8,7 @@ import {
 } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
 import type { CardFormatType } from '~/models/cardModel';
+import type { BulkEditRequest, BulkEditResponse } from '~/models/cardListModel';
 
 export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
@@ -211,7 +212,9 @@ export const useCardLists = () => {
     },
   });
 
-  const bulkEditList = async (listId: string, cardNames: string[]) => {
+  const bulkEditList = async (
+    request: BulkEditRequest,
+  ): Promise<BulkEditResponse> => {
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -228,38 +231,32 @@ export const useCardLists = () => {
     }
 
     const config = useRuntimeConfig();
-    const response = await $fetch<{
-      addedCount: number;
-      removedCount: number;
-      invalidCardNames: string[];
-      message?: string;
-    }>(`${config.public.backendUrl}/supabase/card-lists/bulk-edit`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
+    console.log('[bulkEditList] request body:', JSON.stringify(request, null, 2));
+    const response = await $fetch<BulkEditResponse>(
+      `${config.public.backendUrl}/supabase/card-lists/bulk-edit`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: request,
       },
-      body: {
-        listId,
-        cardNames,
-      },
-    });
+    );
 
     return response;
   };
 
   const bulkEditListMutation = useMutation({
-    mutationFn: async ({
-      listId,
-      cardNames,
-    }: {
-      listId: string;
-      cardNames: string[];
-    }) => {
-      return bulkEditList(listId, cardNames);
+    mutationFn: async (request: BulkEditRequest) => {
+      return bulkEditList(request);
     },
-    onSuccess: (_, { listId }) => {
-      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+    onSuccess: (_, request) => {
+      queryClient.invalidateQueries({
+        queryKey: ['list-items', request.listId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['list-cards', request.listId],
+      });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
   });

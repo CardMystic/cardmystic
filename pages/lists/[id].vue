@@ -65,7 +65,8 @@
   </div>
 
   <!-- Bulk Edit Modal -->
-  <BulkAddCardsModal v-model:open="isBulkEditModalOpen" :list-id="listId" :current-card-names="currentCardNames" />
+  <BulkAddCardsModal v-model:open="isBulkEditModalOpen" :list-id="listId" :mainboard-names="mainboardNames"
+    :sideboard-names="sideboardNames" :considering-names="consideringNames" />
 
   <!-- Duplicate Card Confirmation Modal -->
   <UModal v-model:open="showDuplicateModal" title="Card Already in List">
@@ -396,26 +397,21 @@ async function confirmAddDuplicate() {
 
 // Bulk edit state
 const isBulkEditModalOpen = ref(false)
-const currentCardNames = computed(() => {
+
+function boardLines(board: 'Mainboard' | 'Sideboard' | 'Considering') {
   if (!cards.value || cards.value.length === 0) return []
-  const boards = ['Mainboard', 'Sideboard', 'Considering'] as const
-  const lines: string[] = []
-  for (const board of boards) {
-    const boardCards = cards.value.filter((card: any) =>
-      (listItemsMap.value[card.card_data.id]?.board ?? 'Mainboard') === board
-    )
-    if (boardCards.length === 0) continue
-    if (board !== 'Mainboard' || lines.length > 0) {
-      lines.push(board)
-    }
-    for (const card of boardCards) {
+  return cards.value
+    .filter((card: any) => (listItemsMap.value[card.card_data.id]?.board ?? 'Mainboard') === board)
+    .map((card: any) => {
       const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1
       const name = card.card_data.name
-      lines.push(copies > 1 ? `${copies} ${name}` : name)
-    }
-  }
-  return lines
-})
+      return copies > 1 ? `${copies} ${name}` : name
+    })
+}
+
+const mainboardNames = computed(() => boardLines('Mainboard'))
+const sideboardNames = computed(() => boardLines('Sideboard'))
+const consideringNames = computed(() => boardLines('Considering'))
 
 // Recommend state
 const recommendDescription = ref('')
