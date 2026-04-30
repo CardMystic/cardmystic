@@ -70,7 +70,7 @@
                     <span class="font-semibold">{{ item.label }}</span>
                     <span v-if="item.surgefoil" class="text-xs text-blue-400">Surge Foil</span>
                     <span v-if="item.frame_effects.length" class="text-xs text-gray-400">{{ item.frame_effects.join(',')
-                      }}</span>
+                    }}</span>
                     <span class="text-xs text-gray-400">{{ item.subtitle }}</span>
                   </div>
                 </div>
@@ -482,6 +482,7 @@ const llmDetails = computed<LlmCardAttributes | null>(() => llm.value?.llm ?? nu
 
 const hasLlmContent = computed(() => {
   const l = llmDetails.value;
+  console.log('llmdetails: ', llmDetails.value);
   if (!l) return false;
   const hasPower = l.power_level > 0;
   const hasStrategy = [l.strategy_rankings.aggro, l.strategy_rankings.midrange, l.strategy_rankings.control, l.strategy_rankings.combo].some(v => v > 0);

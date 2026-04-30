@@ -62,7 +62,7 @@
           <UBadge v-for="role in cardRoles" :key="role" color="primary" variant="subtle" size="sm" class="role-badge">
             {{ role }}
           </UBadge>
-          <UBadge v-for="theme in cardThemes" :key="theme" color="secondary" variant="subtle" size="sm"
+          <UBadge v-for="theme in cardThemes" :key="theme" color="success" variant="subtle" size="sm"
             class="role-badge">
             {{ theme }}
           </UBadge>
@@ -140,9 +140,7 @@ const labelPoints = computed(() => labels.map((_, i) => {
 
 function toMeterPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
-  if (value <= 5) return Math.max(0, Math.min(100, (value / 5) * 100));
-  if (value <= 10) return Math.max(0, Math.min(100, (value / 10) * 100));
-  return Math.max(0, Math.min(100, value));
+  return Math.max(0, Math.min(100, (value / 5) * 100));
 }
 
 const overallPowerPercent = computed(() => toMeterPercent(props.llm.power_level));
