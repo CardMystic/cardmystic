@@ -179,7 +179,6 @@ const submitNewPassword = async () => {
       router.push('/login')
     }
   } catch (error) {
-    console.log(error)
     errorMessage.value = 'An unexpected error occurred.'
   }
 

@@ -80,7 +80,6 @@
 import type { Card } from '~/models/cardModel';
 import { getCardImageUrl } from '~/utils/scryfall';
 import { useClipboard } from '~/composables/useClipboard';
-import { useToast } from '#imports';
 
 const router = useRouter();
 const route = useRoute();
@@ -88,7 +87,6 @@ const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const deckbuilderStore = useDeckbuilder();
 const clipboard = useClipboard();
-const toast = useToast();
 
 const props = defineProps<{
   card: Card | null;
@@ -215,12 +213,10 @@ function toggleClipboard() {
   if (!clipboardCard.value) return;
 
   if (isInClipboard.value) {
-    toast.add({ title: 'Card removed from clipboard', icon: 'i-lucide-clipboard-minus' });
     clipboard.remove(clipboardCard.value.id);
     return;
   }
 
-  toast.add({ title: 'Card added to clipboard', icon: 'i-lucide-clipboard-check' });
   clipboard.add(clipboardCard.value);
 }
 
@@ -276,7 +272,9 @@ function getRecommendations() {
 
 function viewPopularCards() {
   if (!props.card?.card_data?.name) return;
-  router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('popular-by-commander', queryParams);
+  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 </script>
 

@@ -5,6 +5,21 @@
 
       <SearchAbout type="popular-by-commander" />
 
+      <!-- Commander Card(s) -->
+      <div v-if="commanderNames.length" class="w-full mt-4 flex flex-wrap gap-4 justify-center">
+        <template v-if="commanderCardsLoading">
+          <div v-for="name in commanderNames" :key="name" class="w-full max-w-50 sm:max-w-70">
+            <CardSkeleton :show-card-info="true" />
+          </div>
+        </template>
+        <template v-else-if="commanderCards && commanderCards.length">
+          <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-50 sm:max-w-70">
+            <Card :card="cmd" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
+              :gold-highlight="true" :is-commander="true" />
+          </div>
+        </template>
+      </div>
+
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="commanderParam || ''"
@@ -24,6 +39,7 @@ import { CardSearchFiltersSchema } from '~/models/searchModel';
 import { PopularByCommanderSearchSchema } from '~/models/deckStatsModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePopularByCommander } from '~/composables/useDeckStats';
+import { useCardsByName } from '~/composables/useCards';
 import { isValidPlatform, type Platform } from '~/utils/platformConfig';
 
 const route = useRoute();
@@ -36,6 +52,10 @@ if (!isValidPlatform(platform)) {
 const commanderParam = computed(() => String(route.query.commander || ''));
 const partnerParam = computed(() => String(route.query.partner || ''));
 const queryParam = computed(() => String(route.query.query || ''));
+
+const commanderNames = computed(() => [commanderParam.value, partnerParam.value].filter(Boolean));
+
+const { cards: commanderCards, isLoading: commanderCardsLoading } = useCardsByName(commanderNames);
 
 const commanderDisplay = computed(() => {
   if (!commanderParam.value) return '';

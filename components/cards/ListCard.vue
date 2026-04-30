@@ -271,7 +271,9 @@ function getRecommendations() {
 
 function viewPopularCards() {
   if (!props.card?.card_data?.name) return;
-  router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('popular-by-commander', queryParams);
+  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 
 function handleImageError(event: Event) {

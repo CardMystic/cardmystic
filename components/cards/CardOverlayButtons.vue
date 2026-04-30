@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useToast } from '#imports';
 import type { Card, ScryfallCard } from '~/models/cardModel';
 import { useClipboard } from '~/composables/useClipboard';
 import { getCardImageUrl } from '~/utils/scryfall';
@@ -65,7 +64,6 @@ const emit = defineEmits<{
 }>();
 
 const clipboard = useClipboard();
-const toast = useToast();
 
 const resolvedCardData = computed(() => {
   if (!props.card) return null;
@@ -102,12 +100,10 @@ function handleClipboardClick() {
   if (!cardClipData.value) return;
 
   if (isInClipboard.value) {
-    toast.add({ title: 'Card removed from clipboard', icon: 'i-lucide-clipboard-minus' });
     clipboard.remove(cardClipData.value.id);
     return;
   }
 
-  toast.add({ title: 'Card added to clipboard', icon: 'i-lucide-clipboard-check' });
   clipboard.add(cardClipData.value);
 }
 </script>

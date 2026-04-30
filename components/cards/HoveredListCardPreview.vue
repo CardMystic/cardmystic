@@ -17,7 +17,7 @@
         <img :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
           class="preview-image cursor-pointer" loading="eager" decoding="async"
           @click="navigateToCard(card.card_data.id)" />
-        <span v-if="!isDeckCommander" class="copy-count-pill">x{{ numCopies ?? 1 }}</span>
+        <span v-if="!isCommanderOfDecklist" class="copy-count-pill">x{{ numCopies ?? 1 }}</span>
       </div>
 
       <div class="space-y-2">
@@ -35,10 +35,11 @@
         :buy-label="card.card_data.prices.usd ? `Buy on TCGPlayer ($${card.card_data.prices.usd})` : 'Buy on TCGPlayer'"
         :can-show-deck-menu="canShowDeckMenu" :is-in-clipboard="isInClipboard" :is-dual-faced="isDualFaced"
         :show-commander-buttons="isCommanderCardComputed" :show-list-actions="true" :num-copies="numCopies ?? 1"
-        :available-boards="availableBoards" :show-set-commander="isCommanderCardComputed && !isDeckCommander"
-        :show-clear-commander="isDeckCommander" @find-similar="findSimilarCards"
-        @open-add-to-deck="showAddToDeckModal = true" @toggle-clipboard="toggleClipboard" @flip-card="flipCard"
-        @get-recommendations="getRecommendations" @view-popular-cards="viewPopularCards"
+        :available-boards="availableBoards" :show-set-commander="isCommanderCardComputed && !isCommanderOfDecklist"
+        :show-clear-commander="isCommanderOfDecklist" :show-edit-copies-buttons="!isCommanderOfDecklist"
+        @find-similar="findSimilarCards" @open-add-to-deck="showAddToDeckModal = true"
+        @toggle-clipboard="toggleClipboard" @flip-card="flipCard" @get-recommendations="getRecommendations"
+        @view-popular-cards="viewPopularCards"
         @add-copy="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) + 1)"
         @remove-copy="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) - 1)"
         @set-copies="openSetCopiesModal" @change-board="handleChangeBoard" @set-commander="showCommanderModal = true"
@@ -54,21 +55,20 @@ import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCommandersSet } from '~/composables/useBulkData';
 import { useClipboard } from '~/composables/useClipboard';
 import { getCardImageUrl } from '~/utils/scryfall';
-import { useToast } from '#imports';
 
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const { data: commanders } = useCommandersSet();
 const clipboard = useClipboard();
-const toast = useToast();
 
 const props = defineProps<{
   card: Card | null;
-  isDeckCommander: boolean;
-  isCommanderCard?: boolean;
+  isCommanderOfDecklist: boolean; // Whether this card is the commander of the deck list
+  canBeACommander?: boolean; // Whether this card CAN be a commander of a deck list
   numCopies?: number;
   board?: string;
+  showEditCopiesButtons?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -107,7 +107,7 @@ const availableBoards = computed(() => boardOptions.filter(board => board !== cu
 
 const isCommanderCardComputed = computed(() => {
   if (!props.card) return false;
-  if (props.isCommanderCard !== undefined) return props.isCommanderCard;
+  if (props.canBeACommander !== undefined) return props.canBeACommander;
   return commanders.value?.has(props.card.card_data.name) ?? false;
 });
 
@@ -151,12 +151,10 @@ function toggleClipboard() {
   if (!clipboardCard.value) return;
 
   if (isInClipboard.value) {
-    toast.add({ title: 'Card removed from clipboard', icon: 'i-lucide-clipboard-minus' });
     clipboard.remove(clipboardCard.value.id);
     return;
   }
 
-  toast.add({ title: 'Card added to clipboard', icon: 'i-lucide-clipboard-check' });
   clipboard.add(clipboardCard.value);
 }
 
@@ -211,7 +209,9 @@ function getRecommendations() {
 
 function viewPopularCards() {
   if (!props.card?.card_data.name) return;
-  router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('popular-by-commander', queryParams);
+  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 
 function handleChangeBoard(board: 'Mainboard' | 'Sideboard' | 'Considering') {

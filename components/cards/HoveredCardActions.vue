@@ -23,14 +23,16 @@
 
   <div v-if="showListActions" class="preview-actions">
     <p class="preview-section-label">List Actions</p>
-    <div class="grid grid-cols-2 gap-2">
-      <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-plus" size="md" label="Add Copy"
-        :disabled="(numCopies ?? 1) >= 100" @click="emit('addCopy')" />
-      <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-minus" size="md"
-        label="Remove Copy" :disabled="(numCopies ?? 1) <= 1" @click="emit('removeCopy')" />
-    </div>
-    <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-hash" size="md" label="Set Copies"
-      block @click="emit('setCopies')" />
+    <template v-if="showEditCopiesButtons">
+      <div class="grid grid-cols-2 gap-2">
+        <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-plus" size="md"
+          label="Add Copy" :disabled="(numCopies ?? 1) >= 100" @click="emit('addCopy')" />
+        <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-minus" size="md"
+          label="Remove Copy" :disabled="(numCopies ?? 1) <= 1" @click="emit('removeCopy')" />
+      </div>
+      <UButton color="neutral" class="cursor-pointer" variant="outline" icon="i-lucide-hash" size="md"
+        label="Set Copies" block @click="emit('setCopies')" />
+    </template>
     <UButton v-for="boardOption in availableBoards" size="md" :key="boardOption" color="neutral" class="cursor-pointer"
       variant="outline" :icon="boardIcon(boardOption)" :label="`Move to ${boardOption}`" block
       @click="emit('changeBoard', boardOption)" />
@@ -74,6 +76,7 @@ const props = withDefaults(defineProps<{
   availableBoards?: Board[];
   showSetCommander?: boolean;
   showClearCommander?: boolean;
+  showEditCopiesButtons?: boolean;
   showSearchActions?: boolean;
   hideThumbsDownButton?: boolean;
   isThumbsDownClicked?: boolean;
@@ -90,6 +93,7 @@ const props = withDefaults(defineProps<{
   availableBoards: () => [],
   showSetCommander: false,
   showClearCommander: false,
+  showEditCopiesButtons: true,
   showSearchActions: false,
   hideThumbsDownButton: false,
   isThumbsDownClicked: false,
