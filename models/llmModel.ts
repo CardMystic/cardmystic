@@ -9,10 +9,19 @@ export const StrategyRankingsSchema = z.object({
 
 export const LlmCardAttributesSchema = z.object({
   power_level: z.coerce.number().int(),
-  community_sentiment: z.array(z.string()).default([]),
+  community_sentiment: z
+    .array(z.string())
+    .nullish()
+    .transform((v) => v ?? []),
   format_strength: z.record(z.string(), z.coerce.number().int()).default({}),
-  themes: z.array(z.string()).default([]),
-  roles: z.array(z.string()).default([]),
+  themes: z
+    .array(z.string())
+    .nullish()
+    .transform((v) => v ?? []),
+  roles: z
+    .array(z.string())
+    .nullish()
+    .transform((v) => v ?? []),
   long_summary: z.string().default(''),
   strategy_rankings: StrategyRankingsSchema,
 });
