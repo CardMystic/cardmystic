@@ -36,7 +36,7 @@
   <LazyIssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
   <LazyBackToTop />
 
-  <SaveToListModal v-model="showSaveAllModal" :card-names="decklistCardNames" :commanders="commanderNames" />
+  <AddToDeckModal v-model:open="showSaveAllModal" :card-names="decklistCardNames" />
 </template>
 
 <script setup lang="ts">

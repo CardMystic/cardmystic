@@ -33,7 +33,7 @@
               <div class="board-divider-line"></div>
               <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' :
                 'cards'
-              }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+                }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
               <div class="board-divider-line"></div>
             </div>
             <!-- Commander card(s) at the top (groups with empty label) -->
@@ -202,8 +202,8 @@
         <UIcon name="i-lucide-layers" class="w-16 h-16 mb-4 text-gray-400" />
         <h3 class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300">This list is empty!</h3>
         <p class="text-gray-500 dark:text-gray-400 max-w-md">
-          Use the search dropdown above, or the <span class="font-medium">Save To List</span> button from the clipboard
-          to add cards to this list.
+          Use the search dropdown above, or the <span class="font-medium">Add to Deck</span> button from the clipboard
+          to add cards to this deck.
         </p>
       </div>
     </template>

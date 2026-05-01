@@ -1,7 +1,6 @@
 <template>
   <UCard v-if="card" variant="outline" class="preview-root" :ui="{ body: 'p-4' }">
-    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
-      :card-name="card.card_data.name" />
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-ids="[card.card_data.id]" />
 
     <SetCommanderModal :open="showCommanderModal" :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event" @confirm="confirmSetCommander" />

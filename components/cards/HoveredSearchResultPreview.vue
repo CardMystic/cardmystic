@@ -1,7 +1,6 @@
 <template>
   <UCard v-if="card" variant="subtle" class="preview-root" :ui="{ body: 'p-4' }">
-    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
-      :card-name="card.card_data.name" />
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-ids="[card.card_data.id]" />
 
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"

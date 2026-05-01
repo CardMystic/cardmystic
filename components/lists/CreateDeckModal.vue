@@ -39,10 +39,13 @@ import { useToast } from '#imports'
 
 const props = defineProps<{
   open: boolean
+  cardIds?: string[]
+  cardNames?: string[]
 }>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
+  'success': []
 }>()
 
 const isOpen = computed({
@@ -50,7 +53,7 @@ const isOpen = computed({
   set: (value) => emit('update:open', value),
 })
 
-const { createListMutation } = useCardLists()
+const { createListMutation, addCardsToListMutation, addCardsByNameToListMutation } = useCardLists()
 const { data: commanders } = useCommanders()
 const { data: partnerCommanders } = usePartnerCommanders()
 const toast = useToast()
@@ -134,16 +137,27 @@ const handleCreate = async () => {
     if (newListCommander.value) commandersList.push(newListCommander.value)
     if (newListPartnerCommander.value) commandersList.push(newListPartnerCommander.value)
 
-    await createListMutation.mutateAsync({
+    const result = await createListMutation.mutateAsync({
       name: newListName.value.trim(),
       description: newListDescription.value.trim() || undefined,
       format: newListFormat.value,
       commanders: commandersList.length > 0 ? commandersList : undefined,
     })
+
+    if (result?.id) {
+      if (props.cardIds?.length) {
+        await addCardsToListMutation.mutateAsync({ listId: result.id, cardIds: props.cardIds })
+      } else if (props.cardNames?.length) {
+        await addCardsByNameToListMutation.mutateAsync({ listId: result.id, cardNames: props.cardNames })
+      }
+    }
+
+    const cardCount = (props.cardIds?.length ?? 0) || (props.cardNames?.length ?? 0)
     toast.add({
-      title: 'List created',
+      title: cardCount > 0 ? `List created and ${cardCount} card${cardCount === 1 ? '' : 's'} added` : 'List created',
       icon: 'i-lucide-check'
     })
+    emit('success')
     isOpen.value = false
   } catch (error: any) {
     toast.add({

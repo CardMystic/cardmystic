@@ -113,27 +113,30 @@ export const useCardLists = () => {
       throw new Error('No cards to add');
     }
 
-    // Create card list items
-    const items = cardIds.map((cardId) => ({
-      list_id: listId,
-      card_id: cardId,
-      board: 'Mainboard',
-      num_copies: 1,
-    }));
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
 
-    const { error: insertError } = await supabase
-      .from('card_list_items')
-      .insert(items);
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
 
-    if (insertError) throw insertError;
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      addedCount: number;
+      updatedCount: number;
+      invalidCardIds: string[];
+    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-id`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardIds,
+      },
+    });
 
-    // Update the list's updated_at timestamp
-    const { error: updateError } = await supabase
-      .from('card_lists')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', listId);
-
-    if (updateError) throw updateError;
+    return response;
   };
 
   const addCardsToListMutation = useMutation({
@@ -181,7 +184,7 @@ export const useCardLists = () => {
       updatedCount: number;
       invalidCardNames: string[];
       message?: string;
-    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards`, {
+    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-name`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
