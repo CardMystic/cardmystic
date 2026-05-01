@@ -432,6 +432,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
 import type { LlmCardAttributes } from '~/models/llmModel';
+import { PopularByCommanderSearchSchema, PopularCommandersForCardSearchSchema } from '~/models/deckStatsModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
@@ -891,10 +892,9 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 const popularByCommanderRequest = computed(() => {
   if (!activatedTabs.has('popular')) return undefined;
   if (!isCommander.value || !card.value?.name) return undefined;
-  return {
+  return PopularByCommanderSearchSchema.parse({
     commanders: [card.value.name],
-    limit: 40,
-  };
+  });
 });
 
 const { searchResults: popularCards, isLoading: isPopularCardsLoading } = usePopularByCommander(popularByCommanderRequest);
@@ -915,11 +915,10 @@ function applyPopularCommandersQuery() {
 const popularCommandersForCardRequest = computed(() => {
   if (!activatedTabs.has('popular-commanders')) return undefined;
   if (!card.value?.name) return undefined;
-  return {
+  return PopularCommandersForCardSearchSchema.parse({
     card_name: card.value.name,
-    limit: 40,
     query: appliedPopularCommandersQuery.value || undefined,
-  };
+  });
 });
 
 const { searchResults: popularCommandersForCard, isLoading: isPopularCommandersLoading } = usePopularCommandersForCard(popularCommandersForCardRequest);

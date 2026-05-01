@@ -69,6 +69,7 @@ const props = defineProps<{
   board?: string;
   showEditCopiesButtons?: boolean;
   decklistCardNames?: string[]; // Full decklist for pre-filling the deckbuilder
+  isFlipped?: boolean; // Controlled flip state synced from the grid card
 }>();
 
 const emit = defineEmits<{
@@ -77,9 +78,9 @@ const emit = defineEmits<{
   (e: 'clearCommander', cardId: string): void;
   (e: 'updateNumCopies', cardName: string, numCopies: number): void;
   (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
+  (e: 'flip', cardId: string): void;
 }>();
 
-const isFlipped = ref(false);
 const showCommanderModal = ref(false);
 const showAddToDeckModal = ref(false);
 const hasMounted = ref(false);
@@ -87,11 +88,6 @@ const hasMounted = ref(false);
 const canShowDeckMenu = computed(() =>
   hasMounted.value && Boolean(props.card)
 );
-
-// Reset flip state when the previewed card changes
-watch(() => props.card?.card_data.id, () => {
-  isFlipped.value = false;
-});
 
 onMounted(() => {
   hasMounted.value = true;
@@ -144,7 +140,7 @@ const simpleType = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.card) emit('flip', props.card.card_data.id);
 }
 
 function toggleClipboard() {

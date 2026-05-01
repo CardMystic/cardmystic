@@ -275,6 +275,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
+  (e: 'flip', cardId: string): void;
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
@@ -369,6 +370,7 @@ const isDualFaced = computed(() => {
 
 function flipCard() {
   isFlipped.value = !isFlipped.value;
+  emit('flip', props.card.card_data.id);
 }
 
 // Get the search query from route params

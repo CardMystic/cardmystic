@@ -103,6 +103,7 @@ const emit = defineEmits<{
   (e: 'clearCommander', cardId: string): void;
   (e: 'updateNumCopies', cardName: string, numCopies: number): void;
   (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
+  (e: 'flip', cardId: string): void;
 }>();
 
 const isFlipped = ref(false);
@@ -231,6 +232,7 @@ const isDualFaced = computed(() => {
 
 function flipCard() {
   isFlipped.value = !isFlipped.value;
+  emit('flip', props.card.card_data.id);
 }
 
 function confirmSetCommander() {

@@ -33,7 +33,9 @@
             <HoveredSearchResultPreview :card="previewCard" :query-param="queryParam"
               :is-commander="previewCardIsCommander" :is-searched="previewIsSearched"
               :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
-              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
+              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
+              :is-flipped="flippedCards[previewCard.card_data.id] ?? false"
+              @flip="handleCardFlip" />
           </div>
         </aside>
 
@@ -46,7 +48,7 @@
               @mouseleave="clearPendingPreviewCard(searchedCard.card_data.id)">
               <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
                 :hide-progress-bar="false" :hide-thumbs-down-button="true"
-                :is-commander="checkIsCommander(searchedCard)" />
+                :is-commander="checkIsCommander(searchedCard)" @flip="handleCardFlip" />
             </div>
           </div>
 
@@ -68,7 +70,7 @@
                     <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                       :hide-thumbs-down-button="hideThumbsDownButton"
                       :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-                      :is-commander="checkIsCommander(result)" />
+                      :is-commander="checkIsCommander(result)" @flip="handleCardFlip" />
                   </div>
                 </div>
               </template>
@@ -84,7 +86,7 @@
                 <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
                   :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-                  :is-commander="checkIsCommander(result)" />
+                  :is-commander="checkIsCommander(result)" @flip="handleCardFlip" />
               </div>
             </div>
           </template>
@@ -159,6 +161,13 @@ const props = withDefaults(defineProps<{
 }>(), {
   skeletonCount: 40,
 });
+
+// Flip state — tracks flipped cards by ID so grid card and preview stay in sync
+const flippedCards = ref<Record<string, boolean>>({});
+
+function handleCardFlip(cardId: string) {
+  flippedCards.value = { ...flippedCards.value, [cardId]: !(flippedCards.value[cardId] ?? false) };
+}
 
 // Sorting state
 const sortBy = ref<string | undefined>(undefined);

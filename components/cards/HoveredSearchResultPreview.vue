@@ -95,9 +95,12 @@ const props = defineProps<{
   hideProgressBar?: boolean;
   hideThumbsDownButton?: boolean;
   showAddToDeckbuilderButton?: boolean;
+  isFlipped?: boolean; // Controlled flip state synced from the grid card
 }>();
 
-const isFlipped = ref(false);
+const emit = defineEmits<{
+  (e: 'flip', cardId: string): void;
+}>();
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const showAddToDeckModal = ref(false);
@@ -109,7 +112,6 @@ const canShowDeckMenu = computed(() =>
 
 // Reset per-card transient state when the previewed card changes
 watch(() => props.card?.card_data.id, () => {
-  isFlipped.value = false;
   isThumbsDownClicked.value = false;
 });
 
@@ -205,7 +207,7 @@ const priceLabel = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.card) emit('flip', props.card.card_data.id);
 }
 
 function toggleClipboard() {

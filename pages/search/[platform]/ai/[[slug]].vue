@@ -118,7 +118,7 @@ const wordSearch = computed(() => {
   if (!query) return undefined;
   return WordSearchSchema.parse({
     query,
-    limit: limitParam.value || (seoEntry ? 40 : undefined),
+    limit: limitParam.value || undefined,
     filters: parsedFilters.value,
     exclude_card_data: false,
   });

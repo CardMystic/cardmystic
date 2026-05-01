@@ -88,7 +88,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Keyword Search' });
 
-const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : 40; });
+const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : undefined; });
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -119,7 +119,7 @@ const keywordSearch = computed(() => {
   if (!query) return undefined;
   return KeywordSearchSchema.parse({
     query,
-    limit: limitParam.value || (seoEntry ? 100 : 40),
+    limit: limitParam.value || undefined,
     filters: parsedFilters.value,
   });
 });
