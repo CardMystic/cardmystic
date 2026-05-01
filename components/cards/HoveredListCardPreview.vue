@@ -68,6 +68,7 @@ const props = defineProps<{
   numCopies?: number;
   board?: string;
   showEditCopiesButtons?: boolean;
+  decklistCardNames?: string[]; // Full decklist for pre-filling the deckbuilder
 }>();
 
 const emit = defineEmits<{
@@ -194,14 +195,16 @@ function findSimilarCards() {
 function getRecommendations() {
   const commanderName = props.card?.card_data.name;
   if (!commanderName) return;
-  const queryParams = { commander: commanderName };
+  const decklist = props.decklistCardNames?.join('\n');
+  const queryParams: Record<string, string> = { commander: commanderName };
+  if (decklist) queryParams.decklist = decklist;
   saveSearchQuery('recommend', queryParams);
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
   queueMicrotask(() => {
     saveSearchMutation.mutate({
       query: commanderName,
       searchType: 'recommend',
-      filters: { commander: commanderName },
+      filters: { commander: commanderName, decklist: decklist || undefined },
     });
   });
 }
