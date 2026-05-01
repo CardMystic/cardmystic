@@ -34,8 +34,7 @@
               :is-commander="previewCardIsCommander" :is-searched="previewIsSearched"
               :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
               :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-              :is-flipped="flippedCards[previewCard.card_data.id] ?? false"
-              @flip="handleCardFlip" />
+              :is-flipped="flippedCards[previewCard.card_data.id] ?? false" @flip="handleCardFlip" />
           </div>
         </aside>
 
@@ -85,8 +84,8 @@
                 @mouseleave="clearPendingPreviewCard(result.card_data.id)">
                 <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
                   :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
-                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-                  :is-commander="checkIsCommander(result)" @flip="handleCardFlip" />
+                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :is-commander="checkIsCommander(result)"
+                  @flip="handleCardFlip" />
               </div>
             </div>
           </template>
