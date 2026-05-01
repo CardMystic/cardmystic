@@ -271,6 +271,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // When provided, flip state is controlled by the parent (e.g. SearchResults syncing grid + preview).
+  // When omitted, the component manages its own internal flip state.
+  isFlipped: {
+    type: Boolean,
+    default: undefined,
+  },
 });
 
 const emit = defineEmits<{
@@ -335,7 +341,9 @@ const isInDecklist = computed(() => {
   return deckbuilderStore.hasCard(props.card.card_data.name);
 });
 
-const isFlipped = ref(false);
+const isFlippedInternal = ref(false);
+// In controlled mode (parent passes :is-flipped), use the prop; otherwise fall back to internal state.
+const isFlipped = computed(() => props.isFlipped !== undefined ? props.isFlipped : isFlippedInternal.value);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const moreActionsOpen = ref(false);
@@ -369,7 +377,10 @@ const isDualFaced = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.isFlipped === undefined) {
+    // Uncontrolled mode: manage flip state internally
+    isFlippedInternal.value = !isFlippedInternal.value;
+  }
   emit('flip', props.card.card_data.id);
 }
 

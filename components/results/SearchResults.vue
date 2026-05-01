@@ -47,7 +47,8 @@
               @mouseleave="clearPendingPreviewCard(searchedCard.card_data.id)">
               <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
                 :hide-progress-bar="false" :hide-thumbs-down-button="true"
-                :is-commander="checkIsCommander(searchedCard)" @flip="handleCardFlip" />
+                :is-commander="checkIsCommander(searchedCard)"
+                :is-flipped="flippedCards[searchedCard.card_data.id] ?? false" @flip="handleCardFlip" />
             </div>
           </div>
 
@@ -69,7 +70,8 @@
                     <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                       :hide-thumbs-down-button="hideThumbsDownButton"
                       :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-                      :is-commander="checkIsCommander(result)" @flip="handleCardFlip" />
+                      :is-commander="checkIsCommander(result)" :is-flipped="flippedCards[result.card_data.id] ?? false"
+                      @flip="handleCardFlip" />
                   </div>
                 </div>
               </template>
@@ -85,7 +87,7 @@
                 <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
                   :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :is-commander="checkIsCommander(result)"
-                  @flip="handleCardFlip" />
+                  :is-flipped="flippedCards[result.card_data.id] ?? false" @flip="handleCardFlip" />
               </div>
             </div>
           </template>
