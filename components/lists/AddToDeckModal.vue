@@ -37,7 +37,7 @@
         </div>
 
         <UAlert v-if="hasDuplicates" color="warning" icon="i-lucide-triangle-alert"
-          :title="`${duplicateCardIds.length} of ${cardIds.length} card${cardIds.length === 1 ? '' : 's'} already in this deck`"
+          :title="`${effectiveDuplicateCount} of ${cardCount} card${cardCount === 1 ? '' : 's'} already in this deck`"
           description="Choose whether to add only the new cards or add all cards (increasing copies of duplicates)." />
 
         <span class="text-orange-400 font-medium">{{ cardCount }}</span> card{{ cardCount === 1 ? '' : 's' }} will be
@@ -55,19 +55,19 @@
         <button :disabled="loading"
           class="text-sm text-muted underline hover:text-default disabled:opacity-50 cursor-pointer"
           @click="showCreateDeckModal = true">
-          Create List Instead
+          Create Deck Instead
         </button>
         <UButton color="neutral" variant="outline" :disabled="loading" @click="isOpen = false">
           Cancel
         </UButton>
-        <template v-if="hasDuplicates && newCardIds.length > 0">
+        <template v-if="hasDuplicates && effectiveNewCount > 0">
           <UButton color="warning" variant="outline" :loading="loading" :disabled="!selectedListId"
             @click="handleAddToDeck(true)">
-            Add New Only ({{ newCardIds.length }})
+            Add New Only ({{ effectiveNewCount }})
           </UButton>
           <UButton color="primary" variant="solid" :loading="loading" :disabled="!selectedListId"
             @click="handleAddToDeck(false)">
-            Add All ({{ cardIds.length }})
+            Add All ({{ cardCount }})
           </UButton>
         </template>
         <UButton v-else color="primary" variant="solid" :loading="loading" :disabled="!selectedListId"
@@ -88,6 +88,7 @@ import { useToast } from '#imports';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter';
 
 import { useCardLists } from '~/composables/useCardLists';
+import { useCardsByIds } from '~/composables/useCards';
 
 const props = defineProps<{
   open: boolean;
@@ -208,7 +209,32 @@ const newCardIds = computed(() =>
   cardIds.value.filter(id => !existingCardIdSet.value.has(id))
 );
 
-const hasDuplicates = computed(() => duplicateCardIds.value.length > 0);
+// Name-based duplicate detection (used when modal receives cardNames instead of cardIds)
+const existingCardIds = computed(() =>
+  (selectedListItems.value ?? []).map(item => item.card_id).filter((id): id is string => !!id)
+);
+const { cards: existingListCards } = useCardsByIds(existingCardIds, 'add-to-deck-names');
+const existingCardNameSet = computed(() => {
+  const cards = Array.isArray(existingListCards.value) ? existingListCards.value : [];
+  if (!cards.length) return new Set<string>();
+  return new Set((cards as any[]).map(c => c.name as string));
+});
+const duplicateCardNames = computed(() =>
+  cardNames.value.filter(name => existingCardNameSet.value.has(name))
+);
+const newCardNames = computed(() =>
+  cardNames.value.filter(name => !existingCardNameSet.value.has(name))
+);
+
+// Unified counts that work for both ID-based and name-based adds
+const effectiveDuplicateCount = computed(() =>
+  cardNames.value.length > 0 ? duplicateCardNames.value.length : duplicateCardIds.value.length
+);
+const effectiveNewCount = computed(() =>
+  cardNames.value.length > 0 ? newCardNames.value.length : newCardIds.value.length
+);
+
+const hasDuplicates = computed(() => effectiveDuplicateCount.value > 0);
 
 const loading = computed(() => addCardsToListMutation.isPending.value || addCardsByNameToListMutation.isPending.value);
 
@@ -236,9 +262,10 @@ async function handleAddToDeck(onlyNew = false) {
     const deckName = selectedList.value?.name || 'deck';
 
     if (cardNames.value.length > 0) {
+      const namesToAdd = onlyNew ? newCardNames.value : cardNames.value;
       const result = await addCardsByNameToListMutation.mutateAsync({
         listId: selectedListId.value,
-        cardNames: cardNames.value,
+        cardNames: namesToAdd,
       });
       const messages: string[] = [];
       if (result.addedCount > 0) messages.push(`Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`);
