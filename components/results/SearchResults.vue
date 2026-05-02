@@ -46,9 +46,8 @@
             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-3">
             <div @mouseenter="setPreviewCard(searchedCard)" @focusin="setPreviewCard(searchedCard)"
               @mouseleave="clearPendingPreviewCard(searchedCard.card_data.id)">
-              <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
-                :hide-progress-bar="false" :hide-thumbs-down-button="true"
-                :is-commander="checkIsCommander(searchedCard)"
+              <Card :card="searchedCard" :showCardInfo="true" :is-searched="true" :hide-progress-bar="false"
+                :hide-thumbs-down-button="true" :is-commander="checkIsCommander(searchedCard)"
                 :is-flipped="flippedCards[searchedCard.card_data.id] ?? false" @flip="handleCardFlip"
                 @partner-hover="handlePartnerHover" />
             </div>
