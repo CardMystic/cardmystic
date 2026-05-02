@@ -27,7 +27,7 @@
         </div>
 
         <div class="flex flex-wrap gap-2 text-xs">
-          <UBadge v-if="isSearched" color="secondary" variant="subtle">Searched Card</UBadge>
+          <UBadge v-if="isSearched" color="primary" variant="subtle">Searched Card</UBadge>
           <UBadge v-if="isCommander" color="warning" variant="subtle">Commander</UBadge>
           <UBadge v-if="activeCardData?.game_changer" color="primary" variant="subtle">Game Changer</UBadge>
         </div>
