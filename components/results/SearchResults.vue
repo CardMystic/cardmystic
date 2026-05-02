@@ -34,7 +34,8 @@
               :is-commander="previewCardIsCommander" :is-searched="previewIsSearched"
               :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
               :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-              :is-flipped="flippedCards[previewCard.card_data.id] ?? false" @flip="handleCardFlip" />
+              :is-flipped="flippedCards[previewCard.card_data.id] ?? false" :partner-index="previewPartnerIndex"
+              @flip="handleCardFlip" />
           </div>
         </aside>
 
@@ -48,7 +49,8 @@
               <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
                 :hide-progress-bar="false" :hide-thumbs-down-button="true"
                 :is-commander="checkIsCommander(searchedCard)"
-                :is-flipped="flippedCards[searchedCard.card_data.id] ?? false" @flip="handleCardFlip" />
+                :is-flipped="flippedCards[searchedCard.card_data.id] ?? false" @flip="handleCardFlip"
+                @partner-hover="handlePartnerHover" />
             </div>
           </div>
 
@@ -71,7 +73,7 @@
                       :hide-thumbs-down-button="hideThumbsDownButton"
                       :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
                       :is-commander="checkIsCommander(result)" :is-flipped="flippedCards[result.card_data.id] ?? false"
-                      @flip="handleCardFlip" />
+                      @flip="handleCardFlip" @partner-hover="handlePartnerHover" />
                   </div>
                 </div>
               </template>
@@ -87,7 +89,8 @@
                 <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
                   :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :is-commander="checkIsCommander(result)"
-                  :is-flipped="flippedCards[result.card_data.id] ?? false" @flip="handleCardFlip" />
+                  :is-flipped="flippedCards[result.card_data.id] ?? false" @flip="handleCardFlip"
+                  @partner-hover="handlePartnerHover" />
               </div>
             </div>
           </template>
@@ -168,6 +171,13 @@ const flippedCards = ref<Record<string, boolean>>({});
 
 function handleCardFlip(cardId: string) {
   flippedCards.value = { ...flippedCards.value, [cardId]: !(flippedCards.value[cardId] ?? false) };
+}
+
+// Partner hover — tracks which partner (0 = primary, 1 = partner) is being hovered
+const previewPartnerIndex = ref<0 | 1>(0);
+
+function handlePartnerHover(index: 0 | 1) {
+  previewPartnerIndex.value = index;
 }
 
 // Sorting state
@@ -273,6 +283,11 @@ const previewIsSearched = computed(() => {
 const previewCardIsCommander = computed(() =>
   previewCard.value ? checkIsCommander(previewCard.value) : false
 );
+
+// Reset partner index when the previewed card changes
+watch(() => previewCard.value?.card_data.id, () => {
+  previewPartnerIndex.value = 0;
+});
 
 const HOVER_PREVIEW_DELAY_MS = 200;
 let _hoverRafId: number | null = null;

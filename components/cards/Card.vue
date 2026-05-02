@@ -19,13 +19,14 @@
       <template v-if="hasPartner">
         <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
           <div class="partner-card partner-back" :class="{ 'partner-front': partnerFrontIndex === 1 }"
-            @mouseenter="partnerHoveredIndex = 1" @click="navigateToCard(card.partner_card_data!.id)">
+            @mouseenter="partnerHoveredIndex = 1; emit('partner-hover', 1)"
+            @click="navigateToCard(card.partner_card_data!.id)">
             <img class="card-large cursor-pointer" :src="getCardImageUrl(card.partner_card_data!)"
               :alt="card.partner_card_data!.name" @error="handleImageError"
               v-if="getCardImageUrl(card.partner_card_data!)" loading="lazy" decoding="async" />
           </div>
           <div class="partner-card" :class="{ 'partner-front': partnerFrontIndex === 0 }"
-            @mouseenter="partnerHoveredIndex = 0" @click="navigateToCard(card.card_data.id)">
+            @mouseenter="partnerHoveredIndex = 0; emit('partner-hover', 0)" @click="navigateToCard(card.card_data.id)">
             <img class="card-large cursor-pointer" :src="getCardImageUrl(card.card_data, isFlipped)"
               :alt="card.card_data.name" @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)"
               loading="lazy" decoding="async" />
@@ -282,6 +283,7 @@ const props = defineProps({
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
   (e: 'flip', cardId: string): void;
+  (e: 'partner-hover', index: 0 | 1): void;
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
