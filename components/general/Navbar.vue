@@ -325,7 +325,7 @@ const externalItems: NavigationMenuItem[] = [
   </header>
 
   <ClientOnly>
-    <div v-if="maintenanceMode === true || maintenanceMode === 'true'"
+    <div v-if="maintenanceMode === 'enabled'"
       class="fixed left-0 right-0 z-40 bg-yellow-500 text-black py-1 px-4 text-sm font-medium" style="top: 83px">
       <div class="flex items-center justify-center gap-1.5">
         <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 shrink-0" />
