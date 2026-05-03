@@ -17,7 +17,7 @@
               <span class="flex flex-col items-start leading-tight">
                 <span>{{ listName(list) }}</span>
                 <span class="text-xs opacity-70">{{ [listFormat(list), listDate(list)].filter(Boolean).join(' · ')
-                  }}</span>
+                }}</span>
               </span>
             </UButton>
           </div>
@@ -79,7 +79,7 @@
   </UModal>
 
   <LazyCreateDeckModal v-if="showCreateDeckModal" v-model:open="showCreateDeckModal" :card-ids="props.cardIds"
-    :card-names="props.cardNames" @success="() => { showCreateDeckModal = false; emit('success') }" />
+    :card-names="props.cardNames" @success="() => { showCreateDeckModal = false; isOpen = false; emit('success') }" />
 </template>
 
 <script setup lang="ts">
