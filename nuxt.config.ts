@@ -67,8 +67,7 @@ export default defineNuxtConfig({
       supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
       backendUrl:
         process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
-      maintenanceMode:
-        process.env.NUXT_PUBLIC_MAINTENANCE_MODE === 'true' ? true : false,
+      maintenanceMode: process.env.NUXT_PUBLIC_MAINTENANCE_MODE || '',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
