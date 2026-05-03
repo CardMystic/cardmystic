@@ -17,11 +17,38 @@ export const useSupabase = () => {
       );
     }
 
+    // Wrap localStorage so quota errors from Supabase auth
+    // (session persistence) are handled gracefully by clearing
+    // stale TanStack Query cache entries and retrying once.
+    const safeStorage =
+      import.meta.client
+        ? {
+            getItem: (key: string) => localStorage.getItem(key),
+            setItem: (key: string, value: string) => {
+              try {
+                localStorage.setItem(key, value);
+              } catch {
+                // Quota exceeded — purge TanStack Query cache and retry
+                try {
+                  Object.keys(localStorage)
+                    .filter((k) => k.startsWith('tsqd-'))
+                    .forEach((k) => localStorage.removeItem(k));
+                  localStorage.setItem(key, value);
+                } catch {
+                  // Still full — silently skip persistence
+                }
+              }
+            },
+            removeItem: (key: string) => localStorage.removeItem(key),
+          }
+        : undefined;
+
     nuxtApp._supabaseClient = createClient<Database>(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        ...(safeStorage && { storage: safeStorage }),
       },
     });
   }

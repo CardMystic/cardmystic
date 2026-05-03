@@ -28,21 +28,27 @@ watch(defaultBottom, (val) => {
   updatePosition();
 });
 
+let _rafPending = false;
 function updatePosition() {
-  const footer = document.querySelector('footer');
-  if (!footer) {
-    bottomOffset.value = minBottom.value;
-    return;
-  }
+  if (_rafPending) return;
+  _rafPending = true;
+  requestAnimationFrame(() => {
+    _rafPending = false;
+    const footer = document.querySelector('footer');
+    if (!footer) {
+      bottomOffset.value = minBottom.value;
+      return;
+    }
 
-  const footerRect = footer.getBoundingClientRect();
-  const viewportHeight = window.innerHeight;
+    const footerRect = footer.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
 
-  if (footerRect.top < viewportHeight) {
-    bottomOffset.value = viewportHeight - footerRect.top + footerGap;
-  } else {
-    bottomOffset.value = minBottom.value;
-  }
+    if (footerRect.top < viewportHeight) {
+      bottomOffset.value = viewportHeight - footerRect.top + footerGap;
+    } else {
+      bottomOffset.value = minBottom.value;
+    }
+  });
 }
 
 onMounted(() => {

@@ -1,8 +1,8 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+  <div class="mx-auto px-4 py-8 relative z-10 w-full">
     <!-- Header -->
     <div class="mb-8 flex items-center justify-between">
-      <h1 class="text-3xl font-bold">My Card Lists</h1>
+      <h1 class="text-3xl font-bold">My Decklists</h1>
       <UButton icon="i-lucide-plus" label="New List" @click="isCreateModalOpen = true" class="cursor-pointer" />
     </div>
 
@@ -22,7 +22,7 @@
       <!-- Empty State -->
       <div v-else-if="!lists || lists.length === 0" class="text-center py-12">
         <UIcon name="i-lucide-inbox" class="w-16 h-16 mx-auto mb-4 text-gray-400" />
-        <p class="text-gray-500 text-lg mb-4">You haven't created any lists yet</p>
+        <p class="text-gray-500 text-lg mb-4">You haven't created any decklists yet</p>
         <p class="text-gray-400 text-sm">Add cards to your clipboard and save them to a list to get started!</p>
       </div>
 
@@ -39,8 +39,8 @@
     </ClientOnly>
   </div>
 
-  <!-- Create List Modal -->
-  <CreateListModal v-model:open="isCreateModalOpen" />
+  <!-- Create Deck Modal -->
+  <CreateDeckModal v-model:open="isCreateModalOpen" />
 </template>
 
 <script setup lang="ts">
@@ -51,7 +51,6 @@ definePageMeta({
 import { useCardLists } from '~/composables/useCardLists'
 import { useToast } from '#imports'
 import CardListLink from '~/components/lists/CardListLink.vue'
-import CreateListModal from '~/components/lists/CreateListModal.vue'
 
 const { userLists, isLoadingLists, listsError } = useCardLists()
 const toast = useToast()

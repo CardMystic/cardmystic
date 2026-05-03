@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
+    class="relative border max-w-[500px] border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
     <!-- Background Image -->
     <div v-if="getListImageUrl(list)"
       class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
@@ -17,7 +17,7 @@
     <!-- Content (clickable) -->
     <div class="relative p-2 md:p-4" @click="router.push(`/lists/${list.id}`)">
       <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">{{ list.name }}</h3>
-      <p v-if="list.description" class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
+      <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
         {{ list.description }}
       </p>
       <div class="flex items-center justify-between text-xs md:text-sm">

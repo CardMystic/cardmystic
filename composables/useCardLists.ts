@@ -7,6 +7,8 @@ import {
   keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
+import type { CardFormatType } from '~/models/cardModel';
+import type { BulkEditRequest, BulkEditResponse } from '~/models/cardListModel';
 
 export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
@@ -43,6 +45,7 @@ export const useCardLists = () => {
     name: string,
     description?: string,
     commanders?: string[],
+    format?: CardFormatType,
   ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
@@ -71,6 +74,7 @@ export const useCardLists = () => {
         body: {
           name: name.trim(),
           description: description?.trim() || undefined,
+          format: format || 'Commander',
           commanders: commanders?.filter((c) => c.trim()) || [],
         },
       },
@@ -84,13 +88,15 @@ export const useCardLists = () => {
       name,
       description,
       commanders,
+      format,
     }: {
       name: string;
       description?: string;
       commanders?: string[];
+      format?: CardFormatType;
     }) => {
       if (!supabase) return;
-      return createList(name, description, commanders);
+      return createList(name, description, commanders, format);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
@@ -107,25 +113,30 @@ export const useCardLists = () => {
       throw new Error('No cards to add');
     }
 
-    // Create card list items
-    const items = cardIds.map((cardId) => ({
-      list_id: listId,
-      card_id: cardId,
-    }));
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
 
-    const { error: insertError } = await supabase
-      .from('card_list_items')
-      .insert(items);
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
 
-    if (insertError) throw insertError;
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      addedCount: number;
+      updatedCount: number;
+      invalidCardIds: string[];
+    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-id`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardIds,
+      },
+    });
 
-    // Update the list's updated_at timestamp
-    const { error: updateError } = await supabase
-      .from('card_lists')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', listId);
-
-    if (updateError) throw updateError;
+    return response;
   };
 
   const addCardsToListMutation = useMutation({
@@ -170,10 +181,10 @@ export const useCardLists = () => {
     const config = useRuntimeConfig();
     const response = await $fetch<{
       addedCount: number;
-      duplicatesSkipped: number;
+      updatedCount: number;
       invalidCardNames: string[];
       message?: string;
-    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards`, {
+    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-name`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -204,7 +215,9 @@ export const useCardLists = () => {
     },
   });
 
-  const bulkEditList = async (listId: string, cardNames: string[]) => {
+  const bulkEditList = async (
+    request: BulkEditRequest,
+  ): Promise<BulkEditResponse> => {
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -221,38 +234,31 @@ export const useCardLists = () => {
     }
 
     const config = useRuntimeConfig();
-    const response = await $fetch<{
-      addedCount: number;
-      removedCount: number;
-      invalidCardNames: string[];
-      message?: string;
-    }>(`${config.public.backendUrl}/supabase/card-lists/bulk-edit`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await $fetch<BulkEditResponse>(
+      `${config.public.backendUrl}/supabase/card-lists/bulk-edit`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: request,
       },
-      body: {
-        listId,
-        cardNames,
-      },
-    });
+    );
 
     return response;
   };
 
   const bulkEditListMutation = useMutation({
-    mutationFn: async ({
-      listId,
-      cardNames,
-    }: {
-      listId: string;
-      cardNames: string[];
-    }) => {
-      return bulkEditList(listId, cardNames);
+    mutationFn: async (request: BulkEditRequest) => {
+      return bulkEditList(request);
     },
-    onSuccess: (_, { listId }) => {
-      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+    onSuccess: (_, request) => {
+      queryClient.invalidateQueries({
+        queryKey: ['list-items', request.listId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['list-cards', request.listId],
+      });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
   });
@@ -551,6 +557,165 @@ export const useCardLists = () => {
     },
   });
 
+  const updateFormat = async (listId: string, format: CardFormatType) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      format: string;
+      commandersCleared: boolean;
+    }>(`${config.public.backendUrl}/supabase/card-lists/update-format`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        format,
+      },
+    });
+
+    return response;
+  };
+
+  const updateFormatMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      format,
+    }: {
+      listId: string;
+      format: CardFormatType;
+    }) => {
+      if (!supabase) return;
+      return updateFormat(listId, format);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
+  const updateNumCopies = async (
+    listId: string,
+    cardName: string,
+    numCopies: number,
+  ) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      cardName: string;
+      numCopies: number;
+    }>(`${config.public.backendUrl}/supabase/card-lists/update-num-copies`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardName,
+        numCopies,
+      },
+    });
+
+    return response;
+  };
+
+  const updateNumCopiesMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardName,
+      numCopies,
+    }: {
+      listId: string;
+      cardName: string;
+      numCopies: number;
+    }) => {
+      if (!supabase) return;
+      return updateNumCopies(listId, cardName, numCopies);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
+  const changeBoard = async (
+    listId: string,
+    cardName: string,
+    board: 'Mainboard' | 'Sideboard' | 'Considering',
+  ) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{
+      cardName: string;
+      board: string;
+    }>(`${config.public.backendUrl}/supabase/card-lists/change-board`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {
+        listId,
+        cardName,
+        board,
+      },
+    });
+
+    return response;
+  };
+
+  const changeBoardMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      cardName,
+      board,
+    }: {
+      listId: string;
+      cardName: string;
+      board: 'Mainboard' | 'Sideboard' | 'Considering';
+    }) => {
+      if (!supabase) return;
+      return changeBoard(listId, cardName, board);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+    },
+  });
+
   return {
     // Query data and states
     userLists,
@@ -569,6 +734,9 @@ export const useCardLists = () => {
     updateListAvatarMutation,
     setCommanderMutation,
     clearCommanderMutation,
+    updateFormatMutation,
+    updateNumCopiesMutation,
+    changeBoardMutation,
 
     // For nested queries (list items)
     useListItems,

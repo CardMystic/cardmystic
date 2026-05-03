@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type ComputedRef, type Ref } from 'vue';
 import type { Card, ScryfallCard } from '~/models/cardModel';
+import type { CardLlmResponse } from '~/models/llmModel';
 
 /**
  * Composable for fetching a single card + its printings (lazy).
@@ -9,8 +10,13 @@ import type { Card, ScryfallCard } from '~/models/cardModel';
 export function useCardDetails(cardId: ComputedRef<string>) {
   const config = useRuntimeConfig();
 
+  type CardWithLlmResponse = {
+    card: ScryfallCard;
+    llm: CardLlmResponse;
+  };
+
   const {
-    data: card,
+    data: cardWithLlm,
     error,
     status: asyncStatus,
   } = useAsyncData(
@@ -20,8 +26,8 @@ export function useCardDetails(cardId: ComputedRef<string>) {
         throw new Error('No card ID provided');
       }
 
-      return await $fetch<ScryfallCard>(
-        `${config.public.backendUrl}/cards/${cardId.value}`,
+      return await $fetch<CardWithLlmResponse>(
+        `${config.public.backendUrl}/cards/with-llm/${cardId.value}`,
         { signal: AbortSignal.timeout(10000) },
       );
     },
@@ -31,6 +37,10 @@ export function useCardDetails(cardId: ComputedRef<string>) {
       watch: [cardId],
     },
   );
+
+  // Preserve the existing `card` API shape so current call-sites keep working.
+  const card = computed(() => cardWithLlm.value?.card ?? null);
+  const llm = computed(() => cardWithLlm.value?.llm ?? null);
 
   const pending = computed(() => asyncStatus.value === 'pending');
 
@@ -54,6 +64,7 @@ export function useCardDetails(cardId: ComputedRef<string>) {
 
   return {
     card,
+    llm,
     printings,
     error,
     pending,

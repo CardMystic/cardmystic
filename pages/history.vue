@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+  <div class="container mx-auto px-4 py-8 relative z-10">
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold">History</h1>

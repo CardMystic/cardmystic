@@ -45,9 +45,9 @@
       <div class="relative">
         <UTextarea v-model="state.decklist" placeholder="Paste your decklist here (one card per line)..." :rows="6"
           autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" autocomplete="off" />
-        <UButton v-if="onSaveToList && hasCards" icon="i-lucide-list-plus" color="primary" variant="soft" size="xs"
-          label="Save All to List" class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
-          @click="onSaveToList" />
+        <UButton v-if="onSaveToDeck && hasCards" icon="i-lucide-list-plus" color="primary" variant="soft" size="xs"
+          label="Save All to Deck" class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
+          @click="onSaveToDeck" />
       </div>
     </UFormField>
 
@@ -134,7 +134,7 @@ type Schema = z.output<typeof schema>
 const route = useRoute();
 
 const isOnDeckbuilderPage = computed(() => route.path.includes('/deckbuilder'));
-const onSaveToList = computed(() => isOnDeckbuilderPage.value ? () => { deckbuilderStore.showSaveAllModal.value = true } : null);
+const onSaveToDeck = computed(() => isOnDeckbuilderPage.value ? () => { deckbuilderStore.showSaveAllModal.value = true } : null);
 
 const currentPlatform = computed(() => {
   if (route.params.platform) return String(route.params.platform);

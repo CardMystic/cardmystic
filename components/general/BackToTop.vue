@@ -8,11 +8,16 @@
 <script setup lang="ts">
 const showButton = ref(false)
 const scrollThreshold = 300
+let _rafPending = false;
 
 // Show or hide the button based on scroll position
 function handleScroll() {
-  const scrollY = window.scrollY
-  showButton.value = scrollY > scrollThreshold
+  if (_rafPending) return;
+  _rafPending = true;
+  requestAnimationFrame(() => {
+    _rafPending = false;
+    showButton.value = window.scrollY > scrollThreshold;
+  });
 }
 
 function scrollToTop() {

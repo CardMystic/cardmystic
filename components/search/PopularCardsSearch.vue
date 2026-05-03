@@ -14,7 +14,7 @@
           </template>
         </UInput>
         <UButton type="submit" class="cursor-pointer h-10" icon="i-lucide-chart-no-axes-combined">
-          Search
+          <span class="hidden sm:inline">Search</span>
         </UButton>
       </div>
     </UFormField>

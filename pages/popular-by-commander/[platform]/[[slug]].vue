@@ -1,15 +1,30 @@
 <template>
-  <UContainer class="mb-6 px-0">
-    <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <StatsSearch default-stats-type="popular-by-commander" class="mt-6 w-full" />
+  <UContainer class="mb-6 px-0 max-w-full">
+    <div class="w-full pt-4 flex flex-col items-center">
+      <StatsSearch default-stats-type="popular-by-commander" class="mt-6 max-w-5xl" />
 
       <SearchAbout type="popular-by-commander" />
+
+      <!-- Commander Card(s) -->
+      <div v-if="commanderNames.length" class="w-full mt-4 flex flex-wrap gap-4 justify-center">
+        <template v-if="commanderCardsLoading">
+          <div v-for="name in commanderNames" :key="name" class="w-full max-w-50 sm:max-w-70">
+            <CardSkeleton :show-card-info="true" />
+          </div>
+        </template>
+        <template v-else-if="commanderCards && commanderCards.length">
+          <div v-for="cmd in commanderCards" :key="cmd.card_name" class="w-full max-w-50 sm:max-w-70">
+            <Card :card="cmd" :show-card-info="true" :hide-progress-bar="true" :hide-thumbs-down-button="true"
+              :gold-highlight="true" :is-commander="true" />
+          </div>
+        </template>
+      </div>
 
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="commanderParam || ''"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message" :help-text="helpText"
-          :hide-thumbs-down-button="true" default-group-by="type" />
+          :error-message="searchError?.message" :help-text="helpText" :hide-thumbs-down-button="true"
+          default-group-by="type" />
       </div>
     </div>
   </UContainer>
@@ -24,6 +39,7 @@ import { CardSearchFiltersSchema } from '~/models/searchModel';
 import { PopularByCommanderSearchSchema } from '~/models/deckStatsModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePopularByCommander } from '~/composables/useDeckStats';
+import { useCardsByName } from '~/composables/useCards';
 import { isValidPlatform, type Platform } from '~/utils/platformConfig';
 
 const route = useRoute();
@@ -36,6 +52,10 @@ if (!isValidPlatform(platform)) {
 const commanderParam = computed(() => String(route.query.commander || ''));
 const partnerParam = computed(() => String(route.query.partner || ''));
 const queryParam = computed(() => String(route.query.query || ''));
+
+const commanderNames = computed(() => [commanderParam.value, partnerParam.value].filter(Boolean));
+
+const { cards: commanderCards, isLoading: commanderCardsLoading } = useCardsByName(commanderNames);
 
 const commanderDisplay = computed(() => {
   if (!commanderParam.value) return '';
@@ -111,6 +131,5 @@ const searchParams = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || 100);
 const { searchResults, isLoading, error: searchError } = usePopularByCommander(searchParams);
 </script>

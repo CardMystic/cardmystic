@@ -1,37 +1,16 @@
 <template>
   <UCard variant="subtle"
-    :class="['card-root', isCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '', legalityWarning ? 'illegal-card-bg' : '']"
-    :ui="{ body: 'p-4 sm:p-4' }">
+    :class="['card-root', isDeckCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '', legalityWarning ? 'illegal-card-bg' : '']"
+    :ui="{ body: 'p-1 sm:p-2' }">
 
-    <!-- Set Commander Confirmation Modal -->
-    <UModal v-model:open="showCommanderModal" title="Set Commander">
-      <template #body>
-        <p class="text-sm">
-          Set <span class="font-bold">{{ card.card_data.name }}</span> as your commander?
-        </p>
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Set Commander" color="primary" icon="i-lucide-crown" @click="confirmSetCommander(close)" />
-        </div>
-      </template>
-    </UModal>
+    <SetCommanderModal :open="showCommanderModal" :card-name="card.card_data.name"
+      @update:open="showCommanderModal = $event" @confirm="confirmSetCommander" />
 
-    <!-- Clear Commander Confirmation Modal -->
-    <UModal v-model:open="showClearCommanderModal" title="Remove Commander">
-      <template #body>
-        <p class="text-sm">
-          Remove <span class="font-bold">{{ card.card_data.name }}</span> as your commander?
-        </p>
-      </template>
-      <template #footer="{ close }">
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-          <UButton label="Remove Commander" color="error" icon="i-lucide-crown" @click="confirmClearCommander(close)" />
-        </div>
-      </template>
-    </UModal>
+    <SetCopiesModal :open="showSetCopiesInput" :card-name="card.card_data.name" :initial-copies="numCopies ?? 1"
+      @update:open="showSetCopiesInput = $event" @confirm="confirmSetCopies" />
+
+    <RemoveCommanderModal :open="showClearCommanderModal" :card-name="card.card_data.name"
+      @update:open="showClearCommanderModal = $event" @confirm="confirmClearCommander" />
 
     <div class="card-image-wrapper">
       <!-- Card image -->
@@ -42,7 +21,9 @@
         <p class="placeholder-text">{{ card.card_data.name }}</p>
       </div>
 
-      <ClipboardButton :card="card" />
+      <LazyCardOverlayButtons :card="card" :isDualFaced="isDualFaced" :show-menu-button="true"
+        :show-copy-count="!isDeckCommander" :num-copies="numCopies ?? 1" :menu-items="cardOverlayMenuItems"
+        @flip="flipCard" />
 
       <!-- Legality Warning Overlay -->
       <div v-if="legalityWarning" class="legality-overlay">
@@ -51,67 +32,41 @@
           <span class="text-xs text-amber-400 text-center font-medium leading-tight">{{ legalityWarning }}</span>
         </div>
       </div>
-
-      <!-- Flip Button for Dual-Faced Cards -->
-      <div v-if="isDualFaced" class="flip-card-btn" @click.stop="flipCard">
-        <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
-          square>
-          <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
-        </UButton>
-      </div>
     </div>
 
     <!-- Card Name and mana cost -->
-    <div class="flex flex-col items-center justify-center text-center">
-      <div class="flex flex-row items-center justify-between w-full">
-        <p class="whitespace-nowrap overflow-hidden truncate">
-          {{ card.card_data.name.split(' // ')[0] }}
-        </p>
-        <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
-          class="manacost-text whitespace-nowrap" />
-      </div>
-      <div class="flex flex-row items-center justify-between w-full text-xs">
-        <p class="whitespace-nowrap overflow-hidden truncate">
-          <span
-            :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
-            {{ getSimpleCardType(card.card_data.type_line) ?? "" }}
-          </span>
-        </p>
-      </div>
+    <div class="flex flex-col items-center justify-center text-center mt-1">
 
       <!-- Action Buttons -->
-      <div class="flex flex-row items-center justify-between text-center w-full">
-        <!-- Left side buttons -->
-        <div class="flex flex-row items-center">
-          <!-- Buy on TCGPlayer -->
-          <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
-            <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
-              color="success" variant="solid" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm"
-              target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
-              {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
-            </UButton>
-          </UTooltip>
-
-          <!-- Set as Commander -->
-          <UTooltip v-if="isEligibleCommander || isCommander"
-            :text="isCommander ? 'Current commander' : 'Set as commander'" :popper="{ placement: 'top' }">
-            <UButton class="mt-1 mr-2 cursor-pointer" :color="isCommander ? 'warning' : 'neutral'" variant="solid"
-              icon="i-lucide-crown" size="sm" aria-label="Set as commander" @click="handleCrownClick" />
-          </UTooltip>
-
-          <!-- Similarity search -->
-          <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
-            <UButton color="neutral" variant="solid" class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline"
-              size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
-          </UTooltip>
-        </div>
-
-        <!-- Right side: Remove from list -->
-        <UTooltip text="Remove from list" :popper="{ placement: 'top' }">
-          <UButton class="cursor-pointer" color="error" variant="soft" icon="i-lucide-trash-2" size="sm"
-            aria-label="Remove from list" @click="emit('remove', card.card_data.id)" />
+      <div class="flex flex-row items-center text-center w-full">
+        <!-- Buy on TCGPlayer -->
+        <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
+          <UButton v-if="card.card_data.tcgplayer_id" :to="getAffiliateLink(card.card_data.tcgplayer_id)" external
+            color="success" variant="outline" class="mt-1 mr-2" icon="i-heroicons-shopping-cart" size="sm"
+            target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
+            {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
+          </UButton>
         </UTooltip>
+
+        <!-- Similarity search -->
+        <UTooltip text="Search for similar cards" :popper="{ placement: 'top' }">
+          <UButton color="neutral" variant="outline" class="mt-1 mr-2 cursor-pointer" icon="i-mdi-cards-outline"
+            size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
+        </UTooltip>
+
+        <!-- Commander-card buttons -->
+        <template v-if="isCommanderCardComputed">
+          <UTooltip text="Get Deck Recommendations" :popper="{ placement: 'top' }">
+            <UButton color="primary" variant="outline" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
+              @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander" />
+          </UTooltip>
+          <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
+            <UButton color="error" variant="outline" class="mt-1 mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
+              @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
+          </UTooltip>
+        </template>
       </div>
+
     </div>
   </UCard>
 </template>
@@ -120,37 +75,135 @@
 import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
-import ClipboardButton from '~/components/clipboard/ClipboardButton.vue';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
-import { isLegal, isColorIdentityLegal } from '~/utils/legality';
+import { isLegal, isColorIdentityLegal, formatToLegalityKey } from '~/utils/legality';
 import { useCommandersSet } from '~/composables/useBulkData';
+import { useSearchType } from '~/composables/useSearchType';
+import { useSearchHistory } from '~/composables/useSearchHistory';
 
 const router = useRouter();
+const { saveSearchQuery } = useSearchType();
+const { saveSearchMutation } = useSearchHistory();
 
 const { data: commanders } = useCommandersSet();
 
 const props = defineProps<{
   card: Card;
-  isCommander: boolean;
+  isDeckCommander: boolean;
+  isCommanderCard?: boolean;
   commanderColorIdentity?: string[] | null;
+  numCopies?: number;
+  board?: string;
+  format?: string;
+  decklistCardNames?: string[]; // Full decklist for pre-filling the deckbuilder
 }>();
 
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
+  (e: 'updateNumCopies', cardName: string, numCopies: number): void;
+  (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
+  (e: 'flip', cardId: string): void;
 }>();
 
 const isFlipped = ref(false);
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
+const showSetCopiesInput = ref(false);
+
+function confirmSetCopies(numCopies: number) {
+  emit('updateNumCopies', props.card.card_data.name, numCopies);
+}
+
+const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
+type Board = typeof boardOptions[number];
+const currentBoard = ref<Board>((props.board as Board) || 'Mainboard');
+
+watch(() => props.board, (val) => {
+  currentBoard.value = (val as Board) || 'Mainboard';
+});
+
+const isCommanderCardComputed = computed(() => {
+  if (props.isCommanderCard !== undefined) return props.isCommanderCard;
+  return isEligibleCommander.value;
+});
+
+const cardOverlayMenuItems = computed(() => {
+  const copies = props.numCopies ?? 1;
+  const copyActions = props.isDeckCommander ? [] : [
+    {
+      label: 'Add a copy',
+      icon: 'i-lucide-plus',
+      disabled: copies >= 100,
+      onSelect() {
+        emit('updateNumCopies', props.card.card_data.name, copies + 1);
+      },
+    },
+    {
+      label: 'Remove a copy',
+      icon: 'i-lucide-minus',
+      disabled: copies <= 1,
+      onSelect() {
+        emit('updateNumCopies', props.card.card_data.name, copies - 1);
+      },
+    },
+    {
+      label: 'Set Copies',
+      icon: 'i-lucide-hash',
+      onSelect() {
+        showSetCopiesInput.value = true;
+      },
+    },
+  ];
+
+  const boardActions = boardOptions
+    .filter(b => b !== currentBoard.value)
+    .map(b => ({
+      label: `Move to ${b}`,
+      icon: b === 'Mainboard' ? 'i-lucide-layout-grid' : b === 'Sideboard' ? 'i-lucide-columns-2' : 'i-lucide-help-circle',
+      onSelect() {
+        emit('changeBoard', props.card.card_data.name, b);
+      },
+    }));
+
+  const commanderActions = isCommanderCardComputed.value && !props.isDeckCommander
+    ? [{
+      label: 'Set as Commander',
+      icon: 'i-lucide-crown',
+      onSelect() {
+        showCommanderModal.value = true;
+      },
+    }]
+    : [];
+
+  const removeAction = [{
+    label: 'Remove',
+    icon: 'i-lucide-trash-2',
+    color: 'error' as const,
+    onSelect() {
+      emit('remove', props.card.card_data.id);
+    },
+  }];
+
+  return [copyActions, boardActions, commanderActions, removeAction].filter(g => g.length > 0);
+});
+
+const legalityKey = computed(() => {
+  return props.format ? formatToLegalityKey(props.format) : 'commander';
+});
 
 const formatLegality = computed(() => {
-  return isLegal(props.card.card_data.legalities, 'commander');
+  return isLegal(
+    props.card.card_data.legalities,
+    legalityKey.value,
+    props.numCopies ?? 1,
+    props.card.card_data.type_line,
+    props.card.card_data.oracle_text,
+  );
 });
 
 const colorLegality = computed(() => {
-  if (!props.commanderColorIdentity || props.isCommander) return { legal: true };
+  if (!props.commanderColorIdentity || props.isDeckCommander) return { legal: true };
   return isColorIdentityLegal(
     props.card.card_data.color_identity,
     props.commanderColorIdentity,
@@ -179,24 +232,15 @@ const isDualFaced = computed(() => {
 
 function flipCard() {
   isFlipped.value = !isFlipped.value;
+  emit('flip', props.card.card_data.id);
 }
 
-function handleCrownClick() {
-  if (props.isCommander) {
-    showClearCommanderModal.value = true;
-  } else {
-    showCommanderModal.value = true;
-  }
-}
-
-function confirmSetCommander(close: () => void) {
+function confirmSetCommander() {
   emit('setCommander', props.card.card_data.name);
-  close();
 }
 
-function confirmClearCommander(close: () => void) {
+function confirmClearCommander() {
   emit('clearCommander', props.card.card_data.id);
-  close();
 }
 
 function navigateToCard(cardId: string | undefined) {
@@ -208,23 +252,34 @@ function findSimilarCards() {
   if (!props.card) return;
   const queryParams = {
     card_name: props.card.card_name,
-    limit: DefaultLimitSimilarity,
     filters: undefined,
     searchType: 'similarity'
   };
   router.push({ path: '/search/all/similarity', query: queryParams });
 }
 
-function getSimpleCardType(type_line: string): string {
-  if (!type_line) return 'Unknown';
-  const faces = type_line.split('//');
-  if (faces.length === 1) {
-    return faces[0].split(' — ')[0].trim();
-  } else {
-    const frontType = faces[0].split(' — ')[0].trim();
-    const backType = faces[1].split(' — ')[0].trim();
-    return `${frontType} // ${backType}`;
-  }
+function getRecommendations() {
+  if (!props.card?.card_data?.name) return;
+  const commanderName = props.card.card_data.name;
+  const decklist = props.decklistCardNames?.join('\n');
+  const queryParams: Record<string, string> = { commander: commanderName };
+  if (decklist) queryParams.decklist = decklist;
+  saveSearchQuery('recommend', queryParams);
+  router.push({ path: '/search/all/deckbuilder', query: queryParams });
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: commanderName,
+      searchType: 'recommend',
+      filters: { commander: commanderName, decklist: decklist || undefined },
+    });
+  });
+}
+
+function viewPopularCards() {
+  if (!props.card?.card_data?.name) return;
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('popular-by-commander', queryParams);
+  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 
 function handleImageError(event: Event) {
@@ -313,47 +368,5 @@ function handleImageError(event: Event) {
 
 .card-image-wrapper:hover img {
   transform: scale(1.03);
-}
-
-.flip-card-btn {
-  position: absolute;
-  right: 30px;
-  top: 88px;
-  opacity: 0;
-  pointer-events: auto;
-  z-index: 2;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  max-width: 30px;
-  max-height: 30px;
-  transition: opacity 0.2s;
-}
-
-.card-image-wrapper:hover .flip-card-btn {
-  opacity: 0.7;
-}
-
-@media (max-width: 767px) {
-  .flip-card-btn {
-    opacity: 0.7 !important;
-    right: 20px;
-    top: 80px;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    max-width: 28px;
-    max-height: 28px;
-  }
-
-  .flip-card-icon {
-    font-size: 1rem;
-  }
-}
-
-.flip-card-icon {
-  font-size: 1.2rem;
 }
 </style>

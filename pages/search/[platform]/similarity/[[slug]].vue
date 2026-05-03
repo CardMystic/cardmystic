@@ -1,7 +1,7 @@
 <template>
-  <UContainer class="mb-6 px-0">
-    <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <Search default-search-type="similarity" :platform="searchPlatformProp" class="mt-6 w-full" />
+  <UContainer class="mb-6 px-0 max-w-full">
+    <div class="w-full pt-4 flex flex-col items-center">
+      <Search default-search-type="similarity" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
 
       <!-- SEO slug page: show pre-generated title + description -->
       <template v-if="seoEntry">
@@ -15,7 +15,7 @@
       <div class="mb-10 w-full">
         <!-- Results -->
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading similar cards...` : `Please enter a card name to search for similar ${platformName} cards.`"
           :is-similarity-search="true" :hide-thumbs-down-button="true" />
       </div>
@@ -88,7 +88,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Similarity Search' });
 
-const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : 40; });
+const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : undefined; });
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -119,13 +119,12 @@ const similaritySearch = computed(() => {
   if (!cardName) return undefined;
   return SimilaritySearchSchema.parse({
     card_name: cardName,
-    limit: limitParam.value || 40,
+    limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false,
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || 20);
 const { searchResults, isLoading, error: searchError } = useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();

@@ -51,7 +51,9 @@
           </div>
 
           <div class="flex gap-2">
-            <UButton icon="i-lucide-search" color="primary" variant="solid" label="Search" @click="runSearch(item)" />
+            <UButton icon="i-lucide-search" color="primary" variant="solid" @click="runSearch(item)">
+              <span class="hidden sm:inline">Search</span>
+            </UButton>
             <UButton icon="i-lucide-trash-2" color="error" variant="ghost" size="sm" @click="deleteItem(item)" />
           </div>
         </div>

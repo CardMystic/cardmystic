@@ -8,10 +8,10 @@
       <div class="flex gap-2">
         <UInputMenu ref="autoComplete" v-model="state.card_name" v-model:search-term="searchTerm" :items="filteredCards"
           placeholder="Enter a card name..." icon="i-mdi-cards-outline" class="flex-1 min-w-0"
-          :ui="{ base: 'text-base h-10 truncate' }" />
+          :ui="{ base: 'text-base h-10 truncate' }" @update:model-value="handleCardSelected" />
         <UButton icon="i-mdi-cards-outline" :disabled="state.card_name?.length == 0" type="submit"
           class="h-10 cursor-pointer">
-          Search
+          <span class="hidden sm:inline">Search</span>
         </UButton>
       </div>
     </UFormField>
@@ -146,22 +146,13 @@ const honeypot = ref('')
 const toast = useToast()
 const { saveSearchMutation } = useSearchHistory()
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  // Bot detection: if honeypot field is filled, reject the submission
-  if (honeypot.value) {
-    toast.add({
-      title: 'Invalid submission',
-      color: 'error'
-    });
-    return;
-  }
-
+async function performSearch(cardName: string, filters: Schema['filters']) {
   try {
     filtersRef.value?.collapse();
-    const requestFilters = { ...event.data.filters } // shallow copy
+    const requestFilters = { ...filters } // shallow copy
 
     // Only modify the copy, NEVER the form state
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
+    if (!filters?.selectedColors || filters?.selectedColors.length === 0) {
       delete requestFilters.selectedColors
       delete requestFilters.selectedColorFilterOption
     }
@@ -175,11 +166,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
 
     // Save to search history
-    saveSearchMutation.mutate({ query: event.data.card_name, searchType: 'similarity', filters: requestFilters })
+    saveSearchMutation.mutate({ query: cardName, searchType: 'similarity', filters: requestFilters })
 
     // Construct query parameters
     const query: Record<string, any> = {
-      card_name: event.data.card_name,
+      card_name: cardName,
       filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
       searchType: 'similarity'
     };
@@ -188,6 +179,23 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   } catch (error) {
     console.error('Form submission error:', error)
   }
+}
+
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  // Bot detection: if honeypot field is filled, reject the submission
+  if (honeypot.value) {
+    toast.add({
+      title: 'Invalid submission',
+      color: 'error'
+    });
+    return;
+  }
+  await performSearch(event.data.card_name, event.data.filters);
+}
+
+function handleCardSelected(value: string) {
+  if (!value) return;
+  nextTick(() => performSearch(state.card_name, state.filters));
 }
 
 // If similarity button is clicked on the similarity page, this will update the card name in the search field

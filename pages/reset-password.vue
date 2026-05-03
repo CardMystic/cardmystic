@@ -176,10 +176,9 @@ const submitNewPassword = async () => {
     } else {
       await supabase.auth.signOut()
       successMessage.value = 'Password updated! Redirecting to login…'
-      setTimeout(() => router.push('/login'), 2000)
+      router.push('/login')
     }
   } catch (error) {
-    console.log(error)
     errorMessage.value = 'An unexpected error occurred.'
   }
 

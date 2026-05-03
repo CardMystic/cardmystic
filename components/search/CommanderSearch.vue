@@ -17,7 +17,7 @@
           </template>
         </UInput>
         <UButton icon="i-mdi-crown" :disabled="state.query?.length == 0" type="submit" class="cursor-pointer h-10">
-          Search
+          <span class="hidden sm:inline">Search</span>
         </UButton>
       </div>
     </UFormField>

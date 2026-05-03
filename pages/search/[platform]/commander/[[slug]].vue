@@ -1,7 +1,7 @@
 <template>
-  <UContainer class="mb-6 px-0">
-    <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <Search default-search-type="commander" :platform="searchPlatformProp" class="mt-6 w-full" />
+  <UContainer class="mb-6 px-0 max-w-full">
+    <div class="w-full pt-4 flex flex-col items-center">
+      <Search default-search-type="commander" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
 
       <!-- SEO slug page: show pre-generated title + description -->
       <template v-if="seoEntry">
@@ -15,7 +15,7 @@
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading ${platformName} commander results...` : `Please describe the ${platformName} commander you're looking for.`" />
       </div>
     </div>
@@ -118,13 +118,12 @@ const wordSearch = computed(() => {
   if (!query) return undefined;
   return WordSearchSchema.parse({
     query,
-    limit: limitParam.value || (seoEntry ? 40 : undefined),
+    limit: limitParam.value || undefined,
     filters: parsedFilters.value,
     exclude_card_data: false,
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || (seoEntry ? 40 : 20));
 const { searchResults, isLoading, error: searchError } = useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
