@@ -4,6 +4,7 @@ const ClipboardMenu = defineAsyncComponent(() => import('~/components/clipboard/
 import { useUserProfile } from '~/composables/useUserProfile'
 
 const { public: { maintenanceMode } } = useRuntimeConfig()
+console.log('[Navbar] maintenanceMode:', JSON.stringify(maintenanceMode))
 
 const isOpen = ref(false)
 const isMobileProfilePopoverOpen = ref(false)
