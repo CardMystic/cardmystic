@@ -39,8 +39,8 @@
     </ClientOnly>
   </div>
 
-  <!-- Create List Modal -->
-  <CreateListModal v-model:open="isCreateModalOpen" />
+  <!-- Create Deck Modal -->
+  <CreateDeckModal v-model:open="isCreateModalOpen" />
 </template>
 
 <script setup lang="ts">
@@ -51,7 +51,6 @@ definePageMeta({
 import { useCardLists } from '~/composables/useCardLists'
 import { useToast } from '#imports'
 import CardListLink from '~/components/lists/CardListLink.vue'
-import CreateListModal from '~/components/lists/CreateListModal.vue'
 
 const { userLists, isLoadingLists, listsError } = useCardLists()
 const toast = useToast()

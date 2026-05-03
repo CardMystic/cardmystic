@@ -1,7 +1,6 @@
 <template>
   <UCard v-if="card" variant="outline" class="preview-root" :ui="{ body: 'p-4' }">
-    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
-      :card-name="card.card_data.name" />
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-ids="[card.card_data.id]" />
 
     <SetCommanderModal :open="showCommanderModal" :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event" @confirm="confirmSetCommander" />
@@ -69,6 +68,8 @@ const props = defineProps<{
   numCopies?: number;
   board?: string;
   showEditCopiesButtons?: boolean;
+  decklistCardNames?: string[]; // Full decklist for pre-filling the deckbuilder
+  isFlipped?: boolean; // Controlled flip state synced from the grid card
 }>();
 
 const emit = defineEmits<{
@@ -77,9 +78,9 @@ const emit = defineEmits<{
   (e: 'clearCommander', cardId: string): void;
   (e: 'updateNumCopies', cardName: string, numCopies: number): void;
   (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
+  (e: 'flip', cardId: string): void;
 }>();
 
-const isFlipped = ref(false);
 const showCommanderModal = ref(false);
 const showAddToDeckModal = ref(false);
 const hasMounted = ref(false);
@@ -87,11 +88,6 @@ const hasMounted = ref(false);
 const canShowDeckMenu = computed(() =>
   hasMounted.value && Boolean(props.card)
 );
-
-// Reset flip state when the previewed card changes
-watch(() => props.card?.card_data.id, () => {
-  isFlipped.value = false;
-});
 
 onMounted(() => {
   hasMounted.value = true;
@@ -144,7 +140,7 @@ const simpleType = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.card) emit('flip', props.card.card_data.id);
 }
 
 function toggleClipboard() {
@@ -195,14 +191,16 @@ function findSimilarCards() {
 function getRecommendations() {
   const commanderName = props.card?.card_data.name;
   if (!commanderName) return;
-  const queryParams = { commander: commanderName };
+  const decklist = props.decklistCardNames?.join('\n');
+  const queryParams: Record<string, string> = { commander: commanderName };
+  if (decklist) queryParams.decklist = decklist;
   saveSearchQuery('recommend', queryParams);
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
   queueMicrotask(() => {
     saveSearchMutation.mutate({
       query: commanderName,
       searchType: 'recommend',
-      filters: { commander: commanderName },
+      filters: { commander: commanderName, decklist: decklist || undefined },
     });
   });
 }

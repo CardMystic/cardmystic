@@ -2,8 +2,7 @@
   <UCard variant="subtle"
     :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
     :ui="{ body: 'p-1 sm:p-2' }">
-    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
-      :card-name="card.card_data.name" />
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-ids="[card.card_data.id]" />
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -20,13 +19,14 @@
       <template v-if="hasPartner">
         <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
           <div class="partner-card partner-back" :class="{ 'partner-front': partnerFrontIndex === 1 }"
-            @mouseenter="partnerHoveredIndex = 1" @click="navigateToCard(card.partner_card_data!.id)">
+            @mouseenter="partnerHoveredIndex = 1; emit('partner-hover', 1)"
+            @click="navigateToCard(card.partner_card_data!.id)">
             <img class="card-large cursor-pointer" :src="getCardImageUrl(card.partner_card_data!)"
               :alt="card.partner_card_data!.name" @error="handleImageError"
               v-if="getCardImageUrl(card.partner_card_data!)" loading="lazy" decoding="async" />
           </div>
           <div class="partner-card" :class="{ 'partner-front': partnerFrontIndex === 0 }"
-            @mouseenter="partnerHoveredIndex = 0" @click="navigateToCard(card.card_data.id)">
+            @mouseenter="partnerHoveredIndex = 0; emit('partner-hover', 0)" @click="navigateToCard(card.card_data.id)">
             <img class="card-large cursor-pointer" :src="getCardImageUrl(card.card_data, isFlipped)"
               :alt="card.card_data.name" @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)"
               loading="lazy" decoding="async" />
@@ -272,10 +272,18 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // When provided, flip state is controlled by the parent (e.g. SearchResults syncing grid + preview).
+  // When omitted, the component manages its own internal flip state.
+  isFlipped: {
+    type: Boolean,
+    default: undefined,
+  },
 });
 
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
+  (e: 'flip', cardId: string): void;
+  (e: 'partner-hover', index: 0 | 1): void;
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
@@ -335,7 +343,9 @@ const isInDecklist = computed(() => {
   return deckbuilderStore.hasCard(props.card.card_data.name);
 });
 
-const isFlipped = ref(false);
+const isFlippedInternal = ref(false);
+// In controlled mode (parent passes :is-flipped), use the prop; otherwise fall back to internal state.
+const isFlipped = computed(() => props.isFlipped !== undefined ? props.isFlipped : isFlippedInternal.value);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const moreActionsOpen = ref(false);
@@ -369,7 +379,11 @@ const isDualFaced = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.isFlipped === undefined) {
+    // Uncontrolled mode: manage flip state internally
+    isFlippedInternal.value = !isFlippedInternal.value;
+  }
+  emit('flip', props.card.card_data.id);
 }
 
 // Get the search query from route params

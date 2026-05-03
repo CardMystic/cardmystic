@@ -4,7 +4,7 @@ import { ScryfallCardSchema } from './cardModel';
 
 export const TopCardsSearchSchema = z.object({
   query: z.string().optional(),
-  limit: z.number().min(1).max(200).optional().default(40),
+  limit: z.number().min(1).max(200).optional(),
   colors: z.array(z.string()).optional(),
   filters: CardSearchFiltersSchema.optional(),
 });
@@ -12,7 +12,7 @@ export type TopCardsSearch = z.infer<typeof TopCardsSearchSchema>;
 
 export const TopCommandersSearchSchema = z.object({
   query: z.string().optional(),
-  limit: z.number().min(1).max(200).optional().default(40),
+  limit: z.number().min(1).max(200).optional(),
   colors: z.array(z.string()).optional(),
   filters: CardSearchFiltersSchema.optional(),
 });
@@ -53,7 +53,7 @@ export type TopCommandersResponse = z.infer<typeof TopCommandersResponseSchema>;
 export const PopularByCommanderSearchSchema = z.object({
   commanders: z.array(z.string()),
   query: z.string().optional(),
-  limit: z.number().min(1).max(200).optional().default(40),
+  limit: z.number().min(1).max(200).optional(),
   filters: CardSearchFiltersSchema.optional(),
 });
 export type PopularByCommanderSearch = z.infer<
@@ -63,7 +63,7 @@ export type PopularByCommanderSearch = z.infer<
 export const PopularCommandersForCardSearchSchema = z.object({
   card_name: z.string(),
   query: z.string().optional(),
-  limit: z.number().min(1).max(200).optional().default(40),
+  limit: z.number().min(1).max(200).optional(),
   filters: CardSearchFiltersSchema.optional(),
 });
 export type PopularCommandersForCardSearch = z.infer<

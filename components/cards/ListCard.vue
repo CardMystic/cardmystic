@@ -94,6 +94,7 @@ const props = defineProps<{
   numCopies?: number;
   board?: string;
   format?: string;
+  decklistCardNames?: string[]; // Full decklist for pre-filling the deckbuilder
 }>();
 
 const emit = defineEmits<{
@@ -102,6 +103,7 @@ const emit = defineEmits<{
   (e: 'clearCommander', cardId: string): void;
   (e: 'updateNumCopies', cardName: string, numCopies: number): void;
   (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
+  (e: 'flip', cardId: string): void;
 }>();
 
 const isFlipped = ref(false);
@@ -230,6 +232,7 @@ const isDualFaced = computed(() => {
 
 function flipCard() {
   isFlipped.value = !isFlipped.value;
+  emit('flip', props.card.card_data.id);
 }
 
 function confirmSetCommander() {
@@ -257,14 +260,17 @@ function findSimilarCards() {
 
 function getRecommendations() {
   if (!props.card?.card_data?.name) return;
-  const queryParams = { commander: props.card.card_data.name };
+  const commanderName = props.card.card_data.name;
+  const decklist = props.decklistCardNames?.join('\n');
+  const queryParams: Record<string, string> = { commander: commanderName };
+  if (decklist) queryParams.decklist = decklist;
   saveSearchQuery('recommend', queryParams);
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
   queueMicrotask(() => {
     saveSearchMutation.mutate({
-      query: props.card.card_data.name,
+      query: commanderName,
       searchType: 'recommend',
-      filters: { commander: props.card.card_data.name },
+      filters: { commander: commanderName, decklist: decklist || undefined },
     });
   });
 }

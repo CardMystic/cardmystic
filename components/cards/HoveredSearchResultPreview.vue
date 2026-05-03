@@ -1,7 +1,7 @@
 <template>
   <UCard v-if="card" variant="subtle" class="preview-root" :ui="{ body: 'p-4' }">
-    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-id="card.card_data.id"
-      :card-name="card.card_data.name" />
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal"
+      :card-ids="[activeCardData?.id ?? '']" />
 
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -15,21 +15,21 @@
 
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
-        <img :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
+        <img :src="getCardImageUrl(activeCardData!, isFlipped)" :alt="activeCardData?.name"
           class="preview-image cursor-pointer" loading="eager" decoding="async"
-          @click="navigateToCard(card.card_data.id)" />
+          @click="navigateToCard(activeCardData?.id)" />
       </div>
 
       <div class="space-y-2">
         <div>
-          <h3 class="preview-title">{{ card.card_data.name }}</h3>
+          <h3 class="preview-title">{{ activeCardData?.name }}</h3>
           <p class="preview-subtitle">{{ simpleType }}</p>
         </div>
 
         <div class="flex flex-wrap gap-2 text-xs">
-          <UBadge v-if="isSearched" color="secondary" variant="subtle">Searched Card</UBadge>
+          <UBadge v-if="isSearched" color="primary" variant="subtle">Searched Card</UBadge>
           <UBadge v-if="isCommander" color="warning" variant="subtle">Commander</UBadge>
-          <UBadge v-if="card.card_data.game_changer" color="primary" variant="subtle">Game Changer</UBadge>
+          <UBadge v-if="activeCardData?.game_changer" color="primary" variant="subtle">Game Changer</UBadge>
         </div>
 
         <div v-if="!hideProgressBar" class="preview-scores">
@@ -71,7 +71,7 @@
         @find-similar="findSimilarCards" @open-add-to-deck="showAddToDeckModal = true"
         @toggle-clipboard="toggleClipboard" @flip-card="flipCard" @get-recommendations="getRecommendations"
         @view-popular-cards="viewPopularCards" @dislike="handleDislike"
-        @add-to-deckbuilder="deckbuilderStore.addCard(card.card_data.name)" />
+        @add-to-deckbuilder="deckbuilderStore.addCard(activeCardData?.name ?? '')" />
     </div>
   </UCard>
 </template>
@@ -96,9 +96,21 @@ const props = defineProps<{
   hideProgressBar?: boolean;
   hideThumbsDownButton?: boolean;
   showAddToDeckbuilderButton?: boolean;
+  isFlipped?: boolean; // Controlled flip state synced from the grid card
+  partnerIndex?: 0 | 1; // Which partner to show (0 = primary, 1 = partner)
 }>();
 
-const isFlipped = ref(false);
+const emit = defineEmits<{
+  (e: 'flip', cardId: string): void;
+}>();
+
+// When showing partner commanders, display whichever card the user is hovering over in the grid
+const activeCardData = computed(() => {
+  if (props.partnerIndex === 1 && props.card?.partner_card_data) {
+    return props.card.partner_card_data;
+  }
+  return props.card?.card_data ?? null;
+});
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const showAddToDeckModal = ref(false);
@@ -110,7 +122,6 @@ const canShowDeckMenu = computed(() =>
 
 // Reset per-card transient state when the previewed card changes
 watch(() => props.card?.card_data.id, () => {
-  isFlipped.value = false;
   isThumbsDownClicked.value = false;
 });
 
@@ -119,18 +130,17 @@ onMounted(() => {
 });
 
 const isDualFaced = computed(() => {
-  const cardData = props.card?.card_data;
-  if (!cardData?.card_faces || cardData.card_faces.length < 2) return false;
-  return ['transform', 'modal_dfc', 'reversible_card'].includes(cardData.layout);
+  if (!activeCardData.value?.card_faces || activeCardData.value.card_faces.length < 2) return false;
+  return ['transform', 'modal_dfc', 'reversible_card'].includes(activeCardData.value.layout);
 });
 
 const isInDecklist = computed(() => {
-  if (!props.card?.card_data?.name) return false;
-  return deckbuilderStore.hasCard(props.card.card_data.name);
+  if (!activeCardData.value?.name) return false;
+  return deckbuilderStore.hasCard(activeCardData.value.name);
 });
 
 const clipboardCard = computed(() => {
-  const cardData = props.card?.card_data;
+  const cardData = activeCardData.value;
   if (!cardData) return null;
 
   return {
@@ -189,7 +199,7 @@ const alsScoreColor = computed(() => scoreToColor(alsDisplayScore.value));
 const popularityColor = computed(() => scoreToColor(popularityPercent.value));
 
 const simpleType = computed(() => {
-  const typeLine = props.card?.card_data.type_line;
+  const typeLine = activeCardData.value?.type_line;
   if (!typeLine) return 'Unknown';
   const faces = typeLine.split('//');
   if (faces.length === 1) return faces[0].split(' — ')[0].trim();
@@ -197,7 +207,7 @@ const simpleType = computed(() => {
 });
 
 const priceLabel = computed(() => {
-  const prices = props.card?.card_data.prices;
+  const prices = activeCardData.value?.prices;
   if (!prices) return '';
   if (prices.usd) return `$${prices.usd}`;
   if (prices.usd_foil) return `$${prices.usd_foil} foil`;
@@ -206,7 +216,7 @@ const priceLabel = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.card) emit('flip', props.card.card_data.id);
 }
 
 function toggleClipboard() {
@@ -227,18 +237,18 @@ function navigateToCard(cardId: string | undefined) {
 }
 
 function handleDislike() {
-  if (isThumbsDownClicked.value || !props.queryParam || !props.card?.card_data?.name) return;
+  if (isThumbsDownClicked.value || !props.queryParam || !activeCardData.value?.name) return;
   showConfirmModal.value = true;
 }
 
 function confirmDislike(close: () => void) {
-  if (!props.queryParam || !props.card?.card_data?.name) return;
+  if (!props.queryParam || !activeCardData.value?.name) return;
   isThumbsDownClicked.value = true;
   showConfirmModal.value = false;
   close();
   useCardFeedback().dislikeMutation.mutate({
     query: props.queryParam,
-    cardName: props.card.card_data.name,
+    cardName: activeCardData.value.name,
   });
 }
 
@@ -256,7 +266,7 @@ function findSimilarCards() {
 }
 
 function getRecommendations() {
-  const commanderName = props.card?.card_data?.name;
+  const commanderName = activeCardData.value?.name;
   if (!commanderName) return;
   const queryParams = { commander: commanderName };
   saveSearchQuery('recommend', queryParams);
@@ -271,8 +281,8 @@ function getRecommendations() {
 }
 
 function viewPopularCards() {
-  if (!props.card?.card_data?.name) return;
-  const queryParams = { commander: props.card.card_data.name };
+  if (!activeCardData.value?.name) return;
+  const queryParams = { commander: activeCardData.value.name };
   saveSearchQuery('popular-by-commander', queryParams);
   router.push({ path: '/popular-by-commander/all', query: queryParams });
 }

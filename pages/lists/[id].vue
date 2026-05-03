@@ -55,9 +55,9 @@
       <CardListResults ref="cardListResultsRef" class="mb-8" :isLoading="loading" :groups="cardGroups"
         :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
         :list-items-map="listItemsMap" :format="list?.format" :sideboard-groups="sideboardGroups"
-        :considering-groups="consideringGroups" @removeCard="handleRemoveCard" @setCommander="handleSetCommander"
-        @clearCommander="handleClearCommander" @updateNumCopies="handleUpdateNumCopies"
-        @changeBoard="handleChangeBoard" />
+        :considering-groups="consideringGroups" :decklist-card-names="decklistCardNames" @removeCard="handleRemoveCard"
+        @setCommander="handleSetCommander" @clearCommander="handleClearCommander"
+        @updateNumCopies="handleUpdateNumCopies" @changeBoard="handleChangeBoard" />
       <template #fallback>
         <CardListResultsSkeleton />
       </template>
@@ -186,6 +186,7 @@ const copiesMap = computed(() => {
 const { data: cardsData, isLoading: isLoadingCards, isFetching: isFetchingCards } = useListCards(listId, cardIds)
 
 const cards = computed(() => cardsData.value || [])
+const decklistCardNames = computed(() => cards.value.map((c: any) => c.card_data.name))
 
 // Show loading when lists/items are loading, cards query is loading/fetching,
 // or items have loaded with card IDs but card data hasn't arrived yet

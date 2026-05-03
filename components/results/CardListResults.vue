@@ -15,12 +15,14 @@
               :isCommanderOfDecklist="commanderCardIds?.includes(previewCard.card_data.id) ?? false"
               :canBeACommander="isCommanderCard(previewCard)"
               :num-copies="listItemsMap?.[previewCard.card_data.id]?.num_copies"
-              :board="listItemsMap?.[previewCard.card_data.id]?.board"
+              :board="listItemsMap?.[previewCard.card_data.id]?.board" :decklist-card-names="decklistCardNames"
+              :is-flipped="flippedCards[previewCard.card_data.id] ?? false"
               @remove="(cardId: string) => emit('removeCard', cardId)"
               @set-commander="(cardName: string) => emit('setCommander', cardName)"
               @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
               @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-              @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+              @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
+              @flip="handleCardFlip" />
           </div>
         </aside>
 
@@ -33,7 +35,7 @@
               <div class="board-divider-line"></div>
               <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' :
                 'cards'
-              }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+                }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
               <div class="board-divider-line"></div>
             </div>
             <!-- Commander card(s) at the top (groups with empty label) -->
@@ -45,11 +47,12 @@
                     :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
                     :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
                     :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
-                    @remove="(cardId: string) => emit('removeCard', cardId)"
+                    :decklist-card-names="decklistCardNames" @remove="(cardId: string) => emit('removeCard', cardId)"
                     @set-commander="(cardName: string) => emit('setCommander', cardName)"
                     @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
                     @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                    @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+                    @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
+                    @flip="handleCardFlip" />
                 </div>
               </div>
             </template>
@@ -73,11 +76,12 @@
                       :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
                       :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
                       :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
-                      @remove="(cardId: string) => emit('removeCard', cardId)"
+                      :decklist-card-names="decklistCardNames" @remove="(cardId: string) => emit('removeCard', cardId)"
                       @set-commander="(cardName: string) => emit('setCommander', cardName)"
                       @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
                       @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
+                      @flip="handleCardFlip" />
                   </div>
                 </div>
               </template>
@@ -110,7 +114,8 @@
                       @set-commander="(cardName: string) => emit('setCommander', cardName)"
                       @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
                       @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
+                      @flip="handleCardFlip" />
                   </div>
                 </div>
               </template>
@@ -130,7 +135,8 @@
                         @set-commander="(cardName: string) => emit('setCommander', cardName)"
                         @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
                         @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                        @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+                        @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
+                        @flip="handleCardFlip" />
                     </div>
                   </div>
                 </template>
@@ -165,7 +171,8 @@
                       @set-commander="(cardName: string) => emit('setCommander', cardName)"
                       @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
                       @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
+                      @flip="handleCardFlip" />
                   </div>
                 </div>
               </template>
@@ -185,7 +192,8 @@
                         @set-commander="(cardName: string) => emit('setCommander', cardName)"
                         @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
                         @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                        @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)" />
+                        @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
+                        @flip="handleCardFlip" />
                     </div>
                   </div>
                 </template>
@@ -202,8 +210,8 @@
         <UIcon name="i-lucide-layers" class="w-16 h-16 mb-4 text-gray-400" />
         <h3 class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300">This list is empty!</h3>
         <p class="text-gray-500 dark:text-gray-400 max-w-md">
-          Use the search dropdown above, or the <span class="font-medium">Save To List</span> button from the clipboard
-          to add cards to this list.
+          Use the search dropdown above, or the <span class="font-medium">Add to Deck</span> button from the clipboard
+          to add cards to this deck.
         </p>
       </div>
     </template>
@@ -226,6 +234,7 @@ const props = defineProps<{
   format?: string;
   sideboardGroups?: CardGroup[] | null;
   consideringGroups?: CardGroup[] | null;
+  decklistCardNames?: string[];
 }>();
 
 const { data: commandersSet } = useCommandersSet();
@@ -299,6 +308,12 @@ const openConsideringValues = ref<string[]>([]);
 watch(consideringLabeled, (groups) => {
   openConsideringValues.value = groups.map(g => g.label);
 }, { immediate: true });
+
+const flippedCards = ref<Record<string, boolean>>({});
+
+function handleCardFlip(cardId: string) {
+  flippedCards.value = { ...flippedCards.value, [cardId]: !(flippedCards.value[cardId] ?? false) };
+}
 
 const hoveredCardId = ref<string | null>(null);
 

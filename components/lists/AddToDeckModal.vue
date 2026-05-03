@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="isOpen" :title="`Add ${cardName} to Deck`"
+  <UModal v-model:open="isOpen" :title="modalTitle"
     description="Pick a recently edited deck or search your decks by name.">
     <template #content>
       <div v-if="!isLoggedIn" class="p-4 space-y-3 text-center">
@@ -36,33 +36,50 @@
           </UInputMenu>
         </div>
 
-        <div v-if="selectedList" class="rounded-lg border border-secondary/40 bg-elevated/40 px-3 py-2 text-sm">
-          <div class="font-medium">Selected Deck</div>
-          <div class="text-muted">{{ listName(selectedList) }}</div>
-          <div class="text-xs text-muted/70">{{ [listFormat(selectedList),
-          listDate(selectedList)].filter(Boolean).join(' · ')
-            }}</div>
-        </div>
+        <UAlert v-if="hasDuplicates" color="warning" icon="i-lucide-triangle-alert"
+          :title="`${effectiveDuplicateCount} of ${cardCount} card${cardCount === 1 ? '' : 's'} already in this deck`"
+          description="Choose whether to add only the new cards or add all cards (increasing copies of duplicates)." />
 
-        <UAlert v-if="alreadyInSelectedDeck" color="warning" icon="i-lucide-triangle-alert"
-          title="Card already in this deck" description="Adding it again will increase the copies in that deck." />
+        <span class="text-orange-400 font-medium">{{ cardCount }}</span> card{{ cardCount === 1 ? '' : 's' }} will be
+        added to
+        the deck.
 
         <div v-if="errorMessage" class="text-sm text-red-400">
           {{ errorMessage }}
         </div>
+
+
       </div>
 
       <div class="mx-2 my-2 flex justify-end gap-2" v-if="isLoggedIn">
+        <button :disabled="loading"
+          class="text-sm text-muted underline hover:text-default disabled:opacity-50 cursor-pointer"
+          @click="showCreateDeckModal = true">
+          Create Deck Instead
+        </button>
         <UButton color="neutral" variant="outline" :disabled="loading" @click="isOpen = false">
           Cancel
         </UButton>
-        <UButton color="primary" variant="solid" :loading="loading" :disabled="!selectedListId"
-          @click="handleAddToDeck">
-          Add to Deck
+        <template v-if="hasDuplicates && effectiveNewCount > 0">
+          <UButton color="warning" variant="outline" :loading="loading" :disabled="!selectedListId"
+            @click="handleAddToDeck(true)">
+            Add New Only ({{ effectiveNewCount }})
+          </UButton>
+          <UButton color="primary" variant="solid" :loading="loading" :disabled="!selectedListId"
+            @click="handleAddToDeck(false)">
+            Add All ({{ cardCount }})
+          </UButton>
+        </template>
+        <UButton v-else color="primary" variant="solid" :loading="loading" :disabled="!selectedListId"
+          @click="handleAddToDeck(false)">
+          {{ hasDuplicates ? `Add All (${cardIds.length})` : 'Add to Deck' }}
         </UButton>
       </div>
     </template>
   </UModal>
+
+  <LazyCreateDeckModal v-if="showCreateDeckModal" v-model:open="showCreateDeckModal" :card-ids="props.cardIds"
+    :card-names="props.cardNames" @success="() => { showCreateDeckModal = false; emit('success') }" />
 </template>
 
 <script setup lang="ts">
@@ -71,22 +88,33 @@ import { useToast } from '#imports';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter';
 
 import { useCardLists } from '~/composables/useCardLists';
+import { useCardsByIds } from '~/composables/useCards';
 
 const props = defineProps<{
   open: boolean;
-  cardId: string;
-  cardName: string;
+  cardIds?: string[];
+  cardNames?: string[];
 }>();
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void;
+  (e: 'success'): void;
 }>();
 
 type CardListRow = Database['public']['Tables']['card_lists']['Row'];
 
 const { userProfile } = useUserProfile();
-const { userLists, addCardsToListMutation, useListItems } = useCardLists();
+const { userLists, addCardsToListMutation, addCardsByNameToListMutation, useListItems } = useCardLists();
 const toast = useToast();
+
+const cardIds = computed(() => props.cardIds ?? []);
+const cardNames = computed(() => props.cardNames ?? []);
+const cardCount = computed(() => cardIds.value.length || cardNames.value.length);
+
+const modalTitle = computed(() => {
+  const count = cardCount.value;
+  return count === 1 ? 'Add 1 Card to Deck' : `Add ${count} Cards to Deck`;
+});
 
 const isLoggedIn = computed(() => Boolean(userProfile.value));
 const isOpen = computed({
@@ -98,6 +126,7 @@ const selectedListId = ref('');
 const selectedListItem = ref<{ label: string; value: string; description: string } | undefined>(undefined);
 const deckSearchTerm = ref('');
 const errorMessage = ref('');
+const showCreateDeckModal = ref(false);
 
 const recentLists = computed(() => {
   if (!userLists.value) return [];
@@ -167,12 +196,47 @@ const selectedList = computed(() =>
 const selectedListIdRef = computed(() => selectedListId.value);
 const { data: selectedListItems } = useListItems(selectedListIdRef);
 
-const alreadyInSelectedDeck = computed(() => {
-  if (!selectedListItems.value?.length) return false;
-  return selectedListItems.value.some((item) => item.card_id === props.cardId);
+const existingCardIdSet = computed(() => {
+  if (!selectedListItems.value?.length) return new Set<string>();
+  return new Set(selectedListItems.value.map(item => item.card_id));
 });
 
-const loading = computed(() => addCardsToListMutation.isPending.value);
+const duplicateCardIds = computed(() =>
+  cardIds.value.filter(id => existingCardIdSet.value.has(id))
+);
+
+const newCardIds = computed(() =>
+  cardIds.value.filter(id => !existingCardIdSet.value.has(id))
+);
+
+// Name-based duplicate detection (used when modal receives cardNames instead of cardIds)
+const existingCardIds = computed(() =>
+  (selectedListItems.value ?? []).map(item => item.card_id).filter((id): id is string => !!id)
+);
+const { cards: existingListCards } = useCardsByIds(existingCardIds, 'add-to-deck-names');
+const existingCardNameSet = computed(() => {
+  const cards = Array.isArray(existingListCards.value) ? existingListCards.value : [];
+  if (!cards.length) return new Set<string>();
+  return new Set((cards as any[]).map(c => c.name as string));
+});
+const duplicateCardNames = computed(() =>
+  cardNames.value.filter(name => existingCardNameSet.value.has(name))
+);
+const newCardNames = computed(() =>
+  cardNames.value.filter(name => !existingCardNameSet.value.has(name))
+);
+
+// Unified counts that work for both ID-based and name-based adds
+const effectiveDuplicateCount = computed(() =>
+  cardNames.value.length > 0 ? duplicateCardNames.value.length : duplicateCardIds.value.length
+);
+const effectiveNewCount = computed(() =>
+  cardNames.value.length > 0 ? newCardNames.value.length : newCardIds.value.length
+);
+
+const hasDuplicates = computed(() => effectiveDuplicateCount.value > 0);
+
+const loading = computed(() => addCardsToListMutation.isPending.value || addCardsByNameToListMutation.isPending.value);
 
 watch(isOpen, (opened) => {
   if (opened) {
@@ -186,7 +250,7 @@ watch(isOpen, (opened) => {
   errorMessage.value = '';
 });
 
-async function handleAddToDeck() {
+async function handleAddToDeck(onlyNew = false) {
   errorMessage.value = '';
 
   if (!selectedListId.value) {
@@ -195,21 +259,33 @@ async function handleAddToDeck() {
   }
 
   try {
-    const result = await addCardsToListMutation.mutateAsync({
-      listId: selectedListId.value,
-      cardIds: [props.cardId],
-    });
+    const deckName = selectedList.value?.name || 'deck';
 
-    const title = alreadyInSelectedDeck.value
-      ? `${props.cardName} count updated in ${selectedList.value?.name || 'deck'}`
-      : `${props.cardName} added to ${selectedList.value?.name || 'deck'}`;
+    if (cardNames.value.length > 0) {
+      const namesToAdd = onlyNew ? newCardNames.value : cardNames.value;
+      const result = await addCardsByNameToListMutation.mutateAsync({
+        listId: selectedListId.value,
+        cardNames: namesToAdd,
+      });
+      const messages: string[] = [];
+      if (result.addedCount > 0) messages.push(`Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`);
+      if (result.updatedCount > 0) messages.push(`${result.updatedCount} updated`);
+      if (result.invalidCardNames?.length > 0) messages.push(`${result.invalidCardNames.length} not found`);
+      toast.add({ title: messages.join('. ') || `Cards added to ${deckName}`, icon: 'i-lucide-check' });
+    } else {
+      const idsToAdd = onlyNew ? newCardIds.value : cardIds.value;
+      const result = await addCardsToListMutation.mutateAsync({
+        listId: selectedListId.value,
+        cardIds: idsToAdd,
+      });
+      const messages: string[] = [];
+      if (result?.addedCount) messages.push(`Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`);
+      if (result?.updatedCount) messages.push(`${result.updatedCount} updated`);
+      if (result?.invalidCardIds?.length) messages.push(`${result.invalidCardIds.length} not found`);
+      toast.add({ title: messages.join('. ') || `Cards added to ${deckName}`, icon: 'i-lucide-check' });
+    }
 
-    toast.add({
-      title,
-      icon: 'i-lucide-check',
-    });
-
-    void result;
+    emit('success');
     isOpen.value = false;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to add card to deck.';

@@ -36,7 +36,7 @@
   <LazyIssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
   <LazyBackToTop />
 
-  <SaveToListModal v-model="showSaveAllModal" :card-names="decklistCardNames" :commanders="commanderNames" />
+  <AddToDeckModal v-model:open="showSaveAllModal" :card-names="decklistCardNames" />
 </template>
 
 <script setup lang="ts">
@@ -133,7 +133,7 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
 // Seed the deckbuilder with the initial decklist from the URL
 if (decklistParam.value) deckbuilderDecklist.value = decklistParam.value;
 
-// Card names from the decklist textarea for "Save All to List"
+// Card names from the decklist textarea for "Save All to Deck"
 const decklistCardNames = computed(() => {
   if (!deckbuilderDecklist.value.trim()) return [];
   return parseDecklist(deckbuilderDecklist.value);

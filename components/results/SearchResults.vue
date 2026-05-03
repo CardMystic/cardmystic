@@ -33,7 +33,9 @@
             <HoveredSearchResultPreview :card="previewCard" :query-param="queryParam"
               :is-commander="previewCardIsCommander" :is-searched="previewIsSearched"
               :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
-              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" />
+              :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
+              :is-flipped="flippedCards[previewCard.card_data.id] ?? false" :partner-index="previewPartnerIndex"
+              @flip="handleCardFlip" />
           </div>
         </aside>
 
@@ -44,9 +46,10 @@
             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-3">
             <div @mouseenter="setPreviewCard(searchedCard)" @focusin="setPreviewCard(searchedCard)"
               @mouseleave="clearPendingPreviewCard(searchedCard.card_data.id)">
-              <Card :card="searchedCard" :showCardInfo="true" :is-similarity-search="true" :is-searched="true"
-                :hide-progress-bar="false" :hide-thumbs-down-button="true"
-                :is-commander="checkIsCommander(searchedCard)" />
+              <Card :card="searchedCard" :showCardInfo="true" :is-searched="true" :hide-progress-bar="false"
+                :hide-thumbs-down-button="true" :is-commander="checkIsCommander(searchedCard)"
+                :is-flipped="flippedCards[searchedCard.card_data.id] ?? false" @flip="handleCardFlip"
+                @partner-hover="handlePartnerHover" />
             </div>
           </div>
 
@@ -68,7 +71,8 @@
                     <Card :card="result" :showCardInfo="true" :is-searched="false" :hide-progress-bar="hideProgressBar"
                       :hide-thumbs-down-button="hideThumbsDownButton"
                       :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-                      :is-commander="checkIsCommander(result)" />
+                      :is-commander="checkIsCommander(result)" :is-flipped="flippedCards[result.card_data.id] ?? false"
+                      @flip="handleCardFlip" @partner-hover="handlePartnerHover" />
                   </div>
                 </div>
               </template>
@@ -83,8 +87,9 @@
                 @mouseleave="clearPendingPreviewCard(result.card_data.id)">
                 <Card :card="result" :showCardInfo="true" :is-searched="isSimilaritySearch && index === 0"
                   :hide-progress-bar="hideProgressBar" :hide-thumbs-down-button="hideThumbsDownButton"
-                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
-                  :is-commander="checkIsCommander(result)" />
+                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :is-commander="checkIsCommander(result)"
+                  :is-flipped="flippedCards[result.card_data.id] ?? false" @flip="handleCardFlip"
+                  @partner-hover="handlePartnerHover" />
               </div>
             </div>
           </template>
@@ -159,6 +164,20 @@ const props = withDefaults(defineProps<{
 }>(), {
   skeletonCount: 40,
 });
+
+// Flip state — tracks flipped cards by ID so grid card and preview stay in sync
+const flippedCards = ref<Record<string, boolean>>({});
+
+function handleCardFlip(cardId: string) {
+  flippedCards.value = { ...flippedCards.value, [cardId]: !(flippedCards.value[cardId] ?? false) };
+}
+
+// Partner hover — tracks which partner (0 = primary, 1 = partner) is being hovered
+const previewPartnerIndex = ref<0 | 1>(0);
+
+function handlePartnerHover(index: 0 | 1) {
+  previewPartnerIndex.value = index;
+}
 
 // Sorting state
 const sortBy = ref<string | undefined>(undefined);
@@ -263,6 +282,11 @@ const previewIsSearched = computed(() => {
 const previewCardIsCommander = computed(() =>
   previewCard.value ? checkIsCommander(previewCard.value) : false
 );
+
+// Reset partner index when the previewed card changes
+watch(() => previewCard.value?.card_data.id, () => {
+  previewPartnerIndex.value = 0;
+});
 
 const HOVER_PREVIEW_DELAY_MS = 200;
 let _hoverRafId: number | null = null;
