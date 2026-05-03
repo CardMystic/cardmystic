@@ -141,16 +141,16 @@ Check out the [Nuxt deployment documentation](https://nuxt.com/docs/getting-star
 
 ## Maintenance Mode
 
-A site-wide maintenance banner can be shown on all pages by setting the `NUXT_PUBLIC_MAINTENANCE_MODE` environment variable to `true`.
+A site-wide maintenance banner can be shown on all pages by setting the `NUXT_PUBLIC_MAINTENANCE_MODE` variable to `true`.
 
 The banner displays: _"CardMystic is currently under maintenance and may not work properly. We apologize for the inconvenience."_
 
 **To enable:**
 
 - Locally: set `NUXT_PUBLIC_MAINTENANCE_MODE=true` in `.env` and restart the dev server
-- Production: add `NUXT_PUBLIC_MAINTENANCE_MODE=true` as a GitHub Actions secret and redeploy
+- Production: set `NUXT_PUBLIC_MAINTENANCE_MODE=true` in GitHub → repo **Settings → Secrets and variables → Actions → Variables** tab, then redeploy
 
-**To disable:** remove the variable or set it to anything other than `true`, then redeploy.
+**To disable:** set it to `false` (or remove it) and redeploy.
 
 > **Note:** Because the home page (`/`) is prerendered at build time, the banner is rendered client-side after hydration on that page. All other pages (SSR) render it server-side. This means the value is baked in at build time — a redeploy is required to change it in production.
 
