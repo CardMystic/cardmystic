@@ -1,7 +1,8 @@
 <template>
   <UCard variant="subtle"
     :class="['card-root', isSearched ? 'searched-card-bg h-full' : '', goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '']"
-    :ui="{ body: 'p-1 sm:p-4' }">
+    :ui="{ body: 'p-1 sm:p-2' }">
+    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-ids="[card.card_data.id]" />
     <!-- Confirmation Modal -->
     <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -18,13 +19,14 @@
       <template v-if="hasPartner">
         <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
           <div class="partner-card partner-back" :class="{ 'partner-front': partnerFrontIndex === 1 }"
-            @mouseenter="partnerHoveredIndex = 1" @click="navigateToCard(card.partner_card_data!.id)">
+            @mouseenter="partnerHoveredIndex = 1; emit('partner-hover', 1)"
+            @click="navigateToCard(card.partner_card_data!.id)">
             <img class="card-large cursor-pointer" :src="getCardImageUrl(card.partner_card_data!)"
               :alt="card.partner_card_data!.name" @error="handleImageError"
               v-if="getCardImageUrl(card.partner_card_data!)" loading="lazy" decoding="async" />
           </div>
           <div class="partner-card" :class="{ 'partner-front': partnerFrontIndex === 0 }"
-            @mouseenter="partnerHoveredIndex = 0" @click="navigateToCard(card.card_data.id)">
+            @mouseenter="partnerHoveredIndex = 0; emit('partner-hover', 0)" @click="navigateToCard(card.card_data.id)">
             <img class="card-large cursor-pointer" :src="getCardImageUrl(card.card_data, isFlipped)"
               :alt="card.card_data.name" @error="handleImageError" v-if="getCardImageUrl(card.card_data, isFlipped)"
               loading="lazy" decoding="async" />
@@ -42,17 +44,9 @@
         </div>
       </template>
 
-      <LazyClipboardButton v-if="showCardInfo && !hasPartner" :card="card" />
-
-      <!-- Flip Button for Dual-Faced Cards -->
-      <div v-if="showCardInfo && isDualFaced" class="flip-card-btn" @click.stop="flipCard">
-        <UTooltip text="Flip card">
-          <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
-            square>
-            <UIcon name="i-heroicons-arrow-path" class="flip-card-icon" />
-          </UButton>
-        </UTooltip>
-      </div>
+      <LazyCardOverlayButtons :card="card" :isDualFaced="isDualFaced"
+        :show-clipboard-button="showCardInfo && !hasPartner" :show-flip-button="showCardInfo && !hasPartner"
+        :show-menu-button="canShowDeckMenu" :menu-items="cardOverlayMenuItems" @flip="flipCard" />
 
       <!-- Score Bars -->
       <div v-if="!hideProgressBar" class="mt-1 w-full" :class="{ invisible: isSearched }">
@@ -104,46 +98,6 @@
 
     <!-- Card Name and mana cost -->
     <div class="flex flex-col items-center justify-center text-center">
-
-      <!-- Partner: show both names and combined type line -->
-      <template v-if="hasPartner && showCardInfo">
-        <div v-for="scryfallCard in [card.card_data, card.partner_card_data!]" :key="scryfallCard.id"
-          class="flex flex-row items-center justify-between w-full">
-          <p class="whitespace-nowrap overflow-hidden truncate">
-            {{ scryfallCard.name?.split(' // ')[0] }}
-          </p>
-          <ManaCost v-if="scryfallCard.mana_cost" :manaCost="scryfallCard.mana_cost.split(' // ')[0]"
-            class="manacost-text whitespace-nowrap" />
-        </div>
-        <div class="flex flex-row items-center justify-between w-full text-xs">
-          <p class="whitespace-nowrap overflow-hidden truncate">
-            <span style="color: #ff4500;">
-              {{ getSimpleCardType(card.card_data.type_line) }} &amp; {{
-                getSimpleCardType(card.partner_card_data!.type_line) }}
-            </span>
-          </p>
-        </div>
-      </template>
-
-      <!-- Single card: original layout -->
-      <template v-else>
-        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-            {{ card.card_data.name.split(' // ')[0] }}
-          </p>
-          <ManaCost v-if="card.card_data.mana_cost" :manaCost="card.card_data.mana_cost.split(' // ')[0]"
-            class="manacost-text whitespace-nowrap" />
-        </div>
-        <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs">
-          <p class="whitespace-nowrap overflow-hidden truncate" :class="[isSearched ? 'text-white' : '']">
-            <span
-              :style="getSimpleCardType(card.card_data.type_line).toLowerCase().startsWith('legendary') ? 'color: #ff4500;' : ''">
-              {{ getSimpleCardType(card.card_data.type_line) ?? "" }}
-            </span>
-          </p>
-        </div>
-      </template>
-
       <!-- Action Buttons -->
       <div class="flex flex-row items-center justify-between text-center w-full mt-1">
 
@@ -154,14 +108,14 @@
             <template #default>
               <!-- Partner: combined price button -->
               <UButton v-if="hasPartner && showCardInfo && partnerTcgplayerId"
-                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="solid" class="mr-1 sm:mr-2"
-                icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
+                :to="getAffiliateLink(partnerTcgplayerId)" external color="success" variant="outline"
+                class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
                 rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
                 {{ combinedPriceLabel }}
               </UButton>
               <!-- Single card: original price button -->
               <UButton v-else-if="!hasPartner && showCardInfo && card.card_data.tcgplayer_id"
-                :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="solid"
+                :to="getAffiliateLink(card.card_data.tcgplayer_id)" external color="success" variant="outline"
                 class="mr-1 sm:mr-2" icon="i-heroicons-shopping-cart" :size="isMobile ? 'xs' : 'sm'" target="_blank"
                 rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
                 {{ card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy' }}
@@ -196,17 +150,17 @@
           <!-- Desktop buttons (hidden on mobile) -->
           <template v-if="showCardInfo">
             <UTooltip text="Get Deck Recommendations for this Commander" :popper="{ placement: 'top' }">
-              <UButton v-if="isCommander" color="primary" variant="solid"
+              <UButton v-if="isCommander" color="primary" variant="outline"
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-box" size="sm"
                 @click="getRecommendations" aria-label="Get Deck Recommendations for this Commander" />
             </UTooltip>
             <UTooltip text="Popular Cards for this Commander" :popper="{ placement: 'top' }">
-              <UButton v-if="isCommander" color="error" variant="solid"
+              <UButton v-if="isCommander" color="error" variant="outline"
                 class="hidden sm:inline-flex mr-2 cursor-pointer" icon="i-lucide-flame" size="sm"
                 @click="viewPopularCards" aria-label="Popular Cards for this Commander" />
             </UTooltip>
             <UTooltip v-if="!isSearched" text="Find similar cards" :popper="{ placement: 'top' }">
-              <UButton color="neutral" variant="solid" class="hidden sm:inline-flex mr-2 cursor-pointer"
+              <UButton color="neutral" variant="outline" class="hidden sm:inline-flex mr-2 cursor-pointer"
                 icon="i-mdi-cards-outline" size="sm" @click="findSimilarCards" aria-label="Find Similar Cards" />
             </UTooltip>
           </template>
@@ -262,7 +216,6 @@ import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { useRouter } from 'vue-router';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 
@@ -270,6 +223,7 @@ const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
+const { userProfile } = useUserProfile();
 
 // Shared singleton — one listener for all Card instances
 const isMobile = useIsMobile();
@@ -318,10 +272,18 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // When provided, flip state is controlled by the parent (e.g. SearchResults syncing grid + preview).
+  // When omitted, the component manages its own internal flip state.
+  isFlipped: {
+    type: Boolean,
+    default: undefined,
+  },
 });
 
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
+  (e: 'flip', cardId: string): void;
+  (e: 'partner-hover', index: 0 | 1): void;
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
@@ -381,10 +343,32 @@ const isInDecklist = computed(() => {
   return deckbuilderStore.hasCard(props.card.card_data.name);
 });
 
-const isFlipped = ref(false);
+const isFlippedInternal = ref(false);
+// In controlled mode (parent passes :is-flipped), use the prop; otherwise fall back to internal state.
+const isFlipped = computed(() => props.isFlipped !== undefined ? props.isFlipped : isFlippedInternal.value);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const moreActionsOpen = ref(false);
+const showAddToDeckModal = ref(false);
+const hasMounted = ref(false);
+
+const cardOverlayMenuItems = computed(() => [[
+  {
+    label: 'Add to Deck',
+    icon: 'i-lucide-library-big',
+    onSelect() {
+      showAddToDeckModal.value = true;
+    },
+  },
+]]);
+
+const canShowDeckMenu = computed(() =>
+  hasMounted.value && props.showCardInfo
+);
+
+onMounted(() => {
+  hasMounted.value = true;
+});
 
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;
@@ -395,7 +379,11 @@ const isDualFaced = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.isFlipped === undefined) {
+    // Uncontrolled mode: manage flip state internally
+    isFlippedInternal.value = !isFlippedInternal.value;
+  }
+  emit('flip', props.card.card_data.id);
 }
 
 // Get the search query from route params
@@ -455,21 +443,6 @@ function navigateToCard(cardId: string | undefined) {
     return;
   }
   router.push(`/card/${cardId}`);
-}
-
-function getSimpleCardType(type_line: string): string {
-  if (!type_line) return 'Unknown';
-  const faces = type_line.split('//');
-
-  if (faces.length === 1) {
-    // Single-faced card: get type before em-dash
-    return faces[0].split(' — ')[0].trim();
-  } else {
-    // Double-faced card: get type before em-dash for both faces
-    const frontType = faces[0].split(' — ')[0].trim();
-    const backType = faces[1].split(' — ')[0].trim();
-    return `${frontType} // ${backType}`;
-  }
 }
 
 // Whether this card has both ALS and AI scores (dual bar mode)
@@ -532,7 +505,6 @@ function findSimilarCards() {
   // Navigate to search page with similarity search endpoint
   const queryParams = {
     card_name: props.card.card_name,
-    limit: DefaultLimitSimilarity,
     filters: undefined, // No additional filters for similarity search
     searchType: 'similarity'
   };
@@ -543,17 +515,21 @@ function getRecommendations() {
   if (!props.card?.card_data?.name) return;
   const queryParams = { commander: props.card.card_data.name };
   saveSearchQuery('recommend', queryParams);
-  saveSearchMutation.mutate({
-    query: props.card.card_data.name,
-    searchType: 'recommend',
-    filters: { commander: props.card.card_data.name },
-  });
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: props.card.card_data.name,
+      searchType: 'recommend',
+      filters: { commander: props.card.card_data.name },
+    });
+  });
 }
 
 function viewPopularCards() {
   if (!props.card?.card_data?.name) return;
-  router.push({ path: '/popular-by-commander/all', query: { commander: props.card.card_data.name } });
+  const queryParams = { commander: props.card.card_data.name };
+  saveSearchQuery('popular-by-commander', queryParams);
+  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 
 function handleImageError(event: Event) {
@@ -657,48 +633,6 @@ function toggleShowAllData() {
   /* center horizontally within container */
   display: block;
   box-sizing: border-box;
-}
-
-.flip-card-btn {
-  position: absolute;
-  right: 30px;
-  top: 88px;
-  opacity: 0;
-  pointer-events: auto;
-  z-index: 2;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  max-width: 30px;
-  max-height: 30px;
-  transition: opacity 0.2s;
-}
-
-.card-image-wrapper:hover .flip-card-btn {
-  opacity: 0.7;
-}
-
-@media (max-width: 767px) {
-  .flip-card-btn {
-    opacity: 0.7 !important;
-    right: 20px;
-    top: 80px;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    max-width: 28px;
-    max-height: 28px;
-  }
-
-  .flip-card-icon {
-    font-size: 1rem;
-  }
-}
-
-.flip-card-icon {
-  font-size: 1.2rem;
 }
 
 /* Partner commander stack — 24px shorter than a normal card to leave room for extra text */

@@ -1,20 +1,22 @@
 <template>
-    <UCard variant="subtle" class="card-container px-0" :ui="{ body: 'sm:px-2 sm:py-2 w-full h-full' }">
+    <UCard variant="subtle" class="card-container" :ui="{ body: 'p-3 sm:p-4 w-full h-full' }">
         <!-- Card image skeleton -->
         <USkeleton :class="sizeClass" />
 
         <!-- Card Name and mana cost skeleton -->
-        <div class="flex flex-col items-center justify-center text-center">
-            <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full">
-                <USkeleton class="h-4 w-20" />
-                <USkeleton class="h-4 w-12" />
+        <div class="flex flex-col items-center justify-center text-center w-full mt-3">
+            <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full gap-3">
+                <USkeleton class="h-4 w-24" />
+                <USkeleton class="h-4 w-14" />
             </div>
             <div v-if="showCardInfo" class="flex flex-row items-center justify-between w-full text-xs mt-1">
-                <USkeleton class="h-3 w-16" />
+                <USkeleton class="h-3 w-20" />
             </div>
-            <div class="flex flex-row items-center justify-center text-center w-full mt-2">
-                <USkeleton class="h-2 w-full mr-2" />
-                <USkeleton class="h-3 w-8" />
+            <div class="flex flex-row items-center justify-center text-center w-full gap-2 mt-3">
+                <USkeleton class="h-8 flex-1 rounded-md" />
+                <USkeleton class="h-8 w-8 rounded-md" />
+                <USkeleton class="h-8 w-8 rounded-md" />
+                <USkeleton class="h-8 w-8 rounded-md" />
             </div>
         </div>
     </UCard>
@@ -42,15 +44,18 @@ const sizeClass = computed(() => `card-${props.size}`);
 .card-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 330px;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* Small Size Variant */
 .card-small {
     aspect-ratio: 5/7;
     width: 100%;
-    max-width: 200px;
     border-radius: 8px;
 }
 
@@ -58,7 +63,6 @@ const sizeClass = computed(() => `card-${props.size}`);
 .card-large {
     aspect-ratio: 5/7;
     width: 100%;
-    max-width: 300px;
     border-radius: 14px;
 }
 </style>

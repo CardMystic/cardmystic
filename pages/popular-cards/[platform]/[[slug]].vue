@@ -1,14 +1,14 @@
 <template>
-  <UContainer class="mb-6 px-0">
-    <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <StatsSearch default-stats-type="popular-cards" :platform="searchPlatformProp" class="mt-6 w-full" />
+  <UContainer class="mb-6 px-0 max-w-full">
+    <div class="w-full pt-4 flex flex-col items-center">
+      <StatsSearch default-stats-type="popular-cards" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
 
       <SearchAbout type="popular-cards" />
 
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam || 'top'"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="`Showing the most popular ${platformName} cards across all decks.`"
           :hide-thumbs-down-button="true" />
       </div>
@@ -90,6 +90,5 @@ const topCardsSearch = computed(() => {
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || 100);
 const { searchResults, isLoading, error: searchError } = useTopCardsSearch(topCardsSearch);
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10">
+  <div class="mx-auto py-8 relative z-10" :class="{ 'pb-24': showStickyFooter }">
     <!-- Page Background Image (blurred, behind all content) -->
     <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
       <div class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20 blur-sm"
@@ -52,25 +52,51 @@
 
     <!-- Cards Results -->
     <ClientOnly>
-      <CardListResults class="mb-8" :isLoading="loading" :groups="cardGroups" :skeletonCount="20"
+      <CardListResults ref="cardListResultsRef" class="mb-8" :isLoading="loading" :groups="cardGroups"
         :commander-card-ids="commanderCardIds" :commander-color-identity="commanderColorIdentity"
-        @removeCard="handleRemoveCard" @setCommander="handleSetCommander" @clearCommander="handleClearCommander" />
+        :list-items-map="listItemsMap" :format="list?.format" :sideboard-groups="sideboardGroups"
+        :considering-groups="consideringGroups" :decklist-card-names="decklistCardNames" @removeCard="handleRemoveCard"
+        @setCommander="handleSetCommander" @clearCommander="handleClearCommander"
+        @updateNumCopies="handleUpdateNumCopies" @changeBoard="handleChangeBoard" />
       <template #fallback>
-        <div class="mt-3 w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          <CardSkeleton v-for="i in 20" :key="`skeleton-${i}`" :showCardInfo="true" />
-        </div>
+        <CardListResultsSkeleton />
       </template>
     </ClientOnly>
   </div>
 
   <!-- Bulk Edit Modal -->
-  <BulkAddCardsModal v-model:open="isBulkEditModalOpen" :list-id="listId" :current-card-names="currentCardNames" />
+  <BulkAddCardsModal v-model:open="isBulkEditModalOpen" :list-id="listId" :mainboard-names="mainboardNames"
+    :sideboard-names="sideboardNames" :considering-names="consideringNames" />
+
+  <!-- Duplicate Card Confirmation Modal -->
+  <UModal v-model:open="showDuplicateModal" title="Card Already in List">
+    <template #body>
+      <p class="text-sm" v-if="pendingDuplicateCard">
+        <span class="font-bold">{{ pendingDuplicateCard.name }}</span> is already in
+        <span class="font-bold">{{ pendingDuplicateCard.board }}</span> with
+        <span class="font-bold">{{ pendingDuplicateCard.numCopies }}</span>
+        {{ pendingDuplicateCard.numCopies === 1 ? 'copy' : 'copies' }}.
+        Would you like to add another copy?
+      </p>
+    </template>
+    <template #footer="{ close }">
+      <div class="flex justify-end gap-2">
+        <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
+        <UButton label="Yes" color="primary" @click="confirmAddDuplicate" />
+      </div>
+    </template>
+  </UModal>
 
   <BackToTop />
 
-  <DeckStats :card-count="cards?.length ?? 0" :total-price="totalPrice" @buy="openMassEntry" />
-
-  <JumpTo :groups="jumpToGroups" />
+  <StickyActionFooter :show="showStickyFooter">
+    <template #left>
+      <DeckStats :card-count="mainDeckCardCount" :total-price="totalPrice" @buy="openMassEntry" />
+    </template>
+    <template #right>
+      <JumpTo :groups="jumpToGroups" :board-sections="jumpToBoardSections" @jump-board="handleJumpBoard" />
+    </template>
+  </StickyActionFooter>
 
 
 </template>
@@ -103,6 +129,8 @@ const {
   setCommanderMutation,
   clearCommanderMutation,
   updateListAvatarMutation,
+  updateNumCopiesMutation,
+  changeBoardMutation,
 } = useCardLists()
 
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId))
@@ -121,16 +149,44 @@ const debouncedAddCardSearchTerm = refDebounced(addCardSearchTerm, 150)
 const addCardLoading = ref(false)
 const error = ref('')
 
+// Duplicate card confirmation state
+const showDuplicateModal = ref(false)
+const pendingDuplicateCard = ref<{ name: string; id: string; board: string; numCopies: number } | null>(null)
+
 // Use TanStack Query for list items
 const { data: listItems, isLoading: isLoadingItems } = useListItems(listId)
 
 // Computed card IDs from list items - used as dependency for card details query
 const cardIds = computed(() => listItems.value?.map((item: any) => item.card_id) || [])
 
+// Map card_id to list item metadata (num_copies, board)
+const listItemsMap = computed(() => {
+  const map: Record<string, { num_copies: number; board: string }> = {}
+  if (listItems.value) {
+    for (const item of listItems.value) {
+      if (!item.card_id) continue
+      map[item.card_id] = {
+        num_copies: item.num_copies ?? 1,
+        board: item.board ?? 'Mainboard',
+      }
+    }
+  }
+  return map
+})
+
+const copiesMap = computed(() => {
+  const map: Record<string, number> = {}
+  for (const [id, item] of Object.entries(listItemsMap.value)) {
+    map[id] = item.num_copies
+  }
+  return map
+})
+
 // Use TanStack Query to fetch card details
 const { data: cardsData, isLoading: isLoadingCards, isFetching: isFetchingCards } = useListCards(listId, cardIds)
 
 const cards = computed(() => cardsData.value || [])
+const decklistCardNames = computed(() => cards.value.map((c: any) => c.card_data.name))
 
 // Show loading when lists/items are loading, cards query is loading/fetching,
 // or items have loaded with card IDs but card data hasn't arrived yet
@@ -182,11 +238,12 @@ const cardGroups = computed(() => {
   }
 
   const ids = commanderCardIds.value
-  const cardsToGroup = ids.length > 0
+  const mainboardCards = (ids.length > 0
     ? cards.value.filter((c: any) => !ids.includes(c.card_data.id))
     : cards.value
+  ).filter((c: any) => (listItemsMap.value[c.card_data.id]?.board ?? 'Mainboard') === 'Mainboard')
 
-  const groups = groupAndSortCards(cardsToGroup, groupBy.value, sortBy.value, sortDirection.value);
+  const groups = groupAndSortCards(mainboardCards, groupBy.value, sortBy.value, sortDirection.value, copiesMap.value);
 
   // Prepend commanders as their own group if present
   const commanderCards = cards.value.filter((c: any) => ids.includes(c.card_data.id))
@@ -198,10 +255,48 @@ const cardGroups = computed(() => {
   return groups;
 });
 
+const sideboardGroups = computed(() => {
+  if (!cards.value || cards.value.length === 0) return null;
+  const sideboardCards = cards.value.filter((c: any) =>
+    listItemsMap.value[c.card_data.id]?.board === 'Sideboard'
+  )
+  if (sideboardCards.length === 0) return null;
+  return groupAndSortCards(sideboardCards, groupBy.value, sortBy.value, sortDirection.value, copiesMap.value);
+});
+
+const consideringGroups = computed(() => {
+  if (!cards.value || cards.value.length === 0) return null;
+  const consideringCards = cards.value.filter((c: any) =>
+    listItemsMap.value[c.card_data.id]?.board === 'Considering'
+  )
+  if (consideringCards.length === 0) return null;
+  return groupAndSortCards(consideringCards, groupBy.value, sortBy.value, sortDirection.value, copiesMap.value);
+});
+
 const jumpToGroups = computed(() => {
   if (!cardGroups.value) return [];
   return cardGroups.value.filter(g => g.label).map(g => g.label);
 });
+
+const jumpToBoardSections = computed(() => {
+  const sections: string[] = [];
+  if (cardGroups.value && cardGroups.value.length > 0) sections.push('Mainboard');
+  if (sideboardGroups.value && sideboardGroups.value.length > 0) sections.push('Sideboard');
+  if (consideringGroups.value && consideringGroups.value.length > 0) sections.push('Considering');
+  return sections;
+});
+
+const showStickyFooter = computed(() => {
+  return totalCardCount.value > 0 || jumpToGroups.value.length > 0 || jumpToBoardSections.value.length > 1;
+});
+
+const cardListResultsRef = ref<{ expandBoard: (board: 'Sideboard' | 'Considering') => void } | null>(null);
+
+function handleJumpBoard(board: string) {
+  if (board === 'Sideboard' || board === 'Considering') {
+    cardListResultsRef.value?.expandBoard(board);
+  }
+}
 
 // Filter cards for add card autocomplete
 const filteredAddCards = computed(() => {
@@ -237,6 +332,21 @@ async function handleAddCard(cardName: string) {
       throw new Error('Card not found')
     }
 
+    // Check if card already exists in the list
+    const existing = listItemsMap.value[cardData.id]
+    if (existing) {
+      pendingDuplicateCard.value = {
+        name: cardName,
+        id: cardData.id,
+        board: existing.board,
+        numCopies: existing.num_copies,
+      }
+      showDuplicateModal.value = true
+      selectedCardToAdd.value = ''
+      addCardSearchTerm.value = ''
+      return
+    }
+
     await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
       cardIds: [cardData.id]
@@ -247,16 +357,13 @@ async function handleAddCard(cardName: string) {
       icon: 'i-lucide-check'
     })
 
-    // Clear the selection
     selectedCardToAdd.value = ''
     addCardSearchTerm.value = ''
   } catch (error: any) {
-    const isDuplicate = error?.code === '23505' || error?.statusCode === 409
     toast.add({
-      title: isDuplicate ? 'Card already in list' : 'Error adding card',
-      description: isDuplicate ? `${cardName} is already in this list.` : error.message,
-      color: isDuplicate ? 'warning' : 'error',
-      icon: isDuplicate ? 'i-lucide-copy-check' : undefined
+      title: 'Error adding card',
+      description: error.message,
+      color: 'error',
     })
     selectedCardToAdd.value = ''
     addCardSearchTerm.value = ''
@@ -265,11 +372,47 @@ async function handleAddCard(cardName: string) {
   }
 }
 
+async function confirmAddDuplicate() {
+  if (!pendingDuplicateCard.value || !list.value) return
+  try {
+    await updateNumCopiesMutation.mutateAsync({
+      listId: list.value.id,
+      cardName: pendingDuplicateCard.value.name,
+      numCopies: pendingDuplicateCard.value.numCopies + 1,
+    })
+    toast.add({
+      title: `Added another copy of ${pendingDuplicateCard.value.name}`,
+      icon: 'i-lucide-check'
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Error adding copy',
+      description: error.message,
+      color: 'error',
+    })
+  } finally {
+    showDuplicateModal.value = false
+    pendingDuplicateCard.value = null
+  }
+}
+
 // Bulk edit state
 const isBulkEditModalOpen = ref(false)
-const currentCardNames = computed(() =>
-  cards.value?.map((card: any) => card.card_data.name).filter(Boolean) || []
-)
+
+function boardLines(board: 'Mainboard' | 'Sideboard' | 'Considering') {
+  if (!cards.value || cards.value.length === 0) return []
+  return cards.value
+    .filter((card: any) => (listItemsMap.value[card.card_data.id]?.board ?? 'Mainboard') === board)
+    .map((card: any) => {
+      const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1
+      const name = card.card_data.name
+      return copies > 1 ? `${copies} ${name}` : name
+    })
+}
+
+const mainboardNames = computed(() => boardLines('Mainboard'))
+const sideboardNames = computed(() => boardLines('Sideboard'))
+const consideringNames = computed(() => boardLines('Considering'))
 
 // Recommend state
 const recommendDescription = ref('')
@@ -299,17 +442,18 @@ function goToRecommend() {
     query.partnerCommander = commanderNamesList[1]
   }
 
-  saveSearchMutation.mutate({
-    query: recommendDescription.value.trim() || '',
-    searchType: 'recommend',
-    filters: {
-      commander: commanderNamesList[0] || undefined,
-      partnerCommander: commanderNamesList[1] || undefined,
-      decklist: decklist || undefined,
-    },
-  })
-
   router.push({ path: '/search/all/deckbuilder', query })
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: recommendDescription.value.trim() || '',
+      searchType: 'recommend',
+      filters: {
+        commander: commanderNamesList[0] || undefined,
+        partnerCommander: commanderNamesList[1] || undefined,
+        decklist: decklist || undefined,
+      },
+    })
+  })
 }
 
 const { data: rawCards, status: cardsQueryStatus } = useCardNames()
@@ -403,18 +547,72 @@ async function handleClearCommander(cardId: string) {
   }
 }
 
+async function handleUpdateNumCopies(cardName: string, numCopies: number) {
+  if (!list.value) return
+  try {
+    await updateNumCopiesMutation.mutateAsync({
+      listId: list.value.id,
+      cardName,
+      numCopies,
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Error updating quantity',
+      description: error.message,
+      color: 'error',
+    })
+  }
+}
+
+async function handleChangeBoard(cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering') {
+  if (!list.value) return
+  try {
+    await changeBoardMutation.mutateAsync({
+      listId: list.value.id,
+      cardName,
+      board,
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Error changing board',
+      description: error.message,
+      color: 'error',
+    })
+  }
+}
+
 const totalPrice = computed(() => {
   if (!cards.value || cards.value.length === 0) return 0
   return cards.value.reduce((sum: number, card: any) => {
     const price = card.card_data?.prices?.usd
-    return sum + (price ? parseFloat(price) : 0)
+    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1
+    return sum + (price ? parseFloat(price) * copies : 0)
+  }, 0)
+})
+
+const totalCardCount = computed(() => {
+  if (!cards.value || cards.value.length === 0) return 0
+  return cards.value.reduce((sum: number, card: any) => {
+    return sum + (listItemsMap.value[card.card_data.id]?.num_copies ?? 1)
+  }, 0)
+})
+
+const mainDeckCardCount = computed(() => {
+  if (!cards.value || cards.value.length === 0) return 0
+  return cards.value.reduce((sum: number, card: any) => {
+    const board = listItemsMap.value[card.card_data.id]?.board ?? 'Mainboard'
+    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1
+    return board === 'Mainboard' ? sum + copies : sum
   }, 0)
 })
 
 function copyCardNames() {
   if (!cards.value || cards.value.length === 0) return
-  const names = cards.value.map((card: any) => card.card_data.name).join('\n')
-  copy(names)
+  const lines = cards.value.map((card: any) => {
+    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1
+    return copies > 1 ? `${copies} ${card.card_data.name}` : card.card_data.name
+  })
+  copy(lines.join('\n'))
   toast.add({
     title: 'Card names copied!',
     icon: 'i-lucide-clipboard-check'
@@ -423,7 +621,10 @@ function copyCardNames() {
 
 function openMassEntry() {
   if (!cards.value || cards.value.length === 0) return
-  const names = cards.value.map((card: any) => card.card_data.name)
+  const names = cards.value.flatMap((card: any) => {
+    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1
+    return Array(copies).fill(card.card_data.name)
+  })
   const url = getMassEntryAffiliateLink(names)
   window.open(url, '_blank', 'noopener,noreferrer')
 }

@@ -1,5 +1,12 @@
 <template>
-  <div class="page-wrapper py-4 flex justify-center w-full">
+  <div class="page-wrapper py-4 flex flex-col items-center w-full">
+    <!-- Navigation tabs (client-only: depends on sessionStorage state) -->
+    <ClientOnly>
+      <div class="card-page-nav w-full px-4">
+        <SearchTabs v-if="cardOrigin === 'search'" :card-active="true" @select="navigateToSearch" />
+        <ExploreTabs v-else :stats-type="lastExploreType" :card-active="true" @select="navigateToExplore" />
+      </div>
+    </ClientOnly>
     <!-- Background Image -->
     <div v-if="cardArtUrl" class="fixed inset-0 z-0">
       <div class="absolute inset-0 bg-cover bg-center opacity-80 dark:opacity-60 blur-sm"
@@ -27,9 +34,10 @@
       <UButton to="/search/all/ai" color="primary" class="mt-6">Back to Search</UButton>
     </div>
 
-    <div v-else-if="card" class="grid grid-cols-1 lg:grid-cols-10 gap-2 max-w-7xl relative z-10 items-center">
+    <div v-else-if="card"
+      class="grid grid-cols-1 lg:grid-cols-[max-content_minmax(0,1fr)] gap-2 relative z-10 items-start">
       <!-- Left: Card Image -->
-      <div class="lg:col-span-3 flex flex-col items-center">
+      <div class="flex flex-col items-center lg:items-start">
         <div class="card-image-container">
           <div class="card-glow" :class="`glow-${card.rarity?.toLowerCase() || 'common'}`"></div>
           <!-- Single image that changes based on flip state -->
@@ -41,8 +49,7 @@
             <div class="card-sheen"></div>
           </div>
 
-          <!-- use ClipboardButton component -->
-          <ClipboardButton v-if="card" :card="card" />
+          <LazyCardOverlayButtons v-if="card" :card="card" />
         </div>
 
         <!-- Flip Button for Dual-Faced Cards -->
@@ -150,292 +157,270 @@
 
       </div>
 
-      <!-- Center: Card Details -->
-      <div class="lg:col-span-7 flex flex-col">
-        <UCard class="card-details-card">
-          <h2 class="card-title">
-            <span class="card-title-text">{{ currentName }}</span>
-            <span v-if="currentManaCost">
-              <ManaCost :manaCost="currentManaCost" class="ml-2" />
-            </span>
-          </h2>
-          <div class="set-rarity-info">
-            <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
-            <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
-            <UTooltip v-if="card.game_changer" text="Is a Commander Game Changer">
-              <UBadge size="xl" color="primary" variant="subtle">Game Changer</UBadge>
-            </UTooltip>
-          </div>
-          <p class="card-type">
-            {{ currentTypeLine }}
-          </p>
-
-          <!-- Mobile toggle button -->
-          <UButton class="lg:hidden mt-2 w-full" variant="ghost" color="neutral" size="sm"
-            :icon="showMobileDetails ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
-            @click="showMobileDetails = !showMobileDetails">
-            {{ showMobileDetails ? 'Hide Card Details' : 'Show Card Details' }}
-          </UButton>
-
-          <div v-if="currentOracleText" class="oracle-section" :class="{ 'hidden lg:block': !showMobileDetails }">
-            <div class="oracle-text">
-              <template v-for="(part, index) in formattedOracleText" :key="index">
-                <template v-if="typeof part === 'string'">{{ part }}</template>
-                <component v-else :is="part" />
-              </template>
-            </div>
-
-            <div class="stats-container" v-if="currentPower && currentToughness">
-              <div class="power-toughness">
-                Power / Toughness:
-                <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
+      <!-- Center: Card Details + LLM -->
+      <div class="min-w-0">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-2">
+          <div :class="hasLlmContent ? 'lg:col-span-7' : 'lg:col-span-12'" class="flex flex-col">
+            <UCard class="card-details-card">
+              <h2 class="card-title flex flex-row">
+                <span class="card-title-text">{{ currentName }}</span>
+                <span v-if="currentManaCost">
+                  <ManaCost :manaCost="currentManaCost" class="ml-2" />
+                </span>
+              </h2>
+              <div class="set-rarity-info">
+                <p v-if="card.set_name" class="set-name">{{ card.set_name }}</p>
+                <RarityBadge v-if="card.rarity" :rarity="card.rarity" size="medium" />
+                <UTooltip v-if="card.game_changer" text="Is a Commander Game Changer">
+                  <UBadge size="xl" color="primary" variant="subtle">Game Changer</UBadge>
+                </UTooltip>
               </div>
+              <p class="card-type">
+                {{ currentTypeLine }}
+              </p>
+
+              <!-- Mobile toggle button -->
+              <UButton class="lg:hidden mt-2 w-full" variant="ghost" color="neutral" size="sm"
+                :icon="showMobileDetails ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                @click="showMobileDetails = !showMobileDetails">
+                {{ showMobileDetails ? 'Hide Card Details' : 'Show Card Details' }}
+              </UButton>
+
+              <div v-if="currentOracleText" class="oracle-section" :class="{ 'hidden lg:block': !showMobileDetails }">
+                <div class="oracle-text">
+                  <template v-for="(part, index) in formattedOracleText" :key="index">
+                    <template v-if="typeof part === 'string'">{{ part }}</template>
+                    <component v-else :is="part" />
+                  </template>
+                </div>
+
+                <div class="stats-container" v-if="currentPower && currentToughness">
+                  <div class="power-toughness">
+                    Power / Toughness:
+                    <span class="stats">{{ currentPower }}/{{ currentToughness }}</span>
+                  </div>
+                </div>
+
+                <div v-if="currentPrinting && card.artist" class="artist-info">
+                  <span class="artist-label">Illustrated by </span>
+                  <strong class="artist-name">{{ currentPrinting.artist }}</strong>
+                </div>
+              </div>
+            </UCard>
+
+            <!-- Action Buttons + TCGPlayer - Mobile only -->
+            <div class="flex flex-row gap-2 mt-0 mb-0 lg:hidden items-center">
+              <UTooltip v-if="isCommander" text="Get Deck Recommendations for this Commander">
+                <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
+                  class="cursor-pointer" aria-label="Get Deck Recommendations for this Commander" />
+              </UTooltip>
+              <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
+                <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
+                  class="cursor-pointer" aria-label="Popular Cards for this Commander" />
+              </UTooltip>
+              <UTooltip text="Find similar cards">
+                <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
+                  class="cursor-pointer" aria-label="Find similar cards" />
+              </UTooltip>
+              <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
+                :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
+                class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
+                rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
+                Buy {{ tcgPriceLabel }}
+              </UButton>
+              <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
+                variant="solid" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
+                aria-label="Search on TCGPlayer">
+                Search on TCGPlayer
+              </UButton>
             </div>
 
-            <div v-if="currentPrinting && card.artist" class="artist-info">
-              <span class="artist-label">Illustrated by </span>
-              <strong class="artist-name">{{ currentPrinting.artist }}</strong>
-            </div>
-          </div>
-        </UCard>
+            <!-- Price Information - Mobile only -->
+            <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card lg:hidden"
+              :class="{ 'hidden': !showMobileDetails }">
+              <div class="price-header">
+                <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
+                <h4 class="price-title">Current Prices</h4>
+              </div>
 
-        <!-- Action Buttons + TCGPlayer - Mobile only -->
-        <div class="flex flex-row gap-2 mt-0 mb-0 lg:hidden items-center">
-          <UTooltip v-if="isCommander" text="Get Deck Recommendations for this Commander">
-            <UButton color="primary" variant="solid" icon="i-lucide-box" size="lg" @click="getRecommendations"
-              class="cursor-pointer" aria-label="Get Deck Recommendations for this Commander" />
-          </UTooltip>
-          <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
-            <UButton color="error" variant="solid" icon="i-lucide-flame" size="lg" @click="viewPopularCards"
-              class="cursor-pointer" aria-label="Popular Cards for this Commander" />
-          </UTooltip>
-          <UTooltip text="Find similar cards">
-            <UButton color="neutral" variant="solid" icon="i-mdi-cards-outline" size="lg" @click="findSimilarCards"
-              class="cursor-pointer" aria-label="Find similar cards" />
-          </UTooltip>
-          <UButton v-if="currentPrinting && currentPrinting.tcgplayer_id"
-            :to="getAffiliateLink(currentPrinting.tcgplayer_id)" external color="success" variant="solid"
-            class="tcgplayer-btn flex-1" icon="i-heroicons-shopping-cart" size="lg" target="_blank"
-            rel="noopener noreferrer" aria-label="Buy on TCGPlayer">
-            Buy {{ tcgPriceLabel }}
-          </UButton>
-          <UButton v-else-if="card.name" :to="generateTCGPlayerSearchUrl(card.name)" external color="primary"
-            variant="solid" class="tcgplayer-btn flex-1" icon="i-heroicons-magnifying-glass" size="lg"
-            aria-label="Search on TCGPlayer">
-            Search on TCGPlayer
-          </UButton>
-        </div>
-
-        <!-- Price Information - Mobile only -->
-        <UCard v-if="currentPrinting && (currentPrinting.prices && hasPrices)" class="price-card lg:hidden"
-          :class="{ 'hidden': !showMobileDetails }">
-          <div class="price-header">
-            <UIcon name="i-heroicons-currency-dollar" class="w-6 h-6 text-green-500 mr-2" />
-            <h4 class="price-title">Current Prices</h4>
-          </div>
-
-          <div class="price-list">
-            <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
-              <span class="currency-label">USD:</span>
-              <span class="price-value">
-                <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
-                  currentPrinting.prices.usd
-                }}
-                <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
-                  <span class="dark:text-yellow-300 text-yellow-500">
+              <div class="price-list">
+                <div v-if="currentPrinting.prices.usd || currentPrinting.prices.usd_foil" class="price-item">
+                  <span class="currency-label">USD:</span>
+                  <span class="price-value">
                     <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
-                      currentPrinting.prices.usd_foil
-                    }} <span class="text-sm">(Foil)</span>
+                      currentPrinting.prices.usd
+                    }}
+                    <span v-if="currentPrinting.prices.usd_foil" class="foil-value ml-2">
+                      <span class="dark:text-yellow-300 text-yellow-500">
+                        <span v-if="currentPrinting.prices.usd" class="text-green-500">$</span>{{
+                          currentPrinting.prices.usd_foil
+                        }} <span class="text-sm">(Foil)</span>
+                      </span>
+                    </span>
                   </span>
-                </span>
-              </span>
-            </div>
+                </div>
 
-            <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
-              <span class="currency-label">EUR:</span>
-              <span class="price-value">
-                <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
-                  currentPrinting.prices.eur
-                }}
-                <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
-                  <span class="dark:text-yellow-300 text-yellow-500">
-                    <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
-                      currentPrinting.prices.eur_foil
-                    }} <span class="text-sm">(Foil)</span>
+                <div v-if="currentPrinting.prices.eur || currentPrinting.prices.eur_foil" class="price-item">
+                  <span class="currency-label">EUR:</span>
+                  <span class="price-value">
+                    <span v-if="currentPrinting.prices.eur" class="text-green-500">€</span>{{
+                      currentPrinting.prices.eur
+                    }}
+                    <span v-if="currentPrinting.prices.eur_foil" class="foil-value ml-2">
+                      <span class="dark:text-yellow-300 text-yellow-500">
+                        <span v-if="currentPrinting.prices.usd" class="text-green-500">€</span>{{
+                          currentPrinting.prices.eur_foil
+                        }} <span class="text-sm">(Foil)</span>
+                      </span>
+                    </span>
                   </span>
-                </span>
-              </span>
-            </div>
+                </div>
 
-            <div v-if="currentPrinting.prices.tix" class="price-item">
-              <span class="currency-label">MTGO Tix:</span>
-              <span class="price-value">{{ currentPrinting.prices.tix }}</span>
-            </div>
-          </div>
-        </UCard>
-
-        <UCard class="legalities-card" :class="{ 'hidden lg:block': !showMobileDetails }">
-          <div class="legalities-header">
-            <UIcon name="i-heroicons-scale" class="w-6 h-6 text-primary mr-2" />
-            <h3 class="legalities-title">Legalities</h3>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1">
-            <div v-for="(format, name) in legalities" :key="name">
-              <div class="legality-item">
-                <UBadge class="legality-chip" :color="getLegalityColor(format)" variant="solid" size="xs">
-                  {{ format }}
-                </UBadge>
-                <span class="format-name">{{ standardizeFormatName(name) }}</span>
+                <div v-if="currentPrinting.prices.tix" class="price-item">
+                  <span class="currency-label">MTGO Tix:</span>
+                  <span class="price-value">{{ currentPrinting.prices.tix }}</span>
+                </div>
               </div>
-            </div>
+            </UCard>
+
+            <UCard class="legalities-card" :class="{ 'hidden lg:block': !showMobileDetails }">
+              <div class="legalities-header">
+                <UIcon name="i-heroicons-scale" class="w-6 h-6 text-primary mr-2" />
+                <h3 class="legalities-title">Legalities</h3>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1">
+                <div v-for="(format, name) in legalities" :key="name">
+                  <div class="legality-item">
+                    <UBadge class="legality-chip" :color="getLegalityColor(format)" variant="solid" size="xs">
+                      {{ format }}
+                    </UBadge>
+                    <span class="format-name">{{ standardizeFormatName(name) }}</span>
+                  </div>
+                </div>
+              </div>
+            </UCard>
           </div>
-        </UCard>
+
+          <div v-if="hasLlmContent" class="lg:col-span-5 mt-2 lg:mt-0">
+            <LlmStrategyPanel :llm="llmDetails!" />
+          </div>
+        </div>
       </div>
-      <div class="lg:col-span-10 flex flex-col items-center">
-        <!-- Commander: Tabbed Recommended + Similar Cards -->
-        <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
-          <UTabs v-model="activeCommanderTab" :items="cardTabs">
-            <template #recommended>
-              <h3
-                class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-purple-500/20 text-purple-300">
-                Deck Recommendations</h3>
-              <div class="recommend-section flex gap-2 mt-2 mb-4">
-                <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..." class="flex-1 text-base"
-                  icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
-                <UButton color="primary" icon="i-lucide-box" @click="applyRecommendQuery"
-                  :loading="isRecommendedLoading" class="text-base">
-                  Recommend
-                </UButton>
-              </div>
-              <div class="flex justify-end mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="getRecommendations">Go To Full Search Page</button>
-              </div>
-              <ClientOnly>
+      <div class="lg:col-span-2 flex flex-col items-center">
+        <!-- Commander vs Non-commander tabs: wrapped in ClientOnly because isCommander
+             depends on TanStack Query data that may differ between SSR and client hydration -->
+        <ClientOnly>
+          <UCard v-if="card && isCommander" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
+            <UTabs v-model="activeCommanderTab" :items="cardTabs">
+              <template #recommended>
+                <h3
+                  class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-purple-500/20 text-purple-300">
+                  Deck Recommendations</h3>
+                <div class="recommend-section flex gap-2 mt-2 mb-4">
+                  <UInput v-model="recommendQuery" placeholder="e.g. ramp, removal, card draw..."
+                    class="flex-1 text-base" icon="i-lucide-box" @keyup.enter="applyRecommendQuery" />
+                  <UButton color="primary" icon="i-lucide-box" @click="applyRecommendQuery"
+                    :loading="isRecommendedLoading" class="text-base">
+                    Recommend
+                  </UButton>
+                </div>
+                <div class="flex justify-end mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="getRecommendations">Go To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isRecommendedCardsEffectivelyLoading"
-                  :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
+                  :search-results="recommendedCards ?? undefined" :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true" default-group-by="type" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-rec-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+              </template>
 
-            <template #popular>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-red-500/20 text-red-300">
-                Popular Cards</h3>
-              <div class="flex justify-end mt-2 mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="viewPopularCards">Go
-                  To Full Search Page</button>
-              </div>
-              <ClientOnly>
+              <template #popular>
+                <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-red-500/20 text-red-300">
+                  Popular Cards</h3>
+                <div class="flex justify-end mt-2 mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="viewPopularCards">Go
+                    To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isPopularCardsEffectivelyLoading"
-                  :search-results="popularCards ?? undefined" :query-param="cardName ?? null" :skeleton-count="8"
+                  :search-results="popularCards ?? undefined" :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true" default-group-by="type" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-pop-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+              </template>
 
-            <template #similar>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
-                Cards</h3>
-              <div class="flex justify-end mt-2 mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="findSimilarCards">Go
-                  To Full Search Page</button>
-              </div>
-              <ClientOnly>
+              <template #similar>
+                <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
+                  Cards</h3>
+                <div class="flex justify-end mt-2 mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="findSimilarCards">Go
+                    To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
-                  :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-                  default-group-by="type" :is-similarity-search="true" hide-searched-card />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-sim-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+                  :query-param="cardName ?? null" :hide-thumbs-down-button="true" default-group-by="type"
+                  :is-similarity-search="true" hide-searched-card />
+              </template>
 
-            <template #popular-commanders>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
-                Popular Commanders</h3>
-              <div class="flex gap-2 mt-2 mb-4">
-                <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
-                  class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
-                <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
-                  :loading="isPopularCommandersLoading" class="text-base">
-                  Search
-                </UButton>
-              </div>
-              <ClientOnly>
+              <template #popular-commanders>
+                <h3
+                  class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                  Popular Commanders</h3>
+                <div class="flex gap-2 mt-2 mb-4">
+                  <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
+                    class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
+                  <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
+                    :loading="isPopularCommandersLoading" class="text-base">
+                    Search
+                  </UButton>
+                </div>
                 <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
                   :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
-                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-popcmd-cmd-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
-          </UTabs>
-        </UCard>
+                  :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
+              </template>
+            </UTabs>
+          </UCard>
 
-        <!-- Non-commander: Popular Commanders + Similar Cards -->
-        <UCard v-else-if="card" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
-          <UTabs v-model="activeNonCommanderTab" :items="nonCommanderTabs">
-            <template #popular-commanders>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
-                Popular Commanders</h3>
-              <div class="flex gap-2 mt-2 mb-4">
-                <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
-                  class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
-                <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
-                  :loading="isPopularCommandersLoading" class="text-base">
-                  Search
-                </UButton>
-              </div>
-              <ClientOnly>
+          <!-- Non-commander: Popular Commanders + Similar Cards -->
+          <UCard v-else-if="card" class="similar-cards-section w-full px-1 lg:px-0 mb-12">
+            <UTabs v-model="activeNonCommanderTab" :items="nonCommanderTabs">
+              <template #popular-commanders>
+                <h3
+                  class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                  Popular Commanders</h3>
+                <div class="flex gap-2 mt-2 mb-4">
+                  <UInput v-model="popularCommandersQuery" placeholder="e.g. aggro, lifegain, tokens..."
+                    class="flex-1 text-base" icon="i-lucide-search" @keyup.enter="applyPopularCommandersQuery" />
+                  <UButton color="primary" icon="i-lucide-search" @click="applyPopularCommandersQuery"
+                    :loading="isPopularCommandersLoading" class="text-base">
+                    Search
+                  </UButton>
+                </div>
                 <SearchResults :is-loading="isPopularCommandersEffectivelyLoading"
                   :search-results="popularCommandersForCard ?? undefined" :query-param="cardName ?? null"
-                  :skeleton-count="8" :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-popcmd-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
+                  :hide-thumbs-down-button="true" default-group-by="colorIdentity" />
+              </template>
 
-            <template #similar>
-              <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
-                Cards</h3>
-              <div class="flex justify-end mt-2 mb-2">
-                <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                  @click="findSimilarCards">Go
-                  To Full Search Page</button>
-              </div>
-              <ClientOnly>
+              <template #similar>
+                <h3 class="sm:hidden text-center text-sm font-semibold py-1.5 rounded-lg bg-white/20 text-white">Similar
+                  Cards</h3>
+                <div class="flex justify-end mt-2 mb-2">
+                  <button type="button" class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
+                    @click="findSimilarCards">Go
+                    To Full Search Page</button>
+                </div>
                 <SearchResults :is-loading="isSimilarCardsEffectivelyLoading" :search-results="filteredSimilarCards"
-                  :query-param="cardName ?? null" :skeleton-count="8" :hide-thumbs-down-button="true"
-                  default-group-by="type" :is-similarity-search="true" hide-searched-card />
-                <template #fallback>
-                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    <CardSkeleton v-for="i in 8" :key="`skeleton-${i}`" :showCardInfo="true" />
-                  </div>
-                </template>
-              </ClientOnly>
-            </template>
-          </UTabs>
-        </UCard>
+                  :query-param="cardName ?? null" :hide-thumbs-down-button="true" default-group-by="type"
+                  :is-similarity-search="true" hide-searched-card />
+              </template>
+            </UTabs>
+          </UCard>
+          <template #fallback>
+            <UCard class="similar-cards-section w-full px-1 lg:px-0 mb-12">
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                <CardSkeleton v-for="i in 8" :key="`skeleton-tab-${i}`" :showCardInfo="true" />
+              </div>
+            </UCard>
+          </template>
+        </ClientOnly>
       </div>
     </div>
   </div>
@@ -446,7 +431,8 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
-import { DefaultLimitSimilarity } from '~/models/searchModel';
+import type { LlmCardAttributes } from '~/models/llmModel';
+import { PopularByCommanderSearchSchema, PopularCommandersForCardSearchSchema } from '~/models/deckStatsModel';
 import { getAffiliateLink, generateTCGPlayerSearchUrl } from '@/utils/tcgPlayer';
 import { getCardImageUrl, getCardArtUrl, formatsToIgnore, getLegalityColor, standardizeFormatName } from '@/utils/scryfall';
 
@@ -456,10 +442,54 @@ const isFlipped = ref(false);
 const showMobileDetails = ref(false);
 const selectedPrinting = ref<string>('');
 
-const cardIdParam = computed(() => String(route.params.id) || '');
+// Keep last valid card ID so the page doesn't flicker to an empty/loading state
+// when navigating away (route param briefly becomes empty during transition).
+const _lastValidCardId = ref(String(route.params.id) || '');
+watch(() => route.params.id, (id) => { if (id) _lastValidCardId.value = String(id); });
+const cardIdParam = computed(() => _lastValidCardId.value);
 const { saveCardViewMutation } = useCardHistory();
+const { lastCard, setLastOpenedCard } = useLastOpenedCard();
+const { searchType, getPath, restoreSearchQuery } = useSearchType();
 
-const { card, printings, error, pending } = useCardDetails(cardIdParam);
+// Determine origin: was the user on a search or explore page before?
+const cardOrigin = computed(() => lastCard.value?.origin ?? 'search');
+const lastExploreType = ref<'popular-cards' | 'popular-commanders' | 'popular-by-commander'>('popular-cards');
+
+// Detect origin from referring route on mount
+onMounted(() => {
+  const referrer = router.options.history.state?.back as string | undefined;
+  if (referrer) {
+    if (referrer.startsWith('/popular-cards')) lastExploreType.value = 'popular-cards';
+    else if (referrer.startsWith('/popular-commanders')) lastExploreType.value = 'popular-commanders';
+    else if (referrer.startsWith('/popular-by-commander')) lastExploreType.value = 'popular-by-commander';
+  }
+});
+
+function navigateToSearch(type: 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend') {
+  const saved = restoreSearchQuery(type);
+  // Strip limit from restored queries — each page applies its own default/cap
+  if (saved) delete saved.limit;
+  router.push({ path: getPath(type), query: saved ?? undefined });
+}
+
+function navigateToExplore(type: 'popular-cards' | 'popular-commanders' | 'popular-by-commander') {
+  const saved = restoreSearchQuery(type);
+  router.push({ path: `/${type}/all`, query: saved ?? undefined });
+}
+
+const { card, llm, printings, error, pending } = useCardDetails(cardIdParam);
+
+const llmDetails = computed<LlmCardAttributes | null>(() => llm.value?.llm ?? null);
+
+const hasLlmContent = computed(() => {
+  const l = llmDetails.value;
+  if (!l) return false;
+  const hasPower = l.power_level > 0;
+  const hasStrategy = [l.strategy_rankings.aggro, l.strategy_rankings.midrange, l.strategy_rankings.control, l.strategy_rankings.combo].some(v => v > 0);
+  const hasSummary = !!l.long_summary?.trim();
+  const hasBadges = (l.roles?.length ?? 0) > 0 || (l.themes?.length ?? 0) > 0 || (l.community_sentiment?.length ?? 0) > 0;
+  return hasPower || hasStrategy || hasSummary || hasBadges;
+});
 
 // Check if error is a 404 Not Found
 const isNotFound = computed(() => {
@@ -557,12 +587,21 @@ useHead({
   ]
 });
 
-// Save card view to history when card is loaded
-watch(card, (newCard) => {
-  if (newCard?.id) {
-    saveCardViewMutation.mutate(newCard.id);
-  }
-}, { immediate: true });
+// Save card view to history when card is loaded.
+// Deferred to onMounted so lastCard stays null during hydration (matches SSR).
+onMounted(() => {
+  watch(card, (newCard) => {
+    if (newCard?.id) {
+      saveCardViewMutation.mutate(newCard.id);
+      // Detect origin from route history
+      const referrer = router.options.history.state?.back as string | undefined;
+      const origin = referrer && (referrer.startsWith('/popular-cards') || referrer.startsWith('/popular-commanders') || referrer.startsWith('/popular-by-commander'))
+        ? 'explore' as const
+        : 'search' as const;
+      setLastOpenedCard(newCard.id, newCard.name, origin);
+    }
+  }, { immediate: true });
+});
 
 // Watch for card changes to set initial selected printing
 watch([card, printings], ([newCard, newPrintings]) => {
@@ -731,7 +770,6 @@ function findSimilarCards() {
 
   const queryParams = {
     card_name: card.value.name,
-    limit: String(DefaultLimitSimilarity),
   };
 
   saveSearchQuery('similarity', queryParams);
@@ -739,20 +777,25 @@ function findSimilarCards() {
 }
 
 function getRecommendations() {
-  if (!card.value?.name) return;
-  const queryParams = { commander: card.value.name };
+  const commanderName = card.value?.name;
+  if (!commanderName) return;
+  const queryParams = { commander: commanderName };
   saveSearchQuery('recommend', queryParams);
-  saveSearchMutation.mutate({
-    query: card.value.name,
-    searchType: 'recommend',
-    filters: { commander: card.value.name },
-  });
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
+  queueMicrotask(() => {
+    saveSearchMutation.mutate({
+      query: commanderName,
+      searchType: 'recommend',
+      filters: { commander: commanderName },
+    });
+  });
 }
 
 function viewPopularCards() {
   if (!card.value?.name) return;
-  router.push({ path: '/popular-by-commander/all', query: { commander: card.value.name } });
+  const queryParams = { commander: card.value.name };
+  saveSearchQuery('popular-by-commander', queryParams);
+  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 
 // Use the similar cards composable - only fetch when 'similar' tab has been activated
@@ -765,22 +808,44 @@ const isSimilarCardsEffectivelyLoading = computed(() => {
   return isSimilarCardsLoading.value || (!similarCards.value && !!cardName.value);
 });
 
-// Filter out the first card (the card being viewed) from similar cards
+// Filter out the currently viewed card from similar cards.
+// Do not rely on API ordering; exclude by ID and fallback by exact name.
 const filteredSimilarCards = computed(() => {
-  if (!similarCards.value || similarCards.value.length <= 1) return undefined;
-  const [, ...rest] = similarCards.value;
-  return rest;
+  if (!similarCards.value?.length) return undefined;
+
+  const currentCardId = card.value?.id;
+  const currentCardName = card.value?.name?.toLowerCase();
+
+  const filtered = similarCards.value.filter((result) => {
+    const resultId = result.card_data?.id;
+    if (currentCardId && resultId === currentCardId) {
+      return false;
+    }
+
+    const resultName = (result.card_data?.name || result.card_name || '').toLowerCase();
+    if (currentCardName && resultName === currentCardName) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return filtered.length ? filtered : undefined;
 });
 
-// Commander detection
+// Commander detection — deferred to post-mount so SSR and client hydration both start as false,
+// avoiding mismatch when commandersSet loads from TanStack Query localStorage cache on client.
 const { data: commandersSet } = useCommandersSet();
+const isCommanderReady = ref(false);
 const isCommander = computed(() => {
+  if (!isCommanderReady.value) return false;
   if (!card.value?.name || !commandersSet.value) return false;
   return commandersSet.value.has(card.value.name);
 });
 
 const isLgScreen = ref(false);
 onMounted(() => {
+  isCommanderReady.value = true;
   const mq = window.matchMedia('(min-width: 1024px)');
   isLgScreen.value = mq.matches;
   mq.addEventListener('change', (e) => { isLgScreen.value = e.matches; });
@@ -827,10 +892,9 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 const popularByCommanderRequest = computed(() => {
   if (!activatedTabs.has('popular')) return undefined;
   if (!isCommander.value || !card.value?.name) return undefined;
-  return {
+  return PopularByCommanderSearchSchema.parse({
     commanders: [card.value.name],
-    limit: 40,
-  };
+  });
 });
 
 const { searchResults: popularCards, isLoading: isPopularCardsLoading } = usePopularByCommander(popularByCommanderRequest);
@@ -851,11 +915,10 @@ function applyPopularCommandersQuery() {
 const popularCommandersForCardRequest = computed(() => {
   if (!activatedTabs.has('popular-commanders')) return undefined;
   if (!card.value?.name) return undefined;
-  return {
+  return PopularCommandersForCardSearchSchema.parse({
     card_name: card.value.name,
-    limit: 40,
     query: appliedPopularCommandersQuery.value || undefined,
-  };
+  });
 });
 
 const { searchResults: popularCommandersForCard, isLoading: isPopularCommandersLoading } = usePopularCommandersForCard(popularCommandersForCardRequest);
@@ -1177,6 +1240,11 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
 .page-wrapper
   position: relative
   min-height: 100vh
+
+// Card page navigation tabs
+.card-page-nav
+  position: relative
+  z-index: 20
   
 // Similar Cards Section Styling
 .similar-cards-section
@@ -1185,6 +1253,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   position: relative
   background: var(--ui-bg)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
+  overflow: visible !important
 
   @media (max-width: 1023px)
     :deep(> div)

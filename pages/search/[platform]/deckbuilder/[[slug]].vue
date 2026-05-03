@@ -1,7 +1,7 @@
 <template>
-  <UContainer class="mb-6 px-0">
-    <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <Search default-search-type="recommend" :platform="searchPlatformProp" class="mt-6 w-full" />
+  <UContainer class="mb-6 px-0 max-w-full">
+    <div class="w-full pt-4 flex flex-col items-center">
+      <Search default-search-type="recommend" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
 
       <SearchAbout :type="aboutType" />
 
@@ -27,8 +27,7 @@
       <div class="mb-10 w-full">
         <!-- Results -->
         <SearchResults :show-add-to-deckbuilder-button="true" :is-loading="isLoading" :search-results="searchResults"
-          :query-param="decklistParam" :skeleton-count="skeletonCount" :hide-thumbs-down-button="true"
-          :error-message="searchError?.message"
+          :query-param="decklistParam" :hide-thumbs-down-button="true" :error-message="searchError?.message"
           :help-text="`Paste a decklist above to get ${platformName} card recommendations.`" default-group-by="type" />
       </div>
 
@@ -37,7 +36,7 @@
   <LazyIssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
   <LazyBackToTop />
 
-  <SaveToListModal v-model="showSaveAllModal" :card-names="decklistCardNames" :commanders="commanderNames" />
+  <AddToDeckModal v-model:open="showSaveAllModal" :card-names="decklistCardNames" />
 </template>
 
 <script setup lang="ts">
@@ -131,12 +130,10 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
   };
 });
 
-const skeletonCount = ref(20);
-
 // Seed the deckbuilder with the initial decklist from the URL
 if (decklistParam.value) deckbuilderDecklist.value = decklistParam.value;
 
-// Card names from the decklist textarea for "Save All to List"
+// Card names from the decklist textarea for "Save All to Deck"
 const decklistCardNames = computed(() => {
   if (!deckbuilderDecklist.value.trim()) return [];
   return parseDecklist(deckbuilderDecklist.value);

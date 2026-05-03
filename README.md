@@ -50,7 +50,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 ## 🖥️ Server
 
-The CardMystic server code is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server\api\proxy\[...path.ts]`
+The CardMystic server code is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server/api/proxy/[...path].ts`
 
 [API Documentation](https://api.cardmystic.com/documentation)
 
@@ -87,7 +87,7 @@ cp .env_defaults .env
 
 ### Development Server
 
-Start the development server on `http://localhost:3000`:
+Start the development server on `http://localhost:5173`:
 
 ```bash
 # npm

@@ -22,6 +22,20 @@
           {{ list.name }}
         </h1>
 
+        <!-- Format display -->
+        <div class="flex items-center gap-1.5 mb-2">
+          <template v-if="isEditingFormat">
+            <USelect v-model="editedFormat" :items="formatOptions" size="sm" class="w-48 bg-black/50 rounded"
+              @blur="updateListFormat" @keyup.esc="isEditingFormat = false" />
+          </template>
+          <template v-else>
+            <span class="text-gray-300 text-sm font-medium">{{ list.format || 'Commander' }}</span>
+            <UIcon name="i-lucide-pencil"
+              class="w-3.5 h-3.5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+              @click="startEditingFormat" />
+          </template>
+        </div>
+
         <div v-if="isEditingDescription" class="mb-2">
           <textarea v-model="editedDescription" @blur="updateListDescription" @keyup.esc="isEditingDescription = false"
             class="text-gray-200 text-lg bg-black/50 px-2 py-1 rounded w-full outline-none focus:bg-black/70 resize-none"
@@ -85,6 +99,7 @@
 import { refDebounced } from '@vueuse/core'
 import { useCardLists } from '~/composables/useCardLists'
 import { useCardNames } from '~/composables/useBulkData'
+import { CardFormat, type CardFormatType } from '~/models/cardModel'
 import { useToast } from '#imports'
 
 const props = defineProps<{
@@ -94,7 +109,7 @@ const props = defineProps<{
 
 const toast = useToast()
 
-const { updateListAvatarMutation, updateListMutation } = useCardLists()
+const { updateListAvatarMutation, updateListMutation, updateFormatMutation } = useCardLists()
 
 // Banner state
 const isEditBannerModalOpen = ref(false)
@@ -108,6 +123,11 @@ const isEditingTitle = ref(false)
 const isEditingDescription = ref(false)
 const editedTitle = ref('')
 const editedDescription = ref('')
+
+// Format editing state
+const isEditingFormat = ref(false)
+const editedFormat = ref<CardFormatType>('Commander')
+const formatOptions = CardFormat.options
 
 // Load card names from backend bulk data API
 const { data: rawCards, status: cardsQueryStatus } = useCardNames()
@@ -250,6 +270,42 @@ const startEditingDescription = () => {
   if (props.list) {
     editedDescription.value = props.list.description || ''
     isEditingDescription.value = true
+  }
+}
+
+const startEditingFormat = () => {
+  if (props.list) {
+    editedFormat.value = props.list.format || 'Commander'
+    isEditingFormat.value = true
+  }
+}
+
+const updateListFormat = async () => {
+  if (!props.list) {
+    isEditingFormat.value = false
+    return
+  }
+
+  try {
+    if (editedFormat.value === (props.list.format || 'Commander')) {
+      isEditingFormat.value = false
+      return
+    }
+    await updateFormatMutation.mutateAsync({
+      listId: props.list.id,
+      format: editedFormat.value,
+    })
+    toast.add({
+      title: 'Format updated!',
+      icon: 'i-lucide-check'
+    })
+    isEditingFormat.value = false
+  } catch (error: any) {
+    toast.add({
+      title: 'Error updating format',
+      description: error.message,
+      color: 'error'
+    })
   }
 }
 </script>

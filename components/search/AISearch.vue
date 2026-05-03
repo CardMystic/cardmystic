@@ -6,7 +6,7 @@
 
     <UFormField name="query" class="mb-2">
       <div class="flex gap-2">
-        <UInput ref="input" v-model="state.query" placeholder="Describe the cards you want..." icon="i-lucide-search"
+        <UInput ref="input" v-model="state.query" placeholder="Describe the cards you want..." icon="i-lucide-brain"
           class="flex-1" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
           <template v-if="state.query?.length" #trailing>
             <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
@@ -16,8 +16,8 @@
             <UKbd value="/" class="me-1 cursor-default" />
           </template>
         </UInput>
-        <UButton icon="i-lucide-search" :disabled="state.query?.length == 0" type="submit" class="cursor-pointer h-10">
-          Search
+        <UButton icon="i-lucide-brain" :disabled="state.query?.length == 0" type="submit" class="cursor-pointer h-10">
+          <span class="hidden sm:inline">Search</span>
         </UButton>
       </div>
     </UFormField>

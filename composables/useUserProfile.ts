@@ -160,7 +160,6 @@ export const useUserProfile = () => {
       });
     } catch {
       // Non-critical — silently ignore
-      console.log('issue recording OAuth signup');
     }
   };
 

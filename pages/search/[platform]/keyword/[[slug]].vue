@@ -1,7 +1,7 @@
 <template>
-  <UContainer class="mb-6 px-0">
-    <div class="w-full max-w-7xl pt-4 flex flex-col items-center">
-      <Search default-search-type="keyword" :platform="searchPlatformProp" class="mt-6 w-full" />
+  <UContainer class="mb-6 px-0 max-w-full">
+    <div class="w-full pt-4 flex flex-col items-center">
+      <Search default-search-type="keyword" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
 
       <!-- SEO slug page: show pre-generated title + description -->
       <template v-if="seoEntry">
@@ -15,7 +15,7 @@
       <div class="mb-10 w-full">
         <!-- Results -->
         <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
-          :skeleton-count="skeletonCount" :error-message="searchError?.message"
+          :error-message="searchError?.message"
           :help-text="seoEntry ? `Loading ${platformName} keyword results...` : `Try describing what the card does or listing mechanics or types.`"
           :hide-thumbs-down-button="true" :hide-progress-bar="true" />
       </div>
@@ -88,7 +88,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Keyword Search' });
 
-const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : 40; });
+const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : undefined; });
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -119,12 +119,11 @@ const keywordSearch = computed(() => {
   if (!query) return undefined;
   return KeywordSearchSchema.parse({
     query,
-    limit: limitParam.value || (seoEntry ? 100 : 40),
+    limit: limitParam.value || undefined,
     filters: parsedFilters.value,
   });
 });
 
-const skeletonCount = computed(() => limitParam.value || (seoEntry ? 40 : 20));
 const { searchResults, isLoading, error: searchError } = useKeywordSearch(keywordSearch);
 
 const { saveSearchQuery } = useSearchType();

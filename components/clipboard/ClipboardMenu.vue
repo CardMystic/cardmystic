@@ -30,7 +30,7 @@
             </UButton>
             <UButton class="cursor-pointer" icon="i-lucide-save" color="primary" variant="outline" size="sm" block
               @click="openSaveToList" :disabled="clipboard.list.value.length === 0">
-              Save to List
+              Add to Deck
             </UButton>
             <UButton icon="i-heroicons-shopping-cart" color="success" variant="solid" size="sm" block
               class="cursor-pointer" :disabled="clipboard.list.value.length === 0" @click="openMassEntry">
@@ -44,8 +44,8 @@
         </div>
       </template>
     </UPopover>
-    <LazySaveToListModal v-if="isSaveToListOpen" v-model="isSaveToListOpen" :card-names="clipboardCardNames"
-      @saved="handleSaved" />
+    <LazyAddToDeckModal v-if="isAddToDeckOpen" v-model:open="isAddToDeckOpen" :card-ids="clipboardCardIds"
+      @update:open="(v) => { isAddToDeckOpen = v }" @success="() => { clipboard.clear(); isOpen = false }" />
   </div>
 </template>
 
@@ -64,14 +64,12 @@ const { copy } = useCopyToClipboard()
 const toast = useToast()
 const router = useRouter()
 const isOpen = ref(false)
-const isSaveToListOpen = ref(false)
+const isAddToDeckOpen = ref(false)
+
+const clipboardCardIds = computed(() => clipboard.list.value.map(card => card.id))
 
 const clipboardLabel = computed(() => {
   return (clipboard.count.value > 0 ? clipboard.count.value + '' : '0')
-})
-
-const clipboardCardNames = computed(() => {
-  return clipboard.list.value.map(card => card.name)
 })
 
 function navigateToCard(cardId: string) {
@@ -92,13 +90,10 @@ function copyNames() {
 }
 
 function openSaveToList() {
-  isSaveToListOpen.value = true
+  isAddToDeckOpen.value = true
 }
 
-function handleSaved() {
-  // Clear clipboard after saving
-  clipboard.clear()
-}
+
 
 function openMassEntry() {
   if (!clipboard.list.value.length) return
