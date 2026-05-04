@@ -42,6 +42,17 @@ export const useSupabase = () => {
         }
       : undefined;
 
+    if (import.meta.client) {
+      // TEMP debug: trace whether Supabase client is constructed and whether
+      // it sees the OAuth hash on this page load. Remove once the Google
+      // sign-in regression is resolved.
+      // eslint-disable-next-line no-console
+      console.log('[cm-auth] constructing supabase client', {
+        href: window.location.href,
+        hasHash: window.location.hash.includes('access_token'),
+      });
+    }
+
     nuxtApp._supabaseClient = createClient<Database>(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: true,
@@ -54,6 +65,9 @@ export const useSupabase = () => {
         // That mismatch caused Google sign-in to leave the user "logged
         // out" after the redirect. Force implicit so the hash is parsed.
         flowType: 'implicit',
+        // TEMP: verbose logging from auth-js to help diagnose why no
+        // session is being detected from the URL after OAuth redirect.
+        debug: import.meta.client,
         ...(safeStorage && { storage: safeStorage }),
       },
     });
