@@ -239,8 +239,17 @@ export const useUserProfile = () => {
         }
       }
 
-      // Refetch queries when auth state changes
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // Refetch queries when auth state changes.
+      // INITIAL_SESSION fires after an OAuth redirect when Supabase exchanges
+      // the URL code for a session before this listener is registered. Without
+      // handling it here, the navbar keeps showing the hydrated "logged out"
+      // state because the user query has a 5-minute staleTime.
+      if (
+        (event === 'SIGNED_IN' ||
+          event === 'TOKEN_REFRESHED' ||
+          event === 'INITIAL_SESSION') &&
+        session
+      ) {
         // Skip if we're in a recovery flow — the user should stay "logged out" in the UI
         if (inPasswordRecovery) return;
 
