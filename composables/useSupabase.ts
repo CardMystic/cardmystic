@@ -42,32 +42,18 @@ export const useSupabase = () => {
         }
       : undefined;
 
-    if (import.meta.client) {
-      // TEMP debug: trace whether Supabase client is constructed and whether
-      // it sees the OAuth hash on this page load. Remove once the Google
-      // sign-in regression is resolved.
-      // eslint-disable-next-line no-console
-      console.log('[cm-auth] constructing supabase client', {
-        href: window.location.href,
-        hasHash: window.location.hash.includes('access_token'),
-      });
-    }
-
     nuxtApp._supabaseClient = createClient<Database>(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true,
-        // Our Supabase project's OAuth callback returns tokens in the URL
-        // hash (#access_token=...&refresh_token=...) — i.e. the implicit
-        // flow. supabase-js v2 defaults flowType to 'pkce', which only
-        // parses ?code= query params and silently ignores hash tokens.
-        // That mismatch caused Google sign-in to leave the user "logged
-        // out" after the redirect. Force implicit so the hash is parsed.
+        // We capture and apply OAuth implicit-flow tokens manually in
+        // `plugins/auth.client.ts` (via setSession) because Supabase's
+        // built-in URL detection runs asynchronously inside _acquireLock
+        // and races against Vue Router stripping the URL hash on mount.
+        // Disabling this prevents Supabase from also trying — and avoids
+        // duplicate work / state-change events.
+        detectSessionInUrl: false,
         flowType: 'implicit',
-        // TEMP: verbose logging from auth-js to help diagnose why no
-        // session is being detected from the URL after OAuth redirect.
-        debug: import.meta.client,
         ...(safeStorage && { storage: safeStorage }),
       },
     });
