@@ -1,12 +1,20 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full pt-4 flex flex-col items-center">
-      <Search default-search-type="similarity" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
+      <Search
+        default-search-type="similarity"
+        :platform="searchPlatformProp"
+        class="mt-6 max-w-5xl"
+      />
 
       <!-- SEO slug page: show pre-generated title + description -->
       <template v-if="seoEntry">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">{{ seoEntry.title }}</h1>
-        <p class="text-gray-400 text-center mb-6 max-w-2xl">{{ seoEntry.description }}</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
+          {{ seoEntry.title }}
+        </h1>
+        <p class="text-gray-400 text-center mb-6 max-w-2xl">
+          {{ seoEntry.description }}
+        </p>
       </template>
 
       <!-- Landing page: show about section -->
@@ -14,25 +22,46 @@
 
       <div class="mb-10 w-full">
         <!-- Results -->
-        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
+        <SearchResults
+          :is-loading="isLoading"
+          :search-results="searchResults"
+          :query-param="displayQuery"
           :error-message="searchError?.message"
-          :help-text="seoEntry ? `Loading similar cards...` : `Please enter a card name to search for similar ${platformName} cards.`"
-          :is-similarity-search="true" :hide-thumbs-down-button="true" />
+          :help-text="
+            seoEntry
+              ? `Loading similar cards...`
+              : `Please enter a card name to search for similar ${platformName} cards.`
+          "
+          :is-similarity-search="true"
+          :hide-thumbs-down-button="true"
+        />
       </div>
     </div>
   </UContainer>
-  <LazyIssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
+  <LazyIssuesFab
+    v-if="searchResults && searchResults.length"
+    :onClick="handleFabClick"
+  />
   <LazyBackToTop />
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { CardSearchFiltersSchema, SimilaritySearchSchema } from '~/models/searchModel';
+import {
+  CardSearchFiltersSchema,
+  SimilaritySearchSchema,
+} from '~/models/searchModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useSimilaritySearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
-import { isValidPlatform, getPlatformFilters, getSearchPlatformProp, getPlatformDisplayName, type Platform } from '~/utils/platformConfig';
+import {
+  isValidPlatform,
+  getPlatformFilters,
+  getSearchPlatformProp,
+  getPlatformDisplayName,
+  type Platform,
+} from '~/utils/platformConfig';
 import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 
 const route = useRoute();
@@ -50,65 +79,90 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType = platform === 'all' ? 'similarity' : `${platform}-similarity`;
+const aboutType: SearchAboutType =
+  platform === 'all' ? 'similarity' : `${platform}-similarity`;
 
 const cardNameParam = computed(() => String(route.query?.card_name || ''));
 const displayQuery = computed(() => seoEntry?.query || cardNameParam.value);
 
 useSeoMeta({
-  robots: () => seoEntry ? 'index, follow' : (cardNameParam.value ? 'noindex, follow' : 'index, follow'),
-  title: () => seoEntry
-    ? `${seoEntry.title} | CardMystic`
-    : cardNameParam.value
-      ? `${cardNameParam.value} - ${platformName} Similarity Search | CardMystic`
-      : `${platformName} Similarity Search | CardMystic`,
-  description: () => seoEntry
-    ? seoEntry.description
-    : cardNameParam.value
-      ? `Find ${platformName} cards similar to ${cardNameParam.value}.`
-      : `Find similar ${platformName} cards using similarity search.`,
+  robots: () =>
+    seoEntry
+      ? 'index, follow'
+      : cardNameParam.value
+        ? 'noindex, follow'
+        : 'index, follow',
+  title: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : cardNameParam.value
+        ? `${cardNameParam.value} - ${platformName} Similarity Search | CardMystic`
+        : `${platformName} Similarity Search | CardMystic`,
+  description: () =>
+    seoEntry
+      ? seoEntry.description
+      : cardNameParam.value
+        ? `Find ${platformName} cards similar to ${cardNameParam.value}.`
+        : `Find similar ${platformName} cards using similarity search.`,
   ogType: 'website',
-  ogTitle: () => seoEntry
-    ? `${seoEntry.title} | CardMystic`
-    : `${platformName} Similarity Search | CardMystic`,
-  ogDescription: () => seoEntry
-    ? seoEntry.description
-    : `${platformName} similarity search on CardMystic.`,
+  ogTitle: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : `${platformName} Similarity Search | CardMystic`,
+  ogDescription: () =>
+    seoEntry
+      ? seoEntry.description
+      : `${platformName} similarity search on CardMystic.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Similarity Search`,
   twitterCard: 'summary_large_image',
-  twitterTitle: () => seoEntry
-    ? `${seoEntry.title} | CardMystic`
-    : `${platformName} Similarity Search | CardMystic`,
-  twitterDescription: () => seoEntry
-    ? seoEntry.description
-    : `${platformName} similarity search on CardMystic.`,
+  twitterTitle: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : `${platformName} Similarity Search | CardMystic`,
+  twitterDescription: () =>
+    seoEntry
+      ? seoEntry.description
+      : `${platformName} similarity search on CardMystic.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'Similarity Search' });
 
-const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : undefined; });
+const limitParam = computed(() => {
+  const n = Number(route.query?.limit);
+  return n > 0 ? n : undefined;
+});
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
     try {
-      return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
-    } catch { /* fall through to defaults on malformed input */ }
+      return CardSearchFiltersSchema.parse(
+        JSON.parse(String(route.query.filters)),
+      );
+    } catch {
+      /* fall through to defaults on malformed input */
+    }
   }
-  return seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters;
+  return seoEntry
+    ? { ...seoEntry.filters, ...platformFilters }
+    : platformFilters;
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();
-watch([displayQuery, parsedFilters], ([newQuery, newFilters]) => {
-  setPageInfo({
-    page_url: route.fullPath,
-    page_name: `${platformName} Similarity Search: ${newQuery}`,
-    card_name: newQuery,
-    filters: newFilters,
-    labels: [platform, 'similarity search'],
-  });
-}, { immediate: true });
+watch(
+  [displayQuery, parsedFilters],
+  ([newQuery, newFilters]) => {
+    setPageInfo({
+      page_url: route.fullPath,
+      page_name: `${platformName} Similarity Search: ${newQuery}`,
+      card_name: newQuery,
+      filters: newFilters,
+      labels: [platform, 'similarity search'],
+    });
+  },
+  { immediate: true },
+);
 
 function handleFabClick() {
   window.open(searchFeedbackUrl(getPageInfo()), '_blank');
@@ -125,10 +179,18 @@ const similaritySearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading, error: searchError } = useSimilaritySearch(similaritySearch);
+const {
+  searchResults,
+  isLoading,
+  error: searchError,
+} = useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
-watch(() => route.query, (query) => {
-  if (query.card_name) saveSearchQuery('similarity', query);
-}, { immediate: true });
+watch(
+  () => route.query,
+  (query) => {
+    if (query.card_name) saveSearchQuery('similarity', query);
+  },
+  { immediate: true },
+);
 </script>

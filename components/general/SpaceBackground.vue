@@ -1,42 +1,56 @@
 <template>
-  <div class="particle-hero min-h-screen w-full relative overflow-hidden"
-    :class="full ? '' : 'flex items-center justify-center px-4 py-12'">
+  <div
+    class="particle-hero min-h-screen w-full relative overflow-hidden"
+    :class="full ? '' : 'flex items-center justify-center px-4 py-12'"
+  >
     <div class="stars stars-small" :style="{ '--star-shadow': smallShadow }" />
-    <div class="stars stars-medium" :style="{ '--star-shadow': mediumShadow }" />
+    <div
+      class="stars stars-medium"
+      :style="{ '--star-shadow': mediumShadow }"
+    />
     <div class="stars stars-large" :style="{ '--star-shadow': largeShadow }" />
-    <div class="stars stars-xlarge" :style="{ '--star-shadow': xlargeShadow }" />
+    <div
+      class="stars stars-xlarge"
+      :style="{ '--star-shadow': xlargeShadow }"
+    />
     <Comets :interval="30" />
-    <div :class="full ? 'relative z-10 w-full h-full' : 'w-full max-w-md mx-auto z-10'">
+    <div
+      :class="
+        full ? 'relative z-10 w-full h-full' : 'w-full max-w-md mx-auto z-10'
+      "
+    >
       <slot />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-
-withDefaults(defineProps<{
-  full?: boolean
-}>(), { full: false })
+withDefaults(
+  defineProps<{
+    full?: boolean;
+  }>(),
+  { full: false },
+);
 
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
-const FIELD_WIDTH = 3840
-const FIELD_HEIGHT = 2000
-const SMALL_COUNT = 2400
-const MEDIUM_COUNT = 1200
-const LARGE_COUNT = 140
-const XLARGE_COUNT = 60
-const STAR_COLOR = '#fff'
+const FIELD_WIDTH = 3840;
+const FIELD_HEIGHT = 2000;
+const SMALL_COUNT = 2400;
+const MEDIUM_COUNT = 1200;
+const LARGE_COUNT = 140;
+const XLARGE_COUNT = 60;
+const STAR_COLOR = '#fff';
 
 // ---------------------------------------------------------------------------
 // Seeded PRNG — identical output on server and client for clean hydration.
 // ---------------------------------------------------------------------------
 function seededRandom(seed: number) {
   return () => {
-    seed = (seed * 16807) % 2147483647
-    return (seed - 1) / 2147483646
-  }
+    seed = (seed * 16807) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -44,22 +58,21 @@ function seededRandom(seed: number) {
 // Y spans FIELD_HEIGHT which matches the vertical animation tile.
 // ---------------------------------------------------------------------------
 function generateShadows(count: number, seed: number): string {
-  const rand = seededRandom(seed)
-  const shadows: string[] = []
+  const rand = seededRandom(seed);
+  const shadows: string[] = [];
   for (let i = 0; i < count; i++) {
-    const x = Math.round(rand() * FIELD_WIDTH)
-    const y = Math.round(rand() * FIELD_HEIGHT)
-    shadows.push(`${x}px ${y}px ${STAR_COLOR}`)
+    const x = Math.round(rand() * FIELD_WIDTH);
+    const y = Math.round(rand() * FIELD_HEIGHT);
+    shadows.push(`${x}px ${y}px ${STAR_COLOR}`);
   }
-  return shadows.join(',')
+  return shadows.join(',');
 }
 
 // Four layers with different seeds so positions don't overlap
-const smallShadow = generateShadows(SMALL_COUNT, 42)
-const mediumShadow = generateShadows(MEDIUM_COUNT, 137)
-const largeShadow = generateShadows(LARGE_COUNT, 256)
-const xlargeShadow = generateShadows(XLARGE_COUNT, 389)
-
+const smallShadow = generateShadows(SMALL_COUNT, 42);
+const mediumShadow = generateShadows(MEDIUM_COUNT, 137);
+const largeShadow = generateShadows(LARGE_COUNT, 256);
+const xlargeShadow = generateShadows(XLARGE_COUNT, 389);
 </script>
 
 <style lang="sass" scoped>
@@ -133,5 +146,4 @@ const xlargeShadow = generateShadows(XLARGE_COUNT, 389)
     transform: translateY(0)
   to
     transform: translateY(-2000px)
-
 </style>

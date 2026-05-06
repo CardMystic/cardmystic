@@ -1,7 +1,17 @@
 <template>
-  <a v-if="showButton" :href="marketplaceLink" target="_blank" rel="noopener noreferrer" class="product-promotion-btn">
+  <a
+    v-if="showButton"
+    :href="marketplaceLink"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="product-promotion-btn"
+  >
     <div class="product-promotion-btn-content">
-      <img :src="marketplaceImage" alt="Marketplace" class="product-promotion-btn-img" />
+      <img
+        :src="marketplaceImage"
+        alt="Marketplace"
+        class="product-promotion-btn-img"
+      />
       <span class="product-promotion-btn-text">{{ marketplaceText }}</span>
     </div>
   </a>
@@ -11,9 +21,10 @@
 const props = defineProps({
   marketplaceLink: { type: String, required: true },
   marketplaceImage: { type: String, required: true },
-  marketplaceText: { type: String, required: true }
+  marketplaceText: { type: String, required: true },
 });
-const showButton = props.marketplaceLink && props.marketplaceImage && props.marketplaceText;
+const showButton =
+  props.marketplaceLink && props.marketplaceImage && props.marketplaceText;
 </script>
 
 <style scoped>
@@ -29,7 +40,9 @@ const showButton = props.marketplaceLink && props.marketplaceImage && props.mark
   color: #fff;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   max-width: 180px;
   min-width: 180px;
   min-height: 120px;

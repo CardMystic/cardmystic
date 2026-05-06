@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { formatSymbols } from '~/utils/formatMTGSymbols';
 
 const props = defineProps({
@@ -12,7 +11,6 @@ const props = defineProps({
 const formattedManaCost = computed(() => {
   return formatSymbols(props.manaCost);
 });
-
 </script>
 <template>
   <div>
@@ -23,5 +21,4 @@ const formattedManaCost = computed(() => {
   </div>
 </template>
 
-<style scoped lang="sass">
-</style>
+<style scoped lang="sass"></style>

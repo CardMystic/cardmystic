@@ -8,8 +8,14 @@
     </template>
     <!-- Render real buttons after load -->
     <template v-else>
-      <productPromotionButton v-for="(btn, idx) in buttons" :key="idx" :marketplace-link="btn.link"
-        :marketplace-image="btn.image" :marketplace-text="btn.text" class="mx-2" />
+      <productPromotionButton
+        v-for="(btn, idx) in buttons"
+        :key="idx"
+        :marketplace-link="btn.link"
+        :marketplace-image="btn.image"
+        :marketplace-text="btn.text"
+        class="mx-2"
+      />
     </template>
   </div>
 </template>
@@ -29,7 +35,7 @@ onMounted(async () => {
     const data = await res.json();
     if (Array.isArray(data.marketplaceButtons)) {
       buttons.value = data.marketplaceButtons.filter(
-        (btn: any) => btn && btn.link && btn.image && btn.text
+        (btn: any) => btn && btn.link && btn.image && btn.text,
       );
     }
   } catch (e) {

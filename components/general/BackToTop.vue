@@ -1,13 +1,17 @@
 <template>
-  <div v-if="showButton" class="back-to-top cursor-pointer" @click="scrollToTop">
+  <div
+    v-if="showButton"
+    class="back-to-top cursor-pointer"
+    @click="scrollToTop"
+  >
     <UIcon name="i-heroicons-arrow-up" class="mr-1" />
     Back to top
   </div>
 </template>
 
 <script setup lang="ts">
-const showButton = ref(false)
-const scrollThreshold = 300
+const showButton = ref(false);
+const scrollThreshold = 300;
 let _rafPending = false;
 
 // Show or hide the button based on scroll position
@@ -23,22 +27,22 @@ function handleScroll() {
 function scrollToTop() {
   window.scrollTo({
     top: 0,
-    behavior: 'smooth'
-  })
+    behavior: 'smooth',
+  });
 }
 
 onMounted(() => {
   if (process.client) {
-    window.addEventListener('scroll', handleScroll)
-    handleScroll()
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
   }
-})
+});
 
 onUnmounted(() => {
   if (process.client) {
-    window.removeEventListener('scroll', handleScroll)
+    window.removeEventListener('scroll', handleScroll);
   }
-})
+});
 </script>
 
 <style lang="sass" scoped>

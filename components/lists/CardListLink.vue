@@ -1,27 +1,41 @@
 <template>
   <div
-    class="relative border max-w-[500px] border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
+    class="relative border max-w-[500px] border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
+  >
     <!-- Background Image -->
-    <div v-if="getListImageUrl(list)"
-      class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
-      :style="{ backgroundImage: `url(${getListImageUrl(list)})` }"></div>
     <div
-      class="absolute inset-0 bg-linear-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent">
-    </div>
+      v-if="getListImageUrl(list)"
+      class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
+      :style="{ backgroundImage: `url(${getListImageUrl(list)})` }"
+    ></div>
+    <div
+      class="absolute inset-0 bg-linear-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent"
+    ></div>
 
     <!-- Delete Button (visible on hover) -->
-    <UButton v-if="showDeleteButton" @click.stop="confirmDelete"
+    <UButton
+      v-if="showDeleteButton"
+      @click.stop="confirmDelete"
       class="cursor-pointer absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
-      color="error" variant="solid" icon="i-lucide-trash-2" size="sm" aria-label="Delete list" />
+      color="error"
+      variant="solid"
+      icon="i-lucide-trash-2"
+      size="sm"
+      aria-label="Delete list"
+    />
 
     <!-- Content (clickable) -->
     <div class="relative p-2 md:p-4" @click="router.push(`/lists/${list.id}`)">
-      <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">{{ list.name }}</h3>
+      <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">
+        {{ list.name }}
+      </h3>
       <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
         {{ list.description }}
       </p>
       <div class="flex items-center justify-between text-xs md:text-sm">
-        <span>{{ formatShortDate(list.updated_at ? list.updated_at : list.created_at) }}</span>
+        <span>{{
+          formatShortDate(list.updated_at ? list.updated_at : list.created_at)
+        }}</span>
         <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
       </div>
     </div>
@@ -31,13 +45,25 @@
       <template #content>
         <div class="p-4 space-y-4">
           <p class="text-gray-600 dark:text-gray-400">
-            Are you sure you want to delete <span class="font-semibold text-white">"{{ list.name }}"</span>?
+            Are you sure you want to delete
+            <span class="font-semibold text-white">"{{ list.name }}"</span>?
             This action cannot be undone.
           </p>
           <div class="flex justify-end gap-2">
-            <UButton color="neutral" variant="ghost" label="Cancel" @click="isDeleteModalOpen = false"
-              :disabled="deleteLoading" />
-            <UButton color="error" variant="solid" label="Delete" :loading="deleteLoading" @click="handleDelete" />
+            <UButton
+              color="neutral"
+              variant="ghost"
+              label="Cancel"
+              @click="isDeleteModalOpen = false"
+              :disabled="deleteLoading"
+            />
+            <UButton
+              color="error"
+              variant="solid"
+              label="Delete"
+              :loading="deleteLoading"
+              @click="handleDelete"
+            />
           </div>
         </div>
       </template>
@@ -58,12 +84,12 @@ type List = Database['public']['Tables']['card_lists']['Row'];
 const props = defineProps({
   list: {
     type: Object as () => List,
-    required: true
+    required: true,
   },
   showDeleteButton: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 });
 
 const { deleteListMutation } = useCardLists();
@@ -81,14 +107,14 @@ const handleDelete = async () => {
     await deleteListMutation.mutateAsync(props.list.id);
     toast.add({
       title: 'List deleted',
-      icon: 'i-lucide-trash-2'
+      icon: 'i-lucide-trash-2',
     });
     isDeleteModalOpen.value = false;
   } catch (error: any) {
     toast.add({
       title: 'Error deleting list',
       description: error.message,
-      color: 'error'
+      color: 'error',
     });
   }
 };

@@ -2,7 +2,10 @@
   <div class="top-queries-container mt-2 mb-2">
     <TopQueriesSkeleton v-if="isLoading" />
 
-    <div v-else-if="topQueries && topQueries.length > 0" class="top-queries-content">
+    <div
+      v-else-if="topQueries && topQueries.length > 0"
+      class="top-queries-content"
+    >
       <div class="queries-header">
         <UIcon name="i-lucide-trending-up" class="mr-2 text-primary text-xl" />
         <h3 class="queries-title">Top Searches This Week</h3>
@@ -11,11 +14,21 @@
       <div class="queries-grid">
         <!-- Left column: queries 1-5 -->
         <div class="queries-column">
-          <div v-for="(queryData, index) in leftColumnQueries" :key="queryData.query" class="query-item">
+          <div
+            v-for="(queryData, index) in leftColumnQueries"
+            :key="queryData.query"
+            class="query-item"
+          >
             <div class="query-rank">#{{ index + 1 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
-            <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
-              icon="i-lucide-search" class="try-btn cursor-pointer">
+            <UButton
+              color="primary"
+              variant="outline"
+              size="sm"
+              @click="tryQuery(queryData.query)"
+              icon="i-lucide-search"
+              class="try-btn cursor-pointer"
+            >
               Try
             </UButton>
           </div>
@@ -23,11 +36,21 @@
 
         <!-- Right column: queries 6-10 -->
         <div class="queries-column">
-          <div v-for="(queryData, index) in rightColumnQueries" :key="queryData.query" class="query-item">
+          <div
+            v-for="(queryData, index) in rightColumnQueries"
+            :key="queryData.query"
+            class="query-item"
+          >
             <div class="query-rank">#{{ index + 6 }}</div>
             <div class="query-text">{{ queryData.query }}</div>
-            <UButton color="primary" variant="outline" size="sm" @click="tryQuery(queryData.query)"
-              icon="i-lucide-search" class="try-btn cursor-pointer">
+            <UButton
+              color="primary"
+              variant="outline"
+              size="sm"
+              @click="tryQuery(queryData.query)"
+              icon="i-lucide-search"
+              class="try-btn cursor-pointer"
+            >
               Try
             </UButton>
           </div>

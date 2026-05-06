@@ -1,16 +1,36 @@
 <template>
   <!-- Selected colors chips or No Filters chip -->
-  <div v-if="modelValue?.selectedColors && modelValue.selectedColors.length > 0" class="mb-2 flex flex-wrap gap-2">
-    <UButton class="cursor-pointer rounded-pill" size="sm" color="neutral" variant="outline" icon="i-lucide-circle-x"
-      @click="clearColors">
+  <div
+    v-if="modelValue?.selectedColors && modelValue.selectedColors.length > 0"
+    class="mb-2 flex flex-wrap gap-2"
+  >
+    <UButton
+      class="cursor-pointer rounded-pill"
+      size="sm"
+      color="neutral"
+      variant="outline"
+      icon="i-lucide-circle-x"
+      @click="clearColors"
+    >
       <span class="flex items-center gap-1">
-        <ManaIcon v-for="color in modelValue.selectedColors" :key="color" :type="cardColorToSymbol(color)" size="16" />
+        <ManaIcon
+          v-for="color in modelValue.selectedColors"
+          :key="color"
+          :type="cardColorToSymbol(color)"
+          size="16"
+        />
         {{ getColorIdentityName(modelValue.selectedColors) }}
       </span>
     </UButton>
   </div>
   <div v-else class="mb-2 flex">
-    <UButton class="cursor-default rounded-pill" size="sm" color="neutral" variant="outline" disabled>
+    <UButton
+      class="cursor-default rounded-pill"
+      size="sm"
+      color="neutral"
+      variant="outline"
+      disabled
+    >
       No Filters Selected
     </UButton>
   </div>
@@ -20,14 +40,29 @@
     <div class="color-checkboxes">
       <!-- 2 cols (3 rows) on xs, 3 cols (2 rows) on sm, 6 cols on md+ -->
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 w-full">
-        <UCheckbox v-for="item in cardColors" :key="(item as { value: CardColorType }).value"
+        <UCheckbox
+          v-for="item in cardColors"
+          :key="(item as { value: CardColorType }).value"
           :name="`color-${(item as { value: CardColorType }).value}`"
-          :model-value="selectedColors.includes((item as { value: CardColorType }).value)"
-          @update:model-value="(value) => onToggle((item as { value: CardColorType }).value, value === true)"
-          variant="card" class="w-full" :ui="{ root: 'p-2' }">
+          :model-value="
+            selectedColors.includes((item as { value: CardColorType }).value)
+          "
+          @update:model-value="
+            (value) =>
+              onToggle((item as { value: CardColorType }).value, value === true)
+          "
+          variant="card"
+          class="w-full"
+          :ui="{ root: 'p-2' }"
+        >
           <template #label>
             <span class="flex items-center gap-1">
-              <ManaIcon :type="cardColorToSymbol((item as { value: CardColorType }).value)" class="mr-1" />
+              <ManaIcon
+                :type="
+                  cardColorToSymbol((item as { value: CardColorType }).value)
+                "
+                class="mr-1"
+              />
               {{ (item as { value: CardColorType }).value }}
             </span>
           </template>
@@ -40,7 +75,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import ManaIcon from '~/components/general/ManaIcon.vue';
-import { CardColor, cardColorToSymbol, type CardColorType } from '~/models/cardModel';
+import {
+  CardColor,
+  cardColorToSymbol,
+  type CardColorType,
+} from '~/models/cardModel';
 import type { CheckboxGroupItem } from '@nuxt/ui';
 import type { CardSearchFilters } from '~/models/searchModel';
 import { getColorIdentityName } from '~/utils/colorPairings';
@@ -49,9 +88,9 @@ const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
 const emit = defineEmits(['update:modelValue']);
 
 // Map card colors to CheckboxGroup items
-const cardColors = CardColor.options.map(color => ({
+const cardColors = CardColor.options.map((color) => ({
   label: color,
-  value: color
+  value: color,
 })) as CheckboxGroupItem[];
 
 // Handle color checkbox toggles
@@ -70,9 +109,12 @@ const selectedColors = computed({
     const colorOption = modelValue?.selectedColorFilterOption;
 
     // Only apply validation for these specific filter options
-    if (colorOption === 'Match Exactly' || colorOption === 'Contains At Least') {
+    if (
+      colorOption === 'Match Exactly' ||
+      colorOption === 'Contains At Least'
+    ) {
       const hasColorless = value.includes('Colorless');
-      const hasOtherColors = value.some(color => color !== 'Colorless');
+      const hasOtherColors = value.some((color) => color !== 'Colorless');
 
       // If we have both colorless and other colors, decide which to keep
       if (hasColorless && hasOtherColors) {
@@ -85,13 +127,13 @@ const selectedColors = computed({
           value = ['Colorless'];
         } else {
           // Another color was added, remove Colorless
-          value = value.filter(color => color !== 'Colorless');
+          value = value.filter((color) => color !== 'Colorless');
         }
       }
     }
 
     updateFilters({ selectedColors: value });
-  }
+  },
 });
 
 function clearColors() {
@@ -100,11 +142,10 @@ function clearColors() {
 }
 
 function updateFilters(updates: Partial<CardSearchFilters>) {
-  const current = modelValue || {} as CardSearchFilters;
+  const current = modelValue || ({} as CardSearchFilters);
   const newValue = { ...current, ...updates };
   emit('update:modelValue', newValue);
 }
-
 </script>
 
 <style scoped>

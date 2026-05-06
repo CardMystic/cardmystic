@@ -9,7 +9,11 @@
       <div class="queries-grid">
         <!-- Left column skeleton -->
         <div class="queries-column">
-          <div v-for="index in 5" :key="`left-${index}`" class="query-item-skeleton">
+          <div
+            v-for="index in 5"
+            :key="`left-${index}`"
+            class="query-item-skeleton"
+          >
             <USkeleton class="h-6 w-6" :ui="{ rounded: 'rounded-full' }" />
             <USkeleton class="h-4 flex-1" />
             <USkeleton class="h-8 w-12" />
@@ -18,7 +22,11 @@
 
         <!-- Right column skeleton -->
         <div class="queries-column">
-          <div v-for="index in 5" :key="`right-${index}`" class="query-item-skeleton">
+          <div
+            v-for="index in 5"
+            :key="`right-${index}`"
+            class="query-item-skeleton"
+          >
             <USkeleton class="h-6 w-6" :ui="{ rounded: 'rounded-full' }" />
             <USkeleton class="h-4 flex-1" />
             <USkeleton class="h-8 w-12" />
