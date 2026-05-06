@@ -26,3 +26,10 @@ CLAUDE.md
 .env
 .env.*
 !.env.example
+!.env.test.example
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/blob-report/

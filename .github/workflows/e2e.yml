@@ -1,0 +1,117 @@
+name: E2E Tests
+
+# `on` is quoted to avoid YAML 1.1 boolean coercion (`on` -> true) that
+# some YAML linters (incl. VS Code's built-in) flag as invalid.
+'on':
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - dev
+      - main
+
+# Cancel superseded runs on the same branch / PR to keep CI minutes low.
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Vitest unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run unit tests
+        run: pnpm test
+
+  e2e:
+    name: Playwright (${{ matrix.project }})
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium]
+
+    env:
+      # Branch-paired integration testing:
+      #   - `dev` (push or PR target) -> api.next.cardmystic.com
+      #     The 3 containers (frontend, backend, research) all deploy
+      #     their `dev` code to *.next.cardmystic.com, so this validates
+      #     the latest of all three together.
+      #   - `main` (push or PR target) -> api.cardmystic.com
+      #     Validates the prod stack against the code about to be / just
+      #     released.
+      NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL || 'https://ddbgietanhxrozzmogur.supabase.co' }}
+      NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY || 'test-anon-key' }}
+      NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || 'test-recaptcha-site-key' }}
+      NUXT_PUBLIC_BACKEND_URL: ${{ (github.base_ref == 'main' || github.ref == 'refs/heads/main') && 'https://api.cardmystic.com' || 'https://api.next.cardmystic.com' }}
+      # Real Supabase test user used by login / logout integration tests.
+      # Tests that need these will skip cleanly if either is unset.
+      E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps ${{ matrix.project }}
+
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps ${{ matrix.project }}
+
+      - name: Run Playwright tests
+        run: pnpm test:e2e --project=${{ matrix.project }}
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-${{ matrix.project }}
+          path: test-results/
+          retention-days: 7
