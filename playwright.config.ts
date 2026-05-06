@@ -54,10 +54,16 @@ for (const [key, value] of Object.entries(TEST_PUBLIC_ENV)) {
 // Always run e2e against the built Nuxt server (Nitro on port 3000).
 // Vite dev mode streams chunks lazily and was the source of multi-minute
 // CI runs and flaky hydration races, so we never use it for tests.
+//
+// Set PLAYWRIGHT_SKIP_BUILD=1 to skip the build step (CI builds in a
+// dedicated step so build failures surface directly instead of being
+// hidden inside Playwright's webServer output).
 const isCI = !!process.env.CI;
 const PORT = 3000;
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
-const SERVER_COMMAND = 'pnpm build && node .output/server/index.mjs';
+const SERVER_COMMAND = process.env.PLAYWRIGHT_SKIP_BUILD
+  ? 'node .output/server/index.mjs'
+  : 'pnpm build && node .output/server/index.mjs';
 
 export default defineConfig({
   testDir: './e2e',
@@ -94,7 +100,7 @@ export default defineConfig({
     // Cold builds can take ~30s; bump generously so flaky CI runners
     // don't time out before Nitro is ready.
     timeout: 300_000,
-    stdout: 'ignore',
+    stdout: 'pipe',
     stderr: 'pipe',
     env: { ...TEST_PUBLIC_ENV, PORT: String(PORT), HOST: '127.0.0.1' },
   },

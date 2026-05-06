@@ -109,7 +109,12 @@ jobs:
           done
         continue-on-error: true
 
+      - name: Build Nuxt app
+        run: pnpm build
+
       - name: Run Playwright tests
+        env:
+          PLAYWRIGHT_SKIP_BUILD: '1'
         run: pnpm test:e2e --project=${{ matrix.project }}
 
       - name: Upload Playwright report
