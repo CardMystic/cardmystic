@@ -5,24 +5,25 @@ on:
     branches:
       - main
       - dev
-  # PRs to dev deployments are commented out. To re-enable, uncomment the permissions block, the pull_request block, and the "Build And Deploy (Next)" step in the job.
-  # pull_request:
-  #   types: [opened, synchronize, reopened]
-  #   paths-ignore:
-  #     - 'README.md'
-  #     - '.vscode/**'
-  #     - '.gitignore'
-  #     - '.github/ISSUE_TEMPLATE/**'
-  #     - 'CONTRIBUTING.md'
-  #     - 'FUNDING.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - dev
+    paths-ignore:
+      - 'README.md'
+      - '.vscode/**'
+      - '.gitignore'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'CONTRIBUTING.md'
+      - 'FUNDING.yml'
 
 jobs:
   build_and_deploy_job:
-    # if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
-    # permissions:
-    #   pull-requests: write
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -46,7 +47,6 @@ jobs:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
           NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
           NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
-          NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}
           NUXT_PUBLIC_MAINTENANCE_MODE: ${{ vars.NUXT_PUBLIC_MAINTENANCE_MODE || 'false' }}
       - name: Deploy Dev Branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
@@ -64,24 +64,20 @@ jobs:
           NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
           NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
           NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
-          NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}
           NUXT_PUBLIC_MAINTENANCE_MODE: ${{ vars.NUXT_PUBLIC_MAINTENANCE_MODE || 'false' }}
-      # - name: Build And Deploy (Next)
-      #   id: builddeploy-next
-      #   if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'dev'
-      #   uses: Azure/static-web-apps-deploy@v1
-      #   with:
-      #     azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
-      #     repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
-      #     action: 'upload'
-      #     ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-      #     # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-      #     app_location: '/' # App source code path
-      #     api_location: '.output/server' # Api source code path - optional
-      #     output_location: '.output/public' # Built app content directory - optional
-      #     ###### End of Repository/Build Configurations ######
-      #   env:
-      #     NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
-      #     NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
-      #     NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
-      #     NUXT_PUBLIC_BACKEND_URL: ${{ secrets.NUXT_PUBLIC_BACKEND_URL }}
+      - name: Build And Deploy (PR Preview to Next)
+        id: builddeploy-next
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'dev'
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: '/'
+          api_location: '.output/server'
+          output_location: '.output/public'
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
+          NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+          NUXT_PUBLIC_MAINTENANCE_MODE: ${{ vars.NUXT_PUBLIC_MAINTENANCE_MODE || 'false' }}

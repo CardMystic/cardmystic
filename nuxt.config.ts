@@ -114,7 +114,7 @@ export default defineNuxtConfig({
       rollupOptions: {
         output: {
           manualChunks: {
-            'vue-vendor': ['vue', '@vue/runtime-core'],
+            'vue-vendor': ['vue'],
             tanstack: ['@tanstack/vue-query'],
             supabase: ['@supabase/supabase-js'],
           },
