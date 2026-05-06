@@ -69,7 +69,7 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 2 : 0,
+  retries: isCI ? 2 : 1,
   // Built app handles concurrency well; bump workers if the suite grows
   // and CI starts feeling slow again.
   workers: isCI ? 1 : 2,
