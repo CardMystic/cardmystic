@@ -97,6 +97,18 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps ${{ matrix.project }}
 
+      - name: Wake backend (avoid cold-start stalls in tests)
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -fsS --max-time 30 -o /dev/null "$NUXT_PUBLIC_BACKEND_URL/recaptcha/verify" -X POST -H "Content-Type: application/json" -d '{}' 2>/dev/null; then
+              echo "Backend responded on attempt $i"
+              break
+            fi
+            echo "Backend not ready (attempt $i), retrying..."
+            sleep 5
+          done
+        continue-on-error: true
+
       - name: Run Playwright tests
         run: pnpm test:e2e --project=${{ matrix.project }}
 

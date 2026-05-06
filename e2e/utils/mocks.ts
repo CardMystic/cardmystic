@@ -207,15 +207,6 @@ export const waitForHydration = async (page: Page) => {
     undefined,
     { timeout: 30_000 },
   );
-  // Vite dev mode keeps streaming chunks for a while after hydration;
-  // wait until the network settles so handlers that depend on lazily
-  // loaded modules (e.g. @supabase/supabase-js) are wired up.
-  try {
-    await page.waitForLoadState('networkidle', { timeout: 15_000 });
-  } catch {
-    // networkidle can flake under slow CI; the next interaction will
-    // still auto-wait for individual elements, so don't hard-fail.
-  }
 };
 
 /** Convenience: navigate AND wait for hydration in one call. */

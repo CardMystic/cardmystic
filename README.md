@@ -170,7 +170,7 @@ pnpm test:cov      # with coverage
 
 ### End-to-end tests (Playwright)
 
-Live in [`e2e/`](e2e/). These are **integration tests** — they spin up a local Nuxt dev server (`pnpm dev` on port `5173`) and drive a real Chromium against the **real backend and the real Supabase project**.
+Live in [`e2e/`](e2e/). These are **integration tests** — they build the app and run the production Nitro server (`pnpm build && node .output/server/index.mjs` on port `3000`) and drive a real Chromium against the **real backend and the real Supabase project**.
 
 The default backend (locally and on `dev` CI) is `https://api.next.cardmystic.com`. The frontend, backend, and research containers all deploy their `dev` branch to `*.next.cardmystic.com`, so running e2e against `next` validates the latest of all three together, which mirrors how PRs to `dev` are promoted. CI runs on `main` swap in `https://api.cardmystic.com` automatically.
 

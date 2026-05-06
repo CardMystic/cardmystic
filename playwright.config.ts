@@ -51,22 +51,29 @@ for (const [key, value] of Object.entries(TEST_PUBLIC_ENV)) {
   process.env[key] = value;
 }
 
+// Always run e2e against the built Nuxt server (Nitro on port 3000).
+// Vite dev mode streams chunks lazily and was the source of multi-minute
+// CI runs and flaky hydration races, so we never use it for tests.
+const isCI = !!process.env.CI;
+const PORT = 3000;
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
+const SERVER_COMMAND = 'pnpm build && node .output/server/index.mjs';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  // Single worker by default. The Nuxt dev server (Vite) is heavy and
-  // gets flaky under concurrent navigations on this app, especially on
-  // first-load when SSR has to compile every page on demand.
-  workers: process.env.CI ? 1 : 2,
-  reporter: process.env.CI
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
+  // Built app handles concurrency well; bump workers if the suite grows
+  // and CI starts feeling slow again.
+  workers: isCI ? 1 : 2,
+  reporter: isCI
     ? [['github'], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'never' }]],
   timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -77,15 +84,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  // Spin up the Nuxt dev server before running tests. Reused if already
-  // running locally so devs can iterate quickly with `pnpm test:e2e:ui`.
+  // Reused if already running locally so devs can iterate quickly with
+  // `pnpm test:e2e:ui` (start the built server once in another terminal
+  // with `node .output/server/index.mjs`). CI always builds fresh.
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
+    command: SERVER_COMMAND,
+    url: BASE_URL,
+    reuseExistingServer: !isCI,
+    // Cold builds can take ~30s; bump generously so flaky CI runners
+    // don't time out before Nitro is ready.
+    timeout: 300_000,
     stdout: 'ignore',
     stderr: 'pipe',
-    env: TEST_PUBLIC_ENV,
+    env: { ...TEST_PUBLIC_ENV, PORT: String(PORT), HOST: '127.0.0.1' },
   },
 });
