@@ -1,6 +1,13 @@
 <template>
-  <div v-if="rarity"
-    :class="{ 'rarity-badge': !isTextOnly, [sizeClass]: !isTextOnly, [rarityClass]: !isTextOnly, [rarityTextOnlyClass]: isTextOnly }">
+  <div
+    v-if="rarity"
+    :class="{
+      'rarity-badge': !isTextOnly,
+      [sizeClass]: !isTextOnly,
+      [rarityClass]: !isTextOnly,
+      [rarityTextOnlyClass]: isTextOnly,
+    }"
+  >
     <span class="rarity-text">{{ formatRarity(rarity) }}</span>
   </div>
 </template>
@@ -25,7 +32,9 @@ const props = defineProps({
 
 const sizeClass = computed(() => `rarity-badge-${props.size}`);
 const rarityClass = computed(() => `rarity-${props.rarity.toLowerCase()}`);
-const rarityTextOnlyClass = computed(() => `rarity-text-only-${props.rarity.toLowerCase()}`);
+const rarityTextOnlyClass = computed(
+  () => `rarity-text-only-${props.rarity.toLowerCase()}`,
+);
 
 function formatRarity(rarity: string): string {
   return rarity.charAt(0).toUpperCase() + rarity.slice(1);
@@ -75,7 +84,7 @@ function formatRarity(rarity: string): string {
 }
 
 .rarity-text-only-common {
-  color: white
+  color: white;
 }
 
 .rarity-uncommon {
@@ -84,7 +93,7 @@ function formatRarity(rarity: string): string {
 }
 
 .rarity-text-only-uncommon {
-  color: white
+  color: white;
 }
 
 .rarity-rare {
@@ -97,7 +106,6 @@ function formatRarity(rarity: string): string {
   color: gold;
 }
 
-
 .rarity-mythic {
   background: linear-gradient(135deg, #ff8c00, #ff6b35, #ff4500);
   border-color: rgba(255, 140, 0, 0.6);
@@ -105,7 +113,7 @@ function formatRarity(rarity: string): string {
 }
 
 .rarity-text-only-mythic {
-  color: orangered
+  color: orangered;
 }
 
 /* Size-specific animations for rare */

@@ -2,21 +2,30 @@
   <!-- Results -->
   <template v-if="isLoading">
     <!-- Header with title and sort spacer -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3"
+    >
       <div class="flex items-center">
         <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
         <h3 class="text-xl font-semibold">Similar Cards</h3>
       </div>
-      <div style="height: 32px"></div> <!-- Sort spacer -->
+      <div style="height: 32px"></div>
+      <!-- Sort spacer -->
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-      <CardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" :showCardInfo="true" />
+      <CardSkeleton
+        v-for="i in skeletonCount"
+        :key="`skeleton-${i}`"
+        :showCardInfo="true"
+      />
     </div>
   </template>
 
   <template v-else-if="searchResults && searchResults.length > 1">
     <!-- Header with title on left and sort on right -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3"
+    >
       <div class="flex items-center">
         <UIcon name="i-mdi-cards-outline" class="w-6 h-6 text-primary mr-2" />
         <h3 class="text-xl font-semibold">Similar Cards</h3>
@@ -25,12 +34,23 @@
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
       <div v-for="result in displayedResults" :key="result.card_data.id">
-        <Card :card="result" :showCardInfo="true" :hideProgressBar="true" :hideThumbsDownButton="true"
-          :is-commander="checkIsCommander(result)" />
+        <Card
+          :card="result"
+          :showCardInfo="true"
+          :hideProgressBar="true"
+          :hideThumbsDownButton="true"
+          :is-commander="checkIsCommander(result)"
+        />
       </div>
     </div>
     <div v-if="hasMoreCards && !showAll" class="flex justify-center mt-6">
-      <UButton @click="showAll = true" color="primary" variant="solid" size="lg" icon="i-heroicons-chevron-down">
+      <UButton
+        @click="showAll = true"
+        color="primary"
+        variant="solid"
+        size="lg"
+        icon="i-heroicons-chevron-down"
+      >
         Show More ({{ sortedResults.length - initialDisplayCount }} more cards)
       </UButton>
     </div>
@@ -104,8 +124,9 @@ const displayedResults = computed(() => {
 });
 
 // Check if there are more cards to show
-const hasMoreCards = computed(() => sortedResults.value.length > initialDisplayCount);
-
+const hasMoreCards = computed(
+  () => sortedResults.value.length > initialDisplayCount,
+);
 </script>
 
 <style lang="scss" scoped>

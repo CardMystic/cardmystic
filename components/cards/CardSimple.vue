@@ -1,8 +1,16 @@
 <template>
   <div class="card-simple">
-    <img :class="sizeClass" :src="getCardImageUrl(card.card_data)" :alt="card.card_data.name" @error="handleImageError"
-      v-if="getCardImageUrl(card.card_data)" loading="lazy" decoding="async" @click="navigateToCard(card.card_data.id)"
-      class="cursor-pointer" />
+    <img
+      :class="sizeClass"
+      :src="getCardImageUrl(card.card_data)"
+      :alt="card.card_data.name"
+      @error="handleImageError"
+      v-if="getCardImageUrl(card.card_data)"
+      loading="lazy"
+      decoding="async"
+      @click="navigateToCard(card.card_data.id)"
+      class="cursor-pointer"
+    />
   </div>
 </template>
 

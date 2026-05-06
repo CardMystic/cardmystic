@@ -1,23 +1,49 @@
 <template>
-  <UCard v-if="card" variant="subtle" class="preview-root" :ui="{ body: 'p-4' }">
-    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal"
-      :card-ids="[activeCardData?.id ?? '']" />
+  <UCard
+    v-if="card"
+    variant="subtle"
+    class="preview-root"
+    :ui="{ body: 'p-4' }"
+  >
+    <LazyAddToDeckModal
+      v-if="canShowDeckMenu"
+      v-model:open="showAddToDeckModal"
+      :card-ids="[activeCardData?.id ?? '']"
+    />
 
-    <UModal v-model:open="showConfirmModal" title="Confirm Poor Result?"
+    <UModal
+      v-model:open="showConfirmModal"
+      title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
-      :ui="{ footer: 'justify-end' }">
+      :ui="{ footer: 'justify-end' }"
+    >
       <template #footer="{ close }">
-        <UButton label="Cancel" class="cursor-pointer" color="neutral" variant="outline" @click="close" />
-        <UButton label="Yes, This is a Poor Result" class="cursor-pointer" color="error"
-          @click="confirmDislike(close)" />
+        <UButton
+          label="Cancel"
+          class="cursor-pointer"
+          color="neutral"
+          variant="outline"
+          @click="close"
+        />
+        <UButton
+          label="Yes, This is a Poor Result"
+          class="cursor-pointer"
+          color="error"
+          @click="confirmDislike(close)"
+        />
       </template>
     </UModal>
 
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
-        <img :src="getCardImageUrl(activeCardData!, isFlipped)" :alt="activeCardData?.name"
-          class="preview-image cursor-pointer" loading="eager" decoding="async"
-          @click="navigateToCard(activeCardData?.id)" />
+        <img
+          :src="getCardImageUrl(activeCardData!, isFlipped)"
+          :alt="activeCardData?.name"
+          class="preview-image cursor-pointer"
+          loading="eager"
+          decoding="async"
+          @click="navigateToCard(activeCardData?.id)"
+        />
       </div>
 
       <div class="space-y-2">
@@ -27,51 +53,104 @@
         </div>
 
         <div class="flex flex-wrap gap-2 text-xs">
-          <UBadge v-if="isSearched" color="primary" variant="subtle">Searched Card</UBadge>
-          <UBadge v-if="isCommander" color="warning" variant="subtle">Commander</UBadge>
-          <UBadge v-if="activeCardData?.game_changer" color="primary" variant="subtle">Game Changer</UBadge>
+          <UBadge v-if="isSearched" color="primary" variant="subtle"
+            >Searched Card</UBadge
+          >
+          <UBadge v-if="isCommander" color="warning" variant="subtle"
+            >Commander</UBadge
+          >
+          <UBadge
+            v-if="activeCardData?.game_changer"
+            color="primary"
+            variant="subtle"
+            >Game Changer</UBadge
+          >
         </div>
 
         <div v-if="!hideProgressBar" class="preview-scores">
           <template v-if="hasDualScores">
             <div class="preview-score-row">
               <span class="preview-score-label">AI</span>
-              <UProgress :model-value="normalizedScore" class="flex-1" size="lg" :color="scoreColor" />
-              <span class="preview-score-value">{{ Math.round(normalizedScore) }}%</span>
+              <UProgress
+                :model-value="normalizedScore"
+                class="flex-1"
+                size="lg"
+                :color="scoreColor"
+              />
+              <span class="preview-score-value"
+                >{{ Math.round(normalizedScore) }}%</span
+              >
             </div>
             <div class="preview-score-row">
               <span class="preview-score-label">Deck</span>
-              <UProgress :model-value="alsDisplayScore" class="flex-1" size="lg" :color="alsScoreColor" />
-              <span class="preview-score-value">{{ Math.round(alsDisplayScore) }}%</span>
+              <UProgress
+                :model-value="alsDisplayScore"
+                class="flex-1"
+                size="lg"
+                :color="alsScoreColor"
+              />
+              <span class="preview-score-value"
+                >{{ Math.round(alsDisplayScore) }}%</span
+              >
             </div>
           </template>
           <template v-else-if="hasAnyScore">
             <div class="preview-score-row">
-              <span class="preview-score-label">{{ isAlsOnly ? 'Deck' : 'AI' }}</span>
-              <UProgress :model-value="normalizedScore" class="flex-1" size="lg" :color="scoreColor" />
-              <span class="preview-score-value">{{ Math.round(normalizedScore) }}%</span>
+              <span class="preview-score-label">{{
+                isAlsOnly ? 'Deck' : 'AI'
+              }}</span>
+              <UProgress
+                :model-value="normalizedScore"
+                class="flex-1"
+                size="lg"
+                :color="scoreColor"
+              />
+              <span class="preview-score-value"
+                >{{ Math.round(normalizedScore) }}%</span
+              >
             </div>
           </template>
           <template v-if="hasPopularity">
             <div class="preview-score-row">
               <span class="preview-score-label">Pop</span>
-              <UProgress :model-value="popularityPercent" class="flex-1" size="lg" :color="popularityColor" />
+              <UProgress
+                :model-value="popularityPercent"
+                class="flex-1"
+                size="lg"
+                :color="popularityColor"
+              />
               <span class="preview-score-value">{{ popularityDisplay }}%</span>
             </div>
           </template>
         </div>
       </div>
 
-      <HoveredCardActions :card="card" :buy-label="'Buy on TCGPlayer (' + priceLabel + ')'"
-        :can-show-deck-menu="canShowDeckMenu" :find-similar-disabled="isSearched" :is-in-clipboard="isInClipboard"
-        :is-dual-faced="isDualFaced" :show-commander-buttons="isCommander"
-        :show-search-actions="!isSearched && (showAddToDeckbuilderButton || !hideThumbsDownButton)"
-        :hide-thumbs-down-button="hideThumbsDownButton" :is-thumbs-down-clicked="isThumbsDownClicked"
-        :show-add-to-deckbuilder-button="showAddToDeckbuilderButton" :is-in-decklist="isInDecklist"
-        @find-similar="findSimilarCards" @open-add-to-deck="showAddToDeckModal = true"
-        @toggle-clipboard="toggleClipboard" @flip-card="flipCard" @get-recommendations="getRecommendations"
-        @view-popular-cards="viewPopularCards" @dislike="handleDislike"
-        @add-to-deckbuilder="deckbuilderStore.addCard(activeCardData?.name ?? '')" />
+      <HoveredCardActions
+        :card="card"
+        :buy-label="'Buy on TCGPlayer (' + priceLabel + ')'"
+        :can-show-deck-menu="canShowDeckMenu"
+        :find-similar-disabled="isSearched"
+        :is-in-clipboard="isInClipboard"
+        :is-dual-faced="isDualFaced"
+        :show-commander-buttons="isCommander"
+        :show-search-actions="
+          !isSearched && (showAddToDeckbuilderButton || !hideThumbsDownButton)
+        "
+        :hide-thumbs-down-button="hideThumbsDownButton"
+        :is-thumbs-down-clicked="isThumbsDownClicked"
+        :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
+        :is-in-decklist="isInDecklist"
+        @find-similar="findSimilarCards"
+        @open-add-to-deck="showAddToDeckModal = true"
+        @toggle-clipboard="toggleClipboard"
+        @flip-card="flipCard"
+        @get-recommendations="getRecommendations"
+        @view-popular-cards="viewPopularCards"
+        @dislike="handleDislike"
+        @add-to-deckbuilder="
+          deckbuilderStore.addCard(activeCardData?.name ?? '')
+        "
+      />
     </div>
   </UCard>
 </template>
@@ -116,22 +195,29 @@ const showConfirmModal = ref(false);
 const showAddToDeckModal = ref(false);
 const hasMounted = ref(false);
 
-const canShowDeckMenu = computed(() =>
-  hasMounted.value && Boolean(props.card)
-);
+const canShowDeckMenu = computed(() => hasMounted.value && Boolean(props.card));
 
 // Reset per-card transient state when the previewed card changes
-watch(() => props.card?.card_data.id, () => {
-  isThumbsDownClicked.value = false;
-});
+watch(
+  () => props.card?.card_data.id,
+  () => {
+    isThumbsDownClicked.value = false;
+  },
+);
 
 onMounted(() => {
   hasMounted.value = true;
 });
 
 const isDualFaced = computed(() => {
-  if (!activeCardData.value?.card_faces || activeCardData.value.card_faces.length < 2) return false;
-  return ['transform', 'modal_dfc', 'reversible_card'].includes(activeCardData.value.layout);
+  if (
+    !activeCardData.value?.card_faces ||
+    activeCardData.value.card_faces.length < 2
+  )
+    return false;
+  return ['transform', 'modal_dfc', 'reversible_card'].includes(
+    activeCardData.value.layout,
+  );
 });
 
 const isInDecklist = computed(() => {
@@ -157,20 +243,27 @@ const isInClipboard = computed(() => {
   return clipboard.has(clipboardCard.value.id);
 });
 
-const hasDualScores = computed(() =>
-  props.card?.als_score !== undefined && props.card?.ai_normalized_score !== undefined
+const hasDualScores = computed(
+  () =>
+    props.card?.als_score !== undefined &&
+    props.card?.ai_normalized_score !== undefined,
 );
 
-const isAlsOnly = computed(() =>
-  props.card?.als_score !== undefined && props.card?.ai_normalized_score === undefined
+const isAlsOnly = computed(
+  () =>
+    props.card?.als_score !== undefined &&
+    props.card?.ai_normalized_score === undefined,
 );
 
-const hasAnyScore = computed(() =>
-  props.card?.ai_normalized_score !== undefined || props.card?.als_score !== undefined
+const hasAnyScore = computed(
+  () =>
+    props.card?.ai_normalized_score !== undefined ||
+    props.card?.als_score !== undefined,
 );
 
 const primaryScore = computed(() => {
-  if (props.card?.ai_normalized_score !== undefined) return props.card.ai_normalized_score;
+  if (props.card?.ai_normalized_score !== undefined)
+    return props.card.ai_normalized_score;
   if (props.card?.als_score !== undefined) return props.card.als_score;
   return undefined;
 });
@@ -189,7 +282,9 @@ function scoreToColor(value: number) {
 const normalizedScore = computed(() => toDisplayPercent(primaryScore.value));
 const alsDisplayScore = computed(() => toDisplayPercent(props.card?.als_score));
 const hasPopularity = computed(() => props.card?.popularity !== undefined);
-const popularityPercent = computed(() => toDisplayPercent(props.card?.popularity));
+const popularityPercent = computed(() =>
+  toDisplayPercent(props.card?.popularity),
+);
 const popularityDisplay = computed(() => {
   if (popularityPercent.value < 1) return popularityPercent.value.toFixed(2);
   return Math.round(popularityPercent.value).toString();
@@ -237,7 +332,12 @@ function navigateToCard(cardId: string | undefined) {
 }
 
 function handleDislike() {
-  if (isThumbsDownClicked.value || !props.queryParam || !activeCardData.value?.name) return;
+  if (
+    isThumbsDownClicked.value ||
+    !props.queryParam ||
+    !activeCardData.value?.name
+  )
+    return;
   showConfirmModal.value = true;
 }
 

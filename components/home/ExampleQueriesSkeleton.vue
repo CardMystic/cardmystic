@@ -15,7 +15,11 @@
 
       <!-- Skeleton for carousel cards -->
       <div class="skeleton-carousel">
-        <div v-for="index in 6" :key="`skeleton-${index}`" class="skeleton-card">
+        <div
+          v-for="index in 6"
+          :key="`skeleton-${index}`"
+          class="skeleton-card"
+        >
           <USkeleton class="h-32 w-full mb-2" :ui="{ rounded: 'rounded-lg' }" />
           <USkeleton class="h-3 w-3/4 mb-1" />
           <USkeleton class="h-3 w-1/2" />

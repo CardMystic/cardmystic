@@ -1,22 +1,51 @@
 <template>
-  <UCard v-if="card" variant="outline" class="preview-root" :ui="{ body: 'p-4' }">
-    <LazyAddToDeckModal v-if="canShowDeckMenu" v-model:open="showAddToDeckModal" :card-ids="[card.card_data.id]" />
+  <UCard
+    v-if="card"
+    variant="outline"
+    class="preview-root"
+    :ui="{ body: 'p-4' }"
+  >
+    <LazyAddToDeckModal
+      v-if="canShowDeckMenu"
+      v-model:open="showAddToDeckModal"
+      :card-ids="[card.card_data.id]"
+    />
 
-    <SetCommanderModal :open="showCommanderModal" :card-name="card.card_data.name"
-      @update:open="showCommanderModal = $event" @confirm="confirmSetCommander" />
+    <SetCommanderModal
+      :open="showCommanderModal"
+      :card-name="card.card_data.name"
+      @update:open="showCommanderModal = $event"
+      @confirm="confirmSetCommander"
+    />
 
-    <RemoveCommanderModal :open="showClearCommanderModal" :card-name="card.card_data.name"
-      @update:open="showClearCommanderModal = $event" @confirm="confirmClearCommander" />
+    <RemoveCommanderModal
+      :open="showClearCommanderModal"
+      :card-name="card.card_data.name"
+      @update:open="showClearCommanderModal = $event"
+      @confirm="confirmClearCommander"
+    />
 
-    <SetCopiesModal :open="showSetCopiesInput" :card-name="card.card_data.name" :initial-copies="numCopies ?? 1"
-      @update:open="showSetCopiesInput = $event" @confirm="confirmSetCopies" />
+    <SetCopiesModal
+      :open="showSetCopiesInput"
+      :card-name="card.card_data.name"
+      :initial-copies="numCopies ?? 1"
+      @update:open="showSetCopiesInput = $event"
+      @confirm="confirmSetCopies"
+    />
 
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
-        <img :src="getCardImageUrl(card.card_data, isFlipped)" :alt="card.card_data.name"
-          class="preview-image cursor-pointer" loading="eager" decoding="async"
-          @click="navigateToCard(card.card_data.id)" />
-        <span v-if="!isCommanderOfDecklist" class="copy-count-pill">x{{ numCopies ?? 1 }}</span>
+        <img
+          :src="getCardImageUrl(card.card_data, isFlipped)"
+          :alt="card.card_data.name"
+          class="preview-image cursor-pointer"
+          loading="eager"
+          decoding="async"
+          @click="navigateToCard(card.card_data.id)"
+        />
+        <span v-if="!isCommanderOfDecklist" class="copy-count-pill"
+          >x{{ numCopies ?? 1 }}</span
+        >
       </div>
 
       <div class="space-y-2">
@@ -30,19 +59,41 @@
         </div>
       </div>
 
-      <HoveredCardActions :card="card"
-        :buy-label="card.card_data.prices.usd ? `Buy on TCGPlayer ($${card.card_data.prices.usd})` : 'Buy on TCGPlayer'"
-        :can-show-deck-menu="canShowDeckMenu" :is-in-clipboard="isInClipboard" :is-dual-faced="isDualFaced"
-        :show-commander-buttons="isCommanderCardComputed" :show-list-actions="true" :num-copies="numCopies ?? 1"
-        :available-boards="availableBoards" :show-set-commander="isCommanderCardComputed && !isCommanderOfDecklist"
-        :show-clear-commander="isCommanderOfDecklist" :show-edit-copies-buttons="!isCommanderOfDecklist"
-        @find-similar="findSimilarCards" @open-add-to-deck="showAddToDeckModal = true"
-        @toggle-clipboard="toggleClipboard" @flip-card="flipCard" @get-recommendations="getRecommendations"
+      <HoveredCardActions
+        :card="card"
+        :buy-label="
+          card.card_data.prices.usd
+            ? `Buy on TCGPlayer ($${card.card_data.prices.usd})`
+            : 'Buy on TCGPlayer'
+        "
+        :can-show-deck-menu="canShowDeckMenu"
+        :is-in-clipboard="isInClipboard"
+        :is-dual-faced="isDualFaced"
+        :show-commander-buttons="isCommanderCardComputed"
+        :show-list-actions="true"
+        :num-copies="numCopies ?? 1"
+        :available-boards="availableBoards"
+        :show-set-commander="isCommanderCardComputed && !isCommanderOfDecklist"
+        :show-clear-commander="isCommanderOfDecklist"
+        :show-edit-copies-buttons="!isCommanderOfDecklist"
+        @find-similar="findSimilarCards"
+        @open-add-to-deck="showAddToDeckModal = true"
+        @toggle-clipboard="toggleClipboard"
+        @flip-card="flipCard"
+        @get-recommendations="getRecommendations"
         @view-popular-cards="viewPopularCards"
-        @add-copy="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) + 1)"
-        @remove-copy="emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) - 1)"
-        @set-copies="openSetCopiesModal" @change-board="handleChangeBoard" @set-commander="showCommanderModal = true"
-        @clear-commander="showClearCommanderModal = true" @remove-from-list="emit('remove', card.card_data.id)" />
+        @add-copy="
+          emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) + 1)
+        "
+        @remove-copy="
+          emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) - 1)
+        "
+        @set-copies="openSetCopiesModal"
+        @change-board="handleChangeBoard"
+        @set-commander="showCommanderModal = true"
+        @clear-commander="showClearCommanderModal = true"
+        @remove-from-list="emit('remove', card.card_data.id)"
+      />
     </div>
   </UCard>
 </template>
@@ -77,7 +128,11 @@ const emit = defineEmits<{
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
   (e: 'updateNumCopies', cardName: string, numCopies: number): void;
-  (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
+  (
+    e: 'changeBoard',
+    cardName: string,
+    board: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
   (e: 'flip', cardId: string): void;
 }>();
 
@@ -85,9 +140,7 @@ const showCommanderModal = ref(false);
 const showAddToDeckModal = ref(false);
 const hasMounted = ref(false);
 
-const canShowDeckMenu = computed(() =>
-  hasMounted.value && Boolean(props.card)
-);
+const canShowDeckMenu = computed(() => hasMounted.value && Boolean(props.card));
 
 onMounted(() => {
   hasMounted.value = true;
@@ -97,9 +150,13 @@ const showSetCopiesInput = ref(false);
 
 const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
 
-const currentBoard = computed(() => (props.board as typeof boardOptions[number]) || 'Mainboard');
+const currentBoard = computed(
+  () => (props.board as (typeof boardOptions)[number]) || 'Mainboard',
+);
 
-const availableBoards = computed(() => boardOptions.filter(board => board !== currentBoard.value));
+const availableBoards = computed(() =>
+  boardOptions.filter((board) => board !== currentBoard.value),
+);
 
 const isCommanderCardComputed = computed(() => {
   if (!props.card) return false;
@@ -110,7 +167,9 @@ const isCommanderCardComputed = computed(() => {
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;
   if (!cardData?.card_faces || cardData.card_faces.length < 2) return false;
-  return ['transform', 'modal_dfc', 'reversible_card'].includes(cardData.layout);
+  return ['transform', 'modal_dfc', 'reversible_card'].includes(
+    cardData.layout,
+  );
 });
 
 const clipboardCard = computed(() => {

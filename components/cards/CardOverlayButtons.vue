@@ -1,32 +1,71 @@
 <template>
-  <div v-if="resolvedCardData && (showClipboardControl || showFlipControl)" class="card-action-overlay"
-    :class="{ 'clipboard-added': isInClipboard }">
-    <UTooltip v-if="showClipboardControl" :text="isInClipboard ? 'Added to clipboard' : 'Add to clipboard'">
-      <UButton class="cursor-pointer" tabindex="0" :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
-        :color="isInClipboard ? 'success' : 'neutral'" variant="solid" size="md" square
-        @click.stop="handleClipboardClick">
-        <UIcon :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'" class="action-icon" />
+  <div
+    v-if="resolvedCardData && (showClipboardControl || showFlipControl)"
+    class="card-action-overlay"
+    :class="{ 'clipboard-added': isInClipboard }"
+  >
+    <UTooltip
+      v-if="showClipboardControl"
+      :text="isInClipboard ? 'Added to clipboard' : 'Add to clipboard'"
+    >
+      <UButton
+        class="cursor-pointer"
+        tabindex="0"
+        :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
+        :color="isInClipboard ? 'success' : 'neutral'"
+        variant="solid"
+        size="md"
+        square
+        @click.stop="handleClipboardClick"
+      >
+        <UIcon
+          :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'"
+          class="action-icon"
+        />
       </UButton>
     </UTooltip>
 
     <UTooltip v-if="showFlipControl" text="Flip card">
-      <UButton class="cursor-pointer" tabindex="0" aria-label="Flip Card" color="neutral" variant="solid" size="md"
-        square @click.stop="emit('flip')">
+      <UButton
+        class="cursor-pointer"
+        tabindex="0"
+        aria-label="Flip Card"
+        color="neutral"
+        variant="solid"
+        size="md"
+        square
+        @click.stop="emit('flip')"
+      >
         <UIcon name="i-heroicons-arrow-path" class="action-icon" />
       </UButton>
     </UTooltip>
   </div>
 
-  <div v-if="showMenuControl && hasMenuItems || showCopyCountBadge" class="card-menu-overlay"
-    :class="{ 'with-copy-count': showCopyCountBadge }">
-    <div v-if="showCopyCountBadge" class="copy-count-wrapper" :class="{ 'multi-copy': copyCount > 1 }">
+  <div
+    v-if="(showMenuControl && hasMenuItems) || showCopyCountBadge"
+    class="card-menu-overlay"
+    :class="{ 'with-copy-count': showCopyCountBadge }"
+  >
+    <div
+      v-if="showCopyCountBadge"
+      class="copy-count-wrapper"
+      :class="{ 'multi-copy': copyCount > 1 }"
+    >
       <span class="copy-count-badge p-1">x{{ copyCount }}</span>
     </div>
 
     <div v-if="showMenuControl && hasMenuItems" class="menu-wrapper">
       <UDropdownMenu :items="menuItems ?? []">
-        <UButton class="cursor-pointer" tabindex="0" aria-label="Card options" color="neutral" variant="solid" size="xs"
-          square icon="i-lucide-ellipsis-vertical" />
+        <UButton
+          class="cursor-pointer"
+          tabindex="0"
+          aria-label="Card options"
+          color="neutral"
+          variant="solid"
+          size="xs"
+          square
+          icon="i-lucide-ellipsis-vertical"
+        />
       </UDropdownMenu>
     </div>
   </div>
@@ -40,24 +79,27 @@ import { getCardImageUrl } from '~/utils/scryfall';
 
 type DropdownMenuItem = Record<string, unknown>;
 
-const props = withDefaults(defineProps<{
-  card: Card | ScryfallCard | null;
-  isDualFaced?: boolean;
-  showClipboardButton?: boolean;
-  showFlipButton?: boolean;
-  showMenuButton?: boolean;
-  showCopyCount?: boolean;
-  numCopies?: number;
-  menuItems?: DropdownMenuItem[][];
-}>(), {
-  isDualFaced: false,
-  showClipboardButton: true,
-  showFlipButton: false,
-  showMenuButton: false,
-  showCopyCount: false,
-  numCopies: 1,
-  menuItems: () => [],
-});
+const props = withDefaults(
+  defineProps<{
+    card: Card | ScryfallCard | null;
+    isDualFaced?: boolean;
+    showClipboardButton?: boolean;
+    showFlipButton?: boolean;
+    showMenuButton?: boolean;
+    showCopyCount?: boolean;
+    numCopies?: number;
+    menuItems?: DropdownMenuItem[][];
+  }>(),
+  {
+    isDualFaced: false,
+    showClipboardButton: true,
+    showFlipButton: false,
+    showMenuButton: false,
+    showCopyCount: false,
+    numCopies: 1,
+    menuItems: () => [],
+  },
+);
 
 const emit = defineEmits<{
   (e: 'flip'): void;
@@ -72,11 +114,22 @@ const resolvedCardData = computed(() => {
 });
 
 const copyCount = computed(() => Math.max(props.numCopies ?? 1, 1));
-const showClipboardControl = computed(() => Boolean(resolvedCardData.value) && props.showClipboardButton);
-const showFlipControl = computed(() => Boolean(resolvedCardData.value) && props.showFlipButton && props.isDualFaced);
-const showCopyCountBadge = computed(() => props.showCopyCount && copyCount.value > 0);
+const showClipboardControl = computed(
+  () => Boolean(resolvedCardData.value) && props.showClipboardButton,
+);
+const showFlipControl = computed(
+  () =>
+    Boolean(resolvedCardData.value) &&
+    props.showFlipButton &&
+    props.isDualFaced,
+);
+const showCopyCountBadge = computed(
+  () => props.showCopyCount && copyCount.value > 0,
+);
 const hasMenuItems = computed(() => (props.menuItems?.length ?? 0) > 0);
-const showMenuControl = computed(() => props.showMenuButton && hasMenuItems.value);
+const showMenuControl = computed(
+  () => props.showMenuButton && hasMenuItems.value,
+);
 
 const cardClipData = computed(() => {
   const cardData = resolvedCardData.value;
@@ -189,7 +242,6 @@ function handleClipboardClick() {
 }
 
 @media (max-width: 767px) {
-
   .card-action-overlay,
   .card-action-overlay.clipboard-added {
     opacity: 0.7 !important;

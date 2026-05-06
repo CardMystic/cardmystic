@@ -2,14 +2,30 @@
   <div>
     <h2 class="section-title">Recent Decklists</h2>
 
-    <div v-if="isLoadingLists" class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+    <div
+      v-if="isLoadingLists"
+      class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4"
+    >
       <USkeleton v-for="i in 3" :key="i" class="list-skeleton" />
     </div>
 
-    <div v-else-if="recentLists.length > 0" class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
-      <CardListLink v-for="list in recentLists" :key="list.id" :list="list" :show-delete-button="false" />
+    <div
+      v-else-if="recentLists.length > 0"
+      class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
+    >
+      <CardListLink
+        v-for="list in recentLists"
+        :key="list.id"
+        :list="list"
+        :show-delete-button="false"
+      />
       <NuxtLink to="/lists">
-        <UButton color="primary" variant="outline" class="h-full w-full justify-center" icon="i-lucide-arrow-right">
+        <UButton
+          color="primary"
+          variant="outline"
+          class="h-full w-full justify-center"
+          icon="i-lucide-arrow-right"
+        >
           See More
         </UButton>
       </NuxtLink>
@@ -24,10 +40,20 @@
     </div>
 
     <div v-if="!isLoadingLists" class="flex gap-3 mt-2 md:mt-4 justify-center">
-      <UButton to="/history?tab=search" color="neutral" variant="outline" icon="i-lucide-search">
+      <UButton
+        to="/history?tab=search"
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-search"
+      >
         Recent Searches
       </UButton>
-      <UButton to="/history?tab=cards" color="neutral" variant="outline" icon="i-lucide-eye">
+      <UButton
+        to="/history?tab=cards"
+        color="neutral"
+        variant="outline"
+        icon="i-lucide-eye"
+      >
         Recent Cards
       </UButton>
     </div>
@@ -43,7 +69,11 @@ const { userLists, isLoadingLists } = useCardLists();
 const recentLists = computed(() => {
   if (!userLists.value) return [];
   return [...userLists.value]
-    .sort((a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.updated_at ?? 0).getTime() -
+        new Date(a.updated_at ?? 0).getTime(),
+    )
     .slice(0, 3);
 });
 </script>

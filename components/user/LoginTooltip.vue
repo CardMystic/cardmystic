@@ -1,33 +1,41 @@
 <script setup lang="ts">
-const route = useRoute()
-const showTooltip = ref(false)
+const route = useRoute();
+const showTooltip = ref(false);
 
 onMounted(() => {
   if (process.server) return;
   if (route.path !== '/') return;
   // Check if user has dismissed the tooltip before
-  const dismissed = localStorage.getItem('loginTooltipDismissed')
+  const dismissed = localStorage.getItem('loginTooltipDismissed');
   if (dismissed !== 'true') {
-    showTooltip.value = true
+    showTooltip.value = true;
   }
-})
+});
 
 function dismissTooltip() {
-  showTooltip.value = false
+  showTooltip.value = false;
   if (process.server) return;
-  localStorage.setItem('loginTooltipDismissed', 'true')
+  localStorage.setItem('loginTooltipDismissed', 'true');
 }
 </script>
 
 <template>
-  <div v-if="showTooltip"
-    class="absolute top-full right-0 mt-4 bg-secondary text-white p-3 rounded-lg shadow-lg z-50 flex flex-row items-center">
-
+  <div
+    v-if="showTooltip"
+    class="absolute top-full right-0 mt-4 bg-secondary text-white p-3 rounded-lg shadow-lg z-50 flex flex-row items-center"
+  >
     <div class="text-[12px] font-medium mr-2 whitespace-nowrap">
-      <span class="font-bold animate-rainbow">NEW!</span> Login for more features!
+      <span class="font-bold animate-rainbow">NEW!</span> Login for more
+      features!
     </div>
-    <UButton @click="dismissTooltip" icon="i-lucide-x" size="xs" color="neutral" variant="solid"
-      class=" rounded-full shadow-md cursor-pointer" />
+    <UButton
+      @click="dismissTooltip"
+      icon="i-lucide-x"
+      size="xs"
+      color="neutral"
+      variant="solid"
+      class="rounded-full shadow-md cursor-pointer"
+    />
     <!-- Arrow pointing up -->
     <div class="absolute -top-2 right-4 w-4 h-4 bg-secondary rotate-45"></div>
   </div>

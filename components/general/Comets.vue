@@ -1,22 +1,28 @@
 <template>
   <div class="comet-container">
-    <div v-for="c in comets" :key="c.id" class="comet" :style="{
-      '--start-x': c.startX,
-      '--start-y': c.startY,
-      '--end-x': c.endX,
-      '--end-y': c.endY,
-      '--tail-angle': c.tailAngle,
-      '--comet-size': size + 'px',
-      '--comet-speed': speed + 's',
-      '--comet-tail': tailLength + 'px',
-      '--comet-color': color,
-      '--comet-glow': glowColor,
-    }" @animationend="removeComet(c.id)" />
+    <div
+      v-for="c in comets"
+      :key="c.id"
+      class="comet"
+      :style="{
+        '--start-x': c.startX,
+        '--start-y': c.startY,
+        '--end-x': c.endX,
+        '--end-y': c.endY,
+        '--tail-angle': c.tailAngle,
+        '--comet-size': size + 'px',
+        '--comet-speed': speed + 's',
+        '--comet-tail': tailLength + 'px',
+        '--comet-color': color,
+        '--comet-glow': glowColor,
+      }"
+      @animationend="removeComet(c.id)"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue';
 
 // ---------------------------------------------------------------------------
 // Comet configuration — all props with sensible defaults
@@ -30,81 +36,81 @@ const {
   glowColor = 'rgba(168, 85, 247, 0.8)',
 } = defineProps<{
   /** seconds between comets (average) */
-  interval?: number
+  interval?: number;
   /** px — diameter of the comet head */
-  size?: number
+  size?: number;
   /** seconds — how long the streak takes */
-  speed?: number
+  speed?: number;
   /** px — length of the trailing tail */
-  tailLength?: number
+  tailLength?: number;
   /** color of the comet head & tail */
-  color?: string
+  color?: string;
   /** purple glow color */
-  glowColor?: string
-}>()
+  glowColor?: string;
+}>();
 
 // ---------------------------------------------------------------------------
 // Comet — spawns roughly every COMET_INTERVAL s from a random point,
 // streaks in a random direction, then disappears.
 // ---------------------------------------------------------------------------
 interface Comet {
-  id: number
-  startX: string
-  startY: string
-  endX: string
-  endY: string
-  tailAngle: string
+  id: number;
+  startX: string;
+  startY: string;
+  endX: string;
+  endY: string;
+  tailAngle: string;
 }
 
-const comets = ref<Comet[]>([])
-let cometId = 0
-let cometTimer: ReturnType<typeof setTimeout> | null = null
-let paused = false
+const comets = ref<Comet[]>([]);
+let cometId = 0;
+let cometTimer: ReturnType<typeof setTimeout> | null = null;
+let paused = false;
 
 function spawnComet() {
   // Never allow more than 1 comet on screen at a time
-  if (comets.value.length >= 1) return
+  if (comets.value.length >= 1) return;
 
-  const angle = Math.random() * Math.PI * 2
-  const cosA = Math.cos(angle)
-  const sinA = Math.sin(angle)
+  const angle = Math.random() * Math.PI * 2;
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
 
   // Compute the tail angle in actual pixel-space so it matches the visual
   // direction of travel (vw and vh have different pixel sizes).
-  const aspect = window.innerWidth / window.innerHeight
-  const pixelDx = cosA          // vw component
-  const pixelDy = sinA / aspect // vh→vw correction
-  const tailAngle = (Math.atan2(pixelDy, pixelDx) * 180) / Math.PI
+  const aspect = window.innerWidth / window.innerHeight;
+  const pixelDx = cosA; // vw component
+  const pixelDy = sinA / aspect; // vh→vw correction
+  const tailAngle = (Math.atan2(pixelDy, pixelDx) * 180) / Math.PI;
 
   // Pick a random point roughly in the centre of the viewport
-  const midX = 20 + Math.random() * 60 // vw  (avoid extreme edges)
-  const midY = 20 + Math.random() * 60 // vh
+  const midX = 20 + Math.random() * 60; // vw  (avoid extreme edges)
+  const midY = 20 + Math.random() * 60; // vh
 
   // Walk backward / forward along the angle until BOTH x and y are off-screen.
   // Off-screen means x < -10 or x > 110, AND y < -10 or y > 110 (generous buffer).
   function distToOffScreen(dirSign: number): number {
-    let t = 0
+    let t = 0;
     // Increase t until the point is outside the viewport in at least one axis
     // with a solid buffer so the comet is fully invisible.
     // We need the point to be outside [-10, 110] in BOTH vw and vh or just
     // one axis — but to be safe we keep going until at least one axis is well past.
-    const step = 5
+    const step = 5;
     while (t < 300) {
-      t += step
-      const px = midX + cosA * dirSign * t
-      const py = midY + sinA * dirSign * t
-      if (px < -15 || px > 115 || py < -15 || py > 115) return t
+      t += step;
+      const px = midX + cosA * dirSign * t;
+      const py = midY + sinA * dirSign * t;
+      if (px < -15 || px > 115 || py < -15 || py > 115) return t;
     }
-    return t
+    return t;
   }
 
-  const backDist = distToOffScreen(-1) + 10
-  const fwdDist = distToOffScreen(1) + 10
+  const backDist = distToOffScreen(-1) + 10;
+  const fwdDist = distToOffScreen(1) + 10;
 
-  const startX = midX - cosA * backDist
-  const startY = midY - sinA * backDist
-  const endX = midX + cosA * fwdDist
-  const endY = midY + sinA * fwdDist
+  const startX = midX - cosA * backDist;
+  const startY = midY - sinA * backDist;
+  const endX = midX + cosA * fwdDist;
+  const endY = midY + sinA * fwdDist;
 
   comets.value.push({
     id: ++cometId,
@@ -113,46 +119,46 @@ function spawnComet() {
     endX: `${endX}vw`,
     endY: `${endY}vh`,
     tailAngle: `${tailAngle}deg`,
-  })
+  });
 }
 
 function removeComet(id: number) {
-  comets.value = comets.value.filter(c => c.id !== id)
+  comets.value = comets.value.filter((c) => c.id !== id);
 }
 
 function scheduleComet() {
-  if (cometTimer) clearTimeout(cometTimer)
-  if (paused) return
-  const base = interval * 1000
-  const delay = base * 0.8 + Math.random() * base * 0.4
+  if (cometTimer) clearTimeout(cometTimer);
+  if (paused) return;
+  const base = interval * 1000;
+  const delay = base * 0.8 + Math.random() * base * 0.4;
   cometTimer = setTimeout(() => {
-    spawnComet()
-    scheduleComet()
-  }, delay)
+    spawnComet();
+    scheduleComet();
+  }, delay);
 }
 
 function onVisibilityChange() {
   if (document.hidden) {
-    paused = true
+    paused = true;
     if (cometTimer) {
-      clearTimeout(cometTimer)
-      cometTimer = null
+      clearTimeout(cometTimer);
+      cometTimer = null;
     }
   } else {
-    paused = false
-    scheduleComet()
+    paused = false;
+    scheduleComet();
   }
 }
 
 onMounted(() => {
-  document.addEventListener('visibilitychange', onVisibilityChange)
-  scheduleComet()
-})
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  scheduleComet();
+});
 
 onUnmounted(() => {
-  document.removeEventListener('visibilitychange', onVisibilityChange)
-  if (cometTimer) clearTimeout(cometTimer)
-})
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  if (cometTimer) clearTimeout(cometTimer);
+});
 </script>
 
 <style lang="sass" scoped>

@@ -1,64 +1,149 @@
 <template>
-  <UForm :schema="schema" :state="state" class="grow space-y-4" @submit="onSubmit">
+  <UForm
+    :schema="schema"
+    :state="state"
+    class="grow space-y-4"
+    @submit="onSubmit"
+  >
     <!-- Honeypot field - hidden from users but visible to bots -->
-    <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
-      style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
+    <input
+      v-model="honeypot"
+      type="text"
+      name="website"
+      autocomplete="off"
+      tabindex="-1"
+      aria-hidden="true"
+      style="position: absolute; left: -9999px; width: 1px; height: 1px"
+    />
 
     <UFormField name="description" class="mb-2">
-      <UInput v-model="state.description"
+      <UInput
+        v-model="state.description"
         placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
-        icon="i-lucide-search" class="w-full" :ui="{ trailing: 'pe-1', base: 'text-base h-10' }">
+        icon="i-lucide-search"
+        class="w-full"
+        :ui="{ trailing: 'pe-1', base: 'text-base h-10' }"
+      >
         <template v-if="state.description?.length" #trailing>
-          <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" aria-label="Clear input"
-            @click="state.description = ''" />
+          <UButton
+            color="neutral"
+            variant="link"
+            size="sm"
+            icon="i-lucide-circle-x"
+            aria-label="Clear input"
+            @click="state.description = ''"
+          />
         </template>
       </UInput>
     </UFormField>
 
     <UFormField name="commander" class="mb-2">
       <div class="flex gap-2 items-center">
-        <UInputMenu v-model="state.commander" v-model:search-term="commanderSearchTerm" :items="filteredCommanders"
-          placeholder="Select a commander (optional)..." icon="i-lucide-crown" class="flex-1"
-          :ui="{ base: 'text-base h-10' }" />
-        <UButton v-if="state.commander" class="cursor-pointer" color="neutral" variant="link" size="sm"
-          icon="i-lucide-circle-x" aria-label="Clear commander" @click="state.commander = ''" />
+        <UInputMenu
+          v-model="state.commander"
+          v-model:search-term="commanderSearchTerm"
+          :items="filteredCommanders"
+          placeholder="Select a commander (optional)..."
+          icon="i-lucide-crown"
+          class="flex-1"
+          :ui="{ base: 'text-base h-10' }"
+        />
+        <UButton
+          v-if="state.commander"
+          class="cursor-pointer"
+          color="neutral"
+          variant="link"
+          size="sm"
+          icon="i-lucide-circle-x"
+          aria-label="Clear commander"
+          @click="state.commander = ''"
+        />
       </div>
     </UFormField>
 
     <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
       <div class="flex gap-2 items-center">
-        <UInputMenu v-model="state.partnerCommander" v-model:search-term="partnerSearchTerm" :items="filteredPartners"
-          placeholder="Select a partner commander (optional)..." icon="i-lucide-crown" class="flex-1"
-          :ui="{ base: 'text-base h-10' }" />
-        <UButton v-if="state.partnerCommander" color="neutral" variant="link" size="sm" icon="i-lucide-circle-x"
-          aria-label="Clear partner commander" @click="state.partnerCommander = ''" />
+        <UInputMenu
+          v-model="state.partnerCommander"
+          v-model:search-term="partnerSearchTerm"
+          :items="filteredPartners"
+          placeholder="Select a partner commander (optional)..."
+          icon="i-lucide-crown"
+          class="flex-1"
+          :ui="{ base: 'text-base h-10' }"
+        />
+        <UButton
+          v-if="state.partnerCommander"
+          color="neutral"
+          variant="link"
+          size="sm"
+          icon="i-lucide-circle-x"
+          aria-label="Clear partner commander"
+          @click="state.partnerCommander = ''"
+        />
       </div>
     </UFormField>
 
     <UFormField name="limit" class="mb-2">
-      <UInput v-model.number="state.limit" type="number" inputmode="numeric" pattern="[0-9]*" :min="1" :max="1000"
-        placeholder="Results limit (default: 99, max: 500)" icon="i-lucide-hash" class="w-full"
-        :ui="{ base: 'text-base h-10' }" @keydown="filterNonNumericKeys" />
+      <UInput
+        v-model.number="state.limit"
+        type="number"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        :min="1"
+        :max="1000"
+        placeholder="Results limit (default: 99, max: 500)"
+        icon="i-lucide-hash"
+        class="w-full"
+        :ui="{ base: 'text-base h-10' }"
+        @keydown="filterNonNumericKeys"
+      />
     </UFormField>
 
     <UFormField name="decklist">
       <div class="relative">
-        <UTextarea v-model="state.decklist" placeholder="Paste your decklist here (one card per line)..." :rows="6"
-          autoresize class="w-full" :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }" autocomplete="off" />
-        <UButton v-if="onSaveToDeck && hasCards" icon="i-lucide-list-plus" color="primary" variant="soft" size="xs"
-          label="Save All to Deck" class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
-          @click="onSaveToDeck" />
+        <UTextarea
+          v-model="state.decklist"
+          placeholder="Paste your decklist here (one card per line)..."
+          :rows="6"
+          autoresize
+          class="w-full"
+          :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }"
+          autocomplete="off"
+        />
+        <UButton
+          v-if="onSaveToDeck && hasCards"
+          icon="i-lucide-list-plus"
+          color="primary"
+          variant="soft"
+          size="xs"
+          label="Save All to Deck"
+          class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
+          @click="onSaveToDeck"
+        />
       </div>
     </UFormField>
 
     <QuickFilters v-model="state.filters" :show="['arena', 'mtgo', 'paper']" />
 
-    <Filters v-if="!showFilters" ref="filtersRef" v-model="state.filters" hide-controls hide-formats />
+    <Filters
+      v-if="!showFilters"
+      ref="filtersRef"
+      v-model="state.filters"
+      hide-controls
+      hide-formats
+    />
 
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton class="cursor-pointer" @click="showFilters = true" variant="ghost" size="sm"
-          icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
+        <UButton
+          class="cursor-pointer"
+          @click="showFilters = true"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-sliders-horizontal"
+          aria-label="Show advanced search filters"
+        >
           Show Advanced Filters
         </UButton>
       </UTooltip>
@@ -70,8 +155,14 @@
       </UFormField>
       <template #footer>
         <div class="flex items-center justify-center">
-          <UButton class="cursor-pointer" @click="hideFilters" variant="ghost" size="sm" icon="i-lucide-eye-off"
-            color="neutral">
+          <UButton
+            class="cursor-pointer"
+            @click="hideFilters"
+            variant="ghost"
+            size="sm"
+            icon="i-lucide-eye-off"
+            color="neutral"
+          >
             Hide Advanced Filters
           </UButton>
         </div>
@@ -79,8 +170,12 @@
     </UCard>
 
     <div class="flex justify-center">
-      <UButton icon="i-lucide-box" :disabled="!state.decklist?.trim() && !state.commander?.trim()" type="submit"
-        class="cursor-pointer h-10">
+      <UButton
+        icon="i-lucide-box"
+        :disabled="!state.decklist?.trim() && !state.commander?.trim()"
+        type="submit"
+        class="cursor-pointer h-10"
+      >
         Recommend
       </UButton>
     </div>
@@ -88,28 +183,36 @@
 </template>
 
 <script lang="ts" setup>
-import * as z from 'zod'
+import * as z from 'zod';
 import { useRoute } from 'vue-router';
 import { refDebounced } from '@vueuse/core';
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import { CardSearchFiltersSchema } from '~/models/searchModel'
-import type { Platform } from '~/utils/platformConfig'
-import { useDeckbuilder } from '~/composables/useDeckbuilder'
-import Filters from './Filters.vue'
+import { CardSearchFiltersSchema } from '~/models/searchModel';
+import type { Platform } from '~/utils/platformConfig';
+import { useDeckbuilder } from '~/composables/useDeckbuilder';
+import Filters from './Filters.vue';
 
 const props = defineProps<{
-  platform?: 'arena' | 'mtgo' | 'paper'
-}>()
+  platform?: 'arena' | 'mtgo' | 'paper';
+}>();
 
 const deckbuilderStore = useDeckbuilder();
 
 const router = useRouter();
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent } from '@nuxt/ui';
 
 const { getPath, getPlatformFromPath } = useSearchType();
 
-const allowedKeys = new Set(['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End']);
+const allowedKeys = new Set([
+  'Backspace',
+  'Delete',
+  'Tab',
+  'ArrowLeft',
+  'ArrowRight',
+  'Home',
+  'End',
+]);
 function filterNonNumericKeys(e: KeyboardEvent) {
   if (allowedKeys.has(e.key) || e.ctrlKey || e.metaKey) return;
   if (!/^\d$/.test(e.key)) e.preventDefault();
@@ -121,20 +224,32 @@ const schema = z.object({
   description: z.string().optional(),
   commander: z.string().optional(),
   partnerCommander: z.string().optional(),
-  limit: z.union([
-    z.number().refine(v => !isNaN(v), { message: 'Must be a valid number' }).pipe(z.number().min(1).max(500)),
-    z.literal(''),
-  ]).optional().transform(v => (typeof v === 'number' && !isNaN(v) ? v : undefined)),
+  limit: z
+    .union([
+      z
+        .number()
+        .refine((v) => !isNaN(v), { message: 'Must be a valid number' })
+        .pipe(z.number().min(1).max(500)),
+      z.literal(''),
+    ])
+    .optional()
+    .transform((v) => (typeof v === 'number' && !isNaN(v) ? v : undefined)),
   decklist: z.string().optional(),
   filters: CardSearchFiltersSchema.optional(),
-})
+});
 
-type Schema = z.output<typeof schema>
+type Schema = z.output<typeof schema>;
 
 const route = useRoute();
 
 const isOnDeckbuilderPage = computed(() => route.path.includes('/deckbuilder'));
-const onSaveToDeck = computed(() => isOnDeckbuilderPage.value ? () => { deckbuilderStore.showSaveAllModal.value = true } : null);
+const onSaveToDeck = computed(() =>
+  isOnDeckbuilderPage.value
+    ? () => {
+        deckbuilderStore.showSaveAllModal.value = true;
+      }
+    : null,
+);
 
 const currentPlatform = computed(() => {
   if (route.params.platform) return String(route.params.platform);
@@ -144,21 +259,27 @@ const currentPlatform = computed(() => {
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
 const commanderParam = computed(() => String(route.query.commander || ''));
-const partnerCommanderParam = computed(() => String(route.query.partnerCommander || ''));
+const partnerCommanderParam = computed(() =>
+  String(route.query.partnerCommander || ''),
+);
 const limitParam = computed(() => {
   const raw = Number(route.query.limit);
   return raw > 0 ? raw : undefined;
 });
 
-import { hasAdvancedFilters } from '~/utils/quickFilters'
+import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = { selectedColorFilterOption: 'Color Identity' as 'Color Identity' };
+  const base: Record<string, any> = {
+    selectedColorFilterOption: 'Color Identity' as 'Color Identity',
+  };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
   if (route.query.filters) {
-    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    return CardSearchFiltersSchema.parse(
+      JSON.parse(String(route.query.filters)),
+    );
   }
   return base;
 });
@@ -174,18 +295,29 @@ const state = reactive<Partial<Schema>>({
   partnerCommander: partnerCommanderParam.value || '',
   limit: limitParam.value,
   decklist: decklistParam.value || '',
-  filters: parsedFilters.value || { 'selectedColorFilterOption': 'Color Identity' },
-})
+  filters: parsedFilters.value || {
+    selectedColorFilterOption: 'Color Identity',
+  },
+});
 
-const hasCards = computed(() => !!state.decklist?.trim() || !!state.commander?.trim())
+const hasCards = computed(
+  () => !!state.decklist?.trim() || !!state.commander?.trim(),
+);
 
 // Two-way sync between local textarea state and the deckbuilder store
-watch(() => deckbuilderStore.decklist.value, (newVal) => {
-  if (newVal !== state.decklist) state.decklist = newVal;
-});
-watch(() => state.decklist, (newVal) => {
-  if (newVal !== undefined && newVal !== deckbuilderStore.decklist.value) deckbuilderStore.decklist.value = newVal;
-});
+watch(
+  () => deckbuilderStore.decklist.value,
+  (newVal) => {
+    if (newVal !== state.decklist) state.decklist = newVal;
+  },
+);
+watch(
+  () => state.decklist,
+  (newVal) => {
+    if (newVal !== undefined && newVal !== deckbuilderStore.decklist.value)
+      deckbuilderStore.decklist.value = newVal;
+  },
+);
 
 // Commander autocomplete
 const commanderSearchTerm = ref('');
@@ -193,10 +325,15 @@ const debouncedCommanderSearch = refDebounced(commanderSearchTerm, 150);
 
 const { data: rawCommanders, status: commanderQueryStatus } = useCommanders();
 const { data: partnerCommanders } = usePartnerCommanders();
-const commanderStatus = computed(() => commanderQueryStatus.value === 'pending' ? 'pending' : 'success');
+const commanderStatus = computed(() =>
+  commanderQueryStatus.value === 'pending' ? 'pending' : 'success',
+);
 
 const filteredCommanders = computed(() => {
-  if (!debouncedCommanderSearch.value || debouncedCommanderSearch.value.length < 2) {
+  if (
+    !debouncedCommanderSearch.value ||
+    debouncedCommanderSearch.value.length < 2
+  ) {
     if (state.commander) {
       return [state.commander];
     }
@@ -215,76 +352,97 @@ const filteredCommanders = computed(() => {
     }
   }
   return filtered;
-})
+});
 
 // Partner commander logic
 const partnerSearchTerm = ref('');
 const debouncedPartnerSearch = refDebounced(partnerSearchTerm, 150);
 
 const selectedCommanderPartnerType = computed(() => {
-  if (!state.commander || !partnerCommanders.value) return null
-  return getPartnerType(state.commander, partnerCommanders.value)
-})
+  if (!state.commander || !partnerCommanders.value) return null;
+  return getPartnerType(state.commander, partnerCommanders.value);
+});
 
-const showPartnerField = computed(() => !!selectedCommanderPartnerType.value)
+const showPartnerField = computed(() => !!selectedCommanderPartnerType.value);
 
 const validPartnerList = computed(() => {
-  if (!partnerCommanders.value || !selectedCommanderPartnerType.value) return []
-  return getValidPartners(selectedCommanderPartnerType.value, partnerCommanders.value)
-})
+  if (!partnerCommanders.value || !selectedCommanderPartnerType.value)
+    return [];
+  return getValidPartners(
+    selectedCommanderPartnerType.value,
+    partnerCommanders.value,
+  );
+});
 
 const filteredPartners = computed(() => {
-  if (!debouncedPartnerSearch.value || debouncedPartnerSearch.value.length < 2) {
-    if (state.partnerCommander) return [state.partnerCommander]
-    return []
+  if (
+    !debouncedPartnerSearch.value ||
+    debouncedPartnerSearch.value.length < 2
+  ) {
+    if (state.partnerCommander) return [state.partnerCommander];
+    return [];
   }
-  const searchLower = debouncedPartnerSearch.value.toLowerCase()
-  const filtered: string[] = []
-  if (state.partnerCommander) filtered.push(state.partnerCommander)
+  const searchLower = debouncedPartnerSearch.value.toLowerCase();
+  const filtered: string[] = [];
+  if (state.partnerCommander) filtered.push(state.partnerCommander);
   for (const cmd of validPartnerList.value) {
-    if (filtered.length >= 100) break
-    if (cmd !== state.commander && cmd !== state.partnerCommander && cmd.toLowerCase().includes(searchLower)) {
-      filtered.push(cmd)
+    if (filtered.length >= 100) break;
+    if (
+      cmd !== state.commander &&
+      cmd !== state.partnerCommander &&
+      cmd.toLowerCase().includes(searchLower)
+    ) {
+      filtered.push(cmd);
     }
   }
-  return filtered
-})
+  return filtered;
+});
 
 // Clear partner when commander changes
-watch(() => state.commander, () => {
-  state.partnerCommander = ''
-  partnerSearchTerm.value = ''
-})
+watch(
+  () => state.commander,
+  () => {
+    state.partnerCommander = '';
+    partnerSearchTerm.value = '';
+  },
+);
 
 // Honeypot field for bot detection
-const honeypot = ref('')
+const honeypot = ref('');
 
-const toast = useToast()
-const { saveSearchMutation } = useSearchHistory()
+const toast = useToast();
+const { saveSearchMutation } = useSearchHistory();
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Bot detection: if honeypot field is filled, reject the submission
   if (honeypot.value) {
     toast.add({
       title: 'Invalid submission',
-      color: 'error'
+      color: 'error',
     });
     return;
   }
 
   try {
-    const requestFilters = { ...event.data.filters } // shallow copy
+    const requestFilters = { ...event.data.filters }; // shallow copy
 
     // Only modify the copy, NEVER the form state
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
-      delete requestFilters.selectedColors
-      delete requestFilters.selectedColorFilterOption
+    if (
+      !event.data.filters?.selectedColors ||
+      event.data.filters?.selectedColors.length === 0
+    ) {
+      delete requestFilters.selectedColors;
+      delete requestFilters.selectedColorFilterOption;
     }
 
     // Remove undefined/null/empty values from filters
-    Object.keys(requestFilters).forEach(key => {
+    Object.keys(requestFilters).forEach((key) => {
       const value = requestFilters[key as keyof typeof requestFilters];
-      if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+      if (
+        value === undefined ||
+        value === null ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         delete requestFilters[key as keyof typeof requestFilters];
       }
     });
@@ -295,7 +453,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       commander: event.data.commander || undefined,
       partnerCommander: event.data.partnerCommander || undefined,
       limit: event.data.limit || undefined,
-      filters: requestFilters && Object.keys(requestFilters).length > 0 ? JSON.stringify(requestFilters) : undefined,
+      filters:
+        requestFilters && Object.keys(requestFilters).length > 0
+          ? JSON.stringify(requestFilters)
+          : undefined,
       searchType: 'recommend',
     };
 
@@ -312,15 +473,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
 
     filtersRef.value?.collapse();
-    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
+    const targetPlatform = detectPlatformFromFilters(
+      requestFilters,
+      currentPlatform.value as Platform,
+    );
     router.push({ path: getPath('recommend', targetPlatform), query });
   } catch (error) {
-    console.error('Form submission error:', error)
+    console.error('Form submission error:', error);
     toast.add({
       title: 'Error',
       description: 'Failed to submit form',
-      color: 'error'
-    })
+      color: 'error',
+    });
   }
 }
 

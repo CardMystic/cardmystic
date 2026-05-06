@@ -1,20 +1,31 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full pt-4 flex flex-col items-center">
-      <StatsSearch default-stats-type="popular-cards" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
+      <StatsSearch
+        default-stats-type="popular-cards"
+        :platform="searchPlatformProp"
+        class="mt-6 max-w-5xl"
+      />
 
       <SearchAbout type="popular-cards" />
 
       <!-- Results -->
       <div class="mb-10 w-full">
-        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="queryParam || 'top'"
+        <SearchResults
+          :is-loading="isLoading"
+          :search-results="searchResults"
+          :query-param="queryParam || 'top'"
           :error-message="searchError?.message"
           :help-text="`Showing the most popular ${platformName} cards across all decks.`"
-          :hide-thumbs-down-button="true" />
+          :hide-thumbs-down-button="true"
+        />
       </div>
     </div>
   </UContainer>
-  <IssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
+  <IssuesFab
+    v-if="searchResults && searchResults.length"
+    :onClick="handleFabClick"
+  />
   <BackToTop />
 </template>
 
@@ -25,7 +36,13 @@ import { CardSearchFiltersSchema } from '~/models/searchModel';
 import { TopCardsSearchSchema } from '~/models/deckStatsModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useTopCardsSearch } from '~/composables/useDeckStats';
-import { isValidPlatform, getPlatformFilters, getSearchPlatformProp, getPlatformDisplayName, type Platform } from '~/utils/platformConfig';
+import {
+  isValidPlatform,
+  getPlatformFilters,
+  getSearchPlatformProp,
+  getPlatformDisplayName,
+  type Platform,
+} from '~/utils/platformConfig';
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
@@ -40,31 +57,40 @@ const searchPlatformProp = getSearchPlatformProp(platform);
 const queryParam = computed(() => String(route.query?.query || ''));
 
 useSeoMeta({
-  robots: () => queryParam.value ? 'noindex, follow' : 'index, follow',
-  title: () => queryParam.value
-    ? `${queryParam.value} - ${platformName} Popular Commander Cards | CardMystic`
-    : `${platformName} Popular Commander Cards | CardMystic`,
-  description: () => queryParam.value
-    ? `Top ${platformName} cards re-ranked by "${queryParam.value}".`
-    : `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
+  robots: () => (queryParam.value ? 'noindex, follow' : 'index, follow'),
+  title: () =>
+    queryParam.value
+      ? `${queryParam.value} - ${platformName} Popular Commander Cards | CardMystic`
+      : `${platformName} Popular Commander Cards | CardMystic`,
+  description: () =>
+    queryParam.value
+      ? `Top ${platformName} cards re-ranked by "${queryParam.value}".`
+      : `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   ogType: 'website',
   ogTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
-  ogDescription: () => `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
+  ogDescription: () =>
+    `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => `${platformName} Popular Commander Cards`,
   twitterCard: 'summary_large_image',
   twitterTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
-  twitterDescription: () => `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
+  twitterDescription: () =>
+    `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'Popular Commander Cards' });
 
-const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : 100; });
+const limitParam = computed(() => {
+  const n = Number(route.query?.limit);
+  return n > 0 ? n : 100;
+});
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
-    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
+    return CardSearchFiltersSchema.parse(
+      JSON.parse(String(route.query.filters)),
+    );
   }
   return platformFilters;
 });
@@ -90,5 +116,9 @@ const topCardsSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading, error: searchError } = useTopCardsSearch(topCardsSearch);
+const {
+  searchResults,
+  isLoading,
+  error: searchError,
+} = useTopCardsSearch(topCardsSearch);
 </script>

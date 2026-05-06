@@ -4,9 +4,17 @@
     <ExploreTabs :stats-type="statsType" @select="switchType" />
 
     <div class="search-input-row">
-      <PopularCardsSearch v-if="statsType === 'popular-cards'" :platform="platform" />
-      <PopularCommandersSearch v-else-if="statsType === 'popular-commanders'" :platform="platform" />
-      <PopularByCommanderSearch v-else-if="statsType === 'popular-by-commander'" />
+      <PopularCardsSearch
+        v-if="statsType === 'popular-cards'"
+        :platform="platform"
+      />
+      <PopularCommandersSearch
+        v-else-if="statsType === 'popular-commanders'"
+        :platform="platform"
+      />
+      <PopularByCommanderSearch
+        v-else-if="statsType === 'popular-by-commander'"
+      />
     </div>
   </div>
 </template>
@@ -16,7 +24,10 @@ import PopularCardsSearch from './PopularCardsSearch.vue';
 import PopularCommandersSearch from './PopularCommandersSearch.vue';
 import PopularByCommanderSearch from './PopularByCommanderSearch.vue';
 
-export type StatsType = 'popular-cards' | 'popular-commanders' | 'popular-by-commander';
+export type StatsType =
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander';
 
 const props = defineProps<{
   defaultStatsType?: StatsType;
@@ -48,7 +59,8 @@ onMounted(() => {
   const type = statsType.value;
   const hasQuery =
     (type === 'popular-by-commander' && route.query.commander) ||
-    (type !== 'popular-by-commander' && (route.query.query || route.query.filters));
+    (type !== 'popular-by-commander' &&
+      (route.query.query || route.query.filters));
   if (!hasQuery) {
     const saved = restoreSearchQuery(type);
     if (saved) {
