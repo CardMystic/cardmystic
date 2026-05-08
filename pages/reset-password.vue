@@ -184,8 +184,6 @@ useSeoMeta({
   robots: 'noindex, nofollow',
 });
 
-const supabase = useSupabase();
-
 const email = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
@@ -213,11 +211,14 @@ onMounted(() => {
     return;
   }
 
-  // Listen for the PASSWORD_RECOVERY event from Supabase
-  supabase.auth.onAuthStateChange((event) => {
-    if (event === 'PASSWORD_RECOVERY') {
-      isRecoverySession.value = true;
-    }
+  // Listen for the PASSWORD_RECOVERY event from Supabase. Supabase is
+  // dynamically imported, so resolve the client first.
+  void useSupabase().then((supabase) => {
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        isRecoverySession.value = true;
+      }
+    });
   });
 });
 
@@ -227,6 +228,7 @@ const sendResetEmail = async () => {
   if (honeypot.value) return;
   loading.value = true;
 
+  const supabase = await useSupabase();
   const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
     redirectTo: `${window.location.origin}/reset-password`,
   });
@@ -259,6 +261,7 @@ const submitNewPassword = async () => {
   loading.value = true;
 
   try {
+    const supabase = await useSupabase();
     const { error } = await supabase.auth.updateUser({
       password: newPassword.value,
     });

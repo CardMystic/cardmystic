@@ -5,10 +5,21 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 let authListenerInitialized = false;
 // Suppress user queries during password-recovery so the navbar shows "Login"
 let inPasswordRecovery = false;
+// Gate the user/profile queries until something (the deferred auth
+// plugin, a login form, etc.) has actually wired up the auth listener.
+// This keeps the (large, dynamically-imported) Supabase SDK off the
+// initial page load on unauthenticated visits.
+const authReady = ref(false);
 
 export const useUserProfile = () => {
-  // Only initialize Supabase on client side
-  const supabase = process.server ? null : useSupabase();
+  // `useSupabase()` is now async and dynamically imports the Supabase
+  // SDK to keep it out of the entry chunk. We never grab the client at
+  // setup time — every consumer awaits `getSupabase()` inside an async
+  // function so the import only fires on real auth interactions.
+  const getSupabase = () => {
+    if (import.meta.server) return Promise.resolve(null);
+    return useSupabase();
+  };
   const queryClient = useQueryClient();
   const config = useRuntimeConfig();
 
@@ -35,6 +46,7 @@ export const useUserProfile = () => {
   } = useQuery({
     queryKey: ['user'],
     queryFn: async () => {
+      const supabase = await getSupabase();
       if (!supabase) return null;
       // During password recovery the session is valid but the user should
       // not appear logged-in in the UI (navbar should show "Login").
@@ -54,7 +66,7 @@ export const useUserProfile = () => {
       }
       return user;
     },
-    enabled: !process.server && !!supabase,
+    enabled: computed(() => !import.meta.server && authReady.value),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -65,6 +77,7 @@ export const useUserProfile = () => {
   const { data: profileData, refetch: fetchProfileData } = useQuery({
     queryKey: ['profile', userId],
     queryFn: async () => {
+      const supabase = await getSupabase();
       if (!supabase || !userId.value) return null;
 
       const { data, error } = await supabase
@@ -79,11 +92,14 @@ export const useUserProfile = () => {
       }
       return data;
     },
-    enabled: computed(() => !process.server && !!supabase && !!userId.value),
+    enabled: computed(
+      () => !import.meta.server && authReady.value && !!userId.value,
+    ),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const signOut = async () => {
+    const supabase = await getSupabase();
     if (!supabase) return;
 
     try {
@@ -110,6 +126,7 @@ export const useUserProfile = () => {
 
   const updateAvatarMutation = useMutation({
     mutationFn: async (cardName: string) => {
+      const supabase = await getSupabase();
       if (!supabase || !userProfile.value?.id) {
         throw new Error('Invalid card name or user not logged in');
       }
@@ -126,6 +143,7 @@ export const useUserProfile = () => {
 
   const updateUsernameMutation = useMutation({
     mutationFn: async (username: string) => {
+      const supabase = await getSupabase();
       if (!supabase || !username.trim()) {
         throw new Error('Username cannot be empty');
       }
@@ -138,6 +156,7 @@ export const useUserProfile = () => {
   });
 
   const pingActivity = async () => {
+    const supabase = await getSupabase();
     if (!supabase) return;
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
@@ -165,6 +184,7 @@ export const useUserProfile = () => {
 
   const updateEmailMutation = useMutation({
     mutationFn: async (newEmail: string) => {
+      const supabase = await getSupabase();
       if (!supabase) throw new Error('Not available on server');
 
       const { error } = await supabase.auth.updateUser({ email: newEmail });
@@ -177,6 +197,7 @@ export const useUserProfile = () => {
 
   const updatePasswordMutation = useMutation({
     mutationFn: async (newPassword: string) => {
+      const supabase = await getSupabase();
       if (!supabase) throw new Error('Not available on server');
 
       const { data: sessionData } = await supabase.auth.getSession();
@@ -215,10 +236,16 @@ export const useUserProfile = () => {
   });
 
   // Listen to auth state changes - only initialize once globally
-  const initAuthListener = () => {
+  const initAuthListener = async () => {
+    if (import.meta.server || authListenerInitialized) return;
+    const supabase = await getSupabase();
     if (!supabase || authListenerInitialized) return;
 
     authListenerInitialized = true;
+    // Flip the gate so the user/profile queries can run. The first run
+    // will hit `supabase.auth.getUser()`, which uses the persisted
+    // session in localStorage to figure out who (if anyone) is logged in.
+    authReady.value = true;
 
     const {
       data: { subscription },

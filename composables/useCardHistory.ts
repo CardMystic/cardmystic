@@ -7,7 +7,8 @@ import { computed } from 'vue';
 type CardHistoryInsert = Database['public']['Tables']['card_history']['Insert'];
 
 export const useCardHistory = () => {
-  const supabase = process.server ? null : useSupabase();
+  const getSupabase = async () =>
+    import.meta.server ? null : await useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
 
@@ -20,6 +21,7 @@ export const useCardHistory = () => {
   } = useQuery({
     queryKey: ['card-history', computed(() => userProfile.value?.id)],
     queryFn: async () => {
+      const supabase = await getSupabase();
       if (!supabase) return [];
       if (!userProfile.value?.id) {
         throw new Error('User not authenticated');
@@ -39,6 +41,7 @@ export const useCardHistory = () => {
   });
 
   const saveCardView = async (cardId: string) => {
+    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -56,7 +59,6 @@ export const useCardHistory = () => {
 
   const saveCardViewMutation = useMutation({
     mutationFn: async (cardId: string) => {
-      if (!supabase) return;
       return saveCardView(cardId);
     },
     onSuccess: () => {
@@ -65,6 +67,7 @@ export const useCardHistory = () => {
   });
 
   const clearAllHistory = async () => {
+    const supabase = await getSupabase();
     if (!supabase) return [];
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -80,7 +83,6 @@ export const useCardHistory = () => {
 
   const clearAllHistoryMutation = useMutation({
     mutationFn: async () => {
-      if (!supabase) return;
       return clearAllHistory();
     },
     onSuccess: () => {
