@@ -136,7 +136,6 @@
     <LazyMeetTheDevs class="mb-10" />
     <LazySponsorships class="mb-10" />
     <LazyJoinUs class="mb-10" />
-    <LazyProductPromotionButtons />
   </UContainer>
 </template>
 
