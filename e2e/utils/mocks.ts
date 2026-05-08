@@ -83,10 +83,11 @@ export const fakeJwt = (sub = FAKE_USER.id) => {
  * without loading Google's script. The backend's `/recaptcha/verify`
  * accepts the fake token when called with the test bypass header.
  *
- * The recaptcha.client plugin injects `<script src="...recaptcha/api.js">`
- * via useHead which would overwrite `window.grecaptcha` once loaded, so
- * we also block all requests to Google's reCAPTCHA endpoints to keep
- * our stub authoritative.
+ * `useRecaptcha` lazy-injects `<script src="...recaptcha/api.js">` on
+ * first call (no eager Nuxt plugin anymore), and that real script
+ * would overwrite `window.grecaptcha` once loaded, so we also block
+ * all requests to Google's reCAPTCHA endpoints to keep our stub
+ * authoritative.
  */
 export const stubRecaptcha = async (page: Page) => {
   await page.addInitScript(() => {
