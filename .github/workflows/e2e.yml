@@ -136,11 +136,3 @@ jobs:
           name: playwright-traces-${{ matrix.project }}
           path: test-results/
           retention-days: 7
-
-      - name: Upload Lighthouse reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lighthouse-report-${{ matrix.project }}
-          path: lighthouse-report/
-          retention-days: 14

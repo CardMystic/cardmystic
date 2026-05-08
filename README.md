@@ -217,13 +217,6 @@ pnpm exec playwright test --project=chromium -g "Logout"   # filter by name
 
 The Playwright config (`playwright.config.ts`) auto-loads `.env.test` via `dotenv` and starts the dev server itself. Reports land in `playwright-report/`; failure traces in `test-results/`.
 
-**Accessibility & performance scans**
-
-Two extra suites run alongside the regular E2E specs:
-
-- [`e2e/a11y.spec.ts`](e2e/a11y.spec.ts) — runs [Axe](https://github.com/dequelabs/axe-core) against the homepage, AI search landing, about, and privacy pages. **Critical-impact violations fail the build** (the hard accessibility gate). `serious`/`moderate`/`minor` issues are surfaced via console output but don't block — they're tracked for incremental cleanup. To tighten the gate, edit `GATING_IMPACTS` in the spec.
-- [`e2e/lighthouse.spec.ts`](e2e/lighthouse.spec.ts) — runs Lighthouse on the same pages. **Informational only** (thresholds = 0); reports are written to `lighthouse-report/` and uploaded as a CI artifact for tracking scores over time.
-
 **Pointing at a different backend**
 
 Override `NUXT_PUBLIC_BACKEND_URL` in `.env.test` to hit prod (`https://api.cardmystic.com`) or a local backend (`http://localhost:3000`). For local backend runs you'll usually also override `NUXT_PUBLIC_SUPABASE_URL` to a local Supabase instance.
@@ -273,10 +266,6 @@ A module-level `authReady` ref in [composables/useUserProfile.ts](composables/us
 ### Image lazy-loading
 
 Below-the-fold homepage `<img>` tags (`ProductPromotionButton`, `MeetTheDevs`, `Sponsorships`) use `loading="lazy" decoding="async"` plus explicit `width`/`height` so the browser can defer decode and avoid layout shift.
-
-### Lighthouse CI
-
-[`e2e/lighthouse.spec.ts`](e2e/lighthouse.spec.ts) runs Lighthouse against the production build on every CI run. Reports are saved under `lighthouse-report/` and uploaded as a CI artifact. Thresholds are 0 (informational only) — use the JSON summaries to track regressions over time. Each run uses a **fresh browser context with empty localStorage**, so it exercises the "no session" code path described above (the Supabase chunk should not appear in the homepage waterfall).
 
 ## Maintenance Mode
 

@@ -8,7 +8,7 @@ import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
  *   - `large`  →  672 × 936  (~160–400 kB) hovered preview / detail page
  *
  * Picking the right variant is the single biggest win for homepage
- * Lighthouse — eleven `normal` thumbnails ≈ 1.4 MB, while eleven
+ * page weight — eleven `normal` thumbnails ≈ 1.4 MB, while eleven
  * `small` thumbnails ≈ 200 kB.
  */
 export type CardImageSize = 'small' | 'normal' | 'large';

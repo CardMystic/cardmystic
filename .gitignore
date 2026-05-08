@@ -34,4 +34,3 @@ CLAUDE.md
 /playwright/.cache/
 /blob-report/
 /e2e/.auth/
-/lighthouse-report/

@@ -190,7 +190,7 @@ useHead({
     {
       rel: 'preload',
       as: 'image',
-      href: '/ulamog.webp',
+      href: '/kaalia.webp',
       type: 'image/webp',
       fetchpriority: 'high',
     },
@@ -221,7 +221,7 @@ const heroCards = [
     id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
     name: 'Ugin, the Spirit Dragon',
     image: '/ugin.webp',
-    position: 'card-right',
+    position: 'card-left',
   },
   {
     id: '10d42b35-844f-4a64-9981-c6118d45e826',
@@ -230,10 +230,10 @@ const heroCards = [
     position: 'card-center',
   },
   {
-    id: '9464a820-65de-44f2-9895-46a35e8621a0',
-    name: 'Ulamog, the Infinite Gyre',
-    image: '/ulamog.webp',
-    position: 'card-left',
+    id: 'e71c8c39-3fbb-4a42-9cf6-b3224f5a56fc',
+    name: 'Kaalia of the Vast',
+    image: '/kaalia.webp',
+    position: 'card-right',
   },
 ];
 

@@ -6,7 +6,7 @@ export const useRecaptcha = () => {
   // rather than loading it eagerly on every page from a Nuxt plugin.
   // The Google script is ~365kB transfer + ~800ms of bootup time, but
   // it's only used on the login + register flows, so loading it up
-  // front trashes Lighthouse performance scores on every other page.
+  // front would tax every other page for no benefit.
   let scriptLoadingPromise: Promise<void> | null = null;
   const ensureRecaptchaLoaded = (): Promise<void> => {
     if (typeof window === 'undefined') {
