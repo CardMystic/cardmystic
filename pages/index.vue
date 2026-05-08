@@ -32,17 +32,30 @@
       <div
         class="explore-spacer mb-4 flex flex-col items-center gap-1 text-black"
       >
-        <!-- Fanned cards at bottom -->
+        <!-- Fanned cards at bottom. Self-hosted WebPs (~40 kB each) are
+             much smaller than the equivalent Scryfall `normal` JPGs
+             (~100 kB each) and don't add cross-origin DNS/connect time
+             to LCP. Sized at the 2× DPR of their CSS box (180 × 251) so
+             they look crisp on retina without wasted bytes. -->
         <div class="bottom-cards">
-          <div v-if="heroCards[0]" class="card-wrapper card-left">
-            <LazyCardSimple :card="heroCards[0]" size="small" />
-          </div>
-          <div v-if="heroCards[1]" class="card-wrapper card-center">
-            <LazyCardSimple :card="heroCards[1]" size="small" />
-          </div>
-          <div v-if="heroCards[2]" class="card-wrapper card-right">
-            <LazyCardSimple :card="heroCards[2]" size="small" />
-          </div>
+          <NuxtLink
+            v-for="card in heroCards"
+            :key="card.id"
+            :to="`/card/${card.id}`"
+            class="card-wrapper"
+            :class="card.position"
+          >
+            <img
+              :src="card.image"
+              :alt="card.name"
+              width="360"
+              height="502"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              class="hero-card-img"
+            />
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -157,6 +170,30 @@ useHead({
       type: 'image/webp',
       fetchpriority: 'high',
     },
+    // Preload the three hero card images so the browser can fetch them
+    // in parallel with the HTML document instead of waiting for the
+    // `<img>` tags to be discovered during render.
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/ugin.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/ur-dragon.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/ulamog.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
   ],
   script: [
     {
@@ -166,7 +203,6 @@ useHead({
   ],
 });
 
-import type { Card as CardType } from '~/models/cardModel';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSearchType } from '~/composables/useSearchType';
 // Use search type composable to check if AI search is active
@@ -176,40 +212,28 @@ const { isAiSearch } = useSearchType();
 const { userProfile } = useUserProfile();
 const isLoggedIn = computed(() => !!userProfile.value);
 
-// Hardcoded hero cards
-const heroCards: CardType[] = [
+// Hardcoded hero cards. Each renders as a fanned-out image link to its
+// card detail page. Images are self-hosted WebPs (~40 kB each, 360×502
+// — exactly 2× the desktop CSS slot of 180×251) so they don't pull
+// from scryfall.io on the most-visited page.
+const heroCards = [
   {
-    card_name: 'Ugin, the Spirit Dragon',
-    card_data: {
-      id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
-      name: 'Ugin, the Spirit Dragon',
-      image_uris: {
-        normal:
-          'https://cards.scryfall.io/normal/front/1/b/1bacda35-bb91-4537-a14d-846650fa85f6.jpg?1594157535',
-      },
-    } as any,
+    id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
+    name: 'Ugin, the Spirit Dragon',
+    image: '/ugin.webp',
+    position: 'card-right',
   },
   {
-    card_name: 'The Ur-Dragon',
-    card_data: {
-      id: '10d42b35-844f-4a64-9981-c6118d45e826',
-      name: 'The Ur-Dragon',
-      image_uris: {
-        normal:
-          'https://cards.scryfall.io/normal/front/6/2/6270c798-a3ba-4826-b0a9-82f7e12890f6.jpg?1719466632',
-      },
-    } as any,
+    id: '10d42b35-844f-4a64-9981-c6118d45e826',
+    name: 'The Ur-Dragon',
+    image: '/ur-dragon.webp',
+    position: 'card-center',
   },
   {
-    card_name: 'Teferi, Time Raveler',
-    card_data: {
-      id: '662fe50f-d75c-422c-8c6c-1f9b5c4ba21f',
-      name: 'Teferi, Time Raveler',
-      image_uris: {
-        normal:
-          'https://cards.scryfall.io/normal/front/5/a/5a47d968-bba0-4277-b5d7-eb9e1acd7953.jpg?1731704855',
-      },
-    } as any,
+    id: '9464a820-65de-44f2-9895-46a35e8621a0',
+    name: 'Ulamog, the Infinite Gyre',
+    image: '/ulamog.webp',
+    position: 'card-left',
   },
 ];
 
@@ -282,8 +306,25 @@ setPageInfo({
 .card-wrapper
   position: absolute
   width: 180px
+  cursor: pointer
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
   @media (max-width: 768px)
     width: 105px
+
+.card-wrapper:hover
+  z-index: 10
+
+.hero-card-img
+  width: 100%
+  height: auto
+  aspect-ratio: 360/502
+  object-fit: cover
+  border-radius: 8px
+  display: block
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+
+.card-wrapper:hover .hero-card-img
+  transform: scale(1.08)
 
 .card-left
   transform: rotate(-15deg) translateX(-100px)

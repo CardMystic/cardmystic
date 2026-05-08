@@ -51,10 +51,14 @@
           >
             <img
               class="card-large cursor-pointer"
-              :src="getCardImageUrl(card.partner_card_data!)"
+              :src="
+                getCardImageUrl(card.partner_card_data!, false, scryfallSize)
+              "
               :alt="card.partner_card_data!.name"
               @error="handleImageError"
-              v-if="getCardImageUrl(card.partner_card_data!)"
+              v-if="
+                getCardImageUrl(card.partner_card_data!, false, scryfallSize)
+              "
               loading="lazy"
               decoding="async"
             />
@@ -70,10 +74,10 @@
           >
             <img
               class="card-large cursor-pointer"
-              :src="getCardImageUrl(card.card_data, isFlipped)"
+              :src="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
               :alt="card.card_data.name"
               @error="handleImageError"
-              v-if="getCardImageUrl(card.card_data, isFlipped)"
+              v-if="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
               loading="lazy"
               decoding="async"
             />
@@ -85,10 +89,10 @@
       <template v-else>
         <img
           :class="sizeClass"
-          :src="getCardImageUrl(card.card_data, isFlipped)"
+          :src="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
           :alt="card.card_data.name"
           @error="handleImageError"
-          v-if="getCardImageUrl(card.card_data, isFlipped)"
+          v-if="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
           loading="lazy"
           decoding="async"
           :ui="{}"
@@ -541,6 +545,13 @@ const emit = defineEmits<{
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
+// Use Scryfall's `small` variant (146×204, ~10–30 kB) for grid/carousel
+// thumbnails; full-size cards stay on `normal` since `small` pixelates
+// above ~150 px wide. Hovered previews use their own components and
+// request `large` independently.
+const scryfallSize = computed(() =>
+  props.size === 'small' ? 'small' : 'normal',
+);
 
 // Partner commander support
 const hasPartner = computed(() => !!props.card.partner_card_data);

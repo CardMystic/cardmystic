@@ -37,7 +37,7 @@
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
         <img
-          :src="getCardImageUrl(activeCardData!, isFlipped)"
+          :src="getCardImageUrl(activeCardData!, isFlipped, 'large')"
           :alt="activeCardData?.name"
           class="preview-image cursor-pointer"
           loading="eager"
