@@ -48,26 +48,8 @@ jobs:
           NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
           NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
           NUXT_PUBLIC_MAINTENANCE_MODE: ${{ vars.NUXT_PUBLIC_MAINTENANCE_MODE || 'false' }}
-      - name: Deploy Dev Branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          action: 'upload'
-          app_location: '/'
-          api_location: '.output/server'
-          output_location: '.output/public'
-        env:
-          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL }}
-          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY }}
-          NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY }}
-          NUXT_PUBLIC_MAINTENANCE_MODE: ${{ vars.NUXT_PUBLIC_MAINTENANCE_MODE || 'false' }}
-      - name: Build And Deploy (PR Preview to Next)
-        id: builddeploy-next
-        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'dev'
+      - name: Deploy to Next (dev branch or PR to dev)
+        if: (github.event_name == 'pull_request' && github.base_ref == 'dev') || github.ref == 'refs/heads/dev'
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_TREE_06155740F }}
