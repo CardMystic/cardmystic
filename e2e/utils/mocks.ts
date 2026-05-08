@@ -80,7 +80,8 @@ export const fakeJwt = (sub = FAKE_USER.id) => {
 
 /**
  * Stub the reCAPTCHA grecaptcha global so verifyRecaptcha() resolves
- * without loading Google's script. Pair with `mockRecaptchaVerify()`.
+ * without loading Google's script. The backend's `/recaptcha/verify`
+ * accepts the fake token when called with the test bypass header.
  *
  * The recaptcha.client plugin injects `<script src="...recaptcha/api.js">`
  * via useHead which would overwrite `window.grecaptcha` once loaded, so
@@ -116,27 +117,15 @@ export const stubRecaptcha = async (page: Page) => {
 };
 
 /**
- * Mock the backend's `/recaptcha/verify` endpoint to always succeed.
- * Required because verifyRecaptcha() POSTs there with our fake token,
- * which the real backend would (correctly) reject.
- */
-export const mockRecaptchaVerify = async (page: Page) => {
-  await page.route(`${BACKEND_URL}/recaptcha/verify`, (route: Route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: true, score: 0.9 }),
-    }),
-  );
-};
-
-/**
- * Default test setup: stub reCAPTCHA + mock its verify endpoint. All
- * other traffic (Supabase, backend) goes to the real services.
+ * Default test setup: stub the in-page reCAPTCHA challenge so login
+ * forms can submit a fake token. The backend's `/recaptcha/verify`
+ * endpoint short-circuits to `{ success: true }` when the
+ * `X-CardMystic-Test: $E2E_BYPASS_TOKEN` header is present (sent
+ * automatically via `extraHTTPHeaders` in `playwright.config.ts`),
+ * so no client-side mock for that endpoint is needed.
  */
 export const setupRecaptchaStubs = async (page: Page) => {
   await stubRecaptcha(page);
-  await mockRecaptchaVerify(page);
 };
 
 /**

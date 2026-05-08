@@ -64,6 +64,10 @@ jobs:
       # Tests that need these will skip cleanly if either is unset.
       E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      # Bypass token for the backend's IP rate limit (60 req/min).
+      # The backend allowlists requests carrying
+      # `X-CardMystic-Test: $E2E_BYPASS_TOKEN`.
+      E2E_BYPASS_TOKEN: ${{ secrets.E2E_BYPASS_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -132,3 +136,11 @@ jobs:
           name: playwright-traces-${{ matrix.project }}
           path: test-results/
           retention-days: 7
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report-${{ matrix.project }}
+          path: lighthouse-report/
+          retention-days: 14

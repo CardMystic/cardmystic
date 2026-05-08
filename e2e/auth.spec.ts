@@ -226,6 +226,14 @@ test.describe('Logout', () => {
   }) => {
     requireTestUser();
 
+    // Intercept the Supabase global logout call so it doesn't actually
+    // invalidate the shared E2E user's refresh token (which would
+    // break other specs that rely on `e2e/.auth/user.json`). The
+    // frontend still clears local storage and redirects on its side.
+    await page.route(/\/auth\/v1\/logout/, (route) =>
+      route.fulfill({ status: 204, body: '' }),
+    );
+
     await gotoHydrated(page, '/login');
     await reliableFill(page.getByPlaceholder('Email'), TEST_USER_EMAIL);
     await reliableFill(page.getByPlaceholder('Password'), TEST_USER_PASSWORD);

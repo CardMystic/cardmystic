@@ -660,16 +660,12 @@ const searchQuery = computed(() => {
   return '';
 });
 
-// Lazily initialise feedback composable — only when user actually dislikes
-let _dislikeMutation:
-  | ReturnType<typeof useCardFeedback>['dislikeMutation']
-  | null = null;
-function getDislikeMutation() {
-  if (!_dislikeMutation) {
-    _dislikeMutation = useCardFeedback().dislikeMutation;
-  }
-  return _dislikeMutation;
-}
+// Initialise feedback composable at setup so vue-query injection
+// context is available. Calling `useCardFeedback()` lazily inside a
+// click handler throws "vue-query hooks can only be used inside
+// setup() function or functions that support injection context" and
+// the dislike POST is silently dropped.
+const { dislikeMutation } = useCardFeedback();
 
 // Handle dislike button click - show confirmation modal
 function handleDislike() {
@@ -692,7 +688,7 @@ function confirmDislike() {
   isThumbsDownClicked.value = true;
 
   // Track the dislike
-  getDislikeMutation().mutate({
+  dislikeMutation.mutate({
     query: searchQuery.value,
     cardName: props.card.card_data.name,
   });

@@ -59,7 +59,7 @@ for (const [key, value] of Object.entries(TEST_PUBLIC_ENV)) {
 // dedicated step so build failures surface directly instead of being
 // hidden inside Playwright's webServer output).
 const isCI = !!process.env.CI;
-const PORT = 3000;
+const PORT = 5173;
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
 const SERVER_COMMAND = process.env.PLAYWRIGHT_SKIP_BUILD
   ? 'node .output/server/index.mjs'
@@ -67,11 +67,14 @@ const SERVER_COMMAND = process.env.PLAYWRIGHT_SKIP_BUILD
 
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 1,
   // Built app handles concurrency well; bump workers if the suite grows
-  // and CI starts feeling slow again.
+  // and CI starts feeling slow again. Note: this requires the backend
+  // rate-limit bypass header (see `extraHTTPHeaders` below) — without
+  // it, parallel runs trip the 60 req/min IP rate limit and fail 429.
   workers: isCI ? 1 : 2,
   reporter: isCI
     ? [['github'], ['html', { open: 'never' }]]
@@ -83,6 +86,15 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // Sent on every browser request. The backend's rate-limit
+    // middleware should compare this against E2E_BYPASS_TOKEN and skip
+    // rate limiting when it matches. Without this, the suite trips the
+    // backend's 60 req/min IP rate limit and tests fail with 429.
+    // Header is omitted entirely when the env var is unset, so dev
+    // runs against a backend that doesn't know the header still work.
+    extraHTTPHeaders: process.env.E2E_BYPASS_TOKEN
+      ? { 'X-CardMystic-Test': process.env.E2E_BYPASS_TOKEN }
+      : undefined,
   },
   projects: [
     {

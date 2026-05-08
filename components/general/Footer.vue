@@ -61,13 +61,17 @@
           to be accurate. See stores for official prices.
         </p>
         <p>All other content © 2025 Fiasco Games LLC</p>
-        <p class="text-xs opacity-70">
+        <p class="text-xs text-gray-400 dark:text-gray-500">
           This site is protected by reCAPTCHA and the Google
-          <a class="text-purple-400" href="https://policies.google.com/privacy"
+          <a
+            class="text-purple-400 underline"
+            href="https://policies.google.com/privacy"
             >Privacy Policy</a
           >
           and
-          <a class="text-purple-400" href="https://policies.google.com/terms"
+          <a
+            class="text-purple-400 underline"
+            href="https://policies.google.com/terms"
             >Terms of Service</a
           >
           apply.

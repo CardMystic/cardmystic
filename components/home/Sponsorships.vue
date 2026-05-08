@@ -38,6 +38,7 @@
             size="sm"
             :icon="getSocialIcon(platform)"
             square
+            :aria-label="`${sponsor.name} on ${platform}`"
           />
         </div>
       </div>

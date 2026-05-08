@@ -166,6 +166,10 @@ const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const deckbuilderStore = useDeckbuilder();
 const clipboard = useClipboard();
+// Initialise feedback composable at setup so vue-query injection
+// context is available. Calling `useCardFeedback()` lazily inside a
+// click handler throws and the dislike POST is silently dropped.
+const { dislikeMutation } = useCardFeedback();
 
 const props = defineProps<{
   card: Card | null;
@@ -346,7 +350,7 @@ function confirmDislike(close: () => void) {
   isThumbsDownClicked.value = true;
   showConfirmModal.value = false;
   close();
-  useCardFeedback().dislikeMutation.mutate({
+  dislikeMutation.mutate({
     query: props.queryParam,
     cardName: activeCardData.value.name,
   });

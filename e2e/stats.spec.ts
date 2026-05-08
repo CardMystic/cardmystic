@@ -42,6 +42,50 @@ test.describe('Popular Cards', () => {
       })
       .toBeGreaterThan(2);
   });
+
+  test('platform switch: toggling Arena filter navigates to /popular-cards/arena and re-fetches', async ({
+    page,
+  }) => {
+    // Wait for the initial all-platform fetch.
+    const initialCall = page.waitForResponse(
+      (resp) =>
+        resp.url().startsWith(`${BACKEND}/deck-stats/top-cards`) &&
+        resp.request().method() === 'POST',
+      { timeout: SEARCH_TIMEOUT },
+    );
+    await gotoHydrated(page, '/popular-cards/all');
+    await initialCall;
+
+    // Set up listener for the re-fetch that will fire after form submit.
+    const arenaCall = page.waitForResponse(
+      (resp) =>
+        resp.url().startsWith(`${BACKEND}/deck-stats/top-cards`) &&
+        resp.request().method() === 'POST',
+      { timeout: SEARCH_TIMEOUT },
+    );
+
+    // Toggle the "Arena" quick-filter and submit the form.
+    // QuickFilters renders a button labelled "Arena" that sets isArena: true,
+    // and detectPlatformFromFilters then routes to /popular-cards/arena.
+    await page.getByRole('button', { name: /^Arena$/ }).click();
+    await page
+      .locator('button[type="submit"]')
+      .filter({ hasText: 'Search' })
+      .click();
+
+    // URL must change to the arena-specific route.
+    await page.waitForURL('**/popular-cards/arena**', {
+      timeout: SEARCH_TIMEOUT,
+    });
+
+    // The re-fetch must succeed and still return results.
+    const arenaResponse = await arenaCall;
+    expect(arenaResponse.ok()).toBeTruthy();
+
+    const body = await arenaResponse.json();
+    const results = Array.isArray(body?.results) ? body.results : [];
+    expect(results.length).toBeGreaterThan(0);
+  });
 });
 
 // ─── Popular Commanders ──────────────────────────────────────────────
