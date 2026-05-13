@@ -48,7 +48,7 @@
   <div class="mb-2 md:hidden flex flex-col justify-center items-center">
     <p class="text-sm text-gray-400 mb-1 text-center">Select Explore Type</p>
     <USelect
-      label="select"
+      aria-label="Select explore page"
       class="w-50"
       :modelValue="mobileValue"
       placeholder="Select type"

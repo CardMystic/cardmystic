@@ -64,13 +64,13 @@
         <p class="text-xs text-gray-400 dark:text-gray-500">
           This site is protected by reCAPTCHA and the Google
           <a
-            class="text-purple-400 underline"
+            class="text-purple-300 underline"
             href="https://policies.google.com/privacy"
             >Privacy Policy</a
           >
           and
           <a
-            class="text-purple-400 underline"
+            class="text-purple-300 underline"
             href="https://policies.google.com/terms"
             >Terms of Service</a
           >
@@ -81,14 +81,14 @@
             :to="commitUrl"
             target="_blank"
             rel="noopener"
-            class="text-purple-400 hover:text-purple-300 underline text-[10px]"
+            class="text-purple-300 hover:text-purple-200 underline text-[10px]"
           >
             Version: {{ commitHash }}
           </NuxtLink>
           <NuxtLink
             to="/privacyPolicy"
             rel="noopener"
-            class="ml-2 text-purple-400 hover:text-purple-300 underline text-[10px]"
+            class="ml-2 text-purple-300 hover:text-purple-200 underline text-[10px]"
             >Privacy Policy
           </NuxtLink>
         </p>
@@ -96,7 +96,7 @@
           Experiencing issues? Contact us at
           <a
             href="mailto:thecardmystic@gmail.com"
-            class="text-purple-400 hover:text-purple-300 underline"
+            class="text-purple-300 hover:text-purple-200 underline"
             >thecardmystic@gmail.com</a
           >
         </p>
