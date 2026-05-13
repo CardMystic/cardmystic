@@ -7,8 +7,18 @@
     </template>
     <template #footer="{ close }">
       <div class="flex justify-end gap-2">
-        <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-        <UButton label="Remove Commander" color="error" icon="i-lucide-crown" @click="onConfirm(close)" />
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="outline"
+          @click="close"
+        />
+        <UButton
+          label="Remove Commander"
+          color="error"
+          icon="i-lucide-crown"
+          @click="onConfirm(close)"
+        />
       </div>
     </template>
   </UModal>

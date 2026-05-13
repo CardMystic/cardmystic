@@ -1,9 +1,17 @@
 <template>
   <div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <UCard v-for="item in items" :key="item.title" class="border border-green-500/20" :ui="{ body: 'p-4 md:p-5' }">
+      <UCard
+        v-for="item in items"
+        :key="item.title"
+        class="border border-green-500/20"
+        :ui="{ body: 'p-4 md:p-5' }"
+      >
         <div class="flex items-start gap-3">
-          <UIcon :name="item.icon" class="text-xl text-green-400 flex-shrink-0 mt-0.5" />
+          <UIcon
+            :name="item.icon"
+            class="text-xl text-green-400 flex-shrink-0 mt-0.5"
+          />
           <div>
             <h3 class="font-semibold mb-1">{{ item.title }}</h3>
             <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">

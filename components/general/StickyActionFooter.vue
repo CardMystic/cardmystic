@@ -10,18 +10,20 @@
             <slot name="right" />
           </div>
         </div>
-
       </div>
     </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
-  show?: boolean;
-}>(), {
-  show: true,
-});
+withDefaults(
+  defineProps<{
+    show?: boolean;
+  }>(),
+  {
+    show: true,
+  },
+);
 
 const slots = useSlots();
 const hasLeftSlot = computed(() => Boolean(slots.left));
@@ -79,7 +81,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-top: 1px solid color-mix(in oklab, var(--ui-secondary) 52%, transparent);
+  border-top: 1px solid
+    color-mix(in oklab, var(--ui-secondary) 52%, transparent);
   background: color-mix(in oklab, var(--ui-bg) 92%, transparent);
   backdrop-filter: blur(10px);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);

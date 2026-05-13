@@ -9,35 +9,38 @@ definePageMeta({
   layout: 'fullscreen',
   middleware: (to) => {
     // Redirect if already logged in
-    const { userProfile } = useUserProfile()
+    const { userProfile } = useUserProfile();
     if (userProfile.value?.id) {
-      return navigateTo('/profile')
+      return navigateTo('/profile');
     }
-  }
-})
+  },
+});
 
 useHead({
   meta: [
     {
       name: 'robots',
-      content: 'noindex, nofollow' // Don't index login pages
-    }
-  ]
-})
+      content: 'noindex, nofollow', // Don't index login pages
+    },
+  ],
+});
 
 useSeoMeta({
   title: () => 'Login - CardMystic',
-  description: () => 'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
+  description: () =>
+    'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
   ogTitle: () => 'Login - CardMystic',
-  ogDescription: () => 'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
+  ogDescription: () =>
+    'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
   ogType: 'website',
   ogImage: () => 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => 'CardMystic - Magic: The Gathering card search',
   twitterCard: 'summary',
   twitterTitle: () => 'Login - CardMystic',
-  twitterDescription: () => 'Sign in to your CardMystic account to access your saved decklists and personalized MTG search.',
-  twitterImage: () => 'https://cardmystic.com/cardmystic_cards.png'
-})
+  twitterDescription: () =>
+    'Sign in to your CardMystic account to access your saved decklists and personalized MTG search.',
+  twitterImage: () => 'https://cardmystic.com/cardmystic_cards.png',
+});
 
-const { userProfile } = useUserProfile()
+const { userProfile } = useUserProfile();
 </script>

@@ -1,15 +1,37 @@
 <template>
-  <UForm :schema="schema" :state="state" class="grow space-y-4" @submit="onSubmit">
+  <UForm
+    :schema="schema"
+    :state="state"
+    class="grow space-y-4"
+    @submit="onSubmit"
+  >
     <!-- Honeypot field - hidden from users but visible to bots -->
-    <input v-model="honeypot" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true"
-      style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
+    <input
+      v-model="honeypot"
+      type="text"
+      name="website"
+      autocomplete="off"
+      tabindex="-1"
+      aria-hidden="true"
+      style="position: absolute; left: -9999px; width: 1px; height: 1px"
+    />
 
     <UFormField name="query" class="mb-2">
       <div class="flex gap-2 w-full">
-        <UInput ref="input" v-model="state.query" placeholder="Search cards by keywords…" icon="i-lucide-whole-word"
-          class="flex-1" :ui="{ base: 'text-base h-10' }" />
-        <UButton icon="i-lucide-whole-word" :disabled="state.query?.length == 0" type="submit"
-          class="h-10 cursor-pointer">
+        <UInput
+          ref="input"
+          v-model="state.query"
+          placeholder="Search cards by keywords…"
+          icon="i-lucide-whole-word"
+          class="flex-1"
+          :ui="{ base: 'text-base h-10' }"
+        />
+        <UButton
+          icon="i-lucide-whole-word"
+          :disabled="state.query?.length == 0"
+          type="submit"
+          class="h-10 cursor-pointer"
+        >
           <span class="hidden sm:inline">Search</span>
         </UButton>
       </div>
@@ -17,12 +39,23 @@
 
     <QuickFilters v-model="state.filters" />
 
-    <Filters v-if="!showFilters" ref="filtersRef" v-model="state.filters" hide-controls />
+    <Filters
+      v-if="!showFilters"
+      ref="filtersRef"
+      v-model="state.filters"
+      hide-controls
+    />
 
     <div v-if="!showFilters" class="flex justify-center">
       <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton class="cursor-pointer" @click="showFilters = true" variant="ghost" size="sm"
-          icon="i-lucide-sliders-horizontal" aria-label="Show advanced search filters">
+        <UButton
+          class="cursor-pointer"
+          @click="showFilters = true"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-sliders-horizontal"
+          aria-label="Show advanced search filters"
+        >
           Show Advanced Filters
         </UButton>
       </UTooltip>
@@ -34,8 +67,14 @@
       </UFormField>
       <template #footer>
         <div class="flex items-center justify-center">
-          <UButton class="cursor-pointer" @click="hideFilters" variant="ghost" size="sm" icon="i-lucide-eye-off"
-            color="neutral">
+          <UButton
+            class="cursor-pointer"
+            @click="hideFilters"
+            variant="ghost"
+            size="sm"
+            icon="i-lucide-eye-off"
+            color="neutral"
+          >
             Hide Advanced Filters
           </UButton>
         </div>
@@ -45,14 +84,14 @@
 </template>
 
 <script lang="ts" setup>
-import * as z from 'zod'
-import { useRoute } from 'vue-router'
+import * as z from 'zod';
+import { useRoute } from 'vue-router';
 
 const router = useRouter();
-import type { FormSubmitEvent } from '@nuxt/ui'
-import { CardSearchFiltersSchema } from '~/models/searchModel'
-import type { Platform } from '~/utils/platformConfig'
-import Filters from './Filters.vue'
+import type { FormSubmitEvent } from '@nuxt/ui';
+import { CardSearchFiltersSchema } from '~/models/searchModel';
+import type { Platform } from '~/utils/platformConfig';
+import Filters from './Filters.vue';
 
 const { getPath, getPlatformFromPath } = useSearchType();
 
@@ -60,15 +99,15 @@ const input = ref();
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 
 defineShortcuts({
-  '/': () => input.value?.inputRef?.focus()
+  '/': () => input.value?.inputRef?.focus(),
 });
 
 const schema = z.object({
-  query: z.string().min(1, ""),
-  filters: CardSearchFiltersSchema.optional()
-})
+  query: z.string().min(1, ''),
+  filters: CardSearchFiltersSchema.optional(),
+});
 
-type Schema = z.output<typeof schema>
+type Schema = z.output<typeof schema>;
 
 const route = useRoute();
 
@@ -78,14 +117,16 @@ const currentPlatform = computed(() => {
 });
 
 const queryParam = computed(() => String(route.query.query || ''));
-import { hasAdvancedFilters } from '~/utils/quickFilters'
+import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 const parsedFilters = computed(() => {
   if (route.query.filters) {
-    return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)))
+    return CardSearchFiltersSchema.parse(
+      JSON.parse(String(route.query.filters)),
+    );
   }
-  return { selectedColorFilterOption: 'Match Exactly' as const }
-})
+  return { selectedColorFilterOption: 'Match Exactly' as const };
+});
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
 function hideFilters() {
@@ -94,20 +135,18 @@ function hideFilters() {
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value,
-  filters: parsedFilters.value
-})
+  filters: parsedFilters.value,
+});
 
 watch(queryParam, (newVal) => {
   if (newVal !== state.query) state.query = newVal;
 });
 
-
-
 // Honeypot field for bot detection
-const honeypot = ref('')
+const honeypot = ref('');
 
-const toast = useToast()
-const { saveSearchMutation } = useSearchHistory()
+const toast = useToast();
+const { saveSearchMutation } = useSearchHistory();
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   filtersRef.value?.collapse();
@@ -115,49 +154,64 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   if (honeypot.value) {
     toast.add({
       title: 'Invalid submission',
-      color: 'error'
+      color: 'error',
     });
     return;
   }
 
   try {
-    const requestFilters = { ...event.data.filters } // shallow copy
+    const requestFilters = { ...event.data.filters }; // shallow copy
 
     // Only modify the copy, NEVER the form state
-    if (!event.data.filters?.selectedColors || event.data.filters?.selectedColors.length === 0) {
-      delete requestFilters.selectedColors
-      delete requestFilters.selectedColorFilterOption
+    if (
+      !event.data.filters?.selectedColors ||
+      event.data.filters?.selectedColors.length === 0
+    ) {
+      delete requestFilters.selectedColors;
+      delete requestFilters.selectedColorFilterOption;
     }
 
     // Remove undefined/null/empty values from filters
-    Object.keys(requestFilters).forEach(key => {
+    Object.keys(requestFilters).forEach((key) => {
       const value = requestFilters[key as keyof typeof requestFilters];
-      if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+      if (
+        value === undefined ||
+        value === null ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         delete requestFilters[key as keyof typeof requestFilters];
       }
     });
 
     // Save to search history
-    saveSearchMutation.mutate({ query: event.data.query, searchType: 'keyword', filters: requestFilters })
+    saveSearchMutation.mutate({
+      query: event.data.query,
+      searchType: 'keyword',
+      filters: requestFilters,
+    });
 
     const query: Record<string, any> = {
       query: event.data.query,
-      filters: Object.keys(requestFilters).length > 0
-        ? JSON.stringify(requestFilters)
-        : undefined,
+      filters:
+        Object.keys(requestFilters).length > 0
+          ? JSON.stringify(requestFilters)
+          : undefined,
       searchType: 'keyword',
-      limit: 100
-    }
+      limit: 100,
+    };
 
-    const targetPlatform = detectPlatformFromFilters(requestFilters, currentPlatform.value as Platform);
-    router.push({ path: getPath('keyword', targetPlatform), query })
+    const targetPlatform = detectPlatformFromFilters(
+      requestFilters,
+      currentPlatform.value as Platform,
+    );
+    router.push({ path: getPath('keyword', targetPlatform), query });
   } catch (error) {
-    console.error('Form submission error:', error)
+    console.error('Form submission error:', error);
     toast.add({
       title: 'Error',
       description: 'Failed to submit form',
-      color: 'error'
-    })
+      color: 'error',
+    });
   }
 }
 </script>

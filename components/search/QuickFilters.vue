@@ -1,8 +1,14 @@
 <template>
   <div class="flex flex-wrap justify-center gap-1">
-    <UButton v-for="filter in visibleFilters" :key="filter.key" size="sm"
-      :variant="isActive(filter) ? 'solid' : 'outline'" :color="isActive(filter) ? 'primary' : 'primary'"
-      class="cursor-pointer rounded-pill" @click="toggle(filter)">
+    <UButton
+      v-for="filter in visibleFilters"
+      :key="filter.key"
+      size="sm"
+      :variant="isActive(filter) ? 'solid' : 'outline'"
+      :color="isActive(filter) ? 'primary' : 'primary'"
+      class="cursor-pointer rounded-pill"
+      @click="toggle(filter)"
+    >
       <UIcon :name="filter.icon" class="w-3.5 h-3.5" />
       {{ filter.label }}
     </UButton>
@@ -10,21 +16,23 @@
 </template>
 
 <script setup lang="ts">
-import type { CardSearchFilters } from '~/models/searchModel'
+import type { CardSearchFilters } from '~/models/searchModel';
 
 const props = defineProps<{
-  show?: string[]
-}>()
+  show?: string[];
+}>();
 
-const modelValue = defineModel<Partial<CardSearchFilters> | undefined>({ required: true })
+const modelValue = defineModel<Partial<CardSearchFilters> | undefined>({
+  required: true,
+});
 
 interface QuickFilter {
-  key: string
-  label: string
-  icon: string
-  apply: (filters: Partial<CardSearchFilters>) => Partial<CardSearchFilters>
-  remove: (filters: Partial<CardSearchFilters>) => Partial<CardSearchFilters>
-  check: (filters: Partial<CardSearchFilters>) => boolean
+  key: string;
+  label: string;
+  icon: string;
+  apply: (filters: Partial<CardSearchFilters>) => Partial<CardSearchFilters>;
+  remove: (filters: Partial<CardSearchFilters>) => Partial<CardSearchFilters>;
+  check: (filters: Partial<CardSearchFilters>) => boolean;
 }
 
 const quickFilters: QuickFilter[] = [
@@ -32,7 +40,12 @@ const quickFilters: QuickFilter[] = [
     key: 'arena',
     label: 'Arena',
     icon: 'i-lucide-monitor',
-    apply: (f) => ({ ...f, isArena: true, isMTGO: undefined, isPaper: undefined }),
+    apply: (f) => ({
+      ...f,
+      isArena: true,
+      isMTGO: undefined,
+      isPaper: undefined,
+    }),
     remove: (f) => ({ ...f, isArena: undefined }),
     check: (f) => !!f.isArena,
   },
@@ -40,7 +53,12 @@ const quickFilters: QuickFilter[] = [
     key: 'mtgo',
     label: 'MTGO',
     icon: 'i-lucide-monitor',
-    apply: (f) => ({ ...f, isMTGO: true, isArena: undefined, isPaper: undefined }),
+    apply: (f) => ({
+      ...f,
+      isMTGO: true,
+      isArena: undefined,
+      isPaper: undefined,
+    }),
     remove: (f) => ({ ...f, isMTGO: undefined }),
     check: (f) => !!f.isMTGO,
   },
@@ -50,7 +68,9 @@ const quickFilters: QuickFilter[] = [
     icon: 'i-lucide-layers',
     apply: (f) => ({
       ...f,
-      selectedCardFormats: [{ format: 'Modern' as const, status: 'Legal' as const }],
+      selectedCardFormats: [
+        { format: 'Modern' as const, status: 'Legal' as const },
+      ],
     }),
     remove: (f) => ({ ...f, selectedCardFormats: undefined }),
     check: (f) =>
@@ -64,7 +84,9 @@ const quickFilters: QuickFilter[] = [
     icon: 'i-lucide-crown',
     apply: (f) => ({
       ...f,
-      selectedCardFormats: [{ format: 'Commander' as const, status: 'Legal' as const }],
+      selectedCardFormats: [
+        { format: 'Commander' as const, status: 'Legal' as const },
+      ],
     }),
     remove: (f) => ({ ...f, selectedCardFormats: undefined }),
     check: (f) =>
@@ -72,21 +94,23 @@ const quickFilters: QuickFilter[] = [
         (fmt) => fmt.format === 'Commander' && fmt.status === 'Legal',
       ),
   },
-]
+];
 
 function isActive(filter: QuickFilter): boolean {
-  return filter.check(modelValue.value ?? {})
+  return filter.check(modelValue.value ?? {});
 }
 
 const visibleFilters = computed(() =>
-  props.show ? quickFilters.filter((f) => props.show!.includes(f.key)) : quickFilters,
-)
+  props.show
+    ? quickFilters.filter((f) => props.show!.includes(f.key))
+    : quickFilters,
+);
 
 function toggle(filter: QuickFilter) {
   if (isActive(filter)) {
-    modelValue.value = filter.remove(modelValue.value ?? {})
+    modelValue.value = filter.remove(modelValue.value ?? {});
   } else {
-    modelValue.value = filter.apply(modelValue.value ?? {})
+    modelValue.value = filter.apply(modelValue.value ?? {});
   }
 }
 </script>

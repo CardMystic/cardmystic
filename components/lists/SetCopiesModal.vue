@@ -1,14 +1,34 @@
 <template>
   <UModal v-model:open="modelOpen" title="Set Copies">
     <template #body>
-      <p class="text-sm mb-3">How many copies of <span class="font-bold">{{ cardName }}</span>?</p>
-      <UInput v-model="copiesInputValue" type="number" min="1" max="100" autofocus @keyup.enter="onConfirm"
-        @keyup.escape="modelOpen = false" />
+      <p class="text-sm mb-3">
+        How many copies of <span class="font-bold">{{ cardName }}</span
+        >?
+      </p>
+      <UInput
+        v-model="copiesInputValue"
+        type="number"
+        min="1"
+        max="100"
+        autofocus
+        @keyup.enter="onConfirm"
+        @keyup.escape="modelOpen = false"
+      />
     </template>
     <template #footer="{ close }">
       <div class="flex justify-end gap-2">
-        <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
-        <UButton label="Set Copies" color="primary" icon="i-lucide-hash" @click="onConfirm(close)" />
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="outline"
+          @click="close"
+        />
+        <UButton
+          label="Set Copies"
+          color="primary"
+          icon="i-lucide-hash"
+          @click="onConfirm(close)"
+        />
       </div>
     </template>
   </UModal>
@@ -39,7 +59,7 @@ watch(
     if (!open) return;
     copiesInputValue.value = String(initialCopies ?? 1);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 function onConfirm(close?: () => void) {

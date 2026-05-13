@@ -1,17 +1,24 @@
 <template>
   <SpaceBackground :full="true">
     <LazyCometDog />
-    <div class="hero px-0 h-full w-full justify-center flex flex-col items-center">
-      <div class="explore-spacer">
-      </div>
-      <UContainer class="flex flex-col items-center justify-center text-center max-w-250 h-full relative z-10">
+    <div
+      class="hero px-0 h-full w-full justify-center flex flex-col items-center"
+    >
+      <div class="explore-spacer"></div>
+      <UContainer
+        class="flex flex-col items-center justify-center text-center max-w-250 h-full relative z-10"
+      >
         <div class="header-layout">
           <div class="title-container">
-            <img src="/wizard.webp" class="image object-cover" alt="Wizard" fetchpriority="high" />
+            <img
+              src="/wizard.webp"
+              class="image object-cover"
+              alt="Wizard"
+              fetchpriority="high"
+            />
             <h1 class="subtitle text-white">
-              <b style="color: var(--ui-highlight)">CardMystic</b> Is An <b style="color: var(--ui-highlight)">A.I.
-                Search
-                Engine</b> For
+              <b style="color: var(--ui-highlight)">CardMystic</b> Is An
+              <b style="color: var(--ui-highlight)">A.I. Search Engine</b> For
               <b style="color: var(--ui-highlight)">MTG</b>
             </h1>
           </div>
@@ -19,22 +26,36 @@
 
         <!-- Search -->
         <Search :showAbout="true" />
-
       </UContainer>
 
       <!-- Explore text + icon -->
-      <div class="explore-spacer mb-4 flex flex-col items-center gap-1 text-black">
-        <!-- Fanned cards at bottom -->
+      <div
+        class="explore-spacer mb-4 flex flex-col items-center gap-1 text-black"
+      >
+        <!-- Fanned cards at bottom. Self-hosted WebPs (~40 kB each) are
+             much smaller than the equivalent Scryfall `normal` JPGs
+             (~100 kB each) and don't add cross-origin DNS/connect time
+             to LCP. Sized at the 2× DPR of their CSS box (180 × 251) so
+             they look crisp on retina without wasted bytes. -->
         <div class="bottom-cards">
-          <div v-if="heroCards[0]" class="card-wrapper card-left">
-            <LazyCardSimple :card="heroCards[0]" size="small" />
-          </div>
-          <div v-if="heroCards[1]" class="card-wrapper card-center">
-            <LazyCardSimple :card="heroCards[1]" size="small" />
-          </div>
-          <div v-if="heroCards[2]" class="card-wrapper card-right">
-            <LazyCardSimple :card="heroCards[2]" size="small" />
-          </div>
+          <NuxtLink
+            v-for="card in heroCards"
+            :key="card.id"
+            :to="`/card/${card.id}`"
+            class="card-wrapper"
+            :class="card.position"
+          >
+            <img
+              :src="card.image"
+              :alt="card.name"
+              width="360"
+              height="502"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              class="hero-card-img"
+            />
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -57,11 +78,17 @@
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
       <div
-        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent">
+        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent"
+      >
         <div class="flex items-start gap-4">
-          <UIcon name="i-lucide-book-open" class="text-3xl text-primary shrink-0 mt-1" />
+          <UIcon
+            name="i-lucide-book-open"
+            class="text-3xl text-primary shrink-0 mt-1"
+          />
           <div>
-            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How To Use</h2>
+            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">
+              How To Use
+            </h2>
             <p class="text-base md:text-lg leading-relaxed">
               Simply describe the cards you want in plain English, and let our
               intelligent search engine do the rest. Still not sure? Try an
@@ -73,15 +100,21 @@
 
       <!-- How It Works -->
       <div
-        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent">
+        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent"
+      >
         <div class="flex items-start gap-4">
-          <UIcon name="i-lucide-sparkles" class="text-3xl text-primary shrink-0 mt-1" />
+          <UIcon
+            name="i-lucide-sparkles"
+            class="text-3xl text-primary shrink-0 mt-1"
+          />
           <div>
-            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">How It Works</h2>
+            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">
+              How It Works
+            </h2>
             <p class="text-base md:text-lg leading-relaxed">
-              Our A.I. experts meticulously train custom, state-of-the-art models to understand the nuances of Magic
-              including
-              slang, synergies, and game mechanics.
+              Our A.I. experts meticulously train custom, state-of-the-art
+              models to understand the nuances of Magic including slang,
+              synergies, and game mechanics.
             </p>
           </div>
         </div>
@@ -103,27 +136,29 @@
     <LazyMeetTheDevs class="mb-10" />
     <LazySponsorships class="mb-10" />
     <LazyJoinUs class="mb-10" />
-    <LazyProductPromotionButtons />
   </UContainer>
 </template>
 
 <script setup lang="ts">
 defineOptions({ name: 'HomePage' });
 definePageMeta({
-  layout: 'fullscreen'
+  layout: 'fullscreen',
 });
 useSeoMeta({
   title: 'CardMystic - AI Search Engine for Magic: The Gathering',
-  description: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
+  description:
+    'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
   ogTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
-  ogDescription: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
+  ogDescription:
+    'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
   ogType: 'website',
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => 'CardMystic - AI Search Engine for Magic: The Gathering',
   twitterCard: 'summary_large_image',
   twitterTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
-  twitterDescription: 'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.'
-})
+  twitterDescription:
+    'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
+});
 
 useHead({
   link: [
@@ -134,16 +169,39 @@ useHead({
       type: 'image/webp',
       fetchpriority: 'high',
     },
+    // Preload the three hero card images so the browser can fetch them
+    // in parallel with the HTML document instead of waiting for the
+    // `<img>` tags to be discovered during render.
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/ugin.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/ur-dragon.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
+    {
+      rel: 'preload',
+      as: 'image',
+      href: '/kaalia.webp',
+      type: 'image/webp',
+      fetchpriority: 'high',
+    },
   ],
   script: [
     {
       type: 'application/ld+json',
-      src: '/ld/home.json'
-    }
-  ]
-})
+      src: '/ld/home.json',
+    },
+  ],
+});
 
-import type { Card as CardType } from '~/models/cardModel';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSearchType } from '~/composables/useSearchType';
 // Use search type composable to check if AI search is active
@@ -153,38 +211,29 @@ const { isAiSearch } = useSearchType();
 const { userProfile } = useUserProfile();
 const isLoggedIn = computed(() => !!userProfile.value);
 
-// Hardcoded hero cards
-const heroCards: CardType[] = [
+// Hardcoded hero cards. Each renders as a fanned-out image link to its
+// card detail page. Images are self-hosted WebPs (~40 kB each, 360×502
+// — exactly 2× the desktop CSS slot of 180×251) so they don't pull
+// from scryfall.io on the most-visited page.
+const heroCards = [
   {
-    card_name: 'Ugin, the Spirit Dragon',
-    card_data: {
-      id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
-      name: 'Ugin, the Spirit Dragon',
-      image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/1/b/1bacda35-bb91-4537-a14d-846650fa85f6.jpg?1594157535',
-      }
-    } as any
+    id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
+    name: 'Ugin, the Spirit Dragon',
+    image: '/ugin.webp',
+    position: 'card-left',
   },
   {
-    card_name: 'The Ur-Dragon',
-    card_data: {
-      id: '10d42b35-844f-4a64-9981-c6118d45e826',
-      name: 'The Ur-Dragon',
-      image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/6/2/6270c798-a3ba-4826-b0a9-82f7e12890f6.jpg?1719466632',
-      }
-    } as any
+    id: '10d42b35-844f-4a64-9981-c6118d45e826',
+    name: 'The Ur-Dragon',
+    image: '/ur-dragon.webp',
+    position: 'card-center',
   },
   {
-    card_name: 'Teferi, Time Raveler',
-    card_data: {
-      id: '662fe50f-d75c-422c-8c6c-1f9b5c4ba21f',
-      name: 'Teferi, Time Raveler',
-      image_uris: {
-        normal: 'https://cards.scryfall.io/normal/front/5/a/5a47d968-bba0-4277-b5d7-eb9e1acd7953.jpg?1731704855',
-      }
-    } as any
-  }
+    id: 'e71c8c39-3fbb-4a42-9cf6-b3224f5a56fc',
+    name: 'Kaalia of the Vast',
+    image: '/kaalia.webp',
+    position: 'card-right',
+  },
 ];
 
 const { setPageInfo } = usePageInfo();
@@ -195,7 +244,6 @@ setPageInfo({
   card_name: '',
   filters: undefined,
 });
-
 </script>
 
 <style lang="sass" scoped>
@@ -257,9 +305,26 @@ setPageInfo({
 .card-wrapper
   position: absolute
   width: 180px
+  cursor: pointer
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
   @media (max-width: 768px)
     width: 105px
-    
+
+.card-wrapper:hover
+  z-index: 10
+
+.hero-card-img
+  width: 100%
+  height: auto
+  aspect-ratio: 360/502
+  object-fit: cover
+  border-radius: 8px
+  display: block
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+
+.card-wrapper:hover .hero-card-img
+  transform: scale(1.08)
+
 .card-left
   transform: rotate(-15deg) translateX(-100px)
   @media (max-width: 768px)

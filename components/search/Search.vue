@@ -9,10 +9,16 @@
       <AISearch v-if="searchType === 'ai'" :platform="platform" />
 
       <!-- Select Menu for similarity search -->
-      <SimilaritySearch v-else-if="searchType === 'similarity'" :platform="platform" />
+      <SimilaritySearch
+        v-else-if="searchType === 'similarity'"
+        :platform="platform"
+      />
 
       <!-- Commander Search -->
-      <CommanderSearch v-else-if="searchType === 'commander'" :platform="platform" />
+      <CommanderSearch
+        v-else-if="searchType === 'commander'"
+        :platform="platform"
+      />
 
       <!-- Keyword Search -->
       <KeywordSearch v-else-if="searchType === 'keyword'" />
@@ -34,22 +40,35 @@ import SimilaritySearch from './SimilaritySearch.vue';
 import CommanderSearch from './CommanderSearch.vue';
 import KeywordSearch from './KeywordSearch.vue';
 import ALSSearch from './ALSSearch.vue';
-import { detectPlatformFromFilters, type Platform } from '~/utils/platformConfig';
+import {
+  detectPlatformFromFilters,
+  type Platform,
+} from '~/utils/platformConfig';
 
 // Define props
 const props = defineProps<{
   similarity?: boolean;
   showAbout?: boolean;
-  defaultSearchType?: 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend';
+  defaultSearchType?:
+    | 'ai'
+    | 'similarity'
+    | 'commander'
+    | 'keyword'
+    | 'recommend';
   platform?: 'arena' | 'mtgo' | 'paper';
 }>();
-
 
 const route = useRoute();
 const router = useRouter();
 
 // Initialize search type based on props or route
-const { searchType, setSearchType, getPath, getPlatformFromPath, restoreSearchQuery } = useSearchType();
+const {
+  searchType,
+  setSearchType,
+  getPath,
+  getPlatformFromPath,
+  restoreSearchQuery,
+} = useSearchType();
 
 // Derive the current platform from the route (e.g. /search/arena/ai → 'arena')
 const currentPlatform = computed(() => {
@@ -93,8 +112,13 @@ onMounted(() => {
     (type === 'recommend' && (route.query.decklist || route.query.commander));
 
   if (!hasQuery) {
-    const restoredFilters = restored.filters ? JSON.parse(String(restored.filters)) : undefined;
-    const targetPlatform = detectPlatformFromFilters(restoredFilters, currentPlatform.value as Platform);
+    const restoredFilters = restored.filters
+      ? JSON.parse(String(restored.filters))
+      : undefined;
+    const targetPlatform = detectPlatformFromFilters(
+      restoredFilters,
+      currentPlatform.value as Platform,
+    );
     router.replace({ path: getPath(type, targetPlatform), query: restored });
   }
 });
@@ -107,14 +131,15 @@ watch(searchType, (newType) => {
   // Only preserve the current platform if the saved filters explicitly contain a platform flag;
   // otherwise default to 'all' (no filters means the search wasn't platform-specific).
   const savedQuery = restoreSearchQuery(newType);
-  const savedFilters = savedQuery?.filters ? JSON.parse(String(savedQuery.filters)) : undefined;
+  const savedFilters = savedQuery?.filters
+    ? JSON.parse(String(savedQuery.filters))
+    : undefined;
   const targetPlatform = detectPlatformFromFilters(savedFilters);
   const targetPath = getPath(newType, targetPlatform);
   if (route.path !== targetPath && route.path !== '/') {
     router.push({ path: targetPath, query: savedQuery });
   }
 });
-
 </script>
 
 <style scoped>

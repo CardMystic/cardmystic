@@ -20,25 +20,30 @@
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'auth'
-})
+  middleware: 'auth',
+});
 
-const route = useRoute()
+const route = useRoute();
 
-const selectedTab = ref('0')
+const selectedTab = ref('0');
 
 // Set active tab based on query parameter on mount
 onMounted(() => {
-  const tabParam = route.query.tab as string
+  const tabParam = route.query.tab as string;
   if (tabParam === 'cards') {
-    selectedTab.value = '1'
+    selectedTab.value = '1';
   } else if (tabParam === 'search') {
-    selectedTab.value = '0'
+    selectedTab.value = '0';
   }
-})
+});
 
 const tabs = [
-  { key: 'search', label: 'Search History', icon: 'i-lucide-search', slot: 'search' },
-  { key: 'cards', label: 'Recent Cards', icon: 'i-lucide-eye', slot: 'cards' }
-]
+  {
+    key: 'search',
+    label: 'Search History',
+    icon: 'i-lucide-search',
+    slot: 'search',
+  },
+  { key: 'cards', label: 'Recent Cards', icon: 'i-lucide-eye', slot: 'cards' },
+];
 </script>

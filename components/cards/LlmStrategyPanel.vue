@@ -11,16 +11,28 @@
             <span class="meter-label">Overall</span>
             <span class="meter-value">{{ props.llm.power_level }}</span>
           </div>
-          <UProgress :model-value="overallPowerPercent" :color="meterColor(overallPowerPercent)" size="lg" />
+          <UProgress
+            :model-value="overallPowerPercent"
+            :color="meterColor(overallPowerPercent)"
+            size="lg"
+          />
         </div>
 
         <div v-if="formatMeters.length" class="format-meters">
-          <div v-for="formatMeter in formatMeters" :key="formatMeter.name" class="meter-block">
+          <div
+            v-for="formatMeter in formatMeters"
+            :key="formatMeter.name"
+            class="meter-block"
+          >
             <div class="meter-header">
               <span class="meter-label">{{ formatMeter.name }}</span>
               <span class="meter-value">{{ formatMeter.value }}</span>
             </div>
-            <UProgress :model-value="formatMeter.percent" :color="meterColor(formatMeter.percent)" size="sm" />
+            <UProgress
+              :model-value="formatMeter.percent"
+              :color="meterColor(formatMeter.percent)"
+              size="sm"
+            />
           </div>
         </div>
       </div>
@@ -32,24 +44,55 @@
       </h3>
 
       <div v-if="hasStrategyData" class="chart-wrap">
-        <svg :viewBox="`0 0 ${size} ${size}`" class="radar-chart" role="img" aria-label="AI strategy radar chart">
+        <svg
+          :viewBox="`0 0 ${size} ${size}`"
+          class="radar-chart"
+          role="img"
+          aria-label="AI strategy radar chart"
+        >
           <g>
-            <polygon v-for="(ring, i) in ringPolygons" :key="`ring-${i}`" :points="ring" class="ring"
-              :class="{ 'ring-outer': i === ringPolygons.length - 1 }" />
+            <polygon
+              v-for="(ring, i) in ringPolygons"
+              :key="`ring-${i}`"
+              :points="ring"
+              class="ring"
+              :class="{ 'ring-outer': i === ringPolygons.length - 1 }"
+            />
           </g>
 
           <g>
-            <line v-for="(pt, i) in axisPoints" :key="`axis-${i}`" :x1="center" :y1="center" :x2="pt.x" :y2="pt.y"
-              class="axis" />
+            <line
+              v-for="(pt, i) in axisPoints"
+              :key="`axis-${i}`"
+              :x1="center"
+              :y1="center"
+              :x2="pt.x"
+              :y2="pt.y"
+              class="axis"
+            />
           </g>
 
           <polygon :points="valuePolygon" class="value-fill" />
           <polygon :points="valuePolygon" class="value-line" />
 
-          <circle v-for="(pt, i) in valuePoints" :key="`dot-${i}`" :cx="pt.x" :cy="pt.y" r="3.2" class="value-dot" />
+          <circle
+            v-for="(pt, i) in valuePoints"
+            :key="`dot-${i}`"
+            :cx="pt.x"
+            :cy="pt.y"
+            r="3.2"
+            class="value-dot"
+          />
 
-          <text v-for="(label, i) in labels" :key="`label-${i}`" :x="labelPoints[i].x" :y="labelPoints[i].y"
-            text-anchor="middle" dominant-baseline="middle" class="label">
+          <text
+            v-for="(label, i) in labels"
+            :key="`label-${i}`"
+            :x="labelPoints[i].x"
+            :y="labelPoints[i].y"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            class="label"
+          >
             {{ label }}
           </text>
         </svg>
@@ -58,16 +101,38 @@
       <div v-if="longSummary">
         <p class="summary-text">{{ longSummary }}</p>
 
-        <div v-if="cardRoles.length || cardThemes.length || cardSentiment.length" class="roles-wrap">
-          <UBadge v-for="role in cardRoles" :key="role" color="primary" variant="subtle" size="sm" class="role-badge">
+        <div
+          v-if="cardRoles.length || cardThemes.length || cardSentiment.length"
+          class="roles-wrap"
+        >
+          <UBadge
+            v-for="role in cardRoles"
+            :key="role"
+            color="primary"
+            variant="subtle"
+            size="sm"
+            class="role-badge"
+          >
             {{ role }}
           </UBadge>
-          <UBadge v-for="theme in cardThemes" :key="theme" color="success" variant="subtle" size="sm"
-            class="role-badge">
+          <UBadge
+            v-for="theme in cardThemes"
+            :key="theme"
+            color="success"
+            variant="subtle"
+            size="sm"
+            class="role-badge"
+          >
             {{ theme }}
           </UBadge>
-          <UBadge v-for="sentiment in cardSentiment" :key="sentiment" color="info" variant="subtle" size="sm"
-            class="role-badge">
+          <UBadge
+            v-for="sentiment in cardSentiment"
+            :key="sentiment"
+            color="info"
+            variant="subtle"
+            size="sm"
+            class="role-badge"
+          >
             {{ sentiment }}
           </UBadge>
         </div>
@@ -131,19 +196,25 @@ const valuePoints = computed(() => {
   });
 });
 
-const valuePolygon = computed(() => valuePoints.value.map((p) => `${p.x},${p.y}`).join(' '));
+const valuePolygon = computed(() =>
+  valuePoints.value.map((p) => `${p.x},${p.y}`).join(' '),
+);
 
-const labelPoints = computed(() => labels.map((_, i) => {
-  const extraOffset = i === 1 || i === 3 ? 8 : 0; // Midrange + Combo
-  return pointAt(i, radius + 20 + extraOffset);
-}));
+const labelPoints = computed(() =>
+  labels.map((_, i) => {
+    const extraOffset = i === 1 || i === 3 ? 8 : 0; // Midrange + Combo
+    return pointAt(i, radius + 20 + extraOffset);
+  }),
+);
 
 function toMeterPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(100, (value / 5) * 100));
 }
 
-const overallPowerPercent = computed(() => toMeterPercent(props.llm.power_level));
+const overallPowerPercent = computed(() =>
+  toMeterPercent(props.llm.power_level),
+);
 
 const formatMeters = computed(() => {
   return Object.entries(props.llm.format_strength || {})
@@ -158,38 +229,41 @@ const formatMeters = computed(() => {
 
 const cardRoles = computed(() => {
   return (props.llm.roles || [])
-    .map(role => role.trim())
+    .map((role) => role.trim())
     .filter(Boolean)
     .slice(0, 5);
 });
 
 const cardThemes = computed(() => {
   return (props.llm.themes || [])
-    .map(theme => theme.trim())
+    .map((theme) => theme.trim())
     .filter(Boolean)
     .slice(0, 5);
 });
 
 const cardSentiment = computed(() => {
   return (props.llm.community_sentiment || [])
-    .map(sentiment => sentiment.trim())
+    .map((sentiment) => sentiment.trim())
     .filter(Boolean)
     .slice(0, 5);
 });
 
-const hasPowerLevelData = computed(() =>
-  props.llm.power_level > 0
+const hasPowerLevelData = computed(() => props.llm.power_level > 0);
+
+const hasStrategyData = computed(() => values.value.some((v) => v > 0));
+
+const hasSummaryData = computed(
+  () =>
+    hasStrategyData.value ||
+    !!longSummary.value ||
+    cardRoles.value.length > 0 ||
+    cardThemes.value.length > 0 ||
+    cardSentiment.value.length > 0,
 );
 
-const hasStrategyData = computed(() =>
-  values.value.some(v => v > 0)
+const hasAnyData = computed(
+  () => hasPowerLevelData.value || hasSummaryData.value,
 );
-
-const hasSummaryData = computed(() =>
-  hasStrategyData.value || !!longSummary.value || cardRoles.value.length > 0 || cardThemes.value.length > 0 || cardSentiment.value.length > 0
-);
-
-const hasAnyData = computed(() => hasPowerLevelData.value || hasSummaryData.value);
 
 function meterColor(percent: number) {
   if (percent >= 70) return 'success';

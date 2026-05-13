@@ -1,9 +1,14 @@
 <template>
   <div class="mb-2">
-    <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">Try An Example Query:</h2>
+    <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">
+      Try An Example Query:
+    </h2>
     <ExampleQueriesSkeleton v-if="isLoading" />
 
-    <div v-else-if="results && results.cards.length > 0" class="example-content">
+    <div
+      v-else-if="results && results.cards.length > 0"
+      class="example-content"
+    >
       <!-- Query display and TRY IT button -->
       <div class="query-header">
         <div>
@@ -11,17 +16,38 @@
           <span class="query-value">"{{ results.query }}"</span>
         </div>
         <div class="button-group">
-          <UButton color="neutral" variant="outline" icon="i-lucide-refresh-cw" @click="loadRandomExample"
-            :loading="isLoading" size="sm" class="cursor-pointer" />
-          <UButton color="primary" variant="outline" @click="tryQuery" icon="i-lucide-search" class="cursor-pointer">
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-refresh-cw"
+            @click="loadRandomExample"
+            :loading="isLoading"
+            size="sm"
+            class="cursor-pointer"
+            aria-label="Load another example query"
+          />
+          <UButton
+            color="primary"
+            variant="outline"
+            @click="tryQuery"
+            icon="i-lucide-search"
+            class="cursor-pointer"
+          >
             TRY
           </UButton>
         </div>
       </div>
       <!-- Horizontal scrolling results -->
-      <UCarousel v-slot="{ item }" loop wheel-gestures :auto-scroll="{ speed: 1 }" :items="results.cards" :ui="{
-        item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0'
-      }">
+      <UCarousel
+        v-slot="{ item }"
+        loop
+        wheel-gestures
+        :auto-scroll="{ speed: 1 }"
+        :items="results.cards"
+        :ui="{
+          item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0',
+        }"
+      >
         <Card :card="item" size="small" />
       </UCarousel>
     </div>
@@ -36,18 +62,21 @@ const router = useRouter();
 
 const { results, isLoading, refetch } = useExampleQueries();
 
-
 // Call refetch() to manually trigger the query again
 function loadRandomExample() {
   refetch();
 }
 
 function tryQuery() {
-  // Navigate to search page with the current query
+  // Navigate to the AI search page with the current example query.
+  // We can't use a `name` here — search routes are nested under
+  // `/search/[platform]/[type]/[[slug]]` and don't have a single
+  // stable name; use the path directly.
+  if (!results.value?.query) return;
   router.push({
-    name: 'search',
+    path: '/search/all/ai',
     query: {
-      query: results.value?.query,
+      query: results.value.query,
     },
   });
 }

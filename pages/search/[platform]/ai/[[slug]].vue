@@ -1,12 +1,20 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full pt-4 flex flex-col items-center">
-      <Search default-search-type="ai" :platform="searchPlatformProp" class="mt-6 max-w-5xl" />
+      <Search
+        default-search-type="ai"
+        :platform="searchPlatformProp"
+        class="mt-6 max-w-5xl"
+      />
 
       <!-- SEO slug page: show pre-generated title + description -->
       <template v-if="seoEntry">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">{{ seoEntry.title }}</h1>
-        <p class="text-gray-400 text-center mb-6 max-w-2xl">{{ seoEntry.description }}</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
+          {{ seoEntry.title }}
+        </h1>
+        <p class="text-gray-400 text-center mb-6 max-w-2xl">
+          {{ seoEntry.description }}
+        </p>
       </template>
 
       <!-- Landing page: show about section -->
@@ -14,25 +22,44 @@
 
       <!-- Results -->
       <div class="mb-10 w-full">
-        <SearchResults :is-loading="isLoading" :search-results="searchResults" :query-param="displayQuery"
+        <SearchResults
+          :is-loading="isLoading"
+          :search-results="searchResults"
+          :query-param="displayQuery"
           :error-message="searchError?.message"
-          :help-text="seoEntry ? `Loading ${platformName} results...` : `Please enter a search query to find ${platformName} cards.`" />
+          :help-text="
+            seoEntry
+              ? `Loading ${platformName} results...`
+              : `Please enter a search query to find ${platformName} cards.`
+          "
+        />
       </div>
-
     </div>
   </UContainer>
-  <LazyIssuesFab v-if="searchResults && searchResults.length" :onClick="handleFabClick" />
+  <LazyIssuesFab
+    v-if="searchResults && searchResults.length"
+    :onClick="handleFabClick"
+  />
   <LazyBackToTop />
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { CardSearchFiltersSchema, WordSearchSchema } from '~/models/searchModel';
+import {
+  CardSearchFiltersSchema,
+  WordSearchSchema,
+} from '~/models/searchModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useColbertSearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
-import { isValidPlatform, getPlatformFilters, getSearchPlatformProp, getPlatformDisplayName, type Platform } from '~/utils/platformConfig';
+import {
+  isValidPlatform,
+  getPlatformFilters,
+  getSearchPlatformProp,
+  getPlatformDisplayName,
+  type Platform,
+} from '~/utils/platformConfig';
 import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 
 const route = useRoute();
@@ -57,47 +84,67 @@ const queryParam = computed(() => String(route.query?.query || ''));
 const displayQuery = computed(() => seoEntry?.query || queryParam.value);
 
 useSeoMeta({
-  robots: () => seoEntry ? 'index, follow' : (queryParam.value ? 'noindex, follow' : 'index, follow'),
-  title: () => seoEntry
-    ? `${seoEntry.title} | CardMystic`
-    : queryParam.value
-      ? `${queryParam.value} - ${platformName} AI Search | CardMystic`
-      : `${platformName} AI Search | CardMystic`,
-  description: () => seoEntry
-    ? seoEntry.description
-    : queryParam.value
-      ? `Find ${platformName} cards matching "${queryParam.value}" using AI search.`
-      : `Search for ${platformName} cards using AI-powered natural language search.`,
+  robots: () =>
+    seoEntry
+      ? 'index, follow'
+      : queryParam.value
+        ? 'noindex, follow'
+        : 'index, follow',
+  title: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : queryParam.value
+        ? `${queryParam.value} - ${platformName} AI Search | CardMystic`
+        : `${platformName} AI Search | CardMystic`,
+  description: () =>
+    seoEntry
+      ? seoEntry.description
+      : queryParam.value
+        ? `Find ${platformName} cards matching "${queryParam.value}" using AI search.`
+        : `Search for ${platformName} cards using AI-powered natural language search.`,
   ogType: 'website',
-  ogTitle: () => seoEntry
-    ? `${seoEntry.title} | CardMystic`
-    : `${platformName} AI Search | CardMystic`,
-  ogDescription: () => seoEntry
-    ? seoEntry.description
-    : `AI-powered ${platformName} card search on CardMystic.`,
+  ogTitle: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : `${platformName} AI Search | CardMystic`,
+  ogDescription: () =>
+    seoEntry
+      ? seoEntry.description
+      : `AI-powered ${platformName} card search on CardMystic.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} AI Search`,
   twitterCard: 'summary_large_image',
-  twitterTitle: () => seoEntry
-    ? `${seoEntry.title} | CardMystic`
-    : `${platformName} AI Search | CardMystic`,
-  twitterDescription: () => seoEntry
-    ? seoEntry.description
-    : `AI-powered ${platformName} card search on CardMystic.`,
+  twitterTitle: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : `${platformName} AI Search | CardMystic`,
+  twitterDescription: () =>
+    seoEntry
+      ? seoEntry.description
+      : `AI-powered ${platformName} card search on CardMystic.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
 definePageMeta({ title: 'AI Search' });
 
-const limitParam = computed(() => { const n = Number(route.query?.limit); return n > 0 ? n : undefined; });
+const limitParam = computed(() => {
+  const n = Number(route.query?.limit);
+  return n > 0 ? n : undefined;
+});
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
     try {
-      return CardSearchFiltersSchema.parse(JSON.parse(String(route.query.filters)));
-    } catch { /* fall through to defaults on malformed input */ }
+      return CardSearchFiltersSchema.parse(
+        JSON.parse(String(route.query.filters)),
+      );
+    } catch {
+      /* fall through to defaults on malformed input */
+    }
   }
-  return seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters;
+  return seoEntry
+    ? { ...seoEntry.filters, ...platformFilters }
+    : platformFilters;
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();
@@ -124,10 +171,18 @@ const wordSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading, error: searchError } = useColbertSearch(wordSearch);
+const {
+  searchResults,
+  isLoading,
+  error: searchError,
+} = useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
-watch(() => route.query, (query) => {
-  if (query.query) saveSearchQuery('ai', query);
-}, { immediate: true });
+watch(
+  () => route.query,
+  (query) => {
+    if (query.query) saveSearchQuery('ai', query);
+  },
+  { immediate: true },
+);
 </script>

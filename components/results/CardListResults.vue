@@ -8,21 +8,41 @@
     <!-- Cards display -->
     <template v-else-if="hasAnyCards">
       <div class="results-layout xl:flex xl:items-start xl:gap-6">
-        <aside v-if="previewCard" class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
-          @mouseenter="clearPendingPreviewCard()">
+        <aside
+          v-if="previewCard"
+          class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
+          @mouseenter="clearPendingPreviewCard()"
+        >
           <div class="preview-sticky">
-            <HoveredListCardPreview :card="previewCard"
-              :isCommanderOfDecklist="commanderCardIds?.includes(previewCard.card_data.id) ?? false"
+            <HoveredListCardPreview
+              :card="previewCard"
+              :isCommanderOfDecklist="
+                commanderCardIds?.includes(previewCard.card_data.id) ?? false
+              "
               :canBeACommander="isCommanderCard(previewCard)"
               :num-copies="listItemsMap?.[previewCard.card_data.id]?.num_copies"
-              :board="listItemsMap?.[previewCard.card_data.id]?.board" :decklist-card-names="decklistCardNames"
+              :board="listItemsMap?.[previewCard.card_data.id]?.board"
+              :decklist-card-names="decklistCardNames"
               :is-flipped="flippedCards[previewCard.card_data.id] ?? false"
               @remove="(cardId: string) => emit('removeCard', cardId)"
-              @set-commander="(cardName: string) => emit('setCommander', cardName)"
-              @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
-              @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-              @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
-              @flip="handleCardFlip" />
+              @set-commander="
+                (cardName: string) => emit('setCommander', cardName)
+              "
+              @clear-commander="
+                (cardId: string) => emit('clearCommander', cardId)
+              "
+              @update-num-copies="
+                (cardName: string, n: number) =>
+                  emit('updateNumCopies', cardName, n)
+              "
+              @change-board="
+                (
+                  cardName: string,
+                  b: 'Mainboard' | 'Sideboard' | 'Considering',
+                ) => emit('changeBoard', cardName, b)
+              "
+              @flip="handleCardFlip"
+            />
           </div>
         </aside>
 
@@ -30,58 +50,153 @@
           <template v-if="groups && groups.length > 0">
             <!-- Mainboard header -->
             <div
-              v-if="(sideboardGroups && sideboardGroups.length > 0) || (consideringGroups && consideringGroups.length > 0)"
-              class="board-divider mb-2">
+              v-if="
+                (sideboardGroups && sideboardGroups.length > 0) ||
+                (consideringGroups && consideringGroups.length > 0)
+              "
+              class="board-divider mb-2"
+            >
               <div class="board-divider-line"></div>
-              <span class="board-divider-label">Mainboard ({{ mainboardCount }} {{ mainboardCount === 1 ? 'card' :
-                'cards'
-                }}) <span class="board-divider-price">${{ mainboardPrice.toFixed(2) }}</span></span>
+              <span class="board-divider-label"
+                >Mainboard ({{ mainboardCount }}
+                {{ mainboardCount === 1 ? 'card' : 'cards' }})
+                <span class="board-divider-price"
+                  >${{ mainboardPrice.toFixed(2) }}</span
+                ></span
+              >
               <div class="board-divider-line"></div>
             </div>
             <!-- Commander card(s) at the top (groups with empty label) -->
-            <template v-for="(group, index) in ungroupedGroups" :key="'ungrouped-' + index">
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4">
-                <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                  @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
-                  <ListCard :card="card" :is-deck-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
-                    :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
+            <template
+              v-for="(group, index) in ungroupedGroups"
+              :key="'ungrouped-' + index"
+            >
+              <div
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4"
+              >
+                <div
+                  v-for="card in group.cards"
+                  :key="card.card_data.id"
+                  @mouseenter="setPreviewCard(card)"
+                  @focusin="setPreviewCard(card)"
+                  @mouseleave="clearPendingPreviewCard(card.card_data.id)"
+                >
+                  <ListCard
+                    :card="card"
+                    :is-deck-commander="
+                      commanderCardIds?.includes(card.card_data.id) ?? false
+                    "
+                    :is-commander-card="isCommanderCard(card)"
+                    :commander-color-identity="commanderColorIdentity"
                     :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
-                    :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
-                    :decklist-card-names="decklistCardNames" @remove="(cardId: string) => emit('removeCard', cardId)"
-                    @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                    @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
-                    @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                    @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
-                    @flip="handleCardFlip" />
+                    :board="listItemsMap?.[card.card_data.id]?.board"
+                    :format="format"
+                    :decklist-card-names="decklistCardNames"
+                    @remove="(cardId: string) => emit('removeCard', cardId)"
+                    @set-commander="
+                      (cardName: string) => emit('setCommander', cardName)
+                    "
+                    @clear-commander="
+                      (cardId: string) => emit('clearCommander', cardId)
+                    "
+                    @update-num-copies="
+                      (cardName: string, n: number) =>
+                        emit('updateNumCopies', cardName, n)
+                    "
+                    @change-board="
+                      (
+                        cardName: string,
+                        b: 'Mainboard' | 'Sideboard' | 'Considering',
+                      ) => emit('changeBoard', cardName, b)
+                    "
+                    @flip="handleCardFlip"
+                  />
                 </div>
               </div>
             </template>
 
             <!-- Grouped Cards (Accordion) -->
-            <div v-if="labeledGroups.length > 0" class="flex justify-center sm:justify-end gap-1 mb-1">
-              <UButton class="cursor-pointer" icon="i-lucide-chevrons-down" label="Expand All" size="xs" color="neutral"
-                variant="ghost" @click="openAccordionValues = labeledGroups.map(g => g.label)" />
-              <UButton icon="i-lucide-chevrons-up" label="Collapse All" size="xs" color="neutral" variant="ghost"
-                @click="openAccordionValues = []" />
+            <div
+              v-if="labeledGroups.length > 0"
+              class="flex justify-center sm:justify-end gap-1 mb-1"
+            >
+              <UButton
+                class="cursor-pointer"
+                icon="i-lucide-chevrons-down"
+                label="Expand All"
+                size="xs"
+                color="neutral"
+                variant="ghost"
+                @click="openAccordionValues = labeledGroups.map((g) => g.label)"
+              />
+              <UButton
+                icon="i-lucide-chevrons-up"
+                label="Collapse All"
+                size="xs"
+                color="neutral"
+                variant="ghost"
+                @click="openAccordionValues = []"
+              />
             </div>
-            <UAccordion v-if="labeledGroups.length > 0" type="multiple" v-model="openAccordionValues"
+            <UAccordion
+              v-if="labeledGroups.length > 0"
+              type="multiple"
+              v-model="openAccordionValues"
               :items="accordionItems"
-              :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
-              <template v-for="group in labeledGroups" :key="group.label" #[group.label]>
-                <div :id="groupToId(group.label)"
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2">
-                  <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
-                    <ListCard :card="card" :is-deck-commander="commanderCardIds?.includes(card.card_data.id) ?? false"
-                      :is-commander-card="isCommanderCard(card)" :commander-color-identity="commanderColorIdentity"
-                      :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
-                      :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
-                      :decklist-card-names="decklistCardNames" @remove="(cardId: string) => emit('removeCard', cardId)"
-                      @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                      @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
-                      @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
-                      @flip="handleCardFlip" />
+              :ui="{
+                item: 'w-full mx-auto sm:mx-0',
+                trigger:
+                  'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1',
+              }"
+            >
+              <template
+                v-for="group in labeledGroups"
+                :key="group.label"
+                #[group.label]
+              >
+                <div
+                  :id="groupToId(group.label)"
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2"
+                >
+                  <div
+                    v-for="card in group.cards"
+                    :key="card.card_data.id"
+                    @mouseenter="setPreviewCard(card)"
+                    @focusin="setPreviewCard(card)"
+                    @mouseleave="clearPendingPreviewCard(card.card_data.id)"
+                  >
+                    <ListCard
+                      :card="card"
+                      :is-deck-commander="
+                        commanderCardIds?.includes(card.card_data.id) ?? false
+                      "
+                      :is-commander-card="isCommanderCard(card)"
+                      :commander-color-identity="commanderColorIdentity"
+                      :num-copies="
+                        listItemsMap?.[card.card_data.id]?.num_copies
+                      "
+                      :board="listItemsMap?.[card.card_data.id]?.board"
+                      :format="format"
+                      :decklist-card-names="decklistCardNames"
+                      @remove="(cardId: string) => emit('removeCard', cardId)"
+                      @set-commander="
+                        (cardName: string) => emit('setCommander', cardName)
+                      "
+                      @clear-commander="
+                        (cardId: string) => emit('clearCommander', cardId)
+                      "
+                      @update-num-copies="
+                        (cardName: string, n: number) =>
+                          emit('updateNumCopies', cardName, n)
+                      "
+                      @change-board="
+                        (
+                          cardName: string,
+                          b: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('changeBoard', cardName, b)
+                      "
+                      @flip="handleCardFlip"
+                    />
                   </div>
                 </div>
               </template>
@@ -90,53 +205,133 @@
 
           <!-- Sideboard Section -->
           <template v-if="sideboardGroups && sideboardGroups.length > 0">
-            <div id="board-sideboard" class="board-divider cursor-pointer"
-              @click="sideboardExpanded = !sideboardExpanded">
+            <div
+              id="board-sideboard"
+              class="board-divider cursor-pointer"
+              @click="sideboardExpanded = !sideboardExpanded"
+            >
               <div class="board-divider-line"></div>
               <span class="board-divider-label">
-                <UIcon :name="sideboardExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="w-4 h-4" />
-                Sideboard ({{ sideboardCount }} {{ sideboardCount === 1 ? 'card' : 'cards' }}) <span
-                  class="board-divider-price">${{ sideboardPrice.toFixed(2) }}</span>
+                <UIcon
+                  :name="
+                    sideboardExpanded
+                      ? 'i-lucide-chevron-down'
+                      : 'i-lucide-chevron-right'
+                  "
+                  class="w-4 h-4"
+                />
+                Sideboard ({{ sideboardCount }}
+                {{ sideboardCount === 1 ? 'card' : 'cards' }})
+                <span class="board-divider-price"
+                  >${{ sideboardPrice.toFixed(2) }}</span
+                >
               </span>
               <div class="board-divider-line"></div>
             </div>
             <UCard variant="outline" v-show="sideboardExpanded" class="mb-4">
               <!-- Ungrouped sideboard cards -->
-              <template v-for="(group, index) in sideboardUngrouped" :key="'sb-ungrouped-' + index">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4">
-                  <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
-                    <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+              <template
+                v-for="(group, index) in sideboardUngrouped"
+                :key="'sb-ungrouped-' + index"
+              >
+                <div
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4"
+                >
+                  <div
+                    v-for="card in group.cards"
+                    :key="card.card_data.id"
+                    @mouseenter="setPreviewCard(card)"
+                    @focusin="setPreviewCard(card)"
+                    @mouseleave="clearPendingPreviewCard(card.card_data.id)"
+                  >
+                    <ListCard
+                      :card="card"
+                      :is-deck-commander="false"
+                      :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
-                      :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
-                      :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                      :num-copies="
+                        listItemsMap?.[card.card_data.id]?.num_copies
+                      "
+                      :board="listItemsMap?.[card.card_data.id]?.board"
+                      :format="format"
                       @remove="(cardId: string) => emit('removeCard', cardId)"
-                      @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                      @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
-                      @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
-                      @flip="handleCardFlip" />
+                      @set-commander="
+                        (cardName: string) => emit('setCommander', cardName)
+                      "
+                      @clear-commander="
+                        (cardId: string) => emit('clearCommander', cardId)
+                      "
+                      @update-num-copies="
+                        (cardName: string, n: number) =>
+                          emit('updateNumCopies', cardName, n)
+                      "
+                      @change-board="
+                        (
+                          cardName: string,
+                          b: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('changeBoard', cardName, b)
+                      "
+                      @flip="handleCardFlip"
+                    />
                   </div>
                 </div>
               </template>
               <!-- Grouped sideboard cards -->
-              <UAccordion v-if="sideboardLabeled.length > 0" type="multiple" v-model="openSideboardValues"
+              <UAccordion
+                v-if="sideboardLabeled.length > 0"
+                type="multiple"
+                v-model="openSideboardValues"
                 :items="sideboardAccordionItems"
-                :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
-                <template v-for="group in sideboardLabeled" :key="group.label" #[group.label]>
-                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2">
-                    <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                      @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
-                      <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+                :ui="{
+                  item: 'w-full mx-auto sm:mx-0',
+                  trigger:
+                    'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1',
+                }"
+              >
+                <template
+                  v-for="group in sideboardLabeled"
+                  :key="group.label"
+                  #[group.label]
+                >
+                  <div
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2"
+                  >
+                    <div
+                      v-for="card in group.cards"
+                      :key="card.card_data.id"
+                      @mouseenter="setPreviewCard(card)"
+                      @focusin="setPreviewCard(card)"
+                      @mouseleave="clearPendingPreviewCard(card.card_data.id)"
+                    >
+                      <ListCard
+                        :card="card"
+                        :is-deck-commander="false"
+                        :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
-                        :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
-                        :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                        :num-copies="
+                          listItemsMap?.[card.card_data.id]?.num_copies
+                        "
+                        :board="listItemsMap?.[card.card_data.id]?.board"
+                        :format="format"
                         @remove="(cardId: string) => emit('removeCard', cardId)"
-                        @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                        @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
-                        @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                        @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
-                        @flip="handleCardFlip" />
+                        @set-commander="
+                          (cardName: string) => emit('setCommander', cardName)
+                        "
+                        @clear-commander="
+                          (cardId: string) => emit('clearCommander', cardId)
+                        "
+                        @update-num-copies="
+                          (cardName: string, n: number) =>
+                            emit('updateNumCopies', cardName, n)
+                        "
+                        @change-board="
+                          (
+                            cardName: string,
+                            b: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('changeBoard', cardName, b)
+                        "
+                        @flip="handleCardFlip"
+                      />
                     </div>
                   </div>
                 </template>
@@ -146,54 +341,133 @@
 
           <!-- Considering Section -->
           <template v-if="consideringGroups && consideringGroups.length > 0">
-            <div id="board-considering" class="board-divider cursor-pointer"
-              @click="consideringExpanded = !consideringExpanded">
+            <div
+              id="board-considering"
+              class="board-divider cursor-pointer"
+              @click="consideringExpanded = !consideringExpanded"
+            >
               <div class="board-divider-line"></div>
               <span class="board-divider-label">
-                <UIcon :name="consideringExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
-                  class="w-4 h-4" />
-                Considering ({{ consideringCount }} {{ consideringCount === 1 ? 'card' : 'cards' }}) <span
-                  class="board-divider-price">${{ consideringPrice.toFixed(2) }}</span>
+                <UIcon
+                  :name="
+                    consideringExpanded
+                      ? 'i-lucide-chevron-down'
+                      : 'i-lucide-chevron-right'
+                  "
+                  class="w-4 h-4"
+                />
+                Considering ({{ consideringCount }}
+                {{ consideringCount === 1 ? 'card' : 'cards' }})
+                <span class="board-divider-price"
+                  >${{ consideringPrice.toFixed(2) }}</span
+                >
               </span>
               <div class="board-divider-line"></div>
             </div>
             <UCard variant="outline" v-show="consideringExpanded" class="mb-4">
               <!-- Ungrouped considering cards -->
-              <template v-for="(group, index) in consideringUngrouped" :key="'con-ungrouped-' + index">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4">
-                  <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
-                    <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+              <template
+                v-for="(group, index) in consideringUngrouped"
+                :key="'con-ungrouped-' + index"
+              >
+                <div
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4"
+                >
+                  <div
+                    v-for="card in group.cards"
+                    :key="card.card_data.id"
+                    @mouseenter="setPreviewCard(card)"
+                    @focusin="setPreviewCard(card)"
+                    @mouseleave="clearPendingPreviewCard(card.card_data.id)"
+                  >
+                    <ListCard
+                      :card="card"
+                      :is-deck-commander="false"
+                      :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
-                      :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
-                      :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                      :num-copies="
+                        listItemsMap?.[card.card_data.id]?.num_copies
+                      "
+                      :board="listItemsMap?.[card.card_data.id]?.board"
+                      :format="format"
                       @remove="(cardId: string) => emit('removeCard', cardId)"
-                      @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                      @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
-                      @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                      @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
-                      @flip="handleCardFlip" />
+                      @set-commander="
+                        (cardName: string) => emit('setCommander', cardName)
+                      "
+                      @clear-commander="
+                        (cardId: string) => emit('clearCommander', cardId)
+                      "
+                      @update-num-copies="
+                        (cardName: string, n: number) =>
+                          emit('updateNumCopies', cardName, n)
+                      "
+                      @change-board="
+                        (
+                          cardName: string,
+                          b: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('changeBoard', cardName, b)
+                      "
+                      @flip="handleCardFlip"
+                    />
                   </div>
                 </div>
               </template>
               <!-- Grouped considering cards -->
-              <UAccordion v-if="consideringLabeled.length > 0" type="multiple" v-model="openConsideringValues"
+              <UAccordion
+                v-if="consideringLabeled.length > 0"
+                type="multiple"
+                v-model="openConsideringValues"
                 :items="consideringAccordionItems"
-                :ui="{ item: 'w-full mx-auto sm:mx-0', trigger: 'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1' }">
-                <template v-for="group in consideringLabeled" :key="group.label" #[group.label]>
-                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2">
-                    <div v-for="card in group.cards" :key="card.card_data.id" @mouseenter="setPreviewCard(card)"
-                      @focusin="setPreviewCard(card)" @mouseleave="clearPendingPreviewCard(card.card_data.id)">
-                      <ListCard :card="card" :is-deck-commander="false" :is-commander-card="isCommanderCard(card)"
+                :ui="{
+                  item: 'w-full mx-auto sm:mx-0',
+                  trigger:
+                    'cursor-pointer bg-secondary text-white rounded-lg px-4 py-2 mb-1',
+                }"
+              >
+                <template
+                  v-for="group in consideringLabeled"
+                  :key="group.label"
+                  #[group.label]
+                >
+                  <div
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2"
+                  >
+                    <div
+                      v-for="card in group.cards"
+                      :key="card.card_data.id"
+                      @mouseenter="setPreviewCard(card)"
+                      @focusin="setPreviewCard(card)"
+                      @mouseleave="clearPendingPreviewCard(card.card_data.id)"
+                    >
+                      <ListCard
+                        :card="card"
+                        :is-deck-commander="false"
+                        :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
-                        :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
-                        :board="listItemsMap?.[card.card_data.id]?.board" :format="format"
+                        :num-copies="
+                          listItemsMap?.[card.card_data.id]?.num_copies
+                        "
+                        :board="listItemsMap?.[card.card_data.id]?.board"
+                        :format="format"
                         @remove="(cardId: string) => emit('removeCard', cardId)"
-                        @set-commander="(cardName: string) => emit('setCommander', cardName)"
-                        @clear-commander="(cardId: string) => emit('clearCommander', cardId)"
-                        @update-num-copies="(cardName: string, n: number) => emit('updateNumCopies', cardName, n)"
-                        @change-board="(cardName: string, b: 'Mainboard' | 'Sideboard' | 'Considering') => emit('changeBoard', cardName, b)"
-                        @flip="handleCardFlip" />
+                        @set-commander="
+                          (cardName: string) => emit('setCommander', cardName)
+                        "
+                        @clear-commander="
+                          (cardId: string) => emit('clearCommander', cardId)
+                        "
+                        @update-num-copies="
+                          (cardName: string, n: number) =>
+                            emit('updateNumCopies', cardName, n)
+                        "
+                        @change-board="
+                          (
+                            cardName: string,
+                            b: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('changeBoard', cardName, b)
+                        "
+                        @flip="handleCardFlip"
+                      />
                     </div>
                   </div>
                 </template>
@@ -208,14 +482,16 @@
     <template v-else>
       <div class="flex flex-col items-center justify-center py-12 text-center">
         <UIcon name="i-lucide-layers" class="w-16 h-16 mb-4 text-gray-400" />
-        <h3 class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300">This list is empty!</h3>
+        <h3 class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300">
+          This list is empty!
+        </h3>
         <p class="text-gray-500 dark:text-gray-400 max-w-md">
-          Use the search dropdown above, or the <span class="font-medium">Add to Deck</span> button from the clipboard
+          Use the search dropdown above, or the
+          <span class="font-medium">Add to Deck</span> button from the clipboard
           to add cards to this deck.
         </p>
       </div>
     </template>
-
   </div>
 </template>
 
@@ -241,7 +517,7 @@ const { data: commandersSet } = useCommandersSet();
 
 function flattenGroups(groups: CardGroup[] | null | undefined): Card[] {
   if (!groups) return [];
-  return groups.flatMap(group => group.cards);
+  return groups.flatMap((group) => group.cards);
 }
 
 function isCommanderCard(card: Card): boolean {
@@ -251,16 +527,16 @@ function isCommanderCard(card: Card): boolean {
 
 const ungroupedGroups = computed(() => {
   if (!props.groups) return [];
-  return props.groups.filter(g => !g.label);
+  return props.groups.filter((g) => !g.label);
 });
 
 const labeledGroups = computed(() => {
   if (!props.groups) return [];
-  return props.groups.filter(g => g.label);
+  return props.groups.filter((g) => g.label);
 });
 
 const accordionItems = computed<AccordionItem[]>(() => {
-  return labeledGroups.value.map(g => ({
+  return labeledGroups.value.map((g) => ({
     label: g.label,
     value: g.label,
     slot: g.label,
@@ -269,50 +545,73 @@ const accordionItems = computed<AccordionItem[]>(() => {
 
 const openAccordionValues = ref<string[]>([]);
 
-watch(labeledGroups, (groups) => {
-  openAccordionValues.value = groups.map(g => g.label);
-}, { immediate: true });
+watch(
+  labeledGroups,
+  (groups) => {
+    openAccordionValues.value = groups.map((g) => g.label);
+  },
+  { immediate: true },
+);
 
 // Sideboard accordion
 const sideboardLabeled = computed(() => {
   if (!props.sideboardGroups) return [];
-  return props.sideboardGroups.filter(g => g.label);
+  return props.sideboardGroups.filter((g) => g.label);
 });
 const sideboardUngrouped = computed(() => {
   if (!props.sideboardGroups) return [];
-  return props.sideboardGroups.filter(g => !g.label);
+  return props.sideboardGroups.filter((g) => !g.label);
 });
 const sideboardAccordionItems = computed<AccordionItem[]>(() => {
-  return sideboardLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label }));
+  return sideboardLabeled.value.map((g) => ({
+    label: g.label,
+    value: g.label,
+    slot: g.label,
+  }));
 });
 const sideboardExpanded = ref(false);
 const openSideboardValues = ref<string[]>([]);
-watch(sideboardLabeled, (groups) => {
-  openSideboardValues.value = groups.map(g => g.label);
-}, { immediate: true });
+watch(
+  sideboardLabeled,
+  (groups) => {
+    openSideboardValues.value = groups.map((g) => g.label);
+  },
+  { immediate: true },
+);
 
 // Considering accordion
 const consideringLabeled = computed(() => {
   if (!props.consideringGroups) return [];
-  return props.consideringGroups.filter(g => g.label);
+  return props.consideringGroups.filter((g) => g.label);
 });
 const consideringUngrouped = computed(() => {
   if (!props.consideringGroups) return [];
-  return props.consideringGroups.filter(g => !g.label);
+  return props.consideringGroups.filter((g) => !g.label);
 });
 const consideringAccordionItems = computed<AccordionItem[]>(() => {
-  return consideringLabeled.value.map(g => ({ label: g.label, value: g.label, slot: g.label }));
+  return consideringLabeled.value.map((g) => ({
+    label: g.label,
+    value: g.label,
+    slot: g.label,
+  }));
 });
 const consideringExpanded = ref(false);
 const openConsideringValues = ref<string[]>([]);
-watch(consideringLabeled, (groups) => {
-  openConsideringValues.value = groups.map(g => g.label);
-}, { immediate: true });
+watch(
+  consideringLabeled,
+  (groups) => {
+    openConsideringValues.value = groups.map((g) => g.label);
+  },
+  { immediate: true },
+);
 
 const flippedCards = ref<Record<string, boolean>>({});
 
 function handleCardFlip(cardId: string) {
-  flippedCards.value = { ...flippedCards.value, [cardId]: !(flippedCards.value[cardId] ?? false) };
+  flippedCards.value = {
+    ...flippedCards.value,
+    [cardId]: !(flippedCards.value[cardId] ?? false),
+  };
 }
 
 const hoveredCardId = ref<string | null>(null);
@@ -326,25 +625,33 @@ const previewCandidates = computed(() => [
 const previewCard = computed(() => {
   if (previewCandidates.value.length === 0) return null;
   if (!hoveredCardId.value) return previewCandidates.value[0];
-  return previewCandidates.value.find(card => card.card_data.id === hoveredCardId.value) ?? previewCandidates.value[0];
+  return (
+    previewCandidates.value.find(
+      (card) => card.card_data.id === hoveredCardId.value,
+    ) ?? previewCandidates.value[0]
+  );
 });
 
 const hasAnyCards = computed(() => previewCandidates.value.length > 0);
 
-watch(previewCandidates, (cards) => {
-  if (cards.length === 0) {
-    hoveredCardId.value = null;
-    return;
-  }
+watch(
+  previewCandidates,
+  (cards) => {
+    if (cards.length === 0) {
+      hoveredCardId.value = null;
+      return;
+    }
 
-  const stillExists = hoveredCardId.value
-    ? cards.some(card => card.card_data.id === hoveredCardId.value)
-    : false;
+    const stillExists = hoveredCardId.value
+      ? cards.some((card) => card.card_data.id === hoveredCardId.value)
+      : false;
 
-  if (!stillExists) {
-    hoveredCardId.value = cards[0].card_data.id;
-  }
-}, { immediate: true });
+    if (!stillExists) {
+      hoveredCardId.value = cards[0].card_data.id;
+    }
+  },
+  { immediate: true },
+);
 
 const HOVER_PREVIEW_DELAY_MS = 200;
 let _hoverRafId: number | null = null;
@@ -397,24 +704,38 @@ const emit = defineEmits<{
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
   (e: 'updateNumCopies', cardName: string, numCopies: number): void;
-  (e: 'changeBoard', cardName: string, board: 'Mainboard' | 'Sideboard' | 'Considering'): void;
+  (
+    e: 'changeBoard',
+    cardName: string,
+    board: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
 }>();
 
 function countCards(groups: CardGroup[] | null | undefined): number {
   if (!groups) return 0;
-  return groups.reduce((total, g) => total + g.cards.reduce((sum, c) => {
-    const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
-    return sum + copies;
-  }, 0), 0);
+  return groups.reduce(
+    (total, g) =>
+      total +
+      g.cards.reduce((sum, c) => {
+        const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
+        return sum + copies;
+      }, 0),
+    0,
+  );
 }
 
 function sumPrice(groups: CardGroup[] | null | undefined): number {
   if (!groups) return 0;
-  return groups.reduce((total, g) => total + g.cards.reduce((sum, c) => {
-    const price = c.card_data?.prices?.usd;
-    const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
-    return sum + (price ? parseFloat(price) * copies : 0);
-  }, 0), 0);
+  return groups.reduce(
+    (total, g) =>
+      total +
+      g.cards.reduce((sum, c) => {
+        const price = c.card_data?.prices?.usd;
+        const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
+        return sum + (price ? parseFloat(price) * copies : 0);
+      }, 0),
+    0,
+  );
 }
 
 const mainboardCount = computed(() => countCards(props.groups));
@@ -426,7 +747,13 @@ const sideboardPrice = computed(() => sumPrice(props.sideboardGroups));
 const consideringPrice = computed(() => sumPrice(props.consideringGroups));
 
 function groupToId(label: string): string {
-  return 'group-' + label.replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '').toLowerCase();
+  return (
+    'group-' +
+    label
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/-+$/, '')
+      .toLowerCase()
+  );
 }
 
 function expandBoard(board: 'Sideboard' | 'Considering') {
