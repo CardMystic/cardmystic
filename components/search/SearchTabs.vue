@@ -74,7 +74,7 @@
   <!-- Mobile dropdown -->
   <div class="mb-2 lg:hidden flex flex-col justify-center items-center">
     <USelect
-      label="select"
+      aria-label="Select search type"
       class="w-50"
       :modelValue="mobileValue"
       placeholder="Select status"

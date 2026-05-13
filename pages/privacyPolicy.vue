@@ -11,9 +11,8 @@
           of user data.
         </p>
         <p class="mt-4">
-          CardMystic collects analytics data through Microsoft Clarity and
-          stores user account information, decklists, and search data in our
-          Supabase database.
+          CardMystic stores user account information, decklists, and search data
+          in our Supabase database.
         </p>
       </div>
     </UCard>
@@ -36,17 +35,6 @@
             <strong>Card interaction feedback:</strong> Dislike clicks on card
             search results to help refine search quality and relevance
           </li>
-        </ul>
-
-        <p class="mt-6">
-          We also use Microsoft Clarity to collect anonymized analytics, which
-          may include:
-        </p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>Device and browser details</li>
-          <li>Interaction data (clicks, scrolls, navigation)</li>
-          <li>Region-level location information</li>
-          <li>Session recordings of page interactions</li>
         </ul>
 
         <p class="mt-6 font-semibold">2. User Account Data</p>
@@ -87,12 +75,6 @@
           <li>Understanding user preferences and search patterns</li>
         </ul>
 
-        <p class="mt-6 font-semibold">For analytics:</p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>Understanding site performance and usage patterns</li>
-          <li>Improving overall user experience</li>
-        </ul>
-
         <p class="mt-6 font-semibold">For user accounts:</p>
         <ul class="list-disc ml-6 mt-4">
           <li>Creating and managing your user profile</li>
@@ -124,10 +106,6 @@
           is stored securely in our Supabase database with row-level security
           policies ensuring users can only access their own data.
         </p>
-        <p class="mt-4">
-          Analytics data handled by Microsoft Clarity is processed according to
-          Microsoft's security standards.
-        </p>
       </div>
     </UCard>
 
@@ -136,34 +114,6 @@
 
       <div class="mt-2 text-base">
         <p>
-          We use Microsoft Clarity for analytics. Their policies apply to the
-          collection and processing of analytics data:
-        </p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>
-            <a
-              href="https://clarity.microsoft.com/terms"
-              target="_blank"
-              class="text-primary underline"
-            >
-              Clarity Terms
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://privacy.microsoft.com/"
-              target="_blank"
-              class="text-primary underline"
-            >
-              Microsoft Privacy Statement
-            </a>
-          </li>
-        </ul>
-        <p class="mt-4">
-          No personal user data (email, username, etc.) is ever shared with
-          Microsoft Clarity.
-        </p>
-        <p class="mt-4">
           Card data displayed on CardMystic is sourced from
           <a
             href="https://scryfall.com"
