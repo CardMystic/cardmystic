@@ -1,8 +1,45 @@
 import type { CardFormatType, ScryfallCard } from '~/models/cardModel';
 
+/**
+ * Which Scryfall image variant to use. Scryfall serves the same artwork
+ * at different resolutions:
+ *   - `small`  →  146 × 204  (~10–30 kB)   thumbnails / carousels / grids
+ *   - `normal` →  488 × 680  (~60–150 kB)  default detail / list cards
+ *   - `large`  →  672 × 936  (~160–400 kB) hovered preview / detail page
+ *
+ * Picking the right variant is the single biggest win for homepage
+ * page weight — eleven `normal` thumbnails ≈ 1.4 MB, while eleven
+ * `small` thumbnails ≈ 200 kB.
+ */
+export type CardImageSize = 'small' | 'normal' | 'large';
+
+/**
+ * Try `image_uris` keys in priority order based on the requested size,
+ * falling back to whatever's available so we always return *something*
+ * if the card has any image at all.
+ */
+const pickFromImageUris = (
+  uris: Partial<Record<string, string>> | undefined,
+  size: CardImageSize,
+): string | undefined => {
+  if (!uris) return undefined;
+  const order: string[] =
+    size === 'small'
+      ? ['small', 'normal', 'large', 'png']
+      : size === 'large'
+        ? ['large', 'normal', 'small', 'png']
+        : ['normal', 'large', 'small', 'png'];
+  for (const key of order) {
+    const url = uris[key];
+    if (url) return url;
+  }
+  return undefined;
+};
+
 export function getCardImageUrl(
   cardData: ScryfallCard,
   isFlipped: boolean = false,
+  size: CardImageSize = 'normal',
 ): string {
   // Use current printing instead of passed cardData
   const printingData = cardData;
@@ -13,35 +50,21 @@ export function getCardImageUrl(
     const face = isFlipped
       ? printingData.card_faces[1]
       : printingData.card_faces[0];
-    if (face.image_uris) {
-      if (face.image_uris.normal) return face.image_uris.normal;
-      if (face.image_uris.large) return face.image_uris.large;
-      if (face.image_uris.small) return face.image_uris.small;
-      if (face.image_uris.png) return face.image_uris.png;
-    }
+    const faceUrl = pickFromImageUris(face.image_uris, size);
+    if (faceUrl) return faceUrl;
   }
 
-  // For single-faced cards, try different image URI options
-  if (printingData.image_uris?.normal) {
-    return printingData.image_uris.normal;
-  }
-  if (printingData.image_uris?.large) {
-    return printingData.image_uris.large;
-  }
-  if (printingData.image_uris?.small) {
-    return printingData.image_uris.small;
-  }
-  if (printingData.image_uris?.png) {
-    return printingData.image_uris.png;
-  }
+  // Single-faced cards
+  const url = pickFromImageUris(printingData.image_uris, size);
+  if (url) return url;
 
   // Fallback to first face if available
   if (printingData.card_faces && printingData.card_faces[0]?.image_uris) {
-    const firstFace = printingData.card_faces[0].image_uris;
-    if (firstFace.normal) return firstFace.normal;
-    if (firstFace.large) return firstFace.large;
-    if (firstFace.small) return firstFace.small;
-    if (firstFace.png) return firstFace.png;
+    const fallback = pickFromImageUris(
+      printingData.card_faces[0].image_uris,
+      size,
+    );
+    if (fallback) return fallback;
   }
 
   return '';

@@ -35,6 +35,7 @@ function dismissTooltip() {
       color="neutral"
       variant="solid"
       class="rounded-full shadow-md cursor-pointer"
+      aria-label="Dismiss login tooltip"
     />
     <!-- Arrow pointing up -->
     <div class="absolute -top-2 right-4 w-4 h-4 bg-secondary rotate-45"></div>

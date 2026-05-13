@@ -14,6 +14,10 @@
           :src="dev.profilePicture"
           :alt="dev.name"
           class="w-24 h-24 rounded-full object-cover mb-4 border-2 border-primary"
+          loading="lazy"
+          decoding="async"
+          width="96"
+          height="96"
         />
         <h3 class="text-xl font-semibold mb-1">{{ dev.name }}</h3>
         <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">

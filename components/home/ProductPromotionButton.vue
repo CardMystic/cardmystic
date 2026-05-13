@@ -11,6 +11,10 @@
         :src="marketplaceImage"
         alt="Marketplace"
         class="product-promotion-btn-img"
+        loading="lazy"
+        decoding="async"
+        width="60"
+        height="60"
       />
       <span class="product-promotion-btn-text">{{ marketplaceText }}</span>
     </div>

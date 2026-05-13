@@ -24,6 +24,10 @@
           :src="sponsor.profileIcon"
           :alt="sponsor.name"
           class="w-24 h-24 rounded-full object-cover mb-4 border-2 border-primary"
+          loading="lazy"
+          decoding="async"
+          width="96"
+          height="96"
         />
         <h3 class="text-xl font-semibold mb-3">{{ sponsor.name }}</h3>
 
@@ -38,6 +42,7 @@
             size="sm"
             :icon="getSocialIcon(platform)"
             square
+            :aria-label="`${sponsor.name} on ${platform}`"
           />
         </div>
       </div>

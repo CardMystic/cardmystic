@@ -48,16 +48,14 @@
       </div>
 
       <!-- See More button -->
-      <NuxtLink class="flex">
-        <UButton
-          color="primary"
-          variant="outline"
-          class="h-full w-full justify-center"
-          icon="i-lucide-arrow-right"
-        >
-          See More
-        </UButton>
-      </NuxtLink>
+      <UButton
+        color="primary"
+        variant="outline"
+        class="h-full w-full justify-center"
+        icon="i-lucide-arrow-right"
+      >
+        See More
+      </UButton>
     </div>
 
     <div class="flex gap-3 mt-2 md:mt-4 justify-center">

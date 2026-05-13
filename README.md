@@ -139,6 +139,100 @@ bun run preview
 
 Check out the [Nuxt deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
+## 🧪 Testing
+
+CardMystic has two complementary test suites:
+
+| Suite             | Tool                                  | Scope                                     | Command         |
+| ----------------- | ------------------------------------- | ----------------------------------------- | --------------- |
+| Unit tests        | [Vitest](https://vitest.dev/)         | Pure utils (`utils/`, `models/`, etc.)    | `pnpm test`     |
+| Integration / E2E | [Playwright](https://playwright.dev/) | Full browser flows against a real backend | `pnpm test:e2e` |
+
+Both suites run in CI on every push/PR to `dev` and `main` (see [`.github/workflows/e2e.yml`](.github/workflows/e2e.yml)). The `e2e` job depends on `unit`, so a unit-test failure fast-fails the whole pipeline before browsers spin up.
+
+The backend the e2e suite hits is chosen automatically from the branch:
+
+| Trigger                                                                   | Backend                           | Research Container                     |
+| ------------------------------------------------------------------------- | --------------------------------- | -------------------------------------- |
+| push to `dev` / PR targeting `dev`                                        | `https://api.next.cardmystic.com` | `https://research.next.cardmystic.com` |
+| push to `main` / PR targeting `main` (i.e. the `dev` → `main` release PR) | `https://api.cardmystic.com`      | `https://research.cardmystic.com`      |
+
+### Unit tests (Vitest)
+
+Live in [`tests/`](tests/). Run them with:
+
+```bash
+pnpm test          # one-shot
+pnpm test:cov      # with coverage
+```
+
+`vitest.config.ts` excludes `e2e/**` so Playwright specs aren't picked up by Vitest.
+
+### End-to-end tests (Playwright)
+
+Live in [`e2e/`](e2e/). These are **integration tests** — they build the app and run the production Nitro server (`pnpm build && node .output/server/index.mjs` on port `3000`) and drive a real Chromium against the **real backend and the real Supabase project**.
+
+The default backend (locally and on `dev` CI) is `https://api.next.cardmystic.com`. The frontend, backend, and research containers all deploy their `dev` branch to `*.next.cardmystic.com`, so running e2e against `next` validates the latest of all three together, which mirrors how PRs to `dev` are promoted. CI runs on `main` swap in `https://api.cardmystic.com` automatically.
+
+**What's stubbed (and why)**
+
+Only two things are stubbed because they can't be made deterministic from a headless browser:
+
+1. **reCAPTCHA challenge + verify** — Google's invisible reCAPTCHA can't be solved by an automated browser, so [`e2e/utils/mocks.ts`](e2e/utils/mocks.ts) stubs `window.grecaptcha` and mocks the backend's `/recaptcha/verify` to accept the fake token. Real verification is covered by manual QA and the backend's own tests.
+2. **Google OAuth round-trip** — Tests intercept Supabase's `/auth/v1/authorize` redirect instead of actually leaving for `accounts.google.com`. The OAuth callback regression test (Vue Router race) opts into a synthesized Supabase session via `mockSupabaseAuth` because the assertion is purely about client-side hash-fragment handling.
+
+Everything else (login, logout, registration validation, search, etc.) hits the real backend.
+
+**Setup**
+
+Copy [`.env.test.example`](.env.test.example) to `.env.test` (gitignored) and fill in:
+
+```bash
+NUXT_PUBLIC_SUPABASE_URL=https://ddbgietanhxrozzmogur.supabase.co
+NUXT_PUBLIC_SUPABASE_KEY=<your-supabase-anon-key>
+NUXT_PUBLIC_RECAPTCHA_SITE_KEY=<your-recaptcha-site-key>
+NUXT_PUBLIC_BACKEND_URL=https://api.next.cardmystic.com
+
+# Real Supabase test user used by login + logout tests.
+# Tests skip cleanly if these are unset.
+E2E_TEST_EMAIL=<test-user-email>
+E2E_TEST_PASSWORD=<test-user-password>
+```
+
+In CI these come from GitHub Secrets (configured in the workflow's `env:` block).
+
+Install Chromium once:
+
+```bash
+pnpm test:e2e:install
+```
+
+**Running**
+
+```bash
+pnpm test:e2e             # headless run, all specs
+pnpm test:e2e:ui          # Playwright UI mode (recommended for debugging)
+pnpm exec playwright test --project=chromium -g "Logout"   # filter by name
+```
+
+The Playwright config (`playwright.config.ts`) auto-loads `.env.test` via `dotenv` and starts the dev server itself. Reports land in `playwright-report/`; failure traces in `test-results/`.
+
+**Pointing at a different backend**
+
+Override `NUXT_PUBLIC_BACKEND_URL` in `.env.test` to hit prod (`https://api.cardmystic.com`) or a local backend (`http://localhost:3000`). For local backend runs you'll usually also override `NUXT_PUBLIC_SUPABASE_URL` to a local Supabase instance.
+
+### ⚠️ Cost: stop the `next` containers when not in use
+
+The `*.next.cardmystic.com` backend and research containers cost money to keep running. **They should be stopped when not actively being used for E2E testing.**
+
+Workflow:
+
+1. **Before opening a PR to `dev` (or pushing to `dev`)**: start the `api.next.cardmystic.com` and `research.next.cardmystic.com` containers so the e2e workflow can hit them.
+2. **After the e2e workflow finishes** (and after any local e2e runs): stop the containers again.
+3. The frontend `next.cardmystic.com` Static Web App is effectively free at idle so it can stay up.
+
+The CI workflow does **not** start/stop containers automatically — that's a manual step on the backend side. If e2e tests fail with connection errors against `api.next.cardmystic.com`, the most likely cause is the backend container being asleep.
+
 ## Maintenance Mode
 
 A site-wide maintenance banner can be shown on all pages by setting the `NUXT_PUBLIC_MAINTENANCE_MODE` variable to `enabled`.

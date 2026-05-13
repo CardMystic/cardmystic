@@ -2,10 +2,10 @@
   <div class="card-simple">
     <img
       :class="sizeClass"
-      :src="getCardImageUrl(card.card_data)"
+      :src="getCardImageUrl(card.card_data, false, scryfallSize)"
       :alt="card.card_data.name"
       @error="handleImageError"
-      v-if="getCardImageUrl(card.card_data)"
+      v-if="getCardImageUrl(card.card_data, false, scryfallSize)"
       loading="lazy"
       decoding="async"
       @click="navigateToCard(card.card_data.id)"
@@ -35,6 +35,12 @@ const props = defineProps({
 });
 
 const sizeClass = computed(() => `card-${props.size}`);
+// Use Scryfall's small variant for thumbnail-sized cards (~10–30 kB each
+// vs. ~100 kB for `normal`). For full-size cards keep `normal` — `small`
+// would visibly pixelate at >150 px wide.
+const scryfallSize = computed(() =>
+  props.size === 'small' ? 'small' : 'normal',
+);
 
 function navigateToCard(cardId: string | undefined) {
   if (!cardId) {

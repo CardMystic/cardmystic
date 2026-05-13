@@ -51,10 +51,14 @@
           >
             <img
               class="card-large cursor-pointer"
-              :src="getCardImageUrl(card.partner_card_data!)"
+              :src="
+                getCardImageUrl(card.partner_card_data!, false, scryfallSize)
+              "
               :alt="card.partner_card_data!.name"
               @error="handleImageError"
-              v-if="getCardImageUrl(card.partner_card_data!)"
+              v-if="
+                getCardImageUrl(card.partner_card_data!, false, scryfallSize)
+              "
               loading="lazy"
               decoding="async"
             />
@@ -70,10 +74,10 @@
           >
             <img
               class="card-large cursor-pointer"
-              :src="getCardImageUrl(card.card_data, isFlipped)"
+              :src="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
               :alt="card.card_data.name"
               @error="handleImageError"
-              v-if="getCardImageUrl(card.card_data, isFlipped)"
+              v-if="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
               loading="lazy"
               decoding="async"
             />
@@ -85,10 +89,10 @@
       <template v-else>
         <img
           :class="sizeClass"
-          :src="getCardImageUrl(card.card_data, isFlipped)"
+          :src="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
           :alt="card.card_data.name"
           @error="handleImageError"
-          v-if="getCardImageUrl(card.card_data, isFlipped)"
+          v-if="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
           loading="lazy"
           decoding="async"
           :ui="{}"
@@ -541,6 +545,13 @@ const emit = defineEmits<{
 }>();
 
 const sizeClass = computed(() => `card-${props.size}`);
+// Use Scryfall's `small` variant (146×204, ~10–30 kB) for grid/carousel
+// thumbnails; full-size cards stay on `normal` since `small` pixelates
+// above ~150 px wide. Hovered previews use their own components and
+// request `large` independently.
+const scryfallSize = computed(() =>
+  props.size === 'small' ? 'small' : 'normal',
+);
 
 // Partner commander support
 const hasPartner = computed(() => !!props.card.partner_card_data);
@@ -660,16 +671,12 @@ const searchQuery = computed(() => {
   return '';
 });
 
-// Lazily initialise feedback composable — only when user actually dislikes
-let _dislikeMutation:
-  | ReturnType<typeof useCardFeedback>['dislikeMutation']
-  | null = null;
-function getDislikeMutation() {
-  if (!_dislikeMutation) {
-    _dislikeMutation = useCardFeedback().dislikeMutation;
-  }
-  return _dislikeMutation;
-}
+// Initialise feedback composable at setup so vue-query injection
+// context is available. Calling `useCardFeedback()` lazily inside a
+// click handler throws "vue-query hooks can only be used inside
+// setup() function or functions that support injection context" and
+// the dislike POST is silently dropped.
+const { dislikeMutation } = useCardFeedback();
 
 // Handle dislike button click - show confirmation modal
 function handleDislike() {
@@ -692,7 +699,7 @@ function confirmDislike() {
   isThumbsDownClicked.value = true;
 
   // Track the dislike
-  getDislikeMutation().mutate({
+  dislikeMutation.mutate({
     query: searchQuery.value,
     cardName: props.card.card_data.name,
   });

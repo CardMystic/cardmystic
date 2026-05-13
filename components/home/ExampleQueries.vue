@@ -24,6 +24,7 @@
             :loading="isLoading"
             size="sm"
             class="cursor-pointer"
+            aria-label="Load another example query"
           />
           <UButton
             color="primary"
@@ -67,11 +68,15 @@ function loadRandomExample() {
 }
 
 function tryQuery() {
-  // Navigate to search page with the current query
+  // Navigate to the AI search page with the current example query.
+  // We can't use a `name` here — search routes are nested under
+  // `/search/[platform]/[type]/[[slug]]` and don't have a single
+  // stable name; use the path directly.
+  if (!results.value?.query) return;
   router.push({
-    name: 'search',
+    path: '/search/all/ai',
     query: {
-      query: results.value?.query,
+      query: results.value.query,
     },
   });
 }
