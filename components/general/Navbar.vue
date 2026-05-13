@@ -193,7 +193,12 @@ const externalItems: NavigationMenuItem[] = [
     <div class="md:hidden flex flex-row justify-between w-full">
       <!-- Mobile Menu Button -->
       <UPopover v-model:open="isOpen" @close="closePopover">
-        <UButton color="neutral" variant="subtle" icon="i-lucide-menu" />
+        <UButton
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-menu"
+          aria-label="Open navigation menu"
+        />
 
         <template #content>
           <div

@@ -82,6 +82,7 @@
           class="cursor-pointer h-10"
           icon="i-lucide-flame"
           :disabled="!state.commander"
+          aria-label="Search"
         >
           <span class="hidden sm:inline">Search</span>
         </UButton>

@@ -45,6 +45,7 @@
           :disabled="state.query?.length == 0"
           type="submit"
           class="cursor-pointer h-10"
+          aria-label="Search"
         >
           <span class="hidden sm:inline">Search</span>
         </UButton>
