@@ -8,8 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed } from 'vue';
 
 export const useSearchHistory = () => {
-  const getSupabase = async () =>
-    import.meta.server ? null : await useSupabase();
+  const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
 
@@ -22,7 +21,6 @@ export const useSearchHistory = () => {
   } = useQuery<SearchHistory[]>({
     queryKey: ['search-history', computed(() => userProfile.value?.id)],
     queryFn: async () => {
-      const supabase = await getSupabase();
       if (!supabase) return [];
       if (!userProfile.value?.id) {
         throw new Error('User not authenticated');
@@ -46,7 +44,6 @@ export const useSearchHistory = () => {
     searchType: 'ai' | 'similarity' | 'keyword' | 'commander' | 'recommend',
     filters?: any,
   ) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -74,6 +71,7 @@ export const useSearchHistory = () => {
       searchType: 'ai' | 'similarity' | 'keyword' | 'commander' | 'recommend';
       filters?: any;
     }) => {
+      if (!supabase) return;
       return await saveSearch(query, searchType, filters);
     },
     onSuccess: () => {
@@ -82,7 +80,6 @@ export const useSearchHistory = () => {
   });
 
   const deleteSearchHistory = async (searchId: string) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -104,7 +101,6 @@ export const useSearchHistory = () => {
   });
 
   const clearAllHistory = async () => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -120,6 +116,7 @@ export const useSearchHistory = () => {
 
   const clearAllHistoryMutation = useMutation({
     mutationFn: async () => {
+      if (!supabase) return;
       return clearAllHistory();
     },
     onSuccess: () => {

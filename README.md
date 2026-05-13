@@ -233,40 +233,6 @@ Workflow:
 
 The CI workflow does **not** start/stop containers automatically — that's a manual step on the backend side. If e2e tests fail with connection errors against `api.next.cardmystic.com`, the most likely cause is the backend container being asleep.
 
-## Performance
-
-### Supabase SDK loading strategy
-
-The `@supabase/supabase-js` SDK is ~160 kB minified — too heavy to ship on the initial bundle of an unauthenticated homepage visit. It's loaded with a three-tier strategy in [plugins/auth.client.ts](plugins/auth.client.ts):
-
-1. **OAuth redirect detected** (`#access_token=` in URL) → import the SDK immediately and apply `setSession` so the post-OAuth landing page doesn't flash "logged out" before showing the avatar.
-2. **Persisted session in localStorage** (`sb-<project-ref>-auth-token` key present) → defer the SDK import + auth listener until `requestIdleCallback` (1.5 s `setTimeout` fallback). The navbar briefly renders its logged-out state, then re-renders once `INITIAL_SESSION` fires.
-3. **No session at all** → **skip the SDK entirely**. Login, register, profile, lists, and history pages each call `await useSupabase()` on demand, which triggers the dynamic import only when the user actually interacts with auth UI.
-
-The accessor in [composables/useSupabase.ts](composables/useSupabase.ts) is `async` and uses `await import('@supabase/supabase-js')` so Vite/Rollup splits Supabase into its own chunk. The created client is cached on `nuxtApp` so subsequent calls within the same request return the same singleton.
-
-All consumers of Supabase (`useUserProfile`, `useCardLists`, `useCardHistory`, `useSearchHistory`, login/register/reset-password components) follow the pattern:
-
-```ts
-const getSupabase = async () =>
-  import.meta.server ? null : await useSupabase();
-
-// inside each function:
-const supabase = await getSupabase();
-if (!supabase) return; // SSR or SDK not loaded yet
-```
-
-A module-level `authReady` ref in [composables/useUserProfile.ts](composables/useUserProfile.ts) gates the user/profile TanStack queries so they don't auto-fetch before the auth listener has been wired up. Login and register flows `await initAuthListener()` before calling `setSession`/`signInWithOAuth` to guarantee the `SIGNED_IN` event invalidates the queries on the right tick.
-
-### Lazy-loaded scripts
-
-- **reCAPTCHA** — script is injected on first call to `executeRecaptcha()` in [composables/useRecaptcha.ts](composables/useRecaptcha.ts). No eager plugin.
-- **Google gtag** — removed entirely. We don't ship analytics scripts on initial load.
-
-### Image lazy-loading
-
-Below-the-fold homepage `<img>` tags (`ProductPromotionButton`, `MeetTheDevs`, `Sponsorships`) use `loading="lazy" decoding="async"` plus explicit `width`/`height` so the browser can defer decode and avoid layout shift.
-
 ## Maintenance Mode
 
 A site-wide maintenance banner can be shown on all pages by setting the `NUXT_PUBLIC_MAINTENANCE_MODE` variable to `enabled`.

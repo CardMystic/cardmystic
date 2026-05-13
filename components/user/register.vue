@@ -7,9 +7,10 @@ import { refDebounced } from '@vueuse/core';
 
 const router = useRouter();
 
+const supabase = useSupabase();
 const { verifyRecaptcha } = useRecaptcha();
 const config = useRuntimeConfig();
-const { validatePasswordPolicy, initAuthListener } = useUserProfile();
+const { validatePasswordPolicy } = useUserProfile();
 
 const email = ref('');
 const password = ref('');
@@ -68,8 +69,6 @@ const signUpWithGoogle = async () => {
 
   sessionStorage.setItem('pendingOAuthSignup', 'true');
 
-  await initAuthListener();
-  const supabase = await useSupabase();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
   });

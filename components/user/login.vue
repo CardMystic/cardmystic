@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { useSupabase } from '~/composables/useSupabase';
 import { useRecaptcha } from '~/composables/useRecaptcha';
-import { useUserProfile } from '~/composables/useUserProfile';
 
 const router = useRouter();
 
+const supabase = useSupabase();
 const { verifyRecaptcha } = useRecaptcha();
-const { initAuthListener } = useUserProfile();
 const config = useRuntimeConfig();
 
 const email = ref('');
@@ -24,7 +23,6 @@ const applyPendingSignupAvatar = async (emailAddress: string) => {
   if (!pendingAvatar) return;
 
   try {
-    const supabase = await useSupabase();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -55,8 +53,6 @@ const signInWithGoogle = async () => {
     return;
   }
 
-  await initAuthListener();
-  const supabase = await useSupabase();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
   });
@@ -99,12 +95,7 @@ const signInWithEmail = async () => {
       return;
     }
 
-    // Set the Supabase session from the tokens returned by the backend.
-    // Make sure the auth state listener is wired up first so its
-    // SIGNED_IN handler invalidates the user query and the navbar
-    // refreshes when we navigate home.
-    await initAuthListener();
-    const supabase = await useSupabase();
+    // Set the Supabase session from the tokens returned by the backend
     await supabase.auth.setSession({
       access_token: data.access_token,
       refresh_token: data.refresh_token,

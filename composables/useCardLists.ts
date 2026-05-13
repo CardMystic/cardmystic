@@ -11,11 +11,7 @@ import type { CardFormatType } from '~/models/cardModel';
 import type { BulkEditRequest, BulkEditResponse } from '~/models/cardListModel';
 
 export const useCardLists = () => {
-  // useSupabase is async and dynamically imports the Supabase SDK; we
-  // wrap it in a small helper that no-ops on the server and unwraps the
-  // client on the client.
-  const getSupabase = async () =>
-    import.meta.server ? null : await useSupabase();
+  const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
 
@@ -28,7 +24,6 @@ export const useCardLists = () => {
   } = useQuery({
     queryKey: ['user-lists', computed(() => userProfile.value?.id)],
     queryFn: async () => {
-      const supabase = await getSupabase();
       if (!supabase) return [];
       if (!userProfile.value?.id) {
         throw new Error('User not authenticated');
@@ -52,7 +47,6 @@ export const useCardLists = () => {
     commanders?: string[],
     format?: CardFormatType,
   ) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -101,7 +95,6 @@ export const useCardLists = () => {
       commanders?: string[];
       format?: CardFormatType;
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return createList(name, description, commanders, format);
     },
@@ -111,7 +104,6 @@ export const useCardLists = () => {
   });
 
   const addCardsToList = async (listId: string, cardIds: string[]) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -155,7 +147,6 @@ export const useCardLists = () => {
       listId: string;
       cardIds: string[];
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return addCardsToList(listId, cardIds);
     },
@@ -168,7 +159,6 @@ export const useCardLists = () => {
   });
 
   const addCardsByNameToList = async (listId: string, cardNames: string[]) => {
-    const supabase = await getSupabase();
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -228,7 +218,6 @@ export const useCardLists = () => {
   const bulkEditList = async (
     request: BulkEditRequest,
   ): Promise<BulkEditResponse> => {
-    const supabase = await getSupabase();
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -281,7 +270,6 @@ export const useCardLists = () => {
     return useQuery({
       queryKey: computed(() => ['list-items', listIdRef.value]),
       queryFn: async () => {
-        const supabase = await getSupabase();
         if (!supabase) return [];
         const { data, error } = await supabase
           .from('card_list_items')
@@ -326,7 +314,6 @@ export const useCardLists = () => {
   };
 
   const removeCardFromList = async (listId: string, cardId: string) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
 
     const { data, error, count } = await supabase
@@ -355,7 +342,6 @@ export const useCardLists = () => {
       listId: string;
       cardId: string;
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return removeCardFromList(listId, cardId);
     },
@@ -390,7 +376,6 @@ export const useCardLists = () => {
   });
 
   const deleteList = async (listId: string) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -406,7 +391,6 @@ export const useCardLists = () => {
 
   const deleteListMutation = useMutation({
     mutationFn: async (listId: string) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return deleteList(listId);
     },
@@ -422,7 +406,6 @@ export const useCardLists = () => {
       description?: string;
     },
   ) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -447,7 +430,6 @@ export const useCardLists = () => {
       listId: string;
       updates: { name?: string; description?: string };
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return updateList(listId, updates);
     },
@@ -457,7 +439,6 @@ export const useCardLists = () => {
   });
 
   const updateListAvatar = async (listId: string, cardName: string) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -482,7 +463,6 @@ export const useCardLists = () => {
       listId: string;
       cardName: string;
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return updateListAvatar(listId, cardName);
     },
@@ -492,7 +472,6 @@ export const useCardLists = () => {
   });
 
   const setCommander = async (listId: string, commanderName: string) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -531,7 +510,6 @@ export const useCardLists = () => {
       listId: string;
       commanderName: string;
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return setCommander(listId, commanderName);
     },
@@ -543,7 +521,6 @@ export const useCardLists = () => {
   });
 
   const clearCommander = async (listId: string, cardId?: string) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -570,7 +547,6 @@ export const useCardLists = () => {
       listId: string;
       cardId?: string;
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return clearCommander(listId, cardId);
     },
@@ -582,7 +558,6 @@ export const useCardLists = () => {
   });
 
   const updateFormat = async (listId: string, format: CardFormatType) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -621,7 +596,6 @@ export const useCardLists = () => {
       listId: string;
       format: CardFormatType;
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return updateFormat(listId, format);
     },
@@ -637,7 +611,6 @@ export const useCardLists = () => {
     cardName: string,
     numCopies: number,
   ) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -679,7 +652,6 @@ export const useCardLists = () => {
       cardName: string;
       numCopies: number;
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return updateNumCopies(listId, cardName, numCopies);
     },
@@ -694,7 +666,6 @@ export const useCardLists = () => {
     cardName: string,
     board: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
-    const supabase = await getSupabase();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -736,7 +707,6 @@ export const useCardLists = () => {
       cardName: string;
       board: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
-      const supabase = await getSupabase();
       if (!supabase) return;
       return changeBoard(listId, cardName, board);
     },
