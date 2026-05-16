@@ -52,7 +52,9 @@ export function useColbertSearch(
   });
 
   const isLoading = computed(
-    () => isQueryLoading.value || (queryEnabled.value && !searchResults.value),
+    () =>
+      isQueryLoading.value ||
+      (queryEnabled.value && !searchResults.value && !error.value),
   );
 
   return {
@@ -100,7 +102,9 @@ export function useSimilaritySearch(
   });
 
   const isLoading = computed(
-    () => isQueryLoading.value || (queryEnabled.value && !searchResults.value),
+    () =>
+      isQueryLoading.value ||
+      (queryEnabled.value && !searchResults.value && !error.value),
   );
 
   return {
@@ -148,7 +152,9 @@ export function useKeywordSearch(
   });
 
   const isLoading = computed(
-    () => isQueryLoading.value || (queryEnabled.value && !searchResults.value),
+    () =>
+      isQueryLoading.value ||
+      (queryEnabled.value && !searchResults.value && !error.value),
   );
 
   return {

@@ -61,7 +61,7 @@
           to be accurate. See stores for official prices.
         </p>
         <p>All other content © 2025 Fiasco Games LLC</p>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-200 dark:text-gray-400">
           This site is protected by reCAPTCHA and the Google
           <a
             class="text-purple-300 underline"

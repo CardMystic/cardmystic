@@ -45,23 +45,23 @@ function dismissTooltip() {
 <style scoped>
 @keyframes rainbow {
   0% {
-    color: #dc2626;
+    color: #fca5a5;
   }
 
   25% {
-    color: #ea580c;
+    color: #fdba74;
   }
 
   50% {
-    color: #16a34a;
+    color: #86efac;
   }
 
   75% {
-    color: #2563eb;
+    color: #93c5fd;
   }
 
   100% {
-    color: #dc2626;
+    color: #fca5a5;
   }
 }
 

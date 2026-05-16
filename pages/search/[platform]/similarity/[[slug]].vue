@@ -26,12 +26,13 @@
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="displayQuery"
-          :error-message="searchError?.message"
           :help-text="
             seoEntry
               ? `Loading similar cards...`
               : `Please enter a card name to search for similar ${platformName} cards.`
           "
+          empty-title="No Similar Cards Found Yet"
+          empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
           :is-similarity-search="true"
           :hide-thumbs-down-button="true"
         />
@@ -179,11 +180,7 @@ const similaritySearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  isLoading,
-  error: searchError,
-} = useSimilaritySearch(similaritySearch);
+const { searchResults, isLoading } = useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

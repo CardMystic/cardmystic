@@ -46,8 +46,9 @@
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="commanderParam || ''"
-          :error-message="searchError?.message"
           :help-text="helpText"
+          empty-title="No Commander Data Yet"
+          empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
           :hide-thumbs-down-button="true"
           default-group-by="type"
         />
@@ -176,9 +177,5 @@ const searchParams = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  isLoading,
-  error: searchError,
-} = usePopularByCommander(searchParams);
+const { searchResults, isLoading } = usePopularByCommander(searchParams);
 </script>

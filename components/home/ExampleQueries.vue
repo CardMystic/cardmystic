@@ -38,24 +38,20 @@
         </div>
       </div>
       <!-- Horizontal scrolling results -->
-      <UCarousel
-        v-slot="{ item }"
-        loop
-        wheel-gestures
-        :auto-scroll="{ speed: 1 }"
-        :items="results.cards"
-        :ui="{
-          item: 'flex-[1_0_20%] max-w-[180px] min-w-[155px] shrink-0',
-        }"
-      >
-        <Card :card="item" size="small" />
-      </UCarousel>
+      <div class="card-scroll-track">
+        <div
+          v-for="(card, i) in results.cards"
+          :key="i"
+          class="card-scroll-item"
+        >
+          <Card :card="card" size="small" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useExampleQueries } from '~/composables/useExampleQueries';
 
 const router = useRouter();
@@ -133,4 +129,30 @@ function tryQuery() {
   font-style: italic
   @media (max-width: 768px)
     font-size: 12px
+
+.card-scroll-track
+  display: flex
+  gap: 10px
+  overflow-x: auto
+  padding-bottom: 8px
+  scroll-behavior: smooth
+  -webkit-overflow-scrolling: touch
+  scrollbar-width: thin
+  scrollbar-color: rgba(147, 114, 255, 0.4) transparent
+
+  &::-webkit-scrollbar
+    height: 4px
+
+  &::-webkit-scrollbar-track
+    background: transparent
+
+  &::-webkit-scrollbar-thumb
+    background: rgba(147, 114, 255, 0.4)
+    border-radius: 2px
+
+.card-scroll-item
+  flex: 0 0 auto
+  width: 160px
+  @media (min-width: 768px)
+    width: 180px
 </style>
