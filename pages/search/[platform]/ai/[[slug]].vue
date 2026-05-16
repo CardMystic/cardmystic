@@ -26,7 +26,6 @@
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="displayQuery"
-          :error-message="searchError?.message"
           :help-text="
             seoEntry
               ? `Loading ${platformName} results...`
@@ -174,7 +173,6 @@ const wordSearch = computed(() => {
 const {
   searchResults,
   isLoading,
-  error: searchError,
 } = useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
