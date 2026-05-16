@@ -26,7 +26,6 @@
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="displayQuery"
-          :error-message="searchError?.message"
           :help-text="
             seoEntry
               ? `Loading ${platformName} keyword results...`
@@ -181,7 +180,6 @@ const keywordSearch = computed(() => {
 const {
   searchResults,
   isLoading,
-  error: searchError,
 } = useKeywordSearch(keywordSearch);
 
 const { saveSearchQuery } = useSearchType();

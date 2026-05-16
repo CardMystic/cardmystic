@@ -60,7 +60,6 @@
           :search-results="searchResults"
           :query-param="decklistParam"
           :hide-thumbs-down-button="true"
-          :error-message="searchError?.message"
           :help-text="`Paste a decklist above to get ${platformName} card recommendations.`"
           default-group-by="type"
         />
@@ -203,7 +202,6 @@ const decklistCardNames = computed(() => {
 const {
   searchResults,
   isLoading,
-  error: searchError,
   notFound,
 } = useAlsRecommend(alsRequest);
 

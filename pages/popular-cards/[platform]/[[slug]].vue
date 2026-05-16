@@ -15,7 +15,6 @@
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="queryParam || 'top'"
-          :error-message="searchError?.message"
           :help-text="`Showing the most popular ${platformName} cards across all decks.`"
           :hide-thumbs-down-button="true"
         />
@@ -119,6 +118,5 @@ const topCardsSearch = computed(() => {
 const {
   searchResults,
   isLoading,
-  error: searchError,
 } = useTopCardsSearch(topCardsSearch);
 </script>

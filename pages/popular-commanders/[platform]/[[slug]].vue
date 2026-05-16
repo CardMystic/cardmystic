@@ -15,7 +15,6 @@
           :is-loading="isLoading"
           :search-results="searchResults ?? []"
           :query-param="queryParam || 'top'"
-          :error-message="searchError?.message"
           :help-text="`Showing the most popular ${platformName} commanders across all decks.`"
           :hide-thumbs-down-button="true"
         />
@@ -119,6 +118,5 @@ const topCommandersSearch = computed(() => {
 const {
   searchResults,
   isLoading,
-  error: searchError,
 } = useTopCommandersSearch(topCommandersSearch);
 </script>

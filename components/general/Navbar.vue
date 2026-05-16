@@ -235,7 +235,7 @@ const externalItems: NavigationMenuItem[] = [
             <!-- Login/Register Button with Tooltip -->
             <UButton
               class="cursor-pointer ml-2"
-              color="primary"
+              color="secondary"
               variant="solid"
               icon="i-lucide-user"
               label="Login"

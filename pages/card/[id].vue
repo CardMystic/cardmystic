@@ -1280,13 +1280,15 @@ const cardName = computed(() => card.value?.name);
 const lazyCardNameForSimilar = computed(() =>
   activatedTabs.has('similar') ? cardName.value : undefined,
 );
-const { similarCards, isSimilarCardsLoading } = useSimilarCards(
-  cardIdParam,
-  lazyCardNameForSimilar,
-);
+const {
+  similarCards,
+  isSimilarCardsLoading,
+  error: similarCardsError,
+} = useSimilarCards(cardIdParam, lazyCardNameForSimilar);
 
 const isSimilarCardsEffectivelyLoading = computed(() => {
   if (!activatedTabs.has('similar')) return false;
+  if (similarCardsError.value) return false;
   return (
     isSimilarCardsLoading.value || (!similarCards.value && !!cardName.value)
   );
@@ -1401,11 +1403,15 @@ const alsRecommendRequest = computed(() => {
   };
 });
 
-const { searchResults: recommendedCards, isLoading: isRecommendedLoading } =
-  useAlsRecommend(alsRecommendRequest);
+const {
+  searchResults: recommendedCards,
+  isLoading: isRecommendedLoading,
+  error: recommendedError,
+} = useAlsRecommend(alsRecommendRequest);
 
 const isRecommendedCardsEffectivelyLoading = computed(() => {
   if (!activatedTabs.has('recommended')) return false;
+  if (recommendedError.value) return false;
   return (
     isRecommendedLoading.value || (!recommendedCards.value && isCommander.value)
   );
@@ -1420,11 +1426,15 @@ const popularByCommanderRequest = computed(() => {
   });
 });
 
-const { searchResults: popularCards, isLoading: isPopularCardsLoading } =
-  usePopularByCommander(popularByCommanderRequest);
+const {
+  searchResults: popularCards,
+  isLoading: isPopularCardsLoading,
+  error: popularCardsError,
+} = usePopularByCommander(popularByCommanderRequest);
 
 const isPopularCardsEffectivelyLoading = computed(() => {
   if (!activatedTabs.has('popular')) return false;
+  if (popularCardsError.value) return false;
   return (
     isPopularCardsLoading.value || (!popularCards.value && isCommander.value)
   );
@@ -1450,10 +1460,12 @@ const popularCommandersForCardRequest = computed(() => {
 const {
   searchResults: popularCommandersForCard,
   isLoading: isPopularCommandersLoading,
+  error: popularCommandersError,
 } = usePopularCommandersForCard(popularCommandersForCardRequest);
 
 const isPopularCommandersEffectivelyLoading = computed(() => {
   if (!activatedTabs.has('popular-commanders')) return false;
+  if (popularCommandersError.value) return false;
   return (
     isPopularCommandersLoading.value ||
     (!popularCommandersForCard.value && !!card.value?.name)

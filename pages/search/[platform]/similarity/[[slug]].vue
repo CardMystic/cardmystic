@@ -26,7 +26,6 @@
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="displayQuery"
-          :error-message="searchError?.message"
           :help-text="
             seoEntry
               ? `Loading similar cards...`
@@ -182,7 +181,6 @@ const similaritySearch = computed(() => {
 const {
   searchResults,
   isLoading,
-  error: searchError,
 } = useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();

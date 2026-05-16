@@ -46,7 +46,6 @@
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="commanderParam || ''"
-          :error-message="searchError?.message"
           :help-text="helpText"
           :hide-thumbs-down-button="true"
           default-group-by="type"
@@ -179,6 +178,5 @@ const searchParams = computed(() => {
 const {
   searchResults,
   isLoading,
-  error: searchError,
 } = usePopularByCommander(searchParams);
 </script>
