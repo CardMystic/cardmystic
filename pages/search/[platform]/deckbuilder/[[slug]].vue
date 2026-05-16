@@ -61,6 +61,8 @@
           :query-param="decklistParam"
           :hide-thumbs-down-button="true"
           :help-text="`Paste a decklist above to get ${platformName} card recommendations.`"
+          empty-title="No Recommendations Available Yet"
+          empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
           default-group-by="type"
         />
       </div>
@@ -199,11 +201,7 @@ const decklistCardNames = computed(() => {
   return parseDecklist(deckbuilderDecklist.value);
 });
 
-const {
-  searchResults,
-  isLoading,
-  notFound,
-} = useAlsRecommend(alsRequest);
+const { searchResults, isLoading, notFound } = useAlsRecommend(alsRequest);
 
 const { cards: commanderCards, isLoading: commanderCardsLoading } =
   useCardsByName(commanderNames);

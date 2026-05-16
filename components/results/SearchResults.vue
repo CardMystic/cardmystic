@@ -220,16 +220,21 @@
       <UContainer>
         <div class="flex flex-col items-center">
           <UIcon name="i-lucide-search-x" class="text-5xl text-primary mb-4" />
-          <div class="font-bold text-2xl mb-4">No results found</div>
-          <div class="subtitle2 mb-4">
-            Try adjusting your search terms or filters.<br />
-            If you think this is a mistake,
-            <NuxtLink
-              :to="searchFeedbackUrl(getPageInfo())"
-              target="_blank"
-              class="important-text underline"
-              >let us know</NuxtLink
-            >.
+          <div class="font-bold text-2xl mb-4 text-center">
+            {{ emptyTitle || 'No results found' }}
+          </div>
+          <div class="subtitle2 mb-4 text-center">
+            <template v-if="emptyDescription">{{ emptyDescription }}</template>
+            <template v-else>
+              Try adjusting your search terms or filters.<br />
+              If you think this is a mistake,
+              <NuxtLink
+                :to="searchFeedbackUrl(getPageInfo())"
+                target="_blank"
+                class="important-text underline"
+                >let us know</NuxtLink
+              >.
+            </template>
           </div>
         </div>
       </UContainer>
@@ -271,6 +276,8 @@ const props = withDefaults(
     queryParam: string | null;
     skeletonCount?: number;
     helpText?: string;
+    emptyTitle?: string;
+    emptyDescription?: string;
     isSimilaritySearch?: boolean;
     hideProgressBar?: boolean;
     showAddToDeckbuilderButton?: boolean;

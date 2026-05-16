@@ -598,7 +598,10 @@
                 >
                   Deck Recommendations
                 </h3>
-                <div class="recommend-section flex gap-2 mt-2 mb-4">
+                <div
+                  v-if="showRecommendedInput"
+                  class="recommend-section flex gap-2 mt-2 mb-4"
+                >
                   <UInput
                     v-model="recommendQuery"
                     placeholder="e.g. ramp, removal, card draw..."
@@ -630,6 +633,8 @@
                   :search-results="recommendedCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
+                  empty-title="No Recommendations Available Yet"
+                  empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="type"
                 />
               </template>
@@ -640,6 +645,24 @@
                 >
                   Popular Cards
                 </h3>
+                <div v-if="showPopularCardsInput" class="flex gap-2 mt-2 mb-4">
+                  <UInput
+                    v-model="popularCardsQuery"
+                    placeholder="e.g. ramp, removal, card draw..."
+                    class="flex-1 text-base"
+                    icon="i-lucide-flame"
+                    @keyup.enter="applyPopularCardsQuery"
+                  />
+                  <UButton
+                    color="primary"
+                    icon="i-lucide-flame"
+                    @click="applyPopularCardsQuery"
+                    :loading="isPopularCardsLoading"
+                    class="text-base"
+                  >
+                    Search
+                  </UButton>
+                </div>
                 <div class="flex justify-end mt-2 mb-2">
                   <button
                     type="button"
@@ -654,6 +677,8 @@
                   :search-results="popularCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
+                  empty-title="No Popular Cards Data Yet"
+                  empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="type"
                 />
               </template>
@@ -678,6 +703,8 @@
                   :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
+                  empty-title="No Similar Cards Found Yet"
+                  empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="type"
                   :is-similarity-search="true"
                   hide-searched-card
@@ -690,7 +717,10 @@
                 >
                   Popular Commanders
                 </h3>
-                <div class="flex gap-2 mt-2 mb-4">
+                <div
+                  v-if="showPopularCommandersInput"
+                  class="flex gap-2 mt-2 mb-4"
+                >
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."
@@ -713,6 +743,8 @@
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
+                  empty-title="No Commander Data Yet"
+                  empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="colorIdentity"
                 />
               </template>
@@ -731,7 +763,10 @@
                 >
                   Popular Commanders
                 </h3>
-                <div class="flex gap-2 mt-2 mb-4">
+                <div
+                  v-if="showPopularCommandersInput"
+                  class="flex gap-2 mt-2 mb-4"
+                >
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."
@@ -754,6 +789,8 @@
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
+                  empty-title="No Commander Data Yet"
+                  empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="colorIdentity"
                 />
               </template>
@@ -778,6 +815,8 @@
                   :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
+                  empty-title="No Similar Cards Found Yet"
+                  empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="type"
                   :is-similarity-search="true"
                   hide-searched-card
@@ -1418,11 +1457,19 @@ const isRecommendedCardsEffectivelyLoading = computed(() => {
 });
 
 // Popular cards for this commander
+const popularCardsQuery = ref('');
+const appliedPopularCardsQuery = ref('');
+
+function applyPopularCardsQuery() {
+  appliedPopularCardsQuery.value = popularCardsQuery.value.trim();
+}
+
 const popularByCommanderRequest = computed(() => {
   if (!activatedTabs.has('popular')) return undefined;
   if (!isCommander.value || !card.value?.name) return undefined;
   return PopularByCommanderSearchSchema.parse({
     commanders: [card.value.name],
+    query: appliedPopularCardsQuery.value || undefined,
   });
 });
 
@@ -1438,6 +1485,27 @@ const isPopularCardsEffectivelyLoading = computed(() => {
   return (
     isPopularCardsLoading.value || (!popularCards.value && isCommander.value)
   );
+});
+
+// Hide tab input fields when the entity has no data at all (untrained / empty
+// dataset). Keep the input visible while loading, when a query has been
+// applied (so users can clear/refine), and when there are real results.
+const showRecommendedInput = computed(() => {
+  if (!recommendedCards.value) return true;
+  if (appliedRecommendQuery.value) return true;
+  return recommendedCards.value.length > 0;
+});
+
+const showPopularCardsInput = computed(() => {
+  if (!popularCards.value) return true;
+  if (appliedPopularCardsQuery.value) return true;
+  return popularCards.value.length > 0;
+});
+
+const showPopularCommandersInput = computed(() => {
+  if (!popularCommandersForCard.value) return true;
+  if (appliedPopularCommandersQuery.value) return true;
+  return popularCommandersForCard.value.length > 0;
 });
 
 // Popular commanders for this card (non-commander cards)
