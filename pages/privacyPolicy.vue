@@ -126,7 +126,80 @@
     </UCard>
 
     <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">🔁 Changes to This Policy</div>
+      <div class="text-2xl font-bold">� Advertising & Cookies</div>
+
+      <div class="mt-2 text-base">
+        <p>
+          CardMystic uses
+          <a
+            href="https://adsense.google.com"
+            target="_blank"
+            rel="noopener"
+            class="text-primary underline"
+            >Google AdSense</a
+          >
+          to display advertisements on our site. Google and its third-party
+          vendors use cookies and similar technologies to serve ads based on
+          your prior visits to CardMystic and other websites across the
+          internet.
+        </p>
+
+        <p class="mt-4">
+          We may also use cookies and similar technologies for analytics,
+          measuring ad performance, and improving the overall user experience.
+        </p>
+
+        <p class="mt-4 font-semibold">Managing your ad preferences</p>
+        <ul class="list-disc ml-6 mt-2">
+          <li>
+            You can opt out of personalized advertising by visiting
+            <a
+              href="https://www.google.com/settings/ads"
+              target="_blank"
+              rel="noopener"
+              class="text-primary underline"
+              >Google Ads Settings</a
+            >.
+          </li>
+          <li>
+            You can opt out of third-party vendor use of cookies for
+            personalized ads by visiting
+            <a
+              href="https://www.aboutads.info"
+              target="_blank"
+              rel="noopener"
+              class="text-primary underline"
+              >www.aboutads.info</a
+            >.
+          </li>
+          <li>
+            Learn more about how Google uses information from sites that use its
+            services at
+            <a
+              href="https://policies.google.com/technologies/partner-sites"
+              target="_blank"
+              rel="noopener"
+              class="text-primary underline"
+              >Google's Partner Sites policy</a
+            >.
+          </li>
+          <li>
+            Review
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener"
+              class="text-primary underline"
+              >Google's Privacy Policy</a
+            >
+            for more information about how Google handles data.
+          </li>
+        </ul>
+      </div>
+    </UCard>
+
+    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
+      <div class="text-2xl font-bold">�🔁 Changes to This Policy</div>
 
       <div class="mt-2 text-base">
         <p>
