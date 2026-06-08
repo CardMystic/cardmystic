@@ -6,8 +6,10 @@ import type { CardLlmResponse } from '~/models/llmModel';
 /**
  * Composable for fetching a single card + its printings (lazy).
  * The card fetch blocks rendering (SSR); printings load in the background.
+ * The parameter is the card's Scryfall `oracle_id`; the backend returns the
+ * canonical printing for that oracle.
  */
-export function useCardDetails(cardId: ComputedRef<string>) {
+export function useCardDetails(oracleId: ComputedRef<string>) {
   const config = useRuntimeConfig();
 
   type CardWithLlmResponse = {
@@ -20,21 +22,21 @@ export function useCardDetails(cardId: ComputedRef<string>) {
     error,
     status: asyncStatus,
   } = useAsyncData(
-    () => `card-${cardId.value}`,
+    () => `card-${oracleId.value}`,
     async () => {
-      if (!cardId.value || cardId.value === 'undefined') {
-        throw new Error('No card ID provided');
+      if (!oracleId.value || oracleId.value === 'undefined') {
+        throw new Error('No oracle ID provided');
       }
 
       return await $fetch<CardWithLlmResponse>(
-        `${config.public.backendUrl}/cards/with-llm/${cardId.value}`,
+        `${config.public.backendUrl}/cards/with-llm/${oracleId.value}`,
         { signal: AbortSignal.timeout(10000) },
       );
     },
     {
       server: true,
       lazy: false,
-      watch: [cardId],
+      watch: [oracleId],
     },
   );
 
@@ -72,11 +74,13 @@ export function useCardDetails(cardId: ComputedRef<string>) {
 }
 
 /**
- * Composable for fetching card details by IDs
+ * Composable for fetching card details by Scryfall oracle_ids.
+ * Backend returns the canonical printing for each oracle (and may drop
+ * unknown oracle_ids, so the response can be shorter than the input).
  */
-export function useCardsByIds(
-  cardIds: ComputedRef<string[]> | Ref<string[]>,
-  queryKeyPrefix: string = 'cards-by-ids',
+export function useCardsByOracleIds(
+  oracleIds: ComputedRef<string[]> | Ref<string[]>,
+  queryKeyPrefix: string = 'cards-by-oracle-ids',
 ) {
   const config = useRuntimeConfig();
 
@@ -88,20 +92,20 @@ export function useCardsByIds(
   } = useQuery({
     queryKey: computed(() => [
       queryKeyPrefix,
-      (cardIds as ComputedRef<string[]>).value ||
-        (cardIds as Ref<string[]>).value,
+      (oracleIds as ComputedRef<string[]>).value ||
+        (oracleIds as Ref<string[]>).value,
     ]),
     queryFn: async () => {
       const ids =
-        (cardIds as ComputedRef<string[]>).value ||
-        (cardIds as Ref<string[]>).value;
+        (oracleIds as ComputedRef<string[]>).value ||
+        (oracleIds as Ref<string[]>).value;
       if (ids.length === 0) return [];
 
       const cardsData = await $fetch(
-        `${config.public.backendUrl}/cards/cards-by-ids`,
+        `${config.public.backendUrl}/cards/cards-by-oracle-ids`,
         {
           method: 'POST',
-          body: { cardIds: ids },
+          body: { oracleIds: ids },
         },
       );
 
@@ -109,8 +113,8 @@ export function useCardsByIds(
     },
     enabled: computed(() => {
       const ids =
-        (cardIds as ComputedRef<string[]>).value ||
-        (cardIds as Ref<string[]>).value;
+        (oracleIds as ComputedRef<string[]>).value ||
+        (oracleIds as Ref<string[]>).value;
       return ids.length > 0;
     }),
     staleTime: 1000 * 60 * 10, // 10 minutes cache

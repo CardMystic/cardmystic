@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useCardNames } from '~/composables/useBulkData';
-import { refDebounced } from '@vueuse/core';
+import { refDebounced } from '~/utils/refDebounced';
 
 const router = useRouter();
 

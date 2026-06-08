@@ -56,8 +56,8 @@
       </h2>
       <p v-if="isNotFound" class="mt-4 text-gray-300 max-w-150">
         We apologize, it seems the card with id:
-        <strong>{{ cardIdParam }}</strong> doesn't exist. If you believe this is
-        a mistake, please contact us at
+        <strong>{{ oracleIdParam }}</strong> doesn't exist. If you believe this
+        is a mistake, please contact us at
         <strong>thecardmystic@gmail.com</strong>.
       </p>
       <p v-else class="mt-4 text-gray-300 max-w-150">{{ errorMessage }}</p>
@@ -869,16 +869,16 @@ const isFlipped = ref(false);
 const showMobileDetails = ref(false);
 const selectedPrinting = ref<string>('');
 
-// Keep last valid card ID so the page doesn't flicker to an empty/loading state
-// when navigating away (route param briefly becomes empty during transition).
-const _lastValidCardId = ref(String(route.params.id) || '');
+// Keep last valid oracle ID so the page doesn't flicker to an empty/loading
+// state when navigating away (route param briefly becomes empty during transition).
+const _lastValidOracleId = ref(String(route.params.id) || '');
 watch(
   () => route.params.id,
   (id) => {
-    if (id) _lastValidCardId.value = String(id);
+    if (id) _lastValidOracleId.value = String(id);
   },
 );
-const cardIdParam = computed(() => _lastValidCardId.value);
+const oracleIdParam = computed(() => _lastValidOracleId.value);
 const { saveCardViewMutation } = useCardHistory();
 const { lastCard, setLastOpenedCard } = useLastOpenedCard();
 const { searchType, getPath, restoreSearchQuery } = useSearchType();
@@ -918,7 +918,7 @@ function navigateToExplore(
   router.push({ path: `/${type}/all`, query: saved ?? undefined });
 }
 
-const { card, llm, printings, error, pending } = useCardDetails(cardIdParam);
+const { card, llm, printings, error, pending } = useCardDetails(oracleIdParam);
 
 const llmDetails = computed<LlmCardAttributes | null>(
   () => llm.value?.llm ?? null,
@@ -971,7 +971,8 @@ const errorMessage = computed(() => {
 });
 
 const canonicalUrl = computed(
-  () => `https://cardmystic.com/card/${card.value?.id ?? cardIdParam.value}`,
+  () =>
+    `https://cardmystic.com/card/${card.value?.oracle_id ?? oracleIdParam.value}`,
 );
 // Dynamic SEO meta based on card data
 useSeoMeta({
@@ -1068,8 +1069,8 @@ onMounted(() => {
   watch(
     card,
     (newCard) => {
-      if (newCard?.id) {
-        saveCardViewMutation.mutate(newCard.id);
+      if (newCard?.oracle_id) {
+        saveCardViewMutation.mutate(newCard.oracle_id);
         // Detect origin from route history
         const referrer = router.options.history.state?.back as
           | string
@@ -1081,7 +1082,7 @@ onMounted(() => {
             referrer.startsWith('/popular-by-commander'))
             ? ('explore' as const)
             : ('search' as const);
-        setLastOpenedCard(newCard.id, newCard.name, origin);
+        setLastOpenedCard(newCard.oracle_id, newCard.name, origin);
       }
     },
     { immediate: true },
@@ -1323,7 +1324,7 @@ const {
   similarCards,
   isSimilarCardsLoading,
   error: similarCardsError,
-} = useSimilarCards(cardIdParam, lazyCardNameForSimilar);
+} = useSimilarCards(oracleIdParam, lazyCardNameForSimilar);
 
 const isSimilarCardsEffectivelyLoading = computed(() => {
   if (!activatedTabs.has('similar')) return false;

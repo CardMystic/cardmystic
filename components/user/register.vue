@@ -3,7 +3,7 @@ import { useSupabase } from '~/composables/useSupabase';
 import { useRecaptcha } from '~/composables/useRecaptcha';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useCardNames } from '~/composables/useBulkData';
-import { refDebounced } from '@vueuse/core';
+import { refDebounced } from '~/utils/refDebounced';
 
 const router = useRouter();
 

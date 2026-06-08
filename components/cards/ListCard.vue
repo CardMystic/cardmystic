@@ -40,7 +40,7 @@
         v-if="getCardImageUrl(card.card_data, isFlipped)"
         loading="lazy"
         decoding="async"
-        @click="navigateToCard(card.card_data.id)"
+        @click="navigateToCard(card.card_data.oracle_id)"
         class="cursor-pointer"
       />
       <div v-else class="image-placeholder">
@@ -183,14 +183,24 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'remove', cardId: string): void;
+  (
+    e: 'remove',
+    cardId: string,
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
-  (e: 'updateNumCopies', cardName: string, numCopies: number): void;
+  (
+    e: 'updateNumCopies',
+    cardName: string,
+    numCopies: number,
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
   (
     e: 'changeBoard',
     cardName: string,
     board: 'Mainboard' | 'Sideboard' | 'Considering',
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
   ): void;
   (e: 'flip', cardId: string): void;
 }>();
@@ -201,7 +211,12 @@ const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
 
 function confirmSetCopies(numCopies: number) {
-  emit('updateNumCopies', props.card.card_data.name, numCopies);
+  emit(
+    'updateNumCopies',
+    props.card.card_data.name,
+    numCopies,
+    currentBoard.value,
+  );
 }
 
 const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
@@ -230,7 +245,12 @@ const cardOverlayMenuItems = computed(() => {
           icon: 'i-lucide-plus',
           disabled: copies >= 100,
           onSelect() {
-            emit('updateNumCopies', props.card.card_data.name, copies + 1);
+            emit(
+              'updateNumCopies',
+              props.card.card_data.name,
+              copies + 1,
+              currentBoard.value,
+            );
           },
         },
         {
@@ -238,7 +258,12 @@ const cardOverlayMenuItems = computed(() => {
           icon: 'i-lucide-minus',
           disabled: copies <= 1,
           onSelect() {
-            emit('updateNumCopies', props.card.card_data.name, copies - 1);
+            emit(
+              'updateNumCopies',
+              props.card.card_data.name,
+              copies - 1,
+              currentBoard.value,
+            );
           },
         },
         {
@@ -261,7 +286,7 @@ const cardOverlayMenuItems = computed(() => {
             ? 'i-lucide-columns-2'
             : 'i-lucide-help-circle',
       onSelect() {
-        emit('changeBoard', props.card.card_data.name, b);
+        emit('changeBoard', props.card.card_data.name, b, currentBoard.value);
       },
     }));
 
@@ -284,7 +309,7 @@ const cardOverlayMenuItems = computed(() => {
       icon: 'i-lucide-trash-2',
       color: 'error' as const,
       onSelect() {
-        emit('remove', props.card.card_data.id);
+        emit('remove', props.card.card_data.oracle_id, currentBoard.value);
       },
     },
   ];
@@ -347,7 +372,7 @@ function confirmSetCommander() {
 }
 
 function confirmClearCommander() {
-  emit('clearCommander', props.card.card_data.id);
+  emit('clearCommander', props.card.card_data.oracle_id);
 }
 
 function navigateToCard(cardId: string | undefined) {

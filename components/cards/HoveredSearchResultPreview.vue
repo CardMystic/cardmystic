@@ -42,7 +42,7 @@
           class="preview-image cursor-pointer"
           loading="eager"
           decoding="async"
-          @click="navigateToCard(activeCardData?.id)"
+          @click="navigateToCard(activeCardData?.oracle_id)"
         />
       </div>
 
@@ -235,6 +235,7 @@ const clipboardCard = computed(() => {
 
   return {
     id: cardData.id || '',
+    oracleId: cardData.oracle_id || '',
     name: cardData.name || '',
     set: cardData.set || '',
     imageUrl: getCardImageUrl(cardData),

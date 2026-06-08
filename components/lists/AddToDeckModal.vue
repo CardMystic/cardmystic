@@ -144,7 +144,7 @@ import { useToast } from '#imports';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter';
 
 import { useCardLists } from '~/composables/useCardLists';
-import { useCardsByIds } from '~/composables/useCards';
+import { useCardsByOracleIds } from '~/composables/useCards';
 
 const props = defineProps<{
   open: boolean;
@@ -281,13 +281,13 @@ const newCardIds = computed(() =>
 );
 
 // Name-based duplicate detection (used when modal receives cardNames instead of cardIds)
-const existingCardIds = computed(() =>
+const existingOracleIds = computed(() =>
   (selectedListItems.value ?? [])
-    .map((item) => item.card_id)
+    .map((item) => item.oracle_id)
     .filter((id): id is string => !!id),
 );
-const { cards: existingListCards } = useCardsByIds(
-  existingCardIds,
+const { cards: existingListCards } = useCardsByOracleIds(
+  existingOracleIds,
   'add-to-deck-names',
 );
 const existingCardNameSet = computed(() => {

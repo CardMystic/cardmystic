@@ -17,14 +17,23 @@
             <HoveredListCardPreview
               :card="previewCard"
               :isCommanderOfDecklist="
-                commanderCardIds?.includes(previewCard.card_data.id) ?? false
+                commanderOracleIds?.includes(previewCard.card_data.oracle_id) ??
+                false
               "
               :canBeACommander="isCommanderCard(previewCard)"
-              :num-copies="listItemsMap?.[previewCard.card_data.id]?.num_copies"
-              :board="listItemsMap?.[previewCard.card_data.id]?.board"
+              :num-copies="
+                listItemsMap?.[hoveredBoard]?.[previewCard.card_data.oracle_id]
+                  ?.num_copies
+              "
+              :board="hoveredBoard"
               :decklist-card-names="decklistCardNames"
               :is-flipped="flippedCards[previewCard.card_data.id] ?? false"
-              @remove="(cardId: string) => emit('removeCard', cardId)"
+              @remove="
+                (
+                  cardId: string,
+                  f: 'Mainboard' | 'Sideboard' | 'Considering',
+                ) => emit('removeCard', cardId, f)
+              "
               @set-commander="
                 (cardName: string) => emit('setCommander', cardName)
               "
@@ -32,14 +41,18 @@
                 (cardId: string) => emit('clearCommander', cardId)
               "
               @update-num-copies="
-                (cardName: string, n: number) =>
-                  emit('updateNumCopies', cardName, n)
+                (
+                  cardName: string,
+                  n: number,
+                  f: 'Mainboard' | 'Sideboard' | 'Considering',
+                ) => emit('updateNumCopies', cardName, n, f)
               "
               @change-board="
                 (
                   cardName: string,
                   b: 'Mainboard' | 'Sideboard' | 'Considering',
-                ) => emit('changeBoard', cardName, b)
+                  f: 'Mainboard' | 'Sideboard' | 'Considering',
+                ) => emit('changeBoard', cardName, b, f)
               "
               @flip="handleCardFlip"
             />
@@ -77,22 +90,31 @@
                 <div
                   v-for="card in group.cards"
                   :key="card.card_data.id"
-                  @mouseenter="setPreviewCard(card)"
-                  @focusin="setPreviewCard(card)"
+                  @mouseenter="setPreviewCard(card, 'Mainboard')"
+                  @focusin="setPreviewCard(card, 'Mainboard')"
                   @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                 >
                   <ListCard
                     :card="card"
                     :is-deck-commander="
-                      commanderCardIds?.includes(card.card_data.id) ?? false
+                      commanderOracleIds?.includes(card.card_data.oracle_id) ??
+                      false
                     "
                     :is-commander-card="isCommanderCard(card)"
                     :commander-color-identity="commanderColorIdentity"
-                    :num-copies="listItemsMap?.[card.card_data.id]?.num_copies"
-                    :board="listItemsMap?.[card.card_data.id]?.board"
+                    :num-copies="
+                      listItemsMap?.Mainboard?.[card.card_data.oracle_id]
+                        ?.num_copies
+                    "
+                    :board="'Mainboard'"
                     :format="format"
                     :decklist-card-names="decklistCardNames"
-                    @remove="(cardId: string) => emit('removeCard', cardId)"
+                    @remove="
+                      (
+                        cardId: string,
+                        f: 'Mainboard' | 'Sideboard' | 'Considering',
+                      ) => emit('removeCard', cardId, f)
+                    "
                     @set-commander="
                       (cardName: string) => emit('setCommander', cardName)
                     "
@@ -100,14 +122,18 @@
                       (cardId: string) => emit('clearCommander', cardId)
                     "
                     @update-num-copies="
-                      (cardName: string, n: number) =>
-                        emit('updateNumCopies', cardName, n)
+                      (
+                        cardName: string,
+                        n: number,
+                        f: 'Mainboard' | 'Sideboard' | 'Considering',
+                      ) => emit('updateNumCopies', cardName, n, f)
                     "
                     @change-board="
                       (
                         cardName: string,
                         b: 'Mainboard' | 'Sideboard' | 'Considering',
-                      ) => emit('changeBoard', cardName, b)
+                        f: 'Mainboard' | 'Sideboard' | 'Considering',
+                      ) => emit('changeBoard', cardName, b, f)
                     "
                     @flip="handleCardFlip"
                   />
@@ -161,24 +187,32 @@
                   <div
                     v-for="card in group.cards"
                     :key="card.card_data.id"
-                    @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)"
+                    @mouseenter="setPreviewCard(card, 'Mainboard')"
+                    @focusin="setPreviewCard(card, 'Mainboard')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
                     <ListCard
                       :card="card"
                       :is-deck-commander="
-                        commanderCardIds?.includes(card.card_data.id) ?? false
+                        commanderOracleIds?.includes(
+                          card.card_data.oracle_id,
+                        ) ?? false
                       "
                       :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
                       :num-copies="
-                        listItemsMap?.[card.card_data.id]?.num_copies
+                        listItemsMap?.Mainboard?.[card.card_data.oracle_id]
+                          ?.num_copies
                       "
-                      :board="listItemsMap?.[card.card_data.id]?.board"
+                      :board="'Mainboard'"
                       :format="format"
                       :decklist-card-names="decklistCardNames"
-                      @remove="(cardId: string) => emit('removeCard', cardId)"
+                      @remove="
+                        (
+                          cardId: string,
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('removeCard', cardId, f)
+                      "
                       @set-commander="
                         (cardName: string) => emit('setCommander', cardName)
                       "
@@ -186,14 +220,18 @@
                         (cardId: string) => emit('clearCommander', cardId)
                       "
                       @update-num-copies="
-                        (cardName: string, n: number) =>
-                          emit('updateNumCopies', cardName, n)
+                        (
+                          cardName: string,
+                          n: number,
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('updateNumCopies', cardName, n, f)
                       "
                       @change-board="
                         (
                           cardName: string,
                           b: 'Mainboard' | 'Sideboard' | 'Considering',
-                        ) => emit('changeBoard', cardName, b)
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('changeBoard', cardName, b, f)
                       "
                       @flip="handleCardFlip"
                     />
@@ -240,8 +278,8 @@
                   <div
                     v-for="card in group.cards"
                     :key="card.card_data.id"
-                    @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)"
+                    @mouseenter="setPreviewCard(card, 'Sideboard')"
+                    @focusin="setPreviewCard(card, 'Sideboard')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
                     <ListCard
@@ -250,11 +288,17 @@
                       :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
                       :num-copies="
-                        listItemsMap?.[card.card_data.id]?.num_copies
+                        listItemsMap?.Sideboard?.[card.card_data.oracle_id]
+                          ?.num_copies
                       "
-                      :board="listItemsMap?.[card.card_data.id]?.board"
+                      :board="'Sideboard'"
                       :format="format"
-                      @remove="(cardId: string) => emit('removeCard', cardId)"
+                      @remove="
+                        (
+                          cardId: string,
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('removeCard', cardId, f)
+                      "
                       @set-commander="
                         (cardName: string) => emit('setCommander', cardName)
                       "
@@ -262,14 +306,18 @@
                         (cardId: string) => emit('clearCommander', cardId)
                       "
                       @update-num-copies="
-                        (cardName: string, n: number) =>
-                          emit('updateNumCopies', cardName, n)
+                        (
+                          cardName: string,
+                          n: number,
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('updateNumCopies', cardName, n, f)
                       "
                       @change-board="
                         (
                           cardName: string,
                           b: 'Mainboard' | 'Sideboard' | 'Considering',
-                        ) => emit('changeBoard', cardName, b)
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('changeBoard', cardName, b, f)
                       "
                       @flip="handleCardFlip"
                     />
@@ -299,8 +347,8 @@
                     <div
                       v-for="card in group.cards"
                       :key="card.card_data.id"
-                      @mouseenter="setPreviewCard(card)"
-                      @focusin="setPreviewCard(card)"
+                      @mouseenter="setPreviewCard(card, 'Sideboard')"
+                      @focusin="setPreviewCard(card, 'Sideboard')"
                       @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                     >
                       <ListCard
@@ -309,11 +357,17 @@
                         :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
                         :num-copies="
-                          listItemsMap?.[card.card_data.id]?.num_copies
+                          listItemsMap?.Sideboard?.[card.card_data.oracle_id]
+                            ?.num_copies
                         "
-                        :board="listItemsMap?.[card.card_data.id]?.board"
+                        :board="'Sideboard'"
                         :format="format"
-                        @remove="(cardId: string) => emit('removeCard', cardId)"
+                        @remove="
+                          (
+                            cardId: string,
+                            f: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('removeCard', cardId, f)
+                        "
                         @set-commander="
                           (cardName: string) => emit('setCommander', cardName)
                         "
@@ -321,14 +375,18 @@
                           (cardId: string) => emit('clearCommander', cardId)
                         "
                         @update-num-copies="
-                          (cardName: string, n: number) =>
-                            emit('updateNumCopies', cardName, n)
+                          (
+                            cardName: string,
+                            n: number,
+                            f: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('updateNumCopies', cardName, n, f)
                         "
                         @change-board="
                           (
                             cardName: string,
                             b: 'Mainboard' | 'Sideboard' | 'Considering',
-                          ) => emit('changeBoard', cardName, b)
+                            f: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('changeBoard', cardName, b, f)
                         "
                         @flip="handleCardFlip"
                       />
@@ -376,8 +434,8 @@
                   <div
                     v-for="card in group.cards"
                     :key="card.card_data.id"
-                    @mouseenter="setPreviewCard(card)"
-                    @focusin="setPreviewCard(card)"
+                    @mouseenter="setPreviewCard(card, 'Considering')"
+                    @focusin="setPreviewCard(card, 'Considering')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
                     <ListCard
@@ -386,11 +444,17 @@
                       :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
                       :num-copies="
-                        listItemsMap?.[card.card_data.id]?.num_copies
+                        listItemsMap?.Considering?.[card.card_data.oracle_id]
+                          ?.num_copies
                       "
-                      :board="listItemsMap?.[card.card_data.id]?.board"
+                      :board="'Considering'"
                       :format="format"
-                      @remove="(cardId: string) => emit('removeCard', cardId)"
+                      @remove="
+                        (
+                          cardId: string,
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('removeCard', cardId, f)
+                      "
                       @set-commander="
                         (cardName: string) => emit('setCommander', cardName)
                       "
@@ -398,14 +462,18 @@
                         (cardId: string) => emit('clearCommander', cardId)
                       "
                       @update-num-copies="
-                        (cardName: string, n: number) =>
-                          emit('updateNumCopies', cardName, n)
+                        (
+                          cardName: string,
+                          n: number,
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('updateNumCopies', cardName, n, f)
                       "
                       @change-board="
                         (
                           cardName: string,
                           b: 'Mainboard' | 'Sideboard' | 'Considering',
-                        ) => emit('changeBoard', cardName, b)
+                          f: 'Mainboard' | 'Sideboard' | 'Considering',
+                        ) => emit('changeBoard', cardName, b, f)
                       "
                       @flip="handleCardFlip"
                     />
@@ -435,8 +503,8 @@
                     <div
                       v-for="card in group.cards"
                       :key="card.card_data.id"
-                      @mouseenter="setPreviewCard(card)"
-                      @focusin="setPreviewCard(card)"
+                      @mouseenter="setPreviewCard(card, 'Considering')"
+                      @focusin="setPreviewCard(card, 'Considering')"
                       @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                     >
                       <ListCard
@@ -445,11 +513,17 @@
                         :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
                         :num-copies="
-                          listItemsMap?.[card.card_data.id]?.num_copies
+                          listItemsMap?.Considering?.[card.card_data.oracle_id]
+                            ?.num_copies
                         "
-                        :board="listItemsMap?.[card.card_data.id]?.board"
+                        :board="'Considering'"
                         :format="format"
-                        @remove="(cardId: string) => emit('removeCard', cardId)"
+                        @remove="
+                          (
+                            cardId: string,
+                            f: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('removeCard', cardId, f)
+                        "
                         @set-commander="
                           (cardName: string) => emit('setCommander', cardName)
                         "
@@ -457,14 +531,18 @@
                           (cardId: string) => emit('clearCommander', cardId)
                         "
                         @update-num-copies="
-                          (cardName: string, n: number) =>
-                            emit('updateNumCopies', cardName, n)
+                          (
+                            cardName: string,
+                            n: number,
+                            f: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('updateNumCopies', cardName, n, f)
                         "
                         @change-board="
                           (
                             cardName: string,
                             b: 'Mainboard' | 'Sideboard' | 'Considering',
-                          ) => emit('changeBoard', cardName, b)
+                            f: 'Mainboard' | 'Sideboard' | 'Considering',
+                          ) => emit('changeBoard', cardName, b, f)
                         "
                         @flip="handleCardFlip"
                       />
@@ -504,9 +582,14 @@ import { useCommandersSet } from '~/composables/useBulkData';
 const props = defineProps<{
   isLoading: boolean;
   groups: CardGroup[] | null;
-  commanderCardIds?: string[] | null;
+  commanderOracleIds?: string[] | null;
   commanderColorIdentity?: string[] | null;
-  listItemsMap?: Record<string, { num_copies: number; board: string }>;
+  listItemsMap?: Partial<
+    Record<
+      'Mainboard' | 'Sideboard' | 'Considering',
+      Record<string, { num_copies: number }>
+    >
+  >;
   format?: string;
   sideboardGroups?: CardGroup[] | null;
   consideringGroups?: CardGroup[] | null;
@@ -615,6 +698,7 @@ function handleCardFlip(cardId: string) {
 }
 
 const hoveredCardId = ref<string | null>(null);
+const hoveredBoard = ref<Board>('Mainboard');
 
 const previewCandidates = computed(() => [
   ...flattenGroups(props.groups),
@@ -672,10 +756,11 @@ function clearPendingPreviewCard(cardId?: string) {
   _pendingPreviewCardId = null;
 }
 
-function setPreviewCard(card: Card) {
+function setPreviewCard(card: Card, board: Board = 'Mainboard') {
   const nextCardId = card.card_data.id;
   // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
-  if (nextCardId === hoveredCardId.value) return;
+  if (nextCardId === hoveredCardId.value && board === hoveredBoard.value)
+    return;
 
   _pendingPreviewCardId = nextCardId;
 
@@ -688,6 +773,7 @@ function setPreviewCard(card: Card) {
     _hoverRafId = requestAnimationFrame(() => {
       if (_pendingPreviewCardId !== nextCardId) return;
       hoveredCardId.value = nextCardId;
+      hoveredBoard.value = board;
       _pendingPreviewCardId = null;
       _hoverRafId = null;
     });
@@ -700,51 +786,79 @@ onUnmounted(() => {
 });
 
 const emit = defineEmits<{
-  (e: 'removeCard', cardId: string): void;
+  (
+    e: 'removeCard',
+    cardId: string,
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
-  (e: 'updateNumCopies', cardName: string, numCopies: number): void;
+  (
+    e: 'updateNumCopies',
+    cardName: string,
+    numCopies: number,
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
   (
     e: 'changeBoard',
     cardName: string,
     board: 'Mainboard' | 'Sideboard' | 'Considering',
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
   ): void;
 }>();
 
-function countCards(groups: CardGroup[] | null | undefined): number {
+type Board = 'Mainboard' | 'Sideboard' | 'Considering';
+
+function countCards(
+  groups: CardGroup[] | null | undefined,
+  board: Board,
+): number {
   if (!groups) return 0;
   return groups.reduce(
     (total, g) =>
       total +
       g.cards.reduce((sum, c) => {
-        const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
+        const copies =
+          props.listItemsMap?.[board]?.[c.card_data.oracle_id]?.num_copies ?? 1;
         return sum + copies;
       }, 0),
     0,
   );
 }
 
-function sumPrice(groups: CardGroup[] | null | undefined): number {
+function sumPrice(
+  groups: CardGroup[] | null | undefined,
+  board: Board,
+): number {
   if (!groups) return 0;
   return groups.reduce(
     (total, g) =>
       total +
       g.cards.reduce((sum, c) => {
         const price = c.card_data?.prices?.usd;
-        const copies = props.listItemsMap?.[c.card_data.id]?.num_copies ?? 1;
+        const copies =
+          props.listItemsMap?.[board]?.[c.card_data.oracle_id]?.num_copies ?? 1;
         return sum + (price ? parseFloat(price) * copies : 0);
       }, 0),
     0,
   );
 }
 
-const mainboardCount = computed(() => countCards(props.groups));
-const sideboardCount = computed(() => countCards(props.sideboardGroups));
-const consideringCount = computed(() => countCards(props.consideringGroups));
+const mainboardCount = computed(() => countCards(props.groups, 'Mainboard'));
+const sideboardCount = computed(() =>
+  countCards(props.sideboardGroups, 'Sideboard'),
+);
+const consideringCount = computed(() =>
+  countCards(props.consideringGroups, 'Considering'),
+);
 
-const mainboardPrice = computed(() => sumPrice(props.groups));
-const sideboardPrice = computed(() => sumPrice(props.sideboardGroups));
-const consideringPrice = computed(() => sumPrice(props.consideringGroups));
+const mainboardPrice = computed(() => sumPrice(props.groups, 'Mainboard'));
+const sideboardPrice = computed(() =>
+  sumPrice(props.sideboardGroups, 'Sideboard'),
+);
+const consideringPrice = computed(() =>
+  sumPrice(props.consideringGroups, 'Considering'),
+);
 
 function groupToId(label: string): string {
   return (

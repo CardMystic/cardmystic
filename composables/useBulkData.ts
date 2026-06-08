@@ -64,17 +64,17 @@ export function useCommandersSet() {
   });
 }
 
-export function useCardIds() {
+export function useCardOracleIds() {
   const config = useRuntimeConfig();
 
   return useQuery<string[]>({
-    queryKey: ['bulkdata', 'card-ids'],
+    queryKey: ['bulkdata', 'card-oracle-ids'],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/bulkdata/card-ids.min.json`,
+        `${config.public.backendUrl}/bulkdata/card-oracle-ids.min.json`,
       );
       if (!response.ok) {
-        throw new Error('Failed to fetch card IDs');
+        throw new Error('Failed to fetch card oracle IDs');
       }
       return response.json();
     },
