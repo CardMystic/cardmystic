@@ -139,8 +139,8 @@
         already in
         <span class="font-bold">{{ pendingDuplicateCard.board }}</span> with
         <span class="font-bold">{{ pendingDuplicateCard.numCopies }}</span>
-        {{ pendingDuplicateCard.numCopies === 1 ? 'copy' : 'copies' }}. Would
-        you like to add another copy?
+        {{ pendingDuplicateCard.numCopies === 1 ? 'copy' : 'copies' }}. Add
+        anyway?
       </p>
     </template>
     <template #footer="{ close }">
@@ -226,7 +226,7 @@ const error = ref('');
 const showDuplicateModal = ref(false);
 const pendingDuplicateCard = ref<{
   name: string;
-  id: string;
+  oracle_id: string;
   board: string;
   numCopies: number;
 } | null>(null);
@@ -491,7 +491,7 @@ async function handleAddCard(cardName: string) {
     if (existing) {
       pendingDuplicateCard.value = {
         name: cardName,
-        id: cardData.oracle_id,
+        oracle_id: cardData.oracle_id,
         board: existing.board,
         numCopies: existing.row.num_copies,
       };
@@ -503,7 +503,7 @@ async function handleAddCard(cardName: string) {
 
     await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
-      cardIds: [cardData.id],
+      oracleIds: [cardData.oracle_id],
     });
 
     toast.add({
@@ -526,20 +526,22 @@ async function handleAddCard(cardName: string) {
   }
 }
 
+/**
+ * Fires when user confirms adding a duplicate card from the modal.
+ * We add the duplicate card to mainboard by default regardless of board.
+ *   e.g., Add Sol Ring (0 in Mainboard, 1 in Sideboard) -> (1 in Mainboard, 1 in Sideboard)
+ *         Add Sol Ring (1 in Mainboard, 0 in Sideboard) -> (2 in Mainboard, 0 in Sideboard)
+ */
 async function confirmAddDuplicate() {
   if (!pendingDuplicateCard.value || !list.value) return;
   try {
-    await updateNumCopiesMutation.mutateAsync({
+    await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
-      cardName: pendingDuplicateCard.value.name,
-      numCopies: pendingDuplicateCard.value.numCopies + 1,
-      fromBoard: pendingDuplicateCard.value.board as
-        | 'Mainboard'
-        | 'Sideboard'
-        | 'Considering',
+      oracleIds: [pendingDuplicateCard.value.oracle_id],
+      board: 'Mainboard', // Always add duplicates to mainboard by default, user can move them later if desired
     });
     toast.add({
-      title: `Added another copy of ${pendingDuplicateCard.value.name}`,
+      title: `Added ${pendingDuplicateCard.value.name}`,
       icon: 'i-lucide-check',
     });
   } catch (error: any) {

@@ -103,13 +103,17 @@ export const useCardLists = () => {
     },
   });
 
-  const addCardsToList = async (listId: string, cardIds: string[]) => {
+  const addCardsToList = async (
+    listId: string,
+    oracleIds: string[],
+    board?: 'Mainboard' | 'Sideboard' | 'Considering',
+  ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
 
-    if (!cardIds.length) {
+    if (!oracleIds.length) {
       throw new Error('No cards to add');
     }
 
@@ -124,17 +128,21 @@ export const useCardLists = () => {
     const response = await $fetch<{
       addedCount: number;
       updatedCount: number;
-      invalidCardIds: string[];
-    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-id`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
+      invalidOracleIds: string[];
+    }>(
+      `${config.public.backendUrl}/supabase/card-lists/add-cards-by-oracle-id`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          listId,
+          oracleIds,
+          ...(board ? { board } : {}),
+        },
       },
-      body: {
-        listId,
-        cardIds,
-      },
-    });
+    );
 
     return response;
   };
@@ -142,17 +150,19 @@ export const useCardLists = () => {
   const addCardsToListMutation = useMutation({
     mutationFn: async ({
       listId,
-      cardIds,
+      oracleIds,
+      board,
     }: {
       listId: string;
-      cardIds: string[];
+      oracleIds: string[];
+      board?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
       if (!supabase) return;
-      return addCardsToList(listId, cardIds);
+      return addCardsToList(listId, oracleIds, board);
     },
     onSuccess: (_, { listId }) => {
-      // Invalidate list-items - the list-cards query will auto-refetch
-      // because its queryKey includes cardIds which depends on list-items
+      // Invalidate list-items — the list-cards query will auto-refetch
+      // because its queryKey includes oracleIds derived from list-items
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },

@@ -77,7 +77,7 @@ import { useToast } from '#imports';
 
 const props = defineProps<{
   open: boolean;
-  cardIds?: string[];
+  oracleIds?: string[];
   cardNames?: string[];
 }>();
 
@@ -201,10 +201,10 @@ const handleCreate = async () => {
     });
 
     if (result?.id) {
-      if (props.cardIds?.length) {
+      if (props.oracleIds?.length) {
         await addCardsToListMutation.mutateAsync({
           listId: result.id,
-          cardIds: props.cardIds,
+          oracleIds: props.oracleIds,
         });
       } else if (props.cardNames?.length) {
         await addCardsByNameToListMutation.mutateAsync({
@@ -215,7 +215,7 @@ const handleCreate = async () => {
     }
 
     const cardCount =
-      (props.cardIds?.length ?? 0) || (props.cardNames?.length ?? 0);
+      (props.oracleIds?.length ?? 0) || (props.cardNames?.length ?? 0);
     toast.add({
       title:
         cardCount > 0

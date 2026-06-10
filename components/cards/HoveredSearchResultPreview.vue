@@ -8,7 +8,7 @@
     <LazyAddToDeckModal
       v-if="canShowDeckMenu"
       v-model:open="showAddToDeckModal"
-      :card-ids="[activeCardData?.id ?? '']"
+      :oracle-ids="[activeCardData?.oracle_id ?? '']"
     />
 
     <UModal

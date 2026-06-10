@@ -11,7 +11,7 @@
     <LazyAddToDeckModal
       v-if="canShowDeckMenu"
       v-model:open="showAddToDeckModal"
-      :card-ids="[card.card_data.id]"
+      :oracle-ids="[card.card_data.oracle_id]"
     />
     <!-- Confirmation Modal -->
     <UModal

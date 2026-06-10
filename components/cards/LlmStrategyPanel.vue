@@ -1,9 +1,7 @@
 <template>
   <div v-if="hasAnyData" class="llm-stack">
     <UCard v-if="hasPowerLevelData" class="llm-card">
-      <h3 class="llm-title flex items-center gap-2">
-        <UIcon name="i-lucide-biceps-flexed" />AI Power Level
-      </h3>
+      <h3 class="llm-title flex items-center gap-2">AI Power Level</h3>
 
       <div class="power-section">
         <div class="meter-block">
@@ -39,9 +37,7 @@
     </UCard>
 
     <UCard v-if="hasSummaryData" class="llm-card">
-      <h3 class="llm-title flex items-center gap-2">
-        <UIcon name="i-lucide-brain" />AI Summary
-      </h3>
+      <h3 class="llm-title flex items-center gap-2">AI Summary</h3>
 
       <div v-if="hasStrategyData" class="chart-wrap">
         <svg

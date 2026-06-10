@@ -64,14 +64,17 @@ test.describe('Deck Recommender', () => {
     const commanderInput = page.getByPlaceholder(
       /Select a commander \(optional\)/i,
     );
+    await expect(commanderInput).toBeVisible({ timeout: SEARCH_TIMEOUT });
+
     await commanderInput.click();
     await commanderInput.fill('Kaalia');
 
-    // filteredCommanders debounces by 150 ms — wait for the dropdown to appear.
-    // Playwright's toBeVisible polls automatically up to the given timeout.
+    // The commanders list is fetched from /bulkdata/commanders.min.json on
+    // mount and filtered after a 150 ms debounce. Allow ample time for the
+    // network fetch + reactivity to surface the option.
     await expect(
       page.getByRole('option', { name: /Kaalia of the Vast/i }),
-    ).toBeVisible({ timeout: 5_000 });
+    ).toBeVisible({ timeout: SEARCH_TIMEOUT });
   });
 
   test('typing a decklist and submitting fires /als/recommend and renders results', async ({

@@ -99,7 +99,7 @@
     <LazyAddToDeckModal
       v-if="isAddToDeckOpen"
       v-model:open="isAddToDeckOpen"
-      :card-ids="clipboardCardIds"
+      :oracle-ids="clipboardOracleIds"
       @update:open="
         (v) => {
           isAddToDeckOpen = v;
@@ -130,8 +130,10 @@ const router = useRouter();
 const isOpen = ref(false);
 const isAddToDeckOpen = ref(false);
 
-const clipboardCardIds = computed(() =>
-  clipboard.list.value.map((card) => card.id),
+const clipboardOracleIds = computed(() =>
+  clipboard.list.value
+    .map((card) => card.oracleId)
+    .filter((id): id is string => !!id),
 );
 
 const clipboardLabel = computed(() => {
