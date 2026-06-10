@@ -170,10 +170,7 @@ const wordSearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  isLoading,
-} = useColbertSearch(wordSearch);
+const { searchResults, isLoading } = useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

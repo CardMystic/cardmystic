@@ -360,68 +360,118 @@ test.describe('Card lists CRUD', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Test 30 — Change-board merge: 2 Mainboard copies move to Sideboard
-  //           that already has 1 → Sideboard ends up with 3 copies
+  // Test 30 — Change-board merge: moving N copies of a card to a board that
+  //           already holds M copies of the same card → destination ends up
+  //           with N+M copies.
+  //
+  // Independent of preceding tests: this test seeds its OWN state via the
+  // Bulk Edit modal (Mainboard=2× Brainstorm, Sideboard=1× Brainstorm).
+  // Brainstorm is blue → legal in Atraxa's WUBG identity (no legality
+  // overlay interference) and is not used by any other test in this file.
   // ---------------------------------------------------------------------------
-  // test('moving copies to a board that already holds that card merges the counts', async ({
-  //   page,
-  // }) => {
-  //   expect(LIST_ID).toBeTruthy();
+  test('moving copies to a board that already holds that card merges the counts', async ({
+    page,
+  }) => {
+    expect(LIST_ID).toBeTruthy();
 
-  //   await gotoHydrated(page, `/lists/${LIST_ID}`);
+    const MERGE_TEST_CARD = 'Brainstorm';
 
-  //   // First ensure Mainboard has 2 copies of Sol Ring by bumping num_copies.
-  //   const updateCall = page.waitForResponse(
-  //     (resp) =>
-  //       resp.url() === `${BACKEND}/supabase/card-lists/update-num-copies` &&
-  //       resp.request().method() === 'PUT',
-  //     { timeout: API_TIMEOUT },
-  //   );
+    await gotoHydrated(page, `/lists/${LIST_ID}`);
 
-  //   // Hover Sol Ring in the Mainboard (first occurrence) to get the preview rail.
-  //   const solRingMainboard = page
-  //     .locator('.card-image-wrapper:has(img[alt="Sol Ring"])')
-  //     .first();
-  //   await solRingMainboard.scrollIntoViewIfNeeded();
-  //   await solRingMainboard.hover();
+    // ── Step 1: seed Mainboard=2× and Sideboard=1× via Bulk Edit ────────
+    // Textareas pre-populate from current list state and only boards with
+    // non-empty textareas are touched; we append our seed lines so existing
+    // cards on those boards are preserved.
+    await page.getByRole('button', { name: /bulk edit/i }).click();
+    const modal = page.getByRole('dialog', { name: /bulk edit cards/i });
+    await expect(modal).toBeVisible({ timeout: API_TIMEOUT });
 
-  //   // Use the +Copy button in the preview rail to bring Mainboard to 2 copies.
-  //   await page
-  //     .getByRole('button', { name: /^add copy$/i })
-  //     .first()
-  //     .click();
-  //   await updateCall;
+    const mainboardTextarea = modal.locator('textarea').first();
+    const mainboardCurrent = await mainboardTextarea.inputValue();
+    await mainboardTextarea.fill(
+      `${mainboardCurrent}${mainboardCurrent ? '\n' : ''}2 ${MERGE_TEST_CARD}`,
+    );
 
-  //   // Now move Sol Ring from Mainboard → Sideboard via the card menu.
-  //   const changeBoardCall = page.waitForResponse(
-  //     (resp) =>
-  //       resp.url() === `${BACKEND}/supabase/card-lists/change-board` &&
-  //       resp.request().method() === 'POST',
-  //     { timeout: API_TIMEOUT },
-  //   );
+    await modal.getByRole('tab', { name: /sideboard/i }).click();
+    const sideboardTextarea = modal.locator('textarea').first();
+    const sideboardCurrent = await sideboardTextarea.inputValue();
+    await sideboardTextarea.fill(
+      `${sideboardCurrent}${sideboardCurrent ? '\n' : ''}1 ${MERGE_TEST_CARD}`,
+    );
 
-  //   await solRingMainboard.hover();
-  //   await solRingMainboard
-  //     .getByRole('button', { name: /card options/i })
-  //     .first()
-  //     .click({ force: true });
-  //   await page
-  //     .getByRole('menuitem', { name: /move to sideboard/i })
-  //     .first()
-  //     .click();
+    const bulkCall = page.waitForResponse(
+      (resp) =>
+        resp.url() === `${BACKEND}/supabase/card-lists/bulk-edit` &&
+        resp.request().method() === 'POST',
+      { timeout: API_TIMEOUT },
+    );
+    await modal.getByRole('button', { name: /update list/i }).click();
+    const bulkResp = await bulkCall;
+    expect(bulkResp.ok()).toBeTruthy();
+    await expect(modal).toBeHidden({ timeout: API_TIMEOUT });
 
-  //   const changeBoardResp = await changeBoardCall;
-  //   expect(changeBoardResp.ok()).toBeTruthy();
-  //   const changeBoardBody = (await changeBoardResp.json()) as {
-  //     cardName: string;
-  //     board: string;
-  //     message?: string;
-  //   };
-  //   // Backend merges copies on collision; the message says "Copies merged".
-  //   expect(changeBoardBody.board.toLowerCase()).toBe('sideboard');
-  //   // Either a plain move or a merge; both are valid successes.
-  //   expect(changeBoardBody.cardName).toMatch(/Sol Ring/i);
-  // });
+    // ── Step 2: snapshot the Sideboard count after seeding ──────────────
+    const sideboardHeader = page.locator('#board-sideboard');
+    await expect(sideboardHeader).toBeVisible({ timeout: API_TIMEOUT });
+
+    const readBoardCount = async (locator: typeof sideboardHeader) => {
+      const text = (await locator.textContent()) ?? '';
+      const match = text.match(/\((\d+)/);
+      return match ? Number(match[1]) : 0;
+    };
+
+    // Wait for the seeded Brainstorm copies to render in both boards
+    // (≥2 wrappers — the Mainboard 2× collapses to one wrapper, and the
+    // Sideboard 1× is the other) before snapshotting the count.
+    await expect
+      .poll(
+        () =>
+          page
+            .locator(`.card-image-wrapper:has(img[alt="${MERGE_TEST_CARD}"])`)
+            .count(),
+        { timeout: API_TIMEOUT },
+      )
+      .toBeGreaterThanOrEqual(2);
+
+    const sideboardCountBeforeMove = await readBoardCount(sideboardHeader);
+
+    // ── Step 3: move the Mainboard Brainstorm → Sideboard via the menu ──
+    // Mainboard renders first in the DOM, so `.first()` targets the
+    // Mainboard wrapper (the Sideboard wrapper comes later).
+    const mainboardCard = page
+      .locator(`.card-image-wrapper:has(img[alt="${MERGE_TEST_CARD}"])`)
+      .first();
+    await mainboardCard.scrollIntoViewIfNeeded();
+    await mainboardCard.hover();
+    await mainboardCard
+      .getByRole('button', { name: /card options/i })
+      .first()
+      .click({ force: true });
+
+    // The frontend issues PUT to `/supabase/card-lists/change-board`
+    // (see composables/useCardLists.ts).
+    const changeBoardCall = page.waitForResponse(
+      (resp) =>
+        resp.url() === `${BACKEND}/supabase/card-lists/change-board` &&
+        resp.request().method() === 'PUT',
+      { timeout: API_TIMEOUT },
+    );
+    await page
+      .getByRole('menuitem', { name: /move to sideboard/i })
+      .first()
+      .click();
+    const changeBoardResp = await changeBoardCall;
+    expect(changeBoardResp.ok()).toBeTruthy();
+
+    // ── Step 4: verify Sideboard count grew by exactly 2 ────────────────
+    // Mainboard's 2 copies merged into Sideboard's 1 → +2 sideboard cards.
+    await expect
+      .poll(() => readBoardCount(sideboardHeader), {
+        timeout: API_TIMEOUT,
+        message: 'Sideboard count did not reflect the merged copies',
+      })
+      .toBe(sideboardCountBeforeMove + 2);
+  });
 
   // ---------------------------------------------------------------------------
   // Test 31 — Update num copies via the +Copy button in the preview rail
@@ -542,58 +592,85 @@ test.describe('Card lists CRUD', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Test 33 — Format copy-limit warning (>1 copy in Commander singleton)
+  //
+  // Independent of preceding card-movement tests: adds a fresh card
+  // (Counterspell — legal in Atraxa's WUBG identity so no color-identity
+  // warning interferes), bumps it to 2 copies via the card-overlay menu,
+  // and verifies the Commander singleton-rule overlay appears.
+  //
+  // Uses the card menu's "Add a copy" item (not the preview rail's "Add
+  // Copy" button) because the preview rail is only rendered at the xl:
+  // breakpoint (≥1280px). By this point in the suite enough cards have
+  // been added that the page scrollbar pushes the viewport below 1280px
+  // and the rail disappears, so its button would not exist to click.
   // ---------------------------------------------------------------------------
   test('adding a second copy of a card in Commander format shows copy-limit warning', async ({
     page,
   }) => {
     expect(LIST_ID).toBeTruthy();
 
+    const SINGLETON_TEST_CARD = 'Counterspell';
+
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
-    // Sol Ring is legal in Commander but the singleton rule means 2 copies is illegal.
-    // Bump Sol Ring (in any board) to 2 copies so the warning shows.
-    const solRingCard = page
-      .locator('.card-image-wrapper:has(img[alt="Sol Ring"])')
-      .first();
-    const hasSolRing = (await solRingCard.count()) > 0;
-    test.skip(
-      !hasSolRing,
-      'Sol Ring not present — preceding tests skipped; nothing to update',
+    // ── Step 1: add Counterspell via the list-page autocomplete ─────────
+    const addInput = page.getByPlaceholder('Search for a card to add...');
+    await expect(addInput).toBeVisible({ timeout: API_TIMEOUT });
+
+    const addCall = page.waitForResponse(
+      (resp) =>
+        resp.url() ===
+          `${BACKEND}/supabase/card-lists/add-cards-by-oracle-id` &&
+        resp.request().method() === 'POST',
+      { timeout: API_TIMEOUT },
     );
 
-    await solRingCard.scrollIntoViewIfNeeded();
-    await solRingCard.hover();
+    await reliableFill(addInput, SINGLETON_TEST_CARD);
+    await page
+      .getByRole('option', {
+        name: new RegExp(`^${SINGLETON_TEST_CARD}$`, 'i'),
+      })
+      .first()
+      .click();
+    await addCall;
 
+    const cardWrapper = page
+      .locator(`.card-image-wrapper:has(img[alt="${SINGLETON_TEST_CARD}"])`)
+      .first();
+    await expect(cardWrapper).toBeVisible({ timeout: API_TIMEOUT });
+
+    // ── Step 2: bump Counterspell to 2 copies via the card-overlay menu ─
+    // The menu is scoped to the specific card wrapper, so it works
+    // regardless of viewport width / preview-rail visibility.
     const updateCall = page.waitForResponse(
       (resp) =>
         resp.url() === `${BACKEND}/supabase/card-lists/update-num-copies` &&
         resp.request().method() === 'PUT',
       { timeout: API_TIMEOUT },
     );
+
+    await cardWrapper.scrollIntoViewIfNeeded();
+    await cardWrapper.hover();
+    await cardWrapper
+      .getByRole('button', { name: /card options/i })
+      .first()
+      .click({ force: true });
     await page
-      .getByRole('button', { name: /^add copy$/i })
+      .getByRole('menuitem', { name: /^add a copy$/i })
       .first()
       .click();
     await updateCall;
 
-    // After updating, reload and check for the legality overlay on Sol Ring.
-    await page.reload();
-    await expect
-      .poll(
-        () =>
-          page.locator('.card-image-wrapper:has(img[alt="Sol Ring"])').count(),
-        { timeout: API_TIMEOUT },
-      )
-      .toBeGreaterThan(0);
-
-    // Any Sol Ring card with >1 copy in a Commander list should be flagged.
-    const illegalSolRing = page
-      .locator('.illegal-card-bg:has(img[alt="Sol Ring"])')
+    // ── Step 3: verify the singleton overlay is shown on Counterspell ───
+    // Legality is reactive — no reload required.
+    const illegalCard = page
+      .locator(`.illegal-card-bg:has(img[alt="${SINGLETON_TEST_CARD}"])`)
       .first();
-    await expect(illegalSolRing).toBeVisible({ timeout: API_TIMEOUT });
+    await expect(illegalCard).toBeVisible({ timeout: API_TIMEOUT });
 
-    const overlay = illegalSolRing.locator('.legality-overlay').first();
+    const overlay = illegalCard.locator('.legality-overlay').first();
     await expect(overlay).toBeVisible();
     await expect(overlay).toContainText(/1 copy|singleton|commander/i);
   });

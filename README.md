@@ -213,6 +213,7 @@ pnpm test:e2e:install
 pnpm test:e2e             # headless run, all specs
 pnpm test:e2e:ui          # Playwright UI mode (recommended for debugging)
 pnpm exec playwright test --project=chromium -g "Logout"   # filter by name
+pnpm exec playwright test e2e/lists.spec.ts --project=chromium # run a specific file
 ```
 
 The Playwright config (`playwright.config.ts`) auto-loads `.env.test` via `dotenv` and starts the dev server itself. Reports land in `playwright-report/`; failure traces in `test-results/`.
