@@ -28,7 +28,7 @@
             >
               <span
                 class="truncate flex-1 cursor-pointer hover:text-primary hover:underline"
-                @click="navigateToCard(card.id)"
+                @click="navigateToCard(card.oracleId ?? card.id)"
               >
                 {{ card.name }}
               </span>
@@ -99,7 +99,7 @@
     <LazyAddToDeckModal
       v-if="isAddToDeckOpen"
       v-model:open="isAddToDeckOpen"
-      :card-ids="clipboardCardIds"
+      :oracle-ids="clipboardOracleIds"
       @update:open="
         (v) => {
           isAddToDeckOpen = v;
@@ -117,7 +117,6 @@
 
 <script setup lang="ts">
 import { useClipboard as useClipboardStore } from '~/composables/useClipboard';
-import { useClipboard as useCopyToClipboard } from '@vueuse/core';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
 
@@ -126,14 +125,15 @@ defineOptions({
 });
 
 const clipboard = useClipboardStore();
-const { copy } = useCopyToClipboard();
 const toast = useToast();
 const router = useRouter();
 const isOpen = ref(false);
 const isAddToDeckOpen = ref(false);
 
-const clipboardCardIds = computed(() =>
-  clipboard.list.value.map((card) => card.id),
+const clipboardOracleIds = computed(() =>
+  clipboard.list.value
+    .map((card) => card.oracleId)
+    .filter((id): id is string => !!id),
 );
 
 const clipboardLabel = computed(() => {
@@ -147,14 +147,22 @@ function navigateToCard(cardId: string) {
   });
 }
 
-function copyNames() {
+async function copyNames() {
   if (clipboard.list.value.length === 0) return;
   const names = clipboard.list.value.map((card) => card.name).join('\n');
-  copy(names);
-  toast.add({
-    title: 'Card names copied!',
-    icon: 'i-lucide-clipboard-check',
-  });
+  try {
+    await navigator.clipboard.writeText(names);
+    toast.add({
+      title: 'Card names copied!',
+      icon: 'i-lucide-clipboard-check',
+    });
+  } catch {
+    toast.add({
+      title: 'Failed to copy card names',
+      description: 'Clipboard access is unavailable in this context.',
+      color: 'error',
+    });
+  }
 }
 
 function openSaveToList() {

@@ -3,7 +3,7 @@ const STORAGE_KEY = 'last_opened_card';
 export type CardOrigin = 'search' | 'explore';
 
 interface LastOpenedCard {
-  id: string;
+  oracleId: string;
   name: string;
   origin: CardOrigin;
 }
@@ -21,7 +21,11 @@ export function useLastOpenedCard() {
       try {
         const stored = sessionStorage.getItem(STORAGE_KEY);
         if (stored) {
-          lastCard.value = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          // Skip pre-cutover entries (which used `id` for the printing id).
+          if (parsed && typeof parsed.oracleId === 'string') {
+            lastCard.value = parsed;
+          }
         }
       } catch {
         /* ignore */
@@ -29,13 +33,17 @@ export function useLastOpenedCard() {
     }
   });
 
-  function setLastOpenedCard(id: string, name: string, origin: CardOrigin) {
-    lastCard.value = { id, name, origin };
+  function setLastOpenedCard(
+    oracleId: string,
+    name: string,
+    origin: CardOrigin,
+  ) {
+    lastCard.value = { oracleId, name, origin };
     if (import.meta.client) {
       try {
         sessionStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify({ id, name, origin }),
+          JSON.stringify({ oracleId, name, origin }),
         );
       } catch {
         /* ignore */
@@ -44,7 +52,7 @@ export function useLastOpenedCard() {
   }
 
   const cardRoute = computed(() =>
-    lastCard.value ? `/card/${lastCard.value.id}` : undefined,
+    lastCard.value ? `/card/${lastCard.value.oracleId}` : undefined,
   );
 
   return {

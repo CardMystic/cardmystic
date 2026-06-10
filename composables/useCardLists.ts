@@ -103,13 +103,17 @@ export const useCardLists = () => {
     },
   });
 
-  const addCardsToList = async (listId: string, cardIds: string[]) => {
+  const addCardsToList = async (
+    listId: string,
+    oracleIds: string[],
+    board?: 'Mainboard' | 'Sideboard' | 'Considering',
+  ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
     }
 
-    if (!cardIds.length) {
+    if (!oracleIds.length) {
       throw new Error('No cards to add');
     }
 
@@ -124,17 +128,21 @@ export const useCardLists = () => {
     const response = await $fetch<{
       addedCount: number;
       updatedCount: number;
-      invalidCardIds: string[];
-    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-id`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
+      invalidOracleIds: string[];
+    }>(
+      `${config.public.backendUrl}/supabase/card-lists/add-cards-by-oracle-id`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          listId,
+          oracleIds,
+          ...(board ? { board } : {}),
+        },
       },
-      body: {
-        listId,
-        cardIds,
-      },
-    });
+    );
 
     return response;
   };
@@ -142,17 +150,19 @@ export const useCardLists = () => {
   const addCardsToListMutation = useMutation({
     mutationFn: async ({
       listId,
-      cardIds,
+      oracleIds,
+      board,
     }: {
       listId: string;
-      cardIds: string[];
+      oracleIds: string[];
+      board?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
       if (!supabase) return;
-      return addCardsToList(listId, cardIds);
+      return addCardsToList(listId, oracleIds, board);
     },
     onSuccess: (_, { listId }) => {
-      // Invalidate list-items - the list-cards query will auto-refetch
-      // because its queryKey includes cardIds which depends on list-items
+      // Invalidate list-items — the list-cards query will auto-refetch
+      // because its queryKey includes oracleIds derived from list-items
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
     },
@@ -286,19 +296,19 @@ export const useCardLists = () => {
   };
 
   // Get card details for list items with TanStack Query
-  const useListCards = (listId: string, cardIds: Ref<string[]>) => {
+  const useListCards = (listId: string, oracleIds: Ref<string[]>) => {
     const config = useRuntimeConfig();
     return useQuery({
-      // Include cardIds in the queryKey so it refetches when the list items change
-      queryKey: computed(() => ['list-cards', listId, cardIds.value]),
+      // Include oracleIds in the queryKey so it refetches when the list items change
+      queryKey: computed(() => ['list-cards', listId, oracleIds.value]),
       queryFn: async () => {
-        if (cardIds.value.length === 0) return [];
+        if (oracleIds.value.length === 0) return [];
 
         const cardsData: any[] = await $fetch(
-          `${config.public.backendUrl}/cards/cards-by-ids`,
+          `${config.public.backendUrl}/cards/cards-by-oracle-ids`,
           {
             method: 'POST',
-            body: { cardIds: cardIds.value },
+            body: { oracleIds: oracleIds.value },
           },
         );
 
@@ -307,29 +317,37 @@ export const useCardLists = () => {
           card_data: cardData,
         }));
       },
-      enabled: computed(() => cardIds.value.length > 0),
+      enabled: computed(() => oracleIds.value.length > 0),
       staleTime: 1000 * 60 * 10, // 10 minutes
       placeholderData: keepPreviousData,
     });
   };
 
-  const removeCardFromList = async (listId: string, cardId: string) => {
+  const removeCardFromList = async (
+    listId: string,
+    oracleId: string,
+    board?: 'Mainboard' | 'Sideboard' | 'Considering',
+  ) => {
     if (!supabase) return;
 
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('card_list_items')
       .delete()
       .eq('list_id', listId)
-      .eq('card_id', cardId)
-      .select();
+      .eq('oracle_id', oracleId);
+    if (board) query = query.eq('board', board);
+
+    const { data, error } = await query.select();
     if (error) throw error;
 
     if (!data || data.length === 0) {
       console.warn(
         'No card found to delete with listId:',
         listId,
-        'cardId:',
-        cardId,
+        'oracleId:',
+        oracleId,
+        'board:',
+        board,
       );
     }
   };
@@ -337,29 +355,50 @@ export const useCardLists = () => {
   const removeCardFromListMutation = useMutation({
     mutationFn: async ({
       listId,
-      cardId,
+      oracleId,
+      board,
     }: {
       listId: string;
-      cardId: string;
+      oracleId: string;
+      board?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
       if (!supabase) return;
-      return removeCardFromList(listId, cardId);
+      return removeCardFromList(listId, oracleId, board);
     },
-    onMutate: async ({ listId, cardId }) => {
+    onMutate: async ({ listId, oracleId, board }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['list-items', listId] });
       await queryClient.cancelQueries({ queryKey: ['list-cards', listId] });
 
-      // Optimistically remove the card from list-items cache
+      // Optimistically remove the card from list-items cache.
+      // When board is provided, only drop the row matching that board so
+      // the same card in other boards remains.
       queryClient.setQueriesData<any[]>(
         { queryKey: ['list-items', listId] },
-        (old) => old?.filter((item: any) => item.card_id !== cardId),
+        (old) =>
+          old?.filter((item: any) => {
+            if (item.oracle_id !== oracleId) return true;
+            if (board && item.board !== board) return true;
+            return false;
+          }),
       );
 
-      // Optimistically remove the card from list-cards cache
+      // Optimistically remove the card from list-cards cache only if no
+      // remaining list-items row references this oracle_id.
       queryClient.setQueriesData<any[]>(
         { queryKey: ['list-cards', listId] },
-        (old) => old?.filter((card: any) => card.card_data.id !== cardId),
+        (old) => {
+          if (!old) return old;
+          const items =
+            queryClient.getQueryData<any[]>(['list-items', listId]) ?? [];
+          const stillReferenced = items.some(
+            (item: any) => item.oracle_id === oracleId,
+          );
+          if (stillReferenced) return old;
+          return old.filter(
+            (card: any) => card.card_data.oracle_id !== oracleId,
+          );
+        },
       );
     },
     onSuccess: (_, { listId }) => {
@@ -520,7 +559,7 @@ export const useCardLists = () => {
     },
   });
 
-  const clearCommander = async (listId: string, cardId?: string) => {
+  const clearCommander = async (listId: string, oracleId?: string) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -531,8 +570,8 @@ export const useCardLists = () => {
       .update({ is_commander: false })
       .eq('list_id', listId);
 
-    if (cardId) {
-      query = query.eq('card_id', cardId);
+    if (oracleId) {
+      query = query.eq('oracle_id', oracleId);
     }
 
     const { error } = await query;
@@ -542,13 +581,13 @@ export const useCardLists = () => {
   const clearCommanderMutation = useMutation({
     mutationFn: async ({
       listId,
-      cardId,
+      oracleId,
     }: {
       listId: string;
-      cardId?: string;
+      oracleId?: string;
     }) => {
       if (!supabase) return;
-      return clearCommander(listId, cardId);
+      return clearCommander(listId, oracleId);
     },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
@@ -610,6 +649,7 @@ export const useCardLists = () => {
     listId: string,
     cardName: string,
     numCopies: number,
+    fromBoard?: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
@@ -636,6 +676,7 @@ export const useCardLists = () => {
         listId,
         cardName,
         numCopies,
+        ...(fromBoard ? { fromBoard } : {}),
       },
     });
 
@@ -647,13 +688,15 @@ export const useCardLists = () => {
       listId,
       cardName,
       numCopies,
+      fromBoard,
     }: {
       listId: string;
       cardName: string;
       numCopies: number;
+      fromBoard?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
       if (!supabase) return;
-      return updateNumCopies(listId, cardName, numCopies);
+      return updateNumCopies(listId, cardName, numCopies, fromBoard);
     },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
@@ -665,6 +708,7 @@ export const useCardLists = () => {
     listId: string,
     cardName: string,
     board: 'Mainboard' | 'Sideboard' | 'Considering',
+    fromBoard?: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
@@ -682,6 +726,7 @@ export const useCardLists = () => {
     const response = await $fetch<{
       cardName: string;
       board: string;
+      message?: string;
     }>(`${config.public.backendUrl}/supabase/card-lists/change-board`, {
       method: 'PUT',
       headers: {
@@ -691,6 +736,7 @@ export const useCardLists = () => {
         listId,
         cardName,
         board,
+        ...(fromBoard ? { fromBoard } : {}),
       },
     });
 
@@ -702,13 +748,15 @@ export const useCardLists = () => {
       listId,
       cardName,
       board,
+      fromBoard,
     }: {
       listId: string;
       cardName: string;
       board: 'Mainboard' | 'Sideboard' | 'Considering';
+      fromBoard?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
       if (!supabase) return;
-      return changeBoard(listId, cardName, board);
+      return changeBoard(listId, cardName, board, fromBoard);
     },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });

@@ -115,8 +115,6 @@ const topCommandersSearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  isLoading,
-} = useTopCommandersSearch(topCommandersSearch);
+const { searchResults, isLoading } =
+  useTopCommandersSearch(topCommandersSearch);
 </script>

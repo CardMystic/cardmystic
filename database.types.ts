@@ -44,6 +44,7 @@ export type Database = {
           is_commander: boolean;
           list_id: string | null;
           num_copies: number;
+          oracle_id: string;
         };
         Insert: {
           board?: string;
@@ -53,6 +54,7 @@ export type Database = {
           is_commander?: boolean;
           list_id?: string | null;
           num_copies?: number;
+          oracle_id: string;
         };
         Update: {
           board?: string;
@@ -62,6 +64,7 @@ export type Database = {
           is_commander?: boolean;
           list_id?: string | null;
           num_copies?: number;
+          oracle_id?: string;
         };
         Relationships: [
           {

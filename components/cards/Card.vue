@@ -11,7 +11,7 @@
     <LazyAddToDeckModal
       v-if="canShowDeckMenu"
       v-model:open="showAddToDeckModal"
-      :card-ids="[card.card_data.id]"
+      :oracle-ids="[card.card_data.oracle_id]"
     />
     <!-- Confirmation Modal -->
     <UModal
@@ -47,7 +47,7 @@
               partnerHoveredIndex = 1;
               emit('partner-hover', 1);
             "
-            @click="navigateToCard(card.partner_card_data!.id)"
+            @click="navigateToCard(card.partner_card_data!.oracle_id)"
           >
             <img
               class="card-large cursor-pointer"
@@ -70,7 +70,7 @@
               partnerHoveredIndex = 0;
               emit('partner-hover', 0);
             "
-            @click="navigateToCard(card.card_data.id)"
+            @click="navigateToCard(card.card_data.oracle_id)"
           >
             <img
               class="card-large cursor-pointer"
@@ -96,7 +96,7 @@
           loading="lazy"
           decoding="async"
           :ui="{}"
-          @click="navigateToCard(card.card_data.id)"
+          @click="navigateToCard(card.card_data.oracle_id)"
           class="cursor-pointer"
         />
         <div v-else class="image-placeholder">

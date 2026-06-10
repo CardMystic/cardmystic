@@ -60,7 +60,7 @@
           color="warning"
           icon="i-lucide-triangle-alert"
           :title="`${effectiveDuplicateCount} of ${cardCount} card${cardCount === 1 ? '' : 's'} already in this deck`"
-          description="Choose whether to add only the new cards or add all cards (increasing copies of duplicates)."
+          description="Choose whether to add only the new cards or add all cards."
         />
 
         <span class="text-orange-400 font-medium">{{ cardCount }}</span> card{{
@@ -117,7 +117,7 @@
           :disabled="!selectedListId"
           @click="handleAddToDeck(false)"
         >
-          {{ hasDuplicates ? `Add All (${cardIds.length})` : 'Add to Deck' }}
+          {{ hasDuplicates ? `Add All (${oracleIds.length})` : 'Add to Deck' }}
         </UButton>
       </div>
     </template>
@@ -126,7 +126,7 @@
   <LazyCreateDeckModal
     v-if="showCreateDeckModal"
     v-model:open="showCreateDeckModal"
-    :card-ids="props.cardIds"
+    :oracle-ids="props.oracleIds"
     :card-names="props.cardNames"
     @success="
       () => {
@@ -144,11 +144,11 @@ import { useToast } from '#imports';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter';
 
 import { useCardLists } from '~/composables/useCardLists';
-import { useCardsByIds } from '~/composables/useCards';
+import { useCardsByOracleIds } from '~/composables/useCards';
 
 const props = defineProps<{
   open: boolean;
-  cardIds?: string[];
+  oracleIds?: string[];
   cardNames?: string[];
 }>();
 
@@ -168,10 +168,10 @@ const {
 } = useCardLists();
 const toast = useToast();
 
-const cardIds = computed(() => props.cardIds ?? []);
+const oracleIds = computed(() => props.oracleIds ?? []);
 const cardNames = computed(() => props.cardNames ?? []);
 const cardCount = computed(
-  () => cardIds.value.length || cardNames.value.length,
+  () => oracleIds.value.length || cardNames.value.length,
 );
 
 const modalTitle = computed(() => {
@@ -267,27 +267,31 @@ const selectedList = computed(() =>
 const selectedListIdRef = computed(() => selectedListId.value);
 const { data: selectedListItems } = useListItems(selectedListIdRef);
 
-const existingCardIdSet = computed(() => {
+const existingOracleIdSet = computed(() => {
   if (!selectedListItems.value?.length) return new Set<string>();
-  return new Set(selectedListItems.value.map((item) => item.card_id));
+  return new Set(
+    selectedListItems.value
+      .map((item) => item.oracle_id)
+      .filter((id): id is string => !!id),
+  );
 });
 
-const duplicateCardIds = computed(() =>
-  cardIds.value.filter((id) => existingCardIdSet.value.has(id)),
+const duplicateOracleIds = computed(() =>
+  oracleIds.value.filter((id) => existingOracleIdSet.value.has(id)),
 );
 
-const newCardIds = computed(() =>
-  cardIds.value.filter((id) => !existingCardIdSet.value.has(id)),
+const newOracleIds = computed(() =>
+  oracleIds.value.filter((id) => !existingOracleIdSet.value.has(id)),
 );
 
 // Name-based duplicate detection (used when modal receives cardNames instead of cardIds)
-const existingCardIds = computed(() =>
+const existingOracleIds = computed(() =>
   (selectedListItems.value ?? [])
-    .map((item) => item.card_id)
+    .map((item) => item.oracle_id)
     .filter((id): id is string => !!id),
 );
-const { cards: existingListCards } = useCardsByIds(
-  existingCardIds,
+const { cards: existingListCards } = useCardsByOracleIds(
+  existingOracleIds,
   'add-to-deck-names',
 );
 const existingCardNameSet = computed(() => {
@@ -308,12 +312,12 @@ const newCardNames = computed(() =>
 const effectiveDuplicateCount = computed(() =>
   cardNames.value.length > 0
     ? duplicateCardNames.value.length
-    : duplicateCardIds.value.length,
+    : duplicateOracleIds.value.length,
 );
 const effectiveNewCount = computed(() =>
   cardNames.value.length > 0
     ? newCardNames.value.length
-    : newCardIds.value.length,
+    : newOracleIds.value.length,
 );
 
 const hasDuplicates = computed(() => effectiveDuplicateCount.value > 0);
@@ -367,10 +371,10 @@ async function handleAddToDeck(onlyNew = false) {
         icon: 'i-lucide-check',
       });
     } else {
-      const idsToAdd = onlyNew ? newCardIds.value : cardIds.value;
+      const idsToAdd = onlyNew ? newOracleIds.value : oracleIds.value;
       const result = await addCardsToListMutation.mutateAsync({
         listId: selectedListId.value,
-        cardIds: idsToAdd,
+        oracleIds: idsToAdd,
       });
       const messages: string[] = [];
       if (result?.addedCount)
@@ -378,8 +382,8 @@ async function handleAddToDeck(onlyNew = false) {
           `Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`,
         );
       if (result?.updatedCount) messages.push(`${result.updatedCount} updated`);
-      if (result?.invalidCardIds?.length)
-        messages.push(`${result.invalidCardIds.length} not found`);
+      if (result?.invalidOracleIds?.length)
+        messages.push(`${result.invalidOracleIds.length} not found`);
       toast.add({
         title: messages.join('. ') || `Cards added to ${deckName}`,
         icon: 'i-lucide-check',

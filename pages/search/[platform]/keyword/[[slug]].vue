@@ -177,10 +177,7 @@ const keywordSearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  isLoading,
-} = useKeywordSearch(keywordSearch);
+const { searchResults, isLoading } = useKeywordSearch(keywordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

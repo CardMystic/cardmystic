@@ -38,7 +38,8 @@ export const useCardHistory = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const saveCardView = async (cardId: string) => {
+  // Note: the `card_id` column on `card_history` stores oracle_id post-cutover.
+  const saveCardView = async (oracleId: string) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -46,7 +47,7 @@ export const useCardHistory = () => {
 
     const newEntry: CardHistoryInsert = {
       user_id: userProfile.value.id,
-      card_id: cardId,
+      card_id: oracleId,
     };
 
     const { error } = await supabase.from('card_history').insert(newEntry);
@@ -55,9 +56,9 @@ export const useCardHistory = () => {
   };
 
   const saveCardViewMutation = useMutation({
-    mutationFn: async (cardId: string) => {
+    mutationFn: async (oracleId: string) => {
       if (!supabase) return;
-      return saveCardView(cardId);
+      return saveCardView(oracleId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['card-history'] });

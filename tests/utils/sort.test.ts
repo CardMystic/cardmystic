@@ -274,8 +274,8 @@ describe('groupCards', () => {
     const card1 = makeCard({ type_line: 'Instant' });
     const card2 = makeCard({ type_line: 'Instant' });
     const copiesMap: Record<string, number> = {
-      [card1.card_data.id]: 3,
-      [card2.card_data.id]: 2,
+      [card1.card_data.oracle_id]: 3,
+      [card2.card_data.oracle_id]: 2,
     };
     const groups = groupCards([card1, card2], 'type', copiesMap);
     const instantGroup = groups.find((g) => g.label.includes('Instant'))!;

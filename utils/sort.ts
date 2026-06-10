@@ -331,7 +331,10 @@ export function groupCards(
 
   return entries.map(([key, groupCards]) => {
     const count = copiesMap
-      ? groupCards.reduce((sum, c) => sum + (copiesMap[c.card_data.id] ?? 1), 0)
+      ? groupCards.reduce(
+          (sum, c) => sum + (copiesMap[c.card_data.oracle_id] ?? 1),
+          0,
+        )
       : groupCards.length;
 
     let label: string;
@@ -356,7 +359,9 @@ export function groupCards(
           ) {
             const backType = faces[1].type_line ?? '';
             if (backType.toLowerCase().includes('land')) {
-              return sum + (copiesMap ? (copiesMap[c.card_data.id] ?? 1) : 1);
+              return (
+                sum + (copiesMap ? (copiesMap[c.card_data.oracle_id] ?? 1) : 1)
+              );
             }
           }
           return sum;

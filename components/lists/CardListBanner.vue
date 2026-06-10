@@ -166,7 +166,7 @@
 </template>
 
 <script setup lang="ts">
-import { refDebounced } from '@vueuse/core';
+import { refDebounced } from '~/utils/refDebounced';
 import { useCardLists } from '~/composables/useCardLists';
 import { useCardNames } from '~/composables/useBulkData';
 import { CardFormat, type CardFormatType } from '~/models/cardModel';
