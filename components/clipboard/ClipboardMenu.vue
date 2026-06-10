@@ -147,14 +147,22 @@ function navigateToCard(cardId: string) {
   });
 }
 
-function copyNames() {
+async function copyNames() {
   if (clipboard.list.value.length === 0) return;
   const names = clipboard.list.value.map((card) => card.name).join('\n');
-  navigator.clipboard?.writeText(names);
-  toast.add({
-    title: 'Card names copied!',
-    icon: 'i-lucide-clipboard-check',
-  });
+  try {
+    await navigator.clipboard.writeText(names);
+    toast.add({
+      title: 'Card names copied!',
+      icon: 'i-lucide-clipboard-check',
+    });
+  } catch {
+    toast.add({
+      title: 'Failed to copy card names',
+      description: 'Clipboard access is unavailable in this context.',
+      color: 'error',
+    });
+  }
 }
 
 function openSaveToList() {

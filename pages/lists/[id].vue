@@ -803,7 +803,7 @@ const mainDeckCardCount = computed(() => {
   }, 0);
 });
 
-function copyCardNames() {
+async function copyCardNames() {
   if (!listItems.value || listItems.value.length === 0) return;
   const lines: string[] = [];
   for (const item of listItems.value) {
@@ -815,11 +815,19 @@ function copyCardNames() {
       copies > 1 ? `${copies} ${card.card_data.name}` : card.card_data.name,
     );
   }
-  navigator.clipboard?.writeText(lines.join('\n'));
-  toast.add({
-    title: 'Card names copied!',
-    icon: 'i-lucide-clipboard-check',
-  });
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    toast.add({
+      title: 'Card names copied!',
+      icon: 'i-lucide-clipboard-check',
+    });
+  } catch {
+    toast.add({
+      title: 'Failed to copy card names',
+      description: 'Clipboard access is unavailable in this context.',
+      color: 'error',
+    });
+  }
 }
 function openMassEntry() {
   if (!listItems.value || listItems.value.length === 0) return;
