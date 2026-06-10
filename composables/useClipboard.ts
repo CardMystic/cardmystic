@@ -3,6 +3,9 @@ import { computed, onMounted } from 'vue';
 
 export type CardClip = {
   id: string;
+  // Oracle id used for navigation to /card/:oracleId. Optional for backwards
+  // compatibility with clipboard entries persisted before the cutover.
+  oracleId?: string;
   name: string;
   set?: string;
   imageUrl?: string;

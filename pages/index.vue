@@ -217,19 +217,19 @@ const isLoggedIn = computed(() => !!userProfile.value);
 // from scryfall.io on the most-visited page.
 const heroCards = [
   {
-    id: '9c017fa9-7021-417a-9c2e-3df409644fcf',
+    id: 'eecb3047-a563-441a-9175-200421981ac3',
     name: 'Ugin, the Spirit Dragon',
     image: '/ugin.webp',
     position: 'card-left',
   },
   {
-    id: '10d42b35-844f-4a64-9981-c6118d45e826',
+    id: '87b22b09-4f6d-4bc5-9cfc-663e4c7c6981',
     name: 'The Ur-Dragon',
     image: '/ur-dragon.webp',
     position: 'card-center',
   },
   {
-    id: 'e71c8c39-3fbb-4a42-9cf6-b3224f5a56fc',
+    id: 'cb8d80c9-ed58-4f2d-aa8c-c383370c7f1a',
     name: 'Kaalia of the Vast',
     image: '/kaalia.webp',
     position: 'card-right',

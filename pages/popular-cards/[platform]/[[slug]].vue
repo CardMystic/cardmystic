@@ -115,8 +115,5 @@ const topCardsSearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  isLoading,
-} = useTopCardsSearch(topCardsSearch);
+const { searchResults, isLoading } = useTopCardsSearch(topCardsSearch);
 </script>

@@ -95,7 +95,7 @@ const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { CardSearchFiltersSchema } from '~/models/searchModel';
 import type { Platform } from '~/utils/platformConfig';
-import { refDebounced } from '@vueuse/core';
+import { refDebounced } from '~/utils/refDebounced';
 import Filters from './Filters.vue';
 import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCardNames } from '~/composables/useBulkData';

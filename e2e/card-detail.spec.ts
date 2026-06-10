@@ -8,7 +8,7 @@ const SEARCH_TIMEOUT = 45_000;
  * Lightning Bolt — a stable non-commander card used throughout these tests.
  * Mana cost: {R}. Verified against the live backend at test-authoring time.
  */
-const LIGHTNING_BOLT_ID = '77c6fa74-5543-42ac-9ead-0e890b188e99';
+const LIGHTNING_BOLT_ID = '4457ed35-7c10-48c8-9776-456485fdf070';
 
 test.describe('Card detail page', () => {
   test('renders card image and name via SSR', async ({ page }) => {

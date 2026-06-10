@@ -108,7 +108,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useCardsByIds } from '~/composables/useCards';
+import { useCardsByOracleIds } from '~/composables/useCards';
 import { useCardHistory } from '~/composables/useCardHistory';
 import { useToast } from '#imports';
 
@@ -144,7 +144,9 @@ const handleClearAll = async () => {
   }
 };
 
-// Get all card IDs from history
+// Get all card oracle IDs from history.
+// `card_history.card_id` stores the Scryfall oracle_id (the column name is
+// historical; values are oracle_ids since the API cutover).
 const cardIds = computed(() => {
   if (!cardHistory.value || cardHistory.value.length === 0) return [];
   return cardHistory.value.map((h) => h.card_id).filter(Boolean) as string[];
@@ -155,7 +157,7 @@ const {
   cards,
   isLoading: isLoadingCards,
   error: fetchError,
-} = useCardsByIds(cardIds, 'card-history-details');
+} = useCardsByOracleIds(cardIds, 'card-history-details');
 
 const cardsError = computed(() => fetchError.value?.message || '');
 

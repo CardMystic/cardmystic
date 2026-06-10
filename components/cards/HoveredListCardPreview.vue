@@ -8,7 +8,7 @@
     <LazyAddToDeckModal
       v-if="canShowDeckMenu"
       v-model:open="showAddToDeckModal"
-      :card-ids="[card.card_data.id]"
+      :oracle-ids="[card.card_data.oracle_id]"
     />
 
     <SetCommanderModal
@@ -41,7 +41,7 @@
           class="preview-image cursor-pointer"
           loading="eager"
           decoding="async"
-          @click="navigateToCard(card.card_data.id)"
+          @click="navigateToCard(card.card_data.oracle_id)"
         />
         <span v-if="!isCommanderOfDecklist" class="copy-count-pill"
           >x{{ numCopies ?? 1 }}</span
@@ -83,16 +83,28 @@
         @get-recommendations="getRecommendations"
         @view-popular-cards="viewPopularCards"
         @add-copy="
-          emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) + 1)
+          emit(
+            'updateNumCopies',
+            card.card_data.name,
+            (numCopies ?? 1) + 1,
+            currentBoard,
+          )
         "
         @remove-copy="
-          emit('updateNumCopies', card.card_data.name, (numCopies ?? 1) - 1)
+          emit(
+            'updateNumCopies',
+            card.card_data.name,
+            (numCopies ?? 1) - 1,
+            currentBoard,
+          )
         "
         @set-copies="openSetCopiesModal"
         @change-board="handleChangeBoard"
         @set-commander="showCommanderModal = true"
         @clear-commander="showClearCommanderModal = true"
-        @remove-from-list="emit('remove', card.card_data.id)"
+        @remove-from-list="
+          emit('remove', card.card_data.oracle_id, currentBoard)
+        "
       />
     </div>
   </UCard>
@@ -124,14 +136,24 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'remove', cardId: string): void;
+  (
+    e: 'remove',
+    cardId: string,
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
   (e: 'setCommander', cardName: string): void;
   (e: 'clearCommander', cardId: string): void;
-  (e: 'updateNumCopies', cardName: string, numCopies: number): void;
+  (
+    e: 'updateNumCopies',
+    cardName: string,
+    numCopies: number,
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+  ): void;
   (
     e: 'changeBoard',
     cardName: string,
     board: 'Mainboard' | 'Sideboard' | 'Considering',
+    fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
   ): void;
   (e: 'flip', cardId: string): void;
 }>();
@@ -178,6 +200,7 @@ const clipboardCard = computed(() => {
 
   return {
     id: cardData.id || '',
+    oracleId: cardData.oracle_id || '',
     name: cardData.name || '',
     set: cardData.set || '',
     imageUrl: getCardImageUrl(cardData),
@@ -219,7 +242,12 @@ function openSetCopiesModal() {
 
 function confirmSetCopies(nextValue: number) {
   if (!props.card) return;
-  emit('updateNumCopies', props.card.card_data.name, nextValue);
+  emit(
+    'updateNumCopies',
+    props.card.card_data.name,
+    nextValue,
+    currentBoard.value,
+  );
 }
 
 function confirmSetCommander() {
@@ -229,7 +257,7 @@ function confirmSetCommander() {
 
 function confirmClearCommander() {
   if (!props.card) return;
-  emit('clearCommander', props.card.card_data.id);
+  emit('clearCommander', props.card.card_data.oracle_id);
 }
 
 function navigateToCard(cardId: string | undefined) {
@@ -273,7 +301,7 @@ function viewPopularCards() {
 
 function handleChangeBoard(board: 'Mainboard' | 'Sideboard' | 'Considering') {
   if (!props.card) return;
-  emit('changeBoard', props.card.card_data.name, board);
+  emit('changeBoard', props.card.card_data.name, board, currentBoard.value);
 }
 </script>
 

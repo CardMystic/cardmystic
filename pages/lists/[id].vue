@@ -103,7 +103,7 @@
         class="mb-8"
         :isLoading="loading"
         :groups="cardGroups"
-        :commander-card-ids="commanderCardIds"
+        :commander-oracle-ids="commanderOracleIds"
         :commander-color-identity="commanderColorIdentity"
         :list-items-map="listItemsMap"
         :format="list?.format"
@@ -139,8 +139,8 @@
         already in
         <span class="font-bold">{{ pendingDuplicateCard.board }}</span> with
         <span class="font-bold">{{ pendingDuplicateCard.numCopies }}</span>
-        {{ pendingDuplicateCard.numCopies === 1 ? 'copy' : 'copies' }}. Would
-        you like to add another copy?
+        {{ pendingDuplicateCard.numCopies === 1 ? 'copy' : 'copies' }}. Add
+        anyway?
       </p>
     </template>
     <template #footer="{ close }">
@@ -183,16 +183,14 @@ definePageMeta({
 
 import { useCardLists } from '~/composables/useCardLists';
 import { useCardNames } from '~/composables/useBulkData';
-import { useClipboard } from '@vueuse/core';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
-import { refDebounced } from '@vueuse/core';
+import { refDebounced } from '~/utils/refDebounced';
 import { groupAndSortCards } from '~/utils/sort';
 
 const route = useRoute();
 const listId = route.params.id as string;
 const toast = useToast();
-const { copy } = useClipboard();
 
 const {
   userLists,
@@ -228,7 +226,7 @@ const error = ref('');
 const showDuplicateModal = ref(false);
 const pendingDuplicateCard = ref<{
   name: string;
-  id: string;
+  oracle_id: string;
   board: string;
   numCopies: number;
 } | null>(null);
@@ -236,30 +234,28 @@ const pendingDuplicateCard = ref<{
 // Use TanStack Query for list items
 const { data: listItems, isLoading: isLoadingItems } = useListItems(listId);
 
-// Computed card IDs from list items - used as dependency for card details query
-const cardIds = computed(
-  () => listItems.value?.map((item: any) => item.card_id) || [],
+// Computed oracle IDs from list items — used as dependency for card details query.
+// The `card_id` column on `card_list_items` stores oracle_id post-cutover.
+const oracleIds = computed(
+  () => listItems.value?.map((item: any) => item.oracle_id) || [],
 );
 
-// Map card_id to list item metadata (num_copies, board)
-const listItemsMap = computed(() => {
-  const map: Record<string, { num_copies: number; board: string }> = {};
+type Board = 'Mainboard' | 'Sideboard' | 'Considering';
+type RowInfo = { num_copies: number };
+
+// Nested by board so the same oracle_id can appear in multiple boards.
+const listItemsMap = computed<Record<Board, Record<string, RowInfo>>>(() => {
+  const map: Record<Board, Record<string, RowInfo>> = {
+    Mainboard: {},
+    Sideboard: {},
+    Considering: {},
+  };
   if (listItems.value) {
     for (const item of listItems.value) {
-      if (!item.card_id) continue;
-      map[item.card_id] = {
-        num_copies: item.num_copies ?? 1,
-        board: item.board ?? 'Mainboard',
-      };
+      if (!item.oracle_id) continue;
+      const board = (item.board ?? 'Mainboard') as Board;
+      map[board][item.oracle_id] = { num_copies: item.num_copies ?? 1 };
     }
-  }
-  return map;
-});
-
-const copiesMap = computed(() => {
-  const map: Record<string, number> = {};
-  for (const [id, item] of Object.entries(listItemsMap.value)) {
-    map[id] = item.num_copies;
   }
   return map;
 });
@@ -269,9 +265,40 @@ const {
   data: cardsData,
   isLoading: isLoadingCards,
   isFetching: isFetchingCards,
-} = useListCards(listId, cardIds);
+} = useListCards(listId, oracleIds);
 
 const cards = computed(() => cardsData.value || []);
+
+// Fast lookup: oracle_id → representative card object (one per oracle, reused across boards).
+const cardsByOracleId = computed(() => {
+  const m: Record<string, any> = {};
+  for (const c of cards.value) m[c.card_data.oracle_id] = c;
+  return m;
+});
+
+function boardCards(board: Board): any[] {
+  return Object.keys(listItemsMap.value[board])
+    .map((oid) => cardsByOracleId.value[oid])
+    .filter(Boolean);
+}
+
+function boardCopiesMap(board: Board): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [oid, r] of Object.entries(listItemsMap.value[board])) {
+    out[oid] = r.num_copies;
+  }
+  return out;
+}
+
+function findRowAnyBoard(
+  oracleId: string,
+): { board: Board; row: RowInfo } | null {
+  for (const board of ['Mainboard', 'Sideboard', 'Considering'] as Board[]) {
+    const row = listItemsMap.value[board][oracleId];
+    if (row) return { board, row };
+  }
+  return null;
+}
 const decklistCardNames = computed(() =>
   cards.value.map((c: any) => c.card_data.name),
 );
@@ -283,7 +310,7 @@ const loading = computed(
     isLoadingLists.value ||
     isLoadingItems.value ||
     isLoadingCards.value ||
-    (cardIds.value.length > 0 && cards.value.length === 0),
+    (oracleIds.value.length > 0 && cards.value.length === 0),
 );
 
 // Sorting + grouping state
@@ -301,12 +328,19 @@ function handleGroupBy(value: string | undefined) {
 }
 
 // Handle removing a card from the list
-async function handleRemoveCard(cardId: string) {
+async function handleRemoveCard(
+  oracleId: string,
+  fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+) {
   try {
-    if (!listId || !cardId) {
-      throw new Error('Cannot remove card: missing listId or cardId');
+    if (!listId || !oracleId) {
+      throw new Error('Cannot remove card: missing listId or oracleId');
     }
-    await removeCardFromListMutation.mutateAsync({ listId, cardId });
+    await removeCardFromListMutation.mutateAsync({
+      listId,
+      oracleId,
+      board: fromBoard,
+    });
     toast.add({
       title: 'Card removed from list',
       icon: 'i-lucide-check',
@@ -326,28 +360,24 @@ const cardGroups = computed(() => {
     return null;
   }
 
-  const ids = commanderCardIds.value;
-  const mainboardCards = (
+  const ids = commanderOracleIds.value;
+  const allMainboard = boardCards('Mainboard');
+  const mainboardCards =
     ids.length > 0
-      ? cards.value.filter((c: any) => !ids.includes(c.card_data.id))
-      : cards.value
-  ).filter(
-    (c: any) =>
-      (listItemsMap.value[c.card_data.id]?.board ?? 'Mainboard') ===
-      'Mainboard',
-  );
+      ? allMainboard.filter((c: any) => !ids.includes(c.card_data.oracle_id))
+      : allMainboard;
 
   const groups = groupAndSortCards(
     mainboardCards,
     groupBy.value,
     sortBy.value,
     sortDirection.value,
-    copiesMap.value,
+    boardCopiesMap('Mainboard'),
   );
 
   // Prepend commanders as their own group if present
-  const commanderCards = cards.value.filter((c: any) =>
-    ids.includes(c.card_data.id),
+  const commanderCards = allMainboard.filter((c: any) =>
+    ids.includes(c.card_data.oracle_id),
   );
   if (commanderCards.length > 0) {
     const commanderGroup = { label: '', cards: commanderCards };
@@ -359,31 +389,27 @@ const cardGroups = computed(() => {
 
 const sideboardGroups = computed(() => {
   if (!cards.value || cards.value.length === 0) return null;
-  const sideboardCards = cards.value.filter(
-    (c: any) => listItemsMap.value[c.card_data.id]?.board === 'Sideboard',
-  );
+  const sideboardCards = boardCards('Sideboard');
   if (sideboardCards.length === 0) return null;
   return groupAndSortCards(
     sideboardCards,
     groupBy.value,
     sortBy.value,
     sortDirection.value,
-    copiesMap.value,
+    boardCopiesMap('Sideboard'),
   );
 });
 
 const consideringGroups = computed(() => {
   if (!cards.value || cards.value.length === 0) return null;
-  const consideringCards = cards.value.filter(
-    (c: any) => listItemsMap.value[c.card_data.id]?.board === 'Considering',
-  );
+  const consideringCards = boardCards('Considering');
   if (consideringCards.length === 0) return null;
   return groupAndSortCards(
     consideringCards,
     groupBy.value,
     sortBy.value,
     sortDirection.value,
-    copiesMap.value,
+    boardCopiesMap('Considering'),
   );
 });
 
@@ -460,14 +486,14 @@ async function handleAddCard(cardName: string) {
       throw new Error('Card not found');
     }
 
-    // Check if card already exists in the list
-    const existing = listItemsMap.value[cardData.id];
+    // Check if card already exists in any board (uniqueness is per (oracle_id, board) now)
+    const existing = findRowAnyBoard(cardData.oracle_id);
     if (existing) {
       pendingDuplicateCard.value = {
         name: cardName,
-        id: cardData.id,
+        oracle_id: cardData.oracle_id,
         board: existing.board,
-        numCopies: existing.num_copies,
+        numCopies: existing.row.num_copies,
       };
       showDuplicateModal.value = true;
       selectedCardToAdd.value = '';
@@ -477,7 +503,7 @@ async function handleAddCard(cardName: string) {
 
     await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
-      cardIds: [cardData.id],
+      oracleIds: [cardData.oracle_id],
     });
 
     toast.add({
@@ -500,16 +526,22 @@ async function handleAddCard(cardName: string) {
   }
 }
 
+/**
+ * Fires when user confirms adding a duplicate card from the modal.
+ * We add the duplicate card to mainboard by default regardless of board.
+ *   e.g., Add Sol Ring (0 in Mainboard, 1 in Sideboard) -> (1 in Mainboard, 1 in Sideboard)
+ *         Add Sol Ring (1 in Mainboard, 0 in Sideboard) -> (2 in Mainboard, 0 in Sideboard)
+ */
 async function confirmAddDuplicate() {
   if (!pendingDuplicateCard.value || !list.value) return;
   try {
-    await updateNumCopiesMutation.mutateAsync({
+    await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
-      cardName: pendingDuplicateCard.value.name,
-      numCopies: pendingDuplicateCard.value.numCopies + 1,
+      oracleIds: [pendingDuplicateCard.value.oracle_id],
+      board: 'Mainboard', // Always add duplicates to mainboard by default, user can move them later if desired
     });
     toast.add({
-      title: `Added another copy of ${pendingDuplicateCard.value.name}`,
+      title: `Added ${pendingDuplicateCard.value.name}`,
       icon: 'i-lucide-check',
     });
   } catch (error: any) {
@@ -528,17 +560,18 @@ async function confirmAddDuplicate() {
 const isBulkEditModalOpen = ref(false);
 
 function boardLines(board: 'Mainboard' | 'Sideboard' | 'Considering') {
-  if (!cards.value || cards.value.length === 0) return [];
-  return cards.value
-    .filter(
-      (card: any) =>
-        (listItemsMap.value[card.card_data.id]?.board ?? 'Mainboard') === board,
-    )
-    .map((card: any) => {
-      const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1;
-      const name = card.card_data.name;
-      return copies > 1 ? `${copies} ${name}` : name;
-    });
+  if (!listItems.value || listItems.value.length === 0) return [];
+  const lines: string[] = [];
+  for (const item of listItems.value) {
+    if (!item.oracle_id) continue;
+    if ((item.board ?? 'Mainboard') !== board) continue;
+    const card = cardsByOracleId.value[item.oracle_id];
+    if (!card) continue;
+    const copies = item.num_copies ?? 1;
+    const name = card.card_data.name;
+    lines.push(copies > 1 ? `${copies} ${name}` : name);
+  }
+  return lines;
 }
 
 const mainboardNames = computed(() => boardLines('Mainboard'));
@@ -565,7 +598,7 @@ function goToRecommend() {
   const commanderNamesList = currentCommanderItems.value
     .map((item: any) => {
       const card = cards.value.find(
-        (c: any) => c.card_data.id === item.card_id,
+        (c: any) => c.card_data.oracle_id === item.oracle_id,
       );
       return card?.card_data?.name;
     })
@@ -606,14 +639,16 @@ const currentCommanderItems = computed(() => {
   );
 });
 
-const commanderCardIds = computed(() => {
-  return currentCommanderItems.value.map((item: any) => item.card_id);
+const commanderOracleIds = computed(() => {
+  return currentCommanderItems.value.map((item: any) => item.oracle_id);
 });
 
 const currentCommanderName = computed(() => {
   if (currentCommanderItems.value.length === 0 || !cards.value) return null;
   const first = currentCommanderItems.value[0];
-  const card = cards.value.find((c: any) => c.card_data.id === first.card_id);
+  const card = cards.value.find(
+    (c: any) => c.card_data.oracle_id === first.oracle_id,
+  );
   return card?.card_data?.name || null;
 });
 
@@ -621,7 +656,9 @@ const commanderColorIdentity = computed(() => {
   if (currentCommanderItems.value.length === 0 || !cards.value) return null;
   const colors = new Set<string>();
   for (const item of currentCommanderItems.value) {
-    const card = cards.value.find((c: any) => c.card_data.id === item.card_id);
+    const card = cards.value.find(
+      (c: any) => c.card_data.oracle_id === item.oracle_id,
+    );
     if (card?.card_data?.color_identity) {
       for (const c of card.card_data.color_identity) {
         colors.add(c);
@@ -664,12 +701,15 @@ async function handleSetCommander(commanderName: string) {
   }
 }
 
-async function handleClearCommander(cardId: string) {
+async function handleClearCommander(oracleId: string) {
   if (!list.value) return;
 
   setCommanderLoading.value = true;
   try {
-    await clearCommanderMutation.mutateAsync({ listId: list.value.id, cardId });
+    await clearCommanderMutation.mutateAsync({
+      listId: list.value.id,
+      oracleId,
+    });
 
     toast.add({
       title: 'Commander cleared',
@@ -686,13 +726,18 @@ async function handleClearCommander(cardId: string) {
   }
 }
 
-async function handleUpdateNumCopies(cardName: string, numCopies: number) {
+async function handleUpdateNumCopies(
+  cardName: string,
+  numCopies: number,
+  fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
+) {
   if (!list.value) return;
   try {
     await updateNumCopiesMutation.mutateAsync({
       listId: list.value.id,
       cardName,
       numCopies,
+      fromBoard,
     });
   } catch (error: any) {
     toast.add({
@@ -706,13 +751,20 @@ async function handleUpdateNumCopies(cardName: string, numCopies: number) {
 async function handleChangeBoard(
   cardName: string,
   board: 'Mainboard' | 'Sideboard' | 'Considering',
+  fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
 ) {
   if (!list.value) return;
   try {
-    await changeBoardMutation.mutateAsync({
+    const response = await changeBoardMutation.mutateAsync({
       listId: list.value.id,
       cardName,
       board,
+      fromBoard,
+    });
+    const merged = response?.message?.toLowerCase().includes('merged') ?? false;
+    toast.add({
+      title: response?.message ?? `Moved ${cardName} to ${board}`,
+      icon: merged ? 'i-lucide-merge' : 'i-lucide-check',
     });
   } catch (error: any) {
     toast.add({
@@ -724,51 +776,69 @@ async function handleChangeBoard(
 }
 
 const totalPrice = computed(() => {
-  if (!cards.value || cards.value.length === 0) return 0;
-  return cards.value.reduce((sum: number, card: any) => {
-    const price = card.card_data?.prices?.usd;
-    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1;
-    return sum + (price ? parseFloat(price) * copies : 0);
-  }, 0);
+  if (!listItems.value || listItems.value.length === 0) return 0;
+  let sum = 0;
+  for (const item of listItems.value) {
+    if (!item.oracle_id) continue;
+    const card = cardsByOracleId.value[item.oracle_id];
+    const price = card?.card_data?.prices?.usd;
+    if (price) sum += parseFloat(price) * (item.num_copies ?? 1);
+  }
+  return sum;
 });
 
 const totalCardCount = computed(() => {
-  if (!cards.value || cards.value.length === 0) return 0;
-  return cards.value.reduce((sum: number, card: any) => {
-    return sum + (listItemsMap.value[card.card_data.id]?.num_copies ?? 1);
-  }, 0);
+  if (!listItems.value || listItems.value.length === 0) return 0;
+  return listItems.value.reduce(
+    (sum: number, item: any) => sum + (item.num_copies ?? 1),
+    0,
+  );
 });
 
 const mainDeckCardCount = computed(() => {
-  if (!cards.value || cards.value.length === 0) return 0;
-  return cards.value.reduce((sum: number, card: any) => {
-    const board = listItemsMap.value[card.card_data.id]?.board ?? 'Mainboard';
-    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1;
-    return board === 'Mainboard' ? sum + copies : sum;
+  if (!listItems.value || listItems.value.length === 0) return 0;
+  return listItems.value.reduce((sum: number, item: any) => {
+    const board = item.board ?? 'Mainboard';
+    return board === 'Mainboard' ? sum + (item.num_copies ?? 1) : sum;
   }, 0);
 });
 
-function copyCardNames() {
-  if (!cards.value || cards.value.length === 0) return;
-  const lines = cards.value.map((card: any) => {
-    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1;
-    return copies > 1
-      ? `${copies} ${card.card_data.name}`
-      : card.card_data.name;
-  });
-  copy(lines.join('\n'));
-  toast.add({
-    title: 'Card names copied!',
-    icon: 'i-lucide-clipboard-check',
-  });
+async function copyCardNames() {
+  if (!listItems.value || listItems.value.length === 0) return;
+  const lines: string[] = [];
+  for (const item of listItems.value) {
+    if (!item.oracle_id) continue;
+    const card = cardsByOracleId.value[item.oracle_id];
+    if (!card) continue;
+    const copies = item.num_copies ?? 1;
+    lines.push(
+      copies > 1 ? `${copies} ${card.card_data.name}` : card.card_data.name,
+    );
+  }
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    toast.add({
+      title: 'Card names copied!',
+      icon: 'i-lucide-clipboard-check',
+    });
+  } catch {
+    toast.add({
+      title: 'Failed to copy card names',
+      description: 'Clipboard access is unavailable in this context.',
+      color: 'error',
+    });
+  }
 }
-
 function openMassEntry() {
-  if (!cards.value || cards.value.length === 0) return;
-  const names = cards.value.flatMap((card: any) => {
-    const copies = listItemsMap.value[card.card_data.id]?.num_copies ?? 1;
-    return Array(copies).fill(card.card_data.name);
-  });
+  if (!listItems.value || listItems.value.length === 0) return;
+  const names: string[] = [];
+  for (const item of listItems.value) {
+    if (!item.oracle_id) continue;
+    const card = cardsByOracleId.value[item.oracle_id];
+    if (!card) continue;
+    const copies = item.num_copies ?? 1;
+    for (let i = 0; i < copies; i++) names.push(card.card_data.name);
+  }
   const url = getMassEntryAffiliateLink(names);
   window.open(url, '_blank', 'noopener,noreferrer');
 }

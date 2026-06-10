@@ -1,5 +1,5 @@
 // server/routes/sitemap.xml.ts
-import cardIds from '~/public/card-ids.min.json';
+import cardOracleIds from '~/public/card-oracle-ids.min.json';
 import { getAllSeoSlugs } from '~/utils/seoQueries';
 
 export default defineEventHandler((event) => {
@@ -65,7 +65,7 @@ export default defineEventHandler((event) => {
   }
 
   // Card pages
-  for (const id of cardIds) {
+  for (const id of cardOracleIds) {
     xml += `
   <url>
     <loc>${baseUrl}/card/${id}</loc>

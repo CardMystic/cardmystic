@@ -166,7 +166,7 @@ Example URLs:
 - `selectedCardFormats` contains Modern → `modern`
 - No platform flags → `all`
 
-## Using card-ids.min.json
+## Using card-oracle-ids.min.json
 
 ### What it is
 
@@ -186,7 +186,7 @@ Example URLs:
 
 ### How to keep it updated
 
-- Regenerate card-ids.min.json when:
+- Regenerate card-oracle-ids.min.json when:
   - New sets release
   - Cards are added or removed
 - The sitemap updates automatically as soon as the file changes

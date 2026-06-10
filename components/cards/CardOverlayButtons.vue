@@ -137,6 +137,7 @@ const cardClipData = computed(() => {
 
   return {
     id: cardData.id || '',
+    oracleId: cardData.oracle_id || '',
     name: cardData.name || '',
     set: cardData.set || '',
     imageUrl: getCardImageUrl(cardData),

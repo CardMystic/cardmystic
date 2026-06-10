@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { BACKEND, gotoHydrated } from './utils/mocks';
 
-const LIGHTNING_BOLT_ID = '77c6fa74-5543-42ac-9ead-0e890b188e99';
+const LIGHTNING_BOLT_ID = '4457ed35-7c10-48c8-9776-456485fdf070';
 
 const CLIP_KEY = 'cm.clipboard.v1';
 const SEARCH_TIMEOUT = 45_000;

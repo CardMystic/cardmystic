@@ -8,7 +8,7 @@
       v-if="getCardImageUrl(card.card_data, false, scryfallSize)"
       loading="lazy"
       decoding="async"
-      @click="navigateToCard(card.card_data.id)"
+      @click="navigateToCard(card.card_data.oracle_id)"
       class="cursor-pointer"
     />
   </div>
