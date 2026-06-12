@@ -917,7 +917,7 @@ function toggleShowAllData() {
 .partner-stack {
   position: relative;
   width: 100%;
-  height: calc(100cqw * 7 / 5 - 24px);
+  height: calc(100cqw * 7 / 5);
 }
 
 .partner-card {
