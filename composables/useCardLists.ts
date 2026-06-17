@@ -32,6 +32,7 @@ export const useCardLists = () => {
       const { data, error } = await supabase
         .from('card_lists')
         .select('*')
+        .eq('user_id', userProfile.value.id)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
