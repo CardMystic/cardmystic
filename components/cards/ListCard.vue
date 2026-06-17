@@ -50,6 +50,7 @@
       <LazyCardOverlayButtons
         :card="card"
         :isDualFaced="isDualFaced"
+        :show-flip-button="true"
         :show-menu-button="true"
         :show-copy-count="!isDeckCommander"
         :num-copies="numCopies ?? 1"
@@ -180,6 +181,7 @@ const props = defineProps<{
   board?: string;
   format?: string;
   decklistCardNames?: string[]; // Full decklist for pre-filling the deckbuilder
+  isFlipped?: boolean; // controlled by parent; falls back to internal state when omitted
 }>();
 
 const emit = defineEmits<{
@@ -205,7 +207,10 @@ const emit = defineEmits<{
   (e: 'flip', cardId: string): void;
 }>();
 
-const isFlipped = ref(false);
+const isFlippedInternal = ref(false);
+const isFlipped = computed(() =>
+  props.isFlipped !== undefined ? props.isFlipped : isFlippedInternal.value,
+);
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
@@ -363,7 +368,10 @@ const isDualFaced = computed(() => {
 });
 
 function flipCard() {
-  isFlipped.value = !isFlipped.value;
+  if (props.isFlipped === undefined) {
+    // Uncontrolled mode: manage flip state internally
+    isFlippedInternal.value = !isFlippedInternal.value;
+  }
   emit('flip', props.card.card_data.id);
 }
 
@@ -485,7 +493,7 @@ function handleImageError(event: Event) {
   justify-content: center;
   background: rgba(0, 0, 0, 0.55);
   border-radius: 14px;
-  z-index: 3;
+  z-index: 1;
   pointer-events: none;
 }
 

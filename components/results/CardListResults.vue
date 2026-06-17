@@ -96,6 +96,7 @@
                 >
                   <ListCard
                     :card="card"
+                    :is-flipped="flippedCards[card.card_data.id] ?? false"
                     :is-deck-commander="
                       commanderOracleIds?.includes(card.card_data.oracle_id) ??
                       false
@@ -193,6 +194,7 @@
                   >
                     <ListCard
                       :card="card"
+                      :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="
                         commanderOracleIds?.includes(
                           card.card_data.oracle_id,
@@ -284,6 +286,7 @@
                   >
                     <ListCard
                       :card="card"
+                      :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="false"
                       :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
@@ -353,6 +356,7 @@
                     >
                       <ListCard
                         :card="card"
+                        :is-flipped="flippedCards[card.card_data.id] ?? false"
                         :is-deck-commander="false"
                         :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
@@ -440,6 +444,7 @@
                   >
                     <ListCard
                       :card="card"
+                      :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="false"
                       :is-commander-card="isCommanderCard(card)"
                       :commander-color-identity="commanderColorIdentity"
@@ -509,6 +514,7 @@
                     >
                       <ListCard
                         :card="card"
+                        :is-flipped="flippedCards[card.card_data.id] ?? false"
                         :is-deck-commander="false"
                         :is-commander-card="isCommanderCard(card)"
                         :commander-color-identity="commanderColorIdentity"
