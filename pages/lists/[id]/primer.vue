@@ -27,6 +27,7 @@
       <PrimerEditor
         v-model="primerContent"
         :editable="isCreator"
+        :is-saving="isSaving"
         @save="handleSave"
       />
       <template #fallback>
@@ -38,6 +39,7 @@
 
 <script setup lang="ts">
 import { useCardLists } from '~/composables/useCardLists';
+import { useSupabase } from '~/composables/useSupabase';
 import { useToast } from '#imports';
 
 definePageMeta({
@@ -47,6 +49,8 @@ definePageMeta({
 const route = useRoute();
 const listId = route.params.id as string;
 const toast = useToast();
+const config = useRuntimeConfig();
+const supabase = useSupabase();
 
 const { userLists, isLoadingLists } = useCardLists();
 
@@ -54,8 +58,6 @@ const list = computed(
   () => userLists.value?.find((l: any) => l.id === listId) ?? null,
 );
 
-// Current user owns this list if it appears in their userLists.
-// Sharing/non-creator viewers will be supported once the primer DB schema exists.
 const isCreator = computed(() => !!list.value);
 
 const bannerImageUrl = computed(() => {
@@ -64,31 +66,46 @@ const bannerImageUrl = computed(() => {
   return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}&format=image&version=art_crop`;
 });
 
-// Local-only persistence until a primer table exists on the backend.
-const storageKey = computed(() => `primer:${listId}`);
 const primerContent = ref('');
+const isSaving = ref(false);
 
-onMounted(() => {
+// Load primer from backend on mount.
+onMounted(async () => {
   try {
-    primerContent.value = localStorage.getItem(storageKey.value) ?? '';
-  } catch {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) return;
+    const data = await $fetch<{ listId: string; text: string | null }>(
+      `${config.public.backendUrl}/supabase/card-lists/primer/${listId}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    primerContent.value = data.text ?? '';
+  } catch (e: any) {
+    // Non-fatal: primer may not exist yet
     primerContent.value = '';
   }
 });
 
-function handleSave(value: string) {
+async function handleSave(value: string) {
+  isSaving.value = true;
   try {
-    localStorage.setItem(storageKey.value, value);
-    toast.add({
-      title: 'Primer saved',
-      icon: 'i-lucide-check',
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) throw new Error('Not authenticated');
+    await $fetch(`${config.public.backendUrl}/supabase/card-lists/primer`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: { listId, text: value },
     });
+    toast.add({ title: 'Primer saved', icon: 'i-lucide-check' });
   } catch (e: any) {
     toast.add({
       title: 'Error saving primer',
       description: e?.message,
       color: 'error',
     });
+  } finally {
+    isSaving.value = false;
   }
 }
 

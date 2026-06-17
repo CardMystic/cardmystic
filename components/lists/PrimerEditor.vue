@@ -51,7 +51,8 @@
           variant="solid"
           label="Save"
           class="cursor-pointer"
-          :disabled="!isDirty"
+          :disabled="!isDirty || isSaving"
+          :loading="isSaving"
           @click="handleSave"
         />
       </div>
@@ -205,6 +206,7 @@ import { getCardImageUrl } from '~/utils/scryfall';
 const props = defineProps<{
   modelValue: string;
   editable: boolean;
+  isSaving?: boolean;
 }>();
 
 const emit = defineEmits<{
