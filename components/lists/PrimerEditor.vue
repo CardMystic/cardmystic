@@ -58,7 +58,10 @@
     </div>
 
     <!-- Edit-only mode -->
-    <div v-if="editable && mode === 'edit'" class="flex flex-col grow min-h-0 gap-2">
+    <div
+      v-if="editable && mode === 'edit'"
+      class="flex flex-col grow min-h-0 gap-2"
+    >
       <!-- Toolbar -->
       <div
         class="shrink-0 flex flex-wrap items-center gap-1 p-1.5 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
@@ -95,7 +98,10 @@
     </div>
 
     <!-- Split mode (editor + live preview side by side, lg+ only) -->
-    <div v-else-if="editable && mode === 'split'" class="flex grow min-h-0 gap-4">
+    <div
+      v-else-if="editable && mode === 'split'"
+      class="flex grow min-h-0 gap-4"
+    >
       <!-- Left: editor -->
       <div class="flex-1 min-w-0 flex flex-col gap-2">
         <!-- Toolbar -->
@@ -282,8 +288,10 @@ const referencedCardNames = computed(() => {
   const imgPattern = /\(\(([^)]+)\)\)/g;
   const linkPattern = /\[\[([^\]]+)\]\]/g;
   let m;
-  while ((m = imgPattern.exec(previewSource.value)) !== null) names.add(m[1].trim());
-  while ((m = linkPattern.exec(previewSource.value)) !== null) names.add(m[1].trim());
+  while ((m = imgPattern.exec(previewSource.value)) !== null)
+    names.add(m[1].trim());
+  while ((m = linkPattern.exec(previewSource.value)) !== null)
+    names.add(m[1].trim());
   return [...names];
 });
 
@@ -347,8 +355,18 @@ const renderedHtml = computed(() => {
   const html = marked.parse(pre, { async: false }) as string;
   const sanitized = DOMPurify.sanitize(html, {
     // Allow style attributes so card-inline-link can carry --card-img CSS variable.
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'loading', 'frameborder',
-      'allowfullscreen', 'class', 'style', 'open'],
+    ALLOWED_ATTR: [
+      'href',
+      'src',
+      'alt',
+      'title',
+      'loading',
+      'frameborder',
+      'allowfullscreen',
+      'class',
+      'style',
+      'open',
+    ],
     ADD_TAGS: ['details', 'summary', 'iframe'],
   });
 
@@ -372,7 +390,9 @@ const renderedHtml = computed(() => {
     if (!name) return '';
     const entry = cardImageMap.value.get(name.toLowerCase());
     const href = entry ? `/card/${entry.oracleId}` : '#';
-    const styleAttr = entry ? ` style="--card-img: url('${entry.imageUrl}')"` : '';
+    const styleAttr = entry
+      ? ` style="--card-img: url('${entry.imageUrl}')"`
+      : '';
     return `<a class="card-inline-link" href="${href}"${styleAttr}>${name}</a>`;
   });
 
@@ -433,8 +453,16 @@ const toolbarGroups: ToolbarAction[][] = [
     { id: 'youtube', icon: 'i-lucide-youtube', tooltip: 'YouTube embed' },
   ],
   [
-    { id: 'card-image', icon: 'i-lucide-image-plus', tooltip: 'Embed card image  ((Card Name))' },
-    { id: 'card-link', icon: 'i-lucide-external-link', tooltip: 'Card link with hover preview  [[Card Name]]' },
+    {
+      id: 'card-image',
+      icon: 'i-lucide-image-plus',
+      tooltip: 'Embed card image  ((Card Name))',
+    },
+    {
+      id: 'card-link',
+      icon: 'i-lucide-external-link',
+      tooltip: 'Card link with hover preview  [[Card Name]]',
+    },
   ],
 ];
 
@@ -769,7 +797,7 @@ function insertAtCursor(text: string) {
   background-size: cover;
   background-position: center;
   border-radius: 10px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   z-index: 100;
 }
