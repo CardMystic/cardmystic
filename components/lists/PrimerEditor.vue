@@ -753,29 +753,33 @@ function insertAtCursor(text: string) {
 .primer-preview :deep(details[open] summary) {
   margin-bottom: 0.5rem;
 }
+.primer-preview :deep(img) {
+  display: block;
+  max-width: 500px;
+  margin: 0.5rem auto;
+}
 .primer-preview :deep(.youtube-embed) {
-  position: relative;
-  padding-bottom: 56.25%;
-  height: 0;
-  overflow: hidden;
-  margin: 1rem 0;
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 16 / 9;
+  margin: 1rem auto;
   border-radius: 6px;
+  overflow: hidden;
 }
 .primer-preview :deep(.youtube-embed iframe) {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   border: 0;
 }
 .primer-preview :deep(.card-inline-img-link) {
-  display: inline-block;
+  display: block;
+  text-align: center;
   text-decoration: none;
 }
 .primer-preview :deep(.card-inline-img) {
   display: inline-block;
   width: 200px;
+  max-width: 500px;
   border-radius: 10px;
   vertical-align: middle;
   margin: 0.25rem;
