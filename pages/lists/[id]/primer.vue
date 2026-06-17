@@ -8,8 +8,6 @@
       ></div>
     </div>
 
-    <CardListBanner :list="list" :is-loading="isLoadingLists" />
-
     <!-- Back button -->
     <div class="mb-4">
       <UButton
