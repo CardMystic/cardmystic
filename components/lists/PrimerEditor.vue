@@ -536,7 +536,7 @@ function applyAction(id: ToolbarActionId) {
     case 'collapsible':
       insertAtCursor(
         ensureBlockBoundary(value, start) +
-          `<details>\n<summary>Details</summary>\n\nContent here.\n\n</details>\n\n`,
+          `<details open>\n<summary>Details</summary>\n\nContent here.\n\n</details>\n\n`,
       );
       return;
     case 'youtube': {
