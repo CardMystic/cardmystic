@@ -117,7 +117,7 @@
           :disabled="!selectedListId"
           @click="handleAddToDeck(false)"
         >
-          {{ hasDuplicates ? `Add All (${oracleIds.length})` : 'Add to Deck' }}
+          {{ hasDuplicates ? `Add All (${cardCount})` : 'Add to Deck' }}
         </UButton>
       </div>
     </template>
