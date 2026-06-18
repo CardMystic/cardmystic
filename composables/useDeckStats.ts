@@ -38,6 +38,11 @@ export function useTopCardsSearch(
         throw new Error(body?.message ?? 'Network response was not ok');
       }
       const data = (await response.json()) as TopCardsResponse;
+      if (import.meta.client) {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
+        });
+      }
       return data.results.map(
         (result): Card => ({
           card_name: result.card_name,
@@ -93,6 +98,11 @@ export function useTopCommandersSearch(
         throw new Error(body?.message ?? 'Network response was not ok');
       }
       const data = (await response.json()) as TopCommandersResponse;
+      if (import.meta.client) {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
+        });
+      }
       return data.results.map(
         (result): Card => ({
           card_name: result.card_data[0]?.name ?? result.commanders[0],
@@ -150,6 +160,11 @@ export function usePopularByCommander(
         throw new Error(body?.message ?? 'Network response was not ok');
       }
       const data = (await response.json()) as TopCardsResponse;
+      if (import.meta.client) {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
+        });
+      }
       return data.results.map(
         (result): Card => ({
           card_name: result.card_name,
