@@ -52,6 +52,11 @@ export function useAlsRecommend(
       }
       const body = (await response.json()) as AlsRecommendResponse;
       notFound.value = body.not_found ?? [];
+      if (import.meta.client) {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
+        });
+      }
       return body.results ?? [];
     },
     staleTime: 1000 * 60 * 15, // 15 minutes

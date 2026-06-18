@@ -132,6 +132,11 @@ const signUpWithEmail = async () => {
 
     successMessage.value = data.message;
 
+    // Fire Google Ads conversion for Sign-up
+    window.gtag?.('event', 'conversion', {
+      send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
+    });
+
     if (selectedProfileCard.value.trim()) {
       localStorage.setItem(
         `pendingSignupAvatar:${email.value.trim().toLowerCase()}`,
