@@ -81,6 +81,18 @@ const searchItems: NavigationMenuItem[] = [
     icon: 'i-lucide-compass',
     children: [
       {
+        label: 'Search Decklists',
+        description: 'Find public decklists by keyword',
+        icon: 'i-lucide-list-tree',
+        to: '/explore/decklists',
+      },
+      {
+        label: 'Search Users',
+        description: 'Find other CardMystic users',
+        icon: 'i-lucide-user-search',
+        to: '/explore/users',
+      },
+      {
         label: 'Popular Commander Cards',
         description: 'Top cards across all commander decks',
         icon: 'i-lucide-chart-no-axes-combined',
@@ -140,6 +152,18 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Get decklist recommendations',
     icon: 'i-lucide-box',
     to: '/search/all/deckbuilder',
+  },
+  {
+    label: 'Search Decklists',
+    description: 'Find public decklists by keyword',
+    icon: 'i-lucide-list-tree',
+    to: '/explore/decklists',
+  },
+  {
+    label: 'Search Users',
+    description: 'Find other CardMystic users',
+    icon: 'i-lucide-user-search',
+    to: '/explore/users',
   },
   {
     label: 'Popular Commander Cards',
