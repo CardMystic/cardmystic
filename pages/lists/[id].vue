@@ -309,6 +309,7 @@ const decklistCardNames = computed(() =>
 const loading = computed(
   () =>
     isLoadingLists.value ||
+    !list.value ||
     isLoadingItems.value ||
     isLoadingCards.value ||
     (oracleIds.value.length > 0 && cards.value.length === 0),
