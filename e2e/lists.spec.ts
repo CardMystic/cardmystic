@@ -249,7 +249,7 @@ test.describe('Card lists CRUD', () => {
 
     // Add Atraxa via the list-page autocomplete input.
     const addInput = page.getByPlaceholder('Search for a card to add...');
-    await expect(addInput).toBeVisible({ timeout: API_TIMEOUT });
+    await expect(addInput).toBeEnabled({ timeout: API_TIMEOUT });
 
     const addCall = page.waitForResponse(
       (resp) =>
@@ -548,7 +548,7 @@ test.describe('Card lists CRUD', () => {
     // Atraxa is WUBG (no Red). Add Lightning Bolt (R) so the legality overlay appears.
     await gotoHydrated(page, `/lists/${LIST_ID}`);
     const addInput = page.getByPlaceholder('Search for a card to add...');
-    await expect(addInput).toBeVisible({ timeout: API_TIMEOUT });
+    await expect(addInput).toBeEnabled({ timeout: API_TIMEOUT });
 
     const addCall = page.waitForResponse(
       (resp) =>
@@ -617,7 +617,7 @@ test.describe('Card lists CRUD', () => {
 
     // ── Step 1: add Counterspell via the list-page autocomplete ─────────
     const addInput = page.getByPlaceholder('Search for a card to add...');
-    await expect(addInput).toBeVisible({ timeout: API_TIMEOUT });
+    await expect(addInput).toBeEnabled({ timeout: API_TIMEOUT });
 
     const addCall = page.waitForResponse(
       (resp) =>
