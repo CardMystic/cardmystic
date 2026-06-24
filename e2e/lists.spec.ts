@@ -561,7 +561,9 @@ test.describe('Card lists CRUD', () => {
     await reliableFill(addInput, OFF_COLOR_CARD_NAME);
     // OFF_COLOR_CARD_NAME is Lightning Bolt (Red) — outside Atraxa's WUBG color identity.
     await page
-      .getByRole('option', { name: new RegExp(OFF_COLOR_CARD_NAME, 'i') })
+      .getByRole('option', {
+        name: new RegExp(`^${OFF_COLOR_CARD_NAME}$`, 'i'),
+      })
       .first()
       .click();
 
