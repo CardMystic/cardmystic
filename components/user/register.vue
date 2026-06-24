@@ -2,8 +2,6 @@
 import { useSupabase } from '~/composables/useSupabase';
 import { useRecaptcha } from '~/composables/useRecaptcha';
 import { useUserProfile } from '~/composables/useUserProfile';
-import { useCardNames } from '~/composables/useBulkData';
-import { refDebounced } from '~/utils/refDebounced';
 
 const router = useRouter();
 
@@ -23,41 +21,6 @@ const resending = ref(false);
 const resendMessage = ref<string | null>(null);
 const honeypot = ref('');
 const showPasswords = ref(false);
-const selectedProfileCard = ref('');
-const avatarSearchTerm = ref('');
-const debouncedAvatarSearch = refDebounced(avatarSearchTerm, 150);
-
-const { data: rawCards, status: cardsQueryStatus } = useCardNames();
-const cardsStatus = computed(() =>
-  cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
-);
-
-const filteredAvatarCards = computed(() => {
-  if (!debouncedAvatarSearch.value || debouncedAvatarSearch.value.length < 2) {
-    if (selectedProfileCard.value) return [selectedProfileCard.value];
-    return [];
-  }
-
-  const searchLower = debouncedAvatarSearch.value.toLowerCase();
-  const filtered: string[] = [];
-
-  if (selectedProfileCard.value) {
-    filtered.push(selectedProfileCard.value);
-  }
-
-  const cards = rawCards.value ?? [];
-  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
-    const card = cards[i];
-    if (
-      card.toLowerCase().includes(searchLower) &&
-      card !== selectedProfileCard.value
-    ) {
-      filtered.push(card);
-    }
-  }
-
-  return filtered;
-});
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null;
@@ -142,17 +105,9 @@ const signUpWithEmail = async () => {
       send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
     });
 
-    if (selectedProfileCard.value.trim()) {
-      localStorage.setItem(
-        `pendingSignupAvatar:${email.value.trim().toLowerCase()}`,
-        selectedProfileCard.value.trim(),
-      );
-    }
-
     email.value = '';
     password.value = '';
     confirmPassword.value = '';
-    selectedProfileCard.value = '';
   } catch (e) {
     errorMessage.value = 'An unexpected error occurred.';
   }
@@ -215,21 +170,6 @@ const resendVerification = async () => {
       placeholder="Email"
       size="lg"
     />
-
-    <UInputMenu
-      v-model="selectedProfileCard"
-      v-model:search-term="avatarSearchTerm"
-      :items="filteredAvatarCards"
-      :loading="cardsStatus === 'pending'"
-      placeholder="Optional: choose a profile icon card"
-      icon="i-lucide-image"
-      class="w-full"
-      size="lg"
-    />
-
-    <p class="text-xs text-zinc-400 -mt-2">
-      Optional: pick an MTG card art as your avatar now.
-    </p>
 
     <UInput
       class="w-full"
