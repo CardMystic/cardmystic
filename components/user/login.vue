@@ -237,10 +237,7 @@ const resendVerification = async () => {
       </UButton>
     </p>
 
-    <p
-      v-if="resendMessage"
-      class="text-zinc-400 text-xs text-center -mt-2"
-    >
+    <p v-if="resendMessage" class="text-zinc-400 text-xs text-center -mt-2">
       {{ resendMessage }}
     </p>
 
