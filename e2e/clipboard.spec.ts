@@ -345,7 +345,7 @@ test.describe('Clipboard', () => {
 
     // Both cards visible in the popover list.
     await expect(page.getByText('Lightning Bolt')).toBeVisible();
-    await expect(page.getByText('Counterspell')).toBeVisible();
+    await expect(page.getByText('Counterspell', { exact: true })).toBeVisible();
 
     // Remove only Lightning Bolt via its row's Remove button.
     await page
@@ -357,13 +357,15 @@ test.describe('Clipboard', () => {
     await expect(page.getByText('Lightning Bolt')).not.toBeVisible({
       timeout: 5_000,
     });
-    await expect(page.getByText('Counterspell')).toBeVisible();
+    await expect(page.getByText('Counterspell', { exact: true })).toBeVisible();
 
     // Clear all remaining cards via the Clear button.
     await page.getByRole('button', { name: /^Clear$/ }).click();
 
     // Toast "Clipboard cleared" fires.
-    await expect(page.getByText('Clipboard cleared')).toBeVisible({
+    await expect(
+      page.getByText('Clipboard cleared', { exact: true }),
+    ).toBeVisible({
       timeout: 5_000,
     });
 

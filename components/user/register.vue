@@ -18,6 +18,9 @@ const confirmPassword = ref('');
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
+const signedUpEmail = ref<string | null>(null);
+const resending = ref(false);
+const resendMessage = ref<string | null>(null);
 const honeypot = ref('');
 const showPasswords = ref(false);
 const selectedProfileCard = ref('');
@@ -131,6 +134,13 @@ const signUpWithEmail = async () => {
     }
 
     successMessage.value = data.message;
+    signedUpEmail.value = email.value.trim();
+    resendMessage.value = null;
+
+    // Fire Google Ads conversion for Sign-up
+    window.gtag?.('event', 'conversion', {
+      send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
+    });
 
     if (selectedProfileCard.value.trim()) {
       localStorage.setItem(
@@ -148,6 +158,22 @@ const signUpWithEmail = async () => {
   }
 
   loading.value = false;
+};
+
+const resendVerification = async () => {
+  if (!signedUpEmail.value) return;
+  resending.value = true;
+  resendMessage.value = null;
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: signedUpEmail.value,
+  });
+
+  resending.value = false;
+  resendMessage.value = error
+    ? error.message
+    : 'Verification email sent. Please check your inbox.';
 };
 </script>
 
@@ -252,13 +278,34 @@ const signUpWithEmail = async () => {
       {{ loading ? 'Creating account…' : 'Create account' }}
     </UButton>
 
-    <p v-if="errorMessage" class="text-red-400 text-sm text-center">
-      {{ errorMessage }}
-    </p>
+    <div v-if="errorMessage" class="text-center space-y-1">
+      <p class="text-red-400 text-sm">
+        {{ errorMessage }}
+      </p>
+    </div>
 
-    <p v-if="successMessage" class="text-green-400 text-sm text-center">
-      {{ successMessage }}
-    </p>
+    <div v-if="successMessage" class="text-center space-y-1">
+      <p class="text-green-400 text-sm">
+        {{ successMessage }}
+      </p>
+      <p v-if="signedUpEmail" class="text-zinc-400 text-xs">
+        Didn't get the email?
+        <UButton
+          variant="link"
+          color="primary"
+          size="xs"
+          :padded="false"
+          :loading="resending"
+          :disabled="resending"
+          @click="resendVerification"
+        >
+          Resend verification email
+        </UButton>
+      </p>
+      <p v-if="resendMessage" class="text-zinc-400 text-xs">
+        {{ resendMessage }}
+      </p>
+    </div>
 
     <div class="text-center text-zinc-400 text-sm">
       Already have an account?

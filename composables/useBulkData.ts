@@ -18,7 +18,6 @@ export function useCardNames() {
     },
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
-    persister: undefined,
   });
 }
 
@@ -38,7 +37,6 @@ export function useCommanders() {
     },
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
-    persister: undefined,
   });
 }
 
@@ -60,7 +58,6 @@ export function useCommandersSet() {
     select: (data) => new Set(data),
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
-    persister: undefined,
   });
 }
 
@@ -80,7 +77,6 @@ export function useCardOracleIds() {
     },
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
-    persister: undefined,
   });
 }
 
@@ -108,6 +104,5 @@ export function usePartnerCommanders() {
     },
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
-    persister: undefined,
   });
 }

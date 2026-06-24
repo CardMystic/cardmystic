@@ -17,9 +17,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.105.1
         version: 2.105.1
-      '@tanstack/query-persist-client-core':
-        specifier: ^5.100.6
-        version: 5.100.6
       '@tanstack/vue-query':
         specifier: ^5.100.6
         version: 5.100.6(vue@3.5.33(typescript@5.9.3))
@@ -1887,9 +1884,6 @@ packages:
 
   '@tanstack/query-devtools@5.90.1':
     resolution: {integrity: sha512-GtINOPjPUH0OegJExZ70UahT9ykmAhmtNVcmtdnOZbxLwT7R5OmRztR5Ahe3/Cu7LArEmR6/588tAycuaWb1xQ==}
-
-  '@tanstack/query-persist-client-core@5.100.6':
-    resolution: {integrity: sha512-SLJXsn5x2XAwKgOVulBFh0KXop7zeDoRmmB7ImKODLflyBnvLBmPQPadmwTgBiZQUa/Kx/y1MxzAXC/4Nfg8kQ==}
 
   '@tanstack/table-core@8.21.3':
     resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
@@ -6918,10 +6912,6 @@ snapshots:
   '@tanstack/query-core@5.100.6': {}
 
   '@tanstack/query-devtools@5.90.1': {}
-
-  '@tanstack/query-persist-client-core@5.100.6':
-    dependencies:
-      '@tanstack/query-core': 5.100.6
 
   '@tanstack/table-core@8.21.3': {}
 

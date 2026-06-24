@@ -45,6 +45,11 @@ export function useColbertSearch(
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Network response was not ok');
       }
+      if (import.meta.client) {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
+        });
+      }
       return response.json() as Promise<Array<Card>>;
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
@@ -95,6 +100,11 @@ export function useSimilaritySearch(
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Network response was not ok');
       }
+      if (import.meta.client) {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
+        });
+      }
       return response.json() as Promise<Array<Card>>;
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
@@ -144,6 +154,11 @@ export function useKeywordSearch(
       if (!response.ok) {
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Network response was not ok');
+      }
+      if (import.meta.client) {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
+        });
       }
       return response.json() as Promise<Array<Card>>;
     },

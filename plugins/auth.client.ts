@@ -53,6 +53,12 @@ export default defineNuxtPlugin(async () => {
     if (error) {
       // eslint-disable-next-line no-console
       console.error('[auth] Failed to apply OAuth session from URL:', error);
+    } else if (sessionStorage.getItem('pendingOAuthSignup') === 'true') {
+      // Fire Google Ads conversion for Sign-up via Google OAuth
+      window.gtag?.('event', 'conversion', {
+        send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
+      });
+      sessionStorage.removeItem('pendingOAuthSignup');
     }
   }
 

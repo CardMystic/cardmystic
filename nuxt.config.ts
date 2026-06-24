@@ -31,6 +31,14 @@ export default defineNuxtConfig({
       ],
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
       script: [
+        // Google tag (gtag.js)
+        {
+          src: 'https://www.googletagmanager.com/gtag/js?id=AW-17812762149',
+          async: true,
+        },
+        {
+          innerHTML: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','AW-17812762149');`,
+        },
         {
           async: true,
           src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8668014466736799',

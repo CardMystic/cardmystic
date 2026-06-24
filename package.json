@@ -26,7 +26,6 @@
     "@nuxt/ui": "^3.3.7",
     "@nuxtjs/device": "^3.2.4",
     "@supabase/supabase-js": "^2.105.1",
-    "@tanstack/query-persist-client-core": "^5.100.6",
     "@tanstack/vue-query": "^5.100.6",
     "@tanstack/vue-query-devtools": "^5.91.0",
     "@vee-validate/nuxt": "^4.15.1",
