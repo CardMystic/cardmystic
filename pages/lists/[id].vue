@@ -52,7 +52,8 @@
           <UInputMenu
             v-model="selectedCardToAdd"
             v-model:search-term="addCardSearchTerm"
-            :loading="addCardLoading"
+            :loading="addCardLoading || loading"
+            :disabled="loading"
             :items="filteredAddCards"
             placeholder="Search for a card to add..."
             icon="i-lucide-plus"
@@ -308,6 +309,7 @@ const decklistCardNames = computed(() =>
 const loading = computed(
   () =>
     isLoadingLists.value ||
+    !list.value ||
     isLoadingItems.value ||
     isLoadingCards.value ||
     (oracleIds.value.length > 0 && cards.value.length === 0),
