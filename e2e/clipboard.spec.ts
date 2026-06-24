@@ -363,7 +363,9 @@ test.describe('Clipboard', () => {
     await page.getByRole('button', { name: /^Clear$/ }).click();
 
     // Toast "Clipboard cleared" fires.
-    await expect(page.getByText('Clipboard cleared')).toBeVisible({
+    await expect(
+      page.getByText('Clipboard cleared', { exact: true }),
+    ).toBeVisible({
       timeout: 5_000,
     });
 
