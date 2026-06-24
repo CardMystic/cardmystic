@@ -11,23 +11,16 @@
  *    - On the client, this cache is "hydrated" back into the QueryClient,
  *      preventing duplicate refetches on initial load.
  *
- * 2) Client-side query persistence
- *    - On the client only, query results are persisted to `localStorage`
- *      using TanStack Query's experimental persister.
- *    - Cached data survives page reloads for up to 6 hours (`maxAge`).
- *    - Auth-sensitive queries (e.g. `user`, `profile`) are explicitly excluded
- *      from persistence to avoid stale or incorrect session state.
- *
- * 3) Sensible defaults
- *    - Queries use a global `staleTime` of 5 minutes to reduce unnecessary
- *      refetching.
- *    - Persistence and hydration are transparent to consumers of `useQuery`.
+ * 2) In-memory caching with a global staleTime of 5 minutes
+ *    - Navigating between pages, re-mounting components, or deduplicating
+ *      parallel fetches are all handled by the in-memory cache. No browser
+ *      storage is used — a page refresh starts fresh, which is appropriate
+ *      for a search engine where results are query-specific and ephemeral.
  *
  * Notes:
  * - This plugin does not automatically prefetch queries on the server.
  *   Queries must still be executed during SSR (e.g. via component setup,
  *   layouts, or explicit prefetching) to appear in the dehydrated state.
- * - Persistence is client-only; no browser APIs are accessed during SSR.
  */
 
 import type {
@@ -40,7 +33,6 @@ import {
   hydrate,
   dehydrate,
 } from '@tanstack/vue-query';
-import { experimental_createQueryPersister } from '@tanstack/query-persist-client-core';
 
 // Nuxt 3 app aliases
 import { defineNuxtPlugin, useState } from '#imports';
@@ -48,48 +40,9 @@ import { defineNuxtPlugin, useState } from '#imports';
 export default defineNuxtPlugin((nuxt) => {
   const vueQueryState = useState<DehydratedState | null>('vue-query');
 
-  // Wrap localStorage to swallow quota errors instead of throwing
-  const safeStorage = import.meta.client
-    ? {
-        getItem: (key: string) => localStorage.getItem(key),
-        setItem: (key: string, value: string) => {
-          try {
-            localStorage.setItem(key, value);
-          } catch {
-            // Quota exceeded — clear stale query cache and retry once
-            try {
-              Object.keys(localStorage)
-                .filter((k) => k.startsWith('tsqd-'))
-                .forEach((k) => localStorage.removeItem(k));
-              localStorage.setItem(key, value);
-            } catch {
-              // Still full — silently skip persistence
-            }
-          }
-        },
-        removeItem: (key: string) => localStorage.removeItem(key),
-      }
-    : undefined;
-
-  const persister =
-    import.meta.client && safeStorage
-      ? experimental_createQueryPersister({
-          storage: safeStorage,
-          maxAge: 1000 * 60 * 60 * 6, // 6 hours
-          // Don't persist auth-related queries - they need fresh data
-          filters: {
-            predicate: (query) => {
-              const key = query.queryKey[0];
-              // Exclude user auth and profile queries from persistence (stale identity can cause issues)
-              return key !== 'user' && key !== 'profile';
-            },
-          },
-        })
-      : undefined;
-
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { staleTime: 300000, persister: persister?.persisterFn },
+      queries: { staleTime: 300000 },
     },
   });
   const options: VueQueryPluginOptions = { queryClient };
