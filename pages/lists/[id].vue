@@ -52,7 +52,8 @@
           <UInputMenu
             v-model="selectedCardToAdd"
             v-model:search-term="addCardSearchTerm"
-            :loading="addCardLoading"
+            :loading="addCardLoading || loading"
+            :disabled="loading"
             :items="filteredAddCards"
             placeholder="Search for a card to add..."
             icon="i-lucide-plus"
