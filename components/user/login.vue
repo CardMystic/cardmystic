@@ -12,6 +12,9 @@ const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
+const showResendVerification = ref(false);
+const resending = ref(false);
+const resendMessage = ref<string | null>(null);
 const honeypot = ref('');
 const showPassword = ref(false);
 
@@ -67,6 +70,8 @@ const signInWithGoogle = async () => {
 const signInWithEmail = async () => {
   loading.value = true;
   errorMessage.value = null;
+  showResendVerification.value = false;
+  resendMessage.value = null;
 
   if (honeypot.value) {
     loading.value = false;
@@ -91,6 +96,9 @@ const signInWithEmail = async () => {
 
     if (!res.ok) {
       errorMessage.value = data.message || 'Login failed.';
+      if (/not confirmed|confirm your email/i.test(errorMessage.value ?? '')) {
+        showResendVerification.value = true;
+      }
       loading.value = false;
       return;
     }
@@ -109,6 +117,22 @@ const signInWithEmail = async () => {
   }
 
   loading.value = false;
+};
+
+const resendVerification = async () => {
+  if (!email.value) return;
+  resending.value = true;
+  resendMessage.value = null;
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email.value.trim(),
+  });
+
+  resending.value = false;
+  resendMessage.value = error
+    ? error.message
+    : 'Verification email sent. Please check your inbox.';
 };
 </script>
 
@@ -194,6 +218,27 @@ const signInWithEmail = async () => {
 
     <p v-if="errorMessage" class="text-red-400 text-sm text-center">
       {{ errorMessage }}
+    </p>
+
+    <p
+      v-if="showResendVerification"
+      class="text-zinc-400 text-xs text-center -mt-2"
+    >
+      <UButton
+        variant="link"
+        color="primary"
+        size="xs"
+        :padded="false"
+        :loading="resending"
+        :disabled="resending || !email"
+        @click="resendVerification"
+      >
+        Resend verification email
+      </UButton>
+    </p>
+
+    <p v-if="resendMessage" class="text-zinc-400 text-xs text-center -mt-2">
+      {{ resendMessage }}
     </p>
 
     <div class="text-center text-zinc-400 text-sm">

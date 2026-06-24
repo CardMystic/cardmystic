@@ -3,6 +3,7 @@ import type { Database } from '~/database.types';
 
 export const useSupabase = () => {
   const nuxtApp = useNuxtApp();
+  const PROTECTED_PREFIXES = ['sb-', '__cm_', 'cm.clipboard.v1']; // don't purge Supabase auth or our own namespaced state
 
   // Use a key on nuxtApp to store the client instance
   // This ensures proper scoping per request on server and single instance on client
@@ -17,25 +18,31 @@ export const useSupabase = () => {
       );
     }
 
-    // Wrap localStorage so quota errors from Supabase auth
-    // (session persistence) are handled gracefully by clearing
-    // stale TanStack Query cache entries and retrying once.
+    /** Last resort: purges everything non-auth */
+    const purgeAllNonAuth = () => {
+      Object.keys(localStorage)
+        .filter((k) => !PROTECTED_PREFIXES.some((p) => k.startsWith(p)))
+        .forEach((k) => localStorage.removeItem(k));
+    };
+
     const safeStorage = import.meta.client
       ? {
           getItem: (key: string) => localStorage.getItem(key),
           setItem: (key: string, value: string) => {
             try {
               localStorage.setItem(key, value);
+              return;
             } catch {
-              // Quota exceeded — purge TanStack Query cache and retry
-              try {
-                Object.keys(localStorage)
-                  .filter((k) => k.startsWith('tsqd-'))
-                  .forEach((k) => localStorage.removeItem(k));
-                localStorage.setItem(key, value);
-              } catch {
-                // Still full — silently skip persistence
-              }
+              // Quota exceeded
+            }
+            try {
+              purgeAllNonAuth();
+              localStorage.setItem(key, value);
+            } catch {
+              // Still full after purging everything non-auth
+              console.error(
+                'LocalStorage is full (after purging nonessential items) or unusable. Auth persistence may not work properly. Consider clearing localStorage or using a different browser.',
+              );
             }
           },
           removeItem: (key: string) => localStorage.removeItem(key),
