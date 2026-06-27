@@ -10,6 +10,7 @@ const { verifyRecaptcha } = useRecaptcha();
 const config = useRuntimeConfig();
 const { validatePasswordPolicy } = useUserProfile();
 
+const username = ref('');
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
@@ -57,6 +58,12 @@ const signUpWithEmail = async () => {
     return;
   }
 
+  if (!username.value.trim()) {
+    errorMessage.value = 'Username is required.';
+    loading.value = false;
+    return;
+  }
+
   const passwordError = validatePasswordPolicy(password.value);
   if (passwordError) {
     errorMessage.value = passwordError;
@@ -82,6 +89,7 @@ const signUpWithEmail = async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        username: username.value.trim(),
         email: email.value,
         password: password.value,
         confirmPassword: confirmPassword.value,
@@ -105,6 +113,7 @@ const signUpWithEmail = async () => {
       send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
     });
 
+    username.value = '';
     email.value = '';
     password.value = '';
     confirmPassword.value = '';
@@ -162,6 +171,14 @@ const resendVerification = async () => {
     </UButton>
 
     <div class="text-center text-zinc-400 text-sm">or</div>
+
+    <UInput
+      class="w-full"
+      v-model="username"
+      type="text"
+      placeholder="Username"
+      size="lg"
+    />
 
     <UInput
       class="w-full"
@@ -254,7 +271,7 @@ const resendVerification = async () => {
         color="primary"
         size="sm"
         :padded="false"
-        @click="router.push('/login')"
+        @click="router.push('/user/login')"
       >
         Login Instead
       </UButton>

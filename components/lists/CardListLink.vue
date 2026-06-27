@@ -29,8 +29,14 @@
       <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">
         {{ list.name }}
       </h3>
-      <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
+      <p
+        v-if="list.description"
+        class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1"
+      >
         {{ list.description }}
+      </p>
+      <p v-else class="text-xs md:text-sm mb-2 md:mb-3 opacity-60 italic">
+        No description
       </p>
       <div class="flex items-center justify-between text-xs md:text-sm">
         <span>{{

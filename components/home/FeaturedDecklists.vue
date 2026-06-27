@@ -33,7 +33,7 @@
 
     <div v-else class="empty-state">
       <UIcon name="i-lucide-stars" class="text-5xl opacity-30 mb-3" />
-      <p class="mb-4">decklists yet — check back soon!</p>
+      <p class="mb-4">No featured decklists yet!</p>
       <UButton to="/explore/decklists" color="primary" variant="soft">
         Search Decklists
       </UButton>

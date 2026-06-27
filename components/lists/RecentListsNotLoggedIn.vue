@@ -68,7 +68,7 @@
     </div>
 
     <!-- Login overlay -->
-    <NuxtLink to="/login">
+    <NuxtLink to="/user/login">
       <div
         class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer backdrop-blur-[1px]"
       >

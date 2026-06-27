@@ -1,6 +1,6 @@
 <template>
   <SpaceBackground>
-    <Login />
+    <Register />
   </SpaceBackground>
 </template>
 
@@ -11,7 +11,7 @@ definePageMeta({
     // Redirect if already logged in
     const { userProfile } = useUserProfile();
     if (userProfile.value?.id) {
-      return navigateTo('/profile');
+      return navigateTo('/user/profile');
     }
   },
 });
@@ -20,25 +20,25 @@ useHead({
   meta: [
     {
       name: 'robots',
-      content: 'noindex, nofollow', // Don't index login pages
+      content: 'noindex, nofollow', // Don't index signup pages
     },
   ],
 });
 
 useSeoMeta({
-  title: () => 'Login - CardMystic',
+  title: () => 'Create Account - CardMystic',
   description: () =>
-    'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
-  ogTitle: () => 'Login - CardMystic',
+    'Create a free CardMystic account to save your favorite MTG cards, build custom lists, track search history, and get personalized Magic: The Gathering card recommendations.',
+  ogTitle: () => 'Create Account - CardMystic',
   ogDescription: () =>
-    'Sign in to your CardMystic account to access your saved decklists, search history, and personalized Magic: The Gathering card search experience.',
+    'Create a free CardMystic account to save your favorite MTG cards, build custom lists, and get personalized Magic: The Gathering card recommendations.',
   ogType: 'website',
   ogImage: () => 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => 'CardMystic - Magic: The Gathering card search',
   twitterCard: 'summary',
-  twitterTitle: () => 'Login - CardMystic',
+  twitterTitle: () => 'Create Account - CardMystic',
   twitterDescription: () =>
-    'Sign in to your CardMystic account to access your saved decklists and personalized MTG search.',
+    'Create a free CardMystic account to save MTG cards, build custom lists, and get personalized recommendations.',
   twitterImage: () => 'https://cardmystic.com/cardmystic_cards.png',
 });
 

@@ -170,7 +170,7 @@ const resendVerification = async () => {
         color="neutral"
         size="xs"
         :padded="false"
-        @click="router.push('/reset-password')"
+        @click="router.push('/user/reset-password')"
       >
         Forgot password?
       </UButton>
@@ -219,7 +219,7 @@ const resendVerification = async () => {
         color="primary"
         size="sm"
         :padded="false"
-        @click="router.push('/register')"
+        @click="router.push('/user/register')"
       >
         Register Instead
       </UButton>

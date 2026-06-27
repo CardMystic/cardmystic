@@ -22,7 +22,9 @@ export function useFeaturedDecklists(limit = 10) {
         `${config.public.backendUrl}/supabase/card-lists/featured?limit=${limit}`,
       );
       if (!response.ok) {
-        throw new Error(`Failed to load featured decklists (${response.status})`);
+        throw new Error(
+          `Failed to load featured decklists (${response.status})`,
+        );
       }
       return GetFeaturedDecklistsResponseSchema.parse(await response.json());
     },
@@ -48,7 +50,12 @@ export function useDecklistSearch(query: Ref<string>, limit = 20) {
   const enabled = computed(() => query.value.trim().length > 0);
 
   const { data, isLoading, isFetching, error, refetch } = useQuery({
-    queryKey: computed(() => ['discovery', 'search-decklists', query.value, limit]),
+    queryKey: computed(() => [
+      'discovery',
+      'search-decklists',
+      query.value,
+      limit,
+    ]),
     queryFn: async () => {
       const trimmed = query.value.trim();
       const url = `${config.public.backendUrl}/supabase/card-lists/search?query=${encodeURIComponent(trimmed)}&limit=${limit}`;

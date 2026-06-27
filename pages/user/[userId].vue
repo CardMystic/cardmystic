@@ -33,11 +33,7 @@
               {{ profile.username || 'Anonymous' }}
             </h1>
             <div class="flex items-center gap-2 mt-1">
-              <UBadge
-                v-if="profile.is_featured"
-                color="primary"
-                variant="soft"
-              >
+              <UBadge v-if="profile.is_featured" color="primary" variant="soft">
                 Featured
               </UBadge>
               <span class="text-xs md:text-sm opacity-70">

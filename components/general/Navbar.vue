@@ -263,7 +263,7 @@ const externalItems: NavigationMenuItem[] = [
               variant="solid"
               icon="i-lucide-user"
               label="Login"
-              @click="router.push('/login')"
+              @click="router.push('/user/login')"
             />
 
             <LoginTooltip class="ml-2" />
@@ -325,7 +325,7 @@ const externalItems: NavigationMenuItem[] = [
                   label="History"
                   block
                   @click="
-                    router.push('/history');
+                    router.push('/user/history');
                     isMobileProfilePopoverOpen = false;
                   "
                 />
@@ -337,7 +337,7 @@ const externalItems: NavigationMenuItem[] = [
                   label="Settings"
                   block
                   @click="
-                    router.push('/profile');
+                    router.push('/user/profile');
                     isMobileProfilePopoverOpen = false;
                   "
                 />
@@ -366,7 +366,7 @@ const externalItems: NavigationMenuItem[] = [
               variant="solid"
               icon="i-lucide-user"
               label="Login"
-              @click="router.push('/login')"
+              @click="router.push('/user/login')"
             />
           </template>
         </ClientOnly>
@@ -432,7 +432,7 @@ const externalItems: NavigationMenuItem[] = [
             variant="solid"
             icon="i-lucide-user"
             label="Login"
-            @click="router.push('/login')"
+            @click="router.push('/user/login')"
           />
 
           <LoginTooltip class="ml-2" />
@@ -496,7 +496,7 @@ const externalItems: NavigationMenuItem[] = [
                 label="History"
                 block
                 @click="
-                  router.push('/history');
+                  router.push('/user/history');
                   isDesktopProfilePopoverOpen = false;
                 "
               />
@@ -508,7 +508,7 @@ const externalItems: NavigationMenuItem[] = [
                 label="Settings"
                 block
                 @click="
-                  router.push('/profile');
+                  router.push('/user/profile');
                   isDesktopProfilePopoverOpen = false;
                 "
               />
@@ -537,7 +537,7 @@ const externalItems: NavigationMenuItem[] = [
             variant="solid"
             icon="i-lucide-user"
             label="Login"
-            @click="router.push('/login')"
+            @click="router.push('/user/login')"
           />
         </template>
       </ClientOnly>

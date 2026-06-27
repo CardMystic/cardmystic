@@ -126,14 +126,23 @@ export const useUserProfile = () => {
 
   const updateUsernameMutation = useMutation({
     mutationFn: async (username: string) => {
-      if (!supabase || !username.trim()) {
-        throw new Error('Username cannot be empty');
-      }
-      const { error } = await supabase.auth.updateUser({ data: { username } });
-      if (error) throw error;
+      if (!username.trim()) throw new Error('Username cannot be empty');
+      const { data: sessionData } = await supabase!.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('Not authenticated');
+      const res = await fetch(`${config.public.backendUrl}/user/username`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ username }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Username update failed');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
 
@@ -201,13 +210,7 @@ export const useUserProfile = () => {
   });
 
   // Computed properties
-  const username = computed(() => {
-    return (
-      userProfile.value?.user_metadata?.username ||
-      userProfile.value?.email?.split('@')[0] ||
-      ''
-    );
-  });
+  const username = computed(() => profileData.value?.username ?? '');
 
   const profileIconUrl = computed(() => {
     if (!profileData.value?.avatar_card_name) return null;
