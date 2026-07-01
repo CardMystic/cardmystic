@@ -81,7 +81,7 @@ test.describe('Homepage', () => {
     await expect(page.getByAltText('Wizard')).toBeVisible();
     await expect(
       page.getByRole('heading', {
-        name: /CardMystic Is An A\.I\. Search Engine For MTG/i,
+        name: /Build Smarter Decks With Tools Designed For Magic/i,
       }),
     ).toBeVisible();
 
@@ -121,7 +121,7 @@ test.describe('AI search', () => {
   test('typing a query hits /search/colbert and renders cards', async ({
     page,
   }) => {
-    await gotoHydrated(page, '/search/all/ai');
+    await gotoHydrated(page, '/search/all/smart');
 
     const input = page.getByPlaceholder('Describe the cards you want...');
     await expect(input).toBeVisible();
@@ -295,7 +295,7 @@ test.describe('Platform routing', () => {
   ];
 
   for (const { platform, expectFilters } of cases) {
-    test(`/search/${platform}/ai forwards the ${platform} platform filter`, async ({
+    test(`/search/${platform}/smart forwards the ${platform} platform filter`, async ({
       page,
     }) => {
       // Drive the page directly via URL param. Submitting the form
@@ -312,7 +312,7 @@ test.describe('Platform routing', () => {
 
       await gotoHydrated(
         page,
-        `/search/${platform}/ai?query=${encodeURIComponent('card draw')}`,
+        `/search/${platform}/smart?query=${encodeURIComponent('card draw')}`,
       );
 
       const request = await requestPromise;
@@ -333,7 +333,7 @@ test.describe('SEO slug pages', () => {
   }) => {
     const colbertCall = waitForSearchCall(page, '/search/colbert');
 
-    await gotoHydrated(page, '/search/all/ai/best-card-draw');
+    await gotoHydrated(page, '/search/all/smart/best-card-draw');
 
     await expect(
       page.getByRole('heading', { name: /Best MTG Card Draw Spells/i }),

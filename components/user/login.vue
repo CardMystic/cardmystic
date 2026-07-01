@@ -188,7 +188,11 @@ const resendVerification = async () => {
           color="neutral"
           :padded="false"
           :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-          @click="showPassword = !showPassword"
+          @click="
+            () => {
+              showPassword = !showPassword;
+            }
+          "
         />
       </template>
     </UInput>
@@ -199,7 +203,11 @@ const resendVerification = async () => {
         color="neutral"
         size="xs"
         :padded="false"
-        @click="router.push('/reset-password')"
+        @click="
+          () => {
+            router.push('/reset-password');
+          }
+        "
       >
         Forgot password?
       </UButton>
@@ -248,7 +256,11 @@ const resendVerification = async () => {
         color="primary"
         size="sm"
         :padded="false"
-        @click="router.push('/register')"
+        @click="
+          () => {
+            router.push('/register');
+          }
+        "
       >
         Register Instead
       </UButton>

@@ -45,7 +45,11 @@
     </div>
     <div v-if="hasMoreCards && !showAll" class="flex justify-center mt-6">
       <UButton
-        @click="showAll = true"
+        @click="
+          () => {
+            showAll = true;
+          }
+        "
         color="primary"
         variant="solid"
         size="lg"

@@ -119,7 +119,11 @@
         class="flex justify-center pt-4"
       >
         <UButton
-          @click="showAll = true"
+          @click="
+            () => {
+              showAll = true;
+            }
+          "
           color="primary"
           variant="outline"
           size="lg"
@@ -142,7 +146,11 @@
               color="neutral"
               variant="ghost"
               label="Cancel"
-              @click="isDeleteModalOpen = false"
+              @click="
+                () => {
+                  isDeleteModalOpen = false;
+                }
+              "
               :disabled="deleteLoading"
             />
             <UButton
@@ -170,7 +178,11 @@
               color="neutral"
               variant="ghost"
               label="Cancel"
-              @click="isClearAllModalOpen = false"
+              @click="
+                () => {
+                  isClearAllModalOpen = false;
+                }
+              "
               :disabled="clearAllLoading"
             />
             <UButton
@@ -245,7 +257,7 @@ const handleClearAll = async () => {
 
 const getSearchTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    ai: 'Smart',
+    smart: 'Smart',
     similarity: 'Similarity',
     keyword: 'Keyword',
     commander: 'Commander',
@@ -256,7 +268,7 @@ const getSearchTypeLabel = (type: string) => {
 
 const getSearchTypeIcon = (type: string) => {
   const icons: Record<string, string> = {
-    ai: 'i-lucide-brain',
+    smart: 'i-lucide-brain',
     similarity: 'i-mdi-cards-outline',
     keyword: 'i-lucide-whole-word',
     commander: 'i-mdi-crown',
@@ -272,7 +284,7 @@ const getSearchTypeColor = (
     string,
     'primary' | 'success' | 'warning' | 'error' | 'info'
   > = {
-    ai: 'primary',
+    smart: 'primary',
     similarity: 'success',
     keyword: 'warning',
     commander: 'error',

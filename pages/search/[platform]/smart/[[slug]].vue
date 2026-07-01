@@ -2,7 +2,7 @@
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full pt-4 flex flex-col items-center">
       <Search
-        default-search-type="ai"
+        default-search-type="smart"
         :platform="searchPlatformProp"
         class="mt-6 max-w-5xl"
       />
@@ -69,14 +69,14 @@ if (!isValidPlatform(platform)) {
   throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
 }
 
-const seoEntry = slug ? getSeoEntry(platform, 'ai', slug) : undefined;
+const seoEntry = slug ? getSeoEntry(platform, 'smart', slug) : undefined;
 if (slug && !seoEntry) {
   throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
 }
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType = 'ai';
+const aboutType: SearchAboutType = 'smart';
 
 // Query from URL params (landing page mode)
 const queryParam = computed(() => String(route.query?.query || ''));
@@ -176,7 +176,7 @@ const { saveSearchQuery } = useSearchType();
 watch(
   () => route.query,
   (query) => {
-    if (query.query) saveSearchQuery('ai', query);
+    if (query.query) saveSearchQuery('smart', query);
   },
   { immediate: true },
 );

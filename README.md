@@ -18,14 +18,14 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 ## ✨ Features
 
 - Smart Search for MTG cards: Find cards using natural language queries (semantic/semantic search)
-  - Example Query: [X Spell Board Wipes](https://cardmystic.com/search/all/ai?query=x+spell+board+wipes)
+  - Example Query: [X Spell Board Wipes](https://cardmystic.com/search/all/smart?query=x+spell+board+wipes)
 - Similarity search: find cards similar to a given card
   - Example Query: [Lightning Bolt](https://cardmystic.com/search/all/similarity?card_name=Lightning+Bolt)
 - Commander search: Smart search specifically for legendary creatures
 - Keyword search: traditional text-based card search
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get personalized card recommendations
 - Platform-specific search: search filtered to Arena, MTGO, Modern, or Paper cards
-  - Example: [Arena Smart Search](https://cardmystic.com/search/arena/ai)
+  - Example: [Arena Smart Search](https://cardmystic.com/search/arena/smart)
 - Card Lists: Create and manage custom card collections with commander designation
 - User accounts with authentication (Supabase)
 - Filter by colors, types, converted mana cost, power/toughness, etc.

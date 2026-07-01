@@ -61,7 +61,7 @@
         <strong>thecardmystic@gmail.com</strong>.
       </p>
       <p v-else class="mt-4 text-gray-300 max-w-150">{{ errorMessage }}</p>
-      <UButton to="/search/all/ai" color="primary" class="mt-6"
+      <UButton to="/search/all/smart" color="primary" class="mt-6"
         >Back to Search</UButton
       >
     </div>
@@ -344,7 +344,11 @@
                     ? 'i-heroicons-chevron-up'
                     : 'i-heroicons-chevron-down'
                 "
-                @click="showMobileDetails = !showMobileDetails"
+                @click="
+                  () => {
+                    showMobileDetails = !showMobileDetails;
+                  }
+                "
               >
                 {{
                   showMobileDetails ? 'Hide Card Details' : 'Show Card Details'
@@ -903,7 +907,7 @@ onMounted(() => {
 });
 
 function navigateToSearch(
-  type: 'ai' | 'similarity' | 'commander' | 'keyword' | 'recommend',
+  type: 'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend',
 ) {
   const saved = restoreSearchQuery(type);
   // Strip limit from restored queries — each page applies its own default/cap

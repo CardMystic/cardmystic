@@ -5,9 +5,9 @@
       type="button"
       :class="[
         'search-tab-button-new',
-        { active: !cardActive && searchType === 'ai' },
+        { active: !cardActive && searchType === 'smart' },
       ]"
-      @click="onTabClick('ai')"
+      @click="onTabClick('smart')"
     >
       <UIcon name="i-lucide-brain" class="icon" size="18" />
       Smart Search
@@ -90,7 +90,7 @@
 import type { SelectItem } from '@nuxt/ui';
 
 export type SearchTabType =
-  | 'ai'
+  | 'smart'
   | 'similarity'
   | 'commander'
   | 'keyword'
@@ -124,7 +124,7 @@ const searchIcon = computed(() => {
 });
 
 const items = ref<SelectItem[]>([
-  { label: 'Smart Search', value: 'ai', icon: 'i-lucide-search' },
+  { label: 'Smart Search', value: 'smart', icon: 'i-lucide-search' },
   {
     label: 'Similarity Search',
     value: 'similarity',

@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 export type SearchAboutType =
-  | 'ai'
+  | 'smart'
   | 'similarity'
   | 'commander'
   | 'keyword'
@@ -73,7 +73,7 @@ const content: Record<
   SearchAboutType,
   { title: string; heading: string; paragraphs: string[] }
 > = {
-  ai: {
+  smart: {
     title: 'About Smart Search',
     heading: 'MTG Smart Card Search',
     paragraphs: [

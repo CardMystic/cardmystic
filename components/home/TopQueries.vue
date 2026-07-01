@@ -86,7 +86,7 @@ const rightColumnQueries = computed(() => {
 function tryQuery(query: string) {
   // Navigate to search page with the current query
   router.push({
-    path: '/search/all/ai',
+    path: '/search/all/smart',
     query: {
       query,
       isTryTopQuery: 'true',

@@ -48,7 +48,7 @@ const searchItems: NavigationMenuItem[] = [
         label: 'Smart Search',
         description: 'Find cards by describing them using natural language',
         icon: 'i-lucide-brain',
-        to: '/search/all/ai',
+        to: '/search/all/smart',
       },
       {
         label: 'Similarity Search',
@@ -116,7 +116,7 @@ const mainItemsMobile: NavigationMenuItem[] = [
     label: 'Smart Search',
     description: 'Search for cards using natural language',
     icon: 'i-lucide-brain',
-    to: '/search/all/ai',
+    to: '/search/all/smart',
   },
   {
     label: 'Similarity Search',
@@ -240,7 +240,11 @@ const externalItems: NavigationMenuItem[] = [
               variant="solid"
               icon="i-lucide-user"
               label="Login"
-              @click="router.push('/login')"
+              @click="
+                () => {
+                  router.push('/login');
+                }
+              "
             />
 
             <LoginTooltip class="ml-2" />
@@ -343,7 +347,11 @@ const externalItems: NavigationMenuItem[] = [
               variant="solid"
               icon="i-lucide-user"
               label="Login"
-              @click="router.push('/login')"
+              @click="
+                () => {
+                  router.push('/login');
+                }
+              "
             />
           </template>
         </ClientOnly>
@@ -409,7 +417,11 @@ const externalItems: NavigationMenuItem[] = [
             variant="solid"
             icon="i-lucide-user"
             label="Login"
-            @click="router.push('/login')"
+            @click="
+              () => {
+                router.push('/login');
+              }
+            "
           />
 
           <LoginTooltip class="ml-2" />
@@ -514,7 +526,11 @@ const externalItems: NavigationMenuItem[] = [
             variant="solid"
             icon="i-lucide-user"
             label="Login"
-            @click="router.push('/login')"
+            @click="
+              () => {
+                router.push('/login');
+              }
+            "
           />
         </template>
       </ClientOnly>

@@ -6,7 +6,7 @@
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
       <!-- Regular search input -->
-      <AISearch v-if="searchType === 'ai'" :platform="platform" />
+      <AISearch v-if="searchType === 'smart'" :platform="platform" />
 
       <!-- Select Menu for similarity search -->
       <SimilaritySearch
@@ -50,7 +50,7 @@ const props = defineProps<{
   similarity?: boolean;
   showAbout?: boolean;
   defaultSearchType?:
-    | 'ai'
+    | 'smart'
     | 'similarity'
     | 'commander'
     | 'keyword'
@@ -70,7 +70,7 @@ const {
   restoreSearchQuery,
 } = useSearchType();
 
-// Derive the current platform from the route (e.g. /search/arena/ai → 'arena')
+// Derive the current platform from the route (e.g. /search/arena/smart → 'arena')
 const currentPlatform = computed(() => {
   if (route.params.platform) return String(route.params.platform);
   return getPlatformFromPath(route.path);
@@ -89,8 +89,8 @@ if (props.defaultSearchType) {
   setSearchType('recommend');
 } else if (route.path.includes('/similarity')) {
   setSearchType('similarity');
-} else if (route.path.includes('/ai') || route.path === '/') {
-  setSearchType('ai');
+} else if (route.path.includes('/smart') || route.path === '/') {
+  setSearchType('smart');
 }
 
 // On mount, restore previous query from sessionStorage if the page has no active query params.
@@ -105,7 +105,7 @@ onMounted(() => {
   // Only restore if the current route has no meaningful query
   const type = searchType.value;
   const hasQuery =
-    (type === 'ai' && route.query.query) ||
+    (type === 'smart' && route.query.query) ||
     (type === 'similarity' && route.query.card_name) ||
     (type === 'commander' && route.query.query) ||
     (type === 'keyword' && route.query.query) ||

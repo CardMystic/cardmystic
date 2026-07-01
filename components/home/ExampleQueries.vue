@@ -70,7 +70,7 @@ function tryQuery() {
   // stable name; use the path directly.
   if (!results.value?.query) return;
   router.push({
-    path: '/search/all/ai',
+    path: '/search/all/smart',
     query: {
       query: results.value.query,
     },

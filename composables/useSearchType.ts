@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import type { LocationQuery } from 'vue-router';
 
 type SearchType =
-  | 'ai'
+  | 'smart'
   | 'similarity'
   | 'commander'
   | 'keyword'
@@ -11,10 +11,10 @@ type SearchType =
   | 'popular-commanders'
   | 'popular-by-commander';
 
-const searchType = ref<SearchType>('ai');
+const searchType = ref<SearchType>('smart');
 
 const storageKeys: Record<SearchType, string> = {
-  ai: 'ai_search_query',
+  smart: 'smart_search_query',
   similarity: 'similarity_search_card_name',
   commander: 'commander_search_query',
   keyword: 'keyword_search_query',
@@ -26,7 +26,7 @@ const storageKeys: Record<SearchType, string> = {
 
 /** Map search type to its sub-path segment under /search/[platform]/... */
 const searchTypeSegments: Record<SearchType, string> = {
-  ai: 'ai',
+  smart: 'smart',
   similarity: 'similarity',
   commander: 'commander',
   keyword: 'keyword',
@@ -37,7 +37,7 @@ const searchTypeSegments: Record<SearchType, string> = {
 };
 
 const requiredFields: Record<SearchType, string[]> = {
-  ai: ['query'],
+  smart: ['query'],
   similarity: ['card_name'],
   commander: ['query'],
   keyword: ['query'],
@@ -63,7 +63,7 @@ export const useSearchType = () => {
   const getPath = (type: SearchType, platform: string = 'all') =>
     buildPath(type, platform);
 
-  /** Extract the current platform from a route path like /search/arena/ai/... */
+  /** Extract the current platform from a route path like /search/arena/smart/... */
   const getPlatformFromPath = (path: string): string => {
     const match = path.match(/^\/search\/([^/]+)\//);
     return match?.[1] || 'all';
@@ -97,7 +97,7 @@ export const useSearchType = () => {
     }
   };
 
-  const isAiSearch = computed(() => searchType.value === 'ai');
+  const isSmartSearch = computed(() => searchType.value === 'smart');
   const isSimilaritySearch = computed(() => searchType.value === 'similarity');
   const isCommanderSearch = computed(() => searchType.value === 'commander');
   const isKeywordSearch = computed(() => searchType.value === 'keyword');
@@ -112,7 +112,7 @@ export const useSearchType = () => {
     saveSearchQuery,
     saveCurrentSearchQuery,
     restoreSearchQuery,
-    isAiSearch,
+    isSmartSearch,
     isSimilaritySearch,
     isCommanderSearch,
     isKeywordSearch,

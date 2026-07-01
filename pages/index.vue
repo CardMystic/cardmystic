@@ -205,7 +205,7 @@ useHead({
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSearchType } from '~/composables/useSearchType';
 // Use search type composable to check if Smart search is active
-const { isAiSearch } = useSearchType();
+const { isSmartSearch } = useSearchType();
 
 // Check if user is logged in
 const { userProfile } = useUserProfile();

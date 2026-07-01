@@ -32,7 +32,7 @@ export default defineEventHandler((event) => {
   // Search landing pages (one per platform × search type)
   const platforms = ['all', 'arena', 'mtgo', 'modern'];
   const searchTypes = [
-    'ai',
+    'smart',
     'similarity',
     'keyword',
     'commander',

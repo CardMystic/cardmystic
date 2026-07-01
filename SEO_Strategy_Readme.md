@@ -65,8 +65,8 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 - Homepage
 - Static pages (e.g. /about)
-- Search landing pages — one per platform × search type (e.g. /search/all/ai, /search/arena/keyword, /search/modern/similarity)
-- SEO slug pages (e.g. /search/all/similarity/sol-ring, /search/all/keyword/flying, /search/arena/ai/board-wipes)
+- Search landing pages — one per platform × search type (e.g. /search/all/smart, /search/arena/keyword, /search/modern/similarity)
+- SEO slug pages (e.g. /search/all/similarity/sol-ring, /search/all/keyword/flying, /search/arena/smart/board-wipes)
 - All card pages
 
 ### What's excluded
@@ -85,7 +85,7 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 - **Filesystem:** `pages/search/[platform]/{searchType}/[[slug]].vue`
 - **URL:** `/search/{platform}/{searchType}/{slug}`
-- The `[[slug]]` is an optional catch-all — the same page serves both the landing page (`/search/all/ai`) and SEO slug pages (`/search/all/ai/best-card-draw`)
+- The `[[slug]]` is an optional catch-all — the same page serves both the landing page (`/search/all/smart`) and SEO slug pages (`/search/all/smart/best-card-draw`)
 - 5 search type pages: `ai`, `similarity`, `commander`, `keyword`, `deckbuilder`
 
 ### How the routing works
@@ -93,7 +93,7 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 - All search pages live under `pages/search/[platform]/` with a subfolder per search type
 - The `[platform]` param is validated at runtime via `isValidPlatform()` from `utils/platformConfig.ts`
 - Valid platforms: `all`, `arena`, `mtgo`, `modern`, `paper`
-- Example: `pages/search/[platform]/ai/[[slug]].vue` → URL `/search/arena/ai/board-wipes`
+- Example: `pages/search/[platform]/smart/[[slug]].vue` → URL `/search/arena/smart/board-wipes`
 
 ### Configuration
 
@@ -117,10 +117,10 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 Example URLs:
 
-- `/search/all/ai/best-card-draw`
-- `/search/modern/ai/burn-spells`
-- `/search/mtgo/ai/best-legacy-cards`
-- `/search/arena/ai/black-removal`
+- `/search/all/smart/best-card-draw`
+- `/search/modern/smart/burn-spells`
+- `/search/mtgo/smart/best-legacy-cards`
+- `/search/arena/smart/black-removal`
 - `/search/all/commander/graveyard-recursion`
 - `/search/all/keyword/flying`
 - `/search/all/similarity/sol-ring`
@@ -147,7 +147,7 @@ Example URLs:
 
 ### How it works
 
-- When a user selects a platform filter (e.g. Arena) and submits a search, the route automatically updates to the correct platform (e.g. `/search/arena/ai`)
+- When a user selects a platform filter (e.g. Arena) and submits a search, the route automatically updates to the correct platform (e.g. `/search/arena/smart`)
 - Platform detection from filters is centralized in `utils/platformConfig.ts` via `detectPlatformFromFilters()`
 - Switching search types only preserves the platform if the saved filters for that search type explicitly contain a platform flag (e.g. `isArena: true`); otherwise the route defaults to `/search/all/...`
 - Search history rerun also detects platform from saved filters

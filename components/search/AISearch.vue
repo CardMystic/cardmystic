@@ -33,7 +33,11 @@
               size="sm"
               icon="i-lucide-circle-x"
               aria-label="Clear input"
-              @click="state.query = ''"
+              @click="
+                () => {
+                  state.query = '';
+                }
+              "
             />
           </template>
         </UInput>
@@ -62,7 +66,11 @@
       <UTooltip text="Filter results by colors, types, rarities, and more">
         <UButton
           class="cursor-pointer"
-          @click="showFilters = true"
+          @click="
+            () => {
+              showFilters = true;
+            }
+          "
           variant="ghost"
           size="sm"
           icon="i-lucide-sliders-horizontal"
@@ -206,7 +214,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     // Save to search history
     saveSearchMutation.mutate({
       query: event.data.query,
-      searchType: 'ai',
+      searchType: 'smart',
       filters: requestFilters,
     });
 
@@ -217,14 +225,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         requestFilters && Object.keys(requestFilters).length > 0
           ? JSON.stringify(requestFilters)
           : undefined,
-      searchType: 'ai',
+      searchType: 'smart',
     };
     filtersRef.value?.collapse();
     const targetPlatform = detectPlatformFromFilters(
       requestFilters,
       currentPlatform.value as Platform,
     );
-    router.push({ path: getPath('ai', targetPlatform), query });
+    router.push({ path: getPath('smart', targetPlatform), query });
   } catch (error) {
     console.error('Form submission error:', error);
     toast.add({
