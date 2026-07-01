@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   ssr: true,
   app: {
     head: {
-      title: 'CardMystic - AI Search Engine for Magic: The Gathering',
+      title: 'CardMystic - Smart Search Engine for Magic: The Gathering',
       htmlAttrs: {
         lang: 'en',
       },
@@ -24,7 +24,7 @@ export default defineNuxtConfig({
         {
           name: 'description',
           content:
-            'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
+            'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
         },
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

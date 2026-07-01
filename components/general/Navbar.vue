@@ -45,8 +45,8 @@ const searchItems: NavigationMenuItem[] = [
     icon: 'i-lucide-search',
     children: [
       {
-        label: 'AI Search',
-        description: 'Find cards by describing them using AI',
+        label: 'Smart Search',
+        description: 'Find cards by describing them using natural language',
         icon: 'i-lucide-brain',
         to: '/search/all/ai',
       },
@@ -58,7 +58,8 @@ const searchItems: NavigationMenuItem[] = [
       },
       {
         label: 'Commander Search',
-        description: 'Find commanders by describing them using AI',
+        description:
+          'Find commanders by describing them using natural language',
         icon: 'i-mdi-crown',
         to: '/search/all/commander',
       },
@@ -112,8 +113,8 @@ const trailingItems: NavigationMenuItem[] = [
 
 const mainItemsMobile: NavigationMenuItem[] = [
   {
-    label: 'AI Search',
-    description: 'Search for cards using AI',
+    label: 'Smart Search',
+    description: 'Search for cards using natural language',
     icon: 'i-lucide-brain',
     to: '/search/all/ai',
   },
@@ -125,7 +126,7 @@ const mainItemsMobile: NavigationMenuItem[] = [
   },
   {
     label: 'Commander Search',
-    description: 'Search for commanders using AI',
+    description: 'Search for commanders using natural language',
     icon: 'i-mdi-crown',
     to: '/search/all/commander',
   },

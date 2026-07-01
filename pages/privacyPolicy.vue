@@ -28,7 +28,7 @@
         <ul class="list-disc ml-6 mt-4">
           <li>
             <strong>Search queries:</strong> All search queries you submit are
-            tracked and stored for training purposes to improve our AI search
+            tracked and stored for training purposes to improve our search
             models
           </li>
           <li>
@@ -70,7 +70,7 @@
       <div class="mt-2 text-base">
         <p class="font-semibold">For search queries and feedback:</p>
         <ul class="list-disc ml-6 mt-4">
-          <li>Training and improving our AI search models</li>
+          <li>Training and improving our search models</li>
           <li>Refining search result relevance and quality</li>
           <li>Understanding user preferences and search patterns</li>
         </ul>

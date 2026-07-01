@@ -76,8 +76,7 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType =
-  platform === 'all' ? 'commander' : `${platform}-commander`;
+const aboutType: SearchAboutType = 'commander';
 
 const queryParam = computed(() => String(route.query?.query || ''));
 const displayQuery = computed(() => seoEntry?.query || queryParam.value);
@@ -99,8 +98,8 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : queryParam.value
-        ? `Find ${platformName} commanders matching "${queryParam.value}" using AI search.`
-        : `Search for ${platformName} commanders using AI-powered natural language search.`,
+        ? `Find ${platformName} commanders matching "${queryParam.value}" using smart search.`
+        : `Search for ${platformName} commanders using semantic natural language search.`,
   ogType: 'website',
   ogTitle: () =>
     seoEntry
@@ -109,7 +108,7 @@ useSeoMeta({
   ogDescription: () =>
     seoEntry
       ? seoEntry.description
-      : `AI-powered ${platformName} commander search on CardMystic.`,
+      : `Semantic ${platformName} commander search on CardMystic.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Commander Search`,
   twitterCard: 'summary_large_image',
@@ -120,7 +119,7 @@ useSeoMeta({
   twitterDescription: () =>
     seoEntry
       ? seoEntry.description
-      : `AI-powered ${platformName} commander search on CardMystic.`,
+      : `Semantic ${platformName} commander search on CardMystic.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 

@@ -64,7 +64,7 @@ function loadRandomExample() {
 }
 
 function tryQuery() {
-  // Navigate to the AI search page with the current example query.
+  // Navigate to the Smart search page with the current example query.
   // We can't use a `name` here — search routes are nested under
   // `/search/[platform]/[type]/[[slug]]` and don't have a single
   // stable name; use the path directly.

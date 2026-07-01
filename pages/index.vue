@@ -17,9 +17,9 @@
               fetchpriority="high"
             />
             <h1 class="subtitle text-white">
-              <b style="color: var(--ui-highlight)">CardMystic</b> Is An
-              <b style="color: var(--ui-highlight)">A.I. Search Engine</b> For
-              <b style="color: var(--ui-highlight)">MTG</b>
+              Build <b style="color: var(--ui-highlight)">Smarter Decks</b> With
+              <b style="color: var(--ui-highlight)">Tools Designed</b> For
+              <b style="color: var(--ui-highlight)">Magic</b>
             </h1>
           </div>
         </div>
@@ -91,8 +91,8 @@
             </h2>
             <p class="text-base md:text-lg leading-relaxed">
               Simply describe the cards you want in plain English, and let our
-              intelligent search engine do the rest. Still not sure? Try an
-              example query below!
+              semantic search engine do the rest. Still not sure? Try an example
+              query below!
             </p>
           </div>
         </div>
@@ -112,9 +112,9 @@
               How It Works
             </h2>
             <p class="text-base md:text-lg leading-relaxed">
-              Our A.I. experts meticulously train custom, state-of-the-art
-              models to understand the nuances of Magic including slang,
-              synergies, and game mechanics.
+              Our custom models use advanced machine learning techniques to
+              understand the nuances of Magic including slang, synergies, and
+              game mechanics.
             </p>
           </div>
         </div>
@@ -145,19 +145,19 @@ definePageMeta({
   layout: 'fullscreen',
 });
 useSeoMeta({
-  title: 'CardMystic - AI Search Engine for Magic: The Gathering',
+  title: 'CardMystic - Smart Search Engine for Magic: The Gathering',
   description:
-    'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
-  ogTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
+    'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
+  ogTitle: 'CardMystic - Smart Search Engine for Magic: The Gathering',
   ogDescription:
-    'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
+    'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
   ogType: 'website',
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
-  ogImageAlt: () => 'CardMystic - AI Search Engine for Magic: The Gathering',
+  ogImageAlt: () => 'CardMystic - Smart Search Engine for Magic: The Gathering',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'CardMystic - AI Search Engine for Magic: The Gathering',
+  twitterTitle: 'CardMystic - Smart Search Engine for Magic: The Gathering',
   twitterDescription:
-    'Search Magic: The Gathering cards using natural language AI. Find MTG cards by describing what you want in plain English.',
+    'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
 });
 
 useHead({
@@ -204,7 +204,7 @@ useHead({
 
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSearchType } from '~/composables/useSearchType';
-// Use search type composable to check if AI search is active
+// Use search type composable to check if Smart search is active
 const { isAiSearch } = useSearchType();
 
 // Check if user is logged in

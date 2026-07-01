@@ -245,7 +245,7 @@ const handleClearAll = async () => {
 
 const getSearchTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    ai: 'AI Search',
+    ai: 'Smart',
     similarity: 'Similarity',
     keyword: 'Keyword',
     commander: 'Commander',
@@ -256,7 +256,7 @@ const getSearchTypeLabel = (type: string) => {
 
 const getSearchTypeIcon = (type: string) => {
   const icons: Record<string, string> = {
-    ai: 'i-lucide-search',
+    ai: 'i-lucide-brain',
     similarity: 'i-mdi-cards-outline',
     keyword: 'i-lucide-whole-word',
     commander: 'i-mdi-crown',

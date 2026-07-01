@@ -76,7 +76,7 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType = platform === 'all' ? 'ai' : `${platform}-ai`;
+const aboutType: SearchAboutType = 'ai';
 
 // Query from URL params (landing page mode)
 const queryParam = computed(() => String(route.query?.query || ''));
@@ -93,38 +93,38 @@ useSeoMeta({
     seoEntry
       ? `${seoEntry.title} | CardMystic`
       : queryParam.value
-        ? `${queryParam.value} - ${platformName} AI Search | CardMystic`
-        : `${platformName} AI Search | CardMystic`,
+        ? `${queryParam.value} - ${platformName} Smart Search | CardMystic`
+        : `${platformName} Smart Search | CardMystic`,
   description: () =>
     seoEntry
       ? seoEntry.description
       : queryParam.value
-        ? `Find ${platformName} cards matching "${queryParam.value}" using AI search.`
-        : `Search for ${platformName} cards using AI-powered natural language search.`,
+        ? `Find ${platformName} cards matching "${queryParam.value}" using smart search.`
+        : `Search for ${platformName} cards using semantic natural language search.`,
   ogType: 'website',
   ogTitle: () =>
     seoEntry
       ? `${seoEntry.title} | CardMystic`
-      : `${platformName} AI Search | CardMystic`,
+      : `${platformName} Smart Search | CardMystic`,
   ogDescription: () =>
     seoEntry
       ? seoEntry.description
-      : `AI-powered ${platformName} card search on CardMystic.`,
+      : `Semantic ${platformName} card search on CardMystic.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
-  ogImageAlt: () => seoEntry?.title || `${platformName} AI Search`,
+  ogImageAlt: () => seoEntry?.title || `${platformName} Smart Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
     seoEntry
       ? `${seoEntry.title} | CardMystic`
-      : `${platformName} AI Search | CardMystic`,
+      : `${platformName} Smart Search | CardMystic`,
   twitterDescription: () =>
     seoEntry
       ? seoEntry.description
-      : `AI-powered ${platformName} card search on CardMystic.`,
+      : `Semantic ${platformName} card search on CardMystic.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 
-definePageMeta({ title: 'AI Search' });
+definePageMeta({ title: 'Smart Search' });
 
 const limitParam = computed(() => {
   const n = Number(route.query?.limit);
@@ -149,10 +149,10 @@ const parsedFilters = computed(() => {
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
-  page_name: `${platformName} AI Search: ${displayQuery.value}`,
+  page_name: `${platformName} Smart Search: ${displayQuery.value}`,
   query: displayQuery.value,
   filters: parsedFilters.value,
-  labels: [platform, 'AI search'],
+  labels: [platform, 'Smart search'],
 });
 
 function handleFabClick() {

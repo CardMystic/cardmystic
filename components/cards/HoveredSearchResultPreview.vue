@@ -70,7 +70,7 @@
         <div v-if="!hideProgressBar" class="preview-scores">
           <template v-if="hasDualScores">
             <div class="preview-score-row">
-              <span class="preview-score-label">AI</span>
+              <span class="preview-score-label">Smart</span>
               <UProgress
                 :model-value="normalizedScore"
                 class="flex-1"
@@ -97,7 +97,7 @@
           <template v-else-if="hasAnyScore">
             <div class="preview-score-row">
               <span class="preview-score-label">{{
-                isAlsOnly ? 'Deck' : 'AI'
+                isAlsOnly ? 'Deck' : 'Smart'
               }}</span>
               <UProgress
                 :model-value="normalizedScore"

@@ -78,8 +78,7 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType =
-  platform === 'all' ? 'keyword' : `${platform}-keyword`;
+const aboutType: SearchAboutType = 'keyword';
 
 const queryParam = computed(() => String(route.query?.query || ''));
 const displayQuery = computed(() => seoEntry?.query || queryParam.value);

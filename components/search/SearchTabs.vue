@@ -10,7 +10,7 @@
       @click="onTabClick('ai')"
     >
       <UIcon name="i-lucide-brain" class="icon" size="18" />
-      AI Search
+      Smart Search
     </button>
     <button
       type="button"
@@ -124,7 +124,7 @@ const searchIcon = computed(() => {
 });
 
 const items = ref<SelectItem[]>([
-  { label: 'AI Search', value: 'ai', icon: 'i-lucide-search' },
+  { label: 'Smart Search', value: 'ai', icon: 'i-lucide-search' },
   {
     label: 'Similarity Search',
     value: 'similarity',
