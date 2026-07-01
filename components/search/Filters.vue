@@ -283,16 +283,16 @@
                   class="w-full flex flex-wrap"
                 >
                   <template #label="{ item }">
-                    <ManaIcon
-                      :type="
-                        cardColorToSymbol(
-                          (item as { value: CardColorType }).value,
-                        )
-                      "
-                      class="mr-1"
-                    />
-                    <!-- Typescript gets confused with the CheckboxGroupItem type so we have to help it out a bit -->
-                    {{ (item as { value: string }).value }}
+                    <span class="ml-2">
+                      <ManaIcon
+                        :type="
+                          cardColorToSymbol(
+                            (item as { value: CardColorType }).value,
+                          )
+                        "
+                      />
+                      {{ (item as { value: CardColorType }).value }}
+                    </span>
                   </template>
                 </UCheckboxGroup>
               </div>
