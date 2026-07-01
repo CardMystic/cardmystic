@@ -17,6 +17,27 @@
     <div v-if="list" class="mb-2">
       <div class="flex flex-wrap items-center justify-between">
         <div class="flex gap-2 mb-2">
+          <UTooltip text="View the primer for this deck">
+            <UButton
+              :to="`/lists/${listId}/primer`"
+              icon="i-lucide-notebook-text"
+              color="info"
+              variant="solid"
+              class="cursor-pointer"
+              label="Primer"
+            />
+          </UTooltip>
+          <UTooltip text="Get personalized recommendations based on this deck">
+            <UButton
+              icon="i-lucide-box"
+              color="primary"
+              variant="solid"
+              label="Recommend"
+              @click="goToRecommend"
+              class="cursor-pointer h-8"
+              size="sm"
+            />
+          </UTooltip>
           <UTooltip text="Copy card names">
             <UButton
               icon="i-lucide-copy"
@@ -25,8 +46,9 @@
               @click="copyCardNames"
               :disabled="!cards || cards.length === 0"
               class="cursor-pointer"
-              label="Copy"
-            />
+            >
+              <span class="hidden md:inline">Copy</span>
+            </UButton>
           </UTooltip>
           <UTooltip text="Bulk edit cards">
             <UButton
@@ -36,63 +58,72 @@
               @click="isBulkEditModalOpen = true"
               class="cursor-pointer"
               label="Bulk Edit"
-            />
+              ><span class="hidden md:inline">Bulk Edit</span>
+            </UButton>
           </UTooltip>
-          <UButton
-            icon="i-heroicons-shopping-cart"
-            color="success"
-            variant="solid"
-            :label="`Buy ($${totalPrice.toFixed(2)})`"
-            @click="openMassEntry"
-            :disabled="!cards || cards.length === 0"
-            class="cursor-pointer"
-          />
+          <UTooltip text="Buy cards in bulk from TCGPlayer">
+            <UButton
+              icon="i-heroicons-shopping-cart"
+              color="success"
+              variant="solid"
+              @click="openMassEntry"
+              :disabled="!cards || cards.length === 0"
+              class="cursor-pointer"
+            >
+              <span class="hidden md:inline"
+                >Buy (${{ totalPrice.toFixed(2) }})</span
+              ></UButton
+            >
+          </UTooltip>
         </div>
-        <div>
-          <UInputMenu
-            v-model="selectedCardToAdd"
-            v-model:search-term="addCardSearchTerm"
-            :loading="addCardLoading || loading"
-            :disabled="loading"
-            :items="filteredAddCards"
-            placeholder="Search for a card to add..."
-            icon="i-lucide-plus"
-            class="flex-1 min-w-90 cursor-pointer"
-            @update:model-value="handleAddCard"
-          />
-        </div>
+        <!-- Desktop add cards input -->
+        <UInputMenu
+          v-model="selectedCardToAdd"
+          v-model:search-term="addCardSearchTerm"
+          :loading="addCardLoading || loading"
+          :disabled="loading"
+          :items="filteredAddCards"
+          placeholder="Add a card to the deck..."
+          icon="i-lucide-plus"
+          class="hidden lg:flex flex-1 min-w-70 max-w-70 cursor-pointer"
+          @update:model-value="handleAddCard"
+        />
       </div>
     </div>
 
-    <!-- Deck Recommender -->
-    <div v-if="list && cards && cards.length > 0" class="mb-2">
-      <div class="flex gap-2 items-center">
-        <UInput
-          v-model="recommendDescription"
-          placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
-          icon="i-lucide-box"
-          class="flex-1"
-          :ui="{ base: 'text-sm h-8' }"
-          size="sm"
-          @keydown.enter="goToRecommend"
-        />
+    <!-- Mobile add cards and display controls-->
+    <div class="lg:hidden flex flex-row justify-between">
+      <!-- Mobile add cards input -->
+      <UInputMenu
+        v-model="selectedCardToAdd"
+        v-model:search-term="addCardSearchTerm"
+        :loading="addCardLoading"
+        :items="filteredAddCards"
+        placeholder="Add a card to the deck..."
+        icon="i-lucide-plus"
+        class="flex-1 min-w-57 max-w-57 cursor-pointer"
+        @update:model-value="handleAddCard"
+      />
+      <!-- Mobile: display controls in a popover & add cards input -->
+      <UPopover class="lg:hidden">
         <UButton
-          icon="i-lucide-box"
-          color="primary"
-          variant="solid"
-          label="Recommend"
-          @click="goToRecommend"
-          class="cursor-pointer h-8"
-          size="sm"
+          icon="i-lucide-settings-2"
+          color="neutral"
+          variant="outline"
+          label="Display"
+          class="cursor-pointer"
         />
-      </div>
+        <template #content>
+          <div class="p-3 space-y-3">
+            <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
+            <Sort default-sort-by="cmc" @sort="handleSort" />
+          </div>
+        </template>
+      </UPopover>
     </div>
 
-    <!-- Group By + Sort (centered) -->
-    <div
-      v-if="list && cards && cards.length > 0"
-      class="mb-4 flex flex-wrap items-center justify-center gap-2"
-    >
+    <!-- Group By + Sort: inline on desktop -->
+    <div class="hidden lg:flex justify-end gap-2">
       <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
       <Sort default-sort-by="cmc" @sort="handleSort" />
     </div>
@@ -188,6 +219,7 @@ import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
 import { refDebounced } from '~/utils/refDebounced';
 import { groupAndSortCards } from '~/utils/sort';
+import type { Card } from '~/models/cardModel';
 
 const route = useRoute();
 const listId = route.params.id as string;
@@ -207,6 +239,8 @@ const {
   changeBoardMutation,
 } = useCardLists();
 
+const router = useRouter();
+const { saveSearchMutation } = useSearchHistory();
 const list = computed(() => userLists.value?.find((l: any) => l.id === listId));
 
 // Banner background image URL
@@ -580,23 +614,16 @@ const mainboardNames = computed(() => boardLines('Mainboard'));
 const sideboardNames = computed(() => boardLines('Sideboard'));
 const consideringNames = computed(() => boardLines('Considering'));
 
-// Recommend state
-const recommendDescription = ref('');
-const router = useRouter();
-const { saveSearchMutation } = useSearchHistory();
-
 function goToRecommend() {
   if (!cards.value || cards.value.length === 0) return;
-  const decklist = cards.value
-    .map((card: any) => card.card_data.name)
+  const decklist = boardCards('Mainboard')
+    .map((card: Card) => card.card_data.name)
+    .slice(0, 200)
     .join('\n');
   const query: Record<string, any> = {
     decklist,
     searchType: 'recommend',
   };
-  if (recommendDescription.value.trim()) {
-    query.description = recommendDescription.value.trim();
-  }
   const commanderNamesList = currentCommanderItems.value
     .map((item: any) => {
       const card = cards.value.find(
@@ -615,7 +642,7 @@ function goToRecommend() {
   router.push({ path: '/search/all/deckbuilder', query });
   queueMicrotask(() => {
     saveSearchMutation.mutate({
-      query: recommendDescription.value.trim() || '',
+      query: '',
       searchType: 'recommend',
       filters: {
         commander: commanderNamesList[0] || undefined,

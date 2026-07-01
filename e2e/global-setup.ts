@@ -11,7 +11,7 @@ dotenv.config({ path: '.env.test' });
  * Responsibilities:
  *
  *   1. Sign the shared E2E test user into Supabase via the real
- *      `/login` page and persist the resulting browser storage to
+ *      `/user/login` page and persist the resulting browser storage to
  *      `e2e/.auth/user.json`. Tests that need an authed session opt in
  *      via the `signedInPage` fixture, which loads this storage state
  *      into a fresh context — no per-test login round-trip.
@@ -49,7 +49,7 @@ export default async function globalSetup(config: FullConfig) {
   // ---------------------------------------------------------------------------
   // 1. Sign in via the real Supabase auth REST endpoint and seed
   //    storage manually. This is faster + less flaky than driving the
-  //    `/login` page in a headless browser, and storageState only
+  //    `/user/login` page in a headless browser, and storageState only
   //    needs the localStorage `sb-*` token entry to be valid.
   // ---------------------------------------------------------------------------
   const baseURL = config.projects[0]?.use?.baseURL ?? 'http://localhost:5173';

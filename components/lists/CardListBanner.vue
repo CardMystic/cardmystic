@@ -1,6 +1,6 @@
 <template>
   <!-- Banner Section -->
-  <div v-if="list" class="mb-6 relative group cursor-pointer">
+  <div v-if="list" class="mb-2 relative group cursor-pointer">
     <!-- Banner Image -->
     <div class="relative h-48 md:h-64 rounded-lg overflow-hidden">
       <div
@@ -104,7 +104,7 @@
   </div>
 
   <!-- Banner Skeleton -->
-  <div v-else class="mb-6">
+  <div v-else class="mb-2">
     <USkeleton class="h-48 md:h-64 rounded-lg" />
   </div>
 

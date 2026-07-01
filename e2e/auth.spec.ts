@@ -40,7 +40,7 @@ test.describe('Login page', () => {
   });
 
   test('renders Google + email options', async ({ page }) => {
-    await gotoHydrated(page, '/login');
+    await gotoHydrated(page, '/user/login');
 
     await expect(
       page.getByRole('heading', { name: /sign in to cardmystic/i }),
@@ -55,7 +55,7 @@ test.describe('Login page', () => {
   test('email login with wrong credentials surfaces the real backend error', async ({
     page,
   }) => {
-    await gotoHydrated(page, '/login');
+    await gotoHydrated(page, '/user/login');
     await reliableFill(
       page.getByPlaceholder('Email'),
       'definitely-not-a-real-user@cardmystic.test',
@@ -68,7 +68,7 @@ test.describe('Login page', () => {
     await expect(
       page.getByText(/invalid|incorrect|credentials|unauthorized|email/i),
     ).toBeVisible({ timeout: 15_000 });
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/user/login$/);
   });
 
   test('email login with valid credentials redirects home and shows logged-in navbar', async ({
@@ -76,7 +76,7 @@ test.describe('Login page', () => {
   }) => {
     requireTestUser();
 
-    await gotoHydrated(page, '/login');
+    await gotoHydrated(page, '/user/login');
     await reliableFill(page.getByPlaceholder('Email'), TEST_USER_EMAIL);
     await reliableFill(page.getByPlaceholder('Password'), TEST_USER_PASSWORD);
     await page.getByRole('button', { name: /^sign in$/i }).click();
@@ -104,7 +104,7 @@ test.describe('Google OAuth', () => {
       });
     });
 
-    await gotoHydrated(page, '/login');
+    await gotoHydrated(page, '/user/login');
     await page.getByRole('button', { name: /continue with google/i }).click();
 
     await expect
@@ -151,7 +151,7 @@ test.describe('Register page', () => {
   });
 
   test('renders Google + email options', async ({ page }) => {
-    await gotoHydrated(page, '/register');
+    await gotoHydrated(page, '/user/register');
 
     await expect(
       page.getByRole('heading', { name: /create your cardmystic account/i }),
@@ -173,7 +173,7 @@ test.describe('Register page', () => {
       route.fulfill({ status: 500, body: '' });
     });
 
-    await gotoHydrated(page, '/register');
+    await gotoHydrated(page, '/user/register');
     await reliableFill(page.getByPlaceholder('Email'), 'new@example.com');
     await reliableFill(
       page.getByPlaceholder('Password', { exact: true }),
@@ -196,7 +196,7 @@ test.describe('Register page', () => {
       route.fulfill({ status: 500, body: '' });
     });
 
-    await gotoHydrated(page, '/register');
+    await gotoHydrated(page, '/user/register');
     await reliableFill(page.getByPlaceholder('Email'), 'new@example.com');
     await reliableFill(
       page.getByPlaceholder('Password', { exact: true }),
@@ -234,7 +234,7 @@ test.describe('Logout', () => {
       route.fulfill({ status: 204, body: '' }),
     );
 
-    await gotoHydrated(page, '/login');
+    await gotoHydrated(page, '/user/login');
     await reliableFill(page.getByPlaceholder('Email'), TEST_USER_EMAIL);
     await reliableFill(page.getByPlaceholder('Password'), TEST_USER_PASSWORD);
     await page.getByRole('button', { name: /^sign in$/i }).click();

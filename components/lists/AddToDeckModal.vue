@@ -7,7 +7,9 @@
     <template #content>
       <div v-if="!isLoggedIn" class="p-4 space-y-3 text-center">
         <p class="text-lg">Login To Create Decks!</p>
-        <UButton to="/login" color="primary" variant="solid">Log In</UButton>
+        <UButton to="/user/login" color="primary" variant="solid"
+          >Log In</UButton
+        >
       </div>
 
       <div v-else class="p-4 space-y-4">
@@ -117,7 +119,7 @@
           :disabled="!selectedListId"
           @click="handleAddToDeck(false)"
         >
-          {{ hasDuplicates ? `Add All (${oracleIds.length})` : 'Add to Deck' }}
+          {{ hasDuplicates ? `Add All (${cardCount})` : 'Add to Deck' }}
         </UButton>
       </div>
     </template>

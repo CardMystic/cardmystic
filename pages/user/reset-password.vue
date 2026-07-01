@@ -62,7 +62,7 @@
             color="primary"
             size="sm"
             :padded="false"
-            @click="router.push('/login')"
+            @click="router.push('/user/login')"
           >
             Back to login
           </UButton>
@@ -200,7 +200,7 @@ const { validatePasswordPolicy } = useUserProfile();
 
 onMounted(() => {
   // Check for an error in the URL hash (e.g. expired link)
-  // Supabase redirects like: /reset-password#error=access_denied&error_code=otp_expired&error_description=...
+  // Supabase redirects like: /user/reset-password#error=access_denied&error_code=otp_expired&error_description=...
   const hash = window.location.hash;
   if (hash.includes('error=')) {
     const params = new URLSearchParams(hash.slice(1));
@@ -228,7 +228,7 @@ const sendResetEmail = async () => {
   loading.value = true;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-    redirectTo: `${window.location.origin}/reset-password`,
+    redirectTo: `${window.location.origin}/user/reset-password`,
   });
 
   loading.value = false;
@@ -268,7 +268,7 @@ const submitNewPassword = async () => {
     } else {
       await supabase.auth.signOut();
       successMessage.value = 'Password updated! Redirecting to login…';
-      router.push('/login');
+      router.push('/user/login');
     }
   } catch (error) {
     errorMessage.value = 'An unexpected error occurred.';
