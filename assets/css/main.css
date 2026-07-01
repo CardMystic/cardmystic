@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+/* mana-font ships generic `.ms-N` selectors (e.g. `.ms-2::before { content: "\eXXX" }`)
+   that collide with Tailwind v4's margin-inline-start utilities (`ms-0`..`ms-20`).
+   Without this override, Tailwind elements using `ms-N` margins get an injected
+   Private Use Area pseudo-glyph (e.g. tofu "E607") because `font-family: Mana`
+   is only applied on the base `.ms` class. */
+:not(.ms)[class^='ms-']::before,
+:not(.ms)[class*=' ms-']::before {
+  content: none;
+}
+
 .grecaptcha-badge {
   visibility: hidden;
 }
