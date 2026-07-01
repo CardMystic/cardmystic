@@ -114,7 +114,7 @@ function onTabClick(type: SearchTabType) {
 
 const searchIcon = computed(() => {
   const iconMap: Record<string, string> = {
-    ai: 'i-lucide-search',
+    smart: 'i-lucide-brain',
     similarity: 'i-mdi-cards-outline',
     commander: 'i-mdi-crown',
     keyword: 'i-lucide-whole-word',
@@ -124,7 +124,7 @@ const searchIcon = computed(() => {
 });
 
 const items = ref<SelectItem[]>([
-  { label: 'Smart Search', value: 'smart', icon: 'i-lucide-search' },
+  { label: 'Smart Search', value: 'smart', icon: 'i-lucide-brain' },
   {
     label: 'Similarity Search',
     value: 'similarity',
