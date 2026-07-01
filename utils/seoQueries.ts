@@ -1,6 +1,6 @@
 import type { CardSearchFilters } from '~/models/searchModel';
 
-export type SeoSearchType = 'ai' | 'similarity' | 'keyword';
+export type SeoSearchType = 'smart' | 'similarity' | 'keyword';
 
 export interface SeoQuery {
   slug: string;
@@ -1013,7 +1013,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'graveyard-recursion',
     query: 'graveyard recursion commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Graveyard Recursion Commanders',
     description:
@@ -1022,7 +1022,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'token-generation',
     query: 'token generation commander that creates lots of creature tokens',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Token Generation Commanders',
     description:
@@ -1031,7 +1031,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'artifact-combo',
     query: 'artifact combo commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Artifact Combo Commanders',
     description:
@@ -1040,7 +1040,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'lifegain',
     query: 'lifegain commander that rewards gaining life',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Lifegain Commanders',
     description:
@@ -1049,7 +1049,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'tribal',
     query: 'tribal commander that cares about creature types',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Tribal Commanders',
     description:
@@ -1058,7 +1058,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'voltron',
     query: 'voltron commander that benefits from equipment and auras',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Voltron Commanders',
     description:
@@ -1067,7 +1067,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'spellslinger',
     query: 'spellslinger commander that rewards casting instants and sorceries',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Spellslinger Commanders',
     description:
@@ -1076,7 +1076,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'group-hug',
     query: 'group hug commander that gives benefits to all players',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Group Hug Commanders',
     description:
@@ -1085,7 +1085,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'stax',
     query: 'stax commander that slows down opponents and restricts resources',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Stax Commanders',
     description:
@@ -1094,7 +1094,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'ramp',
     query: 'ramp commander that accelerates mana production in green',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Ramp Commanders',
     description:
@@ -1103,7 +1103,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'mill',
     query: 'mill commander that mills opponents libraries',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Mill Commanders',
     description:
@@ -1112,7 +1112,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'sacrifice',
     query: 'sacrifice aristocrats commander that benefits from creatures dying',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Sacrifice / Aristocrats Commanders',
     description:
@@ -1121,7 +1121,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'landfall',
     query: 'landfall commander that rewards playing lands',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Landfall Commanders',
     description:
@@ -1130,7 +1130,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'enchantress',
     query: 'enchantress commander that benefits from casting enchantments',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Enchantress Commanders',
     description:
@@ -1139,7 +1139,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'superfriends',
     query: 'superfriends commander that supports planeswalkers',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Superfriends / Planeswalker Commanders',
     description:
@@ -1148,7 +1148,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'reanimator',
     query: 'reanimator commander that brings creatures back from the graveyard',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Reanimator Commanders',
     description:
@@ -1157,7 +1157,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'treasure',
     query: 'treasure token commander that creates and benefits from treasure',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Treasure Commanders',
     description:
@@ -1166,7 +1166,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'blink-flicker',
     query: 'blink flicker commander that exiles and returns creatures',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Blink / Flicker Commanders',
     description:
@@ -1175,7 +1175,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'dragons',
     query: 'dragon tribal commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Dragon Tribal Commanders',
     description:
@@ -1184,7 +1184,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'elves',
     query: 'elf tribal commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Elf Tribal Commanders',
     description:
@@ -1193,7 +1193,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'zombies',
     query: 'zombie tribal commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Zombie Tribal Commanders',
     description:
@@ -1202,7 +1202,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'vampires',
     query: 'vampire tribal commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Vampire Tribal Commanders',
     description:
@@ -1211,7 +1211,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'angels',
     query: 'angel tribal commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Angel Tribal Commanders',
     description:
@@ -1220,7 +1220,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'wizards',
     query: 'wizard tribal commander that cares about wizards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Wizard Tribal Commanders',
     description:
@@ -1229,7 +1229,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'counters',
     query: '+1/+1 counter commander that grows creatures with counters',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: '+1/+1 Counter Commanders',
     description:
@@ -1238,7 +1238,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'wheels',
     query: 'wheel commander that makes all players discard and draw',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Wheel Commanders',
     description:
@@ -1247,7 +1247,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'infect',
     query: 'infect poison counter commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Infect / Poison Commanders',
     description:
@@ -1256,7 +1256,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'chaos',
     query: 'chaos commander that creates random and unpredictable effects',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Chaos Commanders',
     description:
@@ -1265,7 +1265,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'clone-copy',
     query: 'clone copy commander that copies creatures and spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Clone / Copy Commanders',
     description:
@@ -1274,7 +1274,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'equipment-aura',
     query: 'equipment and aura commander for voltron strategy',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Equipment & Aura Commanders',
     description:
@@ -1283,7 +1283,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'politics',
     query: 'political commander that makes deals and manipulates opponents',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Political Commanders',
     description:
@@ -1292,7 +1292,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'storm',
     query: 'storm commander that rewards casting many spells in a turn',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Storm Commanders',
     description:
@@ -1301,7 +1301,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'control',
     query: 'control commander with counterspells and removal',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Control Commanders',
     description:
@@ -1310,7 +1310,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'energy',
     query: 'energy counter commander',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Energy Commanders',
     description:
@@ -1319,7 +1319,7 @@ export const commanderQueries: SeoQuery[] = [
   {
     slug: 'cascade',
     query: 'cascade commander that casts free spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isCommander: true },
     title: 'Cascade Commanders',
     description:
@@ -1332,7 +1332,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'black-removal',
     query: 'black removal spells that destroy or exile creatures',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isArena: true,
       selectedColors: ['Black'],
@@ -1345,7 +1345,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'blue-card-draw',
     query: 'blue card draw spells that draw multiple cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isArena: true,
       selectedColors: ['Blue'],
@@ -1358,7 +1358,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'token-generators',
     query: 'cards that create creature tokens',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Token Generators',
     description:
@@ -1367,7 +1367,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'white-removal',
     query: 'white removal spells that exile or destroy',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isArena: true,
       selectedColors: ['White'],
@@ -1380,7 +1380,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'red-aggro',
     query: 'aggressive red creatures with haste or that deal damage',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isArena: true,
       selectedColors: ['Red'],
@@ -1393,7 +1393,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'green-ramp',
     query: 'green ramp spells and mana acceleration',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isArena: true,
       selectedColors: ['Green'],
@@ -1406,7 +1406,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'board-wipes',
     query: 'board wipes that destroy all creatures',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Board Wipes',
     description:
@@ -1415,7 +1415,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'counterspells',
     query: 'counterspells and counter magic instants',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Counterspells',
     description:
@@ -1424,7 +1424,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'planeswalkers',
     query: 'powerful planeswalkers',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true, selectedCardTypes: ['Planeswalker'] },
     title: 'MTG Arena Planeswalkers',
     description:
@@ -1433,7 +1433,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'dual-lands',
     query: 'lands that produce two or more colors of mana',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Dual Lands & Mana Fixing',
     description:
@@ -1442,7 +1442,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'lifegain',
     query: 'cards that gain life and payoffs for gaining life',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Lifegain Cards',
     description:
@@ -1452,7 +1452,7 @@ export const arenaQueries: SeoQuery[] = [
     slug: 'graveyard-synergy',
     query:
       'cards that interact with the graveyard or benefit from cards in graveyard',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Graveyard Synergy Cards',
     description:
@@ -1461,7 +1461,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'enchantments',
     query: 'powerful enchantments and enchantment synergies',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true, selectedCardTypes: ['Enchantment'] },
     title: 'MTG Arena Best Enchantments',
     description:
@@ -1470,7 +1470,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'artifacts',
     query: 'best artifact cards and artifact synergies',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true, selectedCardTypes: ['Artifact'] },
     title: 'MTG Arena Best Artifacts',
     description:
@@ -1479,7 +1479,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'multicolor-bombs',
     query: 'powerful multicolor gold cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Multicolor Bombs',
     description:
@@ -1488,7 +1488,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'flash-creatures',
     query: 'creatures with flash that you can cast at instant speed',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Flash Creatures',
     description:
@@ -1497,7 +1497,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'mana-fixing',
     query: 'mana fixing cards and color fixing',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Mana Fixing',
     description:
@@ -1506,7 +1506,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'combat-tricks',
     query: 'combat tricks and instant speed pump spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Combat Tricks',
     description:
@@ -1515,7 +1515,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'enchantment-removal',
     query: 'cards that destroy or exile enchantments',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Enchantment Removal',
     description:
@@ -1524,7 +1524,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'flyers',
     query: 'best flying creatures and cards with flying',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Best Flyers',
     description:
@@ -1533,7 +1533,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'deathtouch-creatures',
     query: 'creatures with deathtouch',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Deathtouch Creatures',
     description:
@@ -1542,7 +1542,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'treasure-ramp',
     query: 'cards that create treasure tokens for mana ramp',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Treasure Ramp',
     description:
@@ -1551,7 +1551,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'card-advantage',
     query: 'cards that generate card advantage and draw extra cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Card Advantage Engines',
     description:
@@ -1560,7 +1560,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'reanimation',
     query: 'cards that bring creatures back from the graveyard',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Reanimation Spells',
     description:
@@ -1569,7 +1569,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'sacrifice-synergy',
     query: 'sacrifice synergy cards and aristocrats payoffs',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Sacrifice Synergy',
     description:
@@ -1578,7 +1578,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'landfall-cards',
     query: 'landfall triggers and land enter effects',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Landfall Cards',
     description:
@@ -1587,7 +1587,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'mill-cards',
     query: 'mill cards that put cards from library into graveyard',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Mill Cards',
     description:
@@ -1596,7 +1596,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'hexproof-creatures',
     query: 'creatures with hexproof that cannot be targeted',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Hexproof Creatures',
     description:
@@ -1605,7 +1605,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'haste-creatures',
     query: 'aggressive creatures with haste',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Haste Creatures',
     description:
@@ -1614,7 +1614,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'protection-spells',
     query: 'protection spells that give hexproof or indestructible',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Protection Spells',
     description:
@@ -1623,7 +1623,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'energy-cards',
     query: 'energy counter cards and energy payoffs',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Energy Cards',
     description:
@@ -1632,7 +1632,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'sagas',
     query: 'powerful saga enchantments',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Best Sagas',
     description:
@@ -1641,7 +1641,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'tribal-lords',
     query: 'tribal lords and creature type payoffs',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Tribal Lords',
     description:
@@ -1650,7 +1650,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'cheap-creatures',
     query: 'efficient low mana cost creatures one and two drops',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Best Cheap Creatures',
     description:
@@ -1659,7 +1659,7 @@ export const arenaQueries: SeoQuery[] = [
   {
     slug: 'finishers',
     query: 'game ending finisher creatures and spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isArena: true },
     title: 'MTG Arena Best Finishers',
     description:
@@ -1672,7 +1672,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'best-legacy-cards',
     query: 'best legacy staples and format all-stars',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isMTGO: true,
       selectedCardFormats: [{ format: 'Legacy', status: 'Legal' }],
@@ -1684,7 +1684,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'best-vintage-cards',
     query: 'best vintage restricted and power cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isMTGO: true,
       selectedCardFormats: [{ format: 'Vintage', status: 'Legal' }],
@@ -1696,7 +1696,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'best-pauper-cards',
     query: 'best pauper staples and common cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isMTGO: true,
       selectedCardFormats: [{ format: 'Pauper', status: 'Legal' }],
@@ -1708,7 +1708,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'black-removal',
     query: 'black removal spells that destroy or exile creatures',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isMTGO: true,
       selectedColors: ['Black'],
@@ -1721,7 +1721,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'blue-card-draw',
     query: 'blue card draw spells that draw multiple cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isMTGO: true,
       selectedColors: ['Blue'],
@@ -1734,7 +1734,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'combo-pieces',
     query: 'combo pieces and infinite combo enablers',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Combo Pieces',
     description:
@@ -1743,7 +1743,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'board-wipes',
     query: 'board wipes and mass removal spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Board Wipes',
     description:
@@ -1752,7 +1752,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'counterspells',
     query: 'counterspells and counter magic instants',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Counterspells',
     description:
@@ -1761,7 +1761,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'mana-acceleration',
     query: 'fast mana and mana acceleration artifacts and spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Fast Mana & Acceleration',
     description:
@@ -1770,7 +1770,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'graveyard-strategies',
     query: 'graveyard strategies reanimation and recursion',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Graveyard Strategies',
     description:
@@ -1779,7 +1779,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'land-destruction',
     query: 'land destruction and mana denial cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Land Destruction Cards',
     description:
@@ -1788,7 +1788,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'dual-lands',
     query: 'dual lands and best mana fixing lands',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Dual Lands & Mana Fixing',
     description:
@@ -1797,7 +1797,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'planeswalkers',
     query: 'best planeswalkers for competitive play',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true, selectedCardTypes: ['Planeswalker'] },
     title: 'MTGO Best Planeswalkers',
     description:
@@ -1806,7 +1806,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'storm-cards',
     query: 'storm cards and cards that reward casting many spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Storm Cards',
     description:
@@ -1815,7 +1815,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'delver-cards',
     query: 'tempo creatures and cheap threats like delver of secrets',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Tempo Threats',
     description:
@@ -1824,7 +1824,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'cantrips',
     query: 'cantrips that draw cards and filter',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Best Cantrips',
     description:
@@ -1833,7 +1833,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'removal-spells',
     query: 'best removal spells across all colors',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Best Removal Spells',
     description:
@@ -1842,7 +1842,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'discard-spells',
     query: 'hand disruption and discard spells',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Hand Disruption',
     description:
@@ -1851,7 +1851,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'artifact-hate',
     query: 'artifact destruction and artifact hate cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Artifact Hate',
     description:
@@ -1860,7 +1860,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'enchantment-hate',
     query: 'enchantment removal and enchantment hate cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Enchantment Hate',
     description:
@@ -1869,7 +1869,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'prison-effects',
     query: 'prison and lock pieces that prevent opponents from playing',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Prison Effects',
     description:
@@ -1878,7 +1878,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'dredge-cards',
     query: 'dredge cards and self-mill enablers',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Dredge Cards',
     description:
@@ -1887,7 +1887,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'equipment',
     query: 'best equipment cards for competitive play',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Best Equipment',
     description:
@@ -1896,7 +1896,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'tutor-effects',
     query: 'tutor effects and library search cards',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Best Tutors',
     description:
@@ -1905,7 +1905,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'free-spells',
     query: 'free spells that cost zero mana or have alternate costs',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Free Spells',
     description:
@@ -1914,7 +1914,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'creature-lands',
     query: 'creature lands and manlands that become creatures',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Creature Lands',
     description:
@@ -1923,7 +1923,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'burn-spells',
     query: 'burn spells and direct damage',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       isMTGO: true,
       selectedColors: ['Red'],
@@ -1936,7 +1936,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'hatebears',
     query: 'hatebear creatures that disrupt opponents strategies',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Hatebears',
     description:
@@ -1945,7 +1945,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'protection-creatures',
     query: 'creatures with protection from colors or types',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Protection Creatures',
     description:
@@ -1954,7 +1954,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'reanimation-targets',
     query: 'best reanimation targets and big creatures to cheat into play',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Reanimation Targets',
     description:
@@ -1963,7 +1963,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'card-selection',
     query: 'card selection and library manipulation effects',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Card Selection',
     description:
@@ -1972,7 +1972,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'tribal-staples',
     query: 'tribal lords and creature type synergies',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Tribal Staples',
     description:
@@ -1981,7 +1981,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'tokens-strategies',
     query: 'token generation cards and token strategies',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Token Strategies',
     description:
@@ -1990,7 +1990,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'infect-cards',
     query: 'infect creatures and poison counter strategies',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Infect Cards',
     description:
@@ -1999,7 +1999,7 @@ export const mtgoQueries: SeoQuery[] = [
   {
     slug: 'cascade-cards',
     query: 'cascade spells and free spell effects',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { isMTGO: true },
     title: 'MTGO Cascade Cards',
     description:
@@ -2012,7 +2012,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'best-creatures',
     query: 'best creatures in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2023,7 +2023,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'best-removal',
     query: 'best removal spells in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2034,7 +2034,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'best-counterspells',
     query: 'best counterspells in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2045,7 +2045,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'burn-spells',
     query: 'best burn spells and direct damage in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Red'],
@@ -2058,7 +2058,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'sideboard-cards',
     query: 'best sideboard hate cards in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2069,7 +2069,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'mana-base',
     query: 'best lands and mana fixing for modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2080,7 +2080,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'combo-pieces',
     query: 'combo pieces and combo enablers in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2091,7 +2091,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'card-draw',
     query: 'best card draw and card advantage spells in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2102,7 +2102,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'graveyard-hate',
     query: 'graveyard hate and graveyard removal in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2113,7 +2113,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'planeswalkers',
     query: 'best planeswalkers in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedCardTypes: ['Planeswalker'],
@@ -2125,7 +2125,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'artifact-strategies',
     query: 'best artifact synergy cards in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2136,7 +2136,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'tokens-and-go-wide',
     query: 'token generation and go wide strategies in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2147,7 +2147,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'one-mana-spells',
     query: 'best one mana spells in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2158,7 +2158,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'enchantments',
     query: 'best enchantments in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2169,7 +2169,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'discard-spells',
     query: 'hand disruption and discard spells in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Black'],
@@ -2182,7 +2182,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'cantrips',
     query: 'best cantrips and card selection in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2193,7 +2193,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'tribal-cards',
     query: 'best tribal synergy cards and lords in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2204,7 +2204,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'energy-cards',
     query: 'energy counter cards and energy payoffs in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2215,7 +2215,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'flash-creatures',
     query: 'creatures with flash in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2226,7 +2226,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'protection-spells',
     query: 'protection spells and hexproof effects in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2237,7 +2237,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'reanimation',
     query: 'reanimation and graveyard to battlefield effects in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2248,7 +2248,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'mill-cards',
     query: 'mill cards and library depletion in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2259,7 +2259,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'lifegain-cards',
     query: 'lifegain cards and life gain payoffs in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2270,7 +2270,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'sacrifice-synergy',
     query: 'sacrifice synergy and aristocrats cards in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2281,7 +2281,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'multicolor-lands',
     query: 'best multicolor lands and mana fixers in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2292,7 +2292,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'green-creatures',
     query: 'best green creatures in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Green'],
@@ -2305,7 +2305,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'white-creatures',
     query: 'best white creatures in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['White'],
@@ -2318,7 +2318,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'blue-instants',
     query: 'best blue instant spells in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Blue'],
@@ -2331,7 +2331,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'black-creatures',
     query: 'best black creatures in modern format',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
       selectedColors: ['Black'],
@@ -2344,7 +2344,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'equipment',
     query: 'best equipment cards in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2355,7 +2355,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'colorless-cards',
     query: 'best colorless and artifact cards in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2366,7 +2366,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'ramp-spells',
     query: 'best ramp and mana acceleration in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2377,7 +2377,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'saga-cards',
     query: 'best saga enchantments in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2388,7 +2388,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'hatebears',
     query: 'best hatebear creatures in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2399,7 +2399,7 @@ export const modernQueries: SeoQuery[] = [
   {
     slug: 'cascade-cards',
     query: 'cascade spells and free cast effects in modern',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: {
       selectedCardFormats: [{ format: 'Modern', status: 'Legal' }],
     },
@@ -2409,12 +2409,12 @@ export const modernQueries: SeoQuery[] = [
   },
 ];
 
-// ─── AI Searches (generic) ───────────────────────────────────────
+// ─── smart Searches (generic) ───────────────────────────────────────
 export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-card-draw',
     query: 'best card draw spells in magic',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Card Draw Spells',
     description:
       'Find the best card draw spells in Magic: The Gathering. Discover powerful draw engines, cantrips, and card advantage across all colors.',
@@ -2422,7 +2422,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-removal',
     query: 'best creature removal spells in magic the gathering',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Removal Spells',
     description:
       'Find the best removal spells in Magic: The Gathering. Discover efficient creature removal, exile effects, and board wipes across all colors.',
@@ -2430,7 +2430,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-mana-rocks',
     query: 'best mana rocks and artifact ramp',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Mana Rocks',
     description:
       'Find the best mana rocks in Magic: The Gathering. Discover artifact ramp, mana acceleration, and cost-efficient rocks.',
@@ -2438,7 +2438,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-board-wipes',
     query: 'best board wipes and mass removal spells',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Board Wipes',
     description:
       'Find the best board wipes in Magic: The Gathering. Discover mass removal spells, destroy all effects, and sweepers.',
@@ -2446,7 +2446,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-counterspells',
     query: 'best counterspells and counter magic',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Counterspells',
     description:
       'Find the best counterspells in Magic: The Gathering. Discover efficient counter magic for control decks across all formats.',
@@ -2454,7 +2454,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-tutor-effects',
     query: 'best tutor effects that search your library',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Tutor Effects',
     description:
       'Find the best tutor effects in Magic: The Gathering. Discover cards that search your library across all colors.',
@@ -2462,7 +2462,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-graveyard-hate',
     query: 'best graveyard hate and graveyard removal',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Graveyard Hate',
     description:
       'Find the best graveyard hate in Magic: The Gathering. Discover exile effects, graveyard removal, and anti-recursion cards.',
@@ -2470,7 +2470,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-ramp-spells',
     query: 'best ramp spells and mana acceleration in green',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Ramp Spells',
     description:
       'Find the best ramp spells in Magic: The Gathering. Discover land search, mana dorks, and green mana acceleration.',
@@ -2478,7 +2478,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-planeswalkers',
     query: 'most powerful planeswalkers',
-    searchType: 'ai',
+    searchType: 'smart',
     filters: { selectedCardTypes: ['Planeswalker'] },
     title: 'Best MTG Planeswalkers',
     description:
@@ -2487,7 +2487,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-land-cards',
     query: 'best utility lands and lands with powerful abilities',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Utility Lands',
     description:
       'Find the best utility lands in Magic: The Gathering. Discover lands with powerful abilities beyond just mana production.',
@@ -2495,7 +2495,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-equipment',
     query: 'best equipment cards for creatures',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Equipment Cards',
     description:
       'Find the best equipment in Magic: The Gathering. Discover powerful artifacts that attach to and boost your creatures.',
@@ -2503,7 +2503,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-enchantments',
     query: 'most powerful enchantments in magic',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Enchantments',
     description:
       'Find the best enchantments in Magic: The Gathering. Discover powerful enchantments across all colors for any format.',
@@ -2511,7 +2511,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-commanders',
     query: 'best commanders and legendary creatures for edh',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Commanders',
     description:
       'Find the best commanders in Magic: The Gathering. Discover the most popular and powerful legendary creatures for EDH.',
@@ -2519,7 +2519,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-creatures',
     query: 'most powerful creatures in magic the gathering',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Creatures',
     description:
       'Find the best creatures in Magic: The Gathering. Discover the most powerful and efficient creatures across all formats.',
@@ -2527,7 +2527,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-instants',
     query: 'best instant spells in magic the gathering',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Instants',
     description:
       'Find the best instants in Magic: The Gathering. Discover powerful instant-speed spells for any deck or format.',
@@ -2535,7 +2535,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-sorceries',
     query: 'best sorcery spells in magic the gathering',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Sorceries',
     description:
       'Find the best sorceries in Magic: The Gathering. Discover game-changing sorcery spells across all colors.',
@@ -2543,7 +2543,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-artifacts',
     query: 'most powerful artifacts in magic',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Artifacts',
     description:
       'Find the best artifacts in Magic: The Gathering. Discover colorless powerhouses, mana rocks, and artifact synergies.',
@@ -2551,7 +2551,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-sagas',
     query: 'best saga enchantments in magic the gathering',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Sagas',
     description:
       'Find the best saga enchantments in Magic: The Gathering. Discover multi-chapter enchantments with cumulative value.',
@@ -2559,7 +2559,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-tribal-cards',
     query: 'best tribal synergy cards and tribal lords',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Tribal Cards',
     description:
       'Find the best tribal cards in Magic: The Gathering. Discover creature type lords, tribal synergies, and anthem effects.',
@@ -2567,7 +2567,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-reanimation',
     query: 'best reanimation spells that bring creatures back from the dead',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Reanimation Spells',
     description:
       'Find the best reanimation spells in Magic: The Gathering. Discover graveyard-to-battlefield effects across all colors.',
@@ -2575,7 +2575,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-token-generators',
     query: 'best token generating cards and token payoffs',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Token Generators',
     description:
       'Find the best token generators in Magic: The Gathering. Discover cards that create creature tokens and token synergies.',
@@ -2583,7 +2583,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-combo-pieces',
     query: 'best combo pieces and infinite combo enablers',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Combo Pieces',
     description:
       'Find the best combo pieces in Magic: The Gathering. Discover infinite combos, two-card combos, and synergy engines.',
@@ -2591,7 +2591,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-discard',
     query: 'best discard and hand disruption spells',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Discard Spells',
     description:
       'Find the best discard spells in Magic: The Gathering. Discover targeted discard, hand disruption, and information warfare.',
@@ -2599,7 +2599,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-protection',
     query: 'best protection spells that grant hexproof or indestructible',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Protection Spells',
     description:
       'Find the best protection spells in Magic. Discover ways to shield your permanents from removal and board wipes.',
@@ -2607,7 +2607,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-sacrifice-outlets',
     query: 'best sacrifice outlets and aristocrats payoffs',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Sacrifice Outlets',
     description:
       'Find the best sacrifice outlets in Magic: The Gathering. Discover aristocrats synergies, death triggers, and sac payoffs.',
@@ -2615,7 +2615,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-stax-cards',
     query: 'best stax and resource denial cards',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Stax Cards',
     description:
       'Find the best stax cards in Magic: The Gathering. Discover resource denial, tax effects, and lock pieces.',
@@ -2623,7 +2623,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-cantrips',
     query: 'best cantrips and cheap card draw spells',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Cantrips',
     description:
       'Find the best cantrips in Magic: The Gathering. Discover efficient one-mana card draw, scry, and card selection.',
@@ -2631,7 +2631,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-treasure-cards',
     query: 'best treasure token generators and treasure synergy',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Treasure Cards',
     description:
       'Find the best treasure cards in Magic: The Gathering. Discover treasure generators and powerful treasure synergies.',
@@ -2639,7 +2639,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-energy-cards',
     query: 'best energy counter cards and energy payoffs',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Energy Cards',
     description:
       'Find the best energy cards in Magic: The Gathering. Discover energy generators and powerful energy synergies.',
@@ -2647,7 +2647,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-lifegain-cards',
     query: 'best lifegain cards and life gain payoffs',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Lifegain Cards',
     description:
       'Find the best lifegain cards in Magic: The Gathering. Discover life gain synergies, soul sisters, and life payoffs.',
@@ -2655,7 +2655,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-voltron-cards',
     query: 'best voltron cards equipment and auras for commander damage',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Voltron Cards',
     description:
       'Find the best voltron cards in Magic: The Gathering. Discover equipment, auras, and buff effects for one-shot strategies.',
@@ -2663,7 +2663,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-proliferate-cards',
     query: 'best proliferate cards and counter synergies',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Proliferate Cards',
     description:
       'Find the best proliferate cards in Magic: The Gathering. Discover counter multipliers and proliferate synergies.',
@@ -2671,7 +2671,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-modal-spells',
     query: 'best modal and versatile spells with multiple modes',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Modal Spells',
     description:
       'Find the best modal spells in Magic: The Gathering. Discover versatile cards with multiple options and flexibility.',
@@ -2679,7 +2679,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-eldrazi',
     query: 'best Eldrazi creatures and Eldrazi support cards',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Eldrazi Cards',
     description:
       'Find the best Eldrazi in Magic: The Gathering. Discover massive colorless titans, annihilator threats, and Eldrazi support.',
@@ -2687,7 +2687,7 @@ export const aiQueries: SeoQuery[] = [
   {
     slug: 'best-dragons',
     query: 'best dragon creatures in magic the gathering',
-    searchType: 'ai',
+    searchType: 'smart',
     title: 'Best MTG Dragons',
     description:
       'Find the best dragons in Magic: The Gathering. Discover powerful dragon creatures across all colors.',
@@ -2712,21 +2712,21 @@ export const aiMap = buildMap(aiQueries);
 
 import type { Platform } from '~/utils/platformConfig';
 
-type SearchType = 'ai' | 'similarity' | 'keyword' | 'commander';
+type SearchType = 'smart' | 'similarity' | 'keyword' | 'commander';
 
 /**
  * Mapping from (platform, searchType) to the corresponding query array / map.
- * Arena, MTGO, Modern slug pages are all AI search type.
+ * Arena, MTGO, Modern slug pages are all smart search type.
  * Generic slug pages map to platform "all".
  */
 const seoRegistry: Record<
   string,
   { queries: SeoQuery[]; map: Map<string, SeoQuery> }
 > = {
-  'arena:ai': { queries: arenaQueries, map: arenaMap },
-  'mtgo:ai': { queries: mtgoQueries, map: mtgoMap },
-  'modern:ai': { queries: modernQueries, map: modernMap },
-  'all:ai': { queries: aiQueries, map: aiMap },
+  'arena:smart': { queries: arenaQueries, map: arenaMap },
+  'mtgo:smart': { queries: mtgoQueries, map: mtgoMap },
+  'modern:smart': { queries: modernQueries, map: modernMap },
+  'all:smart': { queries: aiQueries, map: aiMap },
   'all:keyword': { queries: keywordQueries, map: keywordMap },
   'all:commander': { queries: commanderQueries, map: commanderMap },
   'all:similarity': { queries: similarQueries, map: similarMap },

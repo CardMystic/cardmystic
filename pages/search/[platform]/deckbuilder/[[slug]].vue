@@ -111,8 +111,7 @@ if (!isValidPlatform(platform)) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType =
-  platform === 'all' ? 'recommend' : `${platform}-recommend`;
+const aboutType: SearchAboutType = 'recommend';
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
@@ -151,7 +150,7 @@ useSeoMeta({
   description: () =>
     firstCommanderName.value
       ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
-      : `Build your ${platformName} deck with AI-powered card recommendations.`,
+      : `Build your ${platformName} deck with personalized card recommendations.`,
   ogType: 'website',
   ogTitle: () =>
     firstCommanderName.value
@@ -160,7 +159,7 @@ useSeoMeta({
   ogDescription: () =>
     firstCommanderName.value
       ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
-      : `Build your ${platformName} deck with AI-powered card recommendations.`,
+      : `Build your ${platformName} deck with personalized card recommendations.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => `${platformName} Deck Builder`,
   twitterCard: 'summary_large_image',
@@ -171,7 +170,7 @@ useSeoMeta({
   twitterDescription: () =>
     firstCommanderName.value
       ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
-      : `Build your ${platformName} deck with AI-powered card recommendations.`,
+      : `Build your ${platformName} deck with personalized card recommendations.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 

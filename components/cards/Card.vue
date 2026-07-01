@@ -120,9 +120,9 @@
         class="mt-1 w-full"
         :class="{ invisible: isSearched }"
       >
-        <!-- AI score bar (when AI scores present) -->
+        <!-- Smart score bar (when search scores present) -->
         <template v-if="hasDualScores">
-          <UTooltip text="AI Score: how relevant this card is to your query">
+          <UTooltip text="Smart Score: how relevant this card is to your query">
             <div
               class="flex flex-row items-center justify-center text-center w-full mt-0.5"
             >
@@ -133,7 +133,7 @@
                 :color="scoreColor"
               />
               <p class="text-xs whitespace-nowrap">
-                AI: {{ Math.round(normalizedScore) }}%
+                Smart: {{ Math.round(normalizedScore) }}%
               </p>
             </div>
           </UTooltip>
@@ -155,13 +155,13 @@
             </div>
           </UTooltip>
         </template>
-        <!-- Single AI/ALS bar -->
+        <!-- Single Smart/ALS bar -->
         <template v-else-if="hasAnyScore">
           <UTooltip
             :text="
               isAlsOnly
                 ? 'Synergy score: how relevant this card is to your decklist'
-                : 'AI Score: how relevant this card is to your query'
+                : 'Smart Score: how relevant this card is to your query'
             "
           >
             <div
@@ -174,7 +174,7 @@
                 :color="scoreColor"
               />
               <p class="text-xs whitespace-nowrap">
-                {{ isAlsOnly ? 'Deck' : 'AI' }}:
+                {{ isAlsOnly ? 'Deck' : 'Smart' }}:
                 {{ Math.round(normalizedScore) }}%
               </p>
             </div>
@@ -715,7 +715,7 @@ function navigateToCard(cardId: string | undefined) {
   router.push(`/card/${cardId}`);
 }
 
-// Whether this card has both ALS and AI scores (dual bar mode)
+// Whether this card has both ALS and Smart scores (dual bar mode)
 const hasDualScores = computed(
   () =>
     props.card.als_score !== undefined &&

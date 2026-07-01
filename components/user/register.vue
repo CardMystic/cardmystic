@@ -244,7 +244,11 @@ const resendVerification = async () => {
           color="neutral"
           :padded="false"
           :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-          @click="showPasswords = !showPasswords"
+          @click="
+            () => {
+              showPasswords = !showPasswords;
+            }
+          "
         />
       </template>
     </UInput>
@@ -262,7 +266,11 @@ const resendVerification = async () => {
           color="neutral"
           :padded="false"
           :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-          @click="showPasswords = !showPasswords"
+          @click="
+            () => {
+              showPasswords = !showPasswords;
+            }
+          "
         />
       </template>
     </UInput>
@@ -314,7 +322,11 @@ const resendVerification = async () => {
         color="primary"
         size="sm"
         :padded="false"
-        @click="router.push('/login')"
+        @click="
+          () => {
+            router.push('/login');
+          }
+        "
       >
         Login Instead
       </UButton>

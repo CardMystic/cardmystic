@@ -89,7 +89,11 @@
 
       <!-- Edit Icon (always visible when no banner, hover-reveal when banner set) -->
       <UButton
-        @click="isEditBannerModalOpen = true"
+        @click="
+          () => {
+            isEditBannerModalOpen = true;
+          }
+        "
         class="absolute top-4 right-4 transition-opacity cursor-pointer"
         :class="
           bannerImageUrl ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
@@ -148,7 +152,11 @@
             color="neutral"
             variant="ghost"
             label="Cancel"
-            @click="isEditBannerModalOpen = false"
+            @click="
+              () => {
+                isEditBannerModalOpen = false;
+              }
+            "
           />
           <UButton
             class="cursor-pointer"

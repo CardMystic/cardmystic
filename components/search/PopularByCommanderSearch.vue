@@ -50,7 +50,11 @@
           size="sm"
           icon="i-lucide-circle-x"
           aria-label="Clear partner commander"
-          @click="state.partnerCommander = ''"
+          @click="
+            () => {
+              state.partnerCommander = '';
+            }
+          "
         />
       </div>
     </UFormField>
@@ -73,7 +77,11 @@
               size="sm"
               icon="i-lucide-circle-x"
               aria-label="Clear input"
-              @click="state.query = ''"
+              @click="
+                () => {
+                  state.query = '';
+                }
+              "
             />
           </template>
         </UInput>
@@ -104,7 +112,11 @@
       <UTooltip text="Filter results by types, rarities, and more">
         <UButton
           class="cursor-pointer"
-          @click="showFilters = true"
+          @click="
+            () => {
+              showFilters = true;
+            }
+          "
           variant="ghost"
           size="sm"
           icon="i-lucide-sliders-horizontal"

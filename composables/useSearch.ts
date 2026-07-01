@@ -16,7 +16,7 @@ interface UseSearchOptions<T> {
 }
 
 /**
- * Composable for AI/Colbert search
+ * Composable for Smart/ColBERT search
  */
 export function useColbertSearch(
   searchParams: ComputedRef<WordSearch | undefined>,

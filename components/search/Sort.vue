@@ -59,7 +59,7 @@ const sortOptions = computed(() => {
   if (props.hasAlsScore)
     options.unshift({ value: 'deck_score', label: 'Deck Score' });
   if (props.hasAiScore)
-    options.unshift({ value: 'ai_score', label: 'AI Score' });
+    options.unshift({ value: 'ai_score', label: 'Smart Score' });
   return options;
 });
 

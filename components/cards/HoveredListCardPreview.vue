@@ -41,7 +41,7 @@
           class="preview-image cursor-pointer"
           loading="eager"
           decoding="async"
-          @click="navigateToCard(card.card_data.oracle_id)"
+          @click="navigateToCard(card?.card_data.oracle_id)"
         />
         <span v-if="!isCommanderOfDecklist" class="copy-count-pill"
           >x{{ numCopies ?? 1 }}</span
@@ -85,7 +85,7 @@
         @add-copy="
           emit(
             'updateNumCopies',
-            card.card_data.name,
+            card!.card_data.name,
             (numCopies ?? 1) + 1,
             currentBoard,
           )
@@ -93,7 +93,7 @@
         @remove-copy="
           emit(
             'updateNumCopies',
-            card.card_data.name,
+            card!.card_data.name,
             (numCopies ?? 1) - 1,
             currentBoard,
           )
@@ -103,7 +103,7 @@
         @set-commander="showCommanderModal = true"
         @clear-commander="showClearCommanderModal = true"
         @remove-from-list="
-          emit('remove', card.card_data.oracle_id, currentBoard)
+          emit('remove', card!.card_data.oracle_id, currentBoard)
         "
       />
     </div>

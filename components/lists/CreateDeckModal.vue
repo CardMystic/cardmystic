@@ -51,7 +51,11 @@
             color="neutral"
             variant="ghost"
             label="Cancel"
-            @click="isOpen = false"
+            @click="
+              () => {
+                isOpen = false;
+              }
+            "
             :disabled="createLoading"
           />
           <UButton

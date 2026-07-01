@@ -41,7 +41,7 @@ export const useSearchHistory = () => {
 
   const saveSearch = async (
     query: string,
-    searchType: 'ai' | 'similarity' | 'keyword' | 'commander' | 'recommend',
+    searchType: 'smart' | 'similarity' | 'keyword' | 'commander' | 'recommend',
     filters?: any,
   ) => {
     if (!supabase) return;
@@ -68,7 +68,12 @@ export const useSearchHistory = () => {
       filters,
     }: {
       query: string;
-      searchType: 'ai' | 'similarity' | 'keyword' | 'commander' | 'recommend';
+      searchType:
+        | 'smart'
+        | 'similarity'
+        | 'keyword'
+        | 'commander'
+        | 'recommend';
       filters?: any;
     }) => {
       if (!supabase) return;
