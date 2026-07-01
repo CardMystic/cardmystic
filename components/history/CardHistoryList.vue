@@ -66,7 +66,11 @@
         class="flex justify-center pt-6"
       >
         <UButton
-          @click="showAll = true"
+          @click="
+            () => {
+              showAll = true;
+            }
+          "
           color="primary"
           variant="outline"
           size="lg"
@@ -89,7 +93,11 @@
               color="neutral"
               variant="ghost"
               label="Cancel"
-              @click="isClearAllModalOpen = false"
+              @click="
+                () => {
+                  isClearAllModalOpen = false;
+                }
+              "
               :disabled="clearAllLoading"
             />
             <UButton

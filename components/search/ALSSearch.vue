@@ -31,7 +31,11 @@
             size="sm"
             icon="i-lucide-circle-x"
             aria-label="Clear input"
-            @click="state.description = ''"
+            @click="
+              () => {
+                state.description = '';
+              }
+            "
           />
         </template>
       </UInput>
@@ -56,7 +60,11 @@
           size="sm"
           icon="i-lucide-circle-x"
           aria-label="Clear commander"
-          @click="state.commander = ''"
+          @click="
+            () => {
+              state.commander = '';
+            }
+          "
         />
       </div>
     </UFormField>
@@ -79,7 +87,11 @@
           size="sm"
           icon="i-lucide-circle-x"
           aria-label="Clear partner commander"
-          @click="state.partnerCommander = ''"
+          @click="
+            () => {
+              state.partnerCommander = '';
+            }
+          "
         />
       </div>
     </UFormField>
@@ -138,7 +150,11 @@
       <UTooltip text="Filter results by colors, types, rarities, and more">
         <UButton
           class="cursor-pointer"
-          @click="showFilters = true"
+          @click="
+            () => {
+              showFilters = true;
+            }
+          "
           variant="ghost"
           size="sm"
           icon="i-lucide-sliders-horizontal"

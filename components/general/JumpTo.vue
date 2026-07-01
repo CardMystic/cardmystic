@@ -40,7 +40,11 @@
         size="xl"
         class="cursor-pointer border-2 border-secondary"
         aria-label="Jump to group"
-        @click="mobileOpen = !mobileOpen"
+        @click="
+          () => {
+            mobileOpen = !mobileOpen;
+          }
+        "
       />
       <Transition name="fade">
         <div

@@ -153,7 +153,11 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="openAccordionValues = labeledGroups.map((g) => g.label)"
+                @click="
+                  () => {
+                    openAccordionValues = labeledGroups.map((g) => g.label);
+                  }
+                "
               />
               <UButton
                 icon="i-lucide-chevrons-up"

@@ -85,7 +85,11 @@
           color="neutral"
           variant="outline"
           :disabled="loading"
-          @click="isOpen = false"
+          @click="
+            () => {
+              isOpen = false;
+            }
+          "
         >
           Cancel
         </UButton>

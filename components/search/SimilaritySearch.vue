@@ -54,7 +54,11 @@
       <UTooltip text="Filter results by colors, types, rarities, and more">
         <UButton
           class="cursor-pointer"
-          @click="showFilters = true"
+          @click="
+            () => {
+              showFilters = true;
+            }
+          "
           variant="ghost"
           size="sm"
           icon="i-lucide-sliders-horizontal"
