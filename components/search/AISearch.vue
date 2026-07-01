@@ -36,9 +36,6 @@
               @click="state.query = ''"
             />
           </template>
-          <template #trailing>
-            <UKbd value="/" class="me-1 cursor-default" />
-          </template>
         </UInput>
         <UButton
           icon="i-lucide-brain"

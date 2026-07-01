@@ -56,7 +56,7 @@
           :ui="{ root: 'p-2' }"
         >
           <template #label>
-            <span class="flex items-center gap-1">
+            <span class="flex items-center gap-1 ml-2">
               <ManaIcon
                 :type="
                   cardColorToSymbol((item as { value: CardColorType }).value)
