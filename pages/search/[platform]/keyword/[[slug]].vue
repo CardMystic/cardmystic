@@ -47,10 +47,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import {
-  CardSearchFiltersSchema,
-  KeywordSearchSchema,
-} from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { KeywordSearchSchema } from '~/models/searchModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useKeywordSearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';

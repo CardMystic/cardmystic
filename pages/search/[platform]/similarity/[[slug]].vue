@@ -49,10 +49,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import {
-  CardSearchFiltersSchema,
-  SimilaritySearchSchema,
-} from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { SimilaritySearchSchema } from '~/models/searchModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useSimilaritySearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
