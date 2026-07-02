@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { TopCardsRequestSchema } from '~/models/deckStatsModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useTopCardsSearch } from '~/composables/useDeckStats';

@@ -206,7 +206,7 @@ import { parseDecklist } from '~/utils/decklist';
 const MAX_DECK_SIZE = 200;
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import type { Platform } from '~/utils/platformConfig';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import Filters from './Filters.vue';

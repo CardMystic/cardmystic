@@ -159,7 +159,7 @@ import * as z from 'zod';
 import { useRoute } from 'vue-router';
 import { refDebounced } from '~/utils/refDebounced';
 import type { FormSubmitEvent } from '@nuxt/ui';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import {
   detectPlatformFromFilters,
   type Platform,

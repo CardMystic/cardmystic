@@ -94,7 +94,7 @@ import { useRoute } from 'vue-router';
 
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import type { Platform } from '~/utils/platformConfig';
 import Filters from './Filters.vue';
 

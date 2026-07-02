@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CardSearchFiltersSchema } from './searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { ScryfallCardSchema } from './cardModel';
 
 // -----------------------------------

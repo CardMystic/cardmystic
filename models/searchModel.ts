@@ -1,12 +1,6 @@
 import { z } from 'zod';
-import {
-  CardColor,
-  CardFormat,
-  CardFormatStatus,
-  CardRarity,
-  CardSchema,
-  CardType,
-} from './cardModel';
+import { CardFormat, CardFormatStatus, CardSchema } from '@/models/cardModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 
 export type ExampleQueryResponse = z.infer<typeof ExampleQueryResponseSchema>;
 export const ExampleQueryResponseSchema = z.object({
@@ -14,14 +8,14 @@ export const ExampleQueryResponseSchema = z.object({
   cards: z.array(CardSchema),
 });
 
-const ColorFilterEnum = z.enum([
+export const ColorFilterEnum = z.enum([
   'Match Exactly',
   'Contains At Least',
   'Contains At Most',
   'Color Identity',
 ]);
 export type ColorFilterOption = z.infer<typeof ColorFilterEnum>;
-const ComparisonOperatorEnum = z.enum([
+export const ComparisonOperatorEnum = z.enum([
   'Equal To',
   'Not Equal To',
   'Greater Than',
@@ -39,28 +33,6 @@ export const SelectedCardFormatsSchema = z
   .optional();
 
 export type SelectedCardFormats = z.infer<typeof SelectedCardFormatsSchema>;
-
-export const CardSearchFiltersSchema = z.object({
-  selectedCardTypes: z.array(CardType).optional().default([]),
-  selectedColorFilterOption:
-    ColorFilterEnum.optional().default('Contains At Least'),
-  selectedColors: z.array(CardColor).optional(),
-  selectedRarities: z.array(CardRarity).optional(),
-  selectedCMCOption: ComparisonOperatorEnum.optional().default('Equal To'),
-  selectedPowerOption: ComparisonOperatorEnum.optional().default('Equal To'),
-  selectedToughnessOption:
-    ComparisonOperatorEnum.optional().default('Equal To'),
-  selectedCMC: z.string().optional().default(''),
-  selectedPower: z.string().optional().default(''),
-  selectedToughness: z.string().optional().default(''),
-  selectedCardFormats: SelectedCardFormatsSchema,
-  isCommander: z.boolean().optional().default(false),
-  isMTGO: z.boolean().optional().default(false),
-  isArena: z.boolean().optional().default(false),
-  isPaper: z.boolean().optional().default(false),
-  isGameChanger: z.boolean().optional().default(false),
-});
-export type CardSearchFilters = z.infer<typeof CardSearchFiltersSchema>;
 
 export type WordSearch = z.infer<typeof WordSearchSchema>;
 export const WordSearchSchema = z.object({
