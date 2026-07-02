@@ -142,9 +142,10 @@ type Schema = z.output<typeof schema>;
 const queryParam = computed(() => String(route.query.query || ''));
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = {
-    selectedColorFilterOption: 'Color Identity' as 'Color Identity',
-  };
+  const base: ReturnType<typeof CardSearchFiltersSchema.parse> =
+    CardSearchFiltersSchema.parse({
+      selectedColorFilterOption: 'Color Identity' as 'Color Identity',
+    });
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
@@ -163,9 +164,7 @@ function hideFilters() {
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
-  filters: parsedFilters.value || {
-    selectedColorFilterOption: 'Color Identity',
-  },
+  filters: parsedFilters.value,
 });
 
 watch(queryParam, (newVal) => {

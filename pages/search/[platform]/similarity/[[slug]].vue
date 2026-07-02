@@ -144,9 +144,9 @@ const parsedFilters = computed(() => {
       /* fall through to defaults on malformed input */
     }
   }
-  return seoEntry
-    ? { ...seoEntry.filters, ...platformFilters }
-    : platformFilters;
+  return CardSearchFiltersSchema.parse(
+    seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters,
+  );
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();

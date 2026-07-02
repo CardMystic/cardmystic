@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CardSearchFiltersSchema } from './searchModel';
+import { CardSearchFiltersSchema } from '../searchModel';
 
 export type PageInfo = z.infer<typeof PageInfoSchema>;
 export const PageInfoSchema = z.object({

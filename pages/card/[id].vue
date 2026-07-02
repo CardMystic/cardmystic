@@ -852,8 +852,8 @@ import { useRoute } from 'vue-router';
 import type { CardFormatType, ScryfallCard, Card } from '~/models/cardModel';
 import type { LlmCardAttributes } from '~/models/llmModel';
 import {
-  PopularByCommanderSearchSchema,
-  PopularCommandersForCardSearchSchema,
+  PopularByCommanderRequestSchema,
+  PopularCommandersForCardRequestSchema,
 } from '~/models/deckStatsModel';
 import {
   getAffiliateLink,
@@ -1472,7 +1472,7 @@ function applyPopularCardsQuery() {
 const popularByCommanderRequest = computed(() => {
   if (!activatedTabs.has('popular')) return undefined;
   if (!isCommander.value || !card.value?.name) return undefined;
-  return PopularByCommanderSearchSchema.parse({
+  return PopularByCommanderRequestSchema.parse({
     commanders: [card.value.name],
     query: appliedPopularCardsQuery.value || undefined,
   });
@@ -1524,7 +1524,7 @@ function applyPopularCommandersQuery() {
 const popularCommandersForCardRequest = computed(() => {
   if (!activatedTabs.has('popular-commanders')) return undefined;
   if (!card.value?.name) return undefined;
-  return PopularCommandersForCardSearchSchema.parse({
+  return PopularCommandersForCardRequestSchema.parse({
     card_name: card.value.name,
     query: appliedPopularCommandersQuery.value || undefined,
   });

@@ -68,7 +68,7 @@ test.describe('Login page', () => {
     await expect(
       page.getByText(/invalid|incorrect|credentials|unauthorized|email/i),
     ).toBeVisible({ timeout: 15_000 });
-    await expect(page).toHaveURL(/\/user/login$/);
+    await expect(page).toHaveURL(/\/user\/login$/);
   });
 
   test('email login with valid credentials redirects home and shows logged-in navbar', async ({

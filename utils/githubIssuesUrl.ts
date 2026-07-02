@@ -1,5 +1,5 @@
 import type { Device } from '@nuxtjs/device/runtime/types';
-import type { PageInfo } from '~/models/pageInfoModel';
+import type { PageInfo } from '~/models/frontend-specific/pageInfoModel';
 
 export default (pageInfo: PageInfo | undefined, device: Device) => {
   const baseUrl =

@@ -140,9 +140,11 @@ const parsedFilters = computed(() => {
       /* fall through to defaults on malformed input */
     }
   }
-  return seoEntry
-    ? { ...seoEntry.filters, ...platformFilters, isCommander: true }
-    : { ...platformFilters, isCommander: true };
+  return CardSearchFiltersSchema.parse(
+    seoEntry
+      ? { ...seoEntry.filters, ...platformFilters, isCommander: true }
+      : { ...platformFilters, isCommander: true },
+  );
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();

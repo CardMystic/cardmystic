@@ -87,9 +87,9 @@ import { useCardLists } from '~/composables/useCardLists';
 
 const router = useRouter();
 import { useToast } from '#imports';
-import type { Database } from '~/database.types';
+import type { DecklistSummary } from '~/models/cardListModel';
 
-type List = Database['public']['Tables']['card_lists']['Row'];
+type List = DecklistSummary;
 
 const props = defineProps({
   list: {

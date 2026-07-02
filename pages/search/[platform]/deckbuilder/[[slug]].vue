@@ -138,7 +138,7 @@ const parsedFilters = computed(() => {
       /* fall through to defaults on malformed input */
     }
   }
-  return platformFilters;
+  return CardSearchFiltersSchema.parse(platformFilters);
 });
 
 useSeoMeta({

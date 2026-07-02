@@ -146,6 +146,7 @@
 
 <script setup lang="ts">
 import type { Database } from '~/database.types';
+import type { DecklistSummary } from '~/models/cardListModel';
 import { useToast } from '#imports';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter';
 
@@ -163,7 +164,7 @@ const emit = defineEmits<{
   (e: 'success'): void;
 }>();
 
-type CardListRow = Database['public']['Tables']['card_lists']['Row'];
+type CardListRow = DecklistSummary;
 
 const { userProfile } = useUserProfile();
 const {
@@ -200,8 +201,8 @@ const errorMessage = ref('');
 const showCreateDeckModal = ref(false);
 
 const recentLists = computed(() => {
-  if (!userLists.value) return [];
-  return [...userLists.value].slice(0, 4);
+  if (!userLists.value?.decklists) return [];
+  return [...userLists.value.decklists].slice(0, 4);
 });
 
 function listName(list: CardListRow): string {
@@ -225,7 +226,7 @@ function listLabel(list: CardListRow): string {
 
 const filteredDeckLabels = computed(() => {
   const searchLower = deckSearchTerm.value.trim().toLowerCase();
-  const lists = userLists.value || [];
+  const lists = userLists.value?.decklists || [];
   return lists
     .filter((list) => {
       if (!searchLower) return true;
@@ -242,7 +243,7 @@ const filteredDeckLabels = computed(() => {
 });
 
 function syncSelectedLabel() {
-  const selected = (userLists.value || []).find(
+  const selected = (userLists.value?.decklists || []).find(
     (list) => list.id === selectedListId.value,
   );
   selectedListItem.value = selected
@@ -267,7 +268,9 @@ function selectRecentList(listId: string) {
 }
 
 const selectedList = computed(() =>
-  (userLists.value || []).find((list) => list.id === selectedListId.value),
+  (userLists.value?.decklists || []).find(
+    (list) => list.id === selectedListId.value,
+  ),
 );
 
 const selectedListIdRef = computed(() => selectedListId.value);

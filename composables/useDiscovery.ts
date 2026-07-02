@@ -2,11 +2,13 @@ import { useQuery, keepPreviousData } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import {
   GetFeaturedDecklistsResponseSchema,
-  GetUserProfileResponseSchema,
   SearchDecklistsResponseSchema,
+} from '~/models/cardListModel';
+import {
+  GetUserProfileResponseSchema,
   SearchUsersResponseSchema,
   type GetUserProfileResponse,
-} from '~/models/cardListModel';
+} from '~/models/userModel';
 
 /**
  * Recent decklists owned by featured users (profiles.is_featured = true).

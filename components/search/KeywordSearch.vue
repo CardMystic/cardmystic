@@ -130,7 +130,9 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return { selectedColorFilterOption: 'Match Exactly' as const };
+  return CardSearchFiltersSchema.parse({
+    selectedColorFilterOption: 'Match Exactly',
+  });
 });
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));

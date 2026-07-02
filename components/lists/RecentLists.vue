@@ -67,8 +67,8 @@ import CardListLink from '~/components/lists/CardListLink.vue';
 const { userLists, isLoadingLists } = useCardLists();
 
 const recentLists = computed(() => {
-  if (!userLists.value) return [];
-  return [...userLists.value]
+  if (!userLists.value?.decklists) return [];
+  return [...userLists.value.decklists]
     .sort(
       (a, b) =>
         new Date(b.updated_at ?? 0).getTime() -

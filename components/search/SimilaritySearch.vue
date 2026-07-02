@@ -145,7 +145,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return base;
+  return CardSearchFiltersSchema.parse(base);
 });
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));

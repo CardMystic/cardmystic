@@ -53,7 +53,7 @@ const supabase = useSupabase();
 const { userLists, isLoadingLists } = useCardLists();
 
 const list = computed(
-  () => userLists.value?.find((l: any) => l.id === listId) ?? null,
+  () => userLists.value?.decklists?.find((l: any) => l.id === listId) ?? null,
 );
 
 const isCreator = computed(() => !!list.value);
