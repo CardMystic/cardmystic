@@ -60,7 +60,11 @@
               color="neutral"
               variant="ghost"
               label="Cancel"
-              @click="isDeleteModalOpen = false"
+              @click="
+                () => {
+                  isDeleteModalOpen = false;
+                }
+              "
               :disabled="deleteLoading"
             />
             <UButton
