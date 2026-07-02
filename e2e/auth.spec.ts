@@ -174,6 +174,7 @@ test.describe('Register page', () => {
     });
 
     await gotoHydrated(page, '/user/register');
+    await reliableFill(page.getByPlaceholder('Username'), 'testuser');
     await reliableFill(page.getByPlaceholder('Email'), 'new@example.com');
     await reliableFill(
       page.getByPlaceholder('Password', { exact: true }),
@@ -197,6 +198,7 @@ test.describe('Register page', () => {
     });
 
     await gotoHydrated(page, '/user/register');
+    await reliableFill(page.getByPlaceholder('Username'), 'testuser');
     await reliableFill(page.getByPlaceholder('Email'), 'new@example.com');
     await reliableFill(
       page.getByPlaceholder('Password', { exact: true }),

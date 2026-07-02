@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CardFormat, CardFormatStatus, CardSchema } from '@/models/cardModel';
+import { CardSchema } from '@/models/cardModel';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 
 export type ExampleQueryResponse = z.infer<typeof ExampleQueryResponseSchema>;
@@ -7,32 +7,6 @@ export const ExampleQueryResponseSchema = z.object({
   query: z.string().min(1).max(100),
   cards: z.array(CardSchema),
 });
-
-export const ColorFilterEnum = z.enum([
-  'Match Exactly',
-  'Contains At Least',
-  'Contains At Most',
-  'Color Identity',
-]);
-export type ColorFilterOption = z.infer<typeof ColorFilterEnum>;
-export const ComparisonOperatorEnum = z.enum([
-  'Equal To',
-  'Not Equal To',
-  'Greater Than',
-  'Less Than',
-]);
-export type ComparisonOperator = z.infer<typeof ComparisonOperatorEnum>;
-
-export const SelectedCardFormatsSchema = z
-  .array(
-    z.object({
-      format: CardFormat.optional(),
-      status: CardFormatStatus.optional(),
-    }),
-  )
-  .optional();
-
-export type SelectedCardFormats = z.infer<typeof SelectedCardFormatsSchema>;
 
 export type WordSearch = z.infer<typeof WordSearchSchema>;
 export const WordSearchSchema = z.object({

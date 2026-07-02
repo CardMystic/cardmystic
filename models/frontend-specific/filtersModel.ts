@@ -6,12 +6,12 @@
  */
 
 import { z } from 'zod';
-import { CardColor, CardRarity, CardType } from '../cardModel';
+import { CardColor, CardRarity, CardType } from '@/models/cardModel';
 import {
   ColorFilterEnum,
   ComparisonOperatorEnum,
   SelectedCardFormatsSchema,
-} from '@/models/searchModel';
+} from '@/models/filterUtilsModel';
 
 export const CardSearchFiltersSchema = z.object({
   selectedCardTypes: z.array(CardType).optional(),

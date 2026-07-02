@@ -78,7 +78,7 @@ import ManaIcon from '~/components/general/ManaIcon.vue';
 import { CardColor, type CardColorType } from '~/models/cardModel';
 import { cardColorToSymbol } from '~/utils/cardHelpers';
 import type { CheckboxGroupItem } from '@nuxt/ui';
-import type { CardSearchFilters } from '~/models/searchModel';
+import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 import { getColorIdentityName } from '~/utils/colorPairings';
 
 const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();

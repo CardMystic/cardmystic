@@ -431,7 +431,7 @@ import {
   CardFormatStatus,
 } from '~/models/cardModel';
 import { cardColorToSymbol } from '~/utils/cardHelpers.js';
-import type { CardSearchFilters } from '~/models/searchModel';
+import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 import ManaIcon from '../general/ManaIcon.vue';
 import type {
   AccordionItem,
