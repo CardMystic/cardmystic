@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { formatShortDate } from '~/utils/dateFormatter';
-import type { DecklistSummary } from '~/models/discoveryModel';
+import type { DecklistSummary } from '~/models/cardListModel';
 
 const props = withDefaults(
   defineProps<{

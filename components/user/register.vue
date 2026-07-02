@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useSupabase } from '~/composables/useSupabase';
-import { useRecaptcha } from '~/composables/useRecaptcha';
-import { useUserProfile } from '~/composables/useUserProfile';
+import type { SignUpRequest } from '@/models/userModel';
 
 const router = useRouter();
 
-const supabase = useSupabase();
-const { verifyRecaptcha } = useRecaptcha();
-const config = useRuntimeConfig();
-const { validatePasswordPolicy } = useUserProfile();
+const {
+  signupWithEmail,
+  signupWithGoogle,
+  resendVerificationEmail,
+  validatePasswordPolicy,
+} = useUserProfile();
 
 const username = ref('');
 const email = ref('');
@@ -27,25 +27,13 @@ const signUpWithGoogle = async () => {
   errorMessage.value = null;
   loading.value = true;
 
-  const verified = await verifyRecaptcha('signup_google');
-  if (!verified) {
-    errorMessage.value = 'Security verification failed. Please try again.';
-    loading.value = false;
-    return;
+  try {
+    await signupWithGoogle();
+  } catch (e: any) {
+    errorMessage.value = e.message || 'An unexpected error occurred.';
   }
-
-  sessionStorage.setItem('pendingOAuthSignup', 'true');
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  });
 
   loading.value = false;
-
-  if (error) {
-    sessionStorage.removeItem('pendingOAuthSignup');
-    errorMessage.value = error.message;
-  }
 };
 
 const signUpWithEmail = async () => {
@@ -77,34 +65,15 @@ const signUpWithEmail = async () => {
     return;
   }
 
-  const verified = await verifyRecaptcha('signup');
-  if (!verified) {
-    errorMessage.value = 'Security verification failed. Please try again.';
-    loading.value = false;
-    return;
-  }
-
   try {
-    const res = await fetch(`${config.public.backendUrl}/user/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: username.value.trim(),
-        email: email.value,
-        password: password.value,
-        confirmPassword: confirmPassword.value,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      errorMessage.value = data.message || 'Signup failed.';
-      loading.value = false;
-      return;
-    }
-
-    successMessage.value = data.message;
+    const credentials: SignUpRequest = {
+      username: username.value.trim(),
+      email: email.value,
+      password: password.value,
+      confirmPassword: confirmPassword.value,
+    };
+    const response = await signupWithEmail(credentials);
+    successMessage.value = response.message;
     signedUpEmail.value = email.value.trim();
     resendMessage.value = null;
 
@@ -117,8 +86,8 @@ const signUpWithEmail = async () => {
     email.value = '';
     password.value = '';
     confirmPassword.value = '';
-  } catch (e) {
-    errorMessage.value = 'An unexpected error occurred.';
+  } catch (e: any) {
+    errorMessage.value = e.message || 'An unexpected error occurred.';
   }
 
   loading.value = false;
@@ -129,15 +98,14 @@ const resendVerification = async () => {
   resending.value = true;
   resendMessage.value = null;
 
-  const { error } = await supabase.auth.resend({
-    type: 'signup',
-    email: signedUpEmail.value,
-  });
+  try {
+    await resendVerificationEmail(signedUpEmail.value);
+    resendMessage.value = 'Verification email sent. Please check your inbox.';
+  } catch (e: any) {
+    resendMessage.value = e.message;
+  }
 
   resending.value = false;
-  resendMessage.value = error
-    ? error.message
-    : 'Verification email sent. Please check your inbox.';
 };
 </script>
 

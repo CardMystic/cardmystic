@@ -40,7 +40,7 @@
     "vee-validate": "^4.15.1",
     "vue": "^3.5.33",
     "vue-router": "^4.6.4",
-    "zod": "^3.25.76"
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

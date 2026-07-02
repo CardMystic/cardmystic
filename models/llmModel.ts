@@ -12,16 +12,16 @@ export const LlmCardAttributesSchema = z.object({
   community_sentiment: z
     .array(z.string())
     .nullish()
-    .transform((v) => v ?? []),
+    .transform((v: string[] | null | undefined) => v ?? []),
   format_strength: z.record(z.string(), z.coerce.number().int()).default({}),
   themes: z
     .array(z.string())
     .nullish()
-    .transform((v) => v ?? []),
+    .transform((v: string[] | null | undefined) => v ?? []),
   roles: z
     .array(z.string())
     .nullish()
-    .transform((v) => v ?? []),
+    .transform((v: string[] | null | undefined) => v ?? []),
   long_summary: z.string().default(''),
   strategy_rankings: StrategyRankingsSchema,
 });

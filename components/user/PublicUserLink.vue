@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { PublicProfile } from '~/models/discoveryModel';
+import type { PublicProfile } from '~/models/cardListModel';
 
 const props = defineProps<{ profile: PublicProfile }>();
 

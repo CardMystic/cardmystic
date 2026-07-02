@@ -6,7 +6,7 @@ import {
   SearchDecklistsResponseSchema,
   SearchUsersResponseSchema,
   type GetUserProfileResponse,
-} from '~/models/discoveryModel';
+} from '~/models/cardListModel';
 
 /**
  * Recent decklists owned by featured users (profiles.is_featured = true).
