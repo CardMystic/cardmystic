@@ -62,7 +62,7 @@ test.describe('Card feedback', () => {
       });
     });
 
-    await gotoHydrated(page, '/search/all/ai');
+    await gotoHydrated(page, '/search/all/smart');
     const input = page.getByPlaceholder('Describe the cards you want...');
     await reliableFill(input, 'best card draw spells');
 
@@ -143,7 +143,7 @@ test.describe('Trending queries', () => {
 
     await expect
       .poll(() => page.url(), { timeout: 15_000 })
-      .toContain('/search/all/ai');
+      .toContain('/search/all/smart');
     const url = new URL(page.url());
     expect(url.searchParams.get('isTryTopQuery')).toBe('true');
     expect(url.searchParams.get('query')).toBeTruthy();
@@ -175,7 +175,7 @@ test.describe('Trending queries', () => {
 
     await expect
       .poll(() => page.url(), { timeout: 15_000 })
-      .toContain('/search/all/ai');
+      .toContain('/search/all/smart');
     const url = new URL(page.url());
     expect(url.searchParams.get('query')).toBeTruthy();
     expect((await colbertCall).ok()).toBeTruthy();
@@ -205,7 +205,7 @@ test.describe('Mobile (Pixel 5)', () => {
   test('AI search runs on mobile and renders the results grid', async ({
     page,
   }) => {
-    await gotoHydrated(page, '/search/all/ai');
+    await gotoHydrated(page, '/search/all/smart');
     const input = page.getByPlaceholder('Describe the cards you want...');
     await reliableFill(input, 'best card draw spells');
 

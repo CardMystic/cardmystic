@@ -6,7 +6,11 @@
       <UButton
         icon="i-lucide-plus"
         label="New List"
-        @click="isCreateModalOpen = true"
+        @click="
+          () => {
+            isCreateModalOpen = true;
+          }
+        "
         class="cursor-pointer"
       />
     </div>

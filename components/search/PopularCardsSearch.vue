@@ -22,7 +22,11 @@
               size="sm"
               icon="i-lucide-circle-x"
               aria-label="Clear input"
-              @click="state.query = ''"
+              @click="
+                () => {
+                  state.query = '';
+                }
+              "
             />
           </template>
         </UInput>
@@ -54,7 +58,11 @@
       <UTooltip text="Filter results by colors, types, rarities, and more">
         <UButton
           class="cursor-pointer"
-          @click="showFilters = true"
+          @click="
+            () => {
+              showFilters = true;
+            }
+          "
           variant="ghost"
           size="sm"
           icon="i-lucide-sliders-horizontal"

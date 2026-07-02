@@ -62,7 +62,11 @@
             color="primary"
             size="sm"
             :padded="false"
-            @click="router.push('/user/login')"
+            @click="
+              () => {
+                router.push('/user/login');
+              }
+            "
           >
             Back to login
           </UButton>
@@ -91,7 +95,11 @@
               color="neutral"
               :padded="false"
               :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-              @click="showPasswords = !showPasswords"
+              @click="
+                () => {
+                  showPasswords = !showPasswords;
+                }
+              "
             />
           </template>
         </UInput>
@@ -108,7 +116,11 @@
               color="neutral"
               :padded="false"
               :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-              @click="showPasswords = !showPasswords"
+              @click="
+                () => {
+                  showPasswords = !showPasswords;
+                }
+              "
             />
           </template>
         </UInput>

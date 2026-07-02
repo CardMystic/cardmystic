@@ -80,8 +80,7 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType =
-  platform === 'all' ? 'similarity' : `${platform}-similarity`;
+const aboutType: SearchAboutType = 'similarity';
 
 const cardNameParam = computed(() => String(route.query?.card_name || ''));
 const displayQuery = computed(() => seoEntry?.query || cardNameParam.value);

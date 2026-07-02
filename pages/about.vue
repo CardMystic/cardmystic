@@ -8,7 +8,7 @@
         🔮 What is <span class="text-primary">CardMystic</span>?
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
-        CardMystic is a powerful Open Source AI Search engine for Magic: The
+        CardMystic is a powerful Open Source Smart Search engine for Magic: The
         Gathering cards. We trained custom models on MTG data to provide the
         best possible search results. We are dedicated to providing only the
         best tools for the amazing MTG community!
@@ -28,7 +28,7 @@
         engines fall short.
       </p>
       <p class="text-base md:text-lg leading-relaxed">
-        CardMystic makes card discovery effortless with semantic AI search. Just
+        CardMystic makes card discovery effortless with semantic search. Just
         describe what you're looking for and let CardMystic handle the rest!
       </p>
     </div>
@@ -41,10 +41,10 @@
         ⭐ What Sets Us Apart
       </h2>
       <p class="text-base md:text-lg leading-relaxed">
-        Unlike similar tools, we are NOT a generic AI wrapper. Our team's AI
-        experts have meticulously trained custom models specifically on Magic:
-        The Gathering data to ensure the most accurate and relevant search
-        results possible.
+        Unlike similar tools, we are NOT a generic AI wrapper. Our team has
+        meticulously trained custom semantic search models specifically on
+        Magic: The Gathering data to ensure the most accurate and relevant
+        search results possible.
       </p>
     </div>
 
@@ -83,12 +83,12 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'About CardMystic - AI Magic: The Gathering Search Engine',
+  title: 'About CardMystic - Smart Magic: The Gathering Search Engine',
   description:
-    'Learn about CardMystic, an AI search engine for Magic: The Gathering cards. Custom trained models for accurate MTG card search using natural language.',
-  ogTitle: 'About CardMystic - AI Magic: The Gathering Search Engine',
+    'Learn about CardMystic, a smart search engine for Magic: The Gathering cards. Custom trained models for accurate MTG card search using natural language.',
+  ogTitle: 'About CardMystic - Smart Magic: The Gathering Search Engine',
   ogDescription:
-    'Learn about CardMystic, an AI search engine for Magic: The Gathering cards.',
+    'Learn about CardMystic, a smart search engine for Magic: The Gathering cards.',
   ogType: 'website',
   ogImage: () => 'https://cardmystic.com/cardmystic_cards.png',
   ogImageAlt: () => 'CardMystic - About',

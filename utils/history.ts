@@ -3,13 +3,13 @@ import { detectPlatformFromFilters } from '~/utils/platformConfig';
 
 export const rerunSearchHistory = (item: any, router: Router) => {
   const searchTypeSegments: Record<string, string> = {
-    ai: 'ai',
+    smart: 'smart',
     similarity: 'similarity',
     keyword: 'keyword',
     commander: 'commander',
     recommend: 'deckbuilder',
   };
-  const segment = searchTypeSegments[item.search_type] || 'ai';
+  const segment = searchTypeSegments[item.search_type] || 'smart';
   const platform = detectPlatformFromFilters(item.filters);
   const path = `/search/${platform}/${segment}`;
   const query: any = { searchType: item.search_type };

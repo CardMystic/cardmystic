@@ -55,7 +55,11 @@
               icon="i-lucide-list-plus"
               color="primary"
               variant="outline"
-              @click="isBulkEditModalOpen = true"
+              @click="
+                () => {
+                  isBulkEditModalOpen = true;
+                }
+              "
               class="cursor-pointer"
               label="Bulk Edit"
               ><span class="hidden md:inline">Bulk Edit</span>

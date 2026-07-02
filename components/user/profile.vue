@@ -318,7 +318,11 @@ const handleSignOut = async () => {
             size="md"
             :loading="updateEmailMutation.isPending.value"
             :disabled="updateEmailMutation.isPending.value || isEmailUnchanged"
-            @click="showEmailConfirmModal = true"
+            @click="
+              () => {
+                showEmailConfirmModal = true;
+              }
+            "
           >
             Update Email
           </UButton>
@@ -340,7 +344,11 @@ const handleSignOut = async () => {
                 color="neutral"
                 :padded="false"
                 :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                @click="showPasswords = !showPasswords"
+                @click="
+                  () => {
+                    showPasswords = !showPasswords;
+                  }
+                "
               />
             </template>
           </UInput>
@@ -357,7 +365,11 @@ const handleSignOut = async () => {
                 color="neutral"
                 :padded="false"
                 :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                @click="showPasswords = !showPasswords"
+                @click="
+                  () => {
+                    showPasswords = !showPasswords;
+                  }
+                "
               />
             </template>
           </UInput>
@@ -374,7 +386,11 @@ const handleSignOut = async () => {
                 color="neutral"
                 :padded="false"
                 :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                @click="showPasswords = !showPasswords"
+                @click="
+                  () => {
+                    showPasswords = !showPasswords;
+                  }
+                "
               />
             </template>
           </UInput>
