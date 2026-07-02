@@ -248,7 +248,9 @@ test.describe('Card lists CRUD', () => {
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
     // Add Atraxa via the list-page autocomplete input.
-    const addInput = page.getByPlaceholder('Add a card to the deck...');
+    const addInput = page
+      .getByPlaceholder('Add a card to the deck...')
+      .filter({ visible: true });
     await expect(addInput).toBeEnabled({ timeout: API_TIMEOUT });
 
     const addCall = page.waitForResponse(
@@ -547,7 +549,9 @@ test.describe('Card lists CRUD', () => {
 
     // Atraxa is WUBG (no Red). Add Lightning Bolt (R) so the legality overlay appears.
     await gotoHydrated(page, `/lists/${LIST_ID}`);
-    const addInput = page.getByPlaceholder('Add a card to the deck...');
+    const addInput = page
+      .getByPlaceholder('Add a card to the deck...')
+      .filter({ visible: true });
     await expect(addInput).toBeEnabled({ timeout: API_TIMEOUT });
 
     const addCall = page.waitForResponse(
@@ -618,7 +622,9 @@ test.describe('Card lists CRUD', () => {
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
     // ── Step 1: add Counterspell via the list-page autocomplete ─────────
-    const addInput = page.getByPlaceholder('Add a card to the deck...');
+    const addInput = page
+      .getByPlaceholder('Add a card to the deck...')
+      .filter({ visible: true });
     await expect(addInput).toBeEnabled({ timeout: API_TIMEOUT });
 
     const addCall = page.waitForResponse(
@@ -743,8 +749,8 @@ test.describe('Card lists CRUD', () => {
       .toBeGreaterThan(0);
 
     // GroupBy + Sort controls visible.
-    await expect(page.getByText(/group by/i).first()).toBeVisible();
-    await expect(page.getByText(/sort by/i).first()).toBeVisible();
+    await expect(page.getByText(/^group$/i).first()).toBeVisible();
+    await expect(page.getByText(/^sort$/i).first()).toBeVisible();
 
     // Toggle the sort direction button — should not throw, page remains responsive.
     const sortToggle = page
