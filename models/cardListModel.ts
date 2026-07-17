@@ -373,3 +373,38 @@ export const SearchDecklistsResponseSchema = z.object({
 export type SearchDecklistsResponse = z.infer<
   typeof SearchDecklistsResponseSchema
 >;
+
+// ---- Public Decklist View ----
+
+export const PublicDecklistItemSchema = z.object({
+  oracle_id: z.string().describe('Scryfall oracle ID of the card'),
+  num_copies: z.number().int().min(1).describe('Number of copies'),
+  board: z
+    .string()
+    .describe('Board the card belongs to (Mainboard, Sideboard, Considering)'),
+  is_commander: z.boolean().describe('Whether this card is a commander'),
+});
+
+export type PublicDecklistItem = z.infer<typeof PublicDecklistItemSchema>;
+
+export const GetPublicDecklistResponseSchema = z.object({
+  decklist: DecklistSummarySchema,
+  items: z.array(PublicDecklistItemSchema),
+  owner: z
+    .object({
+      id: z.string().describe("The user's ID"),
+      username: z.string().nullable().describe("The user's username"),
+      avatar_card_name: z
+        .string()
+        .nullable()
+        .describe("Card name used as the user's avatar"),
+      is_featured: z
+        .boolean()
+        .describe('Whether the user is a featured profile'),
+    })
+    .describe('The profile of the decklist owner'),
+});
+
+export type GetPublicDecklistResponse = z.infer<
+  typeof GetPublicDecklistResponseSchema
+>;

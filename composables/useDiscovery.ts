@@ -2,6 +2,7 @@ import { useQuery, useInfiniteQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import {
   GetFeaturedDecklistsResponseSchema,
+  GetPublicDecklistResponseSchema,
   SearchDecklistsResponseSchema,
 } from '~/models/cardListModel';
 import {
@@ -177,6 +178,45 @@ export function usePublicUserProfile(userId: Ref<string | null | undefined>) {
   return {
     profile: computed(() => data.value?.profile ?? null),
     decklists: computed(() => data.value?.decklists ?? []),
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Fetches a single public decklist by ID, including its summary and items.
+ * Used as a fallback on the list detail page when the list doesn't belong
+ * to the authenticated user.
+ */
+export function usePublicDecklist(listId: Ref<string | null | undefined>) {
+  const config = useRuntimeConfig();
+
+  const enabled = computed(() => !!listId.value);
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: computed(() => ['discovery', 'public-decklist', listId.value]),
+    queryFn: async () => {
+      if (!listId.value) return null;
+      const url = `${config.public.backendUrl}/supabase/card-lists/view/${encodeURIComponent(listId.value)}`;
+      const response = await fetch(url);
+      if (response.status === 404) {
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to load public decklist (${response.status})`);
+      }
+      return GetPublicDecklistResponseSchema.parse(await response.json());
+    },
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    decklist: computed(() => data.value?.decklist ?? null),
+    items: computed(() => data.value?.items ?? []),
+    owner: computed(() => data.value?.owner ?? null),
     isLoading,
     error,
     refetch,
