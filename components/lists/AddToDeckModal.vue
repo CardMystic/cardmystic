@@ -6,7 +6,7 @@
   >
     <template #content>
       <div v-if="!isLoggedIn" class="p-4 space-y-3 text-center">
-        <p class="text-lg">Login To Create Decks!</p>
+        <p class="text-lg">Login To Create Decklists!</p>
         <UButton to="/user/login" color="primary" variant="solid"
           >Log In</UButton
         >

@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="mb-10 mt-6 max-w-5xl">
+  <UContainer class="mb-10 mt-6 max-w-full">
     <div class="text-center mb-6">
       <h1 class="text-3xl md:text-4xl font-bold mb-2">Search Decklists</h1>
       <p class="text-sm md:text-base opacity-80">
@@ -41,10 +41,12 @@
       v-else-if="decklists.length > 0"
       class="grid grid-cols-1 md:grid-cols-3 gap-3"
     >
-      <PublicDecklistLink
+      <CardListLink
         v-for="list in decklists"
         :key="list.id"
-        :decklist="list"
+        :list="list"
+        :showDeleteButton="false"
+        :showAuthor="true"
       />
     </div>
 
@@ -65,7 +67,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDecklistSearch } from '~/composables/useDiscovery';
 import { refDebounced } from '~/utils/refDebounced';
-import PublicDecklistLink from '~/components/lists/PublicDecklistLink.vue';
+import CardListLink from '~/components/lists/CardListLink.vue';
 
 definePageMeta({ title: 'Search Decklists' });
 

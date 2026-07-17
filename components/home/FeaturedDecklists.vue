@@ -14,10 +14,12 @@
       v-else-if="visibleDecklists.length > 0"
       class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
     >
-      <PublicDecklistLink
+      <CardListLink
         v-for="list in visibleDecklists"
         :key="list.id"
-        :decklist="list"
+        :list="list"
+        :showDeleteButton="false"
+        :showAuthor="true"
       />
       <NuxtLink to="/explore/decklists">
         <UButton
@@ -44,7 +46,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useFeaturedDecklists } from '~/composables/useDiscovery';
-import PublicDecklistLink from '~/components/lists/PublicDecklistLink.vue';
+import CardListLink from '~/components/lists/CardListLink.vue';
 
 const { decklists, isLoading } = useFeaturedDecklists(10);
 

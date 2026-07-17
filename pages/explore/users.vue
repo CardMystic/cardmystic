@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="mb-10 mt-6 max-w-5xl">
+  <UContainer class="mb-10 mt-6 max-w-full">
     <div class="text-center mb-6">
       <h1 class="text-3xl md:text-4xl font-bold mb-2">Search Users</h1>
       <p class="text-sm md:text-base opacity-80">
