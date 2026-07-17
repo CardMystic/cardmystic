@@ -122,7 +122,9 @@
       >
         <!-- Smart score bar (when search scores present) -->
         <template v-if="hasDualScores">
-          <UTooltip text="Smart Score: how relevant this card is to your query">
+          <UTooltip
+            text="Vector Score: how relevant this card is to your query"
+          >
             <div
               class="flex flex-row items-center justify-center text-center w-full mt-0.5"
             >
@@ -132,8 +134,9 @@
                 size="md"
                 :color="scoreColor"
               />
-              <p class="text-xs whitespace-nowrap">
-                Smart: {{ Math.round(normalizedScore) }}%
+              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                <UIcon name="i-lucide-brain" class="w-3 h-3 shrink-0" />
+                {{ Math.round(normalizedScore) }}%
               </p>
             </div>
           </UTooltip>
@@ -149,8 +152,9 @@
                 size="md"
                 :color="alsScoreColor"
               />
-              <p class="text-xs whitespace-nowrap">
-                Deck: {{ Math.round(alsDisplayScore) }}%
+              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                <UIcon name="i-lucide-layers-2" class="w-3 h-3 shrink-0" />
+                {{ Math.round(alsDisplayScore) }}%
               </p>
             </div>
           </UTooltip>
@@ -161,7 +165,7 @@
             :text="
               isAlsOnly
                 ? 'Synergy score: how relevant this card is to your decklist'
-                : 'Smart Score: how relevant this card is to your query'
+                : 'Vector Score: how relevant this card is to your query'
             "
           >
             <div
@@ -173,8 +177,11 @@
                 size="md"
                 :color="scoreColor"
               />
-              <p class="text-xs whitespace-nowrap">
-                {{ isAlsOnly ? 'Deck' : 'Smart' }}:
+              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                <UIcon
+                  :name="isAlsOnly ? 'i-lucide-layers-2' : 'i-lucide-brain'"
+                  class="w-3 h-3 shrink-0"
+                />
                 {{ Math.round(normalizedScore) }}%
               </p>
             </div>
@@ -195,8 +202,9 @@
                 size="md"
                 :color="popularityColor"
               />
-              <p class="text-xs whitespace-nowrap">
-                {{ popularityDisplay }}% POP
+              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                <UIcon name="i-lucide-flame" class="w-3 h-3 shrink-0" />
+                {{ popularityDisplay }}%
               </p>
             </div>
           </UTooltip>
