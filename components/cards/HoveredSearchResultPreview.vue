@@ -70,7 +70,10 @@
         <div v-if="!hideProgressBar" class="preview-scores">
           <template v-if="hasDualScores">
             <div class="preview-score-row">
-              <span class="preview-score-label">Smart</span>
+              <UIcon
+                name="i-lucide-brain"
+                class="preview-score-label w-3.5 h-3.5 shrink-0"
+              />
               <UProgress
                 :model-value="normalizedScore"
                 class="flex-1"
@@ -82,7 +85,10 @@
               >
             </div>
             <div class="preview-score-row">
-              <span class="preview-score-label">Deck</span>
+              <UIcon
+                name="i-lucide-layers-2"
+                class="preview-score-label w-3.5 h-3.5 shrink-0"
+              />
               <UProgress
                 :model-value="alsDisplayScore"
                 class="flex-1"
@@ -96,9 +102,10 @@
           </template>
           <template v-else-if="hasAnyScore">
             <div class="preview-score-row">
-              <span class="preview-score-label">{{
-                isAlsOnly ? 'Deck' : 'Smart'
-              }}</span>
+              <UIcon
+                :name="isAlsOnly ? 'i-lucide-layers-2' : 'i-lucide-brain'"
+                class="preview-score-label w-3.5 h-3.5 shrink-0"
+              />
               <UProgress
                 :model-value="normalizedScore"
                 class="flex-1"
@@ -112,7 +119,10 @@
           </template>
           <template v-if="hasPopularity">
             <div class="preview-score-row">
-              <span class="preview-score-label">Pop</span>
+              <UIcon
+                name="i-lucide-flame"
+                class="preview-score-label w-3.5 h-3.5 shrink-0"
+              />
               <UProgress
                 :model-value="popularityPercent"
                 class="flex-1"
