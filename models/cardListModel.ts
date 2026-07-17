@@ -347,15 +347,27 @@ export const SearchDecklistsQuerySchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(100)
+    .max(200)
     .default(50)
-    .describe('Maximum number of decklists to return (default 50)'),
+    .describe('Maximum number of decklists to return (default 50, max 200)'),
+  cursor: z
+    .uuid()
+    .optional()
+    .describe(
+      'Decklist ID of the last entry from the previous page (omit for first page)',
+    ),
 });
 
 export type SearchDecklistsQuery = z.infer<typeof SearchDecklistsQuerySchema>;
 
 export const SearchDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
+  nextCursor: z
+    .uuid()
+    .nullable()
+    .describe(
+      'Decklist ID to pass as cursor for the next page, or null if no more results',
+    ),
 });
 
 export type SearchDecklistsResponse = z.infer<

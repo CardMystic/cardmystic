@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="mb-10 mt-6 max-w-4xl">
+  <UContainer class="mb-10 mt-6 w-full">
     <!-- Loading -->
     <div v-if="isLoading" class="text-center py-16">
       <USkeleton class="mx-auto h-8 w-64 mb-3" />

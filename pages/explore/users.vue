@@ -30,10 +30,7 @@
       Something went wrong while searching. Please try again.
     </div>
 
-    <div
-      v-if="isLoading || isFetching"
-      class="grid grid-cols-1 md:grid-cols-3 gap-3"
-    >
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <USkeleton v-for="i in 6" :key="i" class="user-skeleton" />
     </div>
 
@@ -48,12 +45,28 @@
       />
     </div>
 
-    <div v-else-if="hasSearched" class="empty-state">
+    <!-- Infinite scroll sentinel + loading spinner -->
+    <div
+      v-if="users.length > 0 && hasNextPage"
+      ref="sentinelRef"
+      class="flex justify-center py-6"
+    >
+      <UIcon
+        v-if="isFetchingNextPage"
+        name="i-lucide-loader-2"
+        class="text-3xl animate-spin opacity-60"
+      />
+    </div>
+
+    <div
+      v-if="hasSearched && !isLoading && users.length === 0"
+      class="empty-state"
+    >
       <UIcon name="i-lucide-search-x" class="text-5xl opacity-30 mb-3" />
       <p>No users matched "{{ debouncedQuery }}"</p>
     </div>
 
-    <div v-else class="empty-state">
+    <div v-if="!hasSearched && !isLoading" class="empty-state">
       <UIcon name="i-lucide-user-search" class="text-5xl opacity-30 mb-3" />
       <p>Enter a username above to find other CardMystic users.</p>
     </div>
@@ -61,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserSearch } from '~/composables/useDiscovery';
 import { refDebounced } from '~/utils/refDebounced';
@@ -82,7 +95,14 @@ const initialQuery = String(route.query.query ?? '');
 const searchInput = ref(initialQuery);
 const debouncedQuery = refDebounced(searchInput, 300);
 
-const { users, isLoading, isFetching, error } = useUserSearch(debouncedQuery);
+const {
+  users,
+  isLoading,
+  isFetchingNextPage,
+  error,
+  fetchNextPage,
+  hasNextPage,
+} = useUserSearch(debouncedQuery);
 
 const hasSearched = computed(() => debouncedQuery.value.trim().length > 0);
 
@@ -100,6 +120,32 @@ watch(debouncedQuery, (value) => {
     query: { ...route.query, query: trimmed || undefined },
   });
 });
+
+// Infinite scroll via IntersectionObserver: checks when the sentinel comes into view
+const sentinelRef = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+function setupObserver() {
+  if (!sentinelRef.value) return;
+  observer?.disconnect();
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0]?.isIntersecting &&
+        hasNextPage.value &&
+        !isFetchingNextPage.value
+      ) {
+        fetchNextPage();
+      }
+    },
+    { rootMargin: '200px' },
+  );
+  observer.observe(sentinelRef.value);
+}
+
+watch(sentinelRef, () => setupObserver());
+onMounted(() => setupObserver());
+onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <style scoped lang="sass">
