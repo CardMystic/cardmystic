@@ -52,11 +52,12 @@
         v-if="decklists.length > 0"
         class="grid grid-cols-1 md:grid-cols-3 gap-3"
       >
-        <PublicDecklistLink
+        <CardListLink
           v-for="list in decklists"
           :key="list.id"
-          :decklist="list"
-          :show-author="false"
+          :list="list"
+          :showDeleteButton="false"
+          :showAuthor="true"
         />
       </div>
 
@@ -75,7 +76,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePublicUserProfile } from '~/composables/useDiscovery';
-import PublicDecklistLink from '~/components/lists/PublicDecklistLink.vue';
+import CardListLink from '~/components/lists/CardListLink.vue';
 
 definePageMeta({ title: 'User Profile' });
 

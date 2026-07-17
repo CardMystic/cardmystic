@@ -10,7 +10,11 @@
           variant="solid"
           label="View Preview"
           class="cursor-pointer"
-          @click="mode = 'preview'"
+          @click="
+            () => {
+              mode = 'preview';
+            }
+          "
         />
         <UButton
           v-if="editable && mode === 'edit'"
@@ -19,7 +23,11 @@
           variant="solid"
           label="Split Preview"
           class="cursor-pointer hidden lg:inline-flex"
-          @click="mode = 'split'"
+          @click="
+            () => {
+              mode = 'split';
+            }
+          "
         />
         <UButton
           v-if="editable && (mode === 'preview' || mode === 'split')"
@@ -28,7 +36,11 @@
           variant="outline"
           label="Back to Edit"
           class="cursor-pointer"
-          @click="mode = 'edit'"
+          @click="
+            () => {
+              mode = 'edit';
+            }
+          "
         />
       </div>
       <div

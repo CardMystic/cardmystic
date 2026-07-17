@@ -206,7 +206,7 @@ import { parseDecklist } from '~/utils/decklist';
 const MAX_DECK_SIZE = 200;
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import type { Platform } from '~/utils/platformConfig';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import Filters from './Filters.vue';
@@ -257,11 +257,7 @@ const schema = z.object({
     .optional()
     .refine(
       (val) => !val?.trim() || parseDecklist(val).length <= MAX_DECK_SIZE,
-      (val) => ({
-        message: `Decklist has ${
-          numCardsInDecklist.value
-        } cards — maximum is ${MAX_DECK_SIZE}.`,
-      }),
+      { message: `Decklist exceeds the maximum of ${MAX_DECK_SIZE} cards.` },
     ),
   filters: CardSearchFiltersSchema.optional(),
 });
@@ -317,7 +313,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return base;
+  return CardSearchFiltersSchema.parse(base);
 });
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));

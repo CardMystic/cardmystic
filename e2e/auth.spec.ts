@@ -68,7 +68,7 @@ test.describe('Login page', () => {
     await expect(
       page.getByText(/invalid|incorrect|credentials|unauthorized|email/i),
     ).toBeVisible({ timeout: 15_000 });
-    await expect(page).toHaveURL(/\/user/login$/);
+    await expect(page).toHaveURL(/\/user\/login$/);
   });
 
   test('email login with valid credentials redirects home and shows logged-in navbar', async ({
@@ -174,6 +174,7 @@ test.describe('Register page', () => {
     });
 
     await gotoHydrated(page, '/user/register');
+    await reliableFill(page.getByPlaceholder('Username'), 'testuser');
     await reliableFill(page.getByPlaceholder('Email'), 'new@example.com');
     await reliableFill(
       page.getByPlaceholder('Password', { exact: true }),
@@ -197,6 +198,7 @@ test.describe('Register page', () => {
     });
 
     await gotoHydrated(page, '/user/register');
+    await reliableFill(page.getByPlaceholder('Username'), 'testuser');
     await reliableFill(page.getByPlaceholder('Email'), 'new@example.com');
     await reliableFill(
       page.getByPlaceholder('Password', { exact: true }),

@@ -245,7 +245,9 @@ const {
 
 const router = useRouter();
 const { saveSearchMutation } = useSearchHistory();
-const list = computed(() => userLists.value?.find((l: any) => l.id === listId));
+const list = computed(() =>
+  userLists.value?.decklists?.find((l: any) => l.id === listId),
+);
 
 // Banner background image URL
 const bannerImageUrl = computed(() => {
