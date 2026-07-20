@@ -82,6 +82,18 @@ const searchItems: NavigationMenuItem[] = [
     icon: 'i-lucide-compass',
     children: [
       {
+        label: 'Search Decklists',
+        description: 'Find public decklists by keyword',
+        icon: 'i-lucide-list-tree',
+        to: '/explore/decklists',
+      },
+      {
+        label: 'Search Users',
+        description: 'Find other CardMystic users',
+        icon: 'i-lucide-user-search',
+        to: '/explore/users',
+      },
+      {
         label: 'Popular Commander Cards',
         description: 'Top cards across all commander decks',
         icon: 'i-lucide-chart-no-axes-combined',
@@ -141,6 +153,18 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Get decklist recommendations',
     icon: 'i-lucide-box',
     to: '/search/all/deckbuilder',
+  },
+  {
+    label: 'Search Decklists',
+    description: 'Find public decklists by keyword',
+    icon: 'i-lucide-list-tree',
+    to: '/explore/decklists',
+  },
+  {
+    label: 'Search Users',
+    description: 'Find other CardMystic users',
+    icon: 'i-lucide-user-search',
+    to: '/explore/users',
   },
   {
     label: 'Popular Commander Cards',
@@ -242,7 +266,7 @@ const externalItems: NavigationMenuItem[] = [
               label="Login"
               @click="
                 () => {
-                  router.push('/login');
+                  router.push('/user/login');
                 }
               "
             />
@@ -306,7 +330,7 @@ const externalItems: NavigationMenuItem[] = [
                   label="History"
                   block
                   @click="
-                    router.push('/history');
+                    router.push('/user/history');
                     isMobileProfilePopoverOpen = false;
                   "
                 />
@@ -318,7 +342,7 @@ const externalItems: NavigationMenuItem[] = [
                   label="Settings"
                   block
                   @click="
-                    router.push('/profile');
+                    router.push('/user/profile');
                     isMobileProfilePopoverOpen = false;
                   "
                 />
@@ -349,7 +373,7 @@ const externalItems: NavigationMenuItem[] = [
               label="Login"
               @click="
                 () => {
-                  router.push('/login');
+                  router.push('/user/login');
                 }
               "
             />
@@ -419,7 +443,7 @@ const externalItems: NavigationMenuItem[] = [
             label="Login"
             @click="
               () => {
-                router.push('/login');
+                router.push('/user/login');
               }
             "
           />
@@ -485,7 +509,7 @@ const externalItems: NavigationMenuItem[] = [
                 label="History"
                 block
                 @click="
-                  router.push('/history');
+                  router.push('/user/history');
                   isDesktopProfilePopoverOpen = false;
                 "
               />
@@ -497,7 +521,7 @@ const externalItems: NavigationMenuItem[] = [
                 label="Settings"
                 block
                 @click="
-                  router.push('/profile');
+                  router.push('/user/profile');
                   isDesktopProfilePopoverOpen = false;
                 "
               />
@@ -528,7 +552,7 @@ const externalItems: NavigationMenuItem[] = [
             label="Login"
             @click="
               () => {
-                router.push('/login');
+                router.push('/user/login');
               }
             "
           />

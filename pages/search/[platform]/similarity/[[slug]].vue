@@ -49,10 +49,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import {
-  CardSearchFiltersSchema,
-  SimilaritySearchSchema,
-} from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { SimilaritySearchSchema } from '~/models/searchModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useSimilaritySearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
@@ -144,9 +142,9 @@ const parsedFilters = computed(() => {
       /* fall through to defaults on malformed input */
     }
   }
-  return seoEntry
-    ? { ...seoEntry.filters, ...platformFilters }
-    : platformFilters;
+  return CardSearchFiltersSchema.parse(
+    seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters,
+  );
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();

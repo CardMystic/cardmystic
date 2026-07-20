@@ -65,8 +65,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
-import { PopularByCommanderSearchSchema } from '~/models/deckStatsModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { PopularByCommanderRequestSchema } from '~/models/deckStatsModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePopularByCommander } from '~/composables/useDeckStats';
 import { useCardsByName } from '~/composables/useCards';
@@ -148,7 +148,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return {};
+  return CardSearchFiltersSchema.parse({});
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();
@@ -169,7 +169,7 @@ const searchParams = computed(() => {
   const commanders = [commanderParam.value];
   if (partnerParam.value) commanders.push(partnerParam.value);
 
-  return PopularByCommanderSearchSchema.parse({
+  return PopularByCommanderRequestSchema.parse({
     commanders,
     query: queryParam.value || undefined,
     limit: limitParam.value,

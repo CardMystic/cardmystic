@@ -87,7 +87,7 @@ import CardListLink from '~/components/lists/CardListLink.vue';
 const { userLists, isLoadingLists, listsError } = useCardLists();
 const toast = useToast();
 
-const lists = computed(() => userLists.value || []);
+const lists = computed(() => userLists.value?.decklists || []);
 const loading = computed(() => isLoadingLists.value);
 const error = computed(() => listsError.value?.message || '');
 

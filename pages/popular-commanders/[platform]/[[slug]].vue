@@ -31,8 +31,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
-import { TopCommandersSearchSchema } from '~/models/deckStatsModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { TopCommandersRequestSchema } from '~/models/deckStatsModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useTopCommandersSearch } from '~/composables/useDeckStats';
 import {
@@ -91,7 +91,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return platformFilters;
+  return CardSearchFiltersSchema.parse(platformFilters);
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();
@@ -108,7 +108,7 @@ function handleFabClick() {
 }
 
 const topCommandersSearch = computed(() => {
-  return TopCommandersSearchSchema.parse({
+  return TopCommandersRequestSchema.parse({
     query: queryParam.value || undefined,
     limit: limitParam.value,
     filters: parsedFilters.value,

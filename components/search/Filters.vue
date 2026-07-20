@@ -429,9 +429,9 @@ import {
   CardRarity,
   CardFormat,
   CardFormatStatus,
-  cardColorToSymbol,
 } from '~/models/cardModel';
-import type { CardSearchFilters } from '~/models/searchModel';
+import { cardColorToSymbol } from '~/utils/cardHelpers.js';
+import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 import ManaIcon from '../general/ManaIcon.vue';
 import type {
   AccordionItem,

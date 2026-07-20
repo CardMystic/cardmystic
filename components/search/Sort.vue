@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center gap-1 justify-center h-8">
     <UIcon name="i-lucide-arrow-up-down" />
-    <span class="text-sm">Sort by:</span>
+    <span class="text-sm">Sort</span>
     <USelect
       v-model="selectedSortValue"
       :items="sortOptions"

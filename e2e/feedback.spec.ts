@@ -152,7 +152,7 @@ test.describe('Trending queries', () => {
     await expect(resultsGrid(page)).toBeVisible({ timeout: SEARCH_TIMEOUT });
   });
 
-  test('clicking the ExampleQueries TRY button navigates to AI search', async ({
+  test('clicking the ExampleQueries TRY button navigates to Smart search', async ({
     page,
   }) => {
     await gotoHydrated(page, '/');

@@ -33,7 +33,7 @@ const selectedProfileCard = ref(profileData.value?.avatar_card_name || '');
 const searchTerm = ref('');
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
-// Sync username when user profile changes
+// Sync display name when user profile changes
 watch(computedUsername, (newVal) => {
   username.value = newVal;
 });
@@ -203,7 +203,7 @@ const handleSignOut = async () => {
             />
             <div
               v-else
-              class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center"
+              class="w-24 h-24 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center"
             >
               <UIcon name="i-lucide-user" class="w-12 h-12" />
             </div>

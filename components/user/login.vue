@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { useSupabase } from '~/composables/useSupabase';
-import { useRecaptcha } from '~/composables/useRecaptcha';
+import type { LoginRequest } from '@/models/userModel';
 
 const router = useRouter();
 
-const supabase = useSupabase();
-const { verifyRecaptcha } = useRecaptcha();
-const config = useRuntimeConfig();
+const { loginWithEmail, loginWithGoogle, resendVerificationEmail } =
+  useUserProfile();
 
 const email = ref('');
 const password = ref('');
@@ -18,53 +16,17 @@ const resendMessage = ref<string | null>(null);
 const honeypot = ref('');
 const showPassword = ref(false);
 
-const applyPendingSignupAvatar = async (emailAddress: string) => {
-  if (!import.meta.client || !emailAddress) return;
-
-  const key = `pendingSignupAvatar:${emailAddress.trim().toLowerCase()}`;
-  const pendingAvatar = localStorage.getItem(key);
-  if (!pendingAvatar) return;
-
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user?.id) return;
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ avatar_card_name: pendingAvatar })
-      .eq('id', user.id);
-
-    if (!error) {
-      localStorage.removeItem(key);
-    }
-  } catch {
-    // Non-critical: leave pending value for next successful login.
-  }
-};
-
 const signInWithGoogle = async () => {
   errorMessage.value = null;
   loading.value = true;
 
-  const verified = await verifyRecaptcha('login_google');
-  if (!verified) {
-    errorMessage.value = 'Security verification failed. Please try again.';
-    loading.value = false;
-    return;
+  try {
+    await loginWithGoogle();
+  } catch (e: any) {
+    errorMessage.value = e.message || 'An unexpected error occurred.';
   }
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  });
 
   loading.value = false;
-
-  if (error) {
-    errorMessage.value = error.message;
-  }
 };
 
 const signInWithEmail = async () => {
@@ -78,42 +40,18 @@ const signInWithEmail = async () => {
     return;
   }
 
-  const verified = await verifyRecaptcha('login');
-  if (!verified) {
-    errorMessage.value = 'Security verification failed. Please try again.';
-    loading.value = false;
-    return;
-  }
-
   try {
-    const res = await fetch(`${config.public.backendUrl}/user/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value, password: password.value }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      errorMessage.value = data.message || 'Login failed.';
-      if (/not confirmed|confirm your email/i.test(errorMessage.value ?? '')) {
-        showResendVerification.value = true;
-      }
-      loading.value = false;
-      return;
-    }
-
-    // Set the Supabase session from the tokens returned by the backend
-    await supabase.auth.setSession({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-    });
-
-    await applyPendingSignupAvatar(email.value);
-
+    const credentials: LoginRequest = {
+      email: email.value,
+      password: password.value,
+    };
+    await loginWithEmail(credentials);
     router.push('/');
-  } catch (e) {
-    errorMessage.value = 'An unexpected error occurred.';
+  } catch (e: any) {
+    errorMessage.value = e.message || 'An unexpected error occurred.';
+    if (/not confirmed|confirm your email/i.test(errorMessage.value ?? '')) {
+      showResendVerification.value = true;
+    }
   }
 
   loading.value = false;
@@ -124,15 +62,14 @@ const resendVerification = async () => {
   resending.value = true;
   resendMessage.value = null;
 
-  const { error } = await supabase.auth.resend({
-    type: 'signup',
-    email: email.value.trim(),
-  });
+  try {
+    await resendVerificationEmail(email.value);
+    resendMessage.value = 'Verification email sent. Please check your inbox.';
+  } catch (e: any) {
+    resendMessage.value = e.message;
+  }
 
   resending.value = false;
-  resendMessage.value = error
-    ? error.message
-    : 'Verification email sent. Please check your inbox.';
 };
 </script>
 
@@ -205,7 +142,7 @@ const resendVerification = async () => {
         :padded="false"
         @click="
           () => {
-            router.push('/reset-password');
+            router.push('/user/reset-password');
           }
         "
       >
@@ -258,7 +195,7 @@ const resendVerification = async () => {
         :padded="false"
         @click="
           () => {
-            router.push('/register');
+            router.push('/user/register');
           }
         "
       >

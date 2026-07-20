@@ -1,4 +1,4 @@
-import type { CardSearchFilters } from '~/models/searchModel';
+import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 
 export type SeoSearchType = 'smart' | 'similarity' | 'keyword';
 

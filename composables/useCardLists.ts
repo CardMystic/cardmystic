@@ -8,12 +8,17 @@ import {
 } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
 import type { CardFormatType } from '~/models/cardModel';
-import type { BulkEditRequest, BulkEditResponse } from '~/models/cardListModel';
+import {
+  GetActiveUserDecklistsResponseSchema,
+  type BulkEditRequest,
+  type BulkEditResponse,
+} from '~/models/cardListModel';
 
 export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
+  const config = useRuntimeConfig();
 
   // Fetch user lists with TanStack Query
   const {
@@ -24,22 +29,24 @@ export const useCardLists = () => {
   } = useQuery({
     queryKey: ['user-lists', computed(() => userProfile.value?.id)],
     queryFn: async () => {
-      if (!supabase) return [];
-      if (!userProfile.value?.id) {
-        throw new Error('User not authenticated');
+      const { data: sessionData } = await supabase!.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error('No authentication token available');
+
+      const response = await fetch(
+        `${config.public.backendUrl}/supabase/card-lists?limit=50`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) {
+        throw new Error(
+          `Failed to load active user decklists (${response.status})`,
+        );
       }
-
-      const { data, error } = await supabase
-        .from('card_lists')
-        .select('*')
-        .eq('user_id', userProfile.value.id)
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
+      return GetActiveUserDecklistsResponseSchema.parse(await response.json());
     },
-    enabled: computed(() => !!userProfile.value?.id),
+    enabled: computed(() => !process.server && !!userProfile.value?.id),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   const createList = async (

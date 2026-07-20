@@ -76,6 +76,35 @@ export type Database = {
           },
         ];
       };
+      card_list_primer: {
+        Row: {
+          created_at: string;
+          id: number;
+          list_id: string;
+          text: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          list_id: string;
+          text?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          list_id?: string;
+          text?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_list_primer_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: true;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       card_lists: {
         Row: {
           avatar_card_name: string | null;
@@ -86,6 +115,7 @@ export type Database = {
           name: string | null;
           updated_at: string | null;
           user_id: string | null;
+          visibility: Database['public']['Enums']['visibility'];
         };
         Insert: {
           avatar_card_name?: string | null;
@@ -96,6 +126,7 @@ export type Database = {
           name?: string | null;
           updated_at?: string | null;
           user_id?: string | null;
+          visibility?: Database['public']['Enums']['visibility'];
         };
         Update: {
           avatar_card_name?: string | null;
@@ -106,24 +137,31 @@ export type Database = {
           name?: string | null;
           updated_at?: string | null;
           user_id?: string | null;
+          visibility?: Database['public']['Enums']['visibility'];
         };
         Relationships: [];
       };
       profiles: {
         Row: {
-          avatar_card_name: string | null;
+          avatar_card_name: string;
           created_at: string;
           id: string;
+          is_featured: boolean;
+          username: string | null;
         };
         Insert: {
-          avatar_card_name?: string | null;
+          avatar_card_name?: string;
           created_at?: string;
           id: string;
+          is_featured?: boolean;
+          username?: string | null;
         };
         Update: {
-          avatar_card_name?: string | null;
+          avatar_card_name?: string;
           created_at?: string;
           id?: string;
+          is_featured?: boolean;
+          username?: string | null;
         };
         Relationships: [];
       };
@@ -162,7 +200,7 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      visibility: 'private' | 'public';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -292,6 +330,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      visibility: ['private', 'public'],
+    },
   },
 } as const;

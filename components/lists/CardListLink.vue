@@ -26,13 +26,48 @@
 
     <!-- Content (clickable) -->
     <div class="relative p-2 md:p-4" @click="router.push(`/lists/${list.id}`)">
-      <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">
+      <h3 class="text-base md:text-xl font-bold mb-1 md:mb-2">
         {{ list.name }}
       </h3>
-      <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
+      <p
+        v-if="list.description"
+        class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1"
+      >
         {{ list.description }}
       </p>
+      <p v-else class="text-xs md:text-sm mb-2 md:mb-3 opacity-60 italic">
+        No description
+      </p>
+      <p
+        v-if="list.commanders"
+        class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1"
+      >
+        <span v-if="list.format == 'Commander'">
+          <UIcon name="i-lucide-crown" class="w-3 h-3 md:w-4 md:h-4 shrink-0" />
+          {{ list.commanders.join(', ') }}
+        </span>
+        <span v-else>
+          <UIcon
+            name="i-lucide-trophy"
+            class="w-3 h-3 md:w-4 md:h-4 shrink-0"
+          />
+          {{ list.format }}
+        </span>
+      </p>
+
       <div class="flex items-center justify-between text-xs md:text-sm">
+        <NuxtLink
+          v-if="showAuthor && list.username"
+          :to="`/user/${list.user_id}`"
+          class="flex items-center gap-1 hover:text-primary truncate"
+          @click.stop
+        >
+          <UIcon name="i-lucide-user" class="w-3 h-3 md:w-4 md:h-4 shrink-0" />
+          <span class="truncate">{{ list.username }}</span>
+        </NuxtLink>
+        <span v-else-if="showAuthor" class="opacity-60 italic truncate">
+          Anonymous
+        </span>
         <span>{{
           formatShortDate(list.updated_at ? list.updated_at : list.created_at)
         }}</span>
@@ -54,7 +89,11 @@
               color="neutral"
               variant="ghost"
               label="Cancel"
-              @click="isDeleteModalOpen = false"
+              @click="
+                () => {
+                  isDeleteModalOpen = false;
+                }
+              "
               :disabled="deleteLoading"
             />
             <UButton
@@ -77,9 +116,9 @@ import { useCardLists } from '~/composables/useCardLists';
 
 const router = useRouter();
 import { useToast } from '#imports';
-import type { Database } from '~/database.types';
+import type { DecklistSummary } from '~/models/cardListModel';
 
-type List = Database['public']['Tables']['card_lists']['Row'];
+type List = DecklistSummary;
 
 const props = defineProps({
   list: {
@@ -89,6 +128,10 @@ const props = defineProps({
   showDeleteButton: {
     type: Boolean,
     default: true,
+  },
+  showAuthor: {
+    type: Boolean,
+    default: false,
   },
 });
 
