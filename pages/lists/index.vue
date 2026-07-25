@@ -60,6 +60,59 @@
         />
       </div>
 
+      <!-- Liked / Saved decklist folders -->
+      <div v-if="!loading && !error" class="mt-10 space-y-4">
+        <UCollapsible v-if="likedDecklists.length > 0">
+          <UButton
+            :label="`Liked Decklists (${likedDecklists.length})`"
+            icon="i-lucide-heart"
+            trailing-icon="i-lucide-chevron-down"
+            color="neutral"
+            variant="outline"
+            class="cursor-pointer"
+            block
+          />
+          <template #content>
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4"
+            >
+              <CardListLink
+                v-for="list in likedDecklists"
+                :key="list.id"
+                :list="list"
+                :show-delete-button="false"
+                :show-author="true"
+              />
+            </div>
+          </template>
+        </UCollapsible>
+
+        <UCollapsible v-if="savedDecklists.length > 0">
+          <UButton
+            :label="`Saved Decklists (${savedDecklists.length})`"
+            icon="i-lucide-bookmark"
+            trailing-icon="i-lucide-chevron-down"
+            color="neutral"
+            variant="outline"
+            class="cursor-pointer"
+            block
+          />
+          <template #content>
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4"
+            >
+              <CardListLink
+                v-for="list in savedDecklists"
+                :key="list.id"
+                :list="list"
+                :show-delete-button="false"
+                :show-author="true"
+              />
+            </div>
+          </template>
+        </UCollapsible>
+      </div>
+
       <template #fallback>
         <div class="flex justify-center py-12">
           <UIcon
@@ -81,11 +134,15 @@ definePageMeta({
 });
 
 import { useCardLists } from '~/composables/useCardLists';
-import { useToast } from '#imports';
+import {
+  useLikedDecklists,
+  useSavedDecklists,
+} from '~/composables/useDecklistSocial';
 import CardListLink from '~/components/lists/CardListLink.vue';
 
 const { userLists, isLoadingLists, listsError } = useCardLists();
-const toast = useToast();
+const { decklists: likedDecklists } = useLikedDecklists();
+const { decklists: savedDecklists } = useSavedDecklists();
 
 const lists = computed(() => userLists.value?.decklists || []);
 const loading = computed(() => isLoadingLists.value);

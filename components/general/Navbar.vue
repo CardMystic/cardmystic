@@ -336,13 +336,13 @@ const externalItems: NavigationMenuItem[] = [
                 />
                 <UButton
                   class="cursor-pointer"
-                  icon="i-lucide-settings"
+                  icon="i-lucide-user-cog"
                   color="neutral"
                   variant="ghost"
-                  label="Settings"
+                  label="Account"
                   block
                   @click="
-                    router.push('/user/profile');
+                    router.push('/user/account');
                     isMobileProfilePopoverOpen = false;
                   "
                 />
@@ -515,13 +515,13 @@ const externalItems: NavigationMenuItem[] = [
               />
               <UButton
                 class="cursor-pointer"
-                icon="i-lucide-settings"
+                icon="i-lucide-user-cog"
                 color="neutral"
                 variant="ghost"
-                label="Settings"
+                label="Account"
                 block
                 @click="
-                  router.push('/user/profile');
+                  router.push('/user/account');
                   isDesktopProfilePopoverOpen = false;
                 "
               />

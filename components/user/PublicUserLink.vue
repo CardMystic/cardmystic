@@ -26,6 +26,11 @@
         >
           Featured
         </UBadge>
+        <span class="text-xs opacity-70 shrink-0">
+          {{ profile.follower_count }} follower{{
+            profile.follower_count === 1 ? '' : 's'
+          }}
+        </span>
       </div>
       <UIcon name="i-lucide-chevron-right" class="w-4 h-4 shrink-0" />
     </div>

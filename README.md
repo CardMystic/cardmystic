@@ -265,9 +265,11 @@ When new Magic sets release or card data updates, the backend data files are upd
 
 The database is hosted on Supabase and stores:
 
-- **User accounts**: Authentication and profile data
-- **Card lists**: User-created card collections with metadata
+- **User accounts**: Authentication and profile data (including follower counts and featured flags)
+- **Card lists**: User-created card collections with metadata and social counters (likes, saves, comments, views)
 - **Card list items**: Individual cards in each list, including commander designation (`is_commander`)
+- **Decklist social**: Likes, saves, and comments on public decklists (`decklist_likes`, `decklist_saves`, `decklist_comments`)
+- **Follows**: Follower relationships between users (`user_follows`)
 - **Search history**: User search and card view history
 - **Card feedback**: User feedback on search results for model improvement
 

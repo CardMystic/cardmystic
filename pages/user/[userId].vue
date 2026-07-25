@@ -28,7 +28,7 @@
         ></div>
         <div class="relative p-6 md:p-10 flex items-center gap-3">
           <UIcon name="i-lucide-user-circle-2" class="text-4xl md:text-5xl" />
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <h1 class="text-2xl md:text-4xl font-bold truncate">
               {{ profile.username || 'Anonymous' }}
             </h1>
@@ -41,8 +41,14 @@
                   decklists.length === 1 ? '' : 's'
                 }}
               </span>
+              <span class="text-xs md:text-sm opacity-70">
+                &middot; {{ profile.follower_count }} follower{{
+                  profile.follower_count === 1 ? '' : 's'
+                }}
+              </span>
             </div>
           </div>
+          <FollowButton :user-id="profile.id" class="shrink-0" />
         </div>
       </div>
 
@@ -77,6 +83,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePublicUserProfile } from '~/composables/useDiscovery';
 import CardListLink from '~/components/lists/CardListLink.vue';
+import FollowButton from '~/components/user/FollowButton.vue';
 
 definePageMeta({ title: 'User Profile' });
 

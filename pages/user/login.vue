@@ -11,7 +11,7 @@ definePageMeta({
     // Redirect if already logged in
     const { userProfile } = useUserProfile();
     if (userProfile.value?.id) {
-      return navigateTo('/user/profile');
+      return navigateTo('/user/account');
     }
   },
 });

@@ -51,6 +51,10 @@ export const PublicProfileSchema = z.object({
     .nullable()
     .describe("Card name used as the user's avatar"),
   is_featured: z.boolean().describe('Whether the user is a featured profile'),
+  follower_count: z
+    .number()
+    .int()
+    .describe('Number of users following this profile'),
 });
 
 export type PublicProfile = z.infer<typeof PublicProfileSchema>;
@@ -108,3 +112,83 @@ export const SetUsernameResponseSchema = z.object({
   message: z.string(),
 });
 export type SetUsernameResponse = z.infer<typeof SetUsernameResponseSchema>;
+
+// ---- Follows ----
+
+export const FollowUserResponseSchema = z.object({
+  following: z
+    .boolean()
+    .describe('Whether the authenticated user now follows the target user'),
+  follower_count: z
+    .number()
+    .int()
+    .describe("The target user's updated follower count"),
+});
+
+export type FollowUserResponse = z.infer<typeof FollowUserResponseSchema>;
+
+export const GetFollowingResponseSchema = z.object({
+  users: z
+    .array(PublicProfileSchema)
+    .describe('Profiles the authenticated user follows, newest first'),
+});
+
+export type GetFollowingResponse = z.infer<typeof GetFollowingResponseSchema>;
+
+// ---- Featured Users ----
+
+export const GetFeaturedUsersQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .default(10)
+    .describe('Maximum number of featured users to return (default 10)'),
+});
+
+export type GetFeaturedUsersQuery = z.infer<typeof GetFeaturedUsersQuerySchema>;
+
+export const GetFeaturedUsersResponseSchema = z.object({
+  users: z.array(PublicProfileSchema),
+});
+
+export type GetFeaturedUsersResponse = z.infer<
+  typeof GetFeaturedUsersResponseSchema
+>;
+
+// ---- Account Stats ----
+
+export const GetAccountStatsResponseSchema = z.object({
+  deckCount: z.number().int().describe('Total number of decklists owned'),
+  publicDeckCount: z
+    .number()
+    .int()
+    .describe('Number of public decklists owned'),
+  totalLikes: z
+    .number()
+    .int()
+    .describe("Total likes across the user's decklists"),
+  totalSaves: z
+    .number()
+    .int()
+    .describe("Total saves across the user's decklists"),
+  totalComments: z
+    .number()
+    .int()
+    .describe("Total comments across the user's decklists"),
+  totalViews: z
+    .number()
+    .int()
+    .describe("Total public views across the user's decklists"),
+  followerCount: z.number().int().describe('Number of users following you'),
+  followingCount: z.number().int().describe('Number of users you follow'),
+  memberSince: z
+    .string()
+    .nullable()
+    .describe('Account creation timestamp (ISO 8601)'),
+});
+
+export type GetAccountStatsResponse = z.infer<
+  typeof GetAccountStatsResponseSchema
+>;
