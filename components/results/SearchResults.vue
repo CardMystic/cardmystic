@@ -1,7 +1,7 @@
 <template>
   <!-- Results -->
   <div class="mt-3 w-full" :class="{ 'pb-24': jumpToGroups.length > 0 }">
-    <template v-if="isLoading">
+    <template v-if="isLoading || deferringHeavyRender">
       <div style="height: 32px"></div>
       <!-- Sort spacer to prevent layout shift -->
       <div v-if="defaultGroupBy" style="height: 26px"></div>
@@ -261,6 +261,20 @@ import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
 import { useCommandersSet } from '~/composables/useBulkData';
 
 const { getPageInfo } = usePageInfo();
+
+// On SPA navigations with cached results, isLoading is false immediately and
+// rendering ~100 Card components synchronously freezes the old view for
+// seconds. Show skeletons for one frame first so the user sees a loading
+// state instead of a frozen page. Inactive during hydration (must match SSR).
+const nuxtApp = useNuxtApp();
+const deferringHeavyRender = ref(import.meta.client && !nuxtApp.isHydrating);
+onMounted(() => {
+  if (!deferringHeavyRender.value) return;
+  // Double rAF: the first paints the skeletons, the second lifts the gate.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => (deferringHeavyRender.value = false)),
+  );
+});
 
 // Hoisted commander detection — single subscription shared by all Card children
 const { data: commandersSet } = useCommandersSet();

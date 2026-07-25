@@ -27,47 +27,47 @@
 
     <!-- Like / Save toggles (interactive on client only) -->
     <ClientOnly>
-      <UTooltip
-        :text="
-          isLoggedIn ? (liked ? 'Unlike' : 'Like') : 'Sign in to like decks'
-        "
-      >
-        <UButton
-          :icon="liked ? 'i-lucide-heart' : 'i-lucide-heart'"
-          :color="liked ? 'error' : 'neutral'"
-          :variant="liked ? 'solid' : 'outline'"
-          size="sm"
-          class="cursor-pointer"
-          :disabled="!isLoggedIn || isTogglingLike"
-          :label="String(list.like_count)"
-          @click="handleToggleLike"
-        />
-      </UTooltip>
-      <UTooltip
-        :text="
-          isLoggedIn ? (saved ? 'Unsave' : 'Save') : 'Sign in to save decks'
-        "
-      >
-        <UButton
-          icon="i-lucide-bookmark"
-          :color="saved ? 'primary' : 'neutral'"
-          :variant="saved ? 'solid' : 'outline'"
-          size="sm"
-          class="cursor-pointer"
-          :disabled="!isLoggedIn || isTogglingSave"
-          :label="String(list.save_count)"
-          @click="handleToggleSave"
-        />
-      </UTooltip>
+      <template v-if="isLoggedIn && isLoadingSocialState">
+        <USkeleton class="h-8 w-14" />
+        <USkeleton class="h-8 w-14" />
+      </template>
+      <template v-else>
+        <UTooltip
+          :text="
+            isLoggedIn ? (liked ? 'Unlike' : 'Like') : 'Sign in to like decks'
+          "
+        >
+          <UButton
+            :icon="liked ? 'i-lucide-heart' : 'i-lucide-heart'"
+            :color="liked ? 'error' : 'neutral'"
+            :variant="liked ? 'solid' : 'outline'"
+            size="sm"
+            class="cursor-pointer"
+            :disabled="!isLoggedIn || isTogglingLike"
+            :label="String(list.like_count)"
+            @click="handleToggleLike"
+          />
+        </UTooltip>
+        <UTooltip
+          :text="
+            isLoggedIn ? (saved ? 'Unsave' : 'Save') : 'Sign in to save decks'
+          "
+        >
+          <UButton
+            icon="i-lucide-bookmark"
+            :color="saved ? 'primary' : 'neutral'"
+            :variant="saved ? 'solid' : 'outline'"
+            size="sm"
+            class="cursor-pointer"
+            :disabled="!isLoggedIn || isTogglingSave"
+            :label="String(list.save_count)"
+            @click="handleToggleSave"
+          />
+        </UTooltip>
+      </template>
       <template #fallback>
-        <span class="flex items-center gap-1 text-sm">
-          <UIcon name="i-lucide-heart" class="w-4 h-4" />
-          {{ list.like_count }}
-        </span>
-        <span class="flex items-center gap-1 text-sm">
-          <UIcon name="i-lucide-bookmark" class="w-4 h-4" />
-          {{ list.save_count }}
-        </span>
+        <USkeleton class="h-8 w-14" />
+        <USkeleton class="h-8 w-14" />
       </template>
     </ClientOnly>
 
@@ -113,6 +113,7 @@ const {
   isLoggedIn,
   liked,
   saved,
+  isLoadingSocialState,
   toggleLike,
   toggleSave,
   isTogglingLike,

@@ -62,6 +62,11 @@
 
       <!-- Liked / Saved decklist folders -->
       <div v-if="!loading && !error" class="mt-10 space-y-4">
+        <template v-if="isLoadingLiked || isLoadingSaved">
+          <USkeleton class="h-8 w-full" />
+          <USkeleton class="h-8 w-full" />
+        </template>
+
         <UCollapsible v-if="likedDecklists.length > 0">
           <UButton
             :label="`Liked Decklists (${likedDecklists.length})`"
@@ -141,8 +146,10 @@ import {
 import CardListLink from '~/components/lists/CardListLink.vue';
 
 const { userLists, isLoadingLists, listsError } = useCardLists();
-const { decklists: likedDecklists } = useLikedDecklists();
-const { decklists: savedDecklists } = useSavedDecklists();
+const { decklists: likedDecklists, isLoading: isLoadingLiked } =
+  useLikedDecklists();
+const { decklists: savedDecklists, isLoading: isLoadingSaved } =
+  useSavedDecklists();
 
 const lists = computed(() => userLists.value?.decklists || []);
 const loading = computed(() => isLoadingLists.value);
