@@ -1,7 +1,8 @@
-import { useQuery, keepPreviousData } from '@tanstack/vue-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import {
   GetFeaturedDecklistsResponseSchema,
+  GetPublicDecklistResponseSchema,
   SearchDecklistsResponseSchema,
 } from '~/models/cardListModel';
 import {
@@ -43,76 +44,106 @@ export function useFeaturedDecklists(limit = 10) {
 }
 
 /**
- * Fuzzy-search public decklists by name/description. The query string is
- * debounced by the caller — pass an already-debounced ref.
+ * Fuzzy-search public decklists by name/description with cursor-based
+ * infinite scrolling. The query string is debounced by the caller.
  */
 export function useDecklistSearch(query: Ref<string>, limit = 20) {
   const config = useRuntimeConfig();
 
-  const enabled = computed(() => query.value.trim().length > 0);
-
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
-    queryKey: computed(() => [
-      'discovery',
-      'search-decklists',
-      query.value,
-      limit,
-    ]),
-    queryFn: async () => {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(() => ({
+    queryKey: ['discovery', 'search-decklists', query.value, limit] as const,
+    queryFn: async ({ pageParam }) => {
       const trimmed = query.value.trim();
-      const url = `${config.public.backendUrl}/supabase/card-lists/search?query=${encodeURIComponent(trimmed)}&limit=${limit}`;
+      const params = new URLSearchParams({
+        query: trimmed,
+        limit: String(limit),
+      });
+      if (pageParam) params.set('cursor', pageParam);
+      const url = `${config.public.backendUrl}/supabase/card-lists/search?${params}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to search decklists (${response.status})`);
       }
       return SearchDecklistsResponseSchema.parse(await response.json());
     },
-    enabled,
-    placeholderData: keepPreviousData,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: query.value.trim().length > 0,
     staleTime: 1000 * 30,
     refetchOnWindowFocus: false,
-  });
+  }));
 
   return {
-    decklists: computed(() => data.value?.decklists ?? []),
+    decklists: computed(
+      () => data.value?.pages.flatMap((p) => p.decklists) ?? [],
+    ),
     isLoading,
     isFetching,
+    isFetchingNextPage,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
   };
 }
 
 /**
- * Fuzzy-search public user profiles by username.
+ * Fuzzy-search public user profiles by username with cursor-based
+ * infinite scrolling.
  */
 export function useUserSearch(query: Ref<string>, limit = 20) {
   const config = useRuntimeConfig();
 
-  const enabled = computed(() => query.value.trim().length > 0);
-
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
-    queryKey: computed(() => ['discovery', 'search-users', query.value, limit]),
-    queryFn: async () => {
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(() => ({
+    queryKey: ['discovery', 'search-users', query.value, limit] as const,
+    queryFn: async ({ pageParam }) => {
       const trimmed = query.value.trim();
-      const url = `${config.public.backendUrl}/user/search?query=${encodeURIComponent(trimmed)}&limit=${limit}`;
+      const params = new URLSearchParams({
+        query: trimmed,
+        limit: String(limit),
+      });
+      if (pageParam) params.set('cursor', pageParam);
+      const url = `${config.public.backendUrl}/user/search?${params}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to search users (${response.status})`);
       }
       return SearchUsersResponseSchema.parse(await response.json());
     },
-    enabled,
-    placeholderData: keepPreviousData,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: query.value.trim().length > 0,
     staleTime: 1000 * 30,
     refetchOnWindowFocus: false,
-  });
+  }));
 
   return {
-    users: computed(() => data.value?.users ?? []),
+    users: computed(() => data.value?.pages.flatMap((p) => p.users) ?? []),
     isLoading,
     isFetching,
+    isFetchingNextPage,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
   };
 }
 
@@ -147,6 +178,45 @@ export function usePublicUserProfile(userId: Ref<string | null | undefined>) {
   return {
     profile: computed(() => data.value?.profile ?? null),
     decklists: computed(() => data.value?.decklists ?? []),
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Fetches a single public decklist by ID, including its summary and items.
+ * Used as a fallback on the list detail page when the list doesn't belong
+ * to the authenticated user.
+ */
+export function usePublicDecklist(listId: Ref<string | null | undefined>) {
+  const config = useRuntimeConfig();
+
+  const enabled = computed(() => !!listId.value);
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: computed(() => ['discovery', 'public-decklist', listId.value]),
+    queryFn: async () => {
+      if (!listId.value) return null;
+      const url = `${config.public.backendUrl}/supabase/card-lists/view/${encodeURIComponent(listId.value)}`;
+      const response = await fetch(url);
+      if (response.status === 404) {
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error(`Failed to load public decklist (${response.status})`);
+      }
+      return GetPublicDecklistResponseSchema.parse(await response.json());
+    },
+    enabled,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    decklist: computed(() => data.value?.decklist ?? null),
+    items: computed(() => data.value?.items ?? []),
+    owner: computed(() => data.value?.owner ?? null),
     isLoading,
     error,
     refetch,

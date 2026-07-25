@@ -347,17 +347,64 @@ export const SearchDecklistsQuerySchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(100)
+    .max(200)
     .default(50)
-    .describe('Maximum number of decklists to return (default 50)'),
+    .describe('Maximum number of decklists to return (default 50, max 200)'),
+  cursor: z
+    .uuid()
+    .optional()
+    .describe(
+      'Decklist ID of the last entry from the previous page (omit for first page)',
+    ),
 });
 
 export type SearchDecklistsQuery = z.infer<typeof SearchDecklistsQuerySchema>;
 
 export const SearchDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
+  nextCursor: z
+    .uuid()
+    .nullable()
+    .describe(
+      'Decklist ID to pass as cursor for the next page, or null if no more results',
+    ),
 });
 
 export type SearchDecklistsResponse = z.infer<
   typeof SearchDecklistsResponseSchema
+>;
+
+// ---- Public Decklist View ----
+
+export const PublicDecklistItemSchema = z.object({
+  oracle_id: z.string().describe('Scryfall oracle ID of the card'),
+  num_copies: z.number().int().min(1).describe('Number of copies'),
+  board: z
+    .string()
+    .describe('Board the card belongs to (Mainboard, Sideboard, Considering)'),
+  is_commander: z.boolean().describe('Whether this card is a commander'),
+});
+
+export type PublicDecklistItem = z.infer<typeof PublicDecklistItemSchema>;
+
+export const GetPublicDecklistResponseSchema = z.object({
+  decklist: DecklistSummarySchema,
+  items: z.array(PublicDecklistItemSchema),
+  owner: z
+    .object({
+      id: z.string().describe("The user's ID"),
+      username: z.string().nullable().describe("The user's username"),
+      avatar_card_name: z
+        .string()
+        .nullable()
+        .describe("Card name used as the user's avatar"),
+      is_featured: z
+        .boolean()
+        .describe('Whether the user is a featured profile'),
+    })
+    .describe('The profile of the decklist owner'),
+});
+
+export type GetPublicDecklistResponse = z.infer<
+  typeof GetPublicDecklistResponseSchema
 >;

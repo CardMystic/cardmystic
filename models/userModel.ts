@@ -65,15 +65,27 @@ export const SearchUsersQuerySchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(50)
-    .default(20)
-    .describe('Maximum number of users to return'),
+    .max(200)
+    .default(50)
+    .describe('Maximum number of users to return (default 50, max 200)'),
+  cursor: z
+    .uuid()
+    .optional()
+    .describe(
+      'Profile ID of the last entry from the previous page (omit for first page)',
+    ),
 });
 
 export type SearchUsersQuery = z.infer<typeof SearchUsersQuerySchema>;
 
 export const SearchUsersResponseSchema = z.object({
   users: z.array(PublicProfileSchema),
+  nextCursor: z
+    .uuid()
+    .nullable()
+    .describe(
+      'Profile ID to pass as cursor for the next page, or null if no more results',
+    ),
 });
 
 export type SearchUsersResponse = z.infer<typeof SearchUsersResponseSchema>;

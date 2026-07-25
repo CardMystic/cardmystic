@@ -13,8 +13,14 @@
 
     <CardListBanner :list="list" :is-loading="isLoadingLists" />
 
-    <!-- Actions + Add Card -->
-    <div v-if="list" class="mb-2">
+    <!-- Owner info (shown when viewing someone else's public list) -->
+    <PublicDecklistOwnerLink
+      v-if="!isOwner && decklistOwner"
+      :owner="decklistOwner"
+    />
+
+    <!-- Actions + Add Card (owner only) -->
+    <div v-if="list && isOwner" class="mb-2">
       <div class="flex flex-wrap items-center justify-between">
         <div class="flex gap-2 mb-2">
           <UTooltip text="View the primer for this deck">
@@ -97,8 +103,9 @@
 
     <!-- Mobile add cards and display controls-->
     <div class="lg:hidden flex flex-row justify-between">
-      <!-- Mobile add cards input -->
+      <!-- Mobile add cards input (owner only) -->
       <UInputMenu
+        v-if="isOwner"
         v-model="selectedCardToAdd"
         v-model:search-term="addCardSearchTerm"
         :loading="addCardLoading"
@@ -158,8 +165,9 @@
     </ClientOnly>
   </div>
 
-  <!-- Bulk Edit Modal -->
+  <!-- Bulk Edit Modal (owner only) -->
   <BulkAddCardsModal
+    v-if="isOwner"
     v-model:open="isBulkEditModalOpen"
     :list-id="listId"
     :mainboard-names="mainboardNames"
@@ -213,11 +221,8 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  middleware: 'auth',
-});
-
 import { useCardLists } from '~/composables/useCardLists';
+import { usePublicDecklist } from '~/composables/useDiscovery';
 import { useCardNames } from '~/composables/useBulkData';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
@@ -245,9 +250,24 @@ const {
 
 const router = useRouter();
 const { saveSearchMutation } = useSearchHistory();
-const list = computed(() =>
+
+// Try to find the list in the user's own lists first
+const ownedList = computed(() =>
   userLists.value?.decklists?.find((l: any) => l.id === listId),
 );
+
+// Fall back to the public endpoint when the list isn't owned by the user
+const listIdRef = computed(() => listId);
+const {
+  decklist: publicDecklist,
+  items: publicItems,
+  owner: decklistOwner,
+  isLoading: isLoadingPublic,
+} = usePublicDecklist(listIdRef);
+
+// Unified list: prefer owned, fall back to public
+const list = computed(() => ownedList.value ?? publicDecklist.value);
+const isOwner = computed(() => !!ownedList.value);
 
 // Banner background image URL
 const bannerImageUrl = computed(() => {
@@ -272,8 +292,17 @@ const pendingDuplicateCard = ref<{
   numCopies: number;
 } | null>(null);
 
-// Use TanStack Query for list items
-const { data: listItems, isLoading: isLoadingItems } = useListItems(listId);
+// Use TanStack Query for list items (owner path, requires Supabase auth)
+const { data: ownedListItems, isLoading: isLoadingOwnedItems } =
+  useListItems(listId);
+
+// Merge items: prefer owned (direct Supabase), fall back to public API items
+const listItems = computed(() =>
+  isOwner.value ? (ownedListItems.value ?? []) : publicItems.value,
+);
+const isLoadingItems = computed(() =>
+  isOwner.value ? isLoadingOwnedItems.value : isLoadingPublic.value,
+);
 
 // Computed oracle IDs from list items — used as dependency for card details query.
 // The `card_id` column on `card_list_items` stores oracle_id post-cutover.
@@ -344,11 +373,10 @@ const decklistCardNames = computed(() =>
   cards.value.map((c: any) => c.card_data.name),
 );
 
-// Show loading when lists/items are loading, cards query is loading/fetching,
-// or items have loaded with card IDs but card data hasn't arrived yet
+// Show loading when data sources are loading, or items have loaded but cards haven't
 const loading = computed(
   () =>
-    isLoadingLists.value ||
+    (isLoadingLists.value && isLoadingPublic.value) ||
     !list.value ||
     isLoadingItems.value ||
     isLoadingCards.value ||
@@ -879,11 +907,11 @@ function openMassEntry() {
 }
 
 onMounted(() => {
-  // Check if list exists after data loads
+  // Check if list exists after both data sources have finished loading
   watch(
-    list,
-    (newList) => {
-      if (!isLoadingLists.value && !newList) {
+    [list, isLoadingLists, isLoadingPublic],
+    ([newList, loadingOwned, loadingPublic]) => {
+      if (!loadingOwned && !loadingPublic && !newList) {
         error.value = 'List not found';
       }
     },
