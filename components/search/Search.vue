@@ -6,7 +6,11 @@
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
       <!-- Regular search input -->
-      <AISearch v-if="searchType === 'smart'" :platform="platform" />
+      <AISearch
+        v-if="searchType === 'smart'"
+        :platform="platform"
+        :show-suggested-searches="showSuggestedSearches"
+      />
 
       <!-- Select Menu for similarity search -->
       <SimilaritySearch
@@ -56,6 +60,8 @@ const props = defineProps<{
     | 'keyword'
     | 'recommend';
   platform?: 'arena' | 'mtgo' | 'paper';
+  /** Show the curated "Suggested Searches" pills under the Smart Search bar (home hero only). */
+  showSuggestedSearches?: boolean;
 }>();
 
 const route = useRoute();

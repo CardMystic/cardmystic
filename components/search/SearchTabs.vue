@@ -1,6 +1,6 @@
 <template>
-  <!-- Desktop tabs -->
-  <div class="flex gap-3 max-lg:hidden mb-4 justify-center flex-nowrap">
+  <!-- Desktop tabs (wrap when the container is narrow, e.g. the home hero) -->
+  <div class="flex gap-3 max-lg:hidden mb-4 justify-center flex-wrap">
     <button
       type="button"
       :class="[
