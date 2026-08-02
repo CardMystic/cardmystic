@@ -25,7 +25,11 @@
         icon="i-lucide-plus"
         class="cursor-pointer rounded-pill"
         aria-label="Show more suggested searches"
-        @click="showAll = true"
+        @click="
+          () => {
+            showAll = true;
+          }
+        "
       >
         More
       </UButton>
