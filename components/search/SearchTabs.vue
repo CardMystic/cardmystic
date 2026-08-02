@@ -54,10 +54,6 @@
       @click="onTabClick('recommend')"
       class="relative"
     >
-      <span
-        class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold whitespace-nowrap bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full px-1.5 py-0.5 border border-gray-200 dark:border-gray-600"
-        ><span class="animate-rainbow">NEW</span> (Beta)</span
-      >
       <UIcon name="i-lucide-box" class="icon" size="18" />
       Deck Recommender
     </button>
@@ -274,9 +270,5 @@ function onMobileSelect(val: unknown) {
   100% {
     color: #dc2626;
   }
-}
-
-.animate-rainbow {
-  animation: rainbow 3s ease-in-out infinite;
 }
 </style>
