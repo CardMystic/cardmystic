@@ -66,9 +66,39 @@
       <p>No users matched "{{ debouncedQuery }}"</p>
     </div>
 
-    <div v-if="!hasSearched && !isLoading" class="empty-state">
-      <UIcon name="i-lucide-user-search" class="text-5xl opacity-30 mb-3" />
-      <p>Enter a username above to find other CardMystic users.</p>
+    <!-- Featured users shown by default when nothing is searched -->
+    <div v-if="!hasSearched">
+      <USeparator class="my-6" />
+
+      <h2
+        class="text-xl md:text-2xl font-semibold mb-1 flex items-center gap-2"
+      >
+        Featured Users
+      </h2>
+      <p class="text-lg text-gray-400 font-normal mb-4 italic">
+        Want to see your profile featured? Support us on Patreon to
+        automatically have your profile considered for featuring!
+      </p>
+      <div
+        v-if="isLoadingFeatured"
+        class="grid grid-cols-1 md:grid-cols-3 gap-3"
+      >
+        <USkeleton v-for="i in 6" :key="i" class="user-skeleton" />
+      </div>
+      <div
+        v-else-if="featuredUsers.length > 0"
+        class="grid grid-cols-1 md:grid-cols-3 gap-3"
+      >
+        <PublicUserLink
+          v-for="profile in featuredUsers"
+          :key="profile.id"
+          :profile="profile"
+        />
+      </div>
+      <div v-else class="empty-state">
+        <UIcon name="i-lucide-user-search" class="text-5xl opacity-30 mb-3" />
+        <p>Enter a username above to find other CardMystic users.</p>
+      </div>
     </div>
   </UContainer>
 </template>
@@ -76,7 +106,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useUserSearch } from '~/composables/useDiscovery';
+import { useUserSearch, useFeaturedUsers } from '~/composables/useDiscovery';
 import { refDebounced } from '~/utils/refDebounced';
 import PublicUserLink from '~/components/user/PublicUserLink.vue';
 
@@ -105,6 +135,10 @@ const {
 } = useUserSearch(debouncedQuery);
 
 const hasSearched = computed(() => debouncedQuery.value.trim().length > 0);
+
+// Featured users shown as the default view when nothing is searched
+const { users: featuredUsers, isLoading: isLoadingFeatured } =
+  useFeaturedUsers(12);
 
 function syncQueryToUrl() {
   const trimmed = searchInput.value.trim();

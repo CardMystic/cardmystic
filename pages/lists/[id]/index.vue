@@ -13,10 +13,11 @@
 
     <CardListBanner :list="list" :is-loading="isLoadingLists" />
 
-    <!-- Owner info (shown when viewing someone else's public list) -->
-    <PublicDecklistOwnerLink
-      v-if="!isOwner && decklistOwner"
-      :owner="decklistOwner"
+    <!-- Social bar with author link (public lists only) -->
+    <DecklistSocialBar
+      v-if="list && list.visibility === 'public'"
+      :list="list"
+      :owner="!isOwner ? decklistOwner : null"
     />
 
     <!-- Actions + Add Card (owner only) -->
@@ -163,6 +164,13 @@
         <CardListResultsSkeleton />
       </template>
     </ClientOnly>
+
+    <!-- Comments (public lists only) -->
+    <DecklistComments
+      v-if="list && list.visibility === 'public'"
+      :list-id="listId"
+      :is-list-owner="isOwner"
+    />
   </div>
 
   <!-- Bulk Edit Modal (owner only) -->
@@ -223,6 +231,7 @@
 <script setup lang="ts">
 import { useCardLists } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
+import { useDecklistViewTracker } from '~/composables/useDecklistSocial';
 import { useCardNames } from '~/composables/useBulkData';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
@@ -268,6 +277,12 @@ const {
 // Unified list: prefer owned, fall back to public
 const list = computed(() => ownedList.value ?? publicDecklist.value);
 const isOwner = computed(() => !!ownedList.value);
+
+// Record a view once per visit when the deck resolves as public
+useDecklistViewTracker(
+  listIdRef,
+  computed(() => list.value?.visibility === 'public'),
+);
 
 // Banner background image URL
 const bannerImageUrl = computed(() => {

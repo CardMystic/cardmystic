@@ -287,6 +287,10 @@ export const DecklistSummarySchema = z.object({
     .describe('The visibility of the list (e.g., public, private)'),
   user_id: z.string().describe("The owner's user ID"),
   username: z.string().nullable().describe("The owner's username"),
+  like_count: z.number().int().describe('Number of likes on the list'),
+  save_count: z.number().int().describe('Number of saves on the list'),
+  comment_count: z.number().int().describe('Number of comments on the list'),
+  view_count: z.number().int().describe('Number of public views of the list'),
 });
 
 export type DecklistSummary = z.infer<typeof DecklistSummarySchema>;
@@ -407,4 +411,128 @@ export const GetPublicDecklistResponseSchema = z.object({
 
 export type GetPublicDecklistResponse = z.infer<
   typeof GetPublicDecklistResponseSchema
+>;
+
+// ---- Decklist Social (likes, saves, comments) ----
+
+export const DecklistSocialStateResponseSchema = z.object({
+  liked: z
+    .boolean()
+    .describe('Whether the authenticated user has liked the list'),
+  saved: z
+    .boolean()
+    .describe('Whether the authenticated user has saved the list'),
+});
+
+export type DecklistSocialStateResponse = z.infer<
+  typeof DecklistSocialStateResponseSchema
+>;
+
+export const ToggleLikeResponseSchema = z.object({
+  liked: z.boolean().describe('Whether the user now likes the list'),
+  like_count: z.number().int().describe('The updated like count'),
+});
+
+export type ToggleLikeResponse = z.infer<typeof ToggleLikeResponseSchema>;
+
+export const ToggleSaveResponseSchema = z.object({
+  saved: z.boolean().describe('Whether the user now has the list saved'),
+  save_count: z.number().int().describe('The updated save count'),
+});
+
+export type ToggleSaveResponse = z.infer<typeof ToggleSaveResponseSchema>;
+
+export const GetLikedDecklistsResponseSchema = z.object({
+  decklists: z.array(DecklistSummarySchema),
+});
+
+export type GetLikedDecklistsResponse = z.infer<
+  typeof GetLikedDecklistsResponseSchema
+>;
+
+export const GetSavedDecklistsResponseSchema = z.object({
+  decklists: z.array(DecklistSummarySchema),
+});
+
+export type GetSavedDecklistsResponse = z.infer<
+  typeof GetSavedDecklistsResponseSchema
+>;
+
+export const DecklistCommentSchema = z.object({
+  id: z.string().describe('The comment ID'),
+  list_id: z.string().describe('The card list ID the comment belongs to'),
+  user_id: z.string().describe("The comment author's user ID"),
+  username: z.string().nullable().describe("The comment author's username"),
+  avatar_card_name: z
+    .string()
+    .nullable()
+    .describe("Card name used as the author's avatar"),
+  body: z.string().describe('The comment text'),
+  created_at: z.string().describe('Creation timestamp (ISO 8601)'),
+});
+
+export type DecklistComment = z.infer<typeof DecklistCommentSchema>;
+
+export const GetDecklistCommentsQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(25)
+    .describe('Maximum number of comments to return (default 25, max 100)'),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      "Opaque cursor from the previous page's nextCursor (omit for first page)",
+    ),
+});
+
+export type GetDecklistCommentsQuery = z.infer<
+  typeof GetDecklistCommentsQuerySchema
+>;
+
+export const GetDecklistCommentsResponseSchema = z.object({
+  comments: z.array(DecklistCommentSchema),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe(
+      'Opaque cursor to pass for the next page, or null if no more results',
+    ),
+});
+
+export type GetDecklistCommentsResponse = z.infer<
+  typeof GetDecklistCommentsResponseSchema
+>;
+
+export const AddDecklistCommentSchema = z.object({
+  body: z
+    .string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .describe('The comment text (1-2000 chars)'),
+});
+
+export type AddDecklistCommentRequest = z.infer<
+  typeof AddDecklistCommentSchema
+>;
+
+export const AddDecklistCommentResponseSchema = z.object({
+  comment: DecklistCommentSchema,
+  comment_count: z.number().int().describe('The updated comment count'),
+});
+
+export type AddDecklistCommentResponse = z.infer<
+  typeof AddDecklistCommentResponseSchema
+>;
+
+export const DeleteDecklistCommentResponseSchema = z.object({
+  message: z.string(),
+});
+
+export type DeleteDecklistCommentResponse = z.infer<
+  typeof DeleteDecklistCommentResponseSchema
 >;

@@ -68,9 +68,40 @@
       <p>No decklists matched "{{ debouncedQuery }}"</p>
     </div>
 
-    <div v-if="!hasSearched && !isLoading" class="empty-state">
-      <UIcon name="i-lucide-search" class="text-5xl opacity-30 mb-3" />
-      <p>Enter a keyword above to search public decklists.</p>
+    <!-- Featured decklists shown by default when nothing is searched -->
+    <div v-if="!hasSearched">
+      <USeparator class="my-6" />
+      <h2
+        class="text-xl md:text-2xl font-semibold mb-1 flex items-center gap-2"
+      >
+        Featured Decklists
+      </h2>
+      <p class="text-lg text-gray-400 font-normal mb-4 italic">
+        Want to see your deck featured? Support us on Patreon to automatically
+        have your deck considered for featuring!
+      </p>
+      <div
+        v-if="isLoadingFeatured"
+        class="grid grid-cols-1 md:grid-cols-3 gap-3"
+      >
+        <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
+      </div>
+      <div
+        v-else-if="featuredDecklists.length > 0"
+        class="grid grid-cols-1 md:grid-cols-3 gap-3"
+      >
+        <CardListLink
+          v-for="list in featuredDecklists"
+          :key="list.id"
+          :list="list"
+          :showDeleteButton="false"
+          :showAuthor="true"
+        />
+      </div>
+      <div v-else class="empty-state">
+        <UIcon name="i-lucide-search" class="text-5xl opacity-30 mb-3" />
+        <p>Enter a keyword above to search public decklists.</p>
+      </div>
     </div>
   </UContainer>
 </template>
@@ -78,7 +109,10 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useDecklistSearch } from '~/composables/useDiscovery';
+import {
+  useDecklistSearch,
+  useFeaturedDecklists,
+} from '~/composables/useDiscovery';
 import { refDebounced } from '~/utils/refDebounced';
 import CardListLink from '~/components/lists/CardListLink.vue';
 
@@ -108,6 +142,10 @@ const {
 } = useDecklistSearch(debouncedQuery);
 
 const hasSearched = computed(() => debouncedQuery.value.trim().length > 0);
+
+// Featured decklists shown as the default view when nothing is searched
+const { decklists: featuredDecklists, isLoading: isLoadingFeatured } =
+  useFeaturedDecklists(12);
 
 function syncQueryToUrl() {
   const trimmed = searchInput.value.trim();

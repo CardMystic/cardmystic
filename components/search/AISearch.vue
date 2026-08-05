@@ -55,6 +55,8 @@
 
     <QuickFilters v-model="state.filters" />
 
+    <SuggestedSearches v-if="showSuggestedSearches" />
+
     <Filters
       v-if="!showFilters"
       ref="filtersRef"
@@ -116,6 +118,8 @@ import Filters from './Filters.vue';
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper';
+  /** Show the curated "Suggested Searches" pills (home hero only). */
+  showSuggestedSearches?: boolean;
 }>();
 
 const { getPath, getPlatformFromPath } = useSearchType();

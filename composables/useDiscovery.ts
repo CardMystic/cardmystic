@@ -8,12 +8,14 @@ import {
 import {
   GetUserProfileResponseSchema,
   SearchUsersResponseSchema,
+  GetFeaturedUsersResponseSchema,
   type GetUserProfileResponse,
 } from '~/models/userModel';
 
 /**
- * Recent decklists owned by featured users (profiles.is_featured = true).
- * Public endpoint — no auth required.
+ * Random selection of featured public decklists — recent decks owned by
+ * featured users (profiles.is_featured = true) or with high traffic
+ * (likes + saves + comments). Public endpoint — no auth required.
  */
 export function useFeaturedDecklists(limit = 10) {
   const config = useRuntimeConfig();
@@ -37,6 +39,37 @@ export function useFeaturedDecklists(limit = 10) {
 
   return {
     decklists: computed(() => data.value?.decklists ?? []),
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Random selection of featured users — profiles with the is_featured tag,
+ * high follower counts, or high recent deck traffic. Public endpoint — no
+ * auth required.
+ */
+export function useFeaturedUsers(limit = 10) {
+  const config = useRuntimeConfig();
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['discovery', 'featured-users', limit],
+    queryFn: async () => {
+      const response = await fetch(
+        `${config.public.backendUrl}/user/featured?limit=${limit}`,
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to load featured users (${response.status})`);
+      }
+      return GetFeaturedUsersResponseSchema.parse(await response.json());
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    users: computed(() => data.value?.users ?? []),
     isLoading,
     error,
     refetch,

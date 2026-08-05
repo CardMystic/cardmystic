@@ -61,7 +61,7 @@ watchEffect(() => {
 watchEffect(() => {
   if (import.meta.server) return;
   if (profileData.value?.username) {
-    router.push('/user/profile');
+    router.push('/user/account');
   }
 });
 
@@ -74,7 +74,7 @@ const submit = async () => {
   loading.value = true;
   try {
     await updateUsernameMutation.mutateAsync(username.value.trim());
-    router.push('/user/profile');
+    router.push('/user/account');
   } catch (e: any) {
     errorMessage.value = e.message || 'Failed to save username.';
   }

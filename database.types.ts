@@ -108,43 +108,140 @@ export type Database = {
       card_lists: {
         Row: {
           avatar_card_name: string | null;
+          comment_count: number;
           created_at: string;
           description: string | null;
           format: string;
           id: string;
+          like_count: number;
           name: string | null;
+          save_count: number;
           updated_at: string | null;
           user_id: string | null;
+          view_count: number;
           visibility: Database['public']['Enums']['visibility'];
         };
         Insert: {
           avatar_card_name?: string | null;
+          comment_count?: number;
           created_at?: string;
           description?: string | null;
           format?: string;
           id?: string;
+          like_count?: number;
           name?: string | null;
+          save_count?: number;
           updated_at?: string | null;
           user_id?: string | null;
+          view_count?: number;
           visibility?: Database['public']['Enums']['visibility'];
         };
         Update: {
           avatar_card_name?: string | null;
+          comment_count?: number;
           created_at?: string;
           description?: string | null;
           format?: string;
           id?: string;
+          like_count?: number;
           name?: string | null;
+          save_count?: number;
           updated_at?: string | null;
           user_id?: string | null;
+          view_count?: number;
           visibility?: Database['public']['Enums']['visibility'];
         };
         Relationships: [];
+      };
+      decklist_comments: {
+        Row: {
+          body: string;
+          created_at: string;
+          id: string;
+          list_id: string;
+          user_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          id?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          id?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'decklist_comments_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      decklist_likes: {
+        Row: {
+          created_at: string;
+          list_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'decklist_likes_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      decklist_saves: {
+        Row: {
+          created_at: string;
+          list_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'decklist_saves_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       profiles: {
         Row: {
           avatar_card_name: string;
           created_at: string;
+          follower_count: number;
           id: string;
           is_featured: boolean;
           username: string | null;
@@ -152,6 +249,7 @@ export type Database = {
         Insert: {
           avatar_card_name?: string;
           created_at?: string;
+          follower_count?: number;
           id: string;
           is_featured?: boolean;
           username?: string | null;
@@ -159,6 +257,7 @@ export type Database = {
         Update: {
           avatar_card_name?: string;
           created_at?: string;
+          follower_count?: number;
           id?: string;
           is_featured?: boolean;
           username?: string | null;
@@ -192,12 +291,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_follows: {
+        Row: {
+          created_at: string;
+          followee_id: string;
+          follower_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          followee_id: string;
+          follower_id: string;
+        };
+        Update: {
+          created_at?: string;
+          followee_id?: string;
+          follower_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      increment_decklist_view_count: {
+        Args: { p_list_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       visibility: 'private' | 'public';

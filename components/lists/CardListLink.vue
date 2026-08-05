@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative border max-w-[500px] border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
+    class="relative border max-w-125 border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
   >
     <!-- Background Image -->
     <div
@@ -54,6 +54,35 @@
           {{ list.format }}
         </span>
       </p>
+
+      <!-- Social stats (public lists only) -->
+      <div
+        v-if="list.visibility === 'public'"
+        class="flex items-center gap-3 text-xs md:text-sm mb-2 opacity-80"
+      >
+        <span class="flex items-center gap-1">
+          <UIcon name="i-lucide-heart" class="w-3 h-3 md:w-4 md:h-4 shrink-0" />
+          {{ list.like_count }}
+        </span>
+        <span class="flex items-center gap-1">
+          <UIcon
+            name="i-lucide-bookmark"
+            class="w-3 h-3 md:w-4 md:h-4 shrink-0"
+          />
+          {{ list.save_count }}
+        </span>
+        <span class="flex items-center gap-1">
+          <UIcon
+            name="i-lucide-message-circle"
+            class="w-3 h-3 md:w-4 md:h-4 shrink-0"
+          />
+          {{ list.comment_count }}
+        </span>
+        <span class="flex items-center gap-1">
+          <UIcon name="i-lucide-eye" class="w-3 h-3 md:w-4 md:h-4 shrink-0" />
+          {{ list.view_count }}
+        </span>
+      </div>
 
       <div class="flex items-center justify-between text-xs md:text-sm">
         <NuxtLink

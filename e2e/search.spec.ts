@@ -78,12 +78,10 @@ test.describe('Homepage', () => {
     await gotoHydrated(page, '/');
 
     // Hero
-    await expect(page.getByAltText('Wizard')).toBeVisible();
     await expect(
-      page.getByRole('heading', {
-        name: /Build Smarter Decks With Tools Designed For Magic/i,
-      }),
+      page.getByRole('heading', { name: /Build Smarter Decks/i }),
     ).toBeVisible();
+    await expect(page.getByAltText('Kaalia of the Vast')).toBeVisible();
 
     // Both calls should succeed against the live backend.
     const [exampleResp, topResp] = await Promise.all([
