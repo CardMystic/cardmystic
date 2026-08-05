@@ -25,13 +25,7 @@ const props = defineProps<{ userId: string }>();
 
 const toast = useToast();
 const { userProfile } = useUserProfile();
-const {
-  isLoggedIn,
-  isFollowing,
-  isLoadingFollowing,
-  setFollow,
-  isSettingFollow,
-} = useFollows();
+const { isLoggedIn, isFollowing, setFollow, isSettingFollow } = useFollows();
 
 const isOwnProfile = computed(() => userProfile.value?.id === props.userId);
 // Only render for other users; logged-out visitors see a disabled Follow button
