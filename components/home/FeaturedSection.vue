@@ -1,10 +1,6 @@
 <template>
   <div>
-    <h2 class="section-title">Featured Decklists & Users</h2>
-    <p class="text-lg text-gray-400 font-normal mb-4 italic text-center">
-      Want to be featured? Support us on Patreon to automatically have your deck
-      considered for featuring!
-    </p>
+    <h2 class="section-title mb-4">Featured Decklists & Users</h2>
 
     <!-- Decklists row -->
     <div

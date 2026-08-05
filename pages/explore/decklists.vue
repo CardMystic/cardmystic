@@ -72,14 +72,10 @@
     <div v-if="!hasSearched">
       <USeparator class="my-6" />
       <h2
-        class="text-xl md:text-2xl font-semibold mb-1 flex items-center gap-2"
+        class="text-xl md:text-2xl font-semibold mb-4 flex items-center gap-2"
       >
         Featured Decklists
       </h2>
-      <p class="text-lg text-gray-400 font-normal mb-4 italic">
-        Want to see your deck featured? Support us on Patreon to automatically
-        have your deck considered for featuring!
-      </p>
       <div
         v-if="isLoadingFeatured"
         class="grid grid-cols-1 md:grid-cols-3 gap-3"
