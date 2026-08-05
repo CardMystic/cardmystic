@@ -482,10 +482,10 @@ export const GetDecklistCommentsQuerySchema = z.object({
     .default(25)
     .describe('Maximum number of comments to return (default 25, max 100)'),
   cursor: z
-    .uuid()
+    .string()
     .optional()
     .describe(
-      'Comment ID of the last entry from the previous page (omit for first page)',
+      "Opaque cursor from the previous page's nextCursor (omit for first page)",
     ),
 });
 
@@ -496,10 +496,10 @@ export type GetDecklistCommentsQuery = z.infer<
 export const GetDecklistCommentsResponseSchema = z.object({
   comments: z.array(DecklistCommentSchema),
   nextCursor: z
-    .uuid()
+    .string()
     .nullable()
     .describe(
-      'Comment ID to pass as cursor for the next page, or null if no more results',
+      'Opaque cursor to pass for the next page, or null if no more results',
     ),
 });
 
