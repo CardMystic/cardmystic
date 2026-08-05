@@ -39,7 +39,7 @@
         No description
       </p>
       <p
-        v-if="list.commanders"
+        v-if="list.commanders?.length"
         class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1"
       >
         <span v-if="list.format == 'Commander'">

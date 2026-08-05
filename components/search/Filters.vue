@@ -430,7 +430,7 @@ import {
   CardFormat,
   CardFormatStatus,
 } from '~/models/cardModel';
-import { cardColorToSymbol } from '~/utils/cardHelpers.js';
+import { cardColorToSymbol } from '~/utils/cardHelpers';
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 import ManaIcon from '../general/ManaIcon.vue';
 import type {
