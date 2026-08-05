@@ -38,7 +38,8 @@
           "
         >
           <UButton
-            :icon="liked ? 'i-lucide-heart' : 'i-lucide-heart'"
+            data-testid="decklist-like-button"
+            icon="i-lucide-heart"
             :color="liked ? 'error' : 'neutral'"
             :variant="liked ? 'solid' : 'outline'"
             size="sm"
@@ -54,6 +55,7 @@
           "
         >
           <UButton
+            data-testid="decklist-save-button"
             icon="i-lucide-bookmark"
             :color="saved ? 'primary' : 'neutral'"
             :variant="saved ? 'solid' : 'outline'"
