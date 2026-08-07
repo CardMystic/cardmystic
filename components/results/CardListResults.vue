@@ -16,6 +16,7 @@
           <div class="preview-sticky">
             <HoveredListCardPreview
               :card="previewCard"
+              :is-owner="isOwner"
               :isCommanderOfDecklist="
                 commanderOracleIds?.includes(previewCard.card_data.oracle_id) ??
                 false
@@ -109,6 +110,7 @@
                     "
                     :board="'Mainboard'"
                     :format="format"
+                    :is-owner="isOwner"
                     :decklist-card-names="decklistCardNames"
                     @remove="
                       (
@@ -212,6 +214,7 @@
                       "
                       :board="'Mainboard'"
                       :format="format"
+                      :is-owner="isOwner"
                       :decklist-card-names="decklistCardNames"
                       @remove="
                         (
@@ -300,6 +303,7 @@
                       "
                       :board="'Sideboard'"
                       :format="format"
+                      :is-owner="isOwner"
                       @remove="
                         (
                           cardId: string,
@@ -370,6 +374,7 @@
                         "
                         :board="'Sideboard'"
                         :format="format"
+                        :is-owner="isOwner"
                         @remove="
                           (
                             cardId: string,
@@ -458,6 +463,7 @@
                       "
                       :board="'Considering'"
                       :format="format"
+                      :is-owner="isOwner"
                       @remove="
                         (
                           cardId: string,
@@ -528,6 +534,7 @@
                         "
                         :board="'Considering'"
                         :format="format"
+                        :is-owner="isOwner"
                         @remove="
                           (
                             cardId: string,
@@ -591,6 +598,7 @@ import { useCommandersSet } from '~/composables/useBulkData';
 
 const props = defineProps<{
   isLoading: boolean;
+  isOwner: boolean;
   groups: CardGroup[] | null;
   commanderOracleIds?: string[] | null;
   commanderColorIdentity?: string[] | null;

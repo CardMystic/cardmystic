@@ -70,7 +70,7 @@
         :is-in-clipboard="isInClipboard"
         :is-dual-faced="isDualFaced"
         :show-commander-buttons="isCommanderCardComputed"
-        :show-list-actions="true"
+        :show-list-actions="isOwner"
         :num-copies="numCopies ?? 1"
         :available-boards="availableBoards"
         :show-set-commander="isCommanderCardComputed && !isCommanderOfDecklist"
@@ -128,6 +128,7 @@ const props = defineProps<{
   card: Card | null;
   isCommanderOfDecklist: boolean; // Whether this card is the commander of the deck list
   canBeACommander?: boolean; // Whether this card CAN be a commander of a deck list
+  isOwner?: boolean; // List actions section is owner-only
   numCopies?: number;
   board?: string;
   showEditCopiesButtons?: boolean;
