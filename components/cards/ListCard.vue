@@ -176,6 +176,7 @@ const props = defineProps<{
   card: Card;
   isDeckCommander: boolean;
   isCommanderCard?: boolean;
+  isOwner?: boolean; // List actions (copies, boards, remove) are owner-only
   commanderColorIdentity?: string[] | null;
   numCopies?: number;
   board?: string;
@@ -241,6 +242,7 @@ const isCommanderCardComputed = computed(() => {
 });
 
 const cardOverlayMenuItems = computed(() => {
+  if (!props.isOwner) return [];
   const copies = props.numCopies ?? 1;
   const copyActions = props.isDeckCommander
     ? []

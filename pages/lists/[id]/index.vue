@@ -146,6 +146,7 @@
         ref="cardListResultsRef"
         class="mb-8"
         :isLoading="loading"
+        :is-owner="isOwner"
         :groups="cardGroups"
         :commander-oracle-ids="commanderOracleIds"
         :commander-color-identity="commanderColorIdentity"
