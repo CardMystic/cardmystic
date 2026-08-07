@@ -159,7 +159,7 @@ import * as z from 'zod';
 import { useRoute } from 'vue-router';
 import { refDebounced } from '~/utils/refDebounced';
 import type { FormSubmitEvent } from '@nuxt/ui';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import {
   detectPlatformFromFilters,
   type Platform,
@@ -198,7 +198,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return {};
+  return CardSearchFiltersSchema.parse({});
 });
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
@@ -210,7 +210,7 @@ const state = reactive<Partial<Schema>>({
   commander: commanderParam.value || '',
   partnerCommander: partnerParam.value || '',
   query: queryParam.value || '',
-  filters: parsedFilters.value || {},
+  filters: parsedFilters.value,
 });
 
 watch(commanderParam, (newVal) => {

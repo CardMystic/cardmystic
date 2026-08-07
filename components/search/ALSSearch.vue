@@ -118,7 +118,6 @@
           v-model="state.decklist"
           placeholder="Paste your decklist here (one card per line)..."
           :rows="6"
-          autoresize
           class="w-full"
           :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }"
           autocomplete="off"
@@ -129,7 +128,7 @@
           color="primary"
           variant="soft"
           size="xs"
-          label="Save All to Deck"
+          :label="`Save ${numCardsInDecklist} cards to Deck`"
           class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
           @click="onSaveToDeck"
         />
@@ -202,9 +201,12 @@
 import * as z from 'zod';
 import { useRoute } from 'vue-router';
 import { refDebounced } from '~/utils/refDebounced';
+import { parseDecklist } from '~/utils/decklist';
+
+const MAX_DECK_SIZE = 200;
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import type { Platform } from '~/utils/platformConfig';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import Filters from './Filters.vue';
@@ -250,7 +252,13 @@ const schema = z.object({
     ])
     .optional()
     .transform((v) => (typeof v === 'number' && !isNaN(v) ? v : undefined)),
-  decklist: z.string().optional(),
+  decklist: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val?.trim() || parseDecklist(val).length <= MAX_DECK_SIZE,
+      { message: `Decklist exceeds the maximum of ${MAX_DECK_SIZE} cards.` },
+    ),
   filters: CardSearchFiltersSchema.optional(),
 });
 
@@ -272,6 +280,14 @@ const currentPlatform = computed(() => {
   return getPlatformFromPath(route.path);
 });
 
+const numCardsInDecklist: Ref<number> = computed(() => {
+  if (!state.decklist) return 0;
+  try {
+    return parseDecklist(state.decklist).length;
+  } catch {
+    return 0;
+  }
+});
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
 const commanderParam = computed(() => String(route.query.commander || ''));
@@ -297,7 +313,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return base;
+  return CardSearchFiltersSchema.parse(base);
 });
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));

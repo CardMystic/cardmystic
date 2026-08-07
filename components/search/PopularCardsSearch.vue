@@ -104,7 +104,7 @@
 import * as z from 'zod';
 import { useRoute } from 'vue-router';
 import type { FormSubmitEvent } from '@nuxt/ui';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import {
   detectPlatformFromFilters,
   type Platform,
@@ -153,7 +153,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return base;
+  return CardSearchFiltersSchema.parse(base);
 });
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
@@ -163,9 +163,7 @@ function hideFilters() {
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
-  filters: parsedFilters.value || {
-    selectedColorFilterOption: 'Color Identity',
-  },
+  filters: parsedFilters.value,
 });
 
 watch(queryParam, (newVal) => {

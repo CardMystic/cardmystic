@@ -37,7 +37,8 @@ export default defineNuxtPlugin(async () => {
   // reading window.location.hash here is the earliest reliable point.
   const oauthTokens = captureOAuthHash();
 
-  const { initAuthListener, userProfile, pingActivity } = useUserProfile();
+  const { initAuthListener, userProfile, profileData, pingActivity } =
+    useUserProfile();
 
   // Initialize the global Supabase auth listener once on app startup.
   // Previously lived in Navbar.vue's onMounted, but it's app-level
@@ -73,4 +74,18 @@ export default defineNuxtPlugin(async () => {
       }
     });
   }
+
+  // Redirect OAuth users who haven't chosen a username yet to /user/setup.
+  // Fires once profileData is resolved so we don't redirect on transient null.
+  const stopUsernameWatch = watch(
+    [userProfile, profileData],
+    ([profile, pData]) => {
+      if (!profile || pData === undefined) return;
+      if (!pData?.username && window.location.pathname !== '/user/setup') {
+        navigateTo('/user/setup');
+        stopUsernameWatch();
+      }
+    },
+    { immediate: true },
+  );
 });

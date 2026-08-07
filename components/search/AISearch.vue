@@ -55,6 +55,8 @@
 
     <QuickFilters v-model="state.filters" />
 
+    <SuggestedSearches v-if="showSuggestedSearches" />
+
     <Filters
       v-if="!showFilters"
       ref="filtersRef"
@@ -110,12 +112,14 @@ import { useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 import type { FormSubmitEvent } from '@nuxt/ui';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import type { Platform } from '~/utils/platformConfig';
 import Filters from './Filters.vue';
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper';
+  /** Show the curated "Suggested Searches" pills (home hero only). */
+  showSuggestedSearches?: boolean;
 }>();
 
 const { getPath, getPlatformFromPath } = useSearchType();
@@ -158,7 +162,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return base;
+  return CardSearchFiltersSchema.parse(base);
 });
 
 const showFilters = ref(hasAdvancedFilters(parsedFilters.value));

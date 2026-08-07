@@ -2,16 +2,18 @@ import { useQuery } from '@tanstack/vue-query';
 import { computed, type ComputedRef } from 'vue';
 import type { Card } from '~/models/cardModel';
 import type {
-  TopCardsSearch,
-  TopCommandersSearch,
+  TopCardsRequest,
+  TopCommandersRequest,
   TopCardsResponse,
   TopCommandersResponse,
-  PopularByCommanderSearch,
-  PopularCommandersForCardSearch,
+  PopularByCommanderRequest,
+  PopularCommandersForCardRequest,
+  PopularCommandersForCardResponse,
+  PopularByCommander,
 } from '~/models/deckStatsModel';
 
 export function useTopCardsSearch(
-  searchParams: ComputedRef<TopCardsSearch | undefined>,
+  searchParams: ComputedRef<TopCardsRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
 
@@ -67,7 +69,7 @@ export function useTopCardsSearch(
 }
 
 export function useTopCommandersSearch(
-  searchParams: ComputedRef<TopCommandersSearch | undefined>,
+  searchParams: ComputedRef<TopCommandersRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
 
@@ -129,7 +131,7 @@ export function useTopCommandersSearch(
 }
 
 export function usePopularByCommander(
-  searchParams: ComputedRef<PopularByCommanderSearch | undefined>,
+  searchParams: ComputedRef<PopularByCommanderRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
 
@@ -159,7 +161,7 @@ export function usePopularByCommander(
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Network response was not ok');
       }
-      const data = (await response.json()) as TopCardsResponse;
+      const data = (await response.json()) as PopularByCommander;
       if (import.meta.client) {
         window.gtag?.('event', 'conversion', {
           send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
@@ -189,7 +191,7 @@ export function usePopularByCommander(
 }
 
 export function usePopularCommandersForCard(
-  searchParams: ComputedRef<PopularCommandersForCardSearch | undefined>,
+  searchParams: ComputedRef<PopularCommandersForCardRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
 
@@ -219,7 +221,7 @@ export function usePopularCommandersForCard(
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Network response was not ok');
       }
-      const data = (await response.json()) as TopCommandersResponse;
+      const data = (await response.json()) as PopularCommandersForCardResponse;
       return data.results.map(
         (result): Card => ({
           card_name: result.card_data[0]?.name ?? result.commanders[0],

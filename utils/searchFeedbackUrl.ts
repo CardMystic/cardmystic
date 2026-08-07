@@ -1,4 +1,4 @@
-import type { PageInfo } from '~/models/pageInfoModel';
+import type { PageInfo } from '~/models/frontend-specific/pageInfoModel';
 
 export default (pageInfo: PageInfo | undefined) => {
   const baseUrl =

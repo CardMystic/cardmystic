@@ -26,7 +26,7 @@ test('cleanup leaked e2e-list-* decklists', async ({ page }) => {
   test.setTimeout(5 * 60_000);
 
   await setupRecaptchaStubs(page);
-  await gotoHydrated(page, '/login');
+  await gotoHydrated(page, '/user/login');
   await reliableFill(page.getByPlaceholder('Email'), TEST_USER_EMAIL);
   await reliableFill(page.getByPlaceholder('Password'), TEST_USER_PASSWORD);
   await page.getByRole('button', { name: /^sign in$/i }).click();

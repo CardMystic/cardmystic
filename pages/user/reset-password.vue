@@ -44,7 +44,7 @@
           size="md"
           :loading="loading"
           :disabled="loading || !email"
-          @click="sendResetEmail"
+          @click="sendResetEmailHandler"
         >
           {{ loading ? 'Sending…' : 'Send reset link' }}
         </UButton>
@@ -64,7 +64,7 @@
             :padded="false"
             @click="
               () => {
-                router.push('/login');
+                router.push('/user/login');
               }
             "
           >
@@ -184,9 +184,6 @@
 </template>
 
 <script setup lang="ts">
-import { useSupabase } from '~/composables/useSupabase';
-import { useUserProfile } from '~/composables/useUserProfile';
-
 const router = useRouter();
 
 definePageMeta({ layout: 'fullscreen' });
@@ -196,7 +193,12 @@ useSeoMeta({
   robots: 'noindex, nofollow',
 });
 
-const supabase = useSupabase();
+const {
+  sendResetEmail,
+  updatePasswordWithToken,
+  signOut,
+  validatePasswordPolicy,
+} = useUserProfile();
 
 const email = ref('');
 const newPassword = ref('');
@@ -208,11 +210,11 @@ const successMessage = ref<string | null>(null);
 const isRecoverySession = ref(false);
 const showPasswords = ref(false);
 
-const { validatePasswordPolicy } = useUserProfile();
-
 onMounted(() => {
+  const supabase = useSupabase();
+
   // Check for an error in the URL hash (e.g. expired link)
-  // Supabase redirects like: /reset-password#error=access_denied&error_code=otp_expired&error_description=...
+  // Supabase redirects like: /user/reset-password#error=access_denied&error_code=otp_expired&error_description=...
   const hash = window.location.hash;
   if (hash.includes('error=')) {
     const params = new URLSearchParams(hash.slice(1));
@@ -233,23 +235,20 @@ onMounted(() => {
   });
 });
 
-const sendResetEmail = async () => {
+const sendResetEmailHandler = async () => {
   errorMessage.value = null;
   successMessage.value = null;
   if (honeypot.value) return;
   loading.value = true;
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-    redirectTo: `${window.location.origin}/reset-password`,
-  });
+  try {
+    await sendResetEmail(email.value);
+    successMessage.value = 'Check your email for a reset link!';
+  } catch (e: any) {
+    errorMessage.value = e.message;
+  }
 
   loading.value = false;
-
-  if (error) {
-    errorMessage.value = error.message;
-  } else {
-    successMessage.value = 'Check your email for a reset link!';
-  }
 };
 
 const submitNewPassword = async () => {
@@ -271,19 +270,12 @@ const submitNewPassword = async () => {
   loading.value = true;
 
   try {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword.value,
-    });
-
-    if (error) {
-      errorMessage.value = error.message;
-    } else {
-      await supabase.auth.signOut();
-      successMessage.value = 'Password updated! Redirecting to login…';
-      router.push('/login');
-    }
-  } catch (error) {
-    errorMessage.value = 'An unexpected error occurred.';
+    await updatePasswordWithToken(newPassword.value);
+    await signOut();
+    successMessage.value = 'Password updated! Redirecting to login…';
+    router.push('/user/login');
+  } catch (e: any) {
+    errorMessage.value = e.message || 'An unexpected error occurred.';
   }
 
   loading.value = false;

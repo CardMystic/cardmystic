@@ -88,7 +88,7 @@ import { usePageInfo } from '~/composables/usePageInfo';
 import { useAlsRecommend } from '~/composables/useAlsRecommend';
 import type { AlsRecommendRequest } from '~/composables/useAlsRecommend';
 import { useCardsByName } from '~/composables/useCards';
-import { CardSearchFiltersSchema } from '~/models/searchModel';
+import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import {
   isValidPlatform,
   getPlatformFilters,
@@ -138,7 +138,7 @@ const parsedFilters = computed(() => {
       /* fall through to defaults on malformed input */
     }
   }
-  return platformFilters;
+  return CardSearchFiltersSchema.parse(platformFilters);
 });
 
 useSeoMeta({

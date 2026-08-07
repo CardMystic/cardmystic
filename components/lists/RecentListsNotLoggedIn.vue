@@ -40,6 +40,13 @@
           <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
             {{ item.description }}
           </p>
+          <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
+            <UIcon
+              name="i-lucide-crown"
+              class="w-3 h-3 md:w-4 md:h-4 shrink-0"
+            />
+            {{ item.commander }}
+          </p>
           <div class="flex items-center justify-between text-xs md:text-sm">
             <span>{{ item.date }}</span>
             <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
@@ -68,7 +75,7 @@
     </div>
 
     <!-- Login overlay -->
-    <NuxtLink to="/login">
+    <NuxtLink to="/user/login">
       <div
         class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer backdrop-blur-[1px]"
       >
@@ -91,6 +98,7 @@ const fakeItems = [
     id: 1,
     name: 'Planeswalkers!!!',
     description: 'Super friends!',
+    commander: "Atraxa, Praetors' Voice",
     date: 'Feb 11, 2026',
     image:
       'https://api.scryfall.com/cards/named?exact=Atraxa%2C+Praetors%27+Voice&format=image&version=art_crop',
@@ -99,6 +107,7 @@ const fakeItems = [
     id: 2,
     name: 'Commander Deck',
     description: 'My favorite build',
+    commander: 'Korvold, Fae-Cursed King',
     date: 'Feb 11, 2026',
     image:
       'https://api.scryfall.com/cards/named?exact=Korvold%2C+Fae-Cursed+King&format=image&version=art_crop',
@@ -107,6 +116,7 @@ const fakeItems = [
     id: 3,
     name: 'Best Stax Pieces',
     description: 'Make my opponents sad. The more sad...',
+    commander: 'Grand Arbiter Augustin IV',
     date: 'Feb 2, 2026',
     image:
       'https://api.scryfall.com/cards/named?exact=Smokestack&format=image&version=art_crop',
