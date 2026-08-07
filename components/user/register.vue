@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { useSupabase } from '~/composables/useSupabase';
-import { useRecaptcha } from '~/composables/useRecaptcha';
-import { useUserProfile } from '~/composables/useUserProfile';
-import { useCardNames } from '~/composables/useBulkData';
-import { refDebounced } from '~/utils/refDebounced';
+import type { SignUpRequest } from '@/models/userModel';
 
 const router = useRouter();
 
-const supabase = useSupabase();
-const { verifyRecaptcha } = useRecaptcha();
-const config = useRuntimeConfig();
-const { validatePasswordPolicy } = useUserProfile();
+const {
+  signupWithEmail,
+  signupWithGoogle,
+  resendVerificationEmail,
+  validatePasswordPolicy,
+} = useUserProfile();
 
+const username = ref('');
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
@@ -23,65 +22,18 @@ const resending = ref(false);
 const resendMessage = ref<string | null>(null);
 const honeypot = ref('');
 const showPasswords = ref(false);
-const selectedProfileCard = ref('');
-const avatarSearchTerm = ref('');
-const debouncedAvatarSearch = refDebounced(avatarSearchTerm, 150);
-
-const { data: rawCards, status: cardsQueryStatus } = useCardNames();
-const cardsStatus = computed(() =>
-  cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
-);
-
-const filteredAvatarCards = computed(() => {
-  if (!debouncedAvatarSearch.value || debouncedAvatarSearch.value.length < 2) {
-    if (selectedProfileCard.value) return [selectedProfileCard.value];
-    return [];
-  }
-
-  const searchLower = debouncedAvatarSearch.value.toLowerCase();
-  const filtered: string[] = [];
-
-  if (selectedProfileCard.value) {
-    filtered.push(selectedProfileCard.value);
-  }
-
-  const cards = rawCards.value ?? [];
-  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
-    const card = cards[i];
-    if (
-      card.toLowerCase().includes(searchLower) &&
-      card !== selectedProfileCard.value
-    ) {
-      filtered.push(card);
-    }
-  }
-
-  return filtered;
-});
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null;
   loading.value = true;
 
-  const verified = await verifyRecaptcha('signup_google');
-  if (!verified) {
-    errorMessage.value = 'Security verification failed. Please try again.';
-    loading.value = false;
-    return;
+  try {
+    await signupWithGoogle();
+  } catch (e: any) {
+    errorMessage.value = e.message || 'An unexpected error occurred.';
   }
-
-  sessionStorage.setItem('pendingOAuthSignup', 'true');
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  });
 
   loading.value = false;
-
-  if (error) {
-    sessionStorage.removeItem('pendingOAuthSignup');
-    errorMessage.value = error.message;
-  }
 };
 
 const signUpWithEmail = async () => {
@@ -90,6 +42,12 @@ const signUpWithEmail = async () => {
   successMessage.value = null;
 
   if (honeypot.value) {
+    loading.value = false;
+    return;
+  }
+
+  if (!username.value.trim()) {
+    errorMessage.value = 'Username is required.';
     loading.value = false;
     return;
   }
@@ -107,33 +65,15 @@ const signUpWithEmail = async () => {
     return;
   }
 
-  const verified = await verifyRecaptcha('signup');
-  if (!verified) {
-    errorMessage.value = 'Security verification failed. Please try again.';
-    loading.value = false;
-    return;
-  }
-
   try {
-    const res = await fetch(`${config.public.backendUrl}/user/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value,
-        confirmPassword: confirmPassword.value,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      errorMessage.value = data.message || 'Signup failed.';
-      loading.value = false;
-      return;
-    }
-
-    successMessage.value = data.message;
+    const credentials: SignUpRequest = {
+      username: username.value.trim(),
+      email: email.value,
+      password: password.value,
+      confirmPassword: confirmPassword.value,
+    };
+    const response = await signupWithEmail(credentials);
+    successMessage.value = response.message;
     signedUpEmail.value = email.value.trim();
     resendMessage.value = null;
 
@@ -142,19 +82,12 @@ const signUpWithEmail = async () => {
       send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
     });
 
-    if (selectedProfileCard.value.trim()) {
-      localStorage.setItem(
-        `pendingSignupAvatar:${email.value.trim().toLowerCase()}`,
-        selectedProfileCard.value.trim(),
-      );
-    }
-
+    username.value = '';
     email.value = '';
     password.value = '';
     confirmPassword.value = '';
-    selectedProfileCard.value = '';
-  } catch (e) {
-    errorMessage.value = 'An unexpected error occurred.';
+  } catch (e: any) {
+    errorMessage.value = e.message || 'An unexpected error occurred.';
   }
 
   loading.value = false;
@@ -165,15 +98,14 @@ const resendVerification = async () => {
   resending.value = true;
   resendMessage.value = null;
 
-  const { error } = await supabase.auth.resend({
-    type: 'signup',
-    email: signedUpEmail.value,
-  });
+  try {
+    await resendVerificationEmail(signedUpEmail.value);
+    resendMessage.value = 'Verification email sent. Please check your inbox.';
+  } catch (e: any) {
+    resendMessage.value = e.message;
+  }
 
   resending.value = false;
-  resendMessage.value = error
-    ? error.message
-    : 'Verification email sent. Please check your inbox.';
 };
 </script>
 
@@ -210,26 +142,19 @@ const resendVerification = async () => {
 
     <UInput
       class="w-full"
+      v-model="username"
+      type="text"
+      placeholder="Username"
+      size="lg"
+    />
+
+    <UInput
+      class="w-full"
       v-model="email"
       type="email"
       placeholder="Email"
       size="lg"
     />
-
-    <UInputMenu
-      v-model="selectedProfileCard"
-      v-model:search-term="avatarSearchTerm"
-      :items="filteredAvatarCards"
-      :loading="cardsStatus === 'pending'"
-      placeholder="Optional: choose a profile icon card"
-      icon="i-lucide-image"
-      class="w-full"
-      size="lg"
-    />
-
-    <p class="text-xs text-zinc-400 -mt-2">
-      Optional: pick an MTG card art as your avatar now.
-    </p>
 
     <UInput
       class="w-full"
@@ -324,7 +249,7 @@ const resendVerification = async () => {
         :padded="false"
         @click="
           () => {
-            router.push('/login');
+            router.push('/user/login');
           }
         "
       >

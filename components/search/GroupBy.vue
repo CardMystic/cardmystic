@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center gap-1 justify-center h-8">
     <UIcon name="i-lucide-group" />
-    <span class="text-sm">Group by:</span>
+    <span class="text-sm">Group</span>
     <USelect
       v-model="selectedGroupBy"
       :items="groupByOptions"

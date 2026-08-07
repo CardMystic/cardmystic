@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CardSearchFilters } from '~/models/searchModel';
+import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 
 const props = defineProps<{
   show?: string[];

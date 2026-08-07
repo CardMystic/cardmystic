@@ -97,6 +97,10 @@ export default defineNuxtConfig({
     '/privacyPolicy': {
       prerender: true,
     },
+    // Settings moved to the combined Account page
+    '/user/profile': {
+      redirect: '/user/account',
+    },
   },
   vite: {
     server: {

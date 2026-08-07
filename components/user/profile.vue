@@ -33,7 +33,7 @@ const selectedProfileCard = ref(profileData.value?.avatar_card_name || '');
 const searchTerm = ref('');
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
-// Sync username when user profile changes
+// Sync display name when user profile changes
 watch(computedUsername, (newVal) => {
   username.value = newVal;
 });
@@ -187,7 +187,7 @@ const handleSignOut = async () => {
 </script>
 
 <template>
-  <div class="w-full max-w-2xl profile-container">
+  <div class="w-full">
     <div class="relative z-10">
       <ProfileSkeleton v-if="loading" />
 
@@ -203,14 +203,14 @@ const handleSignOut = async () => {
             />
             <div
               v-else
-              class="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center"
+              class="w-24 h-24 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center"
             >
               <UIcon name="i-lucide-user" class="w-12 h-12" />
             </div>
 
             <UPopover>
               <div
-                class="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                class="absolute inset-0 rounded-full flex items-center justify-center cursor-pointer"
               >
                 <UIcon name="i-lucide-pencil" class="w-6 h-6" />
               </div>
@@ -442,8 +442,4 @@ const handleSignOut = async () => {
   </div>
 </template>
 
-<style scoped>
-.profile-container {
-  margin-top: 40px;
-}
-</style>
+<style scoped></style>

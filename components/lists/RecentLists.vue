@@ -41,7 +41,7 @@
 
     <div v-if="!isLoadingLists" class="flex gap-3 mt-2 md:mt-4 justify-center">
       <UButton
-        to="/history?tab=search"
+        to="/user/history?tab=search"
         color="neutral"
         variant="outline"
         icon="i-lucide-search"
@@ -49,7 +49,7 @@
         Recent Searches
       </UButton>
       <UButton
-        to="/history?tab=cards"
+        to="/user/history?tab=cards"
         color="neutral"
         variant="outline"
         icon="i-lucide-eye"
@@ -67,8 +67,8 @@ import CardListLink from '~/components/lists/CardListLink.vue';
 const { userLists, isLoadingLists } = useCardLists();
 
 const recentLists = computed(() => {
-  if (!userLists.value) return [];
-  return [...userLists.value]
+  if (!userLists.value?.decklists) return [];
+  return [...userLists.value.decklists]
     .sort(
       (a, b) =>
         new Date(b.updated_at ?? 0).getTime() -

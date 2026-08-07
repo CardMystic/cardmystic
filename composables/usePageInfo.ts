@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import type { PageInfo } from '~/models/pageInfoModel';
+import type { PageInfo } from '~/models/frontend-specific/pageInfoModel';
 
 const pageInfo = ref<PageInfo>();
 

@@ -1,48 +1,42 @@
 <template>
   <SpaceBackground :full="true">
     <LazyCometDog />
-    <div
-      class="hero px-0 h-full w-full justify-center flex flex-col items-center"
-    >
-      <div class="explore-spacer"></div>
+    <div class="hero px-0 w-full flex flex-col items-center justify-center">
       <UContainer
-        class="flex flex-col items-center justify-center text-center max-w-250 h-full relative z-10"
+        class="hero-grid grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-8 items-center w-full max-w-350 relative z-10"
       >
-        <div class="header-layout">
-          <div class="title-container">
-            <img
-              src="/wizard.webp"
-              class="image object-cover"
-              alt="Wizard"
-              fetchpriority="high"
-            />
-            <h1 class="subtitle text-white">
-              Build <b style="color: var(--ui-highlight)">Smarter Decks</b> With
-              <b style="color: var(--ui-highlight)">Tools Designed</b> For
-              <b style="color: var(--ui-highlight)">Magic</b>
-            </h1>
-          </div>
+        <!-- Left: title + search -->
+        <div
+          class="flex flex-col gap-5 items-center lg:items-start text-center lg:text-left"
+        >
+          <p class="hero-eyebrow">Tools designed for Magic</p>
+          <h1 class="hero-title text-white">
+            Build
+            <span class="hero-title-highlight">Smarter</span>
+            Decks.
+          </h1>
+          <p class="hero-subtitle">
+            Simply describe the card you want in plain English! Powered by
+            custom machine learning models.
+          </p>
+
+          <!-- Search (suggested searches + advanced filters render directly
+               below the search bar on all breakpoints) -->
+          <Search :showAbout="true" :show-suggested-searches="true" />
         </div>
 
-        <!-- Search -->
-        <Search :showAbout="true" />
-      </UContainer>
-
-      <!-- Explore text + icon -->
-      <div
-        class="explore-spacer mb-4 flex flex-col items-center gap-1 text-black"
-      >
-        <!-- Fanned cards at bottom. Self-hosted WebPs (~40 kB each) are
-             much smaller than the equivalent Scryfall `normal` JPGs
-             (~100 kB each) and don't add cross-origin DNS/connect time
-             to LCP. Sized at the 2× DPR of their CSS box (180 × 251) so
-             they look crisp on retina without wasted bytes. -->
-        <div class="bottom-cards">
+        <!-- Right: fanned hero cards + Ready To Search example.
+             Self-hosted WebPs (~40 kB each) are much smaller than the
+             equivalent Scryfall `normal` JPGs (~100 kB each) and don't
+             add cross-origin DNS/connect time to LCP. Sized at the 2×
+             DPR of their CSS box so they look crisp on retina without
+             wasted bytes. -->
+        <div class="hero-right">
           <NuxtLink
             v-for="card in heroCards"
             :key="card.id"
             :to="`/card/${card.id}`"
-            class="card-wrapper"
+            class="hero-card"
             :class="card.position"
           >
             <img
@@ -56,8 +50,23 @@
               class="hero-card-img"
             />
           </NuxtLink>
+
+          <!-- Example query matching the cards above -->
+          <NuxtLink
+            :to="{
+              path: '/search/all/smart',
+              query: { query: readyToSearch.query },
+            }"
+            class="ready-card"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <p class="ready-label">Ready to search</p>
+            </div>
+            <p class="ready-query">{{ readyToSearch.query }}</p>
+            <p class="ready-desc">{{ readyToSearch.description }}</p>
+          </NuxtLink>
         </div>
-      </div>
+      </UContainer>
     </div>
   </SpaceBackground>
 
@@ -71,6 +80,8 @@
         <LazyRecentListsNotLoggedIn class="mb-14" />
       </template>
     </ClientOnly>
+
+    <LazyFeaturedSection class="mb-14" />
 
     <LazyQueryCount class="mb-14"></LazyQueryCount>
 
@@ -162,27 +173,13 @@ useSeoMeta({
 
 useHead({
   link: [
-    {
-      rel: 'preload',
-      as: 'image',
-      href: '/wizard.webp',
-      type: 'image/webp',
-      fetchpriority: 'high',
-    },
-    // Preload the three hero card images so the browser can fetch them
+    // Preload the hero card images so the browser can fetch them
     // in parallel with the HTML document instead of waiting for the
     // `<img>` tags to be discovered during render.
     {
       rel: 'preload',
       as: 'image',
       href: '/ugin.webp',
-      type: 'image/webp',
-      fetchpriority: 'high',
-    },
-    {
-      rel: 'preload',
-      as: 'image',
-      href: '/ur-dragon.webp',
       type: 'image/webp',
       fetchpriority: 'high',
     },
@@ -203,38 +200,37 @@ useHead({
 });
 
 import { useUserProfile } from '~/composables/useUserProfile';
-import { useSearchType } from '~/composables/useSearchType';
-// Use search type composable to check if Smart search is active
-const { isSmartSearch } = useSearchType();
 
 // Check if user is logged in
 const { userProfile } = useUserProfile();
 const isLoggedIn = computed(() => !!userProfile.value);
 
-// Hardcoded hero cards. Each renders as a fanned-out image link to its
-// card detail page. Images are self-hosted WebPs (~40 kB each, 360×502
-// — exactly 2× the desktop CSS slot of 180×251) so they don't pull
-// from scryfall.io on the most-visited page.
+// Hardcoded hero cards, fanned out on the right side of the hero.
+// Each renders as an image link to its card detail page. The
+// "Ready To Search" example query below them is chosen to match
+// these cards, so the hero reads as a live search result.
 const heroCards = [
   {
     id: 'eecb3047-a563-441a-9175-200421981ac3',
     name: 'Ugin, the Spirit Dragon',
     image: '/ugin.webp',
-    position: 'card-left',
-  },
-  {
-    id: '87b22b09-4f6d-4bc5-9cfc-663e4c7c6981',
-    name: 'The Ur-Dragon',
-    image: '/ur-dragon.webp',
-    position: 'card-center',
+    position: 'hero-card-back',
   },
   {
     id: 'cb8d80c9-ed58-4f2d-aa8c-c383370c7f1a',
     name: 'Kaalia of the Vast',
     image: '/kaalia.webp',
-    position: 'card-right',
+    position: 'hero-card-front',
   },
 ];
+
+// Example query shown in the "Ready To Search" card — kept in sync
+// with the hero cards above (both are giant flying threats Kaalia
+// can cheat into play).
+const readyToSearch = {
+  query: 'Angels, demons, and dragons',
+  description: 'Results ranked by how closely card text matches the idea.',
+};
 
 const { setPageInfo } = usePageInfo();
 setPageInfo({
@@ -249,68 +245,64 @@ setPageInfo({
 <style lang="sass" scoped>
 .hero
   position: relative
-  min-height:  100vh
-  padding-top: 0px
+  min-height: 100vh
+  padding: 110px 0 60px
   display: flex
   flex-direction: column
   align-items: center
   justify-content: center
   border-bottom: 3px solid white
   overflow: hidden
+  @media (max-width: 1023px)
+    padding: 90px 0 40px
 
-.image
-  width: 160px
-  height: 160px
+.hero-eyebrow
+  font-family: monospace
+  font-size: 0.85rem
+  font-weight: 600
+  letter-spacing: 0.35em
+  text-transform: uppercase
+  color: var(--ui-highlight)
+
+.hero-title
+  font-size: clamp(3rem, 6vw, 5.5rem)
+  font-weight: 900
+  line-height: 0.95
+  letter-spacing: -0.02em
+  text-transform: uppercase
+
+.hero-title-highlight
+  display: block
+  background: linear-gradient(100deg, #c4b5fd 0%, #8f6edf 60%, #6d4fc4 100%)
+  -webkit-background-clip: text
+  background-clip: text
+  -webkit-text-fill-color: transparent
+  color: transparent
+
+.hero-subtitle
+  max-width: 34rem
+  font-size: 1.00rem
+  line-height: 1.6
+  color: rgba(230, 230, 250, 0.85)
+
+// ── Fanned cards + Ready To Search ─────────────────────────────
+.hero-right
   position: relative
-  z-index: 10
-  @media (max-width: 768px)
-    top: -10px
-    width: 80px
-    height: 80px
+  width: 100%
+  max-width: 480px
+  height: 560px
+  margin: 0 auto
+  @media (max-width: 1023px)
+    max-width: 400px
+    height: 470px
 
-.explore-spacer
-  flex-grow: 1
-  justify-content: flex-end
-  min-height: 120px
-
-.header-layout
-  margin-bottom: 20px
-  @media (max-width: 768px)
-    margin-bottom: 4px
-
-.title-container
-  display: flex
-  flex-direction: column
-  align-items: center
-  justify-content: center
-  text-align: center
-  min-width: 372px
-  position: relative
-
-.bottom-cards
+.hero-card
   position: absolute
-  bottom: 0px
-  left: 50%
-  transform: translateX(-50%) translateY(50%)
-  display: flex
-  align-items: center
-  justify-content: center
-  width: 500px
-  height: 300px
-  z-index: 5
-  @media (max-width: 768px)
-    width: 350px
-    height: 200px
-
-.card-wrapper
-  position: absolute
-  width: 180px
+  display: block
   cursor: pointer
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
-  @media (max-width: 768px)
-    width: 105px
+  border-radius: 14px
 
-.card-wrapper:hover
+.hero-card:hover
   z-index: 10
 
 .hero-card-img
@@ -318,33 +310,70 @@ setPageInfo({
   height: auto
   aspect-ratio: 360/502
   object-fit: cover
-  border-radius: 8px
+  border-radius: 14px
   display: block
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)
 
-.card-wrapper:hover .hero-card-img
-  transform: scale(1.08)
+.hero-card:hover .hero-card-img
+  transform: scale(1.05)
 
-.card-left
-  transform: rotate(-15deg) translateX(-100px)
-  @media (max-width: 768px)
-    transform: rotate(-15deg) translateX(-70px)
+// Ugin — behind, tilted right, purple glow
+.hero-card-back
+  top: 0
+  right: 0
+  width: 62%
+  transform: rotate(7deg)
+  z-index: 1
+  .hero-card-img
+    border: 3px solid rgba(143, 110, 223, 0.9)
 
-.card-center
-  transform: rotate(0deg)
+// Kaalia — in front, tilted left, orange glow
+.hero-card-front
+  top: 18%
+  left: 0
+  width: 64%
+  transform: rotate(-8deg)
   z-index: 2
+  .hero-card-img
+    border: 3px solid rgba(228, 132, 42, 0.9)
 
-.card-right
-  transform: rotate(15deg) translateX(100px)
-  @media (max-width: 768px)
-    transform: rotate(15deg) translateX(70px)
+.ready-card
+  position: absolute
+  bottom: 0
+  right: 0
+  z-index: 3
+  width: min(320px, 92%)
+  padding: 14px 16px
+  border-radius: 12px
+  background: #fff
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45)
+  text-align: left
+  text-decoration: none
+  transition: transform 0.2s ease
+  &:hover
+    transform: translateY(-2px)
 
-.subtitle
-  font-size: 2.0rem
-  line-height: 1.2
-  @media (max-width: 768px)
-    font-size: 1.5rem
-    text-align: center
-    position: relative
-    top: -15px
+.ready-label
+  font-size: 0.7rem
+  font-weight: 700
+  letter-spacing: 0.15em
+  text-transform: uppercase
+  color: #8f6edf
+
+.ready-icon
+  font-size: 1.1rem
+  color: #8f6edf
+  flex-shrink: 0
+
+.ready-query
+  margin-top: 4px
+  font-size: 1rem
+  font-weight: 700
+  color: #111827
+
+.ready-desc
+  margin-top: 2px
+  font-size: 0.85rem
+  line-height: 1.4
+  color: #6b7280
 </style>

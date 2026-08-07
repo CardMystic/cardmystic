@@ -2,12 +2,18 @@ import { z } from 'zod';
 
 export const CardType = z.enum([
   'Artifact',
+  'Conspiracy',
   'Creature',
   'Enchantment',
   'Instant',
   'Land',
+  'Phenomenon',
+  'Plane',
   'Planeswalker',
+  'Scheme',
   'Sorcery',
+  'Tribal',
+  'Vanguard',
 ]);
 
 export const CardRarity = z.enum(['Common', 'Uncommon', 'Rare', 'Mythic']);
@@ -21,25 +27,6 @@ export const CardColor = z.enum([
   'Colorless',
 ]);
 export type CardColorType = z.infer<typeof CardColor>;
-
-export function cardColorToSymbol(color: CardColorType): string {
-  switch (color) {
-    case 'White':
-      return 'w';
-    case 'Blue':
-      return 'u';
-    case 'Black':
-      return 'b';
-    case 'Red':
-      return 'r';
-    case 'Green':
-      return 'g';
-    case 'Colorless':
-      return 'c';
-    default:
-      return '';
-  }
-}
 
 export const CardFormat = z.enum([
   'Alchemy',
@@ -68,59 +55,64 @@ export const CardFormat = z.enum([
 ]);
 export type CardFormatType = z.infer<typeof CardFormat>;
 
-export const CardFormatStatus = z.enum(['Legal', 'Banned', 'Restricted']);
+export const CardFormatStatus = z.enum([
+  'Legal',
+  'Banned',
+  'Not Legal',
+  'Restricted',
+]);
 
 // Image URIs Schema
 const imageUrisSchema = z.object({
-  small: z.string().url(),
-  normal: z.string().url(),
-  large: z.string().url(),
-  png: z.string().url(),
-  art_crop: z.string().url(),
-  border_crop: z.string().url(),
+  small: z.url(),
+  normal: z.url(),
+  large: z.url(),
+  png: z.url(),
+  art_crop: z.url(),
+  border_crop: z.url(),
 });
 
 // Legalities Schema
 const legalitiesSchema = z.object({
-  standard: z.string(),
-  future: z.string(),
-  historic: z.string(),
-  gladiator: z.string(),
-  pioneer: z.string(),
-  explorer: z.string(),
-  modern: z.string(),
-  legacy: z.string(),
-  pauper: z.string(),
-  vintage: z.string(),
-  penny: z.string(),
-  commander: z.string(),
-  oathbreaker: z.string(),
-  brawl: z.string(),
-  alchemy: z.string(),
-  paupercommander: z.string(),
-  duel: z.string(),
-  oldschool: z.string(),
-  premodern: z.string(),
-  predh: z.string(),
-  timeless: z.string(),
-  standardbrawl: z.string(),
+  standard: z.string().optional(),
+  future: z.string().optional(),
+  historic: z.string().optional(),
+  gladiator: z.string().optional(),
+  pioneer: z.string().optional(),
+  explorer: z.string().optional(),
+  modern: z.string().optional(),
+  legacy: z.string().optional(),
+  pauper: z.string().optional(),
+  vintage: z.string().optional(),
+  penny: z.string().optional(),
+  commander: z.string().optional(),
+  oathbreaker: z.string().optional(),
+  brawl: z.string().optional(),
+  alchemy: z.string().optional(),
+  paupercommander: z.string().optional(),
+  duel: z.string().optional(),
+  oldschool: z.string().optional(),
+  premodern: z.string().optional(),
+  predh: z.string().optional(),
+  timeless: z.string().optional(),
+  standardbrawl: z.string().optional(),
 });
 
 // RelatedUris Schema
-const relatedUrisSchema = z.record(z.string(), z.string().url());
+const relatedUrisSchema = z.object({}).catchall(z.url());
 
 // PurchaseUris Schema
 const purchaseUrisSchema = z.object({
-  tcgplayer: z.string().url().optional(),
-  cardmarket: z.string().url().optional(),
-  cardhoarder: z.string().url().optional(),
+  tcgplayer: z.url().optional(),
+  cardmarket: z.url().optional(),
+  cardhoarder: z.url().optional(),
 });
 
 // Preview Schema
 const previewSchema = z
   .object({
     source: z.string(),
-    source_uri: z.union([z.literal(''), z.string().url()]),
+    source_uri: z.string(),
     previewed_at: z.string(),
   })
   .optional();
@@ -129,13 +121,13 @@ const previewSchema = z
 const cardFaceSchema = z.object({
   object: z.literal('card_face'),
   name: z.string(),
-  mana_cost: z.string(),
+  mana_cost: z.string().optional(),
   type_line: z.string(),
   oracle_text: z.string().optional(),
-  colors: z.array(z.string()),
+  colors: z.array(z.string()).optional(),
   artist: z.string().optional(),
-  artist_id: z.string().uuid().optional(),
-  illustration_id: z.string().uuid().optional(),
+  artist_id: z.guid().optional(),
+  illustration_id: z.guid().optional(),
   image_uris: imageUrisSchema.optional(),
   flavor_text: z.string().optional(),
   power: z.string().optional(),
@@ -151,8 +143,8 @@ const cardFaceSchema = z.object({
 export type ScryfallCard = z.infer<typeof ScryfallCardSchema>;
 export const ScryfallCardSchema = z.object({
   object: z.literal('card'),
-  id: z.string().uuid(),
-  oracle_id: z.string().uuid(),
+  id: z.guid(),
+  oracle_id: z.guid(),
   multiverse_ids: z.array(z.number()).optional(),
   mtgo_id: z.number().optional(),
   mtgo_foil_id: z.number().optional(),
@@ -161,8 +153,8 @@ export const ScryfallCardSchema = z.object({
   name: z.string(),
   lang: z.string(),
   released_at: z.string(),
-  uri: z.string().url(),
-  scryfall_uri: z.string().url(),
+  uri: z.url(),
+  scryfall_uri: z.url(),
   layout: z.string(),
   highres_image: z.boolean(),
   image_status: z.string(),
@@ -178,8 +170,22 @@ export const ScryfallCardSchema = z.object({
   color_identity: z.array(z.string()),
   keywords: z.array(z.string()),
   legalities: legalitiesSchema.optional(),
+  produced_mana: z.array(z.string()).optional(),
+  all_parts: z
+    .array(
+      z.object({
+        object: z.string(),
+        id: z.guid(),
+        component: z.string(),
+        name: z.string(),
+        type_line: z.string(),
+        uri: z.url(),
+      }),
+    )
+    .optional(),
   games: z.array(z.string()),
   reserved: z.boolean(),
+  game_changer: z.boolean().optional(),
   foil: z.boolean(),
   nonfoil: z.boolean(),
   finishes: z.array(z.string()),
@@ -188,22 +194,24 @@ export const ScryfallCardSchema = z.object({
   promo_types: z.array(z.string()).optional(),
   reprint: z.boolean(),
   variation: z.boolean(),
-  set_id: z.string().uuid(),
+  set_id: z.guid(),
   set: z.string(),
   set_name: z.string(),
   set_type: z.string(),
-  set_uri: z.string().url(),
-  set_search_uri: z.string().url(),
-  scryfall_set_uri: z.string().url(),
-  rulings_uri: z.string().url(),
-  prints_search_uri: z.string().url(),
+  set_uri: z.url(),
+  set_search_uri: z.url(),
+  scryfall_set_uri: z.url(),
+  rulings_uri: z.url(),
+  prints_search_uri: z.url(),
   collector_number: z.string(),
   digital: z.boolean(),
-  rarity: CardRarity,
-  card_back_id: z.string().uuid(),
+  rarity: z.string(),
+  flavor_text: z.string().optional(),
+  watermark: z.string().optional(),
+  card_back_id: z.guid().optional(),
   artist: z.string().optional(),
-  artist_ids: z.array(z.string().uuid()).optional(),
-  illustration_id: z.string().uuid().optional(),
+  artist_ids: z.array(z.guid()).optional(),
+  illustration_id: z.guid().optional(),
   border_color: z.string(),
   frame: z.string(),
   frame_effects: z.array(z.string()).optional(),
@@ -214,12 +222,11 @@ export const ScryfallCardSchema = z.object({
   story_spotlight: z.boolean(),
   edhrec_rank: z.number().optional(),
   penny_rank: z.number().optional(),
-  prices: z.record(z.string(), z.string().nullable()), // prices object with keys like "usd", "eur", etc.
+  prices: z.object({}).catchall(z.string().nullable()),
   related_uris: relatedUrisSchema,
   purchase_uris: purchaseUrisSchema.optional(),
   preview: previewSchema,
   card_faces: z.array(cardFaceSchema).optional(),
-  game_changer: z.boolean().optional(),
 });
 
 export type Card = z.infer<typeof CardSchema>;

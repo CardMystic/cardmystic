@@ -76,54 +76,191 @@ export type Database = {
           },
         ];
       };
+      card_list_primer: {
+        Row: {
+          created_at: string;
+          id: number;
+          list_id: string;
+          text: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          list_id: string;
+          text?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          list_id?: string;
+          text?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_list_primer_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: true;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       card_lists: {
         Row: {
           avatar_card_name: string | null;
+          comment_count: number;
           created_at: string;
           description: string | null;
           format: string;
           id: string;
+          like_count: number;
           name: string | null;
+          save_count: number;
           updated_at: string | null;
           user_id: string | null;
+          view_count: number;
+          visibility: Database['public']['Enums']['visibility'];
         };
         Insert: {
           avatar_card_name?: string | null;
+          comment_count?: number;
           created_at?: string;
           description?: string | null;
           format?: string;
           id?: string;
+          like_count?: number;
           name?: string | null;
+          save_count?: number;
           updated_at?: string | null;
           user_id?: string | null;
+          view_count?: number;
+          visibility?: Database['public']['Enums']['visibility'];
         };
         Update: {
           avatar_card_name?: string | null;
+          comment_count?: number;
           created_at?: string;
           description?: string | null;
           format?: string;
           id?: string;
+          like_count?: number;
           name?: string | null;
+          save_count?: number;
           updated_at?: string | null;
           user_id?: string | null;
+          view_count?: number;
+          visibility?: Database['public']['Enums']['visibility'];
         };
         Relationships: [];
       };
-      profiles: {
+      decklist_comments: {
         Row: {
-          avatar_card_name: string | null;
+          body: string;
           created_at: string;
           id: string;
+          list_id: string;
+          user_id: string;
         };
         Insert: {
-          avatar_card_name?: string | null;
-          created_at?: string;
-          id: string;
-        };
-        Update: {
-          avatar_card_name?: string | null;
+          body: string;
           created_at?: string;
           id?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          id?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'decklist_comments_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      decklist_likes: {
+        Row: {
+          created_at: string;
+          list_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'decklist_likes_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      decklist_saves: {
+        Row: {
+          created_at: string;
+          list_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          list_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'decklist_saves_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_lists';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          avatar_card_name: string;
+          created_at: string;
+          follower_count: number;
+          id: string;
+          is_featured: boolean;
+          username: string | null;
+        };
+        Insert: {
+          avatar_card_name?: string;
+          created_at?: string;
+          follower_count?: number;
+          id: string;
+          is_featured?: boolean;
+          username?: string | null;
+        };
+        Update: {
+          avatar_card_name?: string;
+          created_at?: string;
+          follower_count?: number;
+          id?: string;
+          is_featured?: boolean;
+          username?: string | null;
         };
         Relationships: [];
       };
@@ -154,15 +291,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_follows: {
+        Row: {
+          created_at: string;
+          followee_id: string;
+          follower_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          followee_id: string;
+          follower_id: string;
+        };
+        Update: {
+          created_at?: string;
+          followee_id?: string;
+          follower_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      increment_decklist_view_count: {
+        Args: { p_list_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
-      [_ in never]: never;
+      visibility: 'private' | 'public';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -292,6 +450,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      visibility: ['private', 'public'],
+    },
   },
 } as const;
