@@ -591,6 +591,10 @@ test.describe('Decklist social & discovery', () => {
         page.getByPlaceholder('Share your thoughts on this deck...'),
       ).toBeHidden();
 
+      // Non-owners never see owner-only list actions on the cards.
+      // The per-card options menu (copies/boards/remove) is owner-only.
+      await expect(page.getByLabel('Card options')).toHaveCount(0);
+
       // Public profile shows a disabled Follow button when logged out.
       const auth = await supabaseAuth(request);
       expect(auth, 'Supabase password grant must succeed').toBeTruthy();
