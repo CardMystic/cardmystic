@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="section-title mb-4">Featured Decklists & Users</h2>
+    <h2 class="section-title mb-4">Awesome Decklists & Users</h2>
 
     <!-- Decklists row -->
     <div
