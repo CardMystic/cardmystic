@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { SignUpRequest } from '@/models/userModel';
+import { useCardNames } from '~/composables/useBulkData';
+import { refDebounced } from '~/utils/refDebounced';
 
 const router = useRouter();
 
@@ -22,6 +24,41 @@ const resending = ref(false);
 const resendMessage = ref<string | null>(null);
 const honeypot = ref('');
 const showPasswords = ref(false);
+
+// Profile icon card selection — optional, sent along with signup
+const selectedProfileCard = ref('');
+const avatarSearchTerm = ref('');
+const debouncedAvatarSearchTerm = refDebounced(avatarSearchTerm, 150);
+
+const { data: rawCards, status: cardsQueryStatus } = useCardNames();
+const cardsStatus = computed(() =>
+  cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
+);
+
+const filteredAvatarCards = computed(() => {
+  if (
+    !debouncedAvatarSearchTerm.value ||
+    debouncedAvatarSearchTerm.value.length < 2
+  ) {
+    return selectedProfileCard.value ? [selectedProfileCard.value] : [];
+  }
+
+  const searchLower = debouncedAvatarSearchTerm.value.toLowerCase();
+  const filtered = selectedProfileCard.value ? [selectedProfileCard.value] : [];
+
+  const cards = rawCards.value ?? [];
+  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
+    const card = cards[i];
+    if (
+      card.toLowerCase().includes(searchLower) &&
+      card !== selectedProfileCard.value
+    ) {
+      filtered.push(card);
+    }
+  }
+
+  return filtered;
+});
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null;
@@ -71,6 +108,7 @@ const signUpWithEmail = async () => {
       email: email.value,
       password: password.value,
       confirmPassword: confirmPassword.value,
+      avatarCardName: selectedProfileCard.value.trim() || undefined,
     };
     const response = await signupWithEmail(credentials);
     successMessage.value = response.message;
@@ -86,6 +124,7 @@ const signUpWithEmail = async () => {
     email.value = '';
     password.value = '';
     confirmPassword.value = '';
+    selectedProfileCard.value = '';
   } catch (e: any) {
     errorMessage.value = e.message || 'An unexpected error occurred.';
   }
@@ -155,6 +194,20 @@ const resendVerification = async () => {
       placeholder="Email"
       size="lg"
     />
+
+    <UInputMenu
+      v-model="selectedProfileCard"
+      v-model:search-term="avatarSearchTerm"
+      :items="filteredAvatarCards"
+      :loading="cardsStatus === 'pending'"
+      placeholder="Optional: choose a profile icon card"
+      icon="i-lucide-image"
+      class="w-full"
+      size="lg"
+    />
+    <p class="text-xs text-zinc-400 -mt-2">
+      Optional: pick an MTG card art as your profile icon.
+    </p>
 
     <UInput
       class="w-full"
