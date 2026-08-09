@@ -182,6 +182,21 @@ export const UpdateFormatResponseSchema = z.object({
     .describe('Whether commanders were cleared due to format change'),
 });
 
+// ---- Update Visibility ----
+
+export const UpdateVisibilitySchema = z.object({
+  listId: z.guid().describe('The ID of the card list'),
+  visibility: z
+    .enum(['private', 'public'])
+    .describe('The new visibility for the list'),
+});
+
+export type UpdateVisibilityRequest = z.infer<typeof UpdateVisibilitySchema>;
+
+export const UpdateVisibilityResponseSchema = z.object({
+  visibility: z.string().describe('The updated visibility'),
+});
+
 // ---- Update Num Copies ----
 
 export const UpdateNumCopiesSchema = z.object({

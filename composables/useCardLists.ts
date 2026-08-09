@@ -653,6 +653,59 @@ export const useCardLists = () => {
     },
   });
 
+  const updateVisibility = async (
+    listId: string,
+    visibility: 'private' | 'public',
+  ) => {
+    if (!supabase) return;
+    if (!userProfile.value?.id) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const config = useRuntimeConfig();
+    const response = await $fetch<{ visibility: string }>(
+      `${config.public.backendUrl}/supabase/card-lists/update-visibility`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          listId,
+          visibility,
+        },
+      },
+    );
+
+    return response;
+  };
+
+  const updateVisibilityMutation = useMutation({
+    mutationFn: async ({
+      listId,
+      visibility,
+    }: {
+      listId: string;
+      visibility: 'private' | 'public';
+    }) => {
+      if (!supabase) return;
+      return updateVisibility(listId, visibility);
+    },
+    onSuccess: (_, { listId }) => {
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({
+        queryKey: ['discovery', 'public-decklist', listId],
+      });
+    },
+  });
+
   const updateNumCopies = async (
     listId: string,
     cardName: string,
@@ -791,6 +844,7 @@ export const useCardLists = () => {
     setCommanderMutation,
     clearCommanderMutation,
     updateFormatMutation,
+    updateVisibilityMutation,
     updateNumCopiesMutation,
     changeBoardMutation,
 
