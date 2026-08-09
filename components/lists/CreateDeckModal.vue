@@ -23,6 +23,15 @@
             class="w-full"
           />
         </UFormField>
+        <UFormField label="Visibility">
+          <USelect
+            v-model="newListVisibility"
+            :items="visibilityOptions"
+            class="w-full"
+            data-testid="create-visibility-select"
+            aria-label="List visibility"
+          />
+        </UFormField>
         <UFormField v-if="isCommanderFormat" label="Commander (optional)">
           <UInputMenu
             v-model="newListCommander"
@@ -107,6 +116,7 @@ const toast = useToast();
 const newListName = ref('');
 const newListDescription = ref('');
 const newListFormat = ref<CardFormatType>('Commander');
+const newListVisibility = ref<'private' | 'public'>('private');
 const newListCommander = ref('');
 const newListPartnerCommander = ref('');
 const commanderSearchTerm = ref('');
@@ -114,6 +124,10 @@ const partnerSearchTerm = ref('');
 const createLoading = computed(() => createListMutation.isPending.value);
 
 const formatOptions = CardFormat.options;
+const visibilityOptions = [
+  { label: 'Private', value: 'private' as const },
+  { label: 'Public', value: 'public' as const },
+];
 const isCommanderFormat = computed(() => newListFormat.value === 'Commander');
 
 // Determine which partner category the selected commander belongs to
@@ -181,6 +195,7 @@ watch(isOpen, (opened) => {
     newListName.value = '';
     newListDescription.value = '';
     newListFormat.value = 'Commander';
+    newListVisibility.value = 'private';
     newListCommander.value = '';
     newListPartnerCommander.value = '';
     commanderSearchTerm.value = '';
@@ -202,6 +217,7 @@ const handleCreate = async () => {
       description: newListDescription.value.trim() || undefined,
       format: newListFormat.value,
       commanders: commandersList.length > 0 ? commandersList : undefined,
+      visibility: newListVisibility.value,
     });
 
     if (result?.id) {

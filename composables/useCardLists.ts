@@ -54,6 +54,7 @@ export const useCardLists = () => {
     description?: string,
     commanders?: string[],
     format?: CardFormatType,
+    visibility?: 'private' | 'public',
   ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
@@ -84,6 +85,7 @@ export const useCardLists = () => {
           description: description?.trim() || undefined,
           format: format || 'Commander',
           commanders: commanders?.filter((c) => c.trim()) || [],
+          visibility: visibility || 'private',
         },
       },
     );
@@ -97,14 +99,16 @@ export const useCardLists = () => {
       description,
       commanders,
       format,
+      visibility,
     }: {
       name: string;
       description?: string;
       commanders?: string[];
       format?: CardFormatType;
+      visibility?: 'private' | 'public';
     }) => {
       if (!supabase) return;
-      return createList(name, description, commanders, format);
+      return createList(name, description, commanders, format, visibility);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });

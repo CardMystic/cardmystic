@@ -151,6 +151,10 @@ export const CreateListSchema = z.object({
     .max(2)
     .default([])
     .describe('Optional commander name(s) to set'),
+  visibility: z
+    .enum(['private', 'public'])
+    .default('private')
+    .describe('The initial visibility for the list. Defaults to private'),
 });
 
 export type CreateListRequest = z.infer<typeof CreateListSchema>;
@@ -164,6 +168,7 @@ export const CreateListResponseSchema = z.object({
     .describe('The description of the created list'),
   format: z.string().describe('The format of the created list'),
   commanders: z.array(z.string()).describe('Commander name(s) set on the list'),
+  visibility: z.string().describe('The visibility of the created list'),
 });
 
 // ---- Update Format ----

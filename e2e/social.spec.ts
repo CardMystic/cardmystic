@@ -18,7 +18,8 @@ import { expect, gotoHydrated, test } from './utils/fixtures';
  *
  *  ── Setup ──────────────────────────────────────────────────────────────
  *   38. Create a list via the New List modal and make it public via the
- *       banner visibility selector (owner-only UI)
+ *       modal's visibility selector (owner-only UI; can also be flipped
+ *       later from the banner selector on the deck page)
  *
  *  ── Featured & discovery ───────────────────────────────────────────────
  *   39. Homepage Featured Decklists & Users section renders
@@ -135,6 +136,13 @@ test.describe('Decklist social & discovery', () => {
 
     await reliableFill(dialog.getByPlaceholder('Enter list name'), LIST_NAME);
 
+    // Flip visibility to Public directly from the create modal — owners
+    // can also change it later from the banner selector on the deck page.
+    const visibilitySelect = dialog.getByTestId('create-visibility-select');
+    await expect(visibilitySelect).toBeVisible();
+    await visibilitySelect.click();
+    await page.getByRole('option', { name: 'Public' }).click();
+
     const createCall = page.waitForResponse(
       (resp) =>
         resp.url() === `${BACKEND}/supabase/card-lists/create` &&
@@ -144,27 +152,12 @@ test.describe('Decklist social & discovery', () => {
     await dialog.getByRole('button', { name: /^create$/i }).click();
 
     const resp = await createCall;
-    const body = (await resp.json()) as { id: string };
+    const body = (await resp.json()) as { id: string; visibility?: string };
     // Capture LIST_ID first so afterAll can clean up even if assertions fail.
     if (body?.id) LIST_ID = body.id;
     expect(resp.ok()).toBeTruthy();
     expect(body.id).toBeTruthy();
-
-    // Flip the deck public via the banner visibility selector (owner-only).
-    await gotoHydrated(page, `/lists/${LIST_ID}`);
-    const visibilitySelect = page.getByTestId('visibility-select');
-    // The selector renders once the async user-lists fetch marks us as owner.
-    await expect(visibilitySelect).toBeVisible({ timeout: 60_000 });
-
-    const updateCall = page.waitForResponse(
-      (resp) =>
-        resp.url() === `${BACKEND}/supabase/card-lists/update-visibility` &&
-        resp.request().method() === 'PUT',
-      { timeout: API_TIMEOUT },
-    );
-    await visibilitySelect.click();
-    await page.getByRole('option', { name: 'Public' }).click();
-    expect((await updateCall).ok()).toBeTruthy();
+    expect(body.visibility).toBe('public');
 
     // The public view endpoint should now serve the deck.
     const viewResp = await request.get(
@@ -182,7 +175,7 @@ test.describe('Decklist social & discovery', () => {
     await gotoHydrated(page, '/');
 
     const heading = page.getByRole('heading', {
-      name: 'Featured Decklists & Users',
+      name: 'Awesome Decklists & Users',
     });
     await heading.scrollIntoViewIfNeeded();
     await expect(heading).toBeVisible({ timeout: API_TIMEOUT });
