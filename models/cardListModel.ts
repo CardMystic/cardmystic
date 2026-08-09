@@ -151,6 +151,10 @@ export const CreateListSchema = z.object({
     .max(2)
     .default([])
     .describe('Optional commander name(s) to set'),
+  visibility: z
+    .enum(['private', 'public'])
+    .default('private')
+    .describe('The initial visibility for the list. Defaults to private'),
 });
 
 export type CreateListRequest = z.infer<typeof CreateListSchema>;
@@ -164,6 +168,7 @@ export const CreateListResponseSchema = z.object({
     .describe('The description of the created list'),
   format: z.string().describe('The format of the created list'),
   commanders: z.array(z.string()).describe('Commander name(s) set on the list'),
+  visibility: z.string().describe('The visibility of the created list'),
 });
 
 // ---- Update Format ----
@@ -180,6 +185,21 @@ export const UpdateFormatResponseSchema = z.object({
   commandersCleared: z
     .boolean()
     .describe('Whether commanders were cleared due to format change'),
+});
+
+// ---- Update Visibility ----
+
+export const UpdateVisibilitySchema = z.object({
+  listId: z.guid().describe('The ID of the card list'),
+  visibility: z
+    .enum(['private', 'public'])
+    .describe('The new visibility for the list'),
+});
+
+export type UpdateVisibilityRequest = z.infer<typeof UpdateVisibilitySchema>;
+
+export const UpdateVisibilityResponseSchema = z.object({
+  visibility: z.string().describe('The updated visibility'),
 });
 
 // ---- Update Num Copies ----
@@ -315,6 +335,41 @@ export const GetFeaturedDecklistsResponseSchema = z.object({
 
 export type GetFeaturedDecklistsResponse = z.infer<
   typeof GetFeaturedDecklistsResponseSchema
+>;
+
+// ---- Featured Primers ----
+
+export const FeaturedPrimerSchema = z.object({
+  decklist: DecklistSummarySchema.describe(
+    'Summary of the decklist the primer belongs to',
+  ),
+  primer_preview: z
+    .string()
+    .describe('Short plain-text preview of the primer content'),
+});
+
+export type FeaturedPrimer = z.infer<typeof FeaturedPrimerSchema>;
+
+export const GetFeaturedPrimersQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .default(6)
+    .describe('Maximum number of featured primers to return (default 6)'),
+});
+
+export type GetFeaturedPrimersQuery = z.infer<
+  typeof GetFeaturedPrimersQuerySchema
+>;
+
+export const GetFeaturedPrimersResponseSchema = z.object({
+  primers: z.array(FeaturedPrimerSchema),
+});
+
+export type GetFeaturedPrimersResponse = z.infer<
+  typeof GetFeaturedPrimersResponseSchema
 >;
 
 export const GetActiveUserDecklistsQuerySchema = z.object({

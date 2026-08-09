@@ -32,12 +32,13 @@
         <h1
           v-else
           @click="startEditingTitle"
-          class="text-3xl md:text-4xl font-bold text-white mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+          class="text-3xl md:text-4xl font-bold text-white mb-2 transition-opacity"
+          :class="{ 'cursor-pointer hover:opacity-80': isOwner }"
         >
           {{ list.name }}
         </h1>
 
-        <!-- Format display -->
+        <!-- Format display + visibility selector -->
         <div class="flex items-center gap-1.5 mb-2">
           <template v-if="isEditingFormat">
             <USelect
@@ -54,11 +55,24 @@
               list.format || 'Commander'
             }}</span>
             <UIcon
+              v-if="isOwner"
               name="i-lucide-pencil"
               class="w-3.5 h-3.5 text-gray-400 hover:text-white cursor-pointer transition-colors"
               @click="startEditingFormat"
             />
           </template>
+          <!-- Visibility selector (owner only) -->
+          <USelect
+            v-if="isOwner"
+            :model-value="list.visibility || 'private'"
+            :items="visibilityOptions"
+            :loading="updateVisibilityMutation.isPending.value"
+            size="xs"
+            class="w-28 bg-black/50 rounded ml-2"
+            data-testid="visibility-select"
+            aria-label="List visibility"
+            @update:model-value="updateListVisibility"
+          />
         </div>
 
         <div v-if="isEditingDescription" class="mb-2">
@@ -74,12 +88,13 @@
         <p
           v-else-if="list.description"
           @click="startEditingDescription"
-          class="text-gray-200 text-lg cursor-pointer hover:opacity-80 transition-opacity"
+          class="text-gray-200 text-lg transition-opacity"
+          :class="{ 'cursor-pointer hover:opacity-80': isOwner }"
         >
           {{ list.description }}
         </p>
         <p
-          v-else
+          v-else-if="isOwner"
           @click="startEditingDescription"
           class="text-gray-400 text-lg italic cursor-pointer hover:opacity-80 transition-opacity"
         >
@@ -89,6 +104,7 @@
 
       <!-- Edit Icon (always visible when no banner, hover-reveal when banner set) -->
       <UButton
+        v-if="isOwner"
         @click="
           () => {
             isEditBannerModalOpen = true;
@@ -183,12 +199,17 @@ import { useToast } from '#imports';
 const props = defineProps<{
   list: any | null | undefined;
   isLoading: boolean;
+  isOwner?: boolean;
 }>();
 
 const toast = useToast();
 
-const { updateListAvatarMutation, updateListMutation, updateFormatMutation } =
-  useCardLists();
+const {
+  updateListAvatarMutation,
+  updateListMutation,
+  updateFormatMutation,
+  updateVisibilityMutation,
+} = useCardLists();
 
 // Banner state
 const isEditBannerModalOpen = ref(false);
@@ -207,6 +228,12 @@ const editedDescription = ref('');
 const isEditingFormat = ref(false);
 const editedFormat = ref<CardFormatType>('Commander');
 const formatOptions = CardFormat.options;
+
+// Visibility selector options (owner only)
+const visibilityOptions = [
+  { label: 'Private', value: 'private' },
+  { label: 'Public', value: 'public' },
+];
 
 // Load card names from backend bulk data API
 const { data: rawCards, status: cardsQueryStatus } = useCardNames();
@@ -341,14 +368,14 @@ const updateListDescription = async () => {
 };
 
 const startEditingTitle = () => {
-  if (props.list) {
+  if (props.list && props.isOwner) {
     editedTitle.value = props.list.name;
     isEditingTitle.value = true;
   }
 };
 
 const startEditingDescription = () => {
-  if (props.list) {
+  if (props.list && props.isOwner) {
     editedDescription.value = props.list.description || '';
     isEditingDescription.value = true;
   }
@@ -384,6 +411,30 @@ const updateListFormat = async () => {
   } catch (error: any) {
     toast.add({
       title: 'Error updating format',
+      description: error.message,
+      color: 'error',
+    });
+  }
+};
+
+const updateListVisibility = async (visibility: string) => {
+  if (visibility !== 'private' && visibility !== 'public') return;
+  if (!props.list || visibility === (props.list.visibility || 'private')) {
+    return;
+  }
+
+  try {
+    await updateVisibilityMutation.mutateAsync({
+      listId: props.list.id,
+      visibility,
+    });
+    toast.add({
+      title: `List is now ${visibility}`,
+      icon: 'i-lucide-check',
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Error updating visibility',
       description: error.message,
       color: 'error',
     });

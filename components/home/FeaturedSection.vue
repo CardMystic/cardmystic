@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="section-title mb-4">Featured Decklists & Users</h2>
+    <h2 class="section-title mb-4">Awesome Decklists & Users</h2>
 
     <!-- Decklists row -->
     <div
@@ -77,6 +77,26 @@
         Search Users
       </UButton>
     </div>
+
+    <!-- Primers row -->
+    <template v-if="isLoadingPrimers || visiblePrimers.length > 0">
+      <h2 class="section-title mt-8 mb-4">Suggested Primer Reads</h2>
+
+      <div
+        v-if="isLoadingPrimers"
+        class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4"
+      >
+        <USkeleton v-for="i in 2" :key="i" class="primer-skeleton" />
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+        <FeaturedPrimerLink
+          v-for="primer in visiblePrimers"
+          :key="primer.decklist.id"
+          :primer="primer"
+        />
+      </div>
+    </template>
   </div>
 </template>
 
@@ -85,15 +105,19 @@ import { computed } from 'vue';
 import {
   useFeaturedDecklists,
   useFeaturedUsers,
+  useFeaturedPrimers,
 } from '~/composables/useDiscovery';
 import CardListLink from '~/components/lists/CardListLink.vue';
 import PublicUserLink from '~/components/user/PublicUserLink.vue';
+import FeaturedPrimerLink from '~/components/home/FeaturedPrimerLink.vue';
 
 const { decklists, isLoading: isLoadingDecklists } = useFeaturedDecklists(10);
 const { users, isLoading: isLoadingUsers } = useFeaturedUsers(10);
+const { primers, isLoading: isLoadingPrimers } = useFeaturedPrimers(6);
 
 const visibleDecklists = computed(() => decklists.value.slice(0, 3));
 const visibleUsers = computed(() => users.value.slice(0, 3));
+const visiblePrimers = computed(() => primers.value.slice(0, 2));
 </script>
 
 <style scoped lang="sass">
@@ -112,6 +136,10 @@ const visibleUsers = computed(() => users.value.slice(0, 3));
 
 .user-skeleton
   height: 62px
+  border-radius: 0.5rem
+
+.primer-skeleton
+  height: 160px
   border-radius: 0.5rem
 
 .empty-state

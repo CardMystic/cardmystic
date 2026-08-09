@@ -2,6 +2,7 @@ import { useQuery, useInfiniteQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import {
   GetFeaturedDecklistsResponseSchema,
+  GetFeaturedPrimersResponseSchema,
   GetPublicDecklistResponseSchema,
   SearchDecklistsResponseSchema,
 } from '~/models/cardListModel';
@@ -70,6 +71,38 @@ export function useFeaturedUsers(limit = 10) {
 
   return {
     users: computed(() => data.value?.users ?? []),
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Random selection of featured primers — public decklists with a non-empty
+ * primer that meet the same quality constraints as featured decklists. Each
+ * entry includes the decklist summary and a short plain-text preview of the
+ * primer. Public endpoint — no auth required.
+ */
+export function useFeaturedPrimers(limit = 6) {
+  const config = useRuntimeConfig();
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['discovery', 'featured-primers', limit],
+    queryFn: async () => {
+      const response = await fetch(
+        `${config.public.backendUrl}/supabase/card-lists/featured-primers?limit=${limit}`,
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to load featured primers (${response.status})`);
+      }
+      return GetFeaturedPrimersResponseSchema.parse(await response.json());
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    primers: computed(() => data.value?.primers ?? []),
     isLoading,
     error,
     refetch,

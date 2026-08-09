@@ -17,8 +17,9 @@ import { expect, gotoHydrated, test } from './utils/fixtures';
  * are relative to the global test order, not this file):
  *
  *  ── Setup ──────────────────────────────────────────────────────────────
- *   38. Create a list via the New List modal and make it public
- *       (visibility is flipped via Supabase REST — there is no UI toggle)
+ *   38. Create a list via the New List modal and make it public via the
+ *       modal's visibility selector (owner-only UI; can also be flipped
+ *       later from the banner selector on the deck page)
  *
  *  ── Featured & discovery ───────────────────────────────────────────────
  *   39. Homepage Featured Decklists & Users section renders
@@ -135,6 +136,13 @@ test.describe('Decklist social & discovery', () => {
 
     await reliableFill(dialog.getByPlaceholder('Enter list name'), LIST_NAME);
 
+    // Flip visibility to Public directly from the create modal — owners
+    // can also change it later from the banner selector on the deck page.
+    const visibilitySelect = dialog.getByTestId('create-visibility-select');
+    await expect(visibilitySelect).toBeVisible();
+    await visibilitySelect.click();
+    await page.getByRole('option', { name: 'Public' }).click();
+
     const createCall = page.waitForResponse(
       (resp) =>
         resp.url() === `${BACKEND}/supabase/card-lists/create` &&
@@ -144,24 +152,12 @@ test.describe('Decklist social & discovery', () => {
     await dialog.getByRole('button', { name: /^create$/i }).click();
 
     const resp = await createCall;
-    const body = (await resp.json()) as { id: string };
+    const body = (await resp.json()) as { id: string; visibility?: string };
     // Capture LIST_ID first so afterAll can clean up even if assertions fail.
     if (body?.id) LIST_ID = body.id;
     expect(resp.ok()).toBeTruthy();
     expect(body.id).toBeTruthy();
-
-    // There is no UI visibility toggle yet — flip it via Supabase REST
-    // (owner updates are allowed by RLS, same as the app's own updates).
-    const auth = await supabaseAuth(request);
-    expect(auth, 'Supabase password grant must succeed').toBeTruthy();
-    const patchResp = await request.patch(
-      `${SUPABASE_URL}/rest/v1/card_lists?id=eq.${LIST_ID}`,
-      {
-        headers: auth!.headers,
-        data: { visibility: 'public' },
-      },
-    );
-    expect(patchResp.ok()).toBeTruthy();
+    expect(body.visibility).toBe('public');
 
     // The public view endpoint should now serve the deck.
     const viewResp = await request.get(
@@ -179,7 +175,7 @@ test.describe('Decklist social & discovery', () => {
     await gotoHydrated(page, '/');
 
     const heading = page.getByRole('heading', {
-      name: 'Featured Decklists & Users',
+      name: 'Awesome Decklists & Users',
     });
     await heading.scrollIntoViewIfNeeded();
     await expect(heading).toBeVisible({ timeout: API_TIMEOUT });
@@ -594,6 +590,15 @@ test.describe('Decklist social & discovery', () => {
       // Non-owners never see owner-only list actions on the cards.
       // The per-card options menu (copies/boards/remove) is owner-only.
       await expect(page.getByLabel('Card options')).toHaveCount(0);
+
+      // The deck has no saved primer, so non-owners get a disabled
+      // "No Primer" button instead of the Primer link.
+      const noPrimerButton = page.getByRole('button', { name: 'No Primer' });
+      await expect(noPrimerButton).toBeVisible({ timeout: API_TIMEOUT });
+      await expect(noPrimerButton).toBeDisabled();
+
+      // Non-owners never see the visibility selector.
+      await expect(page.getByTestId('visibility-select')).toHaveCount(0);
 
       // Public profile shows a disabled Follow button when logged out.
       const auth = await supabaseAuth(request);

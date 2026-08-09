@@ -11,7 +11,11 @@
       ></div>
     </div>
 
-    <CardListBanner :list="list" :is-loading="isLoadingLists" />
+    <CardListBanner
+      :list="list"
+      :is-loading="isLoadingLists"
+      :is-owner="isOwner"
+    />
 
     <!-- Social bar with author link (public lists only) -->
     <DecklistSocialBar
@@ -19,6 +23,27 @@
       :list="list"
       :owner="!isOwner ? decklistOwner : null"
     />
+
+    <!-- Primer (non-owners): disabled "No Primer" when the deck has none -->
+    <div v-if="list && !isOwner" class="mb-2">
+      <UTooltip
+        :text="
+          hasPrimer
+            ? 'View the primer for this deck'
+            : 'This deck has no primer yet'
+        "
+      >
+        <UButton
+          :to="hasPrimer ? `/lists/${listId}/primer` : undefined"
+          :disabled="!hasPrimer"
+          icon="i-lucide-notebook-text"
+          color="info"
+          variant="solid"
+          class="cursor-pointer"
+          :label="hasPrimer ? 'Primer' : 'No Primer'"
+        />
+      </UTooltip>
+    </div>
 
     <!-- Actions + Add Card (owner only) -->
     <div v-if="list && isOwner" class="mb-2">
@@ -233,6 +258,7 @@
 import { useCardLists } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
 import { useDecklistViewTracker } from '~/composables/useDecklistSocial';
+import { usePrimer } from '~/composables/usePrimer';
 import { useCardNames } from '~/composables/useBulkData';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
@@ -284,6 +310,10 @@ useDecklistViewTracker(
   listIdRef,
   computed(() => list.value?.visibility === 'public'),
 );
+
+// Primer existence drives the non-owner Primer button state
+const { primerText } = usePrimer(listIdRef);
+const hasPrimer = computed(() => !!primerText.value?.trim());
 
 // Banner background image URL
 const bannerImageUrl = computed(() => {

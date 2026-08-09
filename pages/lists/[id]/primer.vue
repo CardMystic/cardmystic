@@ -36,19 +36,18 @@
 </template>
 
 <script setup lang="ts">
+import { useQueryClient } from '@tanstack/vue-query';
 import { useCardLists } from '~/composables/useCardLists';
+import { usePrimer } from '~/composables/usePrimer';
 import { useSupabase } from '~/composables/useSupabase';
 import { useToast } from '#imports';
-
-definePageMeta({
-  middleware: 'auth',
-});
 
 const route = useRoute();
 const listId = route.params.id as string;
 const toast = useToast();
 const config = useRuntimeConfig();
 const supabase = useSupabase();
+const queryClient = useQueryClient();
 
 const { userLists, isLoadingLists } = useCardLists();
 
@@ -67,22 +66,20 @@ const bannerImageUrl = computed(() => {
 const primerContent = ref('');
 const isSaving = ref(false);
 
-// Load primer from backend on mount.
-onMounted(async () => {
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
-    if (!token) return;
-    const data = await $fetch<{ listId: string; text: string | null }>(
-      `${config.public.backendUrl}/supabase/card-lists/primer/${listId}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-    primerContent.value = data.text ?? '';
-  } catch (e: any) {
-    // Non-fatal: primer may not exist yet
-    primerContent.value = '';
-  }
-});
+// Load primer via the shared query (public primers need no auth). Seed the
+// editable ref once so refetches don't clobber in-progress edits.
+const { primerText } = usePrimer(ref(listId));
+let seeded = false;
+watch(
+  primerText,
+  (text) => {
+    if (!seeded && text !== null) {
+      primerContent.value = text;
+      seeded = true;
+    }
+  },
+  { immediate: true },
+);
 
 async function handleSave(value: string) {
   isSaving.value = true;
@@ -96,6 +93,7 @@ async function handleSave(value: string) {
       body: { listId, text: value },
     });
     toast.add({ title: 'Primer saved', icon: 'i-lucide-check' });
+    queryClient.invalidateQueries({ queryKey: ['primer', listId] });
   } catch (e: any) {
     toast.add({
       title: 'Error saving primer',
