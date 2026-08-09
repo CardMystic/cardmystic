@@ -332,6 +332,41 @@ export type GetFeaturedDecklistsResponse = z.infer<
   typeof GetFeaturedDecklistsResponseSchema
 >;
 
+// ---- Featured Primers ----
+
+export const FeaturedPrimerSchema = z.object({
+  decklist: DecklistSummarySchema.describe(
+    'Summary of the decklist the primer belongs to',
+  ),
+  primer_preview: z
+    .string()
+    .describe('Short plain-text preview of the primer content'),
+});
+
+export type FeaturedPrimer = z.infer<typeof FeaturedPrimerSchema>;
+
+export const GetFeaturedPrimersQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .default(6)
+    .describe('Maximum number of featured primers to return (default 6)'),
+});
+
+export type GetFeaturedPrimersQuery = z.infer<
+  typeof GetFeaturedPrimersQuerySchema
+>;
+
+export const GetFeaturedPrimersResponseSchema = z.object({
+  primers: z.array(FeaturedPrimerSchema),
+});
+
+export type GetFeaturedPrimersResponse = z.infer<
+  typeof GetFeaturedPrimersResponseSchema
+>;
+
 export const GetActiveUserDecklistsQuerySchema = z.object({
   limit: z.coerce
     .number()
