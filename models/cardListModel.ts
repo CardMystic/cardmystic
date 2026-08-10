@@ -497,8 +497,34 @@ export const ToggleSaveResponseSchema = z.object({
 
 export type ToggleSaveResponse = z.infer<typeof ToggleSaveResponseSchema>;
 
+export const GetReactedDecklistsQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(20)
+    .describe('Maximum number of decklists to return (default 20, max 100)'),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      "Opaque cursor from the previous page's nextCursor (omit for first page)",
+    ),
+});
+
+export type GetReactedDecklistsQuery = z.infer<
+  typeof GetReactedDecklistsQuerySchema
+>;
+
 export const GetLikedDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe(
+      'Opaque cursor to pass for the next page, or null if no more results',
+    ),
 });
 
 export type GetLikedDecklistsResponse = z.infer<
@@ -507,6 +533,12 @@ export type GetLikedDecklistsResponse = z.infer<
 
 export const GetSavedDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe(
+      'Opaque cursor to pass for the next page, or null if no more results',
+    ),
 });
 
 export type GetSavedDecklistsResponse = z.infer<

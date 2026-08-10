@@ -275,18 +275,19 @@ export function useDecklistComments(
 }
 
 /** The public decklists the authenticated user has liked. */
-export function useLikedDecklists() {
-  return useReactedDecklists('liked-decklists', 'liked');
+export function useLikedDecklists(limit = 20) {
+  return useReactedDecklists('liked-decklists', 'liked', limit);
 }
 
 /** The public decklists the authenticated user has saved. */
-export function useSavedDecklists() {
-  return useReactedDecklists('saved-decklists', 'saved');
+export function useSavedDecklists(limit = 20) {
+  return useReactedDecklists('saved-decklists', 'saved', limit);
 }
 
 function useReactedDecklists(
   queryKey: 'liked-decklists' | 'saved-decklists',
   endpoint: 'liked' | 'saved',
+  limit: number,
 ) {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
@@ -296,12 +297,22 @@ function useReactedDecklists(
       ? GetLikedDecklistsResponseSchema
       : GetSavedDecklistsResponseSchema;
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: [queryKey, computed(() => userProfile.value?.id)],
-    queryFn: async () => {
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(() => ({
+    queryKey: [queryKey, userProfile.value?.id, limit] as const,
+    queryFn: async ({ pageParam }) => {
       const token = await getAuthToken(supabase!);
+      const params = new URLSearchParams({ limit: String(limit) });
+      if (pageParam) params.set('cursor', pageParam);
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/${endpoint}`,
+        `${config.public.backendUrl}/supabase/card-lists/${endpoint}?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -311,15 +322,22 @@ function useReactedDecklists(
       }
       return schema.parse(await response.json());
     },
-    enabled: computed(() => !process.server && !!userProfile.value?.id),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: !process.server && !!userProfile.value?.id,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-  });
+  }));
 
   return {
-    decklists: computed(() => data.value?.decklists ?? []),
+    decklists: computed(
+      () => data.value?.pages.flatMap((p) => p.decklists) ?? [],
+    ),
     isLoading,
+    isFetchingNextPage,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
   };
 }

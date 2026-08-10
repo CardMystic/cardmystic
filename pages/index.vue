@@ -81,6 +81,8 @@
       </template>
     </ClientOnly>
 
+    <LazyRecentArticles class="mb-14" />
+
     <LazyFeaturedSection class="mb-14" />
 
     <LazyQueryCount class="mb-14"></LazyQueryCount>

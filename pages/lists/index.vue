@@ -69,7 +69,7 @@
 
         <UCollapsible v-if="likedDecklists.length > 0">
           <UButton
-            :label="`Liked Decklists (${likedDecklists.length})`"
+            :label="`Liked Decklists (${likedDecklists.length}${hasMoreLiked ? '+' : ''})`"
             icon="i-lucide-heart"
             trailing-icon="i-lucide-chevron-down"
             color="neutral"
@@ -89,12 +89,23 @@
                 :show-author="true"
               />
             </div>
+            <div
+              v-if="hasMoreLiked"
+              ref="likedSentinelRef"
+              class="flex justify-center py-6"
+            >
+              <UIcon
+                v-if="isFetchingMoreLiked"
+                name="i-lucide-loader-2"
+                class="text-3xl animate-spin opacity-60"
+              />
+            </div>
           </template>
         </UCollapsible>
 
         <UCollapsible v-if="savedDecklists.length > 0">
           <UButton
-            :label="`Saved Decklists (${savedDecklists.length})`"
+            :label="`Saved Decklists (${savedDecklists.length}${hasMoreSaved ? '+' : ''})`"
             icon="i-lucide-bookmark"
             trailing-icon="i-lucide-chevron-down"
             color="neutral"
@@ -112,6 +123,17 @@
                 :list="list"
                 :show-delete-button="false"
                 :show-author="true"
+              />
+            </div>
+            <div
+              v-if="hasMoreSaved"
+              ref="savedSentinelRef"
+              class="flex justify-center py-6"
+            >
+              <UIcon
+                v-if="isFetchingMoreSaved"
+                name="i-lucide-loader-2"
+                class="text-3xl animate-spin opacity-60"
               />
             </div>
           </template>
@@ -138,6 +160,7 @@ definePageMeta({
   middleware: 'auth',
 });
 
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useCardLists } from '~/composables/useCardLists';
 import {
   useLikedDecklists,
@@ -146,10 +169,23 @@ import {
 import CardListLink from '~/components/lists/CardListLink.vue';
 
 const { userLists, isLoadingLists, listsError } = useCardLists();
-const { decklists: likedDecklists, isLoading: isLoadingLiked } =
-  useLikedDecklists();
-const { decklists: savedDecklists, isLoading: isLoadingSaved } =
-  useSavedDecklists();
+const {
+  decklists: likedDecklists,
+  isLoading: isLoadingLiked,
+  isFetchingNextPage: isFetchingMoreLiked,
+  fetchNextPage: fetchMoreLiked,
+  hasNextPage: hasMoreLikedRaw,
+} = useLikedDecklists();
+const {
+  decklists: savedDecklists,
+  isLoading: isLoadingSaved,
+  isFetchingNextPage: isFetchingMoreSaved,
+  fetchNextPage: fetchMoreSaved,
+  hasNextPage: hasMoreSavedRaw,
+} = useSavedDecklists();
+
+const hasMoreLiked = computed(() => !!hasMoreLikedRaw.value);
+const hasMoreSaved = computed(() => !!hasMoreSavedRaw.value);
 
 const lists = computed(() => userLists.value?.decklists || []);
 const loading = computed(() => isLoadingLists.value);
@@ -157,4 +193,51 @@ const error = computed(() => listsError.value?.message || '');
 
 // Create modal state
 const isCreateModalOpen = ref(false);
+
+// Infinite scroll sentinels — mounted only when the collapsible is open,
+// so we re-attach the observer whenever the ref becomes available.
+const likedSentinelRef = ref<HTMLElement | null>(null);
+const savedSentinelRef = ref<HTMLElement | null>(null);
+let likedObserver: IntersectionObserver | null = null;
+let savedObserver: IntersectionObserver | null = null;
+
+function observeSentinel(
+  target: HTMLElement | null,
+  existing: IntersectionObserver | null,
+  onIntersect: () => void,
+): IntersectionObserver | null {
+  existing?.disconnect();
+  if (!target) return null;
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting) onIntersect();
+    },
+    { rootMargin: '200px' },
+  );
+  observer.observe(target);
+  return observer;
+}
+
+function setupLikedObserver() {
+  likedObserver = observeSentinel(likedSentinelRef.value, likedObserver, () => {
+    if (hasMoreLiked.value && !isFetchingMoreLiked.value) fetchMoreLiked();
+  });
+}
+
+function setupSavedObserver() {
+  savedObserver = observeSentinel(savedSentinelRef.value, savedObserver, () => {
+    if (hasMoreSaved.value && !isFetchingMoreSaved.value) fetchMoreSaved();
+  });
+}
+
+watch(likedSentinelRef, setupLikedObserver);
+watch(savedSentinelRef, setupSavedObserver);
+onMounted(() => {
+  setupLikedObserver();
+  setupSavedObserver();
+});
+onBeforeUnmount(() => {
+  likedObserver?.disconnect();
+  savedObserver?.disconnect();
+});
 </script>

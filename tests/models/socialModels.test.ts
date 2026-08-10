@@ -85,9 +85,11 @@ describe('decklist social schemas', () => {
   it('parses liked decklists responses', () => {
     const parsed = GetLikedDecklistsResponseSchema.parse({
       decklists: [decklistSummary],
+      nextCursor: null,
     });
     expect(parsed.decklists).toHaveLength(1);
     expect(parsed.decklists[0].id).toBe(LIST_ID);
+    expect(parsed.nextCursor).toBeNull();
   });
 
   it('parses comments with nullable author fields', () => {

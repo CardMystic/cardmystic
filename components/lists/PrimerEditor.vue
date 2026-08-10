@@ -104,7 +104,7 @@
       <textarea
         ref="textareaRef"
         v-model="draft"
-        placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
+        :placeholder="placeholder"
         class="flex-1 min-h-0 w-full p-4 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-base font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-none overflow-y-auto"
         spellcheck="true"
       />
@@ -146,7 +146,7 @@
         <textarea
           ref="textareaRef"
           v-model="draft"
-          placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
+          :placeholder="placeholder"
           class="flex-1 min-h-0 w-full p-4 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-base font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-none overflow-y-auto"
           spellcheck="true"
           @scroll="onEditorScroll"
@@ -178,7 +178,7 @@
         v-else
         class="text-gray-500 dark:text-gray-400 italic text-center py-8"
       >
-        No primer has been written yet.
+        {{ emptyMessage }}
       </p>
     </div>
 
@@ -215,11 +215,22 @@ import DOMPurify from 'dompurify';
 import { useCardsByName } from '~/composables/useCards';
 import { getCardImageUrl } from '~/utils/scryfall';
 
-const props = defineProps<{
-  modelValue: string;
-  editable: boolean;
-  isSaving?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    modelValue: string;
+    editable: boolean;
+    isSaving?: boolean;
+    /** Message shown in preview mode when there is no content yet. */
+    emptyMessage?: string;
+    /** Placeholder text for the markdown editor textarea. */
+    placeholder?: string;
+  }>(),
+  {
+    emptyMessage: 'No primer has been written yet.',
+    placeholder:
+      'Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported.',
+  },
+);
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
