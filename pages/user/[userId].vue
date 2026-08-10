@@ -94,7 +94,7 @@ const { profile, decklists, isLoading, error } = usePublicUserProfile(userId);
 
 const bannerImageUrl = computed(() => {
   if (!profile.value?.avatar_card_name) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(profile.value.avatar_card_name)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(profile.value.avatar_card_name);
 });
 
 useSeoMeta({

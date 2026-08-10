@@ -64,6 +64,6 @@ const props = defineProps<{ primer: FeaturedPrimer }>();
 
 const bannerImageUrl = computed(() => {
   if (!props.primer.decklist.avatar_card_name) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(props.primer.decklist.avatar_card_name)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(props.primer.decklist.avatar_card_name);
 });
 </script>

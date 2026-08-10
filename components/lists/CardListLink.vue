@@ -39,10 +39,10 @@
         No description
       </p>
       <p
-        v-if="list.commanders?.length"
+        v-if="list.commanders?.length || list.format"
         class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1"
       >
-        <span v-if="list.format == 'Commander'">
+        <span v-if="list.commanders?.length">
           <UIcon name="i-lucide-crown" class="w-3 h-3 md:w-4 md:h-4 shrink-0" />
           {{ list.commanders.join(', ') }}
         </span>
@@ -193,6 +193,6 @@ const handleDelete = async () => {
 
 const getListImageUrl = (list: List) => {
   if (!list.avatar_card_name) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(list.avatar_card_name)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(list.avatar_card_name);
 };
 </script>

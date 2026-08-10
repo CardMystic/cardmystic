@@ -273,15 +273,13 @@ const filteredBannerCards = computed(() => {
 const bannerImageUrl = computed(() => {
   const cardName = props.list?.avatar_card_name;
   if (!cardName) return null;
-
-  // Scryfall's card image API
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(cardName);
 });
 
 // Preview URL for modal
 const previewBannerUrl = computed(() => {
   if (!selectedBannerCard.value) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(selectedBannerCard.value)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(selectedBannerCard.value);
 });
 
 const updateBannerImage = async () => {
