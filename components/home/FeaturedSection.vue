@@ -129,8 +129,6 @@ const { primers, isLoading: isLoadingPrimers } = useFeaturedPrimers(6);
 const visibleDecklists = computed(() => decklists.value.slice(0, 3));
 const visibleUsers = computed(() => users.value.slice(0, 3));
 const visiblePrimers = computed(() => primers.value.slice(0, 2));
-
-console.log(visibleDecklists.value, visibleUsers.value, visiblePrimers.value);
 </script>
 
 <style scoped lang="sass">
