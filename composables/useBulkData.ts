@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/vue-query';
+import { toValue, type MaybeRefOrGetter } from 'vue';
 
 const STALE_TIME = 1000 * 60 * 60 * 24; // 24 hours
 
-export function useCardNames() {
+export function useCardNames(enabled?: MaybeRefOrGetter<boolean>) {
   const config = useRuntimeConfig();
 
   return useQuery<string[]>({
@@ -16,6 +17,7 @@ export function useCardNames() {
       }
       return response.json();
     },
+    enabled: enabled === undefined ? true : () => toValue(enabled),
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
   });
@@ -86,7 +88,7 @@ export function useCardOracleIds() {
  * `/cards/name/:name` (which breaks for DFC names containing `//` behind
  * proxies that decode `%2F` in URL paths).
  */
-export function useCardNameToOracleId() {
+export function useCardNameToOracleId(enabled?: MaybeRefOrGetter<boolean>) {
   const config = useRuntimeConfig();
 
   return useQuery<Record<string, string>>({
@@ -100,6 +102,7 @@ export function useCardNameToOracleId() {
       }
       return response.json();
     },
+    enabled: enabled === undefined ? true : () => toValue(enabled),
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
   });

@@ -116,8 +116,8 @@
         <UInputMenu
           v-model="selectedCardToAdd"
           v-model:search-term="addCardSearchTerm"
-          :loading="addCardLoading || loading"
-          :disabled="loading"
+          :loading="isAddCardBusy || loading"
+          :disabled="loading || !oracleMapReady"
           :items="filteredAddCards"
           placeholder="Add a card to the deck..."
           icon="i-lucide-plus"
@@ -134,7 +134,8 @@
         v-if="isOwner"
         v-model="selectedCardToAdd"
         v-model:search-term="addCardSearchTerm"
-        :loading="addCardLoading"
+        :loading="isAddCardBusy"
+        :disabled="!oracleMapReady"
         :items="filteredAddCards"
         placeholder="Add a card to the deck..."
         icon="i-lucide-plus"
@@ -732,10 +733,14 @@ function goToRecommend() {
   });
 }
 
-const { data: rawCards, status: cardsQueryStatus } = useCardNames();
-const { data: cardNameToOracleId } = useCardNameToOracleId();
+const { data: rawCards, status: cardsQueryStatus } = useCardNames(isOwner);
+const { data: cardNameToOracleId, isSuccess: oracleMapReady } =
+  useCardNameToOracleId(isOwner);
 const cardsStatus = computed(() =>
   cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
+);
+const isAddCardBusy = computed(
+  () => addCardLoading.value || !oracleMapReady.value,
 );
 
 // Commander autocomplete
