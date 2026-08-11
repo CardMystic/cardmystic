@@ -81,7 +81,7 @@
 
       <!-- Primers row -->
       <template v-if="isLoadingPrimers || visiblePrimers.length > 0">
-        <h2 class="section-title mt-8 mb-4">Suggested Primer Reads</h2>
+        <h2 class="section-title mt-14 mb-4">Suggested Primer Reads</h2>
 
         <div
           v-if="isLoadingPrimers"
