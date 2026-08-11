@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :to="`/lists/${primer.decklist.id}/primer`"
-    class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
+    class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group min-h-65 md:min-h-97.5"
   >
     <!-- Banner background -->
     <div
@@ -49,7 +49,9 @@
       </p>
 
       <!-- Primer preview -->
-      <p class="text-xs md:text-sm opacity-80 line-clamp-2 italic">
+      <p
+        class="text-xs md:text-sm opacity-80 line-clamp-8 md:line-clamp-10 italic"
+      >
         {{ primer.primer_preview }}
       </p>
     </div>
