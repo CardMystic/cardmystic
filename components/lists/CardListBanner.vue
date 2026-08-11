@@ -2,7 +2,9 @@
   <!-- Banner Section -->
   <div v-if="list" class="mb-2 relative group cursor-pointer">
     <!-- Banner Image -->
-    <div class="relative h-48 md:h-64 rounded-lg overflow-hidden">
+    <div
+      class="relative min-h-48 md:min-h-64 rounded-lg overflow-hidden flex flex-col"
+    >
       <div
         v-if="bannerImageUrl"
         class="absolute inset-0 bg-cover bg-center"
@@ -18,7 +20,7 @@
       ></div>
 
       <!-- Banner Content -->
-      <div class="absolute bottom-0 left-0 right-0 p-6">
+      <div class="relative mt-auto p-6">
         <div v-if="isEditingTitle" class="mb-2">
           <input
             v-model="editedTitle"
@@ -100,6 +102,13 @@
         >
           Click to add description
         </p>
+
+        <!-- Mana color distribution -->
+        <ColorRatioBar
+          v-if="list.color_ratios"
+          :ratios="list.color_ratios"
+          class="mt-3"
+        />
       </div>
 
       <!-- Edit Icon (always visible when no banner, hover-reveal when banner set) -->
