@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative border max-w-125 border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
+    class="relative border max-w-125 h-full flex flex-col border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
   >
     <!-- Background Image -->
     <div
@@ -25,7 +25,10 @@
     />
 
     <!-- Content (clickable) -->
-    <div class="relative p-2 md:p-4" @click="router.push(`/lists/${list.id}`)">
+    <div
+      class="relative flex flex-col flex-1 p-2 md:p-4"
+      @click="router.push(`/lists/${list.id}`)"
+    >
       <h3 class="text-base md:text-xl font-bold mb-1 md:mb-2">
         {{ list.name }}
       </h3>
@@ -101,6 +104,12 @@
           formatShortDate(list.updated_at ? list.updated_at : list.created_at)
         }}</span>
         <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
+      </div>
+
+      <!-- Color identity distribution across the Mainboard. `mt-auto` pins the
+           bar to the bottom of the card so shorter cards align visually. -->
+      <div v-if="list.color_ratios" class="mt-auto pt-2 md:pt-3">
+        <ColorRatioBar :ratios="list.color_ratios" />
       </div>
     </div>
 
