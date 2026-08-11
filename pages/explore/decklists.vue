@@ -76,28 +76,35 @@
       >
         Featured Decklists
       </h2>
-      <div
-        v-if="isLoadingFeatured"
-        class="grid grid-cols-1 md:grid-cols-3 gap-3"
-      >
-        <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
-      </div>
-      <div
-        v-else-if="featuredDecklists.length > 0"
-        class="grid grid-cols-1 md:grid-cols-3 gap-3"
-      >
-        <CardListLink
-          v-for="list in featuredDecklists"
-          :key="list.id"
-          :list="list"
-          :showDeleteButton="false"
-          :showAuthor="true"
-        />
-      </div>
-      <div v-else class="empty-state">
-        <UIcon name="i-lucide-search" class="text-5xl opacity-30 mb-3" />
-        <p>Enter a keyword above to search public decklists.</p>
-      </div>
+      <ClientOnly>
+        <div
+          v-if="isLoadingFeatured"
+          class="grid grid-cols-1 md:grid-cols-3 gap-3"
+        >
+          <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
+        </div>
+        <div
+          v-else-if="featuredDecklists.length > 0"
+          class="grid grid-cols-1 md:grid-cols-3 gap-3"
+        >
+          <CardListLink
+            v-for="list in featuredDecklists"
+            :key="list.id"
+            :list="list"
+            :showDeleteButton="false"
+            :showAuthor="true"
+          />
+        </div>
+        <div v-else class="empty-state">
+          <UIcon name="i-lucide-search" class="text-5xl opacity-30 mb-3" />
+          <p>Enter a keyword above to search public decklists.</p>
+        </div>
+        <template #fallback>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
+          </div>
+        </template>
+      </ClientOnly>
     </div>
   </UContainer>
 </template>

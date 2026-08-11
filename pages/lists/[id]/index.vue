@@ -116,8 +116,8 @@
         <UInputMenu
           v-model="selectedCardToAdd"
           v-model:search-term="addCardSearchTerm"
-          :loading="addCardLoading || loading"
-          :disabled="loading"
+          :loading="isAddCardBusy || loading"
+          :disabled="loading || !oracleMapReady"
           :items="filteredAddCards"
           placeholder="Add a card to the deck..."
           icon="i-lucide-plus"
@@ -134,7 +134,8 @@
         v-if="isOwner"
         v-model="selectedCardToAdd"
         v-model:search-term="addCardSearchTerm"
-        :loading="addCardLoading"
+        :loading="isAddCardBusy"
+        :disabled="!oracleMapReady"
         :items="filteredAddCards"
         placeholder="Add a card to the deck..."
         icon="i-lucide-plus"
@@ -259,7 +260,7 @@ import { useCardLists } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
 import { useDecklistViewTracker } from '~/composables/useDecklistSocial';
 import { usePrimer } from '~/composables/usePrimer';
-import { useCardNames } from '~/composables/useBulkData';
+import { useCardNames, useCardNameToOracleId } from '~/composables/useBulkData';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
 import { refDebounced } from '~/utils/refDebounced';
@@ -319,7 +320,7 @@ const hasPrimer = computed(() => !!primerText.value?.trim());
 const bannerImageUrl = computed(() => {
   const cardName = list.value?.avatar_card_name;
   if (!cardName) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(cardName);
 });
 
 // Add card state
@@ -593,21 +594,20 @@ async function handleAddCard(cardName: string) {
 
   addCardLoading.value = true;
   try {
-    const config = useRuntimeConfig();
-    const cardData: any = await $fetch(
-      `${config.public.backendUrl}/cards/name/${encodeURIComponent(cardName)}`,
-    );
-
-    if (!cardData?.id) {
+    // Resolve oracle_id locally from the bulk name→oracle_id map. Avoids a
+    // `/cards/name/:name` round-trip that breaks for DFCs like "Wear // Tear"
+    // (proxies decode `%2F` in URL paths, mangling the route).
+    const oracleId = cardNameToOracleId.value?.[cardName.toLowerCase()];
+    if (!oracleId) {
       throw new Error('Card not found');
     }
 
     // Check if card already exists in any board (uniqueness is per (oracle_id, board) now)
-    const existing = findRowAnyBoard(cardData.oracle_id);
+    const existing = findRowAnyBoard(oracleId);
     if (existing) {
       pendingDuplicateCard.value = {
         name: cardName,
-        oracle_id: cardData.oracle_id,
+        oracle_id: oracleId,
         board: existing.board,
         numCopies: existing.row.num_copies,
       };
@@ -619,7 +619,7 @@ async function handleAddCard(cardName: string) {
 
     await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
-      oracleIds: [cardData.oracle_id],
+      oracleIds: [oracleId],
     });
 
     toast.add({
@@ -733,9 +733,14 @@ function goToRecommend() {
   });
 }
 
-const { data: rawCards, status: cardsQueryStatus } = useCardNames();
+const { data: rawCards, status: cardsQueryStatus } = useCardNames(isOwner);
+const { data: cardNameToOracleId, isSuccess: oracleMapReady } =
+  useCardNameToOracleId(isOwner);
 const cardsStatus = computed(() =>
   cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
+);
+const isAddCardBusy = computed(
+  () => addCardLoading.value || !oracleMapReady.value,
 );
 
 // Commander autocomplete

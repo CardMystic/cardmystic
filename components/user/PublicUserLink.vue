@@ -45,6 +45,6 @@ const props = defineProps<{ profile: PublicProfile }>();
 
 const bannerImageUrl = computed(() => {
   if (!props.profile.avatar_card_name) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(props.profile.avatar_card_name)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(props.profile.avatar_card_name);
 });
 </script>
