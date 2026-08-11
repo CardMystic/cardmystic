@@ -50,7 +50,7 @@
 
       <!-- Primer preview -->
       <p
-        class="text-xs md:text-sm opacity-80 line-clamp-8 md:line-clamp-10 italic"
+        class="text-xs md:text-sm opacity-80 line-clamp-14 italic whitespace-pre-line"
       >
         {{ primer.primer_preview }}
       </p>
