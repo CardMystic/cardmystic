@@ -20,7 +20,7 @@
       <div class="relative rounded-lg overflow-hidden mb-6">
         <div
           v-if="bannerImageUrl"
-          class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-30"
+          class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-40 dark:opacity-30"
           :style="{ backgroundImage: `url(${bannerImageUrl})` }"
         ></div>
         <div

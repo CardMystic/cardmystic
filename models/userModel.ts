@@ -7,6 +7,11 @@ export const SignUpSchema = z.object({
   password: z.string(),
   confirmPassword: z.string(),
   username: z.string().min(1).max(50).trim(),
+  avatarCardName: z
+    .string()
+    .trim()
+    .optional()
+    .describe('Optional MTG card name to use as the profile avatar'),
 });
 
 export type SignUpRequest = z.infer<typeof SignUpSchema>;

@@ -6,7 +6,7 @@
     <!-- Banner background -->
     <div
       v-if="bannerImageUrl"
-      class="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
+      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
       :style="{ backgroundImage: `url(${bannerImageUrl})` }"
     ></div>
     <div
