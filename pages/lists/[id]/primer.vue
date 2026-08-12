@@ -3,7 +3,7 @@
     <!-- Page Background Image (blurred, behind all content) -->
     <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
       <div
-        class="absolute inset-0 bg-cover bg-center opacity-40 dark:opacity-20 blur-sm"
+        class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-40 dark:opacity-20 blur-sm"
         :style="{ backgroundImage: `url(${bannerImageUrl})` }"
       ></div>
     </div>

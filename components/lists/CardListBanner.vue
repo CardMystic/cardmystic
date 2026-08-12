@@ -7,7 +7,7 @@
     >
       <div
         v-if="bannerImageUrl"
-        class="absolute inset-0 bg-cover bg-center"
+        class="absolute inset-0 bg-cover bg-position-[center_10%]"
         :style="{ backgroundImage: `url(${bannerImageUrl})` }"
       >
         <div
@@ -164,7 +164,7 @@
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Preview:</p>
           <div class="h-32 rounded-lg overflow-hidden">
             <div
-              class="h-full bg-cover bg-center"
+              class="h-full bg-cover bg-position-[center_10%]"
               :style="{ backgroundImage: `url(${previewBannerUrl})` }"
             ></div>
           </div>

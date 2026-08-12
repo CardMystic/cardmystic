@@ -75,6 +75,17 @@
       >
         Featured Users
       </h2>
+      <p class="text-sm opacity-70 mb-4 text-center">
+        Support us on
+        <a
+          :href="PATREON_MEMBERSHIP_URL"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary hover:underline"
+          >Patreon</a
+        >
+        to automatically get your profile & deck lists featured!
+      </p>
       <div
         v-if="isLoadingFeatured"
         class="grid grid-cols-1 md:grid-cols-3 gap-3"
@@ -105,6 +116,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserSearch, useFeaturedUsers } from '~/composables/useDiscovery';
 import { refDebounced } from '~/utils/refDebounced';
 import PublicUserLink from '~/components/user/PublicUserLink.vue';
+import { PATREON_MEMBERSHIP_URL } from '~/models/patreonModel';
 
 definePageMeta({ title: 'Search Users' });
 
