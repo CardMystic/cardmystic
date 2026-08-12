@@ -248,7 +248,7 @@
                 color="success"
                 variant="outline"
                 class="mr-1 sm:mr-2"
-                icon="i-heroicons-shopping-cart"
+                :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
                 :size="isMobile ? 'xs' : 'sm'"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -266,7 +266,7 @@
                 color="success"
                 variant="outline"
                 class="mr-1 sm:mr-2"
-                icon="i-heroicons-shopping-cart"
+                :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
                 :size="isMobile ? 'xs' : 'sm'"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -472,8 +472,7 @@
   <div v-if="isDev && showAllData" class="card-data mt-2">
     <pre>
     {{ JSON.stringify(card.card_data, null, 2) }}
-  </pre
-    >
+  </pre>
   </div>
 </template>
 
