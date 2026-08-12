@@ -111,7 +111,13 @@
         </UFormField>
 
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <USwitch v-model="isPublished" label="Published" />
+          <USwitch v-model="isPublished">
+            <template #label>
+              <span class="ml-2">
+                {{ isPublished ? 'Published' : 'Draft' }}
+              </span>
+            </template>
+          </USwitch>
           <div class="flex items-center gap-2">
             <span
               v-if="detailsDirty"
