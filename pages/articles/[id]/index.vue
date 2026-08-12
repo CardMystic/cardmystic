@@ -66,6 +66,7 @@
         <MarkdownEditor
           :model-value="article.content"
           :editable="false"
+          :has-background="false"
           empty-message="This article has no content yet."
         />
         <template #fallback>

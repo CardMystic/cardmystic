@@ -206,7 +206,13 @@
     <!-- Preview-only mode -->
     <div
       v-else
-      class="primer-preview grow min-h-0 overflow-y-auto p-6 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950"
+      :class="[
+        'primer-preview grow min-h-0 overflow-y-auto p-6',
+        {
+          'rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950':
+            hasBackground,
+        },
+      ]"
       @mousemove="onPreviewMouseMove"
       @mouseleave="onPreviewMouseLeave"
     >
@@ -275,11 +281,13 @@ const props = withDefaults(
     emptyMessage?: string;
     /** Placeholder text for the markdown editor textarea. */
     placeholder?: string;
+    hasBackground?: boolean;
   }>(),
   {
     emptyMessage: 'No primer has been written yet.',
     placeholder:
       'Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported.',
+    hasBackground: true,
   },
 );
 
