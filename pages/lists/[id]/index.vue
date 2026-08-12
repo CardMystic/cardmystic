@@ -1,6 +1,6 @@
 <template>
   <div
-    class="mx-auto py-8 relative z-10"
+    class="mx-auto py-8 relative z-10 w-full"
     :class="{ 'pb-24': showStickyFooter }"
   >
     <!-- Page Background Image (blurred, behind all content) -->
