@@ -33,7 +33,7 @@ const {
 } = usePatreon();
 
 const patreonTierLabel = computed(() => {
-  if (patreonStatus.value?.tier === 'featured') return 'Featured On Our Site';
+  if (patreonStatus.value?.isFeatured) return 'Featured On Our Site';
   if (patreonStatus.value?.tier === 'supporter') return 'Supporter';
   return null;
 });
