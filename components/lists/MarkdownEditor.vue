@@ -190,6 +190,8 @@
       <div
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 p-6 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 overflow-y-auto"
+        @mousemove="onPreviewMouseMove"
+        @mouseleave="onPreviewMouseLeave"
       >
         <div v-if="renderedHtml" v-html="renderedHtml"></div>
         <p
@@ -205,6 +207,8 @@
     <div
       v-else
       class="primer-preview grow min-h-0 overflow-y-auto p-6 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950"
+      @mousemove="onPreviewMouseMove"
+      @mouseleave="onPreviewMouseLeave"
     >
       <div v-if="renderedHtml" v-html="renderedHtml"></div>
       <p
@@ -425,13 +429,42 @@ function onEditorMouseLeave() {
   tokenPreview.value = null;
 }
 
+// --- Card token hover preview (rendered preview pane) ---
+// The preview pane is `overflow-y-auto`, which clips CSS-only tooltip
+// approaches. Reuse the teleported floating preview by hit-testing the
+// rendered `.card-inline-link` elements on mousemove.
+function onPreviewMouseMove(e: MouseEvent) {
+  const target = (e.target as HTMLElement | null)?.closest(
+    '.card-inline-link',
+  ) as HTMLElement | null;
+  if (!target) {
+    tokenPreview.value = null;
+    return;
+  }
+  const name = (target.textContent ?? '').trim();
+  const entry = cardImageMap.value.get(name.toLowerCase());
+  if (!entry) {
+    tokenPreview.value = null;
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
+  const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
+  const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
+  const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
+  tokenPreview.value = { imageUrl: entry.imageUrl, x, y };
+}
+
+function onPreviewMouseLeave() {
+  tokenPreview.value = null;
+}
+
 // --- Card embeds: ((Card Name)) and [[Card Name]] ---
 // Collect all unique card names referenced in the current preview source.
 const previewSource = computed(() => {
-  const src =
-    (mode.value === 'preview' || mode.value === 'split') && props.editable
-      ? draft.value
-      : props.modelValue;
+  // When editable, always read from the live draft so newly-typed tokens are
+  // resolved for hover previews even before switching to preview/split mode.
+  const src = props.editable ? draft.value : props.modelValue;
   return src ?? '';
 });
 
@@ -506,7 +539,6 @@ const renderedHtml = computed(() => {
 
   const html = marked.parse(pre, { async: false }) as string;
   const sanitized = DOMPurify.sanitize(html, {
-    // Allow style attributes so card-inline-link can carry --card-img CSS variable.
     ALLOWED_ATTR: [
       'href',
       'src',
@@ -516,7 +548,6 @@ const renderedHtml = computed(() => {
       'frameborder',
       'allowfullscreen',
       'class',
-      'style',
       'open',
     ],
     ADD_TAGS: ['details', 'summary', 'iframe'],
@@ -542,10 +573,7 @@ const renderedHtml = computed(() => {
     if (!name) return '';
     const entry = cardImageMap.value.get(name.toLowerCase());
     const href = entry ? `/card/${entry.oracleId}` : '#';
-    const styleAttr = entry
-      ? ` style="--card-img: url('${entry.imageUrl}')"`
-      : '';
-    return `<a class="card-inline-link" href="${href}"${styleAttr}>${name}</a>`;
+    return `<a class="card-inline-link" href="${href}">${name}</a>`;
   });
 
   return result;
@@ -1015,27 +1043,6 @@ function insertAtCursor(text: string) {
   color: #3b82f6;
   text-decoration: underline;
   cursor: pointer;
-  position: relative;
-}
-.primer-preview :deep(.card-inline-link::after) {
-  content: '';
-  display: none;
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  width: 200px;
-  height: 279px;
-  background-image: var(--card-img);
-  background-size: cover;
-  background-position: center;
-  border-radius: 10px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-  z-index: 100;
-}
-.primer-preview :deep(.card-inline-link:hover::after) {
-  display: block;
 }
 .primer-preview :deep(.card-unknown) {
   color: #f87171;
