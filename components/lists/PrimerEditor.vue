@@ -1091,9 +1091,6 @@ function insertAtCursor(text: string) {
   word-break: break-word;
   box-sizing: border-box;
 }
-:global(.dark) .editor-textarea {
-  caret-color: rgb(226 232 240);
-}
 .editor-textarea::selection {
   background: rgba(59, 130, 246, 0.35);
   color: transparent;
@@ -1178,5 +1175,11 @@ function insertAtCursor(text: string) {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Dark-mode caret: kept unscoped because Vue's :global(.dark) in scoped styles
+   did not reliably compile to a matching descendant selector here. */
+.dark .editor-textarea {
+  caret-color: #ffffff;
 }
 </style>
