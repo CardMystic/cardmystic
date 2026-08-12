@@ -363,6 +363,30 @@ export type Database = {
         Args: { p_list_id: string };
         Returns: undefined;
       };
+      patreon_apply_webhook: {
+        Args: {
+          p_featured: boolean;
+          p_last_charge_status?: string;
+          p_patreon_user_id: string;
+          p_patron_status?: string;
+          p_pledge_cents?: number;
+          p_tier_id?: string;
+        };
+        Returns: string;
+      };
+      patreon_disconnect: { Args: { p_user_id: string }; Returns: undefined };
+      patreon_link_account: {
+        Args: {
+          p_featured: boolean;
+          p_last_charge_status?: string;
+          p_patreon_user_id: string;
+          p_patron_status?: string;
+          p_pledge_cents?: number;
+          p_tier_id?: string;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { '': string }; Returns: string[] };
     };
