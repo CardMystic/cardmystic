@@ -30,7 +30,7 @@ export const GetPatreonStatusResponseSchema = z.object({
       'Whether this account counts as featured (manual flag OR active Featured tier membership)',
     ),
   membershipUrl: z
-    .string()
+    .literal(PATREON_MEMBERSHIP_URL)
     .describe('Link to the CardMystic Patreon membership page'),
 });
 export type GetPatreonStatusResponse = z.infer<
