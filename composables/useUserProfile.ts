@@ -222,7 +222,7 @@ export const useUserProfile = () => {
 
   const profileIconUrl = computed(() => {
     if (!profileData.value?.avatar_card_name) return null;
-    return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(profileData.value.avatar_card_name)}&format=image&version=art_crop`;
+    return scryfallArtCropUrl(profileData.value.avatar_card_name);
   });
 
   // Listen to auth state changes - only initialize once globally

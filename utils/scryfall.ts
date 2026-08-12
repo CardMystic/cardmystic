@@ -127,3 +127,19 @@ export function getCardArtUrl(
 
   return '';
 }
+
+/**
+ * Builds a Scryfall `art_crop` URL for a card name, safe to drop into a CSS
+ * `url()` value. `encodeURIComponent` leaves `!'()*` unescaped, and raw
+ * apostrophes/parens break unquoted CSS `url()` tokens (so cards like
+ * "K'rrik, Son of Yawgmoth" render blank). We additionally percent-encode
+ * those characters here.
+ */
+export function scryfallArtCropUrl(cardName: string): string {
+  const encoded = encodeURIComponent(cardName).replace(
+    /['()!*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+  return `https://api.scryfall.com/cards/named?exact=${encoded}&format=image&version=art_crop`;
+}
+

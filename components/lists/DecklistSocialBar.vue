@@ -10,7 +10,7 @@
     >
       <img
         v-if="owner.avatar_card_name"
-        :src="`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(owner.avatar_card_name)}&format=image&version=art_crop`"
+        :src="scryfallArtCropUrl(owner.avatar_card_name)"
         :alt="owner.username ?? 'User'"
         class="w-10 h-10 rounded-full object-cover"
       />
