@@ -313,7 +313,7 @@ const handleSignOut = async () => {
                   Your membership is
                   {{
                     patreonStatus.patronStatus === 'declined_patron'
-                      ? 'payment-declined'
+                      ? 'inactive because payment was declined'
                       : 'no longer active'
                   }}.
                   <a
