@@ -124,6 +124,7 @@ test.describe('Patreon integration', () => {
     await expect(
       section.locator(`a[href="${MEMBERSHIP_URL}"]`).first(),
     ).toBeVisible();
+    await expect(section.getByText('Featured On Our Site')).toHaveCount(0);
   });
 
   test('connect flow: authorize redirect round-trip shows the success toast', async ({

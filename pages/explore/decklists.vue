@@ -85,7 +85,7 @@
           class="text-primary hover:underline"
           >Patreon</a
         >
-        to automatically get you deck list featured!
+        to automatically get your decklist featured!
       </p>
       <ClientOnly>
         <div

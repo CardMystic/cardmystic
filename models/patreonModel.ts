@@ -30,7 +30,7 @@ export const GetPatreonStatusResponseSchema = z.object({
       'Whether this account counts as featured (manual flag OR active Featured tier membership)',
     ),
   membershipUrl: z
-    .string()
+    .literal(PATREON_MEMBERSHIP_URL)
     .describe('Link to the CardMystic Patreon membership page'),
 });
 export type GetPatreonStatusResponse = z.infer<
@@ -39,7 +39,15 @@ export type GetPatreonStatusResponse = z.infer<
 
 export const StartPatreonConnectResponseSchema = z.object({
   authorizeUrl: z
-    .string()
+    .url()
+    .refine((value) => {
+      const url = new URL(value);
+      return (
+        url.protocol === 'https:' &&
+        url.hostname === 'www.patreon.com' &&
+        url.pathname === '/oauth2/authorize'
+      );
+    }, 'Expected a Patreon OAuth authorization URL')
     .describe('Patreon OAuth authorize URL — redirect the browser here to connect'),
 });
 export type StartPatreonConnectResponse = z.infer<

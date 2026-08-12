@@ -12,6 +12,7 @@
       >
       to automatically get your profile & deck lists featured!
     </p>
+
     <ClientOnly>
       <!-- Decklists row -->
       <div

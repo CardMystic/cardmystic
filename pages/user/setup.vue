@@ -5,10 +5,11 @@
         class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl w-full max-w-sm"
       >
         <h1 class="text-xl font-bold text-white text-center">
-          Choose your username
+          Personalize your Profile
         </h1>
         <p class="text-zinc-400 text-sm text-center">
-          Pick a username to display on your decklists and profile.
+          Pick a username and profile icon to display on your decklists and
+          profile.
         </p>
 
         <UInput
@@ -62,7 +63,7 @@
           :disabled="loading || !username.trim()"
           @click="submit"
         >
-          {{ loading ? 'Saving…' : 'Save username' }}
+          {{ loading ? 'Saving…' : 'Save' }}
         </UButton>
       </div>
     </ClientOnly>

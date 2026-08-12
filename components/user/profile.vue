@@ -33,7 +33,7 @@ const {
 } = usePatreon();
 
 const patreonTierLabel = computed(() => {
-  if (patreonStatus.value?.tier === 'featured') return 'Featured On Our Site';
+  if (patreonStatus.value?.isFeatured) return 'Featured On Our Site';
   if (patreonStatus.value?.tier === 'supporter') return 'Supporter';
   return null;
 });
@@ -313,7 +313,7 @@ const handleSignOut = async () => {
                   Your membership is
                   {{
                     patreonStatus.patronStatus === 'declined_patron'
-                      ? 'payment-declined'
+                      ? 'inactive because payment was declined'
                       : 'no longer active'
                   }}.
                   <a
@@ -339,6 +339,12 @@ const handleSignOut = async () => {
               >
                 Disconnect Patreon
               </UButton>
+            </template>
+
+            <template v-else-if="!patreonStatus">
+              <p role="alert" class="text-sm text-red-500">
+                Unable to load your Patreon status. Please refresh and try again.
+              </p>
             </template>
 
             <template v-else>

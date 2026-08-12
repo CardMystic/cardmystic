@@ -61,7 +61,7 @@
           icon="i-lucide-save"
           color="success"
           variant="solid"
-          label="Save"
+          :label="isDirty ? 'Save' : 'Saved'"
           class="cursor-pointer"
           :disabled="!isDirty || isSaving"
           :loading="isSaving"
@@ -101,13 +101,28 @@
         </template>
       </div>
 
-      <textarea
-        ref="textareaRef"
-        v-model="draft"
-        :placeholder="placeholder"
-        class="flex-1 min-h-0 w-full p-4 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-base font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-none overflow-y-auto"
-        spellcheck="true"
-      />
+      <div
+        class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+        @mousemove="onEditorMouseMove"
+        @mouseleave="onEditorMouseLeave"
+      >
+        <div ref="highlightLayerRef" class="highlight-layer" aria-hidden="true">
+          <div
+            ref="highlightContentRef"
+            class="highlight-content"
+            v-html="highlightedDraft"
+          />
+        </div>
+        <textarea
+          ref="textareaRef"
+          v-model="draft"
+          placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
+          class="editor-textarea"
+          spellcheck="true"
+          @scroll="syncHighlightScroll"
+          @input="syncHighlightScroll"
+        />
+      </div>
     </div>
 
     <!-- Split mode (editor + live preview side by side, lg+ only) -->
@@ -143,14 +158,32 @@
           </template>
         </div>
 
-        <textarea
-          ref="textareaRef"
-          v-model="draft"
-          :placeholder="placeholder"
-          class="flex-1 min-h-0 w-full p-4 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-base font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-none overflow-y-auto"
-          spellcheck="true"
-          @scroll="onEditorScroll"
-        />
+        <div
+          class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+          @mousemove="onEditorMouseMove"
+          @mouseleave="onEditorMouseLeave"
+        >
+          <div
+            ref="highlightLayerRef"
+            class="highlight-layer"
+            aria-hidden="true"
+          >
+            <div
+              ref="highlightContentRef"
+              class="highlight-content"
+              v-html="highlightedDraft"
+            />
+          </div>
+          <textarea
+            ref="textareaRef"
+            v-model="draft"
+            placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
+            class="editor-textarea"
+            spellcheck="true"
+            @scroll="onSplitScroll"
+            @input="syncHighlightScroll"
+          />
+        </div>
       </div>
 
       <!-- Right: live preview -->
@@ -181,6 +214,20 @@
         {{ emptyMessage }}
       </p>
     </div>
+
+    <!-- Floating card preview shown while hovering over ((...)) / [[...]] tokens -->
+    <Teleport to="body">
+      <div
+        v-if="tokenPreview"
+        class="editor-card-preview"
+        :style="{
+          left: `${tokenPreview.x}px`,
+          top: `${tokenPreview.y}px`,
+        }"
+      >
+        <img :src="tokenPreview.imageUrl" alt="" />
+      </div>
+    </Teleport>
 
     <!-- Unsaved changes confirmation modal -->
     <UModal v-model:open="showUnsavedModal" title="Unsaved Changes">
@@ -244,6 +291,8 @@ const draft = ref(props.modelValue);
 const lastSavedAt = ref<number | null>(null);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const previewRef = ref<HTMLDivElement | null>(null);
+const highlightLayerRef = ref<HTMLDivElement | null>(null);
+const highlightContentRef = ref<HTMLDivElement | null>(null);
 
 // --- Unsaved changes guard ---
 const showUnsavedModal = ref(false);
@@ -296,6 +345,84 @@ function onEditorScroll() {
   const ratio = ta.scrollTop / maxEditorScroll;
   const maxPreviewScroll = pr.scrollHeight - pr.clientHeight;
   pr.scrollTop = ratio * maxPreviewScroll;
+}
+
+// Keep the syntax-highlight overlay aligned with the textarea's scroll position.
+function syncHighlightScroll() {
+  const ta = textareaRef.value;
+  const content = highlightContentRef.value;
+  if (!ta || !content) return;
+  content.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
+}
+
+function onSplitScroll() {
+  onEditorScroll();
+  syncHighlightScroll();
+}
+
+watch(
+  () => draft.value,
+  () => {
+    nextTick(syncHighlightScroll);
+  },
+);
+
+// --- Card token hover preview (raw editor) ---
+// The highlight overlay is `pointer-events: none` so the textarea stays fully
+// interactive. To surface hover previews for ((Card)) / [[Card]] tokens we
+// hit-test the token span rects against the mouse position on mousemove.
+const tokenPreview = ref<{
+  imageUrl: string;
+  x: number;
+  y: number;
+} | null>(null);
+
+const PREVIEW_WIDTH = 220;
+const PREVIEW_HEIGHT = 307; // 220 * 1.395 (MTG card aspect)
+
+function onEditorMouseMove(e: MouseEvent) {
+  const layer = highlightContentRef.value;
+  if (!layer) {
+    tokenPreview.value = null;
+    return;
+  }
+  const spans = layer.querySelectorAll<HTMLElement>(
+    '.tok-card-img, .tok-card-link',
+  );
+  for (const span of spans) {
+    const rects = span.getClientRects();
+    for (const rect of rects) {
+      if (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      ) {
+        const raw = span.textContent ?? '';
+        const name = raw
+          .replace(/^\(\(|\)\)$/g, '')
+          .replace(/^\[\[|\]\]$/g, '')
+          .trim();
+        const entry = cardImageMap.value.get(name.toLowerCase());
+        if (!entry) {
+          tokenPreview.value = null;
+          return;
+        }
+        // Position above the token by default; flip below if too close to top.
+        const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
+        const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
+        const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
+        const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
+        tokenPreview.value = { imageUrl: entry.imageUrl, x, y };
+        return;
+      }
+    }
+  }
+  tokenPreview.value = null;
+}
+
+function onEditorMouseLeave() {
+  tokenPreview.value = null;
 }
 
 // --- Card embeds: ((Card Name)) and [[Card Name]] ---
@@ -423,6 +550,83 @@ const renderedHtml = computed(() => {
 
   return result;
 });
+
+// --- Syntax highlighting for the raw markdown editor ---
+// Produces safe HTML mirroring the textarea contents with token spans so users
+// can visually distinguish HTML tags, card embeds, links, etc.
+const highlightedDraft = computed(() => highlightMarkdown(draft.value));
+
+interface HighlightMatch {
+  start: number;
+  end: number;
+  cls: string;
+}
+
+function escapeHighlightHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function highlightMarkdown(src: string): string {
+  if (!src) return '';
+
+  const matches: HighlightMatch[] = [];
+  const add = (re: RegExp, cls: string) => {
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src)) !== null) {
+      if (m[0].length === 0) {
+        re.lastIndex++;
+        continue;
+      }
+      matches.push({ start: m.index, end: m.index + m[0].length, cls });
+    }
+  };
+
+  // Higher-priority patterns first so they win when overlapping.
+  add(/```[\s\S]*?```/g, 'tok-code-block');
+  add(/`[^`\n]+`/g, 'tok-code');
+  add(/\(\([^)\n]+\)\)/g, 'tok-card-img');
+  add(/\[\[[^\]\n]+\]\]/g, 'tok-card-link');
+  add(/@\[youtube\]\([A-Za-z0-9_-]{11}\)/g, 'tok-youtube');
+  add(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, 'tok-html');
+  add(/!\[[^\]\n]*\]\([^)\n]+\)/g, 'tok-image');
+  add(/\[[^\]\n]+\]\([^)\n]+\)/g, 'tok-link');
+  add(/^#{1,6}\s.*$/gm, 'tok-heading');
+  add(/\*\*[^*\n]+\*\*/g, 'tok-bold');
+  add(/(?<!\w)_[^_\n]+_(?!\w)/g, 'tok-italic');
+  add(/^>\s.*$/gm, 'tok-quote');
+  add(/^\s*(?:-{3,}|\*{3,})\s*$/gm, 'tok-hr');
+  add(/^\s*(?:[-*+]|\d+\.)\s/gm, 'tok-list');
+
+  // Prefer earlier start; on ties, prefer the longer match.
+  matches.sort((a, b) => a.start - b.start || b.end - a.end);
+
+  // Drop matches that overlap already-claimed ranges (first-wins after sort).
+  const kept: HighlightMatch[] = [];
+  let cursor = 0;
+  for (const m of matches) {
+    if (m.start >= cursor) {
+      kept.push(m);
+      cursor = m.end;
+    }
+  }
+
+  let out = '';
+  let pos = 0;
+  for (const m of kept) {
+    if (m.start > pos) out += escapeHighlightHtml(src.slice(pos, m.start));
+    out += `<span class="${m.cls}">${escapeHighlightHtml(
+      src.slice(m.start, m.end),
+    )}</span>`;
+    pos = m.end;
+  }
+  if (pos < src.length) out += escapeHighlightHtml(src.slice(pos));
+
+  // Textareas render a trailing newline as an empty line; mirror that in the
+  // overlay so line counts stay aligned.
+  if (src.endsWith('\n')) out += '\n';
+
+  return out;
+}
 
 type ToolbarActionId =
   | 'h1'
@@ -836,5 +1040,157 @@ function insertAtCursor(text: string) {
 .primer-preview :deep(.card-unknown) {
   color: #f87171;
   font-style: italic;
+}
+
+/* --- Syntax-highlighted editor (overlay + transparent textarea) --- */
+.editor-shell {
+  position: relative;
+  overflow: hidden;
+}
+/* Shared type metrics — both layers MUST match exactly for caret/highlight alignment. */
+.highlight-layer,
+.editor-textarea {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: 0;
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+.highlight-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.highlight-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  will-change: transform;
+  color: rgb(107 114 128); /* base tone for un-tokenized text */
+}
+:global(.dark) .highlight-content {
+  color: rgb(148 163 184);
+}
+.editor-textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  margin: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: rgb(17 24 39);
+  resize: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+.editor-textarea::selection {
+  background: rgba(59, 130, 246, 0.35);
+  color: transparent;
+}
+.editor-textarea::placeholder {
+  color: rgb(156 163 175);
+}
+
+/* Token colors — tuned to work in both light and dark themes. */
+.highlight-content :deep(.tok-html) {
+  color: #d946ef;
+  font-weight: 600;
+}
+.highlight-content :deep(.tok-card-img) {
+  color: #10b981;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 3px;
+}
+.highlight-content :deep(.tok-card-link) {
+  color: #3b82f6;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 3px;
+}
+.highlight-content :deep(.tok-youtube) {
+  color: #ef4444;
+  font-weight: 600;
+}
+.highlight-content :deep(.tok-heading) {
+  color: #f59e0b;
+  font-weight: 700;
+}
+.highlight-content :deep(.tok-bold) {
+  color: #eab308;
+  font-weight: 700;
+}
+.highlight-content :deep(.tok-italic) {
+  color: #eab308;
+  font-style: italic;
+}
+.highlight-content :deep(.tok-quote) {
+  color: #94a3b8;
+  font-style: italic;
+}
+.highlight-content :deep(.tok-list) {
+  color: #f97316;
+  font-weight: 700;
+}
+.highlight-content :deep(.tok-link) {
+  color: #06b6d4;
+}
+.highlight-content :deep(.tok-image) {
+  color: #14b8a6;
+}
+.highlight-content :deep(.tok-code),
+.highlight-content :deep(.tok-code-block) {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border-radius: 3px;
+}
+.highlight-content :deep(.tok-hr) {
+  color: #64748b;
+}
+</style>
+
+<!-- Unscoped: the token preview is teleported to <body> and can't inherit scoped styles. -->
+<style>
+.editor-card-preview {
+  position: fixed;
+  width: 220px;
+  aspect-ratio: 5 / 7;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1000;
+  background: #000;
+}
+.editor-card-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Dark-mode caret: kept unscoped because Vue's :global(.dark) in scoped styles
+   did not reliably compile to a matching descendant selector here. */
+.dark .editor-textarea {
+  caret-color: #ffffff;
 }
 </style>
