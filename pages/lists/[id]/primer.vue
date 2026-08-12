@@ -60,7 +60,7 @@ const isCreator = computed(() => !!list.value);
 const bannerImageUrl = computed(() => {
   const cardName = list.value?.avatar_card_name;
   if (!cardName) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(cardName)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(cardName);
 });
 
 const primerContent = ref('');

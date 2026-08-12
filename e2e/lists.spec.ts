@@ -21,6 +21,8 @@ import { expect, gotoHydrated, test } from './utils/fixtures';
  *   27. Add card to list (from search results, via AddToDeckModal)
  *   28. Add commander-eligible card (via list-page autocomplete +
  *       SetCommanderModal); assert is_commander flag round-trips
+ *   28b. Split-name ("Wear // Tear") round-trips through the client-side
+ *        oracle_id resolver — regression guard for `//` in names.
  *
  *  ── Multi-board & copies ────────────────────────────────────────────────
  *   29. Same oracle_id in two boards — Bulk Edit places Sol Ring in both
@@ -313,6 +315,83 @@ test.describe('Card lists CRUD', () => {
         timeout: API_TIMEOUT,
       })
       .toBeGreaterThan(0);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Test 28b — DFC/split names round-trip through the client-side oracle_id
+  //            resolver (regression guard for `//` in card names).
+  //
+  // "Wear // Tear" contains `//` which breaks `/cards/name/:name` behind
+  // proxies that decode `%2F` in URL paths. The autocomplete resolves the
+  // name to an oracle_id client-side via the bulk name→oracle_id map, then
+  // POSTs to /add-cards-by-oracle-id. We verify the request succeeds and
+  // then remove the card so downstream tests see a clean deck.
+  // ---------------------------------------------------------------------------
+  test('adds a split-name card ("Wear // Tear") via autocomplete and resolves oracle_id client-side', async ({
+    page,
+  }) => {
+    expect(LIST_ID).toBeTruthy();
+
+    const SPLIT_CARD_NAME = 'Wear // Tear';
+
+    await gotoHydrated(page, `/lists/${LIST_ID}`);
+
+    const addInput = page
+      .getByPlaceholder('Add a card to the deck...')
+      .filter({ visible: true });
+    await expect(addInput).toBeEnabled({ timeout: API_TIMEOUT });
+
+    const addCall = page.waitForResponse(
+      (resp) =>
+        resp.url() ===
+          `${BACKEND}/supabase/card-lists/add-cards-by-oracle-id` &&
+        resp.request().method() === 'POST',
+      { timeout: API_TIMEOUT },
+    );
+
+    await reliableFill(addInput, 'Wear // Tear');
+    await page
+      .getByRole('option', { name: /^Wear \/\/ Tear$/i })
+      .first()
+      .click();
+
+    const addResp = await addCall;
+    expect(addResp.ok()).toBeTruthy();
+    const addBody = (await addResp.json()) as {
+      addedCount: number;
+      updatedCount: number;
+      invalidOracleIds: string[];
+    };
+    // The request body's oracle_id must have resolved cleanly — no invalids.
+    expect(addBody.invalidOracleIds).toHaveLength(0);
+    expect(addBody.addedCount + addBody.updatedCount).toBeGreaterThanOrEqual(1);
+
+    // The card renders in the grid (alt text is the exact split name).
+    const splitImageSel = `img[alt="${SPLIT_CARD_NAME}"]`;
+    await expect
+      .poll(() => page.locator(splitImageSel).count(), {
+        timeout: API_TIMEOUT,
+      })
+      .toBeGreaterThan(0);
+
+    // Remove it so downstream legality/bulk-edit tests don't see it.
+    const splitCard = page
+      .locator(`.card-image-wrapper:has(${splitImageSel})`)
+      .first();
+    await splitCard.scrollIntoViewIfNeeded();
+    await splitCard.hover();
+    await splitCard
+      .getByRole('button', { name: /card options/i })
+      .first()
+      .click({ force: true });
+    await page
+      .getByRole('menuitem', { name: /^remove$/i })
+      .first()
+      .click();
+
+    await expect(page.locator(splitImageSel)).toHaveCount(0, {
+      timeout: API_TIMEOUT,
+    });
   });
 
   // ---------------------------------------------------------------------------

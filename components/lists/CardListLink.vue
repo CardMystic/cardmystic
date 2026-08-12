@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative border max-w-125 border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
+    class="relative border max-w-125 h-full flex flex-col border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
   >
     <!-- Background Image -->
     <div
@@ -25,7 +25,10 @@
     />
 
     <!-- Content (clickable) -->
-    <div class="relative p-2 md:p-4" @click="router.push(`/lists/${list.id}`)">
+    <div
+      class="relative flex flex-col flex-1 p-2 md:p-4"
+      @click="router.push(`/lists/${list.id}`)"
+    >
       <h3 class="text-base md:text-xl font-bold mb-1 md:mb-2">
         {{ list.name }}
       </h3>
@@ -39,10 +42,10 @@
         No description
       </p>
       <p
-        v-if="list.commanders?.length"
+        v-if="list.commanders?.length || list.format"
         class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1"
       >
-        <span v-if="list.format == 'Commander'">
+        <span v-if="list.commanders?.length">
           <UIcon name="i-lucide-crown" class="w-3 h-3 md:w-4 md:h-4 shrink-0" />
           {{ list.commanders.join(', ') }}
         </span>
@@ -101,6 +104,12 @@
           formatShortDate(list.updated_at ? list.updated_at : list.created_at)
         }}</span>
         <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
+      </div>
+
+      <!-- Color identity distribution across the Mainboard. `mt-auto` pins the
+           bar to the bottom of the card so shorter cards align visually. -->
+      <div v-if="list.color_ratios" class="mt-auto pt-2 md:pt-3">
+        <ColorRatioBar :ratios="list.color_ratios" />
       </div>
     </div>
 
@@ -193,6 +202,6 @@ const handleDelete = async () => {
 
 const getListImageUrl = (list: List) => {
   if (!list.avatar_card_name) return null;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(list.avatar_card_name)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(list.avatar_card_name);
 };
 </script>
