@@ -22,7 +22,7 @@
         />
         <!-- Background art (shown once loaded) -->
         <div
-          class="absolute inset-0 bg-cover bg-center opacity-60 dark:opacity-50 transition-opacity duration-500"
+          class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-60 dark:opacity-50 transition-opacity duration-500"
           :class="
             loadedImages[item.id] ? 'opacity-60 dark:opacity-50' : 'opacity-0'
           "
