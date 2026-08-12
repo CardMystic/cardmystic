@@ -63,7 +63,7 @@
 
       <!-- Markdown content -->
       <ClientOnly>
-        <PrimerEditor
+        <MarkdownEditor
           :model-value="article.content"
           :editable="false"
           empty-message="This article has no content yet."
@@ -89,7 +89,7 @@ import { useArticle, useArticleViewTracker } from '~/composables/useArticles';
 import { useUserProfile } from '~/composables/useUserProfile';
 import ArticleSocialBar from '~/components/articles/ArticleSocialBar.vue';
 import ArticleComments from '~/components/articles/ArticleComments.vue';
-import PrimerEditor from '~/components/lists/PrimerEditor.vue';
+import MarkdownEditor from '~/components/lists/MarkdownEditor.vue';
 
 const route = useRoute();
 const articleId = computed(() => String(route.params.id));

@@ -22,7 +22,7 @@
 
     <!-- Primer editor / viewer -->
     <ClientOnly>
-      <PrimerEditor
+      <MarkdownEditor
         v-model="primerContent"
         :editable="isCreator"
         :is-saving="isSaving"

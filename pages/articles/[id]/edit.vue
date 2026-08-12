@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="mb-10 mt-6 max-w-5xl">
+  <UContainer class="mb-10 mt-6 w-full">
     <!-- Back button -->
     <div class="mb-4 flex items-center justify-between">
       <UButton
@@ -17,7 +17,11 @@
         label="Delete Article"
         class="cursor-pointer"
         :loading="isDeleting"
-        @click="showDeleteModal = true"
+        @click="
+          () => {
+            showDeleteModal = true;
+          }
+        "
       />
     </div>
 
@@ -97,7 +101,11 @@
               variant="ghost"
               label="Remove"
               class="cursor-pointer"
-              @click="imageUrl = null"
+              @click="
+                () => {
+                  imageUrl = null;
+                }
+              "
             />
           </div>
         </UFormField>
@@ -126,7 +134,7 @@
       <!-- Markdown content editor -->
       <div class="h-[85vh] flex flex-col">
         <ClientOnly>
-          <PrimerEditor
+          <MarkdownEditor
             v-model="content"
             :editable="true"
             :is-saving="isUpdating"
@@ -153,7 +161,11 @@
               color="neutral"
               variant="ghost"
               label="Cancel"
-              @click="showDeleteModal = false"
+              @click="
+                () => {
+                  showDeleteModal = false;
+                }
+              "
             />
             <UButton
               color="error"
@@ -175,7 +187,7 @@ import { useArticle, useArticleMutations } from '~/composables/useArticles';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSupabase } from '~/composables/useSupabase';
 import { useToast } from '#imports';
-import PrimerEditor from '~/components/lists/PrimerEditor.vue';
+import MarkdownEditor from '~/components/lists/MarkdownEditor.vue';
 import {
   ARTICLE_DESCRIPTION_MAX_CHARS,
   ARTICLE_TITLE_MAX_CHARS,

@@ -116,7 +116,7 @@
         <textarea
           ref="textareaRef"
           v-model="draft"
-          placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
+          :placeholder="placeholder"
           class="editor-textarea"
           spellcheck="true"
           @scroll="syncHighlightScroll"
