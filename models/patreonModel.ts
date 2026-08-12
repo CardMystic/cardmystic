@@ -39,7 +39,15 @@ export type GetPatreonStatusResponse = z.infer<
 
 export const StartPatreonConnectResponseSchema = z.object({
   authorizeUrl: z
-    .string()
+    .url()
+    .refine((value) => {
+      const url = new URL(value);
+      return (
+        url.protocol === 'https:' &&
+        url.hostname === 'www.patreon.com' &&
+        url.pathname === '/oauth2/authorize'
+      );
+    }, 'Expected a Patreon OAuth authorization URL')
     .describe('Patreon OAuth authorize URL — redirect the browser here to connect'),
 });
 export type StartPatreonConnectResponse = z.infer<
