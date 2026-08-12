@@ -108,10 +108,141 @@ useArticleViewTracker(
   computed(() => article.value?.is_published ?? false),
 );
 
+const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
+
+const canonicalUrl = computed(
+  () => `https://cardmystic.com/articles/${articleId.value}`,
+);
+
+// Auto-derive a short description from the markdown content when the
+// author didn't provide one. Strips fenced code, headings, tables, etc.
+function excerptFromMarkdown(md: string, max = 200): string {
+  const plain = md
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^>\s?/gm, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/[*_~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (plain.length <= max) return plain;
+  return `${plain.slice(0, max - 1).trimEnd()}…`;
+}
+
+const seoTitle = computed(() =>
+  article.value
+    ? `${article.value.title} | CardMystic`
+    : 'Article | CardMystic',
+);
+
+const seoDescription = computed(() => {
+  if (!article.value) {
+    return 'Read Magic: The Gathering articles on CardMystic.';
+  }
+  const desc = article.value.description?.trim();
+  if (desc) return desc;
+  const fromContent = excerptFromMarkdown(article.value.content ?? '');
+  if (fromContent) return fromContent;
+  return `Read "${article.value.title}" on CardMystic — Magic: The Gathering articles by the community.`;
+});
+
+const seoImage = computed(() => article.value?.image_url || FALLBACK_OG_IMAGE);
+
+// Only published articles should be crawlable. Drafts are 404-ish for the
+// public and stay out of the index.
+const seoRobots = computed(() =>
+  article.value?.is_published ? 'index, follow' : 'noindex, nofollow',
+);
+
 useSeoMeta({
-  title: () =>
-    article.value ? `${article.value.title} | CardMystic` : 'Article',
-  description: () => article.value?.description || undefined,
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  robots: () => seoRobots.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogType: 'article',
+  ogUrl: () => canonicalUrl.value,
+  ogImage: () => seoImage.value,
+  ogImageAlt: () =>
+    article.value
+      ? `Cover image for "${article.value.title}"`
+      : 'CardMystic article',
+  ogSiteName: 'CardMystic',
+  articleAuthor: () =>
+    article.value?.username ? [article.value.username] : undefined,
+  articlePublishedTime: () => article.value?.published_at || undefined,
+  articleModifiedTime: () =>
+    article.value?.updated_at || article.value?.published_at || undefined,
+  articleSection: 'Magic: The Gathering',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
+});
+
+useHead({
+  link: [{ rel: 'canonical', href: () => canonicalUrl.value }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: () => {
+        if (!article.value || !article.value.is_published) return '';
+        const authorUrl = article.value.user_id
+          ? `https://cardmystic.com/user/${article.value.user_id}`
+          : undefined;
+        return JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: article.value.title,
+          description: seoDescription.value,
+          image: seoImage.value,
+          url: canonicalUrl.value,
+          datePublished: article.value.published_at ?? undefined,
+          dateModified:
+            article.value.updated_at ?? article.value.published_at ?? undefined,
+          author: article.value.username
+            ? {
+                '@type': 'Person',
+                name: article.value.username,
+                url: authorUrl,
+              }
+            : undefined,
+          publisher: {
+            '@type': 'Organization',
+            name: 'CardMystic',
+            logo: {
+              '@type': 'ImageObject',
+              url: 'https://cardmystic.com/wizard.webp',
+            },
+          },
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': canonicalUrl.value,
+          },
+          articleSection: 'Magic: The Gathering',
+          interactionStatistic: [
+            {
+              '@type': 'InteractionCounter',
+              interactionType: 'https://schema.org/LikeAction',
+              userInteractionCount: article.value.like_count,
+            },
+            {
+              '@type': 'InteractionCounter',
+              interactionType: 'https://schema.org/CommentAction',
+              userInteractionCount: article.value.comment_count,
+            },
+            {
+              '@type': 'InteractionCounter',
+              interactionType: 'https://schema.org/ViewAction',
+              userInteractionCount: article.value.view_count,
+            },
+          ],
+        });
+      },
+    },
+  ],
 });
 </script>
 

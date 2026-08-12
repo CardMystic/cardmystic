@@ -239,8 +239,8 @@ test.describe('Articles', () => {
       page.getByRole('link', { name: 'Browse Articles' }),
     ).toBeVisible();
     // Non-authors shouldn't see the "New Article" button.
-    await expect(
-      page.getByRole('button', { name: 'New Article' }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'New Article' })).toHaveCount(
+      0,
+    );
   });
 });

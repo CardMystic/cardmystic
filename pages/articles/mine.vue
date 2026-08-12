@@ -45,10 +45,7 @@
 
       <!-- Authors: their own articles first, then a collapsible liked section. -->
       <template v-else>
-        <div
-          v-if="isLoadingMine"
-          class="grid grid-cols-1 md:grid-cols-3 gap-3"
-        >
+        <div v-if="isLoadingMine" class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
         </div>
 

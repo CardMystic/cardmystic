@@ -323,6 +323,117 @@ const bannerImageUrl = computed(() => {
   return scryfallArtCropUrl(cardName);
 });
 
+// ---- SEO ----
+const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
+const canonicalUrl = computed(() => `https://cardmystic.com/lists/${listId}`);
+
+const isPublicList = computed(() => list.value?.visibility === 'public');
+
+const seoTitle = computed(() => {
+  if (!list.value) return 'Decklist | CardMystic';
+  return `${list.value.name || 'Untitled deck'} | MTG Decklist | CardMystic`;
+});
+
+// Description prefers the author-provided one, then falls back to a
+// synthesized "format + commander(s) + author" line so every public deck
+// still ships something useful for search snippets and social previews.
+const seoDescription = computed(() => {
+  if (!list.value) {
+    return 'Explore Magic: The Gathering decklists shared by the CardMystic community.';
+  }
+  const desc = list.value.description?.trim?.();
+  if (desc) return desc;
+  const parts: string[] = [];
+  if (list.value.format) parts.push(list.value.format);
+  const cmds = (list.value.commanders as string[] | undefined) ?? [];
+  if (cmds.length) parts.push(`led by ${cmds.join(' & ')}`);
+  const owner = (list.value as any).username || decklistOwner.value?.username;
+  if (owner) parts.push(`built by ${owner}`);
+  const prefix = list.value.name || 'MTG decklist';
+  return parts.length
+    ? `${prefix} — ${parts.join(', ')}. View the full decklist on CardMystic.`
+    : `${prefix}. View the full decklist on CardMystic.`;
+});
+
+const seoImage = computed(() => bannerImageUrl.value || FALLBACK_OG_IMAGE);
+
+// Private lists must not be indexed. Public lists opt into indexing so
+// deck pages can be discovered from search.
+const seoRobots = computed(() =>
+  isPublicList.value ? 'index, follow' : 'noindex, nofollow',
+);
+
+useSeoMeta({
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  robots: () => seoRobots.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogType: 'article',
+  ogUrl: () => canonicalUrl.value,
+  ogImage: () => seoImage.value,
+  ogImageAlt: () =>
+    list.value
+      ? `Art for ${list.value.name || 'Untitled deck'}`
+      : 'CardMystic decklist',
+  ogSiteName: 'CardMystic',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
+});
+
+useHead({
+  link: [{ rel: 'canonical', href: () => canonicalUrl.value }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: () => {
+        if (!list.value || !isPublicList.value) return '';
+        const author =
+          (list.value as any).username || decklistOwner.value?.username;
+        const authorId = (list.value as any).user_id || decklistOwner.value?.id;
+        return JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'CreativeWork',
+          name: list.value.name || 'Untitled deck',
+          description: seoDescription.value,
+          image: seoImage.value,
+          url: canonicalUrl.value,
+          genre: 'Magic: The Gathering deck',
+          dateModified: (list.value as any).updated_at ?? undefined,
+          dateCreated: (list.value as any).created_at ?? undefined,
+          author: author
+            ? {
+                '@type': 'Person',
+                name: author,
+                url: authorId
+                  ? `https://cardmystic.com/user/${authorId}`
+                  : undefined,
+              }
+            : undefined,
+          about: {
+            '@type': 'Game',
+            name: 'Magic: The Gathering',
+            publisher: {
+              '@type': 'Organization',
+              name: 'Wizards of the Coast',
+            },
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'CardMystic',
+          },
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': canonicalUrl.value,
+          },
+        });
+      },
+    },
+  ],
+});
+
 // Add card state
 const selectedCardToAdd = ref('');
 const addCardSearchTerm = ref('');

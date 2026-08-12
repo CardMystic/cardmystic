@@ -97,16 +97,96 @@ const bannerImageUrl = computed(() => {
   return scryfallArtCropUrl(profile.value.avatar_card_name);
 });
 
+// ---- SEO ----
+const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
+
+const canonicalUrl = computed(
+  () => `https://cardmystic.com/user/${userId.value}`,
+);
+
+const seoTitle = computed(() =>
+  profile.value?.username
+    ? `${profile.value.username} | MTG Decklists | CardMystic`
+    : 'User Profile | CardMystic',
+);
+
+const seoDescription = computed(() => {
+  if (!profile.value) {
+    return 'Explore Magic: The Gathering decklists shared by the CardMystic community.';
+  }
+  const name = profile.value.username || 'This user';
+  const deckCount = decklists.value.length;
+  const followerCount = profile.value.follower_count ?? 0;
+  const deckPart =
+    deckCount > 0
+      ? `${deckCount} public MTG decklist${deckCount === 1 ? '' : 's'}`
+      : 'Magic: The Gathering community member';
+  const followerPart =
+    followerCount > 0
+      ? `${followerCount} follower${followerCount === 1 ? '' : 's'}.`
+      : '';
+  return `${name} on CardMystic — ${deckPart}. ${followerPart}`.trim();
+});
+
+const seoImage = computed(() => bannerImageUrl.value || FALLBACK_OG_IMAGE);
+
+// Profiles that exist and have a username are indexable so search engines
+// can surface community authors. Anonymous / missing profiles stay out.
+const seoRobots = computed(() =>
+  profile.value?.username ? 'index, follow' : 'noindex, follow',
+);
+
 useSeoMeta({
-  title: () =>
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  robots: () => seoRobots.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogType: 'profile',
+  ogUrl: () => canonicalUrl.value,
+  ogImage: () => seoImage.value,
+  ogImageAlt: () =>
     profile.value?.username
-      ? `${profile.value.username} | CardMystic`
-      : 'User Profile | CardMystic',
-  description: () =>
-    profile.value?.username
-      ? `Public decklists shared by ${profile.value.username} on CardMystic.`
-      : 'Public CardMystic user profile.',
-  robots: 'noindex, follow',
+      ? `${profile.value.username}'s profile art on CardMystic`
+      : 'CardMystic user profile',
+  ogSiteName: 'CardMystic',
+  profileUsername: () => profile.value?.username || undefined,
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
+});
+
+useHead({
+  link: [{ rel: 'canonical', href: () => canonicalUrl.value }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: () => {
+        if (!profile.value?.username) return '';
+        return JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ProfilePage',
+          url: canonicalUrl.value,
+          mainEntity: {
+            '@type': 'Person',
+            name: profile.value.username,
+            identifier: profile.value.id,
+            image: seoImage.value,
+            interactionStatistic: {
+              '@type': 'InteractionCounter',
+              interactionType: 'https://schema.org/FollowAction',
+              userInteractionCount: profile.value.follower_count ?? 0,
+            },
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'CardMystic',
+          },
+        });
+      },
+    },
+  ],
 });
 </script>
 
