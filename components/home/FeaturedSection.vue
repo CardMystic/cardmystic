@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="section-title mb-4">Awesome Decklists & Users</h2>
+    <h2 class="section-title mb-0">Awesome Decklists & Users</h2>
     <p class="text-sm opacity-70 mb-4 text-center">
       Support us on
       <a
