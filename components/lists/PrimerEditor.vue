@@ -61,7 +61,7 @@
           icon="i-lucide-save"
           color="success"
           variant="solid"
-          label="Save"
+          :label="isDirty ? 'Save' : 'Saved'"
           class="cursor-pointer"
           :disabled="!isDirty || isSaving"
           :loading="isSaving"
