@@ -20,6 +20,9 @@ const wizardImage = computed(() => {
 const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
   useUserProfile();
 const isAuthor = computed(() => !!profileData.value?.is_author);
+const articlesNavLabel = computed(() =>
+  isAuthor.value ? 'My Articles' : 'Liked Articles',
+);
 const router = useRouter();
 
 const handleLogout = async () => {
@@ -348,12 +351,11 @@ const externalItems: NavigationMenuItem[] = [
                   "
                 />
                 <UButton
-                  v-if="isAuthor"
                   class="cursor-pointer"
                   icon="i-lucide-newspaper"
                   color="neutral"
                   variant="ghost"
-                  label="My Articles"
+                  :label="articlesNavLabel"
                   block
                   @click="
                     router.push('/articles/mine');
@@ -540,12 +542,11 @@ const externalItems: NavigationMenuItem[] = [
                 "
               />
               <UButton
-                v-if="isAuthor"
                 class="cursor-pointer"
                 icon="i-lucide-newspaper"
                 color="neutral"
                 variant="ghost"
-                label="My Articles"
+                :label="articlesNavLabel"
                 block
                 @click="
                   router.push('/articles/mine');

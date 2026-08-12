@@ -119,6 +119,18 @@ export const GetMyArticlesResponseSchema = z.object({
 
 export type GetMyArticlesResponse = z.infer<typeof GetMyArticlesResponseSchema>;
 
+export const GetLikedArticlesResponseSchema = z.object({
+  articles: z
+    .array(ArticleSummarySchema)
+    .describe(
+      'Published articles the authenticated user has liked, most recently liked first',
+    ),
+});
+
+export type GetLikedArticlesResponse = z.infer<
+  typeof GetLikedArticlesResponseSchema
+>;
+
 // ---- Discovery ----
 
 export const GetRecentArticlesQuerySchema = z.object({

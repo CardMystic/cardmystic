@@ -8,6 +8,7 @@ import { computed, ref, watch, type Ref } from 'vue';
 import { useSupabase } from './useSupabase';
 import {
   ArticleResponseSchema,
+  GetLikedArticlesResponseSchema,
   GetMyArticlesResponseSchema,
   GetRecentArticlesResponseSchema,
   SearchArticlesResponseSchema,
@@ -107,7 +108,7 @@ export function useArticleSearch(query: Ref<string>, limit = 20) {
 }
 
 /** All of the authenticated author's articles, drafts included. */
-export function useMyArticles() {
+export function useMyArticles(enabled: Ref<boolean> | boolean = true) {
   const supabase = process.server ? null : useSupabase();
   const config = useRuntimeConfig();
 
@@ -124,7 +125,49 @@ export function useMyArticles() {
       }
       return GetMyArticlesResponseSchema.parse(await response.json());
     },
-    enabled: computed(() => !process.server),
+    enabled: computed(() => {
+      if (process.server) return false;
+      return typeof enabled === 'boolean' ? enabled : !!enabled.value;
+    }),
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    articles: computed(() => data.value?.articles ?? []),
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Published articles the authenticated user has liked, most recently liked
+ * first. Requires a logged-in session — disabled during SSR.
+ */
+export function useLikedArticles(enabled: Ref<boolean> | boolean = true) {
+  const supabase = process.server ? null : useSupabase();
+  const config = useRuntimeConfig();
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['articles', 'liked'],
+    queryFn: async () => {
+      const token = await getAuthToken(supabase!);
+      const response = await fetch(
+        `${config.public.backendUrl}/articles/liked`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) {
+        throw new Error(
+          `Failed to load your liked articles (${response.status})`,
+        );
+      }
+      return GetLikedArticlesResponseSchema.parse(await response.json());
+    },
+    enabled: computed(() => {
+      if (process.server) return false;
+      return typeof enabled === 'boolean' ? enabled : !!enabled.value;
+    }),
     staleTime: 1000 * 60,
     refetchOnWindowFocus: false,
   });

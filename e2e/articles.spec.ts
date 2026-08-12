@@ -17,7 +17,8 @@ import type { Page } from '@playwright/test';
  *  - Article detail: banner image, title/description, social bar
  *    (author, like button disabled when logged out, comment/view
  *    counts), rendered markdown content, and the view-tracking POST
- *  - /articles/mine: non-authors see the "approved authors only" gate
+ *  - /articles/mine: non-authors see their liked articles (with empty
+ *    state when they haven't liked anything yet)
  */
 
 const AUTHOR = {
@@ -215,15 +216,31 @@ test.describe('Articles', () => {
     await expect(() => expect(viewRecorded).toBe(true)).toPass();
   });
 
-  test('non-authors are gated on the my-articles page', async ({ page }) => {
+  test('non-authors see their liked articles on the my-articles page', async ({
+    page,
+  }) => {
+    // The default fixture is a non-author with no liked articles.
+    await page.route(`${BACKEND}/articles/liked`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ articles: [] }),
+      }),
+    );
+
     await gotoHydrated(page, '/articles/mine');
     await expect(
-      page.getByText('Only approved authors can write articles', {
-        exact: false,
-      }),
+      page.getByRole('heading', { name: 'Liked Articles' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("You haven't liked any articles yet."),
     ).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'Browse Articles' }),
     ).toBeVisible();
+    // Non-authors shouldn't see the "New Article" button.
+    await expect(
+      page.getByRole('button', { name: 'New Article' }),
+    ).toHaveCount(0);
   });
 });
