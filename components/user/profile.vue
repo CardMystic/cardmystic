@@ -341,6 +341,12 @@ const handleSignOut = async () => {
               </UButton>
             </template>
 
+            <template v-else-if="!patreonStatus">
+              <p role="alert" class="text-sm text-red-500">
+                Unable to load your Patreon status. Please refresh and try again.
+              </p>
+            </template>
+
             <template v-else>
               <p class="text-sm text-gray-600 dark:text-zinc-400">
                 Connect your Patreon account to link your membership. Not a
