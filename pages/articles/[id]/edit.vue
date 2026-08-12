@@ -69,14 +69,14 @@
 
         <UFormField
           label="Cover image"
-          help="Shown as the card image and article banner."
+          help="Shown as the card image and article banner. Recommended: landscape 16:9 (e.g. 1200×675). Max 5 MB — JPEG, PNG, WebP, or GIF."
         >
           <div class="flex flex-wrap items-center gap-3">
             <img
               v-if="imageUrl"
               :src="imageUrl"
               alt="Cover image"
-              class="h-24 rounded-md object-cover"
+              class="max-h-32 w-auto rounded-md"
             />
             <input
               ref="fileInputRef"
@@ -280,9 +280,38 @@ const supabase = process.server ? null : useSupabase();
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploadingImage = ref(false);
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
+
 async function handleImageSelected(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
   if (!file || !supabase || !userProfile.value?.id) return;
+
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    toast.add({
+      title: 'Unsupported image type',
+      description: 'Please upload a JPEG, PNG, WebP, or GIF image.',
+      color: 'error',
+    });
+    input.value = '';
+    return;
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    toast.add({
+      title: 'Image is too large',
+      description: `Maximum size is ${MAX_IMAGE_BYTES / 1024 / 1024} MB. Yours is ${(file.size / 1024 / 1024).toFixed(1)} MB.`,
+      color: 'error',
+    });
+    input.value = '';
+    return;
+  }
+
   isUploadingImage.value = true;
   try {
     const extension = file.name.split('.').pop() || 'png';

@@ -99,6 +99,29 @@
             />
           </UTooltip>
         </template>
+        <div
+          class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
+        />
+        <UPopover
+          v-model:open="emojiPickerOpen"
+          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+        >
+          <UButton
+            icon="i-lucide-smile"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            class="cursor-pointer"
+            aria-label="Insert emoji"
+          />
+          <template #content>
+            <EmojiPickerPanel
+              v-model:search="emojiSearchTerm"
+              :emojis="emojiResults"
+              @select="insertEmojiShortcode"
+            />
+          </template>
+        </UPopover>
       </div>
 
       <div
@@ -156,6 +179,29 @@
               />
             </UTooltip>
           </template>
+          <div
+            class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
+          />
+          <UPopover
+            v-model:open="emojiPickerOpen"
+            :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+          >
+            <UButton
+              icon="i-lucide-smile"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              aria-label="Insert emoji"
+            />
+            <template #content>
+              <EmojiPickerPanel
+                v-model:search="emojiSearchTerm"
+                :emojis="emojiResults"
+                @select="insertEmojiShortcode"
+              />
+            </template>
+          </UPopover>
         </div>
 
         <div
@@ -269,6 +315,7 @@
 <script setup lang="ts">
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { emojify, search as searchEmoji } from 'node-emoji';
 import { useCardsByName } from '~/composables/useCards';
 import { getCardImageUrl } from '~/utils/scryfall';
 
@@ -545,6 +592,10 @@ const renderedHtml = computed(() => {
     return `CARDLINKTOKEN${i}CARDLINKTOKEN`;
   });
 
+  // Convert :shortcode: → unicode emoji after custom tokens are extracted
+  // so card names / URLs can never be misinterpreted as emoji names.
+  pre = emojify(pre);
+
   const html = marked.parse(pre, { async: false }) as string;
   const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_ATTR: [
@@ -623,6 +674,7 @@ function highlightMarkdown(src: string): string {
   add(/\(\([^)\n]+\)\)/g, 'tok-card-img');
   add(/\[\[[^\]\n]+\]\]/g, 'tok-card-link');
   add(/@\[youtube\]\([A-Za-z0-9_-]{11}\)/g, 'tok-youtube');
+  add(/:[a-z0-9_+-]+:/g, 'tok-emoji');
   add(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, 'tok-html');
   add(/!\[[^\]\n]*\]\([^)\n]+\)/g, 'tok-image');
   add(/\[[^\]\n]+\]\([^)\n]+\)/g, 'tok-link');
@@ -910,6 +962,123 @@ function insertAtCursor(text: string) {
     );
   });
 }
+
+// --- Emoji picker ---
+// Curated default set shown when the search box is empty. Users can search the
+// full node-emoji dataset by typing.
+interface EmojiEntry {
+  name: string;
+  emoji: string;
+}
+
+const emojiPickerOpen = ref(false);
+const emojiSearchTerm = ref('');
+
+const defaultEmojiNames = [
+  'grinning',
+  'smiley',
+  'smile',
+  'laughing',
+  'sweat_smile',
+  'joy',
+  'rofl',
+  'wink',
+  'blush',
+  'heart_eyes',
+  'star_struck',
+  'kissing_heart',
+  'yum',
+  'sunglasses',
+  'thinking',
+  'raised_eyebrow',
+  'neutral_face',
+  'roll_eyes',
+  'grimacing',
+  'sob',
+  'rage',
+  'exploding_head',
+  'skull',
+  'ghost',
+  '+1',
+  '-1',
+  'clap',
+  'raised_hands',
+  'pray',
+  'muscle',
+  'ok_hand',
+  'wave',
+  'point_right',
+  'point_left',
+  'eyes',
+  'brain',
+  'heart',
+  'orange_heart',
+  'yellow_heart',
+  'green_heart',
+  'blue_heart',
+  'purple_heart',
+  'black_heart',
+  'broken_heart',
+  'sparkling_heart',
+  'fire',
+  'sparkles',
+  '100',
+  'boom',
+  'zap',
+  'star',
+  'dizzy',
+  'crown',
+  'tada',
+  'confetti_ball',
+  'gift',
+  'trophy',
+  'medal_sports',
+  'game_die',
+  'jigsaw',
+  'crystal_ball',
+  'magic_wand',
+  'dragon',
+  'crossed_swords',
+  'shield',
+  'bow_and_arrow',
+  'white_check_mark',
+  'x',
+  'warning',
+  'question',
+  'exclamation',
+  'arrow_right',
+  'arrow_left',
+  'arrow_up',
+  'arrow_down',
+];
+
+const defaultEmojis = computed<EmojiEntry[]>(() => {
+  const out: EmojiEntry[] = [];
+  const seen = new Set<string>();
+  for (const name of defaultEmojiNames) {
+    const rendered = emojify(`:${name}:`);
+    // emojify returns the input unchanged if the shortcode is unknown.
+    if (rendered === `:${name}:` || seen.has(name)) continue;
+    seen.add(name);
+    out.push({ name, emoji: rendered });
+  }
+  return out;
+});
+
+const emojiResults = computed<EmojiEntry[]>(() => {
+  const term = emojiSearchTerm.value.trim().toLowerCase();
+  if (!term) return defaultEmojis.value;
+  const results = searchEmoji(term) as EmojiEntry[];
+  return results.slice(0, 96);
+});
+
+function insertEmojiShortcode(name: string) {
+  emojiPickerOpen.value = false;
+  emojiSearchTerm.value = '';
+  // Focus the textarea first so the shortcode is inserted at the caret.
+  textareaRef.value?.focus();
+  nextTick(() => insertAtCursor(`:${name}:`));
+}
 </script>
 
 <style scoped>
@@ -1145,6 +1314,11 @@ function insertAtCursor(text: string) {
 .highlight-content :deep(.tok-youtube) {
   color: #ef4444;
   font-weight: 600;
+}
+.highlight-content :deep(.tok-emoji) {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 3px;
 }
 .highlight-content :deep(.tok-heading) {
   color: #f59e0b;

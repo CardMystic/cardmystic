@@ -20,12 +20,12 @@
       <!-- Cover image banner -->
       <div
         v-if="article.image_url"
-        class="w-full h-48 md:h-72 rounded-lg overflow-hidden mb-6"
+        class="mb-6 flex justify-center overflow-hidden rounded-lg"
       >
         <img
           :src="article.image_url"
           :alt="article.title"
-          class="w-full h-full object-cover"
+          class="max-h-96 max-w-full w-auto h-auto rounded-lg"
         />
       </div>
 
