@@ -265,6 +265,7 @@ import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
 import { refDebounced } from '~/utils/refDebounced';
 import { groupAndSortCards } from '~/utils/sort';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 import type { Card } from '~/models/cardModel';
 
 const route = useRoute();
@@ -393,7 +394,7 @@ useHead({
         const author =
           (list.value as any).username || decklistOwner.value?.username;
         const authorId = (list.value as any).user_id || decklistOwner.value?.id;
-        return JSON.stringify({
+        return safeJsonLd({
           '@context': 'https://schema.org',
           '@type': 'CreativeWork',
           name: list.value.name || 'Untitled deck',

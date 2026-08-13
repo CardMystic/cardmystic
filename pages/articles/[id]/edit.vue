@@ -102,11 +102,7 @@
               variant="ghost"
               label="Remove"
               class="cursor-pointer"
-              @click="
-                () => {
-                  imageUrl = null;
-                }
-              "
+              @click="removeCurrentImage"
             />
           </div>
         </UFormField>
@@ -189,7 +185,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeRouteLeave } from 'vue-router';
 import { useArticle, useArticleMutations } from '~/composables/useArticles';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSupabase } from '~/composables/useSupabase';
@@ -253,6 +250,10 @@ async function saveDetails() {
       imageUrl: imageUrl.value,
       isPublished: isPublished.value,
     });
+    // Once saved, the backend owns cleanup of the previously-persisted image;
+    // any pending upload we uploaded during this session is now the persisted
+    // one, so it's no longer "orphaned" and shouldn't be cleaned up locally.
+    pendingImagePath.value = null;
     toast.add({ title: 'Article details saved', icon: 'i-lucide-check' });
   } catch (e: any) {
     toast.add({
@@ -277,9 +278,20 @@ async function saveContent(value: string) {
 }
 
 // --- Cover image upload to the public article-images storage bucket ---
+//
+// Uploads happen immediately (so authors can preview the image before saving)
+// but the reader never sees a picture until Save Details is clicked. To keep
+// the bucket at most one image per article, we:
+//   1. Track the storage path of any image we've uploaded during this session
+//      but haven't yet persisted (`pendingImagePath`).
+//   2. Delete the pending image when the author replaces it, removes it,
+//      navigates away, or unmounts before saving.
+//   3. Let the backend delete the previously-persisted image on save/delete
+//      of the article.
 const supabase = process.server ? null : useSupabase();
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploadingImage = ref(false);
+const pendingImagePath = ref<string | null>(null);
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_IMAGE_TYPES = [
@@ -288,6 +300,16 @@ const ALLOWED_IMAGE_TYPES = [
   'image/webp',
   'image/gif',
 ];
+
+/** Best-effort delete of a storage object; never throws. */
+async function deletePendingUpload(path: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.storage.from('article-images').remove([path]);
+  } catch {
+    // Best-effort — leave orphan for server-side cleanup as a fallback.
+  }
+}
 
 async function handleImageSelected(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -314,6 +336,7 @@ async function handleImageSelected(event: Event) {
   }
 
   isUploadingImage.value = true;
+  const previousPending = pendingImagePath.value;
   try {
     const extension = file.name.split('.').pop() || 'png';
     const path = `${userProfile.value.id}/${crypto.randomUUID()}.${extension}`;
@@ -324,6 +347,12 @@ async function handleImageSelected(event: Event) {
     imageUrl.value = supabase.storage
       .from('article-images')
       .getPublicUrl(path).data.publicUrl;
+    pendingImagePath.value = path;
+    // The prior pending upload is now superseded — drop it from storage so we
+    // don't accumulate 5 MB orphans on repeated re-selects.
+    if (previousPending && previousPending !== path) {
+      await deletePendingUpload(previousPending);
+    }
   } catch (e: any) {
     toast.add({
       title: 'Error uploading image',
@@ -336,11 +365,60 @@ async function handleImageSelected(event: Event) {
   }
 }
 
+/**
+ * Handles the Remove button. If the current image was uploaded but not yet
+ * persisted, drop it from storage immediately; otherwise just clear the field
+ * so the backend removes the persisted image on the next save.
+ */
+async function removeCurrentImage() {
+  const pending = pendingImagePath.value;
+  imageUrl.value = null;
+  if (pending) {
+    pendingImagePath.value = null;
+    await deletePendingUpload(pending);
+  }
+}
+
+// Clean up any unsaved pending upload when the author leaves the editor.
+// `onBeforeRouteLeave` catches in-app navigation and `onBeforeUnmount` is a
+// safety net; `beforeunload` handles hard tab close (best-effort — modern
+// browsers restrict what fires there).
+function cleanupPendingOnLeave(): void {
+  const pending = pendingImagePath.value;
+  if (!pending) return;
+  pendingImagePath.value = null;
+  // Fire and forget; navigation shouldn't wait on storage cleanup.
+  void deletePendingUpload(pending);
+}
+
+onBeforeRouteLeave(() => {
+  cleanupPendingOnLeave();
+});
+onBeforeUnmount(() => {
+  cleanupPendingOnLeave();
+  if (beforeUnloadHandler) {
+    window.removeEventListener('beforeunload', beforeUnloadHandler);
+    beforeUnloadHandler = null;
+  }
+});
+let beforeUnloadHandler: (() => void) | null = null;
+onMounted(() => {
+  beforeUnloadHandler = () => cleanupPendingOnLeave();
+  window.addEventListener('beforeunload', beforeUnloadHandler);
+});
+
 const showDeleteModal = ref(false);
 
 async function handleDelete() {
   try {
+    const pending = pendingImagePath.value;
     await deleteArticle(articleId.value);
+    // Backend deletes the persisted cover image; also drop any pending
+    // upload from this session so it doesn't become orphaned.
+    if (pending) {
+      pendingImagePath.value = null;
+      await deletePendingUpload(pending);
+    }
     showDeleteModal.value = false;
     toast.add({ title: 'Article deleted', icon: 'i-lucide-check' });
     router.push('/articles/mine');

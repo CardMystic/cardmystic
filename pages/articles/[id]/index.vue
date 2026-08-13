@@ -91,6 +91,7 @@ import { useUserProfile } from '~/composables/useUserProfile';
 import ArticleSocialBar from '~/components/articles/ArticleSocialBar.vue';
 import ArticleComments from '~/components/articles/ArticleComments.vue';
 import MarkdownEditor from '~/components/lists/MarkdownEditor.vue';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 
 const route = useRoute();
 const articleId = computed(() => String(route.params.id));
@@ -192,7 +193,7 @@ useHead({
         const authorUrl = article.value.user_id
           ? `https://cardmystic.com/user/${article.value.user_id}`
           : undefined;
-        return JSON.stringify({
+        return safeJsonLd({
           '@context': 'https://schema.org',
           '@type': 'Article',
           headline: article.value.title,

@@ -2,6 +2,13 @@ name: E2E Tests
 
 # `on` is quoted to avoid YAML 1.1 boolean coercion (`on` -> true) that
 # some YAML linters (incl. VS Code's built-in) flag as invalid.
+#
+# Trigger policy:
+#   - Unit tests: run on every push / PR to `dev` or `main`.
+#   - Playwright e2e: run automatically only for `main` (push + PR).
+#     For `dev` and everything else, e2e is opt-in via `workflow_dispatch`
+#     (manual "Run workflow" button). This keeps CI green when the dev
+#     container is intentionally down.
 'on':
   push:
     branches:
@@ -11,6 +18,7 @@ name: E2E Tests
     branches:
       - dev
       - main
+  workflow_dispatch:
 
 # Cancel superseded runs on the same branch / PR to keep CI minutes low.
 concurrency:
@@ -39,6 +47,14 @@ jobs:
   e2e:
     name: Playwright (${{ matrix.project }})
     needs: unit
+    # Run e2e only when it's meaningful:
+    #   - Any push to main (post-merge validation)
+    #   - Any PR targeting main
+    #   - Manual workflow_dispatch (opt-in for dev / feature branches)
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      || (github.event_name == 'pull_request' && github.base_ref == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
