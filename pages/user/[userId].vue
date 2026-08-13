@@ -84,6 +84,7 @@ import { useRoute } from 'vue-router';
 import { usePublicUserProfile } from '~/composables/useDiscovery';
 import CardListLink from '~/components/lists/CardListLink.vue';
 import FollowButton from '~/components/user/FollowButton.vue';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 
 definePageMeta({ title: 'User Profile' });
 
@@ -164,7 +165,7 @@ useHead({
       type: 'application/ld+json',
       innerHTML: () => {
         if (!profile.value?.username) return '';
-        return JSON.stringify({
+        return safeJsonLd({
           '@context': 'https://schema.org',
           '@type': 'ProfilePage',
           url: canonicalUrl.value,
