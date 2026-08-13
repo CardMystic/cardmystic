@@ -10,7 +10,8 @@
     />
     <div
       class="mt-2 grid grid-cols-8 gap-1 max-h-64 overflow-y-auto"
-      role="listbox"
+      role="group"
+      aria-label="Emoji choices"
     >
       <button
         v-for="e in emojis"

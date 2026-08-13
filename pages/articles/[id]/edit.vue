@@ -11,6 +11,7 @@
         class="cursor-pointer"
       />
       <UButton
+        v-if="isOwner"
         icon="i-lucide-trash-2"
         color="error"
         variant="outline"

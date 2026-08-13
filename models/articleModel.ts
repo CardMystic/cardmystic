@@ -160,6 +160,7 @@ export type GetRecentArticlesResponse = z.infer<
 export const SearchArticlesQuerySchema = z.object({
   query: z
     .string()
+    .trim()
     .min(1)
     .max(200)
     .describe('Search keywords matched against article title and description'),

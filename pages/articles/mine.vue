@@ -120,7 +120,10 @@ import { useUserProfile } from '~/composables/useUserProfile';
 import { useToast } from '#imports';
 import ArticleCard from '~/components/articles/ArticleCard.vue';
 
-definePageMeta({ title: 'My Articles' });
+definePageMeta({
+  title: 'My Articles',
+  middleware: 'auth',
+});
 
 useSeoMeta({
   title: 'My Articles | CardMystic',

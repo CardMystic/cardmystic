@@ -211,6 +211,8 @@ export function useArticle(articleId: Ref<string | null | undefined>) {
     },
     enabled: computed(() => !!articleId.value),
     staleTime: 1000 * 60 * 5,
+    refetchOnMount: (query) =>
+      query.state.data === null ? 'always' : false,
     refetchOnWindowFocus: false,
   });
 
