@@ -145,7 +145,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/database.types';
 import type { DecklistSummary } from '~/models/cardListModel';
 import { useToast } from '#imports';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter';
