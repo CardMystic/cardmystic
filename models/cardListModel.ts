@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import { CardFormat } from './cardModel';
+import { PaginationInfoSchema, PaginationQuerySchema } from './paginationModel';
+
+export const MAX_DECKLIST_CARDS = 500;
 
 export const BoardSchema = z
   .enum(['Mainboard', 'Sideboard', 'Considering'])
@@ -372,17 +375,7 @@ export type GetFeaturedPrimersResponse = z.infer<
   typeof GetFeaturedPrimersResponseSchema
 >;
 
-export const GetActiveUserDecklistsQuerySchema = z.object({
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(200)
-    .default(100)
-    .describe(
-      'Maximum number of active user decklists to return (default 100)',
-    ),
-});
+export const GetActiveUserDecklistsQuerySchema = PaginationQuerySchema;
 
 export type GetActiveUserDecklistsQuery = z.infer<
   typeof GetActiveUserDecklistsQuerySchema
@@ -390,10 +383,52 @@ export type GetActiveUserDecklistsQuery = z.infer<
 
 export const GetActiveUserDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
+  ...PaginationInfoSchema.shape,
 });
 
 export type GetActiveUserDecklistsResponse = z.infer<
   typeof GetActiveUserDecklistsResponseSchema
+>;
+
+export const SearchMyDecklistsQuerySchema = z.object({
+  query: z
+    .string()
+    .max(200)
+    .default('')
+    .describe(
+      'Fuzzy match against decklist name (empty string returns most-recent decks)',
+    ),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .default(25)
+    .describe('Maximum number of matches to return (default 25, max 50)'),
+});
+
+export type SearchMyDecklistsQuery = z.infer<
+  typeof SearchMyDecklistsQuerySchema
+>;
+
+export const SearchMyDecklistsResponseSchema = z.object({
+  decklists: z
+    .array(DecklistSummarySchema)
+    .describe("Top matches from the authenticated user's own decklists"),
+});
+
+export type SearchMyDecklistsResponse = z.infer<
+  typeof SearchMyDecklistsResponseSchema
+>;
+
+export const GetOwnedDecklistResponseSchema = z.object({
+  decklist: DecklistSummarySchema.describe(
+    "Summary of the authenticated user's own decklist",
+  ),
+});
+
+export type GetOwnedDecklistResponse = z.infer<
+  typeof GetOwnedDecklistResponseSchema
 >;
 
 export const SearchDecklistsQuerySchema = z.object({
@@ -402,31 +437,14 @@ export const SearchDecklistsQuerySchema = z.object({
     .min(1)
     .max(200)
     .describe('Search keywords matched against decklist name and description'),
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(200)
-    .default(50)
-    .describe('Maximum number of decklists to return (default 50, max 200)'),
-  cursor: z
-    .uuid()
-    .optional()
-    .describe(
-      'Decklist ID of the last entry from the previous page (omit for first page)',
-    ),
+  ...PaginationQuerySchema.shape,
 });
 
 export type SearchDecklistsQuery = z.infer<typeof SearchDecklistsQuerySchema>;
 
 export const SearchDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
-  nextCursor: z
-    .uuid()
-    .nullable()
-    .describe(
-      'Decklist ID to pass as cursor for the next page, or null if no more results',
-    ),
+  ...PaginationInfoSchema.shape,
 });
 
 export type SearchDecklistsResponse = z.infer<
@@ -497,16 +515,30 @@ export const ToggleSaveResponseSchema = z.object({
 
 export type ToggleSaveResponse = z.infer<typeof ToggleSaveResponseSchema>;
 
+export const GetLikedDecklistsQuerySchema = PaginationQuerySchema;
+
+export type GetLikedDecklistsQuery = z.infer<
+  typeof GetLikedDecklistsQuerySchema
+>;
+
 export const GetLikedDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
+  ...PaginationInfoSchema.shape,
 });
 
 export type GetLikedDecklistsResponse = z.infer<
   typeof GetLikedDecklistsResponseSchema
 >;
 
+export const GetSavedDecklistsQuerySchema = PaginationQuerySchema;
+
+export type GetSavedDecklistsQuery = z.infer<
+  typeof GetSavedDecklistsQuerySchema
+>;
+
 export const GetSavedDecklistsResponseSchema = z.object({
   decklists: z.array(DecklistSummarySchema),
+  ...PaginationInfoSchema.shape,
 });
 
 export type GetSavedDecklistsResponse = z.infer<

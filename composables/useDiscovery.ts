@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/vue-query';
+import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import {
   GetFeaturedDecklistsResponseSchema,
@@ -110,30 +110,33 @@ export function useFeaturedPrimers(limit = 6) {
 }
 
 /**
- * Fuzzy-search public decklists by name/description with cursor-based
- * infinite scrolling. The query string is debounced by the caller.
+ * Fuzzy-search public decklists by name/description with 1-indexed offset
+ * pagination. The query string is debounced by the caller.
  */
-export function useDecklistSearch(query: Ref<string>, limit = 20) {
+export function useDecklistSearch(
+  query: Ref<string>,
+  page: Ref<number>,
+  pageSize = 50,
+) {
   const config = useRuntimeConfig();
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isFetchingNextPage,
-    error,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery(() => ({
-    queryKey: ['discovery', 'search-decklists', query.value, limit] as const,
-    queryFn: async ({ pageParam }) => {
-      const trimmed = query.value.trim();
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () =>
+        [
+          'discovery',
+          'search-decklists',
+          query.value,
+          page.value,
+          pageSize,
+        ] as const,
+    ),
+    queryFn: async () => {
       const params = new URLSearchParams({
-        query: trimmed,
-        limit: String(limit),
+        query: query.value.trim(),
+        page: String(page.value),
+        pageSize: String(pageSize),
       });
-      if (pageParam) params.set('cursor', pageParam);
       const url = `${config.public.backendUrl}/supabase/card-lists/search?${params}`;
       const response = await fetch(url);
       if (!response.ok) {
@@ -141,52 +144,50 @@ export function useDecklistSearch(query: Ref<string>, limit = 20) {
       }
       return SearchDecklistsResponseSchema.parse(await response.json());
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: query.value.trim().length > 0,
+    enabled: computed(() => query.value.trim().length > 0),
     staleTime: 1000 * 30,
     refetchOnWindowFocus: false,
-  }));
+  });
 
   return {
-    decklists: computed(
-      () => data.value?.pages.flatMap((p) => p.decklists) ?? [],
-    ),
+    decklists: computed(() => data.value?.decklists ?? []),
+    totalCount: computed(() => data.value?.totalCount ?? 0),
+    totalPages: computed(() => data.value?.totalPages ?? 1),
     isLoading,
     isFetching,
-    isFetchingNextPage,
     error,
     refetch,
-    fetchNextPage,
-    hasNextPage,
   };
 }
 
 /**
- * Fuzzy-search public user profiles by username with cursor-based
- * infinite scrolling.
+ * Fuzzy-search public user profiles by username with 1-indexed offset
+ * pagination.
  */
-export function useUserSearch(query: Ref<string>, limit = 20) {
+export function useUserSearch(
+  query: Ref<string>,
+  page: Ref<number>,
+  pageSize = 50,
+) {
   const config = useRuntimeConfig();
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isFetchingNextPage,
-    error,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery(() => ({
-    queryKey: ['discovery', 'search-users', query.value, limit] as const,
-    queryFn: async ({ pageParam }) => {
-      const trimmed = query.value.trim();
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () =>
+        [
+          'discovery',
+          'search-users',
+          query.value,
+          page.value,
+          pageSize,
+        ] as const,
+    ),
+    queryFn: async () => {
       const params = new URLSearchParams({
-        query: trimmed,
-        limit: String(limit),
+        query: query.value.trim(),
+        page: String(page.value),
+        pageSize: String(pageSize),
       });
-      if (pageParam) params.set('cursor', pageParam);
       const url = `${config.public.backendUrl}/user/search?${params}`;
       const response = await fetch(url);
       if (!response.ok) {
@@ -194,22 +195,19 @@ export function useUserSearch(query: Ref<string>, limit = 20) {
       }
       return SearchUsersResponseSchema.parse(await response.json());
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: query.value.trim().length > 0,
+    enabled: computed(() => query.value.trim().length > 0),
     staleTime: 1000 * 30,
     refetchOnWindowFocus: false,
-  }));
+  });
 
   return {
-    users: computed(() => data.value?.pages.flatMap((p) => p.users) ?? []),
+    users: computed(() => data.value?.users ?? []),
+    totalCount: computed(() => data.value?.totalCount ?? 0),
+    totalPages: computed(() => data.value?.totalPages ?? 1),
     isLoading,
     isFetching,
-    isFetchingNextPage,
     error,
     refetch,
-    fetchNextPage,
-    hasNextPage,
   };
 }
 

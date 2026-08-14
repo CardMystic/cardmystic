@@ -3,6 +3,7 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
+  keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, watch, type Ref } from 'vue';
 import { useSupabase } from './useSupabase';
@@ -274,19 +275,27 @@ export function useDecklistComments(
   };
 }
 
-/** The public decklists the authenticated user has liked. */
-export function useLikedDecklists() {
-  return useReactedDecklists('liked-decklists', 'liked');
+/**
+ * The public decklists the authenticated user has liked, with 1-indexed
+ * offset pagination.
+ */
+export function useLikedDecklists(page: Ref<number>, pageSize = 50) {
+  return useReactedDecklists('liked-decklists', 'liked', page, pageSize);
 }
 
-/** The public decklists the authenticated user has saved. */
-export function useSavedDecklists() {
-  return useReactedDecklists('saved-decklists', 'saved');
+/**
+ * The public decklists the authenticated user has saved, with 1-indexed
+ * offset pagination.
+ */
+export function useSavedDecklists(page: Ref<number>, pageSize = 50) {
+  return useReactedDecklists('saved-decklists', 'saved', page, pageSize);
 }
 
 function useReactedDecklists(
   queryKey: 'liked-decklists' | 'saved-decklists',
   endpoint: 'liked' | 'saved',
+  page: Ref<number>,
+  pageSize: number,
 ) {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
@@ -296,12 +305,18 @@ function useReactedDecklists(
       ? GetLikedDecklistsResponseSchema
       : GetSavedDecklistsResponseSchema;
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: [queryKey, computed(() => userProfile.value?.id)],
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () => [queryKey, userProfile.value?.id, page.value, pageSize] as const,
+    ),
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
+      const params = new URLSearchParams({
+        page: String(page.value),
+        pageSize: String(pageSize),
+      });
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/${endpoint}`,
+        `${config.public.backendUrl}/supabase/card-lists/${endpoint}?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -314,11 +329,18 @@ function useReactedDecklists(
     enabled: computed(() => !process.server && !!userProfile.value?.id),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    // Keep the previous page's totals visible during page-change refetches so
+    // pagination totals don't briefly collapse to the fallback (which would
+    // otherwise trigger out-of-range clamps in consumers).
+    placeholderData: keepPreviousData,
   });
 
   return {
     decklists: computed(() => data.value?.decklists ?? []),
+    totalCount: computed(() => data.value?.totalCount ?? 0),
+    totalPages: computed(() => data.value?.totalPages ?? 1),
     isLoading,
+    isFetching,
     error,
     refetch,
   };

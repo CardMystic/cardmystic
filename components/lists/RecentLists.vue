@@ -61,14 +61,18 @@
 </template>
 
 <script setup lang="ts">
-import { useCardLists } from '~/composables/useCardLists';
+import { ref } from 'vue';
+import { useMyDecklists } from '~/composables/useCardLists';
 import CardListLink from '~/components/lists/CardListLink.vue';
 
-const { userLists, isLoadingLists } = useCardLists();
+// The homepage widget only needs the most-recently updated decks; page 1
+// with a small page size is cheap and shares the cache with the paginated
+// My Decklists view.
+const page = ref(1);
+const { decklists, isLoading: isLoadingLists } = useMyDecklists(page, 8);
 
 const recentLists = computed(() => {
-  if (!userLists.value?.decklists) return [];
-  return [...userLists.value.decklists]
+  return [...decklists.value]
     .sort(
       (a, b) =>
         new Date(b.updated_at ?? 0).getTime() -

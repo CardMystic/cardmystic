@@ -1,23 +1,23 @@
 <template>
   <UContainer class="mb-10 mt-6 max-w-full">
     <div class="text-center mb-6">
-      <h1 class="text-3xl md:text-4xl font-bold mb-2">Search Users</h1>
+      <h1 class="text-3xl md:text-4xl font-bold mb-2">Search Articles</h1>
       <p class="text-sm md:text-base opacity-80">
-        Find other CardMystic users by their username.
+        Find articles by keyword in their title or description.
       </p>
     </div>
 
     <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
       <UInput
         v-model="searchInput"
-        placeholder="Search users by username…"
-        icon="i-lucide-user-search"
+        placeholder="Search articles by title or description…"
+        icon="i-lucide-search"
         class="flex-1"
         :ui="{ base: 'text-base h-10' }"
         @keydown.enter="syncQueryToUrl"
       />
       <UButton
-        icon="i-lucide-user-search"
+        icon="i-lucide-search"
         class="h-10 cursor-pointer"
         :disabled="!searchInput.trim()"
         @click="syncQueryToUrl"
@@ -31,17 +31,17 @@
     </div>
 
     <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-      <USkeleton v-for="i in 6" :key="i" class="user-skeleton" />
+      <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
     </div>
 
     <div
-      v-else-if="users.length > 0"
+      v-else-if="articles.length > 0"
       class="grid grid-cols-1 md:grid-cols-3 gap-3"
     >
-      <PublicUserLink
-        v-for="profile in users"
-        :key="profile.id"
-        :profile="profile"
+      <ArticleCard
+        v-for="article in articles"
+        :key="article.id"
+        :article="article"
       />
     </div>
 
@@ -55,52 +55,37 @@
     </div>
 
     <div
-      v-if="hasSearched && !isLoading && users.length === 0"
+      v-if="hasSearched && !isLoading && articles.length === 0"
       class="empty-state"
     >
       <UIcon name="i-lucide-search-x" class="text-5xl opacity-30 mb-3" />
-      <p>No users matched "{{ debouncedQuery }}"</p>
+      <p>No articles matched "{{ debouncedQuery }}"</p>
     </div>
 
-    <!-- Featured users shown by default when nothing is searched -->
+    <!-- Recent articles shown by default when nothing is searched -->
     <div v-if="!hasSearched">
       <USeparator class="my-6" />
-
       <h2
         class="text-xl md:text-2xl font-semibold mb-4 flex items-center gap-2"
       >
-        Featured Users
+        Recent Articles
       </h2>
-      <p class="text-sm opacity-70 mb-4 text-center">
-        Support us on
-        <a
-          :href="PATREON_MEMBERSHIP_URL"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-primary hover:underline"
-          >Patreon</a
-        >
-        to automatically get your profile & deck lists featured!
-      </p>
-      <div
-        v-if="isLoadingFeatured"
-        class="grid grid-cols-1 md:grid-cols-3 gap-3"
-      >
-        <USkeleton v-for="i in 6" :key="i" class="user-skeleton" />
+      <div v-if="isLoadingRecent" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
       </div>
       <div
-        v-else-if="featuredUsers.length > 0"
+        v-else-if="recentArticles.length > 0"
         class="grid grid-cols-1 md:grid-cols-3 gap-3"
       >
-        <PublicUserLink
-          v-for="profile in featuredUsers"
-          :key="profile.id"
-          :profile="profile"
+        <ArticleCard
+          v-for="article in recentArticles"
+          :key="article.id"
+          :article="article"
         />
       </div>
       <div v-else class="empty-state">
-        <UIcon name="i-lucide-user-search" class="text-5xl opacity-30 mb-3" />
-        <p>Enter a username above to find other CardMystic users.</p>
+        <UIcon name="i-lucide-newspaper" class="text-5xl opacity-30 mb-3" />
+        <p>No articles have been published yet. Check back soon!</p>
       </div>
     </div>
   </UContainer>
@@ -109,16 +94,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useUserSearch, useFeaturedUsers } from '~/composables/useDiscovery';
+import { useArticleSearch, useRecentArticles } from '~/composables/useArticles';
 import { refDebounced } from '~/utils/refDebounced';
-import PublicUserLink from '~/components/user/PublicUserLink.vue';
-import { PATREON_MEMBERSHIP_URL } from '~/models/patreonModel';
+import ArticleCard from '~/components/articles/ArticleCard.vue';
 
-definePageMeta({ title: 'Search Users' });
+definePageMeta({ title: 'Search Articles' });
 
 useSeoMeta({
-  title: 'Search Users | CardMystic',
-  description: 'Find other CardMystic users by their username.',
+  title: 'Search Articles | CardMystic',
+  description:
+    'Search Magic: The Gathering articles written by the CardMystic community.',
   robots: 'noindex, follow',
 });
 
@@ -136,7 +121,7 @@ watch(debouncedQuery, () => {
   page.value = 1;
 });
 
-const { users, totalCount, totalPages, isLoading, error } = useUserSearch(
+const { articles, totalCount, totalPages, isLoading, error } = useArticleSearch(
   debouncedQuery,
   page,
   pageSize,
@@ -144,9 +129,9 @@ const { users, totalCount, totalPages, isLoading, error } = useUserSearch(
 
 const hasSearched = computed(() => debouncedQuery.value.trim().length > 0);
 
-// Featured users shown as the default view when nothing is searched
-const { users: featuredUsers, isLoading: isLoadingFeatured } =
-  useFeaturedUsers(12);
+// Recent articles shown as the default view when nothing is searched
+const { articles: recentArticles, isLoading: isLoadingRecent } =
+  useRecentArticles(12);
 
 function syncQueryToUrl() {
   const trimmed = searchInput.value.trim();
@@ -155,6 +140,8 @@ function syncQueryToUrl() {
   });
 }
 
+// Keep the URL in sync as the debounced query settles so users can share
+// or bookmark a search.
 watch(debouncedQuery, (value) => {
   const trimmed = value.trim();
   if ((route.query.query ?? '') === trimmed) return;
@@ -165,8 +152,8 @@ watch(debouncedQuery, (value) => {
 </script>
 
 <style scoped lang="sass">
-.user-skeleton
-  height: 72px
+.article-skeleton
+  height: 300px
   border-radius: 0.5rem
 
 .empty-state

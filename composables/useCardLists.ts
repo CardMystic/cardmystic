@@ -10,31 +10,37 @@ import { computed, ref, type Ref } from 'vue';
 import type { CardFormatType } from '~/models/cardModel';
 import {
   GetActiveUserDecklistsResponseSchema,
+  GetOwnedDecklistResponseSchema,
+  MAX_DECKLIST_CARDS,
+  SearchMyDecklistsResponseSchema,
   type BulkEditRequest,
   type BulkEditResponse,
 } from '~/models/cardListModel';
 
-export const useCardLists = () => {
+/**
+ * The authenticated user's own decklists, 1-indexed offset paginated.
+ * Powers the My Decklists page.
+ */
+export function useMyDecklists(page: Ref<number>, pageSize = 50) {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
-  const queryClient = useQueryClient();
   const config = useRuntimeConfig();
 
-  // Fetch user lists with TanStack Query
-  const {
-    data: userLists,
-    isLoading: isLoadingLists,
-    error: listsError,
-    refetch: refetchLists,
-  } = useQuery({
-    queryKey: ['user-lists', computed(() => userProfile.value?.id)],
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () =>
+        ['user-lists', userProfile.value?.id, page.value, pageSize] as const,
+    ),
     queryFn: async () => {
       const { data: sessionData } = await supabase!.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) throw new Error('No authentication token available');
-
+      const params = new URLSearchParams({
+        page: String(page.value),
+        pageSize: String(pageSize),
+      });
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists?limit=50`,
+        `${config.public.backendUrl}/supabase/card-lists?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -45,9 +51,137 @@ export const useCardLists = () => {
       return GetActiveUserDecklistsResponseSchema.parse(await response.json());
     },
     enabled: computed(() => !process.server && !!userProfile.value?.id),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
+  });
+
+  return {
+    decklists: computed(() => data.value?.decklists ?? []),
+    totalCount: computed(() => data.value?.totalCount ?? 0),
+    totalPages: computed(() => data.value?.totalPages ?? 1),
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Fuzzy-search the authenticated user's own decklists. Powers the deck
+ * picker in Add-to-Deck / Bulk-Add modals. Caller should debounce the query
+ * ref (300ms). Returns the top 25 by relevance / recency.
+ */
+export function useMyDecklistsSearch(query: Ref<string>, limit = 25) {
+  const supabase = process.server ? null : useSupabase();
+  const { userProfile } = useUserProfile();
+  const config = useRuntimeConfig();
+
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () =>
+        [
+          'user-lists',
+          'search',
+          userProfile.value?.id,
+          query.value,
+          limit,
+        ] as const,
+    ),
+    queryFn: async () => {
+      const { data: sessionData } = await supabase!.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error('No authentication token available');
+      const params = new URLSearchParams({
+        query: query.value.trim(),
+        limit: String(limit),
+      });
+      const response = await fetch(
+        `${config.public.backendUrl}/supabase/card-lists/mine/search?${params}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to search user decklists (${response.status})`);
+      }
+      return SearchMyDecklistsResponseSchema.parse(await response.json());
+    },
+    enabled: computed(() => !process.server && !!userProfile.value?.id),
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
+  });
+
+  return {
+    decklists: computed(() => data.value?.decklists ?? []),
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Single owned decklist by id, for the owner-only deck detail and primer
+ * pages. Returns `null` when the id doesn't correspond to a deck the user
+ * owns (404).
+ */
+export function useOwnedDecklist(listId: Ref<string | null | undefined>) {
+  const supabase = process.server ? null : useSupabase();
+  const { userProfile } = useUserProfile();
+  const config = useRuntimeConfig();
+
+  const { data, isLoading, error, refetch } = useQuery({
+queryKey: computed(
+      () =>
+        [
+          'user-lists',
+          'owned',
+          userProfile.value?.id,
+          listId.value,
+        ] as const,
+    ),
+    queryFn: async () => {
+      const { data: sessionData } = await supabase!.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error('No authentication token available');
+      const response = await fetch(
+        `${config.public.backendUrl}/supabase/card-lists/mine/${encodeURIComponent(listId.value!)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (response.status === 404) return null;
+      if (!response.ok) {
+        throw new Error(`Failed to load decklist (${response.status})`);
+      }
+      return GetOwnedDecklistResponseSchema.parse(await response.json());
+    },
+    enabled: computed(
+      () => !process.server && !!userProfile.value?.id && !!listId.value,
+    ),
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });
+
+  return {
+    decklist: computed(() => data.value?.decklist ?? null),
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+// Backend returns 400 on write endpoints when the resulting row count would
+// exceed the per-decklist cap. Only 400 the add-cards endpoints ever emit.
+function throwIfDeckCapExceeded(err: unknown): void {
+  if ((err as { status?: number })?.status === 400) {
+    throw new Error(`Cannot exceed ${MAX_DECKLIST_CARDS} cards per deck list`);
+  }
+}
+
+export const useCardLists = () => {
+  const supabase = process.server ? null : useSupabase();
+  const { userProfile } = useUserProfile();
+  const queryClient = useQueryClient();
+  const config = useRuntimeConfig();
 
   const createList = async (
     name: string,
@@ -137,26 +271,30 @@ export const useCardLists = () => {
     }
 
     const config = useRuntimeConfig();
-    const response = await $fetch<{
-      addedCount: number;
-      updatedCount: number;
-      invalidOracleIds: string[];
-    }>(
-      `${config.public.backendUrl}/supabase/card-lists/add-cards-by-oracle-id`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      const response = await $fetch<{
+        addedCount: number;
+        updatedCount: number;
+        invalidOracleIds: string[];
+      }>(
+        `${config.public.backendUrl}/supabase/card-lists/add-cards-by-oracle-id`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: {
+            listId,
+            oracleIds,
+            ...(board ? { board } : {}),
+          },
         },
-        body: {
-          listId,
-          oracleIds,
-          ...(board ? { board } : {}),
-        },
-      },
-    );
-
-    return response;
+      );
+      return response;
+    } catch (err) {
+      throwIfDeckCapExceeded(err);
+      throw err;
+    }
   };
 
   const addCardsToListMutation = useMutation({
@@ -201,23 +339,27 @@ export const useCardLists = () => {
     }
 
     const config = useRuntimeConfig();
-    const response = await $fetch<{
-      addedCount: number;
-      updatedCount: number;
-      invalidCardNames: string[];
-      message?: string;
-    }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-name`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: {
-        listId,
-        cardNames,
-      },
-    });
-
-    return response;
+    try {
+      const response = await $fetch<{
+        addedCount: number;
+        updatedCount: number;
+        invalidCardNames: string[];
+        message?: string;
+      }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-name`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          listId,
+          cardNames,
+        },
+      });
+      return response;
+    } catch (err) {
+      throwIfDeckCapExceeded(err);
+      throw err;
+    }
   };
 
   const addCardsByNameToListMutation = useMutation({
@@ -256,18 +398,22 @@ export const useCardLists = () => {
     }
 
     const config = useRuntimeConfig();
-    const response = await $fetch<BulkEditResponse>(
-      `${config.public.backendUrl}/supabase/card-lists/bulk-edit`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      const response = await $fetch<BulkEditResponse>(
+        `${config.public.backendUrl}/supabase/card-lists/bulk-edit`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: request,
         },
-        body: request,
-      },
-    );
-
-    return response;
+      );
+      return response;
+    } catch (err) {
+      throwIfDeckCapExceeded(err);
+      throw err;
+    }
   };
 
   const bulkEditListMutation = useMutation({
@@ -830,12 +976,6 @@ export const useCardLists = () => {
   });
 
   return {
-    // Query data and states
-    userLists,
-    isLoadingLists,
-    listsError,
-    refetchLists,
-
     // Mutations
     createListMutation,
     addCardsToListMutation,

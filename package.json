@@ -35,6 +35,7 @@
     "dotenv": "^16.6.1",
     "mana-font": "^1.18.0",
     "marked": "^18.0.9",
+    "node-emoji": "^2.2.0",
     "nuxt": "^3.21.11",
     "nuxt-vitalizer": "^0.10.0",
     "vee-validate": "^4.15.1",

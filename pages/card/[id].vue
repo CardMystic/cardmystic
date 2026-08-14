@@ -866,6 +866,7 @@ import {
   getLegalityColor,
   standardizeFormatName,
 } from '@/utils/scryfall';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 
 const route = useRoute();
 const router = useRouter();
@@ -1039,7 +1040,7 @@ useHead({
       type: 'application/ld+json',
       innerHTML: () => {
         if (!card.value) return '';
-        return JSON.stringify({
+        return safeJsonLd({
           '@context': 'https://schema.org',
           '@type': 'WebPage',
           name: card.value.name,
@@ -1077,8 +1078,7 @@ onMounted(() => {
         saveCardViewMutation.mutate(newCard.oracle_id);
         // Detect origin from route history
         const referrer = router.options.history.state?.back as
-          | string
-          | undefined;
+          string | undefined;
         const origin =
           referrer &&
           (referrer.startsWith('/popular-cards') ||

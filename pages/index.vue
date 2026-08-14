@@ -83,6 +83,8 @@
 
     <LazyFeaturedSection class="mb-14" />
 
+    <LazyRecentArticles class="mb-14" />
+
     <LazyQueryCount class="mb-14"></LazyQueryCount>
 
     <!-- How To Use & How It Works Section -->

@@ -4,15 +4,25 @@ definePageMeta({
   layout: 'fullscreen',
 });
 
-import { useFollows, useAccountStats } from '~/composables/useFollows';
+import {
+  useFollows,
+  useFollowingList,
+  useAccountStats,
+} from '~/composables/useFollows';
 import { useToast } from '#imports';
 import { formatShortDate } from '~/utils/dateFormatter';
 
 const toast = useToast();
 const route = useRoute();
 const router = useRouter();
-const { following, isLoadingFollowing, setFollow, isSettingFollow } =
-  useFollows();
+const { setFollow, isSettingFollow } = useFollows();
+const {
+  following,
+  isLoadingFollowing,
+  isFetchingNextPage,
+  fetchNextPage,
+  hasNextPage,
+} = useFollowingList();
 const { stats, isLoading: isLoadingStats } = useAccountStats();
 
 // Patreon redirects back here with ?patreon=connected|error after the OAuth flow.
@@ -79,19 +89,9 @@ const handleUnfollow = async (userId: string) => {
 };
 
 // ---------------------------------------------------------------------------
-// Following list: the backend returns the full list in one response, so we
-// render it incrementally inside a fixed-height scroll container. A sentinel
-// at the bottom reveals the next chunk when scrolled into view.
+// Following list: cursor-paginated by the backend. The scroll container has a
+// sentinel at the bottom that triggers fetchNextPage when scrolled into view.
 // ---------------------------------------------------------------------------
-const FOLLOWING_CHUNK_SIZE = 20;
-const visibleFollowingCount = ref(FOLLOWING_CHUNK_SIZE);
-const visibleFollowing = computed(() =>
-  following.value.slice(0, visibleFollowingCount.value),
-);
-const hasMoreFollowing = computed(
-  () => visibleFollowingCount.value < following.value.length,
-);
-
 const followingScrollRef = ref<HTMLElement | null>(null);
 const followingSentinelRef = ref<HTMLElement | null>(null);
 let followingObserver: IntersectionObserver | null = null;
@@ -101,8 +101,12 @@ function setupFollowingObserver() {
   if (!followingSentinelRef.value) return;
   followingObserver = new IntersectionObserver(
     (entries) => {
-      if (entries[0]?.isIntersecting && hasMoreFollowing.value) {
-        visibleFollowingCount.value += FOLLOWING_CHUNK_SIZE;
+      if (
+        entries[0]?.isIntersecting &&
+        hasNextPage.value &&
+        !isFetchingNextPage.value
+      ) {
+        fetchNextPage();
       }
     },
     { root: followingScrollRef.value, rootMargin: '100px' },
@@ -175,8 +179,11 @@ onBeforeUnmount(() => followingObserver?.disconnect());
               Following
             </h2>
             <ClientOnly>
-              <span v-if="following.length > 0" class="text-sm opacity-70">
-                {{ following.length }}
+              <span
+                v-if="stats?.followingCount && stats.followingCount > 0"
+                class="text-sm opacity-70"
+              >
+                {{ stats.followingCount }}
               </span>
             </ClientOnly>
           </div>
@@ -202,7 +209,7 @@ onBeforeUnmount(() => followingObserver?.disconnect());
               class="space-y-2 max-h-104 lg:max-h-none lg:flex-1 min-h-0 overflow-y-auto pr-1"
             >
               <div
-                v-for="user in visibleFollowing"
+                v-for="user in following"
                 :key="user.id"
                 class="flex items-center gap-2"
               >
@@ -217,9 +224,9 @@ onBeforeUnmount(() => followingObserver?.disconnect());
                   @click="handleUnfollow(user.id)"
                 />
               </div>
-              <!-- Sentinel: reveals the next chunk when scrolled into view -->
+              <!-- Sentinel: fetches the next page when scrolled into view -->
               <div
-                v-if="hasMoreFollowing"
+                v-if="hasNextPage"
                 ref="followingSentinelRef"
                 class="flex justify-center py-2"
               >
