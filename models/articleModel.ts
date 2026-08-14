@@ -121,7 +121,9 @@ export type GetMyArticlesQuery = z.infer<typeof GetMyArticlesQuerySchema>;
 export const GetMyArticlesResponseSchema = z.object({
   articles: z
     .array(ArticleSummarySchema)
-    .describe("All of the authenticated author's articles, drafts included"),
+    .describe(
+      "The authenticated author's articles for the requested page, drafts included",
+    ),
   ...PaginationInfoSchema.shape,
 });
 
