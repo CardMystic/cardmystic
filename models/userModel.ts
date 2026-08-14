@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DecklistSummarySchema } from './cardListModel';
+import { PaginationInfoSchema, PaginationQuerySchema } from './paginationModel';
 
 // Password policy: at least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
 export const SignUpSchema = z.object({
@@ -70,31 +71,14 @@ export const SearchUsersQuerySchema = z.object({
     .min(1)
     .max(100)
     .describe('Search keywords matched against display name'),
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(200)
-    .default(50)
-    .describe('Maximum number of users to return (default 50, max 200)'),
-  cursor: z
-    .uuid()
-    .optional()
-    .describe(
-      'Profile ID of the last entry from the previous page (omit for first page)',
-    ),
+  ...PaginationQuerySchema.shape,
 });
 
 export type SearchUsersQuery = z.infer<typeof SearchUsersQuerySchema>;
 
 export const SearchUsersResponseSchema = z.object({
   users: z.array(PublicProfileSchema),
-  nextCursor: z
-    .uuid()
-    .nullable()
-    .describe(
-      'Profile ID to pass as cursor for the next page, or null if no more results',
-    ),
+  ...PaginationInfoSchema.shape,
 });
 
 export type SearchUsersResponse = z.infer<typeof SearchUsersResponseSchema>;
@@ -132,10 +116,42 @@ export const FollowUserResponseSchema = z.object({
 
 export type FollowUserResponse = z.infer<typeof FollowUserResponseSchema>;
 
+export const FollowStatusResponseSchema = z.object({
+  following: z
+    .boolean()
+    .describe('Whether the authenticated user follows the target user'),
+});
+
+export type FollowStatusResponse = z.infer<typeof FollowStatusResponseSchema>;
+
+export const GetFollowingQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(25)
+    .describe(
+      'Maximum number of followed users per page (default 25, max 100)',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe(
+      'Opaque pagination cursor from the previous page (omit for first page)',
+    ),
+});
+
+export type GetFollowingQuery = z.infer<typeof GetFollowingQuerySchema>;
+
 export const GetFollowingResponseSchema = z.object({
   users: z
     .array(PublicProfileSchema)
     .describe('Profiles the authenticated user follows, newest first'),
+  nextCursor: z
+    .string()
+    .nullable()
+    .describe('Cursor for the next page, or null if no more follows'),
 });
 
 export type GetFollowingResponse = z.infer<typeof GetFollowingResponseSchema>;

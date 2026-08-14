@@ -47,16 +47,12 @@
       />
     </div>
 
-    <!-- Infinite scroll sentinel + loading spinner -->
-    <div
-      v-if="decklists.length > 0 && hasNextPage"
-      ref="sentinelRef"
-      class="flex justify-center py-6"
-    >
-      <UIcon
-        v-if="isFetchingNextPage"
-        name="i-lucide-loader-2"
-        class="text-3xl animate-spin opacity-60"
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="mt-6 flex justify-center">
+      <UPagination
+        v-model:page="page"
+        :total="totalCount"
+        :items-per-page="pageSize"
       />
     </div>
 
@@ -121,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   useDecklistSearch,
@@ -146,15 +142,16 @@ const router = useRouter();
 const initialQuery = String(route.query.query ?? '');
 const searchInput = ref(initialQuery);
 const debouncedQuery = refDebounced(searchInput, 300);
+const pageSize = 50;
+const page = ref(1);
 
-const {
-  decklists,
-  isLoading,
-  isFetchingNextPage,
-  error,
-  fetchNextPage,
-  hasNextPage,
-} = useDecklistSearch(debouncedQuery);
+// Reset to page 1 whenever the query changes so users see the top matches.
+watch(debouncedQuery, () => {
+  page.value = 1;
+});
+
+const { decklists, totalCount, totalPages, isLoading, error } =
+  useDecklistSearch(debouncedQuery, page, pageSize);
 
 const hasSearched = computed(() => debouncedQuery.value.trim().length > 0);
 
@@ -178,32 +175,6 @@ watch(debouncedQuery, (value) => {
     query: { ...route.query, query: trimmed || undefined },
   });
 });
-
-// Infinite scroll via IntersectionObserver: checks when the sentinel comes into view
-const sentinelRef = ref<HTMLElement | null>(null);
-let observer: IntersectionObserver | null = null;
-
-function setupObserver() {
-  if (!sentinelRef.value) return;
-  observer?.disconnect();
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (
-        entries[0]?.isIntersecting &&
-        hasNextPage.value &&
-        !isFetchingNextPage.value
-      ) {
-        fetchNextPage();
-      }
-    },
-    { rootMargin: '200px' },
-  );
-  observer.observe(sentinelRef.value);
-}
-
-watch(sentinelRef, () => setupObserver());
-onMounted(() => setupObserver());
-onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <style scoped lang="sass">

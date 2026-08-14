@@ -256,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-import { useCardLists } from '~/composables/useCardLists';
+import { useCardLists, useOwnedDecklist } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
 import { useDecklistViewTracker } from '~/composables/useDecklistSocial';
 import { usePrimer } from '~/composables/usePrimer';
@@ -273,8 +273,6 @@ const listId = route.params.id as string;
 const toast = useToast();
 
 const {
-  userLists,
-  isLoadingLists,
   useListItems,
   useListCards,
   removeCardFromListMutation,
@@ -289,13 +287,11 @@ const {
 const router = useRouter();
 const { saveSearchMutation } = useSearchHistory();
 
-// Try to find the list in the user's own lists first
-const ownedList = computed(() =>
-  userLists.value?.decklists?.find((l: any) => l.id === listId),
-);
-
-// Fall back to the public endpoint when the list isn't owned by the user
+// Try to load the list as owned first; the composable returns null on 404
+// so we can fall back to the public endpoint cleanly.
 const listIdRef = computed(() => listId);
+const { decklist: ownedList, isLoading: isLoadingLists } =
+  useOwnedDecklist(listIdRef);
 const {
   decklist: publicDecklist,
   items: publicItems,

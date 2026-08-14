@@ -1,9 +1,4 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/vue-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref, watch, type Ref } from 'vue';
 import { useSupabase } from './useSupabase';
 import {
@@ -54,30 +49,26 @@ export function useRecentArticles(limit = 3) {
 }
 
 /**
- * Keyword search over published article titles/descriptions with
- * cursor-based infinite scrolling. The query string is debounced by the
- * caller.
+ * Keyword search over published article titles/descriptions with 1-indexed
+ * offset pagination. The query string is debounced by the caller.
  */
-export function useArticleSearch(query: Ref<string>, limit = 20) {
+export function useArticleSearch(
+  query: Ref<string>,
+  page: Ref<number>,
+  pageSize = 50,
+) {
   const config = useRuntimeConfig();
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isFetchingNextPage,
-    error,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery(() => ({
-    queryKey: ['articles', 'search', query.value, limit] as const,
-    queryFn: async ({ pageParam }) => {
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () => ['articles', 'search', query.value, page.value, pageSize] as const,
+    ),
+    queryFn: async () => {
       const params = new URLSearchParams({
         query: query.value.trim(),
-        limit: String(limit),
+        page: String(page.value),
+        pageSize: String(pageSize),
       });
-      if (pageParam) params.set('cursor', pageParam);
       const response = await fetch(
         `${config.public.backendUrl}/articles/search?${params}`,
       );
@@ -86,38 +77,46 @@ export function useArticleSearch(query: Ref<string>, limit = 20) {
       }
       return SearchArticlesResponseSchema.parse(await response.json());
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: query.value.trim().length > 0,
+    enabled: computed(() => query.value.trim().length > 0),
     staleTime: 1000 * 30,
     refetchOnWindowFocus: false,
-  }));
+  });
 
   return {
-    articles: computed(
-      () => data.value?.pages.flatMap((p) => p.articles) ?? [],
-    ),
+    articles: computed(() => data.value?.articles ?? []),
+    totalCount: computed(() => data.value?.totalCount ?? 0),
+    totalPages: computed(() => data.value?.totalPages ?? 1),
     isLoading,
     isFetching,
-    isFetchingNextPage,
     error,
     refetch,
-    fetchNextPage,
-    hasNextPage,
   };
 }
 
-/** All of the authenticated author's articles, drafts included. */
-export function useMyArticles(enabled: Ref<boolean> | boolean = true) {
+/**
+ * All of the authenticated author's articles, drafts included, with
+ * 1-indexed offset pagination.
+ */
+export function useMyArticles(
+  page: Ref<number>,
+  enabled: Ref<boolean> | boolean = true,
+  pageSize = 50,
+) {
   const supabase = process.server ? null : useSupabase();
   const config = useRuntimeConfig();
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['articles', 'mine'],
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () => ['articles', 'mine', page.value, pageSize] as const,
+    ),
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
+      const params = new URLSearchParams({
+        page: String(page.value),
+        pageSize: String(pageSize),
+      });
       const response = await fetch(
-        `${config.public.backendUrl}/articles/mine`,
+        `${config.public.backendUrl}/articles/mine?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -135,7 +134,10 @@ export function useMyArticles(enabled: Ref<boolean> | boolean = true) {
 
   return {
     articles: computed(() => data.value?.articles ?? []),
+    totalCount: computed(() => data.value?.totalCount ?? 0),
+    totalPages: computed(() => data.value?.totalPages ?? 1),
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -143,18 +145,29 @@ export function useMyArticles(enabled: Ref<boolean> | boolean = true) {
 
 /**
  * Published articles the authenticated user has liked, most recently liked
- * first. Requires a logged-in session — disabled during SSR.
+ * first, with 1-indexed offset pagination. Requires a logged-in session —
+ * disabled during SSR.
  */
-export function useLikedArticles(enabled: Ref<boolean> | boolean = true) {
+export function useLikedArticles(
+  page: Ref<number>,
+  enabled: Ref<boolean> | boolean = true,
+  pageSize = 50,
+) {
   const supabase = process.server ? null : useSupabase();
   const config = useRuntimeConfig();
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['articles', 'liked'],
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: computed(
+      () => ['articles', 'liked', page.value, pageSize] as const,
+    ),
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
+      const params = new URLSearchParams({
+        page: String(page.value),
+        pageSize: String(pageSize),
+      });
       const response = await fetch(
-        `${config.public.backendUrl}/articles/liked`,
+        `${config.public.backendUrl}/articles/liked?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -174,7 +187,10 @@ export function useLikedArticles(enabled: Ref<boolean> | boolean = true) {
 
   return {
     articles: computed(() => data.value?.articles ?? []),
+    totalCount: computed(() => data.value?.totalCount ?? 0),
+    totalPages: computed(() => data.value?.totalPages ?? 1),
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -211,8 +227,7 @@ export function useArticle(articleId: Ref<string | null | undefined>) {
     },
     enabled: computed(() => !!articleId.value),
     staleTime: 1000 * 60 * 5,
-    refetchOnMount: (query) =>
-      query.state.data === null ? 'always' : false,
+    refetchOnMount: (query) => (query.state.data === null ? 'always' : false),
     refetchOnWindowFocus: false,
   });
 
@@ -262,6 +277,7 @@ export function useArticleMutations() {
 
   const invalidateArticleCaches = (articleId?: string) => {
     queryClient.invalidateQueries({ queryKey: ['articles', 'mine'] });
+    queryClient.invalidateQueries({ queryKey: ['articles', 'liked'] });
     queryClient.invalidateQueries({ queryKey: ['articles', 'recent'] });
     queryClient.invalidateQueries({ queryKey: ['articles', 'search'] });
     if (articleId) {
@@ -325,7 +341,11 @@ export function useArticleMutations() {
         `${config.public.backendUrl}/articles/${encodeURIComponent(articleId)}`,
         {
           method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
         },
       );
       if (!response.ok) {

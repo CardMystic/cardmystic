@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query';
-import { useCardLists } from '~/composables/useCardLists';
+import { useOwnedDecklist } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
 import { usePrimer } from '~/composables/usePrimer';
 import { useSupabase } from '~/composables/useSupabase';
@@ -50,16 +50,13 @@ const config = useRuntimeConfig();
 const supabase = useSupabase();
 const queryClient = useQueryClient();
 
-const { userLists, isLoadingLists } = useCardLists();
-
-const ownedList = computed(
-  () => userLists.value?.decklists?.find((l: any) => l.id === listId) ?? null,
-);
+const listIdRef = computed(() => listId);
+const { decklist: ownedList, isLoading: isLoadingLists } =
+  useOwnedDecklist(listIdRef);
 
 // Non-owners viewing a public primer still get the deck metadata (name,
 // commanders, avatar art) so the primer page can render rich SEO/social
 // previews. usePublicDecklist is a no-op for private decks.
-const listIdRef = computed(() => listId);
 const { decklist: publicDecklist } = usePublicDecklist(listIdRef);
 
 const list = computed(() => ownedList.value ?? publicDecklist.value ?? null);

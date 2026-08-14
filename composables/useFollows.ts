@@ -1,11 +1,17 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { computed } from 'vue';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/vue-query';
+import { computed, type Ref } from 'vue';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
 import {
+  FollowStatusResponseSchema,
   FollowUserResponseSchema,
-  GetFollowingResponseSchema,
   GetAccountStatsResponseSchema,
+  GetFollowingResponseSchema,
 } from '~/models/userModel';
 
 /** Returns the current Supabase access token, or throws when logged out. */
@@ -20,8 +26,9 @@ async function getAuthToken(
 
 /**
  * The users the authenticated user follows, plus follow/unfollow mutations.
+ * The list is cursor-paginated for infinite scroll (25 per page by default).
  */
-export function useFollows() {
+export function useFollows(limit = 25) {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
@@ -32,13 +39,18 @@ export function useFollows() {
   const {
     data,
     isLoading: isLoadingFollowing,
+    isFetchingNextPage,
     error: followingError,
-  } = useQuery({
-    queryKey: ['following', computed(() => userProfile.value?.id)],
-    queryFn: async () => {
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(() => ({
+    queryKey: ['following', userProfile.value?.id, limit] as const,
+    queryFn: async ({ pageParam }) => {
       const token = await getAuthToken(supabase!);
+      const params = new URLSearchParams({ limit: String(limit) });
+      if (pageParam) params.set('cursor', pageParam);
       const response = await fetch(
-        `${config.public.backendUrl}/user/following`,
+        `${config.public.backendUrl}/user/following?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -46,15 +58,16 @@ export function useFollows() {
       }
       return GetFollowingResponseSchema.parse(await response.json());
     },
-    enabled: computed(() => !process.server && !!userProfile.value?.id),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: !process.server && !!userProfile.value?.id,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-  });
+  }));
 
-  const following = computed(() => data.value?.users ?? []);
-
-  const isFollowing = (userId: string) =>
-    following.value.some((u) => u.id === userId);
+  const following = computed(
+    () => data.value?.pages.flatMap((p) => p.users) ?? [],
+  );
 
   const setFollowMutation = useMutation({
     mutationFn: async ({
@@ -69,7 +82,11 @@ export function useFollows() {
         `${config.public.backendUrl}/user/follow/${encodeURIComponent(userId)}`,
         {
           method: follow ? 'POST' : 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
         },
       );
       if (!response.ok) {
@@ -79,8 +96,8 @@ export function useFollows() {
     },
     onSuccess: (_result, { userId }) => {
       queryClient.invalidateQueries({ queryKey: ['following'] });
+      queryClient.invalidateQueries({ queryKey: ['follow-status', userId] });
       queryClient.invalidateQueries({ queryKey: ['account-stats'] });
-      // Follower count is shown on the public profile page
       queryClient.invalidateQueries({
         queryKey: ['discovery', 'public-profile', userId],
       });
@@ -90,12 +107,51 @@ export function useFollows() {
   return {
     isLoggedIn,
     following,
-    isFollowing,
     isLoadingFollowing,
+    isFetchingNextPage,
     followingError,
+    fetchNextPage,
+    hasNextPage,
     setFollow: (userId: string, follow: boolean) =>
       setFollowMutation.mutateAsync({ userId, follow }),
     isSettingFollow: computed(() => setFollowMutation.isPending.value),
+  };
+}
+
+/**
+ * Cheap boolean check for whether the authenticated user follows a given
+ * target user. Powers the FollowButton without pulling the full following
+ * list. Cached per userId so multiple buttons on a page share the request.
+ */
+export function useFollowStatus(userId: Ref<string | null | undefined>) {
+  const supabase = process.server ? null : useSupabase();
+  const { userProfile } = useUserProfile();
+  const config = useRuntimeConfig();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: computed(() => ['follow-status', userId.value] as const),
+    queryFn: async () => {
+      const token = await getAuthToken(supabase!);
+      const response = await fetch(
+        `${config.public.backendUrl}/user/follow-status/${encodeURIComponent(userId.value!)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to load follow status (${response.status})`);
+      }
+      return FollowStatusResponseSchema.parse(await response.json());
+    },
+    enabled: computed(
+      () => !process.server && !!userProfile.value?.id && !!userId.value,
+    ),
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    following: computed(() => data.value?.following ?? false),
+    isLoading,
+    error,
   };
 }
 
