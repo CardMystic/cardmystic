@@ -17,8 +17,12 @@ const colorMode = useColorMode();
 const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_black.webp';
 });
-const { userProfile, profileIconUrl, username, signOut, loading } =
+const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
   useUserProfile();
+const isAuthor = computed(() => !!profileData.value?.is_author);
+const articlesNavLabel = computed(() =>
+  isAuthor.value ? 'My Articles' : 'Liked Articles',
+);
 const router = useRouter();
 
 const handleLogout = async () => {
@@ -94,6 +98,12 @@ const searchItems: NavigationMenuItem[] = [
         to: '/explore/users',
       },
       {
+        label: 'Search Articles',
+        description: 'Read articles written by the community',
+        icon: 'i-lucide-newspaper',
+        to: '/explore/articles',
+      },
+      {
         label: 'Popular Commander Cards',
         description: 'Top cards across all commander decks',
         icon: 'i-lucide-chart-no-axes-combined',
@@ -165,6 +175,12 @@ const mainItemsMobile: NavigationMenuItem[] = [
     description: 'Find other CardMystic users',
     icon: 'i-lucide-user-search',
     to: '/explore/users',
+  },
+  {
+    label: 'Search Articles',
+    description: 'Read articles written by the community',
+    icon: 'i-lucide-newspaper',
+    to: '/explore/articles',
   },
   {
     label: 'Popular Commander Cards',
@@ -331,6 +347,18 @@ const externalItems: NavigationMenuItem[] = [
                   block
                   @click="
                     router.push('/user/history');
+                    isMobileProfilePopoverOpen = false;
+                  "
+                />
+                <UButton
+                  class="cursor-pointer"
+                  icon="i-lucide-newspaper"
+                  color="neutral"
+                  variant="ghost"
+                  :label="articlesNavLabel"
+                  block
+                  @click="
+                    router.push('/articles/mine');
                     isMobileProfilePopoverOpen = false;
                   "
                 />
@@ -510,6 +538,18 @@ const externalItems: NavigationMenuItem[] = [
                 block
                 @click="
                   router.push('/user/history');
+                  isDesktopProfilePopoverOpen = false;
+                "
+              />
+              <UButton
+                class="cursor-pointer"
+                icon="i-lucide-newspaper"
+                color="neutral"
+                variant="ghost"
+                :label="articlesNavLabel"
+                block
+                @click="
+                  router.push('/articles/mine');
                   isDesktopProfilePopoverOpen = false;
                 "
               />

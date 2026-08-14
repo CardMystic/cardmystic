@@ -1,6 +1,6 @@
 <template>
   <div
-    class="mx-auto py-8 relative z-10"
+    class="mx-auto py-8 relative z-10 w-full"
     :class="{ 'pb-24': showStickyFooter }"
   >
     <!-- Page Background Image (blurred, behind all content) -->
@@ -256,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-import { useCardLists } from '~/composables/useCardLists';
+import { useCardLists, useOwnedDecklist } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
 import { useDecklistViewTracker } from '~/composables/useDecklistSocial';
 import { usePrimer } from '~/composables/usePrimer';
@@ -265,6 +265,7 @@ import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
 import { refDebounced } from '~/utils/refDebounced';
 import { groupAndSortCards } from '~/utils/sort';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 import type { Card } from '~/models/cardModel';
 
 const route = useRoute();
@@ -272,8 +273,6 @@ const listId = route.params.id as string;
 const toast = useToast();
 
 const {
-  userLists,
-  isLoadingLists,
   useListItems,
   useListCards,
   removeCardFromListMutation,
@@ -288,13 +287,11 @@ const {
 const router = useRouter();
 const { saveSearchMutation } = useSearchHistory();
 
-// Try to find the list in the user's own lists first
-const ownedList = computed(() =>
-  userLists.value?.decklists?.find((l: any) => l.id === listId),
-);
-
-// Fall back to the public endpoint when the list isn't owned by the user
+// Try to load the list as owned first; the composable returns null on 404
+// so we can fall back to the public endpoint cleanly.
 const listIdRef = computed(() => listId);
+const { decklist: ownedList, isLoading: isLoadingLists } =
+  useOwnedDecklist(listIdRef);
 const {
   decklist: publicDecklist,
   items: publicItems,
@@ -321,6 +318,117 @@ const bannerImageUrl = computed(() => {
   const cardName = list.value?.avatar_card_name;
   if (!cardName) return null;
   return scryfallArtCropUrl(cardName);
+});
+
+// ---- SEO ----
+const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
+const canonicalUrl = computed(() => `https://cardmystic.com/lists/${listId}`);
+
+const isPublicList = computed(() => list.value?.visibility === 'public');
+
+const seoTitle = computed(() => {
+  if (!list.value) return 'Decklist | CardMystic';
+  return `${list.value.name || 'Untitled deck'} | MTG Decklist | CardMystic`;
+});
+
+// Description prefers the author-provided one, then falls back to a
+// synthesized "format + commander(s) + author" line so every public deck
+// still ships something useful for search snippets and social previews.
+const seoDescription = computed(() => {
+  if (!list.value) {
+    return 'Explore Magic: The Gathering decklists shared by the CardMystic community.';
+  }
+  const desc = list.value.description?.trim?.();
+  if (desc) return desc;
+  const parts: string[] = [];
+  if (list.value.format) parts.push(list.value.format);
+  const cmds = (list.value.commanders as string[] | undefined) ?? [];
+  if (cmds.length) parts.push(`led by ${cmds.join(' & ')}`);
+  const owner = (list.value as any).username || decklistOwner.value?.username;
+  if (owner) parts.push(`built by ${owner}`);
+  const prefix = list.value.name || 'MTG decklist';
+  return parts.length
+    ? `${prefix} — ${parts.join(', ')}. View the full decklist on CardMystic.`
+    : `${prefix}. View the full decklist on CardMystic.`;
+});
+
+const seoImage = computed(() => bannerImageUrl.value || FALLBACK_OG_IMAGE);
+
+// Private lists must not be indexed. Public lists opt into indexing so
+// deck pages can be discovered from search.
+const seoRobots = computed(() =>
+  isPublicList.value ? 'index, follow' : 'noindex, nofollow',
+);
+
+useSeoMeta({
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  robots: () => seoRobots.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogType: 'article',
+  ogUrl: () => canonicalUrl.value,
+  ogImage: () => seoImage.value,
+  ogImageAlt: () =>
+    list.value
+      ? `Art for ${list.value.name || 'Untitled deck'}`
+      : 'CardMystic decklist',
+  ogSiteName: 'CardMystic',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
+});
+
+useHead({
+  link: [{ rel: 'canonical', href: () => canonicalUrl.value }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: () => {
+        if (!list.value || !isPublicList.value) return '';
+        const author =
+          (list.value as any).username || decklistOwner.value?.username;
+        const authorId = (list.value as any).user_id || decklistOwner.value?.id;
+        return safeJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'CreativeWork',
+          name: list.value.name || 'Untitled deck',
+          description: seoDescription.value,
+          image: seoImage.value,
+          url: canonicalUrl.value,
+          genre: 'Magic: The Gathering deck',
+          dateModified: (list.value as any).updated_at ?? undefined,
+          dateCreated: (list.value as any).created_at ?? undefined,
+          author: author
+            ? {
+                '@type': 'Person',
+                name: author,
+                url: authorId
+                  ? `https://cardmystic.com/user/${authorId}`
+                  : undefined,
+              }
+            : undefined,
+          about: {
+            '@type': 'Game',
+            name: 'Magic: The Gathering',
+            publisher: {
+              '@type': 'Organization',
+              name: 'Wizards of the Coast',
+            },
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'CardMystic',
+          },
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': canonicalUrl.value,
+          },
+        });
+      },
+    },
+  ],
 });
 
 // Add card state

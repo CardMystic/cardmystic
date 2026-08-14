@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col grow min-h-0 gap-3 pb-16">
+  <div class="flex flex-col grow min-h-0 gap-3 pb-0">
     <!-- Mode toggle / action bar -->
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-2">
@@ -99,6 +99,29 @@
             />
           </UTooltip>
         </template>
+        <div
+          class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
+        />
+        <UPopover
+          v-model:open="emojiPickerOpen"
+          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+        >
+          <UButton
+            icon="i-lucide-smile"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            class="cursor-pointer"
+            aria-label="Insert emoji"
+          />
+          <template #content>
+            <EmojiPickerPanel
+              v-model:search="emojiSearchTerm"
+              :emojis="emojiResults"
+              @select="insertEmojiShortcode"
+            />
+          </template>
+        </UPopover>
       </div>
 
       <div
@@ -116,7 +139,7 @@
         <textarea
           ref="textareaRef"
           v-model="draft"
-          placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
+          :placeholder="placeholder"
           class="editor-textarea"
           spellcheck="true"
           @scroll="syncHighlightScroll"
@@ -156,6 +179,29 @@
               />
             </UTooltip>
           </template>
+          <div
+            class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
+          />
+          <UPopover
+            v-model:open="emojiPickerOpen"
+            :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+          >
+            <UButton
+              icon="i-lucide-smile"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              aria-label="Insert emoji"
+            />
+            <template #content>
+              <EmojiPickerPanel
+                v-model:search="emojiSearchTerm"
+                :emojis="emojiResults"
+                @select="insertEmojiShortcode"
+              />
+            </template>
+          </UPopover>
         </div>
 
         <div
@@ -190,6 +236,8 @@
       <div
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 p-6 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 overflow-y-auto"
+        @mousemove="onPreviewMouseMove"
+        @mouseleave="onPreviewMouseLeave"
       >
         <div v-if="renderedHtml" v-html="renderedHtml"></div>
         <p
@@ -204,14 +252,22 @@
     <!-- Preview-only mode -->
     <div
       v-else
-      class="primer-preview grow min-h-0 overflow-y-auto p-6 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950"
+      :class="[
+        'primer-preview grow min-h-0 overflow-y-auto p-6',
+        {
+          'rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950':
+            hasBackground,
+        },
+      ]"
+      @mousemove="onPreviewMouseMove"
+      @mouseleave="onPreviewMouseLeave"
     >
       <div v-if="renderedHtml" v-html="renderedHtml"></div>
       <p
         v-else
         class="text-gray-500 dark:text-gray-400 italic text-center py-8"
       >
-        No primer has been written yet.
+        {{ emptyMessage }}
       </p>
     </div>
 
@@ -259,18 +315,38 @@
 <script setup lang="ts">
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { emojify, search as searchEmoji } from 'node-emoji';
 import { useCardsByName } from '~/composables/useCards';
 import { getCardImageUrl } from '~/utils/scryfall';
 
-const props = defineProps<{
-  modelValue: string;
-  editable: boolean;
-  isSaving?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    modelValue: string;
+    editable: boolean;
+    isSaving?: boolean;
+    /** Message shown in preview mode when there is no content yet. */
+    emptyMessage?: string;
+    /** Placeholder text for the markdown editor textarea. */
+    placeholder?: string;
+    hasBackground?: boolean;
+    /**
+     * Async save callback. The editor only marks the draft clean and updates
+     * `lastSavedAt` after this resolves — any thrown/rejected error leaves the
+     * draft dirty so the user can retry and the unsaved-changes guard fires.
+     */
+    saveHandler?: (value: string) => void | Promise<void>;
+  }>(),
+  {
+    emptyMessage: 'No primer has been written yet.',
+    placeholder:
+      'Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported.',
+    hasBackground: true,
+    saveHandler: undefined,
+  },
+);
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
-  (e: 'save', value: string): void;
 }>();
 
 const mode = ref<'edit' | 'split' | 'preview'>(
@@ -414,13 +490,42 @@ function onEditorMouseLeave() {
   tokenPreview.value = null;
 }
 
+// --- Card token hover preview (rendered preview pane) ---
+// The preview pane is `overflow-y-auto`, which clips CSS-only tooltip
+// approaches. Reuse the teleported floating preview by hit-testing the
+// rendered `.card-inline-link` elements on mousemove.
+function onPreviewMouseMove(e: MouseEvent) {
+  const target = (e.target as HTMLElement | null)?.closest(
+    '.card-inline-link',
+  ) as HTMLElement | null;
+  if (!target) {
+    tokenPreview.value = null;
+    return;
+  }
+  const name = (target.textContent ?? '').trim();
+  const entry = cardImageMap.value.get(name.toLowerCase());
+  if (!entry) {
+    tokenPreview.value = null;
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
+  const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
+  const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
+  const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
+  tokenPreview.value = { imageUrl: entry.imageUrl, x, y };
+}
+
+function onPreviewMouseLeave() {
+  tokenPreview.value = null;
+}
+
 // --- Card embeds: ((Card Name)) and [[Card Name]] ---
 // Collect all unique card names referenced in the current preview source.
 const previewSource = computed(() => {
-  const src =
-    (mode.value === 'preview' || mode.value === 'split') && props.editable
-      ? draft.value
-      : props.modelValue;
+  // When editable, always read from the live draft so newly-typed tokens are
+  // resolved for hover previews even before switching to preview/split mode.
+  const src = props.editable ? draft.value : props.modelValue;
   return src ?? '';
 });
 
@@ -453,16 +558,27 @@ const cardImageMap = computed(() => {
 
 watch(
   () => props.modelValue,
-  (val) => {
-    if (val !== draft.value) draft.value = val;
+  (val, oldVal) => {
+    if (val === draft.value) return;
+    // Only accept the incoming snapshot if the draft still matches the
+    // previous one — otherwise the user has typed since (e.g. during an
+    // in-flight save) and their newer edits win, keeping the draft dirty.
+    if (draft.value === oldVal) draft.value = val;
   },
 );
 
 const isDirty = computed(() => draft.value !== props.modelValue);
 
-function handleSave() {
-  emit('update:modelValue', draft.value);
-  emit('save', draft.value);
+async function handleSave() {
+  const value = draft.value;
+  try {
+    await props.saveHandler?.(value);
+  } catch {
+    // Parent surfaces the error; keep the draft dirty so the user can retry
+    // and the unsaved-changes guard still fires.
+    return;
+  }
+  emit('update:modelValue', value);
   lastSavedAt.value = Date.now();
 }
 
@@ -493,9 +609,12 @@ const renderedHtml = computed(() => {
     return `CARDLINKTOKEN${i}CARDLINKTOKEN`;
   });
 
+  // Convert :shortcode: → unicode emoji after custom tokens are extracted
+  // so card names / URLs can never be misinterpreted as emoji names.
+  pre = emojify(pre);
+
   const html = marked.parse(pre, { async: false }) as string;
   const sanitized = DOMPurify.sanitize(html, {
-    // Allow style attributes so card-inline-link can carry --card-img CSS variable.
     ALLOWED_ATTR: [
       'href',
       'src',
@@ -505,7 +624,6 @@ const renderedHtml = computed(() => {
       'frameborder',
       'allowfullscreen',
       'class',
-      'style',
       'open',
     ],
     ADD_TAGS: ['details', 'summary', 'iframe'],
@@ -531,10 +649,7 @@ const renderedHtml = computed(() => {
     if (!name) return '';
     const entry = cardImageMap.value.get(name.toLowerCase());
     const href = entry ? `/card/${entry.oracleId}` : '#';
-    const styleAttr = entry
-      ? ` style="--card-img: url('${entry.imageUrl}')"`
-      : '';
-    return `<a class="card-inline-link" href="${href}"${styleAttr}>${name}</a>`;
+    return `<a class="card-inline-link" href="${href}">${name}</a>`;
   });
 
   return result;
@@ -576,6 +691,7 @@ function highlightMarkdown(src: string): string {
   add(/\(\([^)\n]+\)\)/g, 'tok-card-img');
   add(/\[\[[^\]\n]+\]\]/g, 'tok-card-link');
   add(/@\[youtube\]\([A-Za-z0-9_-]{11}\)/g, 'tok-youtube');
+  add(/:[a-z0-9_+-]+:/g, 'tok-emoji');
   add(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, 'tok-html');
   add(/!\[[^\]\n]*\]\([^)\n]+\)/g, 'tok-image');
   add(/\[[^\]\n]+\]\([^)\n]+\)/g, 'tok-link');
@@ -863,6 +979,123 @@ function insertAtCursor(text: string) {
     );
   });
 }
+
+// --- Emoji picker ---
+// Curated default set shown when the search box is empty. Users can search the
+// full node-emoji dataset by typing.
+interface EmojiEntry {
+  name: string;
+  emoji: string;
+}
+
+const emojiPickerOpen = ref(false);
+const emojiSearchTerm = ref('');
+
+const defaultEmojiNames = [
+  'grinning',
+  'smiley',
+  'smile',
+  'laughing',
+  'sweat_smile',
+  'joy',
+  'rofl',
+  'wink',
+  'blush',
+  'heart_eyes',
+  'star_struck',
+  'kissing_heart',
+  'yum',
+  'sunglasses',
+  'thinking',
+  'raised_eyebrow',
+  'neutral_face',
+  'roll_eyes',
+  'grimacing',
+  'sob',
+  'rage',
+  'exploding_head',
+  'skull',
+  'ghost',
+  '+1',
+  '-1',
+  'clap',
+  'raised_hands',
+  'pray',
+  'muscle',
+  'ok_hand',
+  'wave',
+  'point_right',
+  'point_left',
+  'eyes',
+  'brain',
+  'heart',
+  'orange_heart',
+  'yellow_heart',
+  'green_heart',
+  'blue_heart',
+  'purple_heart',
+  'black_heart',
+  'broken_heart',
+  'sparkling_heart',
+  'fire',
+  'sparkles',
+  '100',
+  'boom',
+  'zap',
+  'star',
+  'dizzy',
+  'crown',
+  'tada',
+  'confetti_ball',
+  'gift',
+  'trophy',
+  'medal_sports',
+  'game_die',
+  'jigsaw',
+  'crystal_ball',
+  'magic_wand',
+  'dragon',
+  'crossed_swords',
+  'shield',
+  'bow_and_arrow',
+  'white_check_mark',
+  'x',
+  'warning',
+  'question',
+  'exclamation',
+  'arrow_right',
+  'arrow_left',
+  'arrow_up',
+  'arrow_down',
+];
+
+const defaultEmojis = computed<EmojiEntry[]>(() => {
+  const out: EmojiEntry[] = [];
+  const seen = new Set<string>();
+  for (const name of defaultEmojiNames) {
+    const rendered = emojify(`:${name}:`);
+    // emojify returns the input unchanged if the shortcode is unknown.
+    if (rendered === `:${name}:` || seen.has(name)) continue;
+    seen.add(name);
+    out.push({ name, emoji: rendered });
+  }
+  return out;
+});
+
+const emojiResults = computed<EmojiEntry[]>(() => {
+  const term = emojiSearchTerm.value.trim().toLowerCase();
+  if (!term) return defaultEmojis.value;
+  const results = searchEmoji(term) as EmojiEntry[];
+  return results.slice(0, 96);
+});
+
+function insertEmojiShortcode(name: string) {
+  emojiPickerOpen.value = false;
+  emojiSearchTerm.value = '';
+  // Focus the textarea first so the shortcode is inserted at the caret.
+  textareaRef.value?.focus();
+  nextTick(() => insertAtCursor(`:${name}:`));
+}
 </script>
 
 <style scoped>
@@ -1004,27 +1237,6 @@ function insertAtCursor(text: string) {
   color: #3b82f6;
   text-decoration: underline;
   cursor: pointer;
-  position: relative;
-}
-.primer-preview :deep(.card-inline-link::after) {
-  content: '';
-  display: none;
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  width: 200px;
-  height: 279px;
-  background-image: var(--card-img);
-  background-size: cover;
-  background-position: center;
-  border-radius: 10px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-  z-index: 100;
-}
-.primer-preview :deep(.card-inline-link:hover::after) {
-  display: block;
 }
 .primer-preview :deep(.card-unknown) {
   color: #f87171;
@@ -1119,6 +1331,11 @@ function insertAtCursor(text: string) {
 .highlight-content :deep(.tok-youtube) {
   color: #ef4444;
   font-weight: 600;
+}
+.highlight-content :deep(.tok-emoji) {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 3px;
 }
 .highlight-content :deep(.tok-heading) {
   color: #f59e0b;

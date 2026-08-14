@@ -14,6 +14,112 @@ export type Database = {
   };
   public: {
     Tables: {
+      article_comments: {
+        Row: {
+          article_id: string;
+          body: string;
+          created_at: string;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          article_id: string;
+          body: string;
+          created_at?: string;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          article_id?: string;
+          body?: string;
+          created_at?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'article_comments_article_id_fkey';
+            columns: ['article_id'];
+            isOneToOne: false;
+            referencedRelation: 'articles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      article_likes: {
+        Row: {
+          article_id: string;
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          article_id: string;
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          article_id?: string;
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'article_likes_article_id_fkey';
+            columns: ['article_id'];
+            isOneToOne: false;
+            referencedRelation: 'articles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      articles: {
+        Row: {
+          comment_count: number;
+          content: string;
+          created_at: string;
+          description: string;
+          id: string;
+          image_url: string | null;
+          is_published: boolean;
+          like_count: number;
+          published_at: string | null;
+          title: string;
+          updated_at: string | null;
+          user_id: string;
+          view_count: number;
+        };
+        Insert: {
+          comment_count?: number;
+          content?: string;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          image_url?: string | null;
+          is_published?: boolean;
+          like_count?: number;
+          published_at?: string | null;
+          title: string;
+          updated_at?: string | null;
+          user_id: string;
+          view_count?: number;
+        };
+        Update: {
+          comment_count?: number;
+          content?: string;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          image_url?: string | null;
+          is_published?: boolean;
+          like_count?: number;
+          published_at?: string | null;
+          title?: string;
+          updated_at?: string | null;
+          user_id?: string;
+          view_count?: number;
+        };
+        Relationships: [];
+      };
       card_history: {
         Row: {
           card_id: string | null;
@@ -359,6 +465,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      increment_article_view_count: {
+        Args: { p_article_id: string };
+        Returns: undefined;
+      };
       increment_decklist_view_count: {
         Args: { p_list_id: string };
         Returns: undefined;

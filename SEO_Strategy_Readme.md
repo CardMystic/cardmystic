@@ -43,6 +43,9 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 - Homepage: identifies the site (Organization, WebSite)
 - Card pages: identifies a single card (WebPage)
+- Article detail pages: `Article` (with author, published/modified dates, like/comment/view counters, `Organization` publisher)
+- Decklist detail pages (public only): `CreativeWork` (`about` → `Game: Magic: The Gathering`, author, timestamps)
+- User profile pages: `ProfilePage` with the user's `Person` entity and follower count as an `InteractionCounter`
 
 ### Important
 
@@ -73,6 +76,7 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 
 - Filter pages
 - User-specific or dynamic pages
+- **User-generated content** (article detail pages, public decklists, public user profiles) — these have full SEO meta + JSON-LD and are indexable via inbound links and hub pages (`/explore/articles`, `/explore/decklists`, `/explore/users`), but are not enumerated in the sitemap. Adding them requires new backend endpoints to list all published IDs, and would let the sitemap grow with every new user upload.
 
 ## 4. SEO Slug Pages (high-intent search results)
 
