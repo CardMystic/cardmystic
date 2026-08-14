@@ -23,7 +23,9 @@ export const ArticleSummarySchema = z.object({
   published_at: z
     .string()
     .nullable()
-    .describe('First-publish timestamp (ISO 8601), null for drafts'),
+    .describe(
+      'First-publish timestamp (ISO 8601), null until first publication',
+    ),
   created_at: z.string().describe('Creation timestamp (ISO 8601)'),
   updated_at: z
     .string()

@@ -420,7 +420,7 @@ test.describe('Decklist social & discovery', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Test 46 — Liked/Saved folders on My Decklists
+  // Test 46 — Liked/Saved views on My Decklists
   // ---------------------------------------------------------------------------
   test('shows the deck in the Liked and Saved folders on My Decklists', async ({
     page,
@@ -429,22 +429,29 @@ test.describe('Decklist social & discovery', () => {
 
     await gotoHydrated(page, '/lists');
 
-    const likedFolder = page.getByRole('button', {
-      name: /liked decklists \(\d+\)/i,
+    // The Liked/Saved views are now top-level toggle buttons rather than
+    // collapsible folders — each click swaps the deck grid.
+    const likedButton = page.getByRole('button', {
+      name: 'View Liked Decks',
     });
-    await expect(likedFolder).toBeVisible({ timeout: API_TIMEOUT });
-    await likedFolder.click();
+    await expect(likedButton).toBeVisible({ timeout: API_TIMEOUT });
+    await likedButton.click();
+    await expect(
+      page.getByRole('heading', { name: 'Liked Decklists' }),
+    ).toBeVisible({ timeout: API_TIMEOUT });
     await expect(page.getByText(LIST_NAME).first()).toBeVisible({
       timeout: API_TIMEOUT,
     });
 
-    const savedFolder = page.getByRole('button', {
-      name: /saved decklists \(\d+\)/i,
+    const savedButton = page.getByRole('button', {
+      name: 'View Saved Decks',
     });
-    await expect(savedFolder).toBeVisible();
-    await savedFolder.click();
-    // The deck appears in both folders (two matches once both are open).
-    await expect(page.getByText(LIST_NAME).nth(1)).toBeVisible({
+    await expect(savedButton).toBeVisible();
+    await savedButton.click();
+    await expect(
+      page.getByRole('heading', { name: 'Saved Decklists' }),
+    ).toBeVisible({ timeout: API_TIMEOUT });
+    await expect(page.getByText(LIST_NAME).first()).toBeVisible({
       timeout: API_TIMEOUT,
     });
   });

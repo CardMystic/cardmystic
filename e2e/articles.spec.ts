@@ -220,11 +220,19 @@ test.describe('Articles', () => {
     page,
   }) => {
     // The default fixture is a non-author with no liked articles.
-    await page.route(`${BACKEND}/articles/liked`, (route) =>
+    // Match with a trailing `*` so the offset-pagination query string
+    // (`?page=1&pageSize=50`) is included in the intercept.
+    await page.route(`${BACKEND}/articles/liked*`, (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ articles: [] }),
+        body: JSON.stringify({
+          articles: [],
+          totalCount: 0,
+          page: 1,
+          pageSize: 50,
+          totalPages: 1,
+        }),
       }),
     );
 
