@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col grow min-h-0 gap-3 pb-16">
+  <div class="flex flex-col grow min-h-0 gap-3 pb-0">
     <!-- Mode toggle / action bar -->
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-2">
