@@ -150,7 +150,7 @@ const view = ref<'mine' | 'liked'>('mine');
 watch(
   isAuthor,
   (author) => {
-    if (!author) view.value = 'liked';
+    view.value = author ? 'mine' : 'liked';
   },
   { immediate: true },
 );
