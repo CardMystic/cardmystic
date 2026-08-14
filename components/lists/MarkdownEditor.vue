@@ -329,18 +329,24 @@ const props = withDefaults(
     /** Placeholder text for the markdown editor textarea. */
     placeholder?: string;
     hasBackground?: boolean;
+    /**
+     * Async save callback. The editor only marks the draft clean and updates
+     * `lastSavedAt` after this resolves — any thrown/rejected error leaves the
+     * draft dirty so the user can retry and the unsaved-changes guard fires.
+     */
+    saveHandler?: (value: string) => void | Promise<void>;
   }>(),
   {
     emptyMessage: 'No primer has been written yet.',
     placeholder:
       'Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported.',
     hasBackground: true,
+    saveHandler: undefined,
   },
 );
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
-  (e: 'save', value: string): void;
 }>();
 
 const mode = ref<'edit' | 'split' | 'preview'>(
@@ -559,9 +565,16 @@ watch(
 
 const isDirty = computed(() => draft.value !== props.modelValue);
 
-function handleSave() {
-  emit('update:modelValue', draft.value);
-  emit('save', draft.value);
+async function handleSave() {
+  const value = draft.value;
+  try {
+    await props.saveHandler?.(value);
+  } catch {
+    // Parent surfaces the error; keep the draft dirty so the user can retry
+    // and the unsaved-changes guard still fires.
+    return;
+  }
+  emit('update:modelValue', value);
   lastSavedAt.value = Date.now();
 }
 

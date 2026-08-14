@@ -143,7 +143,7 @@
             :is-saving="isUpdating"
             empty-message="This article has no content yet."
             placeholder="Write your article here. Markdown supported — use ((Card Name)) to embed a card image or [[Card Name]] to link a card."
-            @save="saveContent"
+            :save-handler="saveContent"
           />
           <template #fallback>
             <USkeleton class="h-[60vh] w-full rounded-md" />
@@ -274,6 +274,8 @@ async function saveContent(value: string) {
       description: e?.message,
       color: 'error',
     });
+    // Rethrow so MarkdownEditor keeps the draft dirty and re-enables retry.
+    throw e;
   }
 }
 

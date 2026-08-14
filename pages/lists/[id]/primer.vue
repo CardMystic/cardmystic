@@ -26,7 +26,7 @@
         v-model="primerContent"
         :editable="isCreator"
         :is-saving="isSaving"
-        @save="handleSave"
+        :save-handler="handleSave"
       />
       <template #fallback>
         <USkeleton class="h-[60vh] w-full rounded-md" />
@@ -106,6 +106,8 @@ async function handleSave(value: string) {
       description: e?.message,
       color: 'error',
     });
+    // Rethrow so MarkdownEditor keeps the draft dirty and re-enables retry.
+    throw e;
   } finally {
     isSaving.value = false;
   }
