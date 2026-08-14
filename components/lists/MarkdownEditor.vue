@@ -558,8 +558,12 @@ const cardImageMap = computed(() => {
 
 watch(
   () => props.modelValue,
-  (val) => {
-    if (val !== draft.value) draft.value = val;
+  (val, oldVal) => {
+    if (val === draft.value) return;
+    // Only accept the incoming snapshot if the draft still matches the
+    // previous one — otherwise the user has typed since (e.g. during an
+    // in-flight save) and their newer edits win, keeping the draft dirty.
+    if (draft.value === oldVal) draft.value = val;
   },
 );
 

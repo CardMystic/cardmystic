@@ -179,6 +179,16 @@ const {
   isLoading: isLoadingLiked,
 } = useLikedArticles(likedPage, true, pageSize);
 
+// Clamp each page ref when its total shrinks (e.g. deleting the only
+// article on the last page) so the user isn't stranded on an empty
+// out-of-range page with no pagination control to navigate back.
+watch(mineTotalPages, (total) => {
+  if (minePage.value > total) minePage.value = Math.max(1, total);
+});
+watch(likedTotalPages, (total) => {
+  if (likedPage.value > total) likedPage.value = Math.max(1, total);
+});
+
 const { createArticle, isCreating } = useArticleMutations();
 
 // Creates an untitled draft and jumps straight into the editor.

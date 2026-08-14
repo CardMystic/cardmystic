@@ -3,6 +3,7 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
+  keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, watch, type Ref } from 'vue';
 import { useSupabase } from './useSupabase';
@@ -328,6 +329,10 @@ function useReactedDecklists(
     enabled: computed(() => !process.server && !!userProfile.value?.id),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    // Keep the previous page's totals visible during page-change refetches so
+    // pagination totals don't briefly collapse to the fallback (which would
+    // otherwise trigger out-of-range clamps in consumers).
+    placeholderData: keepPreviousData,
   });
 
   return {

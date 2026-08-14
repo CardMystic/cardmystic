@@ -7,7 +7,11 @@
         v-if="view === 'mine'"
         icon="i-lucide-plus"
         label="New List"
-        @click="isCreateModalOpen = true"
+        @click="
+          () => {
+            isCreateModalOpen = true;
+          }
+        "
         class="cursor-pointer"
       />
     </div>
@@ -20,7 +24,11 @@
         icon="i-lucide-layers"
         label="View My Decks"
         class="cursor-pointer"
-        @click="view = 'mine'"
+        @click="
+          () => {
+            view = 'mine';
+          }
+        "
       />
       <UButton
         :color="view === 'liked' ? 'primary' : 'neutral'"
@@ -28,7 +36,11 @@
         icon="i-lucide-heart"
         label="View Liked Decks"
         class="cursor-pointer"
-        @click="view = 'liked'"
+        @click="
+          () => {
+            view = 'liked';
+          }
+        "
       />
       <UButton
         :color="view === 'saved' ? 'primary' : 'neutral'"
@@ -36,7 +48,11 @@
         icon="i-lucide-bookmark"
         label="View Saved Decks"
         class="cursor-pointer"
-        @click="view = 'saved'"
+        @click="
+          () => {
+            view = 'saved';
+          }
+        "
       />
     </div>
 
@@ -59,10 +75,7 @@
           </p>
           <p class="text-gray-500">{{ mineError.message }}</p>
         </div>
-        <div
-          v-else-if="myDecklists.length === 0"
-          class="text-center py-12"
-        >
+        <div v-else-if="myDecklists.length === 0" class="text-center py-12">
           <UIcon
             name="i-lucide-inbox"
             class="w-16 h-16 mx-auto mb-4 text-gray-400"
@@ -102,10 +115,7 @@
             class="w-8 h-8 animate-spin text-primary"
           />
         </div>
-        <div
-          v-else-if="likedDecklists.length === 0"
-          class="text-center py-12"
-        >
+        <div v-else-if="likedDecklists.length === 0" class="text-center py-12">
           <UIcon
             name="i-lucide-heart-off"
             class="w-16 h-16 mx-auto mb-4 text-gray-400"
@@ -143,10 +153,7 @@
             class="w-8 h-8 animate-spin text-primary"
           />
         </div>
-        <div
-          v-else-if="savedDecklists.length === 0"
-          class="text-center py-12"
-        >
+        <div v-else-if="savedDecklists.length === 0" class="text-center py-12">
           <UIcon
             name="i-lucide-bookmark"
             class="w-16 h-16 mx-auto mb-4 text-gray-400"
@@ -196,7 +203,7 @@ definePageMeta({
   middleware: 'auth',
 });
 
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useMyDecklists } from '~/composables/useCardLists';
 import {
   useLikedDecklists,
@@ -239,6 +246,19 @@ const {
   totalPages: savedTotalPages,
   isLoading: isLoadingSaved,
 } = useSavedDecklists(savedPage, pageSize);
+
+// Clamp each page ref when its total shrinks (e.g. deleting the only deck on
+// the last page) so the user isn't stranded on an empty out-of-range page
+// with no pagination control to navigate back.
+watch(mineTotalPages, (total) => {
+  if (minePage.value > total) minePage.value = Math.max(1, total);
+});
+watch(likedTotalPages, (total) => {
+  if (likedPage.value > total) likedPage.value = Math.max(1, total);
+});
+watch(savedTotalPages, (total) => {
+  if (savedPage.value > total) savedPage.value = Math.max(1, total);
+});
 
 const isCreateModalOpen = ref(false);
 </script>

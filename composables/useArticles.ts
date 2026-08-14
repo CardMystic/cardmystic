@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/vue-query';
 import { computed, ref, watch, type Ref } from 'vue';
 import { useSupabase } from './useSupabase';
 import {
@@ -130,6 +135,7 @@ export function useMyArticles(
     }),
     staleTime: 1000 * 60,
     refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 
   return {
@@ -183,6 +189,7 @@ export function useLikedArticles(
     }),
     staleTime: 1000 * 60,
     refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 
   return {
