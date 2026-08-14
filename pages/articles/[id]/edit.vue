@@ -218,12 +218,12 @@ const description = ref('');
 const imageUrl = ref<string | null>(null);
 const isPublished = ref(false);
 const content = ref('');
-let seeded = false;
+let seededArticleId: string | null = null;
 watch(
   article,
   (value) => {
-    if (seeded || !value) return;
-    seeded = true;
+    if (!value || seededArticleId === value.id) return;
+    seededArticleId = value.id;
     title.value = value.title;
     description.value = value.description;
     imageUrl.value = value.image_url;
