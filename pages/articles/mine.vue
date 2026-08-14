@@ -13,38 +13,29 @@
       />
     </div>
 
+    <!-- Authors get a top-level toggle between their own articles and liked. -->
+    <div v-if="isAuthor" class="flex flex-wrap gap-2 mb-6">
+      <UButton
+        :color="view === 'mine' ? 'primary' : 'neutral'"
+        :variant="view === 'mine' ? 'solid' : 'outline'"
+        icon="i-lucide-newspaper"
+        label="View My Articles"
+        class="cursor-pointer"
+        @click="setView('mine')"
+      />
+      <UButton
+        :color="view === 'liked' ? 'primary' : 'neutral'"
+        :variant="view === 'liked' ? 'solid' : 'outline'"
+        icon="i-lucide-heart"
+        label="View Liked Articles"
+        class="cursor-pointer"
+        @click="setView('liked')"
+      />
+    </div>
+
     <ClientOnly>
-      <!-- Non-authors: liked articles are the entire page. -->
-      <template v-if="!isAuthor">
-        <div
-          v-if="isLoadingLiked"
-          class="grid grid-cols-1 md:grid-cols-3 gap-3"
-        >
-          <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
-        </div>
-
-        <div
-          v-else-if="likedArticles.length > 0"
-          class="grid grid-cols-1 md:grid-cols-3 gap-3"
-        >
-          <ArticleCard
-            v-for="article in likedArticles"
-            :key="article.id"
-            :article="article"
-          />
-        </div>
-
-        <div v-else class="empty-state">
-          <UIcon name="i-lucide-heart-off" class="text-5xl opacity-30 mb-3" />
-          <p class="mb-4">You haven't liked any articles yet.</p>
-          <UButton to="/explore/articles" color="primary" variant="soft">
-            Browse Articles
-          </UButton>
-        </div>
-      </template>
-
-      <!-- Authors: their own articles first, then a collapsible liked section. -->
-      <template v-else>
+      <!-- My Articles view -->
+      <template v-if="view === 'mine'">
         <div v-if="isLoadingMine" class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
         </div>
@@ -74,29 +65,49 @@
           </UButton>
         </div>
 
-        <div v-if="!isLoadingMine" class="mt-10 space-y-4">
-          <USkeleton v-if="isLoadingLiked" class="h-8 w-full" />
+        <div v-if="mineTotalPages > 1" class="mt-6 flex justify-center">
+          <UPagination
+            v-model:page="minePage"
+            :total="mineTotalCount"
+            :items-per-page="pageSize"
+          />
+        </div>
+      </template>
 
-          <UCollapsible v-else-if="likedArticles.length > 0">
-            <UButton
-              :label="`Liked Articles (${likedArticles.length})`"
-              icon="i-lucide-heart"
-              trailing-icon="i-lucide-chevron-down"
-              color="neutral"
-              variant="outline"
-              class="cursor-pointer"
-              block
-            />
-            <template #content>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4">
-                <ArticleCard
-                  v-for="article in likedArticles"
-                  :key="article.id"
-                  :article="article"
-                />
-              </div>
-            </template>
-          </UCollapsible>
+      <!-- Liked Articles view -->
+      <template v-else>
+        <div
+          v-if="isLoadingLiked"
+          class="grid grid-cols-1 md:grid-cols-3 gap-3"
+        >
+          <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
+        </div>
+
+        <div
+          v-else-if="likedArticles.length > 0"
+          class="grid grid-cols-1 md:grid-cols-3 gap-3"
+        >
+          <ArticleCard
+            v-for="article in likedArticles"
+            :key="article.id"
+            :article="article"
+          />
+        </div>
+
+        <div v-else class="empty-state">
+          <UIcon name="i-lucide-heart-off" class="text-5xl opacity-30 mb-3" />
+          <p class="mb-4">You haven't liked any articles yet.</p>
+          <UButton to="/explore/articles" color="primary" variant="soft">
+            Browse Articles
+          </UButton>
+        </div>
+
+        <div v-if="likedTotalPages > 1" class="mt-6 flex justify-center">
+          <UPagination
+            v-model:page="likedPage"
+            :total="likedTotalCount"
+            :items-per-page="pageSize"
+          />
         </div>
       </template>
 
@@ -110,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   useArticleMutations,
   useLikedArticles,
@@ -134,16 +145,50 @@ const router = useRouter();
 const toast = useToast();
 const { profileData } = useUserProfile();
 const isAuthor = computed(() => !!profileData.value?.is_author);
+// Non-authors are locked into the Liked view; authors default to their own.
+const view = ref<'mine' | 'liked'>('mine');
+watch(
+  isAuthor,
+  (author) => {
+    view.value = author ? 'mine' : 'liked';
+  },
+  { immediate: true },
+);
 const pageHeading = computed(() =>
-  isAuthor.value ? 'My Articles' : 'Liked Articles',
+  view.value === 'mine' ? 'My Articles' : 'Liked Articles',
 );
 
-// Author-only: their own articles (drafts included).
-const { articles: myArticles, isLoading: isLoadingMine } =
-  useMyArticles(isAuthor);
-// Everyone (logged-in): articles the user has liked.
-const { articles: likedArticles, isLoading: isLoadingLiked } =
-  useLikedArticles();
+const pageSize = 50;
+const minePage = ref(1);
+const likedPage = ref(1);
+function setView(next: 'mine' | 'liked') {
+  view.value = next;
+}
+
+const {
+  articles: myArticles,
+  totalCount: mineTotalCount,
+  totalPages: mineTotalPages,
+  isLoading: isLoadingMine,
+} = useMyArticles(minePage, isAuthor, pageSize);
+
+const {
+  articles: likedArticles,
+  totalCount: likedTotalCount,
+  totalPages: likedTotalPages,
+  isLoading: isLoadingLiked,
+} = useLikedArticles(likedPage, true, pageSize);
+
+// Clamp each page ref when its total shrinks (e.g. deleting the only
+// article on the last page) so the user isn't stranded on an empty
+// out-of-range page with no pagination control to navigate back.
+watch(mineTotalPages, (total) => {
+  if (minePage.value > total) minePage.value = Math.max(1, total);
+});
+watch(likedTotalPages, (total) => {
+  if (likedPage.value > total) likedPage.value = Math.max(1, total);
+});
+
 const { createArticle, isCreating } = useArticleMutations();
 
 // Creates an untitled draft and jumps straight into the editor.

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col grow min-h-0 gap-3 pb-16">
+  <div class="flex flex-col grow min-h-0 gap-3 pb-0">
     <!-- Mode toggle / action bar -->
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-2">
@@ -329,18 +329,24 @@ const props = withDefaults(
     /** Placeholder text for the markdown editor textarea. */
     placeholder?: string;
     hasBackground?: boolean;
+    /**
+     * Async save callback. The editor only marks the draft clean and updates
+     * `lastSavedAt` after this resolves — any thrown/rejected error leaves the
+     * draft dirty so the user can retry and the unsaved-changes guard fires.
+     */
+    saveHandler?: (value: string) => void | Promise<void>;
   }>(),
   {
     emptyMessage: 'No primer has been written yet.',
     placeholder:
       'Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported.',
     hasBackground: true,
+    saveHandler: undefined,
   },
 );
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
-  (e: 'save', value: string): void;
 }>();
 
 const mode = ref<'edit' | 'split' | 'preview'>(
@@ -552,16 +558,27 @@ const cardImageMap = computed(() => {
 
 watch(
   () => props.modelValue,
-  (val) => {
-    if (val !== draft.value) draft.value = val;
+  (val, oldVal) => {
+    if (val === draft.value) return;
+    // Only accept the incoming snapshot if the draft still matches the
+    // previous one — otherwise the user has typed since (e.g. during an
+    // in-flight save) and their newer edits win, keeping the draft dirty.
+    if (draft.value === oldVal) draft.value = val;
   },
 );
 
 const isDirty = computed(() => draft.value !== props.modelValue);
 
-function handleSave() {
-  emit('update:modelValue', draft.value);
-  emit('save', draft.value);
+async function handleSave() {
+  const value = draft.value;
+  try {
+    await props.saveHandler?.(value);
+  } catch {
+    // Parent surfaces the error; keep the draft dirty so the user can retry
+    // and the unsaved-changes guard still fires.
+    return;
+  }
+  emit('update:modelValue', value);
   lastSavedAt.value = Date.now();
 }
 

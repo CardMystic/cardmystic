@@ -85,11 +85,15 @@ describe('decklist social schemas', () => {
   it('parses liked decklists responses', () => {
     const parsed = GetLikedDecklistsResponseSchema.parse({
       decklists: [decklistSummary],
-      nextCursor: null,
+      totalCount: 1,
+      page: 1,
+      pageSize: 50,
+      totalPages: 1,
     });
     expect(parsed.decklists).toHaveLength(1);
     expect(parsed.decklists[0].id).toBe(LIST_ID);
-    expect(parsed.nextCursor).toBeNull();
+    expect(parsed.totalCount).toBe(1);
+    expect(parsed.totalPages).toBe(1);
   });
 
   it('parses comments with nullable author fields', () => {
@@ -141,8 +145,10 @@ describe('user social schemas', () => {
     ).toEqual({ following: true, follower_count: 8 });
     const parsed = GetFollowingResponseSchema.parse({
       users: [publicProfile],
+      nextCursor: null,
     });
     expect(parsed.users[0].id).toBe(USER_ID);
+    expect(parsed.nextCursor).toBeNull();
   });
 
   it('parses featured users responses', () => {

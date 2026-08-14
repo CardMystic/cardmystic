@@ -16,8 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useFollows } from '~/composables/useFollows';
+import { computed, toRef } from 'vue';
+import { useFollows, useFollowStatus } from '~/composables/useFollows';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useToast } from '#imports';
 
@@ -25,12 +25,12 @@ const props = defineProps<{ userId: string }>();
 
 const toast = useToast();
 const { userProfile } = useUserProfile();
-const { isLoggedIn, isFollowing, setFollow, isSettingFollow } = useFollows();
+const { isLoggedIn, setFollow, isSettingFollow } = useFollows();
+const { following } = useFollowStatus(toRef(props, 'userId'));
 
 const isOwnProfile = computed(() => userProfile.value?.id === props.userId);
 // Only render for other users; logged-out visitors see a disabled Follow button
 const showButton = computed(() => !isOwnProfile.value);
-const following = computed(() => isFollowing(props.userId));
 
 const handleToggle = async () => {
   try {

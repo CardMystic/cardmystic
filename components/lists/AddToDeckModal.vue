@@ -149,8 +149,9 @@ import type { DecklistSummary } from '~/models/cardListModel';
 import { useToast } from '#imports';
 import { formatRelativeTimeShort } from '~/utils/dateFormatter';
 
-import { useCardLists } from '~/composables/useCardLists';
+import { useCardLists, useMyDecklistsSearch } from '~/composables/useCardLists';
 import { useCardsByOracleIds } from '~/composables/useCards';
+import { refDebounced } from '~/utils/refDebounced';
 
 const props = defineProps<{
   open: boolean;
@@ -166,12 +167,12 @@ const emit = defineEmits<{
 type CardListRow = DecklistSummary;
 
 const { userProfile } = useUserProfile();
-const {
-  userLists,
-  addCardsToListMutation,
-  addCardsByNameToListMutation,
-  useListItems,
-} = useCardLists();
+const { addCardsToListMutation, addCardsByNameToListMutation, useListItems } =
+  useCardLists();
+const deckSearchTerm = ref('');
+const debouncedDeckSearch = refDebounced(deckSearchTerm, 300);
+const { decklists: searchedDecklists } =
+  useMyDecklistsSearch(debouncedDeckSearch);
 const toast = useToast();
 
 const oracleIds = computed(() => props.oracleIds ?? []);
@@ -195,14 +196,13 @@ const selectedListId = ref('');
 const selectedListItem = ref<
   { label: string; value: string; description: string } | undefined
 >(undefined);
-const deckSearchTerm = ref('');
 const errorMessage = ref('');
 const showCreateDeckModal = ref(false);
 
-const recentLists = computed(() => {
-  if (!userLists.value?.decklists) return [];
-  return [...userLists.value.decklists].slice(0, 4);
-});
+// The deck picker shows the top matches from the server; when the search
+// term is empty the backend returns the most-recently updated decks. The
+// first 4 populate the "Recent Decks" quick-pick row.
+const recentLists = computed(() => searchedDecklists.value.slice(0, 4));
 
 function listName(list: CardListRow): string {
   return list.name?.trim() || 'Untitled Deck';
@@ -217,32 +217,16 @@ function listDate(list: CardListRow): string {
   return date ? formatRelativeTimeShort(date) : '';
 }
 
-function listLabel(list: CardListRow): string {
-  const name = list.name?.trim() || 'Untitled Deck';
-  const format = list.format?.trim();
-  return format ? `${name} · ${format}` : name;
-}
-
-const filteredDeckLabels = computed(() => {
-  const searchLower = deckSearchTerm.value.trim().toLowerCase();
-  const lists = userLists.value?.decklists || [];
-  return lists
-    .filter((list) => {
-      if (!searchLower) return true;
-      return listLabel(list).toLowerCase().includes(searchLower);
-    })
-    .slice(0, 50)
-    .map((list) => ({
-      label: listName(list),
-      value: list.id,
-      description: [listFormat(list), listDate(list)]
-        .filter(Boolean)
-        .join(' · '),
-    }));
-});
+const filteredDeckLabels = computed(() =>
+  searchedDecklists.value.map((list) => ({
+    label: listName(list),
+    value: list.id,
+    description: [listFormat(list), listDate(list)].filter(Boolean).join(' · '),
+  })),
+);
 
 function syncSelectedLabel() {
-  const selected = (userLists.value?.decklists || []).find(
+  const selected = searchedDecklists.value.find(
     (list) => list.id === selectedListId.value,
   );
   selectedListItem.value = selected
@@ -267,9 +251,7 @@ function selectRecentList(listId: string) {
 }
 
 const selectedList = computed(() =>
-  (userLists.value?.decklists || []).find(
-    (list) => list.id === selectedListId.value,
-  ),
+  searchedDecklists.value.find((list) => list.id === selectedListId.value),
 );
 
 const selectedListIdRef = computed(() => selectedListId.value);

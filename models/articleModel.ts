@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PaginationInfoSchema, PaginationQuerySchema } from './paginationModel';
 
 // Length limits shared by the backend validators and frontend editors.
 export const ARTICLE_TITLE_MAX_CHARS = 200;
@@ -22,7 +23,9 @@ export const ArticleSummarySchema = z.object({
   published_at: z
     .string()
     .nullable()
-    .describe('First-publish timestamp (ISO 8601), null for drafts'),
+    .describe(
+      'First-publish timestamp (ISO 8601), null until first publication',
+    ),
   created_at: z.string().describe('Creation timestamp (ISO 8601)'),
   updated_at: z
     .string()
@@ -111,13 +114,24 @@ export const DeleteArticleResponseSchema = z.object({
 
 export type DeleteArticleResponse = z.infer<typeof DeleteArticleResponseSchema>;
 
+export const GetMyArticlesQuerySchema = PaginationQuerySchema;
+
+export type GetMyArticlesQuery = z.infer<typeof GetMyArticlesQuerySchema>;
+
 export const GetMyArticlesResponseSchema = z.object({
   articles: z
     .array(ArticleSummarySchema)
-    .describe("All of the authenticated author's articles, drafts included"),
+    .describe(
+      "The authenticated author's articles for the requested page, drafts included",
+    ),
+  ...PaginationInfoSchema.shape,
 });
 
 export type GetMyArticlesResponse = z.infer<typeof GetMyArticlesResponseSchema>;
+
+export const GetLikedArticlesQuerySchema = PaginationQuerySchema;
+
+export type GetLikedArticlesQuery = z.infer<typeof GetLikedArticlesQuerySchema>;
 
 export const GetLikedArticlesResponseSchema = z.object({
   articles: z
@@ -125,6 +139,7 @@ export const GetLikedArticlesResponseSchema = z.object({
     .describe(
       'Published articles the authenticated user has liked, most recently liked first',
     ),
+  ...PaginationInfoSchema.shape,
 });
 
 export type GetLikedArticlesResponse = z.infer<
@@ -160,35 +175,17 @@ export type GetRecentArticlesResponse = z.infer<
 export const SearchArticlesQuerySchema = z.object({
   query: z
     .string()
-    .trim()
     .min(1)
     .max(200)
     .describe('Search keywords matched against article title and description'),
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(100)
-    .default(20)
-    .describe('Maximum number of articles to return (default 20, max 100)'),
-  cursor: z
-    .uuid()
-    .optional()
-    .describe(
-      'Article ID of the last entry from the previous page (omit for first page)',
-    ),
+  ...PaginationQuerySchema.shape,
 });
 
 export type SearchArticlesQuery = z.infer<typeof SearchArticlesQuerySchema>;
 
 export const SearchArticlesResponseSchema = z.object({
   articles: z.array(ArticleSummarySchema),
-  nextCursor: z
-    .uuid()
-    .nullable()
-    .describe(
-      'Article ID to pass as cursor for the next page, or null if no more results',
-    ),
+  ...PaginationInfoSchema.shape,
 });
 
 export type SearchArticlesResponse = z.infer<
