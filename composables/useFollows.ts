@@ -25,49 +25,19 @@ async function getAuthToken(
 }
 
 /**
- * The users the authenticated user follows, plus follow/unfollow mutations.
- * The list is cursor-paginated for infinite scroll (25 per page by default).
+ * Follow/unfollow mutation + logged-in flag. Cheap to mount — no requests are
+ * fired until the caller invokes `setFollow`. Use this from every component
+ * that only needs the follow toggle (e.g. `FollowButton`). To render the
+ * authenticated user's followed-users list, mount `useFollowingList()`
+ * alongside this hook.
  */
-export function useFollows(limit = 25) {
+export function useFollows() {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
   const config = useRuntimeConfig();
 
   const isLoggedIn = computed(() => !!userProfile.value?.id);
-
-  const {
-    data,
-    isLoading: isLoadingFollowing,
-    isFetchingNextPage,
-    error: followingError,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery(() => ({
-    queryKey: ['following', userProfile.value?.id, limit] as const,
-    queryFn: async ({ pageParam }) => {
-      const token = await getAuthToken(supabase!);
-      const params = new URLSearchParams({ limit: String(limit) });
-      if (pageParam) params.set('cursor', pageParam);
-      const response = await fetch(
-        `${config.public.backendUrl}/user/following?${params}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to load followed users (${response.status})`);
-      }
-      return GetFollowingResponseSchema.parse(await response.json());
-    },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: !process.server && !!userProfile.value?.id,
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
-  }));
-
-  const following = computed(
-    () => data.value?.pages.flatMap((p) => p.users) ?? [],
-  );
 
   const setFollowMutation = useMutation({
     mutationFn: async ({
@@ -106,15 +76,63 @@ export function useFollows(limit = 25) {
 
   return {
     isLoggedIn,
+    setFollow: (userId: string, follow: boolean) =>
+      setFollowMutation.mutateAsync({ userId, follow }),
+    isSettingFollow: computed(() => setFollowMutation.isPending.value),
+  };
+}
+
+/**
+ * The users the authenticated user follows, cursor-paginated for infinite
+ * scroll (25 per page by default). Mount this only where the list is
+ * actually rendered — `useFollows` is enough for buttons that just need to
+ * toggle follow state.
+ */
+export function useFollowingList(limit = 25) {
+  const supabase = process.server ? null : useSupabase();
+  const { userProfile } = useUserProfile();
+  const config = useRuntimeConfig();
+
+  const {
+    data,
+    isLoading: isLoadingFollowing,
+    isFetchingNextPage,
+    error: followingError,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(() => ({
+    queryKey: ['following', userProfile.value?.id, limit] as const,
+    queryFn: async ({ pageParam }) => {
+      const token = await getAuthToken(supabase!);
+      const params = new URLSearchParams({ limit: String(limit) });
+      if (pageParam) params.set('cursor', pageParam);
+      const response = await fetch(
+        `${config.public.backendUrl}/user/following?${params}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to load followed users (${response.status})`);
+      }
+      return GetFollowingResponseSchema.parse(await response.json());
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: !process.server && !!userProfile.value?.id,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  }));
+
+  const following = computed(
+    () => data.value?.pages.flatMap((p) => p.users) ?? [],
+  );
+
+  return {
     following,
     isLoadingFollowing,
     isFetchingNextPage,
     followingError,
     fetchNextPage,
     hasNextPage,
-    setFollow: (userId: string, follow: boolean) =>
-      setFollowMutation.mutateAsync({ userId, follow }),
-    isSettingFollow: computed(() => setFollowMutation.isPending.value),
   };
 }
 
