@@ -4,22 +4,25 @@ definePageMeta({
   layout: 'fullscreen',
 });
 
-import { useFollows, useAccountStats } from '~/composables/useFollows';
+import {
+  useFollows,
+  useFollowingList,
+  useAccountStats,
+} from '~/composables/useFollows';
 import { useToast } from '#imports';
 import { formatShortDate } from '~/utils/dateFormatter';
 
 const toast = useToast();
 const route = useRoute();
 const router = useRouter();
+const { setFollow, isSettingFollow } = useFollows();
 const {
   following,
   isLoadingFollowing,
   isFetchingNextPage,
-  setFollow,
-  isSettingFollow,
   fetchNextPage,
   hasNextPage,
-} = useFollows();
+} = useFollowingList();
 const { stats, isLoading: isLoadingStats } = useAccountStats();
 
 // Patreon redirects back here with ?patreon=connected|error after the OAuth flow.
