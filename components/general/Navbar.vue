@@ -243,7 +243,7 @@ const externalItems: NavigationMenuItem[] = [
 
         <template #content>
           <div
-            class="p-2 w-80 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2"
+            class="p-2 w-80 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2 max-h-[500px] overflow-y-auto"
           >
             <NuxtLink
               v-for="item in mainItemsMobile"
@@ -254,9 +254,9 @@ const externalItems: NavigationMenuItem[] = [
               <UIcon :name="item.icon!" class="w-5 h-5" />
               <div class="flex flex-col">
                 <span>{{ item.label }}</span>
-                <span class="text-sm text-gray-500" v-if="item.description">{{
+                <!-- <span class="text-sm text-gray-500" v-if="item.description">{{
                   item.description
-                }}</span>
+                }}</span> -->
               </div>
             </NuxtLink>
           </div>

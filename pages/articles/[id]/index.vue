@@ -88,13 +88,23 @@
 import { computed } from 'vue';
 import { useArticle, useArticleViewTracker } from '~/composables/useArticles';
 import { useUserProfile } from '~/composables/useUserProfile';
+import { ArticleResponseSchema } from '~/models/articleModel';
 import ArticleSocialBar from '~/components/articles/ArticleSocialBar.vue';
 import ArticleComments from '~/components/articles/ArticleComments.vue';
 import MarkdownEditor from '~/components/lists/MarkdownEditor.vue';
 import { safeJsonLd } from '~/utils/safeJsonLd';
+import { buildArticleSeo } from '~/utils/seoMeta';
 
 const route = useRoute();
 const articleId = computed(() => String(route.params.id));
+
+// SSR-seed vue-query so link unfurlers see the real title/cover in the HTML.
+await useSsrQuerySeed({
+  cacheKey: `article-ssr-${articleId.value}`,
+  path: `/articles/view/${encodeURIComponent(articleId.value)}`,
+  schema: ArticleResponseSchema,
+  queryKey: ['articles', 'view', articleId.value],
+});
 
 const { article, isLoading } = useArticle(articleId);
 const { userProfile } = useUserProfile();
@@ -109,67 +119,22 @@ useArticleViewTracker(
   computed(() => article.value?.is_published ?? false),
 );
 
-const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
-
 const canonicalUrl = computed(
   () => `https://cardmystic.com/articles/${articleId.value}`,
 );
 
-// Auto-derive a short description from the markdown content when the
-// author didn't provide one. Strips fenced code, headings, tables, etc.
-function excerptFromMarkdown(md: string, max = 200): string {
-  const plain = md
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/`[^`]*`/g, ' ')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/^>\s?/gm, '')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/[*_~]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (plain.length <= max) return plain;
-  return `${plain.slice(0, max - 1).trimEnd()}…`;
-}
-
-const seoTitle = computed(() =>
-  article.value
-    ? `${article.value.title} | CardMystic`
-    : 'Article | CardMystic',
-);
-
-const seoDescription = computed(() => {
-  if (!article.value) {
-    return 'Read Magic: The Gathering articles on CardMystic.';
-  }
-  const desc = article.value.description?.trim();
-  if (desc) return desc;
-  const fromContent = excerptFromMarkdown(article.value.content ?? '');
-  if (fromContent) return fromContent;
-  return `Read "${article.value.title}" on CardMystic — Magic: The Gathering articles by the community.`;
-});
-
-const seoImage = computed(() => article.value?.image_url || FALLBACK_OG_IMAGE);
-
-// Only published articles should be crawlable. Drafts are 404-ish for the
-// public and stay out of the index.
-const seoRobots = computed(() =>
-  article.value?.is_published ? 'index, follow' : 'noindex, nofollow',
-);
+const seo = computed(() => buildArticleSeo(article.value));
 
 useSeoMeta({
-  title: () => seoTitle.value,
-  description: () => seoDescription.value,
-  robots: () => seoRobots.value,
-  ogTitle: () => seoTitle.value,
-  ogDescription: () => seoDescription.value,
+  title: () => seo.value.title,
+  description: () => seo.value.description,
+  robots: () => seo.value.robots,
+  ogTitle: () => seo.value.title,
+  ogDescription: () => seo.value.description,
   ogType: 'article',
   ogUrl: () => canonicalUrl.value,
-  ogImage: () => seoImage.value,
-  ogImageAlt: () =>
-    article.value
-      ? `Cover image for "${article.value.title}"`
-      : 'CardMystic article',
+  ogImage: () => seo.value.image,
+  ogImageAlt: () => seo.value.imageAlt,
   ogSiteName: 'CardMystic',
   articleAuthor: () =>
     article.value?.username ? [article.value.username] : undefined,
@@ -178,9 +143,9 @@ useSeoMeta({
     article.value?.updated_at || article.value?.published_at || undefined,
   articleSection: 'Magic: The Gathering',
   twitterCard: 'summary_large_image',
-  twitterTitle: () => seoTitle.value,
-  twitterDescription: () => seoDescription.value,
-  twitterImage: () => seoImage.value,
+  twitterTitle: () => seo.value.title,
+  twitterDescription: () => seo.value.description,
+  twitterImage: () => seo.value.image,
 });
 
 useHead({
@@ -197,8 +162,8 @@ useHead({
           '@context': 'https://schema.org',
           '@type': 'Article',
           headline: article.value.title,
-          description: seoDescription.value,
-          image: seoImage.value,
+          description: seo.value.description,
+          image: seo.value.image,
           url: canonicalUrl.value,
           datePublished: article.value.published_at ?? undefined,
           dateModified:

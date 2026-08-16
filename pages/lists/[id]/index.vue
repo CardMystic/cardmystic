@@ -261,16 +261,28 @@ import { usePublicDecklist } from '~/composables/useDiscovery';
 import { useDecklistViewTracker } from '~/composables/useDecklistSocial';
 import { usePrimer } from '~/composables/usePrimer';
 import { useCardNames, useCardNameToOracleId } from '~/composables/useBulkData';
+import { GetPublicDecklistResponseSchema } from '~/models/cardListModel';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
 import { refDebounced } from '~/utils/refDebounced';
 import { groupAndSortCards } from '~/utils/sort';
 import { safeJsonLd } from '~/utils/safeJsonLd';
+import { buildDecklistSeo } from '~/utils/seoMeta';
 import type { Card } from '~/models/cardModel';
 
 const route = useRoute();
 const listId = route.params.id as string;
 const toast = useToast();
+
+// SSR-seed vue-query for the public view so unfurlers see the deck name and
+// commander art. Private decks 404 here (no auth on SSR); the owned-decklist
+// flow handles them on the client.
+await useSsrQuerySeed({
+  cacheKey: `list-public-ssr-${listId}`,
+  path: `/supabase/card-lists/view/${encodeURIComponent(listId)}`,
+  schema: GetPublicDecklistResponseSchema,
+  queryKey: ['discovery', 'public-decklist', listId],
+});
 
 const {
   useListItems,
@@ -321,63 +333,29 @@ const bannerImageUrl = computed(() => {
 });
 
 // ---- SEO ----
-const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
 const canonicalUrl = computed(() => `https://cardmystic.com/lists/${listId}`);
 
 const isPublicList = computed(() => list.value?.visibility === 'public');
 
-const seoTitle = computed(() => {
-  if (!list.value) return 'Decklist | CardMystic';
-  return `${list.value.name || 'Untitled deck'} | MTG Decklist | CardMystic`;
-});
-
-// Description prefers the author-provided one, then falls back to a
-// synthesized "format + commander(s) + author" line so every public deck
-// still ships something useful for search snippets and social previews.
-const seoDescription = computed(() => {
-  if (!list.value) {
-    return 'Explore Magic: The Gathering decklists shared by the CardMystic community.';
-  }
-  const desc = list.value.description?.trim?.();
-  if (desc) return desc;
-  const parts: string[] = [];
-  if (list.value.format) parts.push(list.value.format);
-  const cmds = (list.value.commanders as string[] | undefined) ?? [];
-  if (cmds.length) parts.push(`led by ${cmds.join(' & ')}`);
-  const owner = (list.value as any).username || decklistOwner.value?.username;
-  if (owner) parts.push(`built by ${owner}`);
-  const prefix = list.value.name || 'MTG decklist';
-  return parts.length
-    ? `${prefix} — ${parts.join(', ')}. View the full decklist on CardMystic.`
-    : `${prefix}. View the full decklist on CardMystic.`;
-});
-
-const seoImage = computed(() => bannerImageUrl.value || FALLBACK_OG_IMAGE);
-
-// Private lists must not be indexed. Public lists opt into indexing so
-// deck pages can be discovered from search.
-const seoRobots = computed(() =>
-  isPublicList.value ? 'index, follow' : 'noindex, nofollow',
+const seo = computed(() =>
+  buildDecklistSeo(list.value ?? null, decklistOwner.value?.username),
 );
 
 useSeoMeta({
-  title: () => seoTitle.value,
-  description: () => seoDescription.value,
-  robots: () => seoRobots.value,
-  ogTitle: () => seoTitle.value,
-  ogDescription: () => seoDescription.value,
+  title: () => seo.value.title,
+  description: () => seo.value.description,
+  robots: () => seo.value.robots,
+  ogTitle: () => seo.value.title,
+  ogDescription: () => seo.value.description,
   ogType: 'article',
   ogUrl: () => canonicalUrl.value,
-  ogImage: () => seoImage.value,
-  ogImageAlt: () =>
-    list.value
-      ? `Art for ${list.value.name || 'Untitled deck'}`
-      : 'CardMystic decklist',
+  ogImage: () => seo.value.image,
+  ogImageAlt: () => seo.value.imageAlt,
   ogSiteName: 'CardMystic',
   twitterCard: 'summary_large_image',
-  twitterTitle: () => seoTitle.value,
-  twitterDescription: () => seoDescription.value,
-  twitterImage: () => seoImage.value,
+  twitterTitle: () => seo.value.title,
+  twitterDescription: () => seo.value.description,
+  twitterImage: () => seo.value.image,
 });
 
 useHead({
@@ -394,8 +372,8 @@ useHead({
           '@context': 'https://schema.org',
           '@type': 'CreativeWork',
           name: list.value.name || 'Untitled deck',
-          description: seoDescription.value,
-          image: seoImage.value,
+          description: seo.value.description,
+          image: seo.value.image,
           url: canonicalUrl.value,
           genre: 'Magic: The Gathering deck',
           dateModified: (list.value as any).updated_at ?? undefined,
