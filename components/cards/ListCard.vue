@@ -87,7 +87,7 @@
             color="success"
             variant="outline"
             class="mt-1 mr-2"
-            icon="i-heroicons-shopping-cart"
+            :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
             size="sm"
             target="_blank"
             rel="noopener noreferrer"
@@ -169,6 +169,7 @@ import { useSearchHistory } from '~/composables/useSearchHistory';
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
+const isMobile = useIsMobile();
 
 const { data: commanders } = useCommandersSet();
 
