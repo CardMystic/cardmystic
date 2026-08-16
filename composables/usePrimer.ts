@@ -8,7 +8,7 @@ import { useSupabase } from '~/composables/useSupabase';
  */
 export function usePrimer(listId: Ref<string | null | undefined>) {
   const config = useRuntimeConfig();
-  const supabase = useSupabase();
+  const supabase = process.server ? null : useSupabase();
 
   const enabled = computed(() => !!listId.value);
 

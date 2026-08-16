@@ -82,14 +82,24 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { usePublicUserProfile } from '~/composables/useDiscovery';
+import { GetUserProfileResponseSchema } from '~/models/userModel';
 import CardListLink from '~/components/lists/CardListLink.vue';
 import FollowButton from '~/components/user/FollowButton.vue';
 import { safeJsonLd } from '~/utils/safeJsonLd';
+import { buildUserProfileSeo } from '~/utils/seoMeta';
 
 definePageMeta({ title: 'User Profile' });
 
 const route = useRoute();
 const userId = computed(() => String(route.params.userId ?? ''));
+
+// SSR-seed vue-query so unfurlers see the real username and avatar art.
+await useSsrQuerySeed({
+  cacheKey: `user-profile-ssr-${userId.value}`,
+  path: `/user/profile/${encodeURIComponent(userId.value)}`,
+  schema: GetUserProfileResponseSchema,
+  queryKey: ['discovery', 'public-profile', userId.value],
+});
 
 const { profile, decklists, isLoading, error } = usePublicUserProfile(userId);
 
@@ -99,63 +109,30 @@ const bannerImageUrl = computed(() => {
 });
 
 // ---- SEO ----
-const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
-
 const canonicalUrl = computed(
   () => `https://cardmystic.com/user/${userId.value}`,
 );
 
-const seoTitle = computed(() =>
-  profile.value?.username
-    ? `${profile.value.username} | MTG Decklists | CardMystic`
-    : 'User Profile | CardMystic',
-);
-
-const seoDescription = computed(() => {
-  if (!profile.value) {
-    return 'Explore Magic: The Gathering decklists shared by the CardMystic community.';
-  }
-  const name = profile.value.username || 'This user';
-  const deckCount = decklists.value.length;
-  const followerCount = profile.value.follower_count ?? 0;
-  const deckPart =
-    deckCount > 0
-      ? `${deckCount} public MTG decklist${deckCount === 1 ? '' : 's'}`
-      : 'Magic: The Gathering community member';
-  const followerPart =
-    followerCount > 0
-      ? `${followerCount} follower${followerCount === 1 ? '' : 's'}.`
-      : '';
-  return `${name} on CardMystic — ${deckPart}. ${followerPart}`.trim();
-});
-
-const seoImage = computed(() => bannerImageUrl.value || FALLBACK_OG_IMAGE);
-
-// Profiles that exist and have a username are indexable so search engines
-// can surface community authors. Anonymous / missing profiles stay out.
-const seoRobots = computed(() =>
-  profile.value?.username ? 'index, follow' : 'noindex, follow',
+const seo = computed(() =>
+  buildUserProfileSeo(profile.value ?? null, decklists.value.length),
 );
 
 useSeoMeta({
-  title: () => seoTitle.value,
-  description: () => seoDescription.value,
-  robots: () => seoRobots.value,
-  ogTitle: () => seoTitle.value,
-  ogDescription: () => seoDescription.value,
+  title: () => seo.value.title,
+  description: () => seo.value.description,
+  robots: () => seo.value.robots,
+  ogTitle: () => seo.value.title,
+  ogDescription: () => seo.value.description,
   ogType: 'profile',
   ogUrl: () => canonicalUrl.value,
-  ogImage: () => seoImage.value,
-  ogImageAlt: () =>
-    profile.value?.username
-      ? `${profile.value.username}'s profile art on CardMystic`
-      : 'CardMystic user profile',
+  ogImage: () => seo.value.image,
+  ogImageAlt: () => seo.value.imageAlt,
   ogSiteName: 'CardMystic',
   profileUsername: () => profile.value?.username || undefined,
   twitterCard: 'summary_large_image',
-  twitterTitle: () => seoTitle.value,
-  twitterDescription: () => seoDescription.value,
-  twitterImage: () => seoImage.value,
+  twitterTitle: () => seo.value.title,
+  twitterDescription: () => seo.value.description,
+  twitterImage: () => seo.value.image,
 });
 
 useHead({
@@ -173,7 +150,7 @@ useHead({
             '@type': 'Person',
             name: profile.value.username,
             identifier: profile.value.id,
-            image: seoImage.value,
+            image: seo.value.image,
             interactionStatistic: {
               '@type': 'InteractionCounter',
               interactionType: 'https://schema.org/FollowAction',

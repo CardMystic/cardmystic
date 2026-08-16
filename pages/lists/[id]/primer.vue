@@ -47,7 +47,7 @@ const route = useRoute();
 const listId = route.params.id as string;
 const toast = useToast();
 const config = useRuntimeConfig();
-const supabase = useSupabase();
+const supabase = process.server ? null : useSupabase();
 const queryClient = useQueryClient();
 
 const listIdRef = computed(() => listId);
@@ -90,6 +90,7 @@ watch(
 async function handleSave(value: string) {
   isSaving.value = true;
   try {
+    if (!supabase) throw new Error('Not authenticated');
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData?.session?.access_token;
     if (!token) throw new Error('Not authenticated');
