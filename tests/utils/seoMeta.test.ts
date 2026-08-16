@@ -230,6 +230,25 @@ describe('buildDecklistSeo', () => {
     expect(seo.image).toBe(FALLBACK_OG_IMAGE);
   });
 
+  it('uses the direct image URL override when provided', () => {
+    const direct = 'https://cards.scryfall.io/art_crop/front/a/b/abc.jpg?1';
+    const seo = buildDecklistSeo(
+      makeDecklist({ avatar_card_name: 'Krenko, Mob Boss' }),
+      'krenko',
+      direct,
+    );
+    expect(seo.image).toBe(direct);
+  });
+
+  it('ignores a null direct image URL and falls through to the avatar', () => {
+    const seo = buildDecklistSeo(
+      makeDecklist({ avatar_card_name: 'Krenko, Mob Boss' }),
+      'krenko',
+      null,
+    );
+    expect(seo.image).toContain('exact=Krenko%2C%20Mob%20Boss');
+  });
+
   it('marks private lists as noindex', () => {
     expect(
       buildDecklistSeo(makeDecklist({ visibility: 'private' })).robots,
@@ -294,6 +313,25 @@ describe('buildUserProfileSeo', () => {
   it('falls back to the generic image when avatar_card_name is missing', () => {
     const seo = buildUserProfileSeo(makeProfile({ avatar_card_name: null }), 0);
     expect(seo.image).toBe(FALLBACK_OG_IMAGE);
+  });
+
+  it('uses the direct image URL override when provided', () => {
+    const direct = 'https://cards.scryfall.io/art_crop/front/a/b/abc.jpg?1';
+    const seo = buildUserProfileSeo(
+      makeProfile({ avatar_card_name: 'Jace, the Mind Sculptor' }),
+      0,
+      direct,
+    );
+    expect(seo.image).toBe(direct);
+  });
+
+  it('ignores a null direct image URL and falls through to the avatar', () => {
+    const seo = buildUserProfileSeo(
+      makeProfile({ avatar_card_name: 'Jace, the Mind Sculptor' }),
+      0,
+      null,
+    );
+    expect(seo.image).toContain('exact=Jace%2C%20the%20Mind%20Sculptor');
   });
 
   it('marks profiles with a username as indexable', () => {
