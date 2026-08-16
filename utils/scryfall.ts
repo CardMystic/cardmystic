@@ -143,3 +143,34 @@ export function scryfallArtCropUrl(cardName: string): string {
   return `https://api.scryfall.com/cards/named?exact=${encoded}&format=image&version=art_crop`;
 }
 
+/**
+ * Resolves a card name to the direct `cards.scryfall.io/art_crop/...` URL via
+ * the backend's cached lookup. Discord's link unfurler does not follow the
+ * 302 that `scryfallArtCropUrl` returns, so `og:image` must be a direct URL.
+ * Falls back to `null` on network / lookup failure so callers can degrade
+ * gracefully to the redirect URL.
+ */
+export async function fetchDirectArtCropUrl(
+  cardName: string,
+  backendUrl: string,
+): Promise<string | null> {
+  try {
+    const cards = await $fetch<
+      Array<{
+        image_uris?: { art_crop?: string };
+        card_faces?: Array<{ image_uris?: { art_crop?: string } }>;
+      }>
+    >(`${backendUrl}/cards/cards-by-names`, {
+      method: 'POST',
+      body: { cardNames: [cardName] },
+    });
+    const card = cards?.[0];
+    return (
+      card?.image_uris?.art_crop ??
+      card?.card_faces?.[0]?.image_uris?.art_crop ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}

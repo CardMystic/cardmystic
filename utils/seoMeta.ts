@@ -61,6 +61,7 @@ export function buildArticleSeo(article: Article | null): SeoMeta {
 export function buildDecklistSeo(
   list: DecklistSummary | null,
   ownerUsername?: string | null,
+  directImageUrl?: string | null,
 ): SeoMeta {
   if (!list) {
     return {
@@ -89,10 +90,13 @@ export function buildDecklistSeo(
       : `${prefix}. View the full decklist on CardMystic.`;
   }
 
-  // Prefer the owner-chosen avatar, fall back to the first commander so
-  // link unfurls still show a themed card image.
+  // Prefer a caller-resolved direct URL (used for og:image so unfurlers don't
+  // have to follow Scryfall's 302), then avatar, then first commander, then
+  // the generic fallback.
   let image = FALLBACK_OG_IMAGE;
-  if (list.avatar_card_name) image = scryfallArtCropUrl(list.avatar_card_name);
+  if (directImageUrl) image = directImageUrl;
+  else if (list.avatar_card_name)
+    image = scryfallArtCropUrl(list.avatar_card_name);
   else if (commanders[0]) image = scryfallArtCropUrl(commanders[0]);
 
   return {
@@ -108,6 +112,7 @@ export function buildDecklistSeo(
 export function buildUserProfileSeo(
   profile: PublicProfile | null,
   deckCount: number,
+  directImageUrl?: string | null,
 ): SeoMeta {
   if (!profile) {
     return {
@@ -133,9 +138,12 @@ export function buildUserProfileSeo(
   const description =
     `${name} on CardMystic — ${deckPart}. ${followerPart}`.trim();
 
-  const image = profile.avatar_card_name
-    ? scryfallArtCropUrl(profile.avatar_card_name)
-    : FALLBACK_OG_IMAGE;
+  // Prefer a caller-resolved direct URL so unfurlers don't have to follow
+  // Scryfall's 302 redirect for og:image.
+  let image = FALLBACK_OG_IMAGE;
+  if (directImageUrl) image = directImageUrl;
+  else if (profile.avatar_card_name)
+    image = scryfallArtCropUrl(profile.avatar_card_name);
 
   return {
     title: profile.username
