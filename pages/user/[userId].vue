@@ -87,19 +87,37 @@ import CardListLink from '~/components/lists/CardListLink.vue';
 import FollowButton from '~/components/user/FollowButton.vue';
 import { safeJsonLd } from '~/utils/safeJsonLd';
 import { buildUserProfileSeo } from '~/utils/seoMeta';
+import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 
 definePageMeta({ title: 'User Profile' });
 
 const route = useRoute();
 const userId = computed(() => String(route.params.userId ?? ''));
+const runtimeConfig = useRuntimeConfig();
 
 // SSR-seed vue-query so unfurlers see the real username and avatar art.
-await useSsrQuerySeed({
+const ssrProfile = await useSsrQuerySeed({
   cacheKey: `user-profile-ssr-${userId.value}`,
   path: `/user/profile/${encodeURIComponent(userId.value)}`,
   schema: GetUserProfileResponseSchema,
   queryKey: ['discovery', 'public-profile', userId.value],
 });
+
+// Resolve avatar to a direct `cards.scryfall.io/...` URL so Discord's
+// unfurler doesn't have to follow Scryfall's 302 redirect.
+const ssrAvatarCardName = computed(
+  () => ssrProfile.value?.profile?.avatar_card_name || null,
+);
+const { data: ssrOgImageUrl } = await useAsyncData(
+  `user-og-image-${userId.value}`,
+  async () => {
+    if (!ssrAvatarCardName.value) return null;
+    return fetchDirectArtCropUrl(
+      ssrAvatarCardName.value,
+      runtimeConfig.public.backendUrl,
+    );
+  },
+);
 
 const { profile, decklists, isLoading, error } = usePublicUserProfile(userId);
 
@@ -114,7 +132,11 @@ const canonicalUrl = computed(
 );
 
 const seo = computed(() =>
-  buildUserProfileSeo(profile.value ?? null, decklists.value.length),
+  buildUserProfileSeo(
+    profile.value ?? null,
+    decklists.value.length,
+    ssrOgImageUrl.value,
+  ),
 );
 
 useSeoMeta({

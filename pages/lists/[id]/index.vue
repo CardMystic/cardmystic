@@ -268,21 +268,40 @@ import { refDebounced } from '~/utils/refDebounced';
 import { groupAndSortCards } from '~/utils/sort';
 import { safeJsonLd } from '~/utils/safeJsonLd';
 import { buildDecklistSeo } from '~/utils/seoMeta';
+import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 import type { Card } from '~/models/cardModel';
-
 const route = useRoute();
 const listId = route.params.id as string;
 const toast = useToast();
+const runtimeConfig = useRuntimeConfig();
 
 // SSR-seed vue-query for the public view so unfurlers see the deck name and
 // commander art. Private decks 404 here (no auth on SSR); the owned-decklist
 // flow handles them on the client.
-await useSsrQuerySeed({
+const ssrPublicList = await useSsrQuerySeed({
   cacheKey: `list-public-ssr-${listId}`,
   path: `/supabase/card-lists/view/${encodeURIComponent(listId)}`,
   schema: GetPublicDecklistResponseSchema,
   queryKey: ['discovery', 'public-decklist', listId],
 });
+
+// Resolve the primary card name to a direct `cards.scryfall.io/...` URL for
+// og:image. Discord's unfurler does not follow Scryfall's 302 redirect, so
+// the redirect URL renders no preview image.
+const ssrPrimaryCardName = computed(() => {
+  const decklist = ssrPublicList.value?.decklist;
+  return decklist?.avatar_card_name || decklist?.commanders?.[0] || null;
+});
+const { data: ssrOgImageUrl } = await useAsyncData(
+  `list-og-image-${listId}`,
+  async () => {
+    if (!ssrPrimaryCardName.value) return null;
+    return fetchDirectArtCropUrl(
+      ssrPrimaryCardName.value,
+      runtimeConfig.public.backendUrl,
+    );
+  },
+);
 
 const {
   useListItems,
@@ -338,7 +357,11 @@ const canonicalUrl = computed(() => `https://cardmystic.com/lists/${listId}`);
 const isPublicList = computed(() => list.value?.visibility === 'public');
 
 const seo = computed(() =>
-  buildDecklistSeo(list.value ?? null, decklistOwner.value?.username),
+  buildDecklistSeo(
+    list.value ?? null,
+    decklistOwner.value?.username,
+    ssrOgImageUrl.value,
+  ),
 );
 
 useSeoMeta({
