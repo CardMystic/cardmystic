@@ -86,7 +86,7 @@
           variant="outline"
           class="mt-1 mr-2"
           :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
-          size="sm"
+          :size="isMobile ? 'sm' : 'md'"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Buy on TCGPlayer"
@@ -105,7 +105,7 @@
             variant="solid"
             class="mt-1 mr-2 cursor-pointer"
             icon="i-lucide-ellipsis"
-            size="sm"
+            :size="isMobile ? 'sm' : 'md'"
             aria-label="More actions"
           />
         </UTooltip>
@@ -115,7 +115,7 @@
               color="neutral"
               variant="ghost"
               class="cursor-pointer justify-start"
-              size="sm"
+              size="md"
               icon="i-mdi-cards-outline"
               @click="
                 findSimilarCards();
@@ -129,7 +129,7 @@
                 color="primary"
                 variant="ghost"
                 class="cursor-pointer justify-start"
-                size="sm"
+                size="md"
                 icon="i-lucide-box"
                 @click="
                   getRecommendations();
@@ -142,7 +142,7 @@
                 color="error"
                 variant="ghost"
                 class="cursor-pointer justify-start"
-                size="sm"
+                size="md"
                 icon="i-lucide-flame"
                 @click="
                   viewPopularCards();

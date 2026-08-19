@@ -273,7 +273,7 @@
               variant="outline"
               class="mr-1 sm:mr-2"
               :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
-              :size="isMobile ? 'xs' : 'sm'"
+              :size="isMobile ? 'sm' : 'md'"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Buy on TCGPlayer"
@@ -294,7 +294,7 @@
               variant="solid"
               class="mr-1 cursor-pointer"
               icon="i-lucide-ellipsis"
-              size="xs"
+              :size="isMobile ? 'sm' : 'md'"
               aria-label="More actions"
             />
           </UTooltip>
@@ -305,7 +305,7 @@
                 color="neutral"
                 variant="ghost"
                 class="cursor-pointer justify-start"
-                size="sm"
+                size="md"
                 icon="i-mdi-cards-outline"
                 @click="
                   findSimilarCards();
@@ -319,7 +319,7 @@
                   color="primary"
                   variant="ghost"
                   class="cursor-pointer justify-start"
-                  size="sm"
+                  size="md"
                   icon="i-lucide-box"
                   @click="
                     getRecommendations();
@@ -332,7 +332,7 @@
                   color="error"
                   variant="ghost"
                   class="cursor-pointer justify-start"
-                  size="sm"
+                  size="md"
                   icon="i-lucide-flame"
                   @click="
                     viewPopularCards();
@@ -364,7 +364,7 @@
               :color="isThumbsDownClicked ? 'error' : 'primary'"
               variant="ghost"
               icon="i-lucide-thumbs-down"
-              :size="isMobile ? 'xs' : 'sm'"
+              :size="isMobile ? 'sm' : 'md'"
               aria-label="Disagree with this result"
               @click="handleDislike"
             />
@@ -383,50 +383,15 @@
               :color="isInDecklist ? 'success' : 'primary'"
               variant="soft"
               :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'"
-              :size="isMobile ? 'xs' : 'sm'"
+              :size="isMobile ? 'sm' : 'md'"
               aria-label="Add to deckbuilding search"
               @click="deckbuilderStore?.addCard(card.card_data.name)"
             />
           </template>
         </UTooltip>
       </div>
-
-      <!-- Remove from list button -->
-      <UTooltip
-        v-if="showRemoveButton"
-        text="Remove from list"
-        :popper="{ placement: 'top' }"
-      >
-        <template #default>
-          <UButton
-            class="cursor-pointer"
-            color="error"
-            variant="soft"
-            icon="i-lucide-trash-2"
-            :size="isMobile ? 'xs' : 'sm'"
-            aria-label="Remove from list"
-            @click="emit('remove', card.card_data.id)"
-          />
-        </template>
-      </UTooltip>
-
-      <UButton
-        v-if="isDev && showCardInfo"
-        color="warning"
-        variant="outline"
-        class="ml-2"
-        size="xs"
-        @click="toggleShowAllData"
-      >
-        {{ showAllData ? 'Hide Data' : 'Show Data' }}
-      </UButton>
     </div>
   </UCard>
-  <div v-if="isDev && showAllData" class="card-data mt-2">
-    <pre>
-    {{ JSON.stringify(card.card_data, null, 2) }}
-  </pre>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -475,10 +440,6 @@ const props = defineProps({
   },
   // True if the card was the searched card in a similarity search
   isSearched: {
-    type: Boolean,
-    default: false,
-  },
-  showRemoveButton: {
     type: Boolean,
     default: false,
   },
