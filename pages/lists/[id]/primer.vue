@@ -1,13 +1,5 @@
 <template>
-  <div class="w-full h-[97vh] flex flex-col mx-auto relative z-10 pt-4">
-    <!-- Page Background Image (blurred, behind all content) -->
-    <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
-      <div
-        class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-40 dark:opacity-20 blur-sm"
-        :style="{ backgroundImage: `url(${bannerImageUrl})` }"
-      ></div>
-    </div>
-
+  <div class="w-full flex flex-col mx-auto relative z-10 pt-4">
     <!-- Back button -->
     <div class="mb-4">
       <UButton
@@ -21,17 +13,19 @@
     </div>
 
     <!-- Primer editor / viewer -->
-    <ClientOnly>
-      <MarkdownEditor
-        v-model="primerContent"
-        :editable="isCreator"
-        :is-saving="isSaving"
-        :save-handler="handleSave"
-      />
-      <template #fallback>
-        <USkeleton class="h-[60vh] w-full rounded-md" />
-      </template>
-    </ClientOnly>
+    <div class="flex flex-col mb-5">
+      <ClientOnly>
+        <MarkdownEditor
+          v-model="primerContent"
+          :editable="isCreator"
+          :is-saving="isSaving"
+          :save-handler="handleSave"
+        />
+        <template #fallback>
+          <USkeleton class="h-[60vh] w-full rounded-md" />
+        </template>
+      </ClientOnly>
+    </div>
   </div>
 </template>
 

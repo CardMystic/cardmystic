@@ -86,7 +86,7 @@
               :key="'ungrouped-' + index"
             >
               <div
-                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4"
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 mb-4"
               >
                 <div
                   v-for="card in group.cards"
@@ -189,7 +189,7 @@
               >
                 <div
                   :id="groupToId(group.label)"
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2"
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 p-2"
                 >
                   <div
                     v-for="card in group.cards"
@@ -282,7 +282,7 @@
                 :key="'sb-ungrouped-' + index"
               >
                 <div
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4"
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 mb-4"
                 >
                   <div
                     v-for="card in group.cards"
@@ -353,7 +353,7 @@
                   #[group.label]
                 >
                   <div
-                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 p-2"
                   >
                     <div
                       v-for="card in group.cards"
@@ -442,7 +442,7 @@
                 :key="'con-ungrouped-' + index"
               >
                 <div
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-4"
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 mb-4"
                 >
                   <div
                     v-for="card in group.cards"
@@ -513,7 +513,7 @@
                   #[group.label]
                 >
                   <div
-                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-2"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 p-2"
                   >
                     <div
                       v-for="card in group.cards"

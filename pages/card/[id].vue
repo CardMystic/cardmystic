@@ -609,9 +609,10 @@
                   <UInput
                     v-model="recommendQuery"
                     placeholder="e.g. ramp, removal, card draw..."
-                    class="flex-1 text-base"
+                    class="flex-1"
                     icon="i-lucide-box"
                     @keyup.enter="applyRecommendQuery"
+                    :ui="{ base: 'text-base' }"
                   />
                   <UButton
                     color="primary"
@@ -653,9 +654,10 @@
                   <UInput
                     v-model="popularCardsQuery"
                     placeholder="e.g. ramp, removal, card draw..."
-                    class="flex-1 text-base"
+                    class="flex-1"
                     icon="i-lucide-flame"
                     @keyup.enter="applyPopularCardsQuery"
+                    :ui="{ base: 'text-base' }"
                   />
                   <UButton
                     color="primary"
@@ -728,9 +730,10 @@
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."
-                    class="flex-1 text-base"
+                    class="flex-1"
                     icon="i-lucide-search"
                     @keyup.enter="applyPopularCommandersQuery"
+                    :ui="{ base: 'text-base' }"
                   />
                   <UButton
                     color="primary"
@@ -774,9 +777,10 @@
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."
-                    class="flex-1 text-base"
+                    class="flex-1"
                     icon="i-lucide-search"
                     @keyup.enter="applyPopularCommandersQuery"
+                    :ui="{ base: 'text-base' }"
                   />
                   <UButton
                     color="primary"

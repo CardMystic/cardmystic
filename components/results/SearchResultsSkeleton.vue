@@ -1,4 +1,8 @@
 <template>
+  <div style="height: 32px"></div>
+  <!-- Sort spacer to prevent layout shift -->
+  <div v-if="defaultGroupBy" style="height: 26px"></div>
+  <!-- Spacer for expand all/collapse all buttons -->
   <div class="results-layout xl:flex xl:items-start xl:gap-6">
     <aside
       class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
@@ -26,6 +30,7 @@
 withDefaults(
   defineProps<{
     skeletonCount?: number;
+    defaultGroupBy?: string;
   }>(),
   {
     skeletonCount: 40,
