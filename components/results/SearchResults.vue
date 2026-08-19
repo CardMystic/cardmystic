@@ -53,7 +53,7 @@
               groupedResults.length > 0 &&
               groupedResults[0].label
             "
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 mb-3"
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 mb-3"
           >
             <div
               @mouseenter="setPreviewCard(searchedCard)"
@@ -125,7 +125,7 @@
               >
                 <div
                   :id="groupToId(group.label)"
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 pb-4"
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 pb-4"
                 >
                   <div
                     v-for="result in group.cards"
@@ -157,7 +157,7 @@
           <!-- Flat results (no grouping) -->
           <template v-else>
             <div
-              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2"
+              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2"
             >
               <div
                 v-for="(result, index) in sortedResults"

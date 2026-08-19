@@ -36,13 +36,16 @@
     <ClientOnly>
       <!-- My Articles view -->
       <template v-if="view === 'mine'">
-        <div v-if="isLoadingMine" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div
+          v-if="isLoadingMine"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+        >
           <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
         </div>
 
         <div
           v-else-if="myArticles.length > 0"
-          class="grid grid-cols-1 md:grid-cols-3 gap-3"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
         >
           <ArticleCard
             v-for="article in myArticles"
@@ -78,14 +81,14 @@
       <template v-else>
         <div
           v-if="isLoadingLiked"
-          class="grid grid-cols-1 md:grid-cols-3 gap-3"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
         >
           <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
         </div>
 
         <div
           v-else-if="likedArticles.length > 0"
-          class="grid grid-cols-1 md:grid-cols-3 gap-3"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
         >
           <ArticleCard
             v-for="article in likedArticles"
@@ -112,7 +115,9 @@
       </template>
 
       <template #fallback>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+        >
           <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
         </div>
       </template>
