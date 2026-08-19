@@ -74,81 +74,87 @@
       </div>
     </div>
 
-    <!-- Card Name and mana cost -->
-    <div class="flex flex-col items-center justify-center text-center mt-1">
-      <!-- Action Buttons -->
-      <div class="flex flex-row items-center text-center w-full">
-        <!-- Buy on TCGPlayer -->
-        <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
-          <UButton
-            v-if="card.card_data.tcgplayer_id"
-            :to="getAffiliateLink(card.card_data.tcgplayer_id)"
-            external
-            color="success"
-            variant="outline"
-            class="mt-1 mr-2"
-            :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
-            size="sm"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Buy on TCGPlayer"
-          >
-            {{
-              card.card_data.prices.usd
-                ? `$${card.card_data.prices.usd}`
-                : 'Buy'
-            }}
-          </UButton>
-        </UTooltip>
-
-        <!-- Similarity search -->
-        <UTooltip
-          text="Search for similar cards"
-          :popper="{ placement: 'top' }"
+    <!-- Action Buttons -->
+    <div class="flex flex-row items-center text-center w-full">
+      <!-- Buy on TCGPlayer -->
+      <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
+        <UButton
+          v-if="card.card_data.tcgplayer_id"
+          :to="getAffiliateLink(card.card_data.tcgplayer_id)"
+          external
+          color="success"
+          variant="outline"
+          class="mt-1 mr-2"
+          :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
+          size="sm"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Buy on TCGPlayer"
         >
+          {{
+            card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy'
+          }}
+        </UButton>
+      </UTooltip>
+
+      <!-- More actions popover -->
+      <UPopover v-model:open="moreActionsOpen">
+        <UTooltip text="More actions" :popper="{ placement: 'top' }">
           <UButton
             color="neutral"
-            variant="outline"
+            variant="solid"
             class="mt-1 mr-2 cursor-pointer"
-            icon="i-mdi-cards-outline"
+            icon="i-lucide-ellipsis"
             size="sm"
-            @click="findSimilarCards"
-            aria-label="Find Similar Cards"
+            aria-label="More actions"
           />
         </UTooltip>
-
-        <!-- Commander-card buttons -->
-        <template v-if="isCommanderCardComputed">
-          <UTooltip
-            text="Get Deck Recommendations"
-            :popper="{ placement: 'top' }"
-          >
+        <template #content>
+          <div class="flex flex-col gap-1 p-2 w-48">
             <UButton
-              color="primary"
-              variant="outline"
-              class="mt-1 mr-2 cursor-pointer"
-              icon="i-lucide-box"
+              color="neutral"
+              variant="ghost"
+              class="cursor-pointer justify-start"
               size="sm"
-              @click="getRecommendations"
-              aria-label="Get Deck Recommendations for this Commander"
-            />
-          </UTooltip>
-          <UTooltip
-            text="Popular Cards for this Commander"
-            :popper="{ placement: 'top' }"
-          >
-            <UButton
-              color="error"
-              variant="outline"
-              class="mt-1 mr-2 cursor-pointer"
-              icon="i-lucide-flame"
-              size="sm"
-              @click="viewPopularCards"
-              aria-label="Popular Cards for this Commander"
-            />
-          </UTooltip>
+              icon="i-mdi-cards-outline"
+              @click="
+                findSimilarCards();
+                moreActionsOpen = false;
+              "
+            >
+              Find Similar Cards
+            </UButton>
+            <template v-if="isCommanderCardComputed">
+              <UButton
+                color="primary"
+                variant="ghost"
+                class="cursor-pointer justify-start"
+                size="sm"
+                icon="i-lucide-box"
+                @click="
+                  getRecommendations();
+                  moreActionsOpen = false;
+                "
+              >
+                Deck Recommendations
+              </UButton>
+              <UButton
+                color="error"
+                variant="ghost"
+                class="cursor-pointer justify-start"
+                size="sm"
+                icon="i-lucide-flame"
+                @click="
+                  viewPopularCards();
+                  moreActionsOpen = false;
+                "
+              >
+                Popular Cards
+              </UButton>
+            </template>
+          </div>
         </template>
-      </div>
+      </UPopover>
     </div>
   </UCard>
 </template>
@@ -216,6 +222,7 @@ const isFlipped = computed(() =>
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
+const moreActionsOpen = ref(false);
 
 function confirmSetCopies(numCopies: number) {
   emit(
