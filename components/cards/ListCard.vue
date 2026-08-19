@@ -6,7 +6,7 @@
       isDeckCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '',
       legalityWarning ? 'illegal-card-bg' : '',
     ]"
-    :ui="{ body: 'p-1 sm:p-2' }"
+    :ui="{ body: 'p-1 sm:p-1' }"
   >
     <SetCommanderModal
       :open="showCommanderModal"
@@ -75,7 +75,7 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex flex-row items-center text-center w-full">
+    <div class="flex flex-row items-center text-center gap-1 w-full mt-1">
       <!-- Buy on TCGPlayer -->
       <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
         <UButton
@@ -84,9 +84,8 @@
           external
           color="success"
           variant="outline"
-          class="mt-1 mr-2"
-          :icon="isMobile ? undefined : 'i-heroicons-shopping-cart'"
-          :size="isMobile ? 'sm' : 'md'"
+          class="cursor-pointer"
+          :size="isMobile ? 'xs' : 'sm'"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Buy on TCGPlayer"
@@ -97,64 +96,48 @@
         </UButton>
       </UTooltip>
 
-      <!-- More actions popover -->
-      <UPopover v-model:open="moreActionsOpen">
-        <UTooltip text="More actions" :popper="{ placement: 'top' }">
-          <UButton
-            color="neutral"
-            variant="solid"
-            class="mt-1 mr-2 cursor-pointer"
-            icon="i-lucide-ellipsis"
-            :size="isMobile ? 'sm' : 'md'"
-            aria-label="More actions"
-          />
-        </UTooltip>
-        <template #content>
-          <div class="flex flex-col gap-1 p-2 w-48">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              class="cursor-pointer justify-start"
-              size="md"
-              icon="i-mdi-cards-outline"
-              @click="
-                findSimilarCards();
-                moreActionsOpen = false;
-              "
-            >
-              Find Similar Cards
-            </UButton>
-            <template v-if="isCommanderCardComputed">
-              <UButton
-                color="primary"
-                variant="ghost"
-                class="cursor-pointer justify-start"
-                size="md"
-                icon="i-lucide-box"
-                @click="
-                  getRecommendations();
-                  moreActionsOpen = false;
-                "
-              >
-                Deck Recommendations
-              </UButton>
-              <UButton
-                color="error"
-                variant="ghost"
-                class="cursor-pointer justify-start"
-                size="md"
-                icon="i-lucide-flame"
-                @click="
-                  viewPopularCards();
-                  moreActionsOpen = false;
-                "
-              >
-                Popular Cards
-              </UButton>
-            </template>
-          </div>
-        </template>
-      </UPopover>
+      <!-- Desktop buttons (hidden on mobile) -->
+      <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
+        <UButton
+          color="neutral"
+          variant="outline"
+          class="inline-flex cursor-pointer"
+          icon="i-mdi-cards-outline"
+          :size="isMobile ? 'xs' : 'sm'"
+          @click="findSimilarCards"
+          aria-label="Find Similar Cards"
+        />
+      </UTooltip>
+      <UTooltip
+        text="Popular Cards for this Commander"
+        :popper="{ placement: 'top' }"
+      >
+        <UButton
+          v-if="isCommanderCardComputed"
+          color="error"
+          variant="outline"
+          class="inline-flex cursor-pointer"
+          icon="i-lucide-flame"
+          :size="isMobile ? 'xs' : 'sm'"
+          @click="viewPopularCards"
+          aria-label="Popular Cards for this Commander"
+        />
+      </UTooltip>
+      <UTooltip
+        text="Get Deck Recommendations for this Commander"
+        :popper="{ placement: 'top' }"
+      >
+        <UButton
+          v-if="isCommanderCardComputed"
+          color="primary"
+          variant="outline"
+          class="hidden sm:inline-flex cursor-pointer"
+          icon="i-lucide-box"
+          :size="isMobile ? 'xs' : 'sm'"
+          @click="getRecommendations"
+          aria-label="Get Deck Recommendations for this Commander"
+        />
+      </UTooltip>
     </div>
   </UCard>
 </template>
@@ -222,7 +205,6 @@ const isFlipped = computed(() =>
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
-const moreActionsOpen = ref(false);
 
 function confirmSetCopies(numCopies: number) {
   emit(

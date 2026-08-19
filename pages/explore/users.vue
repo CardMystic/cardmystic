@@ -30,13 +30,16 @@
       Something went wrong while searching. Please try again.
     </div>
 
-    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div
+      v-if="isLoading"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+    >
       <USkeleton v-for="i in 6" :key="i" class="user-skeleton" />
     </div>
 
     <div
       v-else-if="users.length > 0"
-      class="grid grid-cols-1 md:grid-cols-3 gap-3"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
     >
       <PublicUserLink
         v-for="profile in users"
@@ -84,13 +87,13 @@
       </p>
       <div
         v-if="isLoadingFeatured"
-        class="grid grid-cols-1 md:grid-cols-3 gap-3"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
       >
         <USkeleton v-for="i in 6" :key="i" class="user-skeleton" />
       </div>
       <div
         v-else-if="featuredUsers.length > 0"
-        class="grid grid-cols-1 md:grid-cols-3 gap-3"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
       >
         <PublicUserLink
           v-for="profile in featuredUsers"
