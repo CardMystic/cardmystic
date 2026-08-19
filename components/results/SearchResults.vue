@@ -2,31 +2,10 @@
   <!-- Results -->
   <div class="mt-3 w-full" :class="{ 'pb-24': jumpToGroups.length > 0 }">
     <template v-if="isLoading || deferringHeavyRender">
-      <div style="height: 32px"></div>
-      <!-- Sort spacer to prevent layout shift -->
-      <div v-if="defaultGroupBy" style="height: 26px"></div>
-      <!-- Spacer for expand all/collapse all buttons -->
-      <div class="results-layout xl:flex xl:items-start xl:gap-6">
-        <aside
-          class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
-        >
-          <div class="preview-sticky">
-            <HoveredPreviewSkeleton />
-          </div>
-        </aside>
-
-        <div class="min-w-0 flex-1">
-          <div
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2"
-          >
-            <CardSkeleton
-              v-for="i in skeletonCount"
-              :key="`skeleton-${i}`"
-              :showCardInfo="true"
-            />
-          </div>
-        </div>
-      </div>
+      <SearchResultsSkeleton
+        :skeleton-count="skeletonCount"
+        :default-group-by="defaultGroupBy"
+      />
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
@@ -74,7 +53,7 @@
               groupedResults.length > 0 &&
               groupedResults[0].label
             "
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 mb-3"
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 mb-3"
           >
             <div
               @mouseenter="setPreviewCard(searchedCard)"
@@ -112,9 +91,11 @@
                 color="neutral"
                 variant="ghost"
                 @click="
-                  openAccordionValues = accordionItems.map(
-                    (i) => i.value as string,
-                  )
+                  () => {
+                    openAccordionValues = accordionItems.map(
+                      (i) => i.value as string,
+                    );
+                  }
                 "
               />
               <UButton
@@ -144,7 +125,7 @@
               >
                 <div
                   :id="groupToId(group.label)"
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 pb-4"
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 pb-4"
                 >
                   <div
                     v-for="result in group.cards"
@@ -176,7 +157,7 @@
           <!-- Flat results (no grouping) -->
           <template v-else>
             <div
-              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2"
+              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2"
             >
               <div
                 v-for="(result, index) in sortedResults"

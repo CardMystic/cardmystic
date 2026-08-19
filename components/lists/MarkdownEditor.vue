@@ -125,7 +125,7 @@
       </div>
 
       <div
-        class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+        class="editor-shell flex-1 min-h-[65vh] w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
         @mousemove="onEditorMouseMove"
         @mouseleave="onEditorMouseLeave"
       >
@@ -205,7 +205,7 @@
         </div>
 
         <div
-          class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+          class="editor-shell flex-1 min-h-[80vh] w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
           @mousemove="onEditorMouseMove"
           @mouseleave="onEditorMouseLeave"
         >
@@ -235,7 +235,7 @@
       <!-- Right: live preview -->
       <div
         ref="previewRef"
-        class="primer-preview flex-1 min-w-0 min-h-0 p-6 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 overflow-y-auto"
+        class="primer-preview flex-1 min-w-0 min-h-0 px-1 overflow-y-auto"
         @mousemove="onPreviewMouseMove"
         @mouseleave="onPreviewMouseLeave"
       >
@@ -252,13 +252,7 @@
     <!-- Preview-only mode -->
     <div
       v-else
-      :class="[
-        'primer-preview grow min-h-0 overflow-y-auto p-6',
-        {
-          'rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950':
-            hasBackground,
-        },
-      ]"
+      class="primer-preview grow min-h-0 overflow-y-auto px-1"
       @mousemove="onPreviewMouseMove"
       @mouseleave="onPreviewMouseLeave"
     >
