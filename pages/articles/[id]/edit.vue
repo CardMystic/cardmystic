@@ -135,7 +135,7 @@
       </div>
 
       <!-- Markdown content editor -->
-      <div class="h-[85vh] flex flex-col">
+      <div class="flex flex-col mb-5">
         <ClientOnly>
           <MarkdownEditor
             v-model="content"
