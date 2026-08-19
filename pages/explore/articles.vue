@@ -30,13 +30,16 @@
       Something went wrong while searching. Please try again.
     </div>
 
-    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div
+      v-if="isLoading"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+    >
       <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
     </div>
 
     <div
       v-else-if="articles.length > 0"
-      class="grid grid-cols-1 md:grid-cols-3 gap-3"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
     >
       <ArticleCard
         v-for="article in articles"
@@ -70,12 +73,15 @@
       >
         Recent Articles
       </h2>
-      <div v-if="isLoadingRecent" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div
+        v-if="isLoadingRecent"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+      >
         <USkeleton v-for="i in 6" :key="i" class="article-skeleton" />
       </div>
       <div
         v-else-if="recentArticles.length > 0"
-        class="grid grid-cols-1 md:grid-cols-3 gap-3"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
       >
         <ArticleCard
           v-for="article in recentArticles"
