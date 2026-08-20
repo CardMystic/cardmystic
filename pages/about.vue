@@ -62,7 +62,7 @@
       <p class="mt-4 text-base md:text-lg leading-relaxed">
         👾 Discord:
         <NuxtLink
-          to="https://discord.gg/GmPZ3e7tZH"
+          to="https://discord.gg/Qhcg87q88r"
           target="_blank"
           class="text-primary hover:underline font-semibold"
         >

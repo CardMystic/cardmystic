@@ -42,7 +42,7 @@ const communityItems: CommunityItem[] = [
     title: 'Chat With Us On Discord!',
     icon: 'i-lucide-message-circle',
     bgColor: '#5865F2',
-    link: 'https://discord.gg/GmPZ3e7tZH',
+    link: 'https://discord.gg/Qhcg87q88r',
   },
 ];
 </script>
