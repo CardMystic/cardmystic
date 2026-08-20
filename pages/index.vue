@@ -9,15 +9,15 @@
         <div
           class="flex flex-col gap-5 items-center lg:items-start text-center lg:text-left"
         >
-          <p class="hero-eyebrow">Tools designed for Magic</p>
+          <p class="hero-eyebrow">YOUR ALL-IN-ONE MTG TOOLKIT</p>
           <h1 class="hero-title text-white">
             Build
             <span class="hero-title-highlight">Smarter</span>
             Decks.
           </h1>
           <p class="hero-subtitle">
-            Simply describe the card you want in plain English! Powered by
-            custom machine learning models.
+            MTG Smart Search Engine, Deck Builder & Deck Recommender for Magic:
+            The Gathering
           </p>
 
           <!-- Search (suggested searches + advanced filters render directly
