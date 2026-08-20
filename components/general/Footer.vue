@@ -14,7 +14,7 @@
           <UIcon name="i-simple-icons-github" size="24" class="text-white" />
         </NuxtLink>
         <NuxtLink
-          to="https://discord.gg/GmPZ3e7tZH"
+          to="https://discord.gg/Qhcg87q88r"
           target="_blank"
           aria-label="Discord"
           rel="noopener"

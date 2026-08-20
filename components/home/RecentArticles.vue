@@ -4,7 +4,7 @@
     <p class="text-sm opacity-70 mb-4 text-center">
       Want to become a writer? Contact us on
       <a
-        href="https://discord.gg/GmPZ3e7tZH"
+        href="https://discord.gg/Qhcg87q88r"
         target="_blank"
         rel="noopener noreferrer"
         class="text-primary hover:underline"
