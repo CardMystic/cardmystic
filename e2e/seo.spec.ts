@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getAllSeoSlugs } from '../utils/seoQueries';
+import { getAllSeoSlugs, getSeoPath } from '../utils/seoQueries';
 
 /**
  * SEO infrastructure coverage: sitemap server route + robots.txt.
@@ -25,15 +25,26 @@ test.describe('SEO infrastructure', () => {
     expect(xml).toContain('<loc>https://cardmystic.com/</loc>');
     expect(xml).toContain('<loc>https://cardmystic.com/about</loc>');
     expect(xml).toContain('<loc>https://cardmystic.com/search/all/smart</loc>');
+    expect(xml).toContain(
+      '<loc>https://cardmystic.com/search/all/deckbuilder</loc>',
+    );
+    expect(xml).toContain(
+      '<loc>https://cardmystic.com/popular-cards/all</loc>',
+    );
+    expect(xml).toContain(
+      '<loc>https://cardmystic.com/popular-commanders/all</loc>',
+    );
+    expect(xml).toContain(
+      '<loc>https://cardmystic.com/popular-by-commander/all</loc>',
+    );
 
     // Every registered SEO slug group has its first slug listed.
     for (const { platform, searchType, slugs } of getAllSeoSlugs()) {
+      const path = getSeoPath(platform, searchType, slugs[0]);
       expect(
         xml,
         `sitemap missing ${platform}/${searchType}/${slugs[0]}`,
-      ).toContain(
-        `<loc>https://cardmystic.com/search/${platform}/${searchType}/${slugs[0]}</loc>`,
-      );
+      ).toContain(`<loc>https://cardmystic.com${path}</loc>`);
     }
 
     // Card pages are included.

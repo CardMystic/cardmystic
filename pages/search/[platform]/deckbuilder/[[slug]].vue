@@ -7,7 +7,18 @@
         class="mt-6 max-w-5xl"
       />
 
-      <SearchAbout :type="aboutType" />
+      <!-- SEO slug page: show pre-generated title + description -->
+      <template v-if="seoEntry">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
+          {{ seoEntry.title }}
+        </h1>
+        <p class="text-gray-400 text-center mb-6 max-w-2xl">
+          {{ seoEntry.description }}
+        </p>
+      </template>
+
+      <!-- Landing page: show about section -->
+      <SearchAbout v-else :type="aboutType" />
 
       <!-- Not Found Warning -->
       <UAlert
@@ -60,7 +71,11 @@
           :search-results="searchResults"
           :query-param="decklistParam"
           :hide-thumbs-down-button="true"
-          :help-text="`Paste a decklist above to get ${platformName} card recommendations.`"
+          :help-text="
+            seoEntry
+              ? `Loading recommendations for ${seoEntry.query}...`
+              : `Paste a decklist above to get ${platformName} card recommendations.`
+          "
           empty-title="No Recommendations Available Yet"
           empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
           default-group-by="type"
@@ -99,13 +114,20 @@ import {
 import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 import { parseDecklist } from '~/utils/decklist';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
+import { getSeoEntry } from '~/utils/seoQueries';
 
 const { decklist: deckbuilderDecklist, showSaveAllModal } = useDeckbuilder();
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
+const slug = route.params.slug ? String(route.params.slug) : undefined;
 
 if (!isValidPlatform(platform)) {
+  throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
+}
+
+const seoEntry = slug ? getSeoEntry(platform, 'deckbuilder', slug) : undefined;
+if (slug && !seoEntry) {
   throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
 }
 
@@ -115,7 +137,9 @@ const aboutType: SearchAboutType = 'recommend';
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
-const commanderParam = computed(() => String(route.query.commander || ''));
+const commanderParam = computed(
+  () => seoEntry?.query || String(route.query.commander || ''),
+);
 const partnerCommanderParam = computed(() =>
   String(route.query.partnerCommander || ''),
 );
@@ -138,39 +162,58 @@ const parsedFilters = computed(() => {
       /* fall through to defaults on malformed input */
     }
   }
-  return CardSearchFiltersSchema.parse(platformFilters);
+  return CardSearchFiltersSchema.parse(
+    seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters,
+  );
 });
 
 useSeoMeta({
-  robots: () => (decklistParam.value ? 'noindex, follow' : 'index, follow'),
+  robots: () =>
+    seoEntry
+      ? 'index, follow'
+      : decklistParam.value || commanderParam.value
+        ? 'noindex, follow'
+        : 'index, follow',
   title: () =>
-    firstCommanderName.value
-      ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-      : `${platformName} Deck Builder & Card Recommender | CardMystic`,
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : firstCommanderName.value
+        ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+        : `${platformName} Deck Builder & Card Recommender | CardMystic`,
   description: () =>
-    firstCommanderName.value
-      ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
-      : `Build your ${platformName} deck with personalized card recommendations.`,
+    seoEntry
+      ? seoEntry.description
+      : firstCommanderName.value
+        ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
+        : `Build your ${platformName} deck with personalized card recommendations.`,
   ogType: 'website',
   ogTitle: () =>
-    firstCommanderName.value
-      ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-      : `${platformName} Deck Builder & Card Recommender | CardMystic`,
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : firstCommanderName.value
+        ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+        : `${platformName} Deck Builder & Card Recommender | CardMystic`,
   ogDescription: () =>
-    firstCommanderName.value
-      ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
-      : `Build your ${platformName} deck with personalized card recommendations.`,
+    seoEntry
+      ? seoEntry.description
+      : firstCommanderName.value
+        ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
+        : `Build your ${platformName} deck with personalized card recommendations.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
-  ogImageAlt: () => `${platformName} Deck Builder`,
+  ogImageAlt: () => seoEntry?.title || `${platformName} Deck Builder`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
-    firstCommanderName.value
-      ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
-      : `${platformName} Deck Builder & Card Recommender | CardMystic`,
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : firstCommanderName.value
+        ? `${platformName} Deck Recommendations for ${firstCommanderName.value} | CardMystic`
+        : `${platformName} Deck Builder & Card Recommender | CardMystic`,
   twitterDescription: () =>
-    firstCommanderName.value
-      ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
-      : `Build your ${platformName} deck with personalized card recommendations.`,
+    seoEntry
+      ? seoEntry.description
+      : firstCommanderName.value
+        ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
+        : `Build your ${platformName} deck with personalized card recommendations.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
 

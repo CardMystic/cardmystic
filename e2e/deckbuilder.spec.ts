@@ -11,6 +11,34 @@ const SEARCH_TIMEOUT = 45_000;
 const TEST_COMMANDER = 'Kaalia of the Vast';
 
 test.describe('Deck Recommender', () => {
+  test('SEO slug renders commander content and runs the canned recommendation', async ({
+    page,
+  }) => {
+    const alsRequest = page.waitForRequest(
+      (request) =>
+        request.url().startsWith(`${BACKEND}/als/recommend`) &&
+        request.method() === 'POST',
+      { timeout: SEARCH_TIMEOUT },
+    );
+
+    await gotoHydrated(
+      page,
+      '/search/all/deckbuilder/best-cards-for-kaalia-of-the-vast',
+    );
+
+    await expect(
+      page.getByRole('heading', { name: 'Best Cards for Kaalia of the Vast' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/data-driven MTG card recommendations/i),
+    ).toBeVisible();
+
+    const request = await alsRequest;
+    expect(request.postDataJSON()).toMatchObject({
+      commanders: ['Kaalia of the Vast'],
+    });
+  });
+
   test('URL-driven commander request hits /als/recommend and renders cards', async ({
     page,
   }) => {

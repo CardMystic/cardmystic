@@ -7,7 +7,16 @@
         class="mt-6 max-w-5xl"
       />
 
-      <SearchAbout type="popular-cards" />
+      <template v-if="seoEntry">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
+          {{ seoEntry.title }}
+        </h1>
+        <p class="text-gray-400 text-center mb-6 max-w-2xl">
+          {{ seoEntry.description }}
+        </p>
+      </template>
+
+      <SearchAbout v-else type="popular-cards" />
 
       <!-- Results -->
       <div class="mb-10 w-full">
@@ -35,6 +44,7 @@ import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel
 import { TopCardsRequestSchema } from '~/models/deckStatsModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useTopCardsSearch } from '~/composables/useDeckStats';
+import { getSeoEntry } from '~/utils/seoQueries';
 import {
   isValidPlatform,
   getPlatformFilters,
@@ -45,35 +55,63 @@ import {
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
+const slug = route.params.slug ? String(route.params.slug) : undefined;
 
 if (!isValidPlatform(platform)) {
+  throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
+}
+
+const seoEntry = slug
+  ? getSeoEntry(platform, 'popular-cards', slug)
+  : undefined;
+if (slug && !seoEntry) {
   throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
 }
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
 
-const queryParam = computed(() => String(route.query?.query || ''));
+const queryParam = computed(
+  () => seoEntry?.query || String(route.query?.query || ''),
+);
 
 useSeoMeta({
-  robots: () => (queryParam.value ? 'noindex, follow' : 'index, follow'),
+  robots: () =>
+    seoEntry
+      ? 'index, follow'
+      : queryParam.value
+        ? 'noindex, follow'
+        : 'index, follow',
   title: () =>
-    queryParam.value
-      ? `${queryParam.value} - ${platformName} Popular Commander Cards | CardMystic`
-      : `${platformName} Popular Commander Cards | CardMystic`,
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : queryParam.value
+        ? `${queryParam.value} - ${platformName} Popular Commander Cards | CardMystic`
+        : `${platformName} Popular Commander Cards | CardMystic`,
   description: () =>
-    queryParam.value
-      ? `Top ${platformName} cards re-ranked by "${queryParam.value}".`
-      : `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
+    seoEntry
+      ? seoEntry.description
+      : queryParam.value
+        ? `Top ${platformName} cards re-ranked by "${queryParam.value}".`
+        : `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   ogType: 'website',
-  ogTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
+  ogTitle: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : `${platformName} Popular Commander Cards | CardMystic`,
   ogDescription: () =>
+    seoEntry?.description ||
     `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
-  ogImageAlt: () => `${platformName} Popular Commander Cards`,
+  ogImageAlt: () =>
+    seoEntry?.title || `${platformName} Popular Commander Cards`,
   twitterCard: 'summary_large_image',
-  twitterTitle: () => `${platformName} Popular Commander Cards | CardMystic`,
+  twitterTitle: () =>
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : `${platformName} Popular Commander Cards | CardMystic`,
   twitterDescription: () =>
+    seoEntry?.description ||
     `Discover the most popular ${platformName} cards across all decks on CardMystic.`,
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
@@ -91,7 +129,9 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return CardSearchFiltersSchema.parse(platformFilters);
+  return CardSearchFiltersSchema.parse(
+    seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters,
+  );
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();

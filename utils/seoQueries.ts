@@ -1,6 +1,13 @@
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 
-export type SeoSearchType = 'smart' | 'similarity' | 'keyword';
+export type SeoSearchType =
+  | 'smart'
+  | 'similarity'
+  | 'keyword'
+  | 'deckbuilder'
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander';
 
 export interface SeoQuery {
   slug: string;
@@ -2696,6 +2703,112 @@ export const aiQueries: SeoQuery[] = [
 
 // ─── Lookup Maps ─────────────────────────────────────────────────
 
+// One canonical page per commander; the route sends `name` to ALS.
+const deckbuilderCommanders = [
+  { slug: 'yshtola-nights-blessed', name: "Y'shtola, Night's Blessed" },
+  { slug: 'the-ur-dragon', name: 'The Ur-Dragon' },
+  { slug: 'edgar-markov', name: 'Edgar Markov' },
+  { slug: 'atraxa-praetors-voice', name: "Atraxa, Praetors' Voice" },
+  { slug: 'krenko-mob-boss', name: 'Krenko, Mob Boss' },
+  { slug: 'kaalia-of-the-vast', name: 'Kaalia of the Vast' },
+  { slug: 'vivi-ornitier', name: 'Vivi Ornitier' },
+  { slug: 'sauron-the-dark-lord', name: 'Sauron, the Dark Lord' },
+  { slug: 'teval-the-balanced-scale', name: 'Teval, the Balanced Scale' },
+  { slug: 'ms-bumbleflower', name: 'Ms. Bumbleflower' },
+  { slug: 'fire-lord-azula', name: 'Fire Lord Azula' },
+  { slug: 'pantlaza-sun-favored', name: 'Pantlaza, Sun-Favored' },
+  { slug: 'lathril-blade-of-the-elves', name: 'Lathril, Blade of the Elves' },
+  { slug: 'giada-font-of-hope', name: 'Giada, Font of Hope' },
+  { slug: 'the-wise-mothman', name: 'The Wise Mothman' },
+  { slug: 'jodah-the-unifier', name: 'Jodah, the Unifier' },
+  { slug: 'yuriko-the-tigers-shadow', name: "Yuriko, the Tiger's Shadow" },
+  { slug: 'nekusar-the-mindrazer', name: 'Nekusar, the Mindrazer' },
+  { slug: 'kenrith-the-returned-king', name: 'Kenrith, the Returned King' },
+  { slug: 'valgavoth-harrower-of-souls', name: 'Valgavoth, Harrower of Souls' },
+  { slug: 'isshin-two-heavens-as-one', name: 'Isshin, Two Heavens as One' },
+  { slug: 'cloud-ex-soldier', name: 'Cloud, Ex-SOLDIER' },
+  { slug: 'kefka-court-mage', name: 'Kefka, Court Mage' },
+  { slug: 'hearthhull-the-worldseed', name: 'Hearthhull, the Worldseed' },
+  { slug: 'baylen-the-haymaker', name: 'Baylen, the Haymaker' },
+  { slug: 'sephiroth-fabled-soldier', name: 'Sephiroth, Fabled SOLDIER' },
+  { slug: 'miirym-sentinel-wyrm', name: 'Miirym, Sentinel Wyrm' },
+  {
+    slug: 'chatterfang-squirrel-general',
+    name: 'Chatterfang, Squirrel General',
+  },
+  { slug: 'ulalek-fused-atrocity', name: 'Ulalek, Fused Atrocity' },
+  { slug: 'bello-bard-of-the-brambles', name: 'Bello, Bard of the Brambles' },
+  { slug: 'hashaton-scarabs-fist', name: "Hashaton, Scarab's Fist" },
+  { slug: 'esika-god-of-the-tree', name: 'Esika, God of the Tree' },
+  { slug: 'hakbal-of-the-surging-soul', name: 'Hakbal of the Surging Soul' },
+  { slug: 'muldrotha-the-gravetide', name: 'Muldrotha, the Gravetide' },
+  { slug: 'rin-and-seri-inseparable', name: 'Rin and Seri, Inseparable' },
+  { slug: 'animar-soul-of-elements', name: 'Animar, Soul of Elements' },
+  { slug: 'the-necrobloom', name: 'The Necrobloom' },
+  { slug: 'arcades-the-strategist', name: 'Arcades, the Strategist' },
+  { slug: 'aragorn-the-uniter', name: 'Aragorn, the Uniter' },
+  { slug: 'wilhelt-the-rotcleaver', name: 'Wilhelt, the Rotcleaver' },
+  { slug: 'breya-etherium-shaper', name: 'Breya, Etherium Shaper' },
+  { slug: 'meren-of-clan-nel-toth', name: 'Meren of Clan Nel Toth' },
+  { slug: 'oloro-ageless-ascetic', name: 'Oloro, Ageless Ascetic' },
+  { slug: 'teysa-karlov', name: 'Teysa Karlov' },
+  { slug: 'gishath-suns-avatar', name: "Gishath, Sun's Avatar" },
+  { slug: 'kinnan-bonder-prodigy', name: 'Kinnan, Bonder Prodigy' },
+  { slug: 'zhulodok-void-gorger', name: 'Zhulodok, Void Gorger' },
+  { slug: 'shorikai-genesis-engine', name: 'Shorikai, Genesis Engine' },
+  { slug: 'korvold-fae-cursed-king', name: 'Korvold, Fae-Cursed King' },
+  { slug: 'krrik-son-of-yawgmoth', name: "K'rrik, Son of Yawgmoth" },
+  { slug: 'urza-lord-high-artificer', name: 'Urza, Lord High Artificer' },
+  { slug: 'prosper-tome-bound', name: 'Prosper, Tome-Bound' },
+  { slug: 'niv-mizzet-parun', name: 'Niv-Mizzet, Parun' },
+  { slug: 'aesi-tyrant-of-gyre-strait', name: 'Aesi, Tyrant of Gyre Strait' },
+] as const;
+
+export const deckbuilderQueries: SeoQuery[] = deckbuilderCommanders.map(
+  ({ slug, name }) => ({
+    slug: `best-cards-for-${slug}`,
+    query: name,
+    searchType: 'deckbuilder',
+    title: `Best Cards for ${name}`,
+    description: `Find the best cards for a ${name} Commander deck. Get data-driven MTG card recommendations, synergies, and upgrade ideas for your EDH deck.`,
+  }),
+);
+
+export const popularCardQueries: SeoQuery[] = aiQueries
+  .filter(({ slug }) => slug !== 'best-commanders')
+  .map(({ slug, query, filters, title }) => {
+    const topic = title.replace(/^Best MTG /, '');
+    return {
+      slug: slug.replace(/^best-/, ''),
+      query,
+      searchType: 'popular-cards',
+      filters,
+      title: `Most Popular MTG ${topic}`,
+      description: `Discover the most-played ${topic.toLowerCase()} across MTG Commander decks, ranked using real deck popularity data.`,
+    };
+  });
+
+export const popularCommanderQueries: SeoQuery[] = commanderQueries.map(
+  ({ slug, query, filters, title }) => ({
+    slug,
+    query,
+    searchType: 'popular-commanders',
+    filters,
+    title: `Most Popular ${title}`,
+    description: `Discover the most-played ${title.toLowerCase()}, ranked using real MTG Commander deck data.`,
+  }),
+);
+
+export const popularByCommanderQueries: SeoQuery[] = deckbuilderCommanders.map(
+  ({ slug, name }) => ({
+    slug: `most-played-cards-for-${slug}`,
+    query: name,
+    searchType: 'popular-by-commander',
+    title: `Most Played Cards for ${name}`,
+    description: `Discover the most-played cards in ${name} Commander decks, ranked using real deck inclusion and popularity data.`,
+  }),
+);
+
 function buildMap(queries: SeoQuery[]): Map<string, SeoQuery> {
   return new Map(queries.map((q) => [q.slug, q]));
 }
@@ -2707,12 +2820,24 @@ export const arenaMap = buildMap(arenaQueries);
 export const mtgoMap = buildMap(mtgoQueries);
 export const modernMap = buildMap(modernQueries);
 export const aiMap = buildMap(aiQueries);
+export const deckbuilderMap = buildMap(deckbuilderQueries);
+export const popularCardMap = buildMap(popularCardQueries);
+export const popularCommanderMap = buildMap(popularCommanderQueries);
+export const popularByCommanderMap = buildMap(popularByCommanderQueries);
 
 // ─── Unified Lookup ──────────────────────────────────────────────
 
 import type { Platform } from '~/utils/platformConfig';
 
-type SearchType = 'smart' | 'similarity' | 'keyword' | 'commander';
+type SearchType =
+  | 'smart'
+  | 'similarity'
+  | 'keyword'
+  | 'commander'
+  | 'deckbuilder'
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander';
 
 /**
  * Mapping from (platform, searchType) to the corresponding query array / map.
@@ -2730,6 +2855,22 @@ const seoRegistry: Record<
   'all:keyword': { queries: keywordQueries, map: keywordMap },
   'all:commander': { queries: commanderQueries, map: commanderMap },
   'all:similarity': { queries: similarQueries, map: similarMap },
+  'all:deckbuilder': {
+    queries: deckbuilderQueries,
+    map: deckbuilderMap,
+  },
+  'all:popular-cards': {
+    queries: popularCardQueries,
+    map: popularCardMap,
+  },
+  'all:popular-commanders': {
+    queries: popularCommanderQueries,
+    map: popularCommanderMap,
+  },
+  'all:popular-by-commander': {
+    queries: popularByCommanderQueries,
+    map: popularByCommanderMap,
+  },
 };
 
 /** Look up an SEO entry by platform + searchType + slug. */
@@ -2740,6 +2881,18 @@ export function getSeoEntry(
 ): SeoQuery | undefined {
   const key = `${platform}:${searchType}`;
   return seoRegistry[key]?.map.get(slug);
+}
+
+/** Build the public URL path for either search or popularity slug pages. */
+export function getSeoPath(
+  platform: Platform,
+  searchType: SearchType,
+  slug: string,
+): string {
+  if (searchType.startsWith('popular-')) {
+    return `/${searchType}/${platform}/${slug}`;
+  }
+  return `/search/${platform}/${searchType}/${slug}`;
 }
 
 /** All slugs for sitemap generation, grouped by platform and search type. */
