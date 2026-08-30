@@ -13,7 +13,14 @@
         class="mt-6 max-w-5xl"
       />
 
-      <div class="mb-10 w-full">
+      <SearchLandingContent
+        v-if="!displayQuery"
+        search-type="similarity"
+        :platform="platform"
+        :platform-name="platformName"
+      />
+
+      <div v-else class="mb-10 w-full">
         <!-- Results -->
         <SearchResults
           :is-loading="isLoading"

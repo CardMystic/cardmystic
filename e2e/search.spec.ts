@@ -113,6 +113,66 @@ test.describe('Homepage', () => {
   });
 });
 
+// ─── Search landing states ───────────────────────────────────────────
+
+const landingPages = [
+  {
+    path: '/search/all/smart',
+    suggestion: 'Creatures that draw cards',
+  },
+  {
+    path: '/search/all/similarity',
+    suggestion: 'Lightning Bolt',
+  },
+  {
+    path: '/search/all/commander',
+    suggestion: 'Graveyard recursion',
+  },
+  {
+    path: '/search/all/keyword',
+    suggestion: 'Draw a card',
+  },
+  {
+    path: '/search/all/deckbuilder',
+    suggestion: 'Korvold, Fae-Cursed King',
+  },
+] as const;
+
+test.describe('Search landing pages', () => {
+  for (const landing of landingPages) {
+    test(`${landing.path} presents useful suggested searches`, async ({
+      page,
+    }) => {
+      await gotoHydrated(page, landing.path);
+
+      await expect(
+        page.getByRole('heading', { name: 'Not sure what to search?' }),
+      ).toBeVisible();
+      await expect(page.getByLabel(/^Try /)).toHaveCount(6);
+      await expect(
+        page.getByRole('button', {
+          name: `Try ${landing.suggestion}`,
+          exact: true,
+        }),
+      ).toBeVisible();
+    });
+  }
+
+  test('a Smart Search suggestion starts a real search', async ({ page }) => {
+    await gotoHydrated(page, '/search/all/smart');
+    await page
+      .getByRole('button', { name: 'Try Creatures that draw cards' })
+      .click();
+
+    await expect(page).toHaveURL(/query=creatures(?:\+|%20)that(?:\+|%20)draw/);
+    await expect(
+      page.getByRole('heading', {
+        name: 'Not sure what to search?',
+      }),
+    ).toBeHidden();
+  });
+});
+
 // ─── 2. AI search ─────────────────────────────────────────────────────
 
 test.describe('AI search', () => {
@@ -280,8 +340,7 @@ test.describe('Platform routing', () => {
       platform: 'modern',
       expectFilters: (f) => {
         const formats = f.selectedCardFormats as
-          | Array<{ format: string; status: string }>
-          | undefined;
+          Array<{ format: string; status: string }> | undefined;
         expect(formats).toBeDefined();
         expect(
           formats?.some(

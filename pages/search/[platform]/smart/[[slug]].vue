@@ -13,8 +13,15 @@
         class="mt-6 max-w-5xl"
       />
 
+      <SearchLandingContent
+        v-if="!displayQuery"
+        search-type="smart"
+        :platform="platform"
+        :platform-name="platformName"
+      />
+
       <!-- Results -->
-      <div class="mb-10 w-full">
+      <div v-else class="mb-10 w-full">
         <SearchResults
           :is-loading="isLoading"
           :search-results="searchResults"

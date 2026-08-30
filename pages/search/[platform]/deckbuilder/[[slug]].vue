@@ -56,7 +56,14 @@
         </template>
       </div>
 
-      <div class="mb-10 w-full">
+      <SearchLandingContent
+        v-if="!hasSearchInput"
+        search-type="recommend"
+        :platform="platform"
+        :platform-name="platformName"
+      />
+
+      <div v-else class="mb-10 w-full">
         <!-- Results -->
         <SearchResults
           :show-add-to-deckbuilder-button="true"
@@ -136,6 +143,9 @@ const partnerCommanderParam = computed(() =>
 );
 const commanderNames = computed(() =>
   [commanderParam.value, partnerCommanderParam.value].filter(Boolean),
+);
+const hasSearchInput = computed(
+  () => !!decklistParam.value || commanderNames.value.length > 0,
 );
 const firstCommanderName = computed(() => commanderParam.value || '');
 const limitParam = computed(() => {
