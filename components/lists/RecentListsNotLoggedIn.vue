@@ -1,6 +1,9 @@
 <template>
   <div class="relative">
     <h2 class="section-title">Recent Decklists</h2>
+    <p class="text-sm opacity-70 mb-4 text-center">
+      Built with CardMystic's powerful deck building tools!
+    </p>
 
     <!-- Fake real-looking list cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
@@ -62,6 +65,18 @@
         icon="i-lucide-arrow-right"
       >
         See More
+      </UButton>
+    </div>
+
+    <div class="relative z-20 flex justify-center mt-4">
+      <UButton
+        color="primary"
+        variant="solid"
+        size="lg"
+        icon="i-lucide-lock"
+        disabled
+      >
+        Build a New Deck
       </UButton>
     </div>
 
@@ -128,11 +143,9 @@ const fakeItems = [
 .section-title
   font-size: 2rem
   font-weight: 700
-  margin-bottom: 1.5rem
   text-align: center
   @media (max-width: 768px)
     font-size: 1.5rem
-    margin-bottom: 0.75rem
 
 .login-container
   background: var(--color-primary)

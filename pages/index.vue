@@ -72,6 +72,8 @@
 
   <!-- Everything below the fold -->
   <UContainer class="mt-10 mb-10">
+    <ExploreLinks class="mb-14" />
+
     <!-- User-specific sections when logged in -->
     <ClientOnly>
       <LazyRecentLists v-if="isLoggedIn" class="mb-14" />

@@ -1,6 +1,9 @@
 <template>
   <div>
     <h2 class="section-title">Recent Decklists</h2>
+    <p class="text-sm opacity-70 mb-4 text-center">
+      Built with CardMystic's powerful deck building tools!
+    </p>
 
     <div
       v-if="isLoadingLists"
@@ -33,9 +36,23 @@
 
     <div v-else class="empty-state">
       <UIcon name="i-lucide-inbox" class="text-5xl opacity-30 mb-3" />
-      <p class="mb-4">You haven't created any decklists yet</p>
-      <UButton to="/lists" color="primary" variant="soft">
-        Create Your First List
+      <p>You haven't created any decklists yet</p>
+    </div>
+
+    <div v-if="!isLoadingLists" class="flex justify-center mt-4">
+      <UButton
+        color="primary"
+        variant="solid"
+        size="lg"
+        icon="i-lucide-plus"
+        class="cursor-pointer"
+        @click="
+          () => {
+            isCreateModalOpen = true;
+          }
+        "
+      >
+        Build a New Deck
       </UButton>
     </div>
 
@@ -57,6 +74,11 @@
         Recent Cards
       </UButton>
     </div>
+
+    <LazyCreateDeckModal
+      v-if="isCreateModalOpen"
+      v-model:open="isCreateModalOpen"
+    />
   </div>
 </template>
 
@@ -69,6 +91,7 @@ import CardListLink from '~/components/lists/CardListLink.vue';
 // with a small page size is cheap and shares the cache with the paginated
 // My Decklists view.
 const page = ref(1);
+const isCreateModalOpen = ref(false);
 const { decklists, isLoading: isLoadingLists } = useMyDecklists(page, 8);
 
 const recentLists = computed(() => {
@@ -87,11 +110,9 @@ const recentLists = computed(() => {
 .section-title
   font-size: 2rem
   font-weight: 700
-  margin-bottom: 1.5rem
   text-align: center
   @media (max-width: 768px)
     font-size: 1.5rem
-    margin-bottom: 0.75rem
 
 .list-skeleton
   height: 150px

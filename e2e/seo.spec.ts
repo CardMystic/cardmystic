@@ -7,6 +7,33 @@ import { getAllSeoSlugs, getSeoPath } from '../utils/seoQueries';
  */
 
 test.describe('SEO infrastructure', () => {
+  test('homepage exposes crawlable explore and popularity links', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const links = page.getByRole('navigation', { name: 'Explore CardMystic' });
+    const destinations = [
+      ['/explore/decklists', 'Decklists'],
+      ['/explore/users', 'Users'],
+      ['/explore/articles', 'Articles'],
+      ['/popular-cards/all', 'Commander Cards'],
+      ['/popular-commanders/all', 'Commanders'],
+      ['/popular-by-commander/all', 'Cards by Commander'],
+    ] as const;
+
+    await expect(links).toBeVisible();
+    for (const [href, name] of destinations) {
+      await expect(
+        links.getByRole('link', { name, exact: true }),
+      ).toHaveAttribute('href', href);
+    }
+
+    await expect(
+      page.getByRole('button', { name: 'Build a New Deck' }),
+    ).toBeDisabled();
+  });
+
   test('sitemap.xml serves valid XML with core, landing, and slug URLs', async ({
     request,
   }) => {
