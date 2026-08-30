@@ -1,22 +1,17 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
-    <div class="w-full pt-4 flex flex-col items-center">
+    <div class="w-full flex flex-col items-center">
+      <SearchSEOTitleAndDescription
+        :seo-entry="seoEntry"
+        fallback-title="MTG Popular Commanders"
+        fallback-description="Discover the most popular commanders across all decks."
+      />
+
       <StatsSearch
         default-stats-type="popular-commanders"
         :platform="searchPlatformProp"
         class="mt-6 max-w-5xl"
       />
-
-      <template v-if="seoEntry">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
-          {{ seoEntry.title }}
-        </h1>
-        <p class="text-gray-400 text-center mb-6 max-w-2xl">
-          {{ seoEntry.description }}
-        </p>
-      </template>
-
-      <SearchAbout v-else type="popular-commanders" />
 
       <!-- Results -->
       <div class="mb-10 w-full">

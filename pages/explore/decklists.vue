@@ -1,12 +1,12 @@
 <template>
-  <UContainer class="mb-10 mt-6 max-w-full">
-    <div class="text-center mb-6">
-      <h1 class="text-3xl md:text-4xl font-bold mb-2">Search Decklists</h1>
-      <p class="text-sm md:text-base opacity-80">
-        Find public decklists by keyword in their name or description.
-      </p>
+  <UContainer class="mb-10 max-w-full">
+    <div class="w-full flex flex-col items-center">
+      <SearchSEOTitleAndDescription
+        fallback-title="Search Decklists"
+        fallback-description="Find public decklists created with CardMystic's Deck Builder."
+      />
+      <p></p>
     </div>
-
     <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
       <UInput
         v-model="searchInput"

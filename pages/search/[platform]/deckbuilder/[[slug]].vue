@@ -1,24 +1,17 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
-    <div class="w-full pt-4 flex flex-col items-center">
+    <div class="w-full flex flex-col items-center">
+      <SearchSEOTitleAndDescription
+        :seo-entry="seoEntry"
+        fallback-title="MTG Deck Recommender"
+        fallback-description="Build your deck using personalized deck recommendations."
+      />
+
       <Search
         default-search-type="recommend"
         :platform="searchPlatformProp"
         class="mt-6 max-w-5xl"
       />
-
-      <!-- SEO slug page: show pre-generated title + description -->
-      <template v-if="seoEntry">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
-          {{ seoEntry.title }}
-        </h1>
-        <p class="text-gray-400 text-center mb-6 max-w-2xl">
-          {{ seoEntry.description }}
-        </p>
-      </template>
-
-      <!-- Landing page: show about section -->
-      <SearchAbout v-else :type="aboutType" />
 
       <!-- Not Found Warning -->
       <UAlert
@@ -111,7 +104,6 @@ import {
   getPlatformDisplayName,
   type Platform,
 } from '~/utils/platformConfig';
-import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 import { parseDecklist } from '~/utils/decklist';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import { getSeoEntry } from '~/utils/seoQueries';
@@ -133,7 +125,6 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType = 'recommend';
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));

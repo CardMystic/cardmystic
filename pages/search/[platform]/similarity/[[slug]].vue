@@ -1,24 +1,17 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
-    <div class="w-full pt-4 flex flex-col items-center">
+    <div class="w-full flex flex-col items-center">
+      <SearchSEOTitleAndDescription
+        :seo-entry="seoEntry"
+        fallback-title="MTG Similarity Search"
+        fallback-description="Search a card name to find cards with similar effects."
+      />
+
       <Search
         default-search-type="similarity"
         :platform="searchPlatformProp"
         class="mt-6 max-w-5xl"
       />
-
-      <!-- SEO slug page: show pre-generated title + description -->
-      <template v-if="seoEntry">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
-          {{ seoEntry.title }}
-        </h1>
-        <p class="text-gray-400 text-center mb-6 max-w-2xl">
-          {{ seoEntry.description }}
-        </p>
-      </template>
-
-      <!-- Landing page: show about section -->
-      <SearchAbout v-else :type="aboutType" />
 
       <div class="mb-10 w-full">
         <!-- Results -->
@@ -61,8 +54,6 @@ import {
   getPlatformDisplayName,
   type Platform,
 } from '~/utils/platformConfig';
-import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
-
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
 const slug = route.params.slug ? String(route.params.slug) : undefined;
@@ -78,7 +69,6 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType = 'similarity';
 
 const cardNameParam = computed(() => String(route.query?.card_name || ''));
 const displayQuery = computed(() => seoEntry?.query || cardNameParam.value);
