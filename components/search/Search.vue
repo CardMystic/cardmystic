@@ -30,8 +30,6 @@
       <!-- Deck Recommender -->
       <ALSSearch v-else-if="searchType === 'recommend'" :platform="platform" />
     </div>
-
-    <SearchAbout v-show="showAbout" :type="searchType" :use-h1="false" />
   </div>
 </template>
 
@@ -52,13 +50,8 @@ import {
 // Define props
 const props = defineProps<{
   similarity?: boolean;
-  showAbout?: boolean;
   defaultSearchType?:
-    | 'smart'
-    | 'similarity'
-    | 'commander'
-    | 'keyword'
-    | 'recommend';
+    'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend';
   platform?: 'arena' | 'mtgo' | 'paper';
   /** Show the curated "Suggested Searches" pills under the Smart Search bar (home hero only). */
   showSuggestedSearches?: boolean;

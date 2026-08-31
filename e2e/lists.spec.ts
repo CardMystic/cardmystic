@@ -123,6 +123,23 @@ test.describe('Card lists CRUD', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Homepage create-deck entry point
+  // ---------------------------------------------------------------------------
+  test('opens the create-deck modal from Recent Decklists', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/');
+
+    const buildButton = page.getByRole('button', { name: 'Build a New Deck' });
+    await expect(buildButton).toBeEnabled();
+    await buildButton.click();
+
+    await expect(
+      page.getByRole('dialog', { name: 'Create New Decklist' }),
+    ).toBeVisible();
+  });
+
+  // ---------------------------------------------------------------------------
   // Test 26 — Create list
   // ---------------------------------------------------------------------------
   test('creates a new list via the New List modal', async ({ page }) => {

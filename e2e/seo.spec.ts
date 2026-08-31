@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { getAllSeoSlugs } from '../utils/seoQueries';
+import { getAllSeoSlugs, getSeoPath } from '../utils/seoQueries';
+import { validPlatforms } from '../utils/platformConfig';
 
 /**
  * SEO infrastructure coverage: sitemap server route + robots.txt.
@@ -7,6 +8,33 @@ import { getAllSeoSlugs } from '../utils/seoQueries';
  */
 
 test.describe('SEO infrastructure', () => {
+  test('homepage exposes crawlable explore and popularity links', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    const links = page.getByRole('navigation', { name: 'Explore CardMystic' });
+    const destinations = [
+      ['/explore/decklists', 'Decklists'],
+      ['/explore/users', 'Users'],
+      ['/explore/articles', 'Articles'],
+      ['/popular-cards/all', 'Commander Cards'],
+      ['/popular-commanders/all', 'Commanders'],
+      ['/popular-by-commander/all', 'Cards by Commander'],
+    ] as const;
+
+    await expect(links).toBeVisible();
+    for (const [href, name] of destinations) {
+      await expect(
+        links.getByRole('link', { name, exact: true }),
+      ).toHaveAttribute('href', href);
+    }
+
+    await expect(
+      page.getByRole('button', { name: 'Build a New Deck' }),
+    ).toBeDisabled();
+  });
+
   test('sitemap.xml serves valid XML with core, landing, and slug URLs', async ({
     request,
   }) => {
@@ -24,16 +52,32 @@ test.describe('SEO infrastructure', () => {
     // Core + landing pages.
     expect(xml).toContain('<loc>https://cardmystic.com/</loc>');
     expect(xml).toContain('<loc>https://cardmystic.com/about</loc>');
-    expect(xml).toContain('<loc>https://cardmystic.com/search/all/smart</loc>');
+    const landingTypes = [
+      'search/{platform}/smart',
+      'search/{platform}/similarity',
+      'search/{platform}/keyword',
+      'search/{platform}/commander',
+      'search/{platform}/deckbuilder',
+      'popular-cards/{platform}',
+      'popular-commanders/{platform}',
+      'popular-by-commander/{platform}',
+    ];
+    for (const platform of validPlatforms) {
+      for (const route of landingTypes) {
+        const path = route.replace('{platform}', platform);
+        expect(xml, `sitemap missing landing page ${path}`).toContain(
+          `<loc>https://cardmystic.com/${path}</loc>`,
+        );
+      }
+    }
 
     // Every registered SEO slug group has its first slug listed.
     for (const { platform, searchType, slugs } of getAllSeoSlugs()) {
+      const path = getSeoPath(platform, searchType, slugs[0]);
       expect(
         xml,
         `sitemap missing ${platform}/${searchType}/${slugs[0]}`,
-      ).toContain(
-        `<loc>https://cardmystic.com/search/${platform}/${searchType}/${slugs[0]}</loc>`,
-      );
+      ).toContain(`<loc>https://cardmystic.com${path}</loc>`);
     }
 
     // Card pages are included.

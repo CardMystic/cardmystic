@@ -1,6 +1,7 @@
 // server/routes/sitemap.xml.ts
 import cardOracleIds from '~/public/card-oracle-ids.min.json';
-import { getAllSeoSlugs } from '~/utils/seoQueries';
+import { getAllSeoSlugs, getSeoPath } from '~/utils/seoQueries';
+import { validPlatforms } from '~/utils/platformConfig';
 
 export default defineEventHandler((event) => {
   const baseUrl = 'https://cardmystic.com';
@@ -30,7 +31,6 @@ export default defineEventHandler((event) => {
 `;
 
   // Search landing pages (one per platform × search type)
-  const platforms = ['all', 'arena', 'mtgo', 'modern'];
   const searchTypes = [
     'smart',
     'similarity',
@@ -38,7 +38,7 @@ export default defineEventHandler((event) => {
     'commander',
     'deckbuilder',
   ];
-  for (const platform of platforms) {
+  for (const platform of validPlatforms) {
     for (const st of searchTypes) {
       xml += `
   <url>
@@ -50,13 +50,32 @@ export default defineEventHandler((event) => {
     }
   }
 
+  // Popularity landing pages (one per platform × popularity view)
+  const popularityTypes = [
+    'popular-cards',
+    'popular-commanders',
+    'popular-by-commander',
+  ];
+  for (const platform of validPlatforms) {
+    for (const popularityType of popularityTypes) {
+      xml += `
+  <url>
+    <loc>${baseUrl}/${popularityType}/${platform}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+    }
+  }
+
   // SEO slug pages (high-intent search results)
   const seoEntries = getAllSeoSlugs();
   for (const { platform, searchType, slugs } of seoEntries) {
     for (const slug of slugs) {
+      const path = getSeoPath(platform, searchType, slug);
       xml += `
   <url>
-    <loc>${baseUrl}/search/${platform}/${searchType}/${slug}</loc>
+    <loc>${baseUrl}${path}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
