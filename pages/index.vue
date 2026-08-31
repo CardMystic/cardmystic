@@ -16,13 +16,13 @@
             Decks.
           </h1>
           <p class="hero-subtitle">
-            MTG Smart Search Engine, Deck Builder & Deck Recommender for Magic:
-            The Gathering
+            MTG Smart Search Engine, Similar Card Search, Popular Card Search,
+            Deck Builder & Deck Recommender for Magic: The Gathering
           </p>
 
           <!-- Search (suggested searches + advanced filters render directly
                below the search bar on all breakpoints) -->
-          <Search :showAbout="true" :show-suggested-searches="true" />
+          <Search :show-suggested-searches="true" />
         </div>
 
         <!-- Right: fanned hero cards + Ready To Search example.
@@ -72,6 +72,8 @@
 
   <!-- Everything below the fold -->
   <UContainer class="mt-10 mb-10">
+    <ExploreLinks class="mb-14" />
+
     <!-- User-specific sections when logged in -->
     <ClientOnly>
       <LazyRecentLists v-if="isLoggedIn" class="mb-14" />

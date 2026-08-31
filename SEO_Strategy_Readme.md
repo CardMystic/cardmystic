@@ -69,6 +69,7 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 - Homepage
 - Static pages (e.g. /about)
 - Search landing pages — one per platform × search type (e.g. /search/all/smart, /search/arena/keyword, /search/modern/similarity)
+- Popularity landing pages — one per platform × popularity view (`popular-cards`, `popular-commanders`, `popular-by-commander`)
 - SEO slug pages (e.g. /search/all/similarity/sol-ring, /search/all/keyword/flying, /search/arena/smart/board-wipes)
 - All card pages
 
@@ -83,20 +84,23 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 ### What they are
 
 - Pre-built search result pages targeting specific high-intent queries
-- Each page runs a real search query and displays results with the full Search component
+- Each page runs a real search query and displays results with the full Search component. For deckbuilder entries, `query` is the commander name sent to the recommendation API.
 
 ### Where they live
 
-- **Filesystem:** `pages/search/[platform]/{searchType}/[[slug]].vue`
-- **URL:** `/search/{platform}/{searchType}/{slug}`
+- **Search filesystem:** `pages/search/[platform]/{searchType}/[[slug]].vue`
+- **Popularity filesystem:** `pages/{popularityType}/[platform]/[[slug]].vue`
+- **Search URL:** `/search/{platform}/{searchType}/{slug}`
+- **Popularity URL:** `/{popularityType}/{platform}/{slug}`
 - The `[[slug]]` is an optional catch-all — the same page serves both the landing page (`/search/all/smart`) and SEO slug pages (`/search/all/smart/best-card-draw`)
 - 5 search type pages: `ai`, `similarity`, `commander`, `keyword`, `deckbuilder`
 
 ### How the routing works
 
 - All search pages live under `pages/search/[platform]/` with a subfolder per search type
+- Popularity slug variants are registered only for `all`; platform landing pages remain available without generating near-duplicate slug pages.
 - The `[platform]` param is validated at runtime via `isValidPlatform()` from `utils/platformConfig.ts`
-- Valid platforms: `all`, `arena`, `mtgo`, `modern`, `paper`
+- Valid platforms: `all`, `arena`, `mtgo`, `modern`, `paper`, `commander`
 - Example: `pages/search/[platform]/smart/[[slug]].vue` → URL `/search/arena/smart/board-wipes`
 
 ### Configuration
@@ -105,19 +109,24 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 - Each entry has: `slug`, `query`, `searchType`, optional `filters`, `title`, `description`
 - A unified `seoRegistry` maps `(platform:searchType)` keys to query arrays and O(1) lookup maps
 - `getSeoEntry(platform, searchType, slug)` resolves a single entry
-- `getAllSeoSlugs()` exports all slugs grouped by platform and search type for sitemap generation
+- `getAllSeoSlugs()` exports all slugs grouped by platform and route type for sitemap generation
+- `getSeoPath()` generates the correct search or popularity route layout
 
-### Current counts (~300 slugs total)
+### Current counts (~475 slugs total)
 
-| Platform | Search Type | Count | Example slugs                                                |
-| -------- | ----------- | ----- | ------------------------------------------------------------ |
-| all      | similarity  | 76    | sol-ring, rhystic-study, dockside-extortionist, edgar-markov |
-| all      | keyword     | 47    | flying, deathtouch, cascade, treasure-tokens, infect         |
-| all      | commander   | 35    | graveyard-recursion, dragons, vampires, blink-flicker        |
-| all      | ai          | 35    | best-card-draw, best-mana-rocks, best-eldrazi, best-dragons  |
-| arena    | ai          | 35    | black-removal, board-wipes, planeswalkers, sagas             |
-| mtgo     | ai          | 35    | best-legacy-cards, combo-pieces, storm-cards, hatebears      |
-| modern   | ai          | 35    | best-creatures, burn-spells, sideboard-cards, cascade-cards  |
+| Platform | Search Type          | Count | Example slugs                                                                           |
+| -------- | -------------------- | ----- | --------------------------------------------------------------------------------------- |
+| all      | similarity           | 76    | sol-ring, rhystic-study, dockside-extortionist, edgar-markov                            |
+| all      | keyword              | 47    | flying, deathtouch, cascade, treasure-tokens, infect                                    |
+| all      | commander            | 35    | graveyard-recursion, dragons, vampires, blink-flicker                                   |
+| all      | deckbuilder          | 53    | best-cards-for-kaalia-of-the-vast, best-cards-for-korvold-fae-cursed-king               |
+| all      | popular-cards        | 34    | card-draw, mana-rocks, board-wipes, treasure-cards                                      |
+| all      | popular-commanders   | 35    | graveyard-recursion, dragons, vampires, blink-flicker                                   |
+| all      | popular-by-commander | 53    | most-played-cards-for-kaalia-of-the-vast, most-played-cards-for-korvold-fae-cursed-king |
+| all      | ai                   | 35    | best-card-draw, best-mana-rocks, best-eldrazi, best-dragons                             |
+| arena    | ai                   | 35    | black-removal, board-wipes, planeswalkers, sagas                                        |
+| mtgo     | ai                   | 35    | best-legacy-cards, combo-pieces, storm-cards, hatebears                                 |
+| modern   | ai                   | 35    | best-creatures, burn-spells, sideboard-cards, cascade-cards                             |
 
 Example URLs:
 
@@ -126,6 +135,10 @@ Example URLs:
 - `/search/mtgo/smart/best-legacy-cards`
 - `/search/arena/smart/black-removal`
 - `/search/all/commander/graveyard-recursion`
+- `/search/all/deckbuilder/best-cards-for-korvold-fae-cursed-king`
+- `/popular-cards/all/card-draw`
+- `/popular-commanders/all/graveyard-recursion`
+- `/popular-by-commander/all/most-played-cards-for-korvold-fae-cursed-king`
 - `/search/all/keyword/flying`
 - `/search/all/similarity/sol-ring`
 

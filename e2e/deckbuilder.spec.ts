@@ -11,6 +11,34 @@ const SEARCH_TIMEOUT = 45_000;
 const TEST_COMMANDER = 'Kaalia of the Vast';
 
 test.describe('Deck Recommender', () => {
+  test('SEO slug renders commander content and runs the canned recommendation', async ({
+    page,
+  }) => {
+    const alsRequest = page.waitForRequest(
+      (request) =>
+        request.url().startsWith(`${BACKEND}/als/recommend`) &&
+        request.method() === 'POST',
+      { timeout: SEARCH_TIMEOUT },
+    );
+
+    await gotoHydrated(
+      page,
+      '/search/all/deckbuilder/best-cards-for-kaalia-of-the-vast',
+    );
+
+    await expect(
+      page.getByRole('heading', { name: 'Best Cards for Kaalia of the Vast' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/data-driven MTG card recommendations/i),
+    ).toBeVisible();
+
+    const request = await alsRequest;
+    expect(request.postDataJSON()).toMatchObject({
+      commanders: ['Kaalia of the Vast'],
+    });
+  });
+
   test('URL-driven commander request hits /als/recommend and renders cards', async ({
     page,
   }) => {
@@ -53,6 +81,28 @@ test.describe('Deck Recommender', () => {
         timeout: SEARCH_TIMEOUT,
       })
       .toBeGreaterThan(0);
+  });
+
+  test('commander-only searches show the recommendation empty state', async ({
+    page,
+  }) => {
+    await page.route('**/als/recommend', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ results: [], not_found: [] }),
+      });
+    });
+
+    await gotoHydrated(
+      page,
+      `/search/all/deckbuilder?commander=${encodeURIComponent(TEST_COMMANDER)}`,
+    );
+
+    await expect(
+      page.getByText('No Recommendations Available Yet'),
+    ).toBeVisible();
+    await expect(page.getByText('Enter a search query')).toHaveCount(0);
   });
 
   test('commander autocomplete loads suggestions from backend and filters on input', async ({

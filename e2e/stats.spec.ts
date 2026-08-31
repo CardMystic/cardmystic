@@ -13,6 +13,28 @@ const TEST_COMMANDER = 'Kaalia of the Vast';
 // ─── Popular Cards ───────────────────────────────────────────────────
 
 test.describe('Popular Cards', () => {
+  test('slug page renders SEO content and runs its canned ranking query', async ({
+    page,
+  }) => {
+    const requestPromise = page.waitForRequest(
+      (request) =>
+        request.url().startsWith(`${BACKEND}/deck-stats/top-cards`) &&
+        request.method() === 'POST',
+      { timeout: SEARCH_TIMEOUT },
+    );
+
+    await gotoHydrated(page, '/popular-cards/all/card-draw');
+
+    await expect(
+      page.getByRole('heading', {
+        name: 'Most Popular MTG Card Draw Spells',
+      }),
+    ).toBeVisible();
+
+    const request = await requestPromise;
+    expect(request.postDataJSON().query).toMatch(/card draw/i);
+  });
+
   test('loads and renders the top-cards list', async ({ page }) => {
     const topCardsCall = page.waitForResponse(
       (resp) =>
@@ -91,6 +113,28 @@ test.describe('Popular Cards', () => {
 // ─── Popular Commanders ──────────────────────────────────────────────
 
 test.describe('Popular Commanders', () => {
+  test('slug page renders SEO content and runs its canned archetype query', async ({
+    page,
+  }) => {
+    const requestPromise = page.waitForRequest(
+      (request) =>
+        request.url().startsWith(`${BACKEND}/deck-stats/top-commanders`) &&
+        request.method() === 'POST',
+      { timeout: SEARCH_TIMEOUT },
+    );
+
+    await gotoHydrated(page, '/popular-commanders/all/graveyard-recursion');
+
+    await expect(
+      page.getByRole('heading', {
+        name: 'Most Popular Graveyard Recursion Commanders',
+      }),
+    ).toBeVisible();
+
+    const request = await requestPromise;
+    expect(request.postDataJSON().query).toMatch(/graveyard recursion/i);
+  });
+
   test('loads and renders the top-commanders list', async ({ page }) => {
     const topCommandersCall = page.waitForResponse(
       (resp) =>
@@ -125,6 +169,35 @@ test.describe('Popular Commanders', () => {
 // ─── Popular by Commander ────────────────────────────────────────────
 
 test.describe('Popular by Commander', () => {
+  test('slug page renders SEO content and fetches its canned commander', async ({
+    page,
+  }) => {
+    const requestPromise = page.waitForRequest(
+      (request) =>
+        request
+          .url()
+          .startsWith(`${BACKEND}/deck-stats/popular-by-commander`) &&
+        request.method() === 'POST',
+      { timeout: SEARCH_TIMEOUT },
+    );
+
+    await gotoHydrated(
+      page,
+      '/popular-by-commander/all/most-played-cards-for-kaalia-of-the-vast',
+    );
+
+    await expect(
+      page.getByRole('heading', {
+        name: 'Most Played Cards for Kaalia of the Vast',
+      }),
+    ).toBeVisible();
+
+    const request = await requestPromise;
+    expect(request.postDataJSON()).toMatchObject({
+      commanders: [TEST_COMMANDER],
+    });
+  });
+
   test('URL-driven commander query fetches and renders popular cards', async ({
     page,
   }) => {

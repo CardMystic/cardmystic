@@ -1,26 +1,26 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
-    <div class="w-full pt-4 flex flex-col items-center">
+    <div class="w-full flex flex-col items-center">
+      <SearchSEOTitleAndDescription
+        :seo-entry="seoEntry"
+        fallback-title="MTG Keyword Search"
+        fallback-description="Search for MTG cards using keyword search."
+      />
+
       <Search
         default-search-type="keyword"
         :platform="searchPlatformProp"
         class="mt-6 max-w-5xl"
       />
 
-      <!-- SEO slug page: show pre-generated title + description -->
-      <template v-if="seoEntry">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center mt-6 mb-2">
-          {{ seoEntry.title }}
-        </h1>
-        <p class="text-gray-400 text-center mb-6 max-w-2xl">
-          {{ seoEntry.description }}
-        </p>
-      </template>
+      <SearchLandingContent
+        v-if="!displayQuery"
+        search-type="keyword"
+        :platform="platform"
+        :platform-name="platformName"
+      />
 
-      <!-- Landing page: show about section -->
-      <SearchAbout v-else :type="aboutType" />
-
-      <div class="mb-10 w-full">
+      <div v-else class="mb-10 w-full">
         <!-- Results -->
         <SearchResults
           :is-loading="isLoading"
@@ -59,7 +59,6 @@ import {
   getPlatformDisplayName,
   type Platform,
 } from '~/utils/platformConfig';
-import type { SearchAboutType } from '~/components/search/SearchAbout.vue';
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
@@ -76,7 +75,6 @@ if (slug && !seoEntry) {
 
 const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
-const aboutType: SearchAboutType = 'keyword';
 
 const queryParam = computed(() => String(route.query?.query || ''));
 const displayQuery = computed(() => seoEntry?.query || queryParam.value);

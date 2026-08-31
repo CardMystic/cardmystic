@@ -1,12 +1,16 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
-    <div class="w-full pt-4 flex flex-col items-center">
+    <div class="w-full flex flex-col items-center">
+      <SearchSEOTitleAndDescription
+        :seo-entry="seoEntry"
+        fallback-title="MTG Popular Cards by Commander"
+        fallback-description="Discover the most popular cards for your commander."
+      />
+
       <StatsSearch
         default-stats-type="popular-by-commander"
         class="mt-6 max-w-5xl"
       />
-
-      <SearchAbout type="popular-by-commander" />
 
       <!-- Commander Card(s) -->
       <div
@@ -71,15 +75,26 @@ import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePopularByCommander } from '~/composables/useDeckStats';
 import { useCardsByName } from '~/composables/useCards';
 import { isValidPlatform, type Platform } from '~/utils/platformConfig';
+import { getSeoEntry } from '~/utils/seoQueries';
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
+const slug = route.params.slug ? String(route.params.slug) : undefined;
 
 if (!isValidPlatform(platform)) {
   throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
 }
 
-const commanderParam = computed(() => String(route.query.commander || ''));
+const seoEntry = slug
+  ? getSeoEntry(platform, 'popular-by-commander', slug)
+  : undefined;
+if (slug && !seoEntry) {
+  throw createError({ statusCode: 404, statusMessage: 'Page Not Found' });
+}
+
+const commanderParam = computed(
+  () => seoEntry?.query || String(route.query.commander || ''),
+);
 const partnerParam = computed(() => String(route.query.partner || ''));
 const queryParam = computed(() => String(route.query.query || ''));
 
@@ -107,30 +122,45 @@ const helpText = computed(() => {
 });
 
 useSeoMeta({
-  robots: () => (commanderParam.value ? 'noindex, follow' : 'index, follow'),
+  robots: () =>
+    seoEntry
+      ? 'index, follow'
+      : commanderParam.value
+        ? 'noindex, follow'
+        : 'index, follow',
   title: () =>
-    commanderParam.value
-      ? `${commanderDisplay.value} Popular Cards | CardMystic`
-      : 'Popular Cards by Commander | CardMystic',
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : commanderParam.value
+        ? `${commanderDisplay.value} Popular Cards | CardMystic`
+        : 'Popular Cards by Commander | CardMystic',
   description: () =>
-    commanderParam.value
-      ? `Discover the most popular cards in ${commanderDisplay.value} commander decks.`
-      : 'Find the most popular cards for any commander on CardMystic.',
+    seoEntry
+      ? seoEntry.description
+      : commanderParam.value
+        ? `Discover the most popular cards in ${commanderDisplay.value} commander decks.`
+        : 'Find the most popular cards for any commander on CardMystic.',
   ogType: 'website',
   ogTitle: () =>
-    commanderParam.value
-      ? `${commanderDisplay.value} Popular Cards | CardMystic`
-      : 'Popular Cards by Commander | CardMystic',
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : commanderParam.value
+        ? `${commanderDisplay.value} Popular Cards | CardMystic`
+        : 'Popular Cards by Commander | CardMystic',
   ogDescription: () =>
+    seoEntry?.description ||
     'Find the most popular cards for any commander on CardMystic.',
   ogImage: 'https://cardmystic.com/cardmystic_cards.png',
-  ogImageAlt: 'Popular Cards by Commander',
+  ogImageAlt: () => seoEntry?.title || 'Popular Cards by Commander',
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
-    commanderParam.value
-      ? `${commanderDisplay.value} Popular Cards | CardMystic`
-      : 'Popular Cards by Commander | CardMystic',
+    seoEntry
+      ? `${seoEntry.title} | CardMystic`
+      : commanderParam.value
+        ? `${commanderDisplay.value} Popular Cards | CardMystic`
+        : 'Popular Cards by Commander | CardMystic',
   twitterDescription: () =>
+    seoEntry?.description ||
     'Find the most popular cards for any commander on CardMystic.',
   twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
 });
@@ -148,7 +178,7 @@ const parsedFilters = computed(() => {
       JSON.parse(String(route.query.filters)),
     );
   }
-  return CardSearchFiltersSchema.parse({});
+  return CardSearchFiltersSchema.parse(seoEntry?.filters || {});
 });
 
 const { setPageInfo, getPageInfo } = usePageInfo();

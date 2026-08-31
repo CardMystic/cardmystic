@@ -113,6 +113,74 @@ test.describe('Homepage', () => {
   });
 });
 
+// ─── Search landing states ───────────────────────────────────────────
+
+const landingPages = [
+  {
+    path: '/search/all/smart',
+    heading: 'The Fastest Way To Find The Right Cards',
+    suggestion: 'Creatures that draw cards',
+  },
+  {
+    path: '/search/all/similarity',
+    heading: 'Find Similar Effects & Alternatives to Your Favorite Cards',
+    suggestion: 'Lightning Bolt',
+  },
+  {
+    path: '/search/all/commander',
+    heading: 'Find the Perfect Commander for Your Next Deck',
+    suggestion: 'Graveyard recursion',
+  },
+  {
+    path: '/search/all/keyword',
+    heading: 'Search MTG Cards by Mechanics and Rules Text',
+    suggestion: 'Draw a card',
+  },
+  {
+    path: '/search/all/deckbuilder',
+    heading: 'Find Cards That Belong in Your Deck',
+    suggestion: 'Korvold, Fae-Cursed King',
+  },
+] as const;
+
+test.describe('Search landing pages', () => {
+  for (const landing of landingPages) {
+    test(`${landing.path} presents useful suggested searches`, async ({
+      page,
+    }) => {
+      await gotoHydrated(page, landing.path);
+
+      await expect(
+        page.getByRole('heading', { level: 2, name: landing.heading }),
+      ).toBeVisible();
+      await expect(page.getByLabel(/^Try /)).toHaveCount(6);
+      await expect(
+        page.getByRole('button', {
+          name: `Try ${landing.suggestion}`,
+          exact: true,
+        }),
+      ).toBeVisible();
+    });
+  }
+
+  test('a Smart Search suggestion starts a real search', async ({ page }) => {
+    await gotoHydrated(page, '/search/all/smart');
+    await page
+      .getByRole('button', { name: 'Try Creatures that draw cards' })
+      .click();
+
+    await expect(page).toHaveURL(
+      /query=creatures(?:\+|%20)that(?:\+|%20)draw/i,
+    );
+    await expect(
+      page.getByRole('heading', {
+        level: 2,
+        name: 'The Fastest Way To Find The Right Cards',
+      }),
+    ).toBeHidden();
+  });
+});
+
 // ─── 2. AI search ─────────────────────────────────────────────────────
 
 test.describe('AI search', () => {
@@ -280,8 +348,7 @@ test.describe('Platform routing', () => {
       platform: 'modern',
       expectFilters: (f) => {
         const formats = f.selectedCardFormats as
-          | Array<{ format: string; status: string }>
-          | undefined;
+          Array<{ format: string; status: string }> | undefined;
         expect(formats).toBeDefined();
         expect(
           formats?.some(
