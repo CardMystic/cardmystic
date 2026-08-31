@@ -83,6 +83,28 @@ test.describe('Deck Recommender', () => {
       .toBeGreaterThan(0);
   });
 
+  test('commander-only searches show the recommendation empty state', async ({
+    page,
+  }) => {
+    await page.route('**/als/recommend', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ results: [], not_found: [] }),
+      });
+    });
+
+    await gotoHydrated(
+      page,
+      `/search/all/deckbuilder?commander=${encodeURIComponent(TEST_COMMANDER)}`,
+    );
+
+    await expect(
+      page.getByText('No Recommendations Available Yet'),
+    ).toBeVisible();
+    await expect(page.getByText('Enter a search query')).toHaveCount(0);
+  });
+
   test('commander autocomplete loads suggestions from backend and filters on input', async ({
     page,
   }) => {

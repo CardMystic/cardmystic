@@ -1,8 +1,5 @@
 <template>
-  <section
-    class="destination-section"
-    aria-labelledby="destination-links-title"
-  >
+  <section class="destination-section">
     <nav class="destination-rows" aria-label="Explore CardMystic">
       <div
         v-for="group in linkGroups"
@@ -61,7 +58,7 @@ const linkGroups = [
       {
         label: 'Similarity Search',
         description: 'Find similar cards based on the input card.',
-        icon: 'mdi-cards-outline',
+        icon: 'i-mdi-cards-outline',
         to: '/search/all/similarity',
         tone: 'similarity-search',
       },

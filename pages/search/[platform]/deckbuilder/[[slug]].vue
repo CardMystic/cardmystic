@@ -69,7 +69,9 @@
           :show-add-to-deckbuilder-button="true"
           :is-loading="isLoading"
           :search-results="searchResults"
-          :query-param="decklistParam"
+          :query-param="
+            decklistParam || commanderParam || partnerCommanderParam
+          "
           :hide-thumbs-down-button="true"
           :help-text="
             seoEntry

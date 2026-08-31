@@ -1,6 +1,7 @@
 // server/routes/sitemap.xml.ts
 import cardOracleIds from '~/public/card-oracle-ids.min.json';
 import { getAllSeoSlugs, getSeoPath } from '~/utils/seoQueries';
+import { validPlatforms } from '~/utils/platformConfig';
 
 export default defineEventHandler((event) => {
   const baseUrl = 'https://cardmystic.com';
@@ -30,7 +31,6 @@ export default defineEventHandler((event) => {
 `;
 
   // Search landing pages (one per platform × search type)
-  const platforms = ['all', 'arena', 'mtgo', 'modern'];
   const searchTypes = [
     'smart',
     'similarity',
@@ -38,7 +38,7 @@ export default defineEventHandler((event) => {
     'commander',
     'deckbuilder',
   ];
-  for (const platform of platforms) {
+  for (const platform of validPlatforms) {
     for (const st of searchTypes) {
       xml += `
   <url>
@@ -56,7 +56,7 @@ export default defineEventHandler((event) => {
     'popular-commanders',
     'popular-by-commander',
   ];
-  for (const platform of platforms) {
+  for (const platform of validPlatforms) {
     for (const popularityType of popularityTypes) {
       xml += `
   <url>

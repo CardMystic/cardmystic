@@ -118,22 +118,27 @@ test.describe('Homepage', () => {
 const landingPages = [
   {
     path: '/search/all/smart',
+    heading: 'The Fastest Way To Find The Right Cards',
     suggestion: 'Creatures that draw cards',
   },
   {
     path: '/search/all/similarity',
+    heading: 'Find Similar Effects & Alternatives to Your Favorite Cards',
     suggestion: 'Lightning Bolt',
   },
   {
     path: '/search/all/commander',
+    heading: 'Find the Perfect Commander for Your Next Deck',
     suggestion: 'Graveyard recursion',
   },
   {
     path: '/search/all/keyword',
+    heading: 'Search MTG Cards by Mechanics and Rules Text',
     suggestion: 'Draw a card',
   },
   {
     path: '/search/all/deckbuilder',
+    heading: 'Find Cards That Belong in Your Deck',
     suggestion: 'Korvold, Fae-Cursed King',
   },
 ] as const;
@@ -146,7 +151,7 @@ test.describe('Search landing pages', () => {
       await gotoHydrated(page, landing.path);
 
       await expect(
-        page.getByRole('heading', { name: 'Not sure what to search?' }),
+        page.getByRole('heading', { level: 2, name: landing.heading }),
       ).toBeVisible();
       await expect(page.getByLabel(/^Try /)).toHaveCount(6);
       await expect(
@@ -164,10 +169,13 @@ test.describe('Search landing pages', () => {
       .getByRole('button', { name: 'Try Creatures that draw cards' })
       .click();
 
-    await expect(page).toHaveURL(/query=creatures(?:\+|%20)that(?:\+|%20)draw/);
+    await expect(page).toHaveURL(
+      /query=creatures(?:\+|%20)that(?:\+|%20)draw/i,
+    );
     await expect(
       page.getByRole('heading', {
-        name: 'Not sure what to search?',
+        level: 2,
+        name: 'The Fastest Way To Find The Right Cards',
       }),
     ).toBeHidden();
   });

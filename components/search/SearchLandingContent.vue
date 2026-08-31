@@ -4,9 +4,14 @@
     aria-labelledby="search-landing-title"
   >
     <div class="landing-header">
-      <p id="search-landing-title" class="landing-title">
-        Not sure what to search?
-      </p>
+      <div>
+        <h2 id="search-landing-title" class="landing-title">
+          {{ config.heading }}
+        </h2>
+        <p class="landing-description">
+          Not sure where to start? Try one of these popular searches.
+        </p>
+      </div>
     </div>
 
     <div class="suggestion-grid" aria-label="Suggested searches">
@@ -49,6 +54,7 @@ interface Suggestion {
 }
 
 interface LandingConfig {
+  heading: string;
   suggestions: Suggestion[];
 }
 
@@ -60,6 +66,7 @@ const props = defineProps<{
 
 const landingConfigs: Record<LandingSearchType, LandingConfig> = {
   smart: {
+    heading: 'The Fastest Way To Find The Right Cards',
     suggestions: [
       {
         label: 'Creatures that draw cards',
@@ -88,6 +95,7 @@ const landingConfigs: Record<LandingSearchType, LandingConfig> = {
     ],
   },
   similarity: {
+    heading: 'Find Similar Effects & Alternatives to Your Favorite Cards',
     suggestions: [
       {
         label: 'Lightning Bolt',
@@ -113,6 +121,7 @@ const landingConfigs: Record<LandingSearchType, LandingConfig> = {
     ],
   },
   commander: {
+    heading: 'Find the Perfect Commander for Your Next Deck',
     suggestions: [
       {
         label: 'Graveyard recursion',
@@ -141,6 +150,7 @@ const landingConfigs: Record<LandingSearchType, LandingConfig> = {
     ],
   },
   keyword: {
+    heading: 'Search MTG Cards by Mechanics and Rules Text',
     suggestions: [
       {
         label: 'Draw a card',
@@ -169,6 +179,7 @@ const landingConfigs: Record<LandingSearchType, LandingConfig> = {
     ],
   },
   recommend: {
+    heading: 'Find Cards That Belong in Your Deck',
     suggestions: [
       {
         label: 'Korvold, Fae-Cursed King',
@@ -278,17 +289,17 @@ function runSuggestion(value: string) {
   color: var(--landing-color)
 
 .landing-title
-  margin-top: 0.2rem
-  font-size: 1.2rem
-  font-weight: 600
+  margin: 0
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem)
+  font-weight: 750
   line-height: 1.15
-  letter-spacing: -0.02em
+  letter-spacing: -0.025em
 
 .landing-description
-  margin-top: 0.55rem
+  margin-top: 0.4rem
   color: var(--ui-text-muted)
-  font-size: 0.95rem
-  line-height: 1.6
+  font-size: 0.9rem
+  line-height: 1.5
 
 .suggestion-grid
   display: grid

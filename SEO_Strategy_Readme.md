@@ -100,7 +100,7 @@ This project uses three separate SEO mechanisms. Each one has a different job.
 - All search pages live under `pages/search/[platform]/` with a subfolder per search type
 - Popularity slug variants are registered only for `all`; platform landing pages remain available without generating near-duplicate slug pages.
 - The `[platform]` param is validated at runtime via `isValidPlatform()` from `utils/platformConfig.ts`
-- Valid platforms: `all`, `arena`, `mtgo`, `modern`, `paper`
+- Valid platforms: `all`, `arena`, `mtgo`, `modern`, `paper`, `commander`
 - Example: `pages/search/[platform]/smart/[[slug]].vue` → URL `/search/arena/smart/board-wipes`
 
 ### Configuration
