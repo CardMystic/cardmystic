@@ -1,12 +1,13 @@
 <template>
-  <div class="flex items-center gap-1 justify-center h-8">
-    <UIcon name="i-lucide-group" />
-    <span class="text-sm">Group</span>
+  <div class="flex items-center gap-1 justify-start h-8">
+    <UIcon name="i-lucide-group" class="size-4 shrink-0" />
+    <span class="text-sm w-11">Group</span>
     <USelect
       v-model="selectedGroupBy"
       :items="groupByOptions"
       placeholder="None"
-      class="cursor-pointer min-w-37.5"
+      size="sm"
+      class="cursor-pointer w-32"
     />
     <UButton
       v-if="selectedGroupBy"

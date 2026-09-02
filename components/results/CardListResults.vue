@@ -2,7 +2,7 @@
   <div class="mt-3 w-full">
     <!-- Loading State -->
     <template v-if="isLoading">
-      <CardListResultsSkeleton />
+      <CardListResultsSkeleton :view="view" />
     </template>
 
     <!-- Cards display -->
@@ -85,9 +85,7 @@
               v-for="(group, index) in ungroupedGroups"
               :key="'ungrouped-' + index"
             >
-              <div
-                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2"
-              >
+              <div :class="cardGridClasses">
                 <div
                   v-for="card in group.cards"
                   :key="card.card_data.id"
@@ -95,7 +93,8 @@
                   @focusin="setPreviewCard(card, 'Mainboard')"
                   @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                 >
-                  <ListCard
+                  <component
+                    :is="cardComponent"
                     :card="card"
                     :is-flipped="flippedCards[card.card_data.id] ?? false"
                     :is-deck-commander="
@@ -189,7 +188,7 @@
               >
                 <div
                   :id="groupToId(group.label)"
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 p-2"
+                  :class="[cardGridClasses, 'p-2']"
                 >
                   <div
                     v-for="card in group.cards"
@@ -198,7 +197,8 @@
                     @focusin="setPreviewCard(card, 'Mainboard')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
-                    <ListCard
+                    <component
+                      :is="cardComponent"
                       :card="card"
                       :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="
@@ -281,9 +281,7 @@
                 v-for="(group, index) in sideboardUngrouped"
                 :key="'sb-ungrouped-' + index"
               >
-                <div
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 mb-4"
-                >
+                <div :class="[cardGridClasses, 'mb-4']">
                   <div
                     v-for="card in group.cards"
                     :key="card.card_data.id"
@@ -291,7 +289,8 @@
                     @focusin="setPreviewCard(card, 'Sideboard')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
-                    <ListCard
+                    <component
+                      :is="cardComponent"
                       :card="card"
                       :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="false"
@@ -352,9 +351,7 @@
                   :key="group.label"
                   #[group.label]
                 >
-                  <div
-                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 p-2"
-                  >
+                  <div :class="[cardGridClasses, 'p-2']">
                     <div
                       v-for="card in group.cards"
                       :key="card.card_data.id"
@@ -362,7 +359,8 @@
                       @focusin="setPreviewCard(card, 'Sideboard')"
                       @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                     >
-                      <ListCard
+                      <component
+                        :is="cardComponent"
                         :card="card"
                         :is-flipped="flippedCards[card.card_data.id] ?? false"
                         :is-deck-commander="false"
@@ -441,9 +439,7 @@
                 v-for="(group, index) in consideringUngrouped"
                 :key="'con-ungrouped-' + index"
               >
-                <div
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 mb-4"
-                >
+                <div :class="[cardGridClasses, 'mb-4']">
                   <div
                     v-for="card in group.cards"
                     :key="card.card_data.id"
@@ -451,7 +447,8 @@
                     @focusin="setPreviewCard(card, 'Considering')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
-                    <ListCard
+                    <component
+                      :is="cardComponent"
                       :card="card"
                       :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="false"
@@ -512,9 +509,7 @@
                   :key="group.label"
                   #[group.label]
                 >
-                  <div
-                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 p-2"
-                  >
+                  <div :class="[cardGridClasses, 'p-2']">
                     <div
                       v-for="card in group.cards"
                       :key="card.card_data.id"
@@ -522,7 +517,8 @@
                       @focusin="setPreviewCard(card, 'Considering')"
                       @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                     >
-                      <ListCard
+                      <component
+                        :is="cardComponent"
                         :card="card"
                         :is-flipped="flippedCards[card.card_data.id] ?? false"
                         :is-deck-commander="false"
@@ -595,24 +591,43 @@ import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import type { AccordionItem } from '@nuxt/ui';
 import { useCommandersSet } from '~/composables/useBulkData';
+import ListCard from '~/components/cards/ListCard.vue';
+import CardText from '~/components/cards/CardText.vue';
 
-const props = defineProps<{
-  isLoading: boolean;
-  isOwner: boolean;
-  groups: CardGroup[] | null;
-  commanderOracleIds?: string[] | null;
-  commanderColorIdentity?: string[] | null;
-  listItemsMap?: Partial<
-    Record<
-      'Mainboard' | 'Sideboard' | 'Considering',
-      Record<string, { num_copies: number }>
-    >
-  >;
-  format?: string;
-  sideboardGroups?: CardGroup[] | null;
-  consideringGroups?: CardGroup[] | null;
-  decklistCardNames?: string[];
-}>();
+type CardView = 'grid' | 'text';
+
+const props = withDefaults(
+  defineProps<{
+    view?: CardView;
+    isLoading: boolean;
+    isOwner: boolean;
+    groups: CardGroup[] | null;
+    commanderOracleIds?: string[] | null;
+    commanderColorIdentity?: string[] | null;
+    listItemsMap?: Partial<
+      Record<
+        'Mainboard' | 'Sideboard' | 'Considering',
+        Record<string, { num_copies: number }>
+      >
+    >;
+    format?: string;
+    sideboardGroups?: CardGroup[] | null;
+    consideringGroups?: CardGroup[] | null;
+    decklistCardNames?: string[];
+  }>(),
+  {
+    view: 'grid',
+  },
+);
+
+const cardComponent = computed(() =>
+  props.view === 'text' ? CardText : ListCard,
+);
+const cardGridClasses = computed(() =>
+  props.view === 'text'
+    ? 'grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-x-6 gap-y-0'
+    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2',
+);
 
 const { data: commandersSet } = useCommandersSet();
 

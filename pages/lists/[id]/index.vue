@@ -153,6 +153,7 @@
         />
         <template #content>
           <div class="p-3 space-y-3">
+            <View :default-value="view" @update:view="handleView" />
             <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
             <Sort default-sort-by="cmc" @sort="handleSort" />
           </div>
@@ -162,6 +163,7 @@
 
     <!-- Group By + Sort: inline on desktop -->
     <div class="hidden lg:flex justify-end gap-2">
+      <View :default-value="view" @update:view="handleView" />
       <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
       <Sort default-sort-by="cmc" @sort="handleSort" />
     </div>
@@ -171,6 +173,7 @@
       <CardListResults
         ref="cardListResultsRef"
         class="mb-8"
+        :view="view"
         :isLoading="loading"
         :is-owner="isOwner"
         :groups="cardGroups"
@@ -188,7 +191,7 @@
         @changeBoard="handleChangeBoard"
       />
       <template #fallback>
-        <CardListResultsSkeleton />
+        <CardListResultsSkeleton :view="view" />
       </template>
     </ClientOnly>
 
@@ -543,10 +546,15 @@ const loading = computed(
 const sortBy = ref<string | undefined>('cmc');
 const sortDirection = ref<'asc' | 'desc'>('asc');
 const groupBy = ref<string | undefined>('type');
+const view = ref<'grid' | 'text'>('grid');
 
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
   sortDirection.value = direction;
+}
+
+function handleView(value: 'grid' | 'text') {
+  view.value = value;
 }
 
 function handleGroupBy(value: string | undefined) {
