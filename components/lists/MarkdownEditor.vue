@@ -284,6 +284,7 @@
       <div
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 px-1 overflow-y-auto"
+        @click="handlePreviewClick"
         @mousemove="onPreviewMouseMove"
         @mouseleave="onPreviewMouseLeave"
       >
@@ -301,6 +302,7 @@
     <div
       v-else
       class="primer-preview grow min-h-0 overflow-y-auto px-1"
+      @click="handlePreviewClick"
       @mousemove="onPreviewMouseMove"
       @mouseleave="onPreviewMouseLeave"
     >
@@ -622,16 +624,23 @@ const cardImageMap = computed(() => {
       isCommander: boolean;
       price: string | null;
       tcgplayerId?: number;
+      backImageUrl: string | null;
     }
   >();
   for (const card of referencedCards.value ?? []) {
     const imageUrl = getCardImageUrl(card.card_data, false, 'normal');
+    const flippedImageUrl = getCardImageUrl(card.card_data, true, 'normal');
+    const hasDistinctBack =
+      (card.card_data.card_faces?.length ?? 0) >= 2 &&
+      Boolean(flippedImageUrl) &&
+      flippedImageUrl !== imageUrl;
     map.set(card.card_data.name.toLowerCase(), {
       imageUrl,
       oracleId: card.card_data.oracle_id,
       isCommander: commanderNames.value?.has(card.card_data.name) ?? false,
       price: card.card_data.prices?.usd ?? null,
       tcgplayerId: card.card_data.tcgplayer_id,
+      backImageUrl: hasDistinctBack ? flippedImageUrl : null,
     });
   }
   return map;
@@ -645,6 +654,7 @@ const embeddedActionIcons = {
   recommend:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7l8.7 5l8.7-5M12 22V12"/></g></svg>',
   buy: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></g></svg>',
+  flip: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>',
 };
 
 function embeddedCardAction(
@@ -773,7 +783,10 @@ const renderedHtml = computed(() => {
     const buyAction = entry.tcgplayerId
       ? `<a class="card-inline-action card-inline-action-buy" href="${getAffiliateLink(entry.tcgplayerId)}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${entry.price ? `Buy on TCGPlayer ($${entry.price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${entry.price ? ` $${entry.price}` : ''}</span></a>`
       : '';
-    return `<span class="card-inline-embed"><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" loading="lazy" /></a><span class="card-inline-actions">${similarAction}${commanderActions}${buyAction}</span></span>`;
+    const flipAction = entry.backImageUrl
+      ? `<button type="button" class="card-inline-action card-inline-action-flip" aria-label="Flip Card" data-tooltip="Flip card" data-card-flip>${embeddedActionIcons.flip}<span>Flip</span></button>`
+      : '';
+    return `<span class="card-inline-embed" data-front-image="${entry.imageUrl}"${entry.backImageUrl ? ` data-back-image="${entry.backImageUrl}"` : ''}><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" data-card-face="front" loading="lazy" /></a><span class="card-inline-actions">${flipAction}${similarAction}${commanderActions}${buyAction}</span></span>`;
   });
 
   result = result.replace(/CARDLINKTOKEN(\d+)CARDLINKTOKEN/g, (_, idx) => {
@@ -788,6 +801,26 @@ const renderedHtml = computed(() => {
 
   return result;
 });
+
+function handlePreviewClick(event: MouseEvent) {
+  const target = event.target as HTMLElement | null;
+  const flipButton = target?.closest<HTMLButtonElement>('[data-card-flip]');
+  if (!flipButton) return;
+
+  const embed = flipButton.closest<HTMLElement>('.card-inline-embed');
+  const image = embed?.querySelector<HTMLImageElement>('.card-inline-img');
+  const frontImage = embed?.dataset.frontImage;
+  const backImage = embed?.dataset.backImage;
+  if (!image || !frontImage || !backImage) return;
+
+  const showBack = image.dataset.cardFace !== 'back';
+  image.src = showBack ? backImage : frontImage;
+  image.dataset.cardFace = showBack ? 'back' : 'front';
+  flipButton.setAttribute(
+    'aria-label',
+    showBack ? 'Show Front Face' : 'Show Back Face',
+  );
+}
 
 // --- Syntax highlighting for the raw markdown editor ---
 // Produces safe HTML mirroring the textarea contents with token spans so users
@@ -1454,6 +1487,10 @@ function insertMagicSymbol(token: string) {
 }
 .primer-preview :deep(.card-inline-action-buy) {
   color: var(--ui-success);
+}
+.primer-preview :deep(.card-inline-action-flip) {
+  color: var(--ui-text-muted);
+  cursor: pointer;
 }
 .primer-preview :deep(.card-inline-link) {
   color: #3b82f6;
