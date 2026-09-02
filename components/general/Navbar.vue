@@ -13,6 +13,7 @@ const isOpen = ref(false);
 const isMobileProfilePopoverOpen = ref(false);
 const isDesktopProfilePopoverOpen = ref(false);
 const colorMode = useColorMode();
+const isMounted = ref(false);
 
 const wizardImage = computed(() => {
   return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_black.webp';
@@ -20,7 +21,7 @@ const wizardImage = computed(() => {
 const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
   useUserProfile();
 const yourDecksTarget = computed(() =>
-  userProfile.value ? '/lists' : '/user/login',
+  isMounted.value && userProfile.value ? '/lists' : '/user/login',
 );
 const yourDecksItems = computed<NavigationMenuItem[]>(() => [
   {
@@ -39,6 +40,10 @@ const handleLogout = async () => {
   await signOut();
   router.push('/');
 };
+
+onMounted(() => {
+  isMounted.value = true;
+});
 
 const props = defineProps<{
   isFixed?: boolean;

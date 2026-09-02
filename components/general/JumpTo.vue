@@ -1,5 +1,5 @@
 <template>
-  <div v-if="hasJumpTargets" class="jump-to-content xl:ml-2">
+  <div v-if="isMounted && hasJumpTargets" class="jump-to-content xl:ml-2">
     <!-- Desktop: show all group buttons inline -->
     <div class="hidden xl:flex items-center gap-1 flex-wrap">
       <UIcon name="i-lucide-map-pin" size="20" class="text-primary mr-0" />
@@ -107,6 +107,7 @@ const emit = defineEmits<{
 
 const mobileOpen = ref(false);
 const mobileContainer = ref<HTMLElement | null>(null);
+const isMounted = ref(false);
 const hasJumpTargets = computed(
   () => props.groups.length > 0 || props.boardSections.length > 1,
 );
@@ -114,7 +115,7 @@ const hasJumpTargets = computed(
 const jumpToVisible = useJumpToVisible();
 
 watch(
-  hasJumpTargets,
+  () => isMounted.value && hasJumpTargets.value,
   (value) => {
     jumpToVisible.value = value;
   },
@@ -187,6 +188,7 @@ function handleClickOutside(e: MouseEvent) {
 }
 
 onMounted(() => {
+  isMounted.value = true;
   if (import.meta.client) {
     document.addEventListener('click', handleClickOutside);
   }
