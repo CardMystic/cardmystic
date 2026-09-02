@@ -239,7 +239,7 @@ const cardOverlayMenuItems = computed(() => {
     : [
         {
           label: 'Add a copy',
-          icon: 'i-lucide-plus',
+          icon: 'i-heroicons-plus',
           disabled: copies >= 100,
           onSelect() {
             emit(

@@ -4,7 +4,7 @@
       <h1 class="text-3xl md:text-4xl font-bold">{{ pageHeading }}</h1>
       <UButton
         v-if="isAuthor"
-        icon="i-lucide-plus"
+        icon="i-heroicons-plus"
         color="primary"
         label="New Article"
         class="cursor-pointer"

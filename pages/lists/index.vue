@@ -5,7 +5,7 @@
       <h1 class="text-3xl font-bold">{{ pageHeading }}</h1>
       <UButton
         v-if="view === 'mine'"
-        icon="i-lucide-plus"
+        icon="i-heroicons-plus"
         label="New Deck"
         @click="
           () => {

@@ -22,7 +22,7 @@
         size="sm"
         color="neutral"
         variant="outline"
-        icon="i-lucide-plus"
+        icon="i-heroicons-plus"
         class="cursor-pointer rounded-pill"
         aria-label="Show more suggested searches"
         @click="

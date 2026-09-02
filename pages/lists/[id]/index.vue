@@ -120,7 +120,7 @@
           :disabled="loading || !oracleMapReady"
           :items="filteredAddCards"
           placeholder="Add a card to the deck..."
-          icon="i-lucide-plus"
+          icon="i-heroicons-plus"
           class="hidden lg:flex flex-1 min-w-70 max-w-70 cursor-pointer"
           @update:model-value="handleAddCard"
         />
@@ -138,7 +138,7 @@
         :disabled="!oracleMapReady"
         :items="filteredAddCards"
         placeholder="Add a card to the deck..."
-        icon="i-lucide-plus"
+        icon="i-heroicons-plus"
         class="flex-1 min-w-57 max-w-57 cursor-pointer"
         @update:model-value="handleAddCard"
       />

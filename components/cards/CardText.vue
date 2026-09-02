@@ -494,7 +494,7 @@ const ownerActions = computed(() => {
     actions.push(
       {
         label: 'Add a Copy',
-        icon: 'i-lucide-plus',
+        icon: 'i-heroicons-plus',
         disabled: copies >= 100,
         onSelect: () =>
           emit(
