@@ -352,6 +352,7 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const previewRef = ref<HTMLDivElement | null>(null);
 const highlightLayerRef = ref<HTMLDivElement | null>(null);
 const highlightContentRef = ref<HTMLDivElement | null>(null);
+let highlightResizeObserver: ResizeObserver | null = null;
 
 // --- Unsaved changes guard ---
 const showUnsavedModal = ref(false);
@@ -388,10 +389,15 @@ function handleBeforeUnload(e: BeforeUnloadEvent) {
 
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
+  highlightResizeObserver = new ResizeObserver(syncHighlightScroll);
+  if (textareaRef.value) highlightResizeObserver.observe(textareaRef.value);
+  nextTick(syncHighlightScroll);
 });
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
+  highlightResizeObserver?.disconnect();
+  highlightResizeObserver = null;
 });
 
 // --- Scroll sync: editor → preview ---
@@ -409,10 +415,22 @@ function onEditorScroll() {
 // Keep the syntax-highlight overlay aligned with the textarea's scroll position.
 function syncHighlightScroll() {
   const ta = textareaRef.value;
+  const layer = highlightLayerRef.value;
   const content = highlightContentRef.value;
-  if (!ta || !content) return;
+  if (!ta || !layer || !content) return;
+  // A textarea's client width excludes its vertical scrollbar. Mirror that
+  // usable width so soft-wrapped lines, highlighted text, and the caret stay
+  // aligned after the editor begins scrolling or changes layout.
+  layer.style.width = `${ta.clientWidth}px`;
   content.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
 }
+
+watch(textareaRef, (ta) => {
+  if (!highlightResizeObserver) return;
+  highlightResizeObserver.disconnect();
+  if (ta) highlightResizeObserver.observe(ta);
+  nextTick(syncHighlightScroll);
+});
 
 function onSplitScroll() {
   onEditorScroll();
@@ -619,6 +637,7 @@ const renderedHtml = computed(() => {
       'allowfullscreen',
       'class',
       'open',
+      'start',
     ],
     ADD_TAGS: ['details', 'summary', 'iframe'],
   });
@@ -1256,7 +1275,10 @@ function insertEmojiShortcode(name: string) {
 }
 .highlight-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   overflow: hidden;
   pointer-events: none;
   border-radius: inherit;
@@ -1305,26 +1327,23 @@ function insertEmojiShortcode(name: string) {
   color: rgb(156 163 175);
 }
 
-/* Token colors — tuned to work in both light and dark themes. */
+/* Token colors — tuned to work in both light and dark themes. Keep font
+   metrics unchanged so this mirror wraps exactly like the textarea. */
 .highlight-content :deep(.tok-html) {
   color: #d946ef;
-  font-weight: 600;
 }
 .highlight-content :deep(.tok-card-img) {
   color: #10b981;
-  font-weight: 600;
   background: rgba(16, 185, 129, 0.12);
   border-radius: 3px;
 }
 .highlight-content :deep(.tok-card-link) {
   color: #3b82f6;
-  font-weight: 600;
   background: rgba(59, 130, 246, 0.12);
   border-radius: 3px;
 }
 .highlight-content :deep(.tok-youtube) {
   color: #ef4444;
-  font-weight: 600;
 }
 .highlight-content :deep(.tok-emoji) {
   color: #f59e0b;
@@ -1333,23 +1352,18 @@ function insertEmojiShortcode(name: string) {
 }
 .highlight-content :deep(.tok-heading) {
   color: #f59e0b;
-  font-weight: 700;
 }
 .highlight-content :deep(.tok-bold) {
   color: #eab308;
-  font-weight: 700;
 }
 .highlight-content :deep(.tok-italic) {
   color: #eab308;
-  font-style: italic;
 }
 .highlight-content :deep(.tok-quote) {
   color: #94a3b8;
-  font-style: italic;
 }
 .highlight-content :deep(.tok-list) {
   color: #f97316;
-  font-weight: 700;
 }
 .highlight-content :deep(.tok-link) {
   color: #06b6d4;

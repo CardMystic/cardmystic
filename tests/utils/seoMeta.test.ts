@@ -101,8 +101,8 @@ describe('buildArticleSeo', () => {
   });
 
   it('titles as "{article.title} | CardMystic"', () => {
-    const seo = buildArticleSeo(makeArticle({ title: 'My Article' }));
-    expect(seo.title).toBe('My Article | CardMystic');
+    const seo = buildArticleSeo(makeArticle({ title: 'Your Article' }));
+    expect(seo.title).toBe('Your Article | CardMystic');
   });
 
   it('prefers author description over content excerpt', () => {

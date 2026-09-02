@@ -17,7 +17,7 @@ import { expect, gotoHydrated, test } from './utils/fixtures';
  * are relative to the global test order, not this file):
  *
  *  ── Setup ──────────────────────────────────────────────────────────────
- *   38. Create a list via the New List modal and make it public via the
+ *   38. Create a list via the New Deck modal and make it public via the
  *       modal's visibility selector (owner-only UI; can also be flipped
  *       later from the banner selector on the deck page)
  *
@@ -130,7 +130,7 @@ test.describe('Decklist social & discovery', () => {
   test('creates a list and makes it public', async ({ page, request }) => {
     await gotoHydrated(page, '/lists');
 
-    await page.getByRole('button', { name: /new list/i }).click();
+    await page.getByRole('button', { name: /New Deck/i }).click();
     const dialog = page.getByRole('dialog', { name: /create new decklist/i });
     await expect(dialog).toBeVisible();
 

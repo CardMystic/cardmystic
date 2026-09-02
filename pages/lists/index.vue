@@ -6,7 +6,7 @@
       <UButton
         v-if="view === 'mine'"
         icon="i-lucide-plus"
-        label="New List"
+        label="New Deck"
         @click="
           () => {
             isCreateModalOpen = true;
@@ -22,7 +22,7 @@
         :color="view === 'mine' ? 'primary' : 'neutral'"
         :variant="view === 'mine' ? 'solid' : 'outline'"
         icon="i-lucide-layers"
-        label="View My Decks"
+        label="My Decks"
         class="cursor-pointer"
         @click="
           () => {
@@ -34,7 +34,7 @@
         :color="view === 'liked' ? 'primary' : 'neutral'"
         :variant="view === 'liked' ? 'solid' : 'outline'"
         icon="i-lucide-heart"
-        label="View Liked Decks"
+        label="Liked Decks"
         class="cursor-pointer"
         @click="
           () => {
@@ -46,7 +46,7 @@
         :color="view === 'saved' ? 'primary' : 'neutral'"
         :variant="view === 'saved' ? 'solid' : 'outline'"
         icon="i-lucide-bookmark"
-        label="View Saved Decks"
+        label="Saved Decks"
         class="cursor-pointer"
         @click="
           () => {

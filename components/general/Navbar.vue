@@ -19,9 +19,19 @@ const wizardImage = computed(() => {
 });
 const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
   useUserProfile();
+const yourDecksTarget = computed(() =>
+  userProfile.value ? '/lists' : '/user/login',
+);
+const yourDecksItems = computed<NavigationMenuItem[]>(() => [
+  {
+    label: 'Your Decks',
+    icon: 'i-lucide-layers',
+    to: yourDecksTarget.value,
+  },
+]);
 const isAuthor = computed(() => !!profileData.value?.is_author);
 const articlesNavLabel = computed(() =>
-  isAuthor.value ? 'My Articles' : 'Liked Articles',
+  isAuthor.value ? 'Your Articles' : 'Liked Articles',
 );
 const router = useRouter();
 
@@ -246,6 +256,14 @@ const externalItems: NavigationMenuItem[] = [
             class="p-2 w-80 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2 max-h-[500px] overflow-y-auto"
           >
             <NuxtLink
+              :to="yourDecksTarget"
+              class="flex items-center gap-2"
+              @click="closePopover"
+            >
+              <UIcon name="i-lucide-layers" class="w-5 h-5" />
+              <span>Your Decks</span>
+            </NuxtLink>
+            <NuxtLink
               v-for="item in mainItemsMobile"
               :to="item.to"
               class="flex items-center gap-2"
@@ -327,11 +345,11 @@ const externalItems: NavigationMenuItem[] = [
                 class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1"
               >
                 <UButton
-                  class="cursor-pointer"
-                  icon="i-lucide-list"
+                  class="cursor-pointer justify-start text-left"
+                  icon="i-lucide-layers"
                   color="neutral"
                   variant="ghost"
-                  label="Decklists"
+                  label="Your Decks"
                   block
                   @click="
                     router.push('/lists');
@@ -339,7 +357,7 @@ const externalItems: NavigationMenuItem[] = [
                   "
                 />
                 <UButton
-                  class="cursor-pointer"
+                  class="cursor-pointer justify-start text-left"
                   icon="i-lucide-history"
                   color="neutral"
                   variant="ghost"
@@ -351,7 +369,7 @@ const externalItems: NavigationMenuItem[] = [
                   "
                 />
                 <UButton
-                  class="cursor-pointer"
+                  class="cursor-pointer justify-start text-left"
                   icon="i-lucide-newspaper"
                   color="neutral"
                   variant="ghost"
@@ -363,7 +381,7 @@ const externalItems: NavigationMenuItem[] = [
                   "
                 />
                 <UButton
-                  class="cursor-pointer"
+                  class="cursor-pointer justify-start text-left"
                   icon="i-lucide-user-cog"
                   color="neutral"
                   variant="ghost"
@@ -378,7 +396,7 @@ const externalItems: NavigationMenuItem[] = [
                   class="border-t border-gray-200 dark:border-gray-700 my-1"
                 ></div>
                 <UButton
-                  class="cursor-pointer"
+                  class="cursor-pointer justify-start text-left"
                   icon="i-lucide-log-out"
                   color="error"
                   variant="ghost"
@@ -457,8 +475,12 @@ const externalItems: NavigationMenuItem[] = [
         }"
       />
       <UNavigationMenu :items="[...trailingItems, ...externalItems]" />
-      <!-- Clipboard Button (always visible, right side) -->
-      <ClipboardMenu class="ml-4 h-12.5" />
+      <div
+        class="w-px h-6 self-center bg-gray-300 dark:bg-gray-700 mx-2"
+        aria-hidden="true"
+      />
+      <UNavigationMenu :items="yourDecksItems" />
+      <ClipboardMenu class="ml-2 h-12.5" />
 
       <ClientOnly>
         <span v-if="!userProfile && !loading" class="relative">
@@ -518,11 +540,11 @@ const externalItems: NavigationMenuItem[] = [
               class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1"
             >
               <UButton
-                class="cursor-pointer"
-                icon="i-lucide-list"
+                class="cursor-pointer justify-start text-left"
+                icon="i-lucide-layers"
                 color="neutral"
                 variant="ghost"
-                label="Decklists"
+                label="Your Decks"
                 block
                 @click="
                   router.push('/lists');
@@ -530,7 +552,7 @@ const externalItems: NavigationMenuItem[] = [
                 "
               />
               <UButton
-                class="cursor-pointer"
+                class="cursor-pointer justify-start text-left"
                 icon="i-lucide-history"
                 color="neutral"
                 variant="ghost"
@@ -542,7 +564,7 @@ const externalItems: NavigationMenuItem[] = [
                 "
               />
               <UButton
-                class="cursor-pointer"
+                class="cursor-pointer justify-start text-left"
                 icon="i-lucide-newspaper"
                 color="neutral"
                 variant="ghost"
@@ -554,7 +576,7 @@ const externalItems: NavigationMenuItem[] = [
                 "
               />
               <UButton
-                class="cursor-pointer"
+                class="cursor-pointer justify-start text-left"
                 icon="i-lucide-user-cog"
                 color="neutral"
                 variant="ghost"
@@ -569,7 +591,7 @@ const externalItems: NavigationMenuItem[] = [
                 class="border-t border-gray-200 dark:border-gray-700 my-1"
               ></div>
               <UButton
-                class="cursor-pointer"
+                class="cursor-pointer justify-start text-left"
                 icon="i-lucide-log-out"
                 color="error"
                 variant="ghost"

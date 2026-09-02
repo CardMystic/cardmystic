@@ -35,6 +35,11 @@ import { useOwnedDecklist } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
 import { usePrimer } from '~/composables/usePrimer';
 import { useSupabase } from '~/composables/useSupabase';
+import {
+  GetPrimerResponseSchema,
+  GetPublicDecklistResponseSchema,
+} from '~/models/cardListModel';
+import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 import { useToast } from '#imports';
 
 const route = useRoute();
@@ -43,6 +48,53 @@ const toast = useToast();
 const config = useRuntimeConfig();
 const supabase = process.server ? null : useSupabase();
 const queryClient = useQueryClient();
+
+// Block SSR on the public deck and primer requests so link unfurlers receive
+// the real title, excerpt, and image in the initial HTML. Seed the matching
+// vue-query caches to avoid immediately repeating either request on hydration.
+const ssrPublicList = await useSsrQuerySeed({
+  cacheKey: `primer-list-ssr-${listId}`,
+  path: `/supabase/card-lists/view/${encodeURIComponent(listId)}`,
+  schema: GetPublicDecklistResponseSchema,
+  queryKey: ['discovery', 'public-decklist', listId],
+});
+
+const { data: ssrPrimerResponse } = await useAsyncData(
+  `primer-content-ssr-${listId}`,
+  async () => {
+    try {
+      const raw = await $fetch(
+        `${config.public.backendUrl}/supabase/card-lists/primer/${encodeURIComponent(listId)}`,
+      );
+      return GetPrimerResponseSchema.parse(raw);
+    } catch {
+      return null;
+    }
+  },
+);
+if (ssrPrimerResponse.value) {
+  queryClient.setQueryData(
+    ['primer', listId],
+    ssrPrimerResponse.value.text ?? null,
+  );
+}
+
+// Resolve the deck's selected avatar to a direct CDN URL because Discord does
+// not reliably follow Scryfall's named-card redirect for og:image.
+const ssrSocialCardName = computed(() => {
+  const decklist = ssrPublicList.value?.decklist;
+  return decklist?.avatar_card_name || null;
+});
+const { data: ssrOgImageUrl } = await useAsyncData(
+  `primer-og-image-${listId}`,
+  async () => {
+    if (!ssrSocialCardName.value) return null;
+    return fetchDirectArtCropUrl(
+      ssrSocialCardName.value,
+      config.public.backendUrl,
+    );
+  },
+);
 
 const listIdRef = computed(() => listId);
 const { decklist: ownedList, isLoading: isLoadingLists } =
@@ -56,12 +108,6 @@ const { decklist: publicDecklist } = usePublicDecklist(listIdRef);
 const list = computed(() => ownedList.value ?? publicDecklist.value ?? null);
 
 const isCreator = computed(() => !!ownedList.value);
-
-const bannerImageUrl = computed(() => {
-  const cardName = list.value?.avatar_card_name;
-  if (!cardName) return null;
-  return scryfallArtCropUrl(cardName);
-});
 
 const primerContent = ref('');
 const isSaving = ref(false);
@@ -150,7 +196,7 @@ const seoDescription = computed(() => {
   return `Primer for ${list.value.name || 'this deck'}${cmdLine}. Read the strategy, mulligans, and card choices on CardMystic.`;
 });
 
-const seoImage = computed(() => bannerImageUrl.value || FALLBACK_OG_IMAGE);
+const seoImage = computed(() => ssrOgImageUrl.value || FALLBACK_OG_IMAGE);
 
 // Only index primers that have real content — owner-only drafts and
 // private decks return no primer text to anonymous crawlers and stay out

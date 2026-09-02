@@ -142,10 +142,10 @@ test.describe('Card lists CRUD', () => {
   // ---------------------------------------------------------------------------
   // Test 26 — Create list
   // ---------------------------------------------------------------------------
-  test('creates a new list via the New List modal', async ({ page }) => {
+  test('creates a New Deck via the New Deck modal', async ({ page }) => {
     await gotoHydrated(page, '/lists');
 
-    await page.getByRole('button', { name: /new list/i }).click();
+    await page.getByRole('button', { name: /New Deck/i }).click();
     const dialog = page.getByRole('dialog', { name: /create new decklist/i });
     await expect(dialog).toBeVisible();
 
@@ -168,7 +168,7 @@ test.describe('Card lists CRUD', () => {
     expect(body.id).toBeTruthy();
     expect(body.name).toBe(LIST_NAME);
 
-    // Modal closes and the new list appears in the grid.
+    // Modal closes and the New Deck appears in the grid.
     await expect(dialog).toBeHidden({ timeout: API_TIMEOUT });
     await expect(
       page.locator('h3').filter({ hasText: LIST_NAME }).first(),
