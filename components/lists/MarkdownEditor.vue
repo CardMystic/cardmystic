@@ -73,7 +73,7 @@
     <!-- Edit-only mode -->
     <div
       v-if="editable && mode === 'edit'"
-      class="flex flex-col grow min-h-0 gap-2"
+      class="flex flex-col h-[80vh] min-h-0 gap-2 overflow-hidden"
     >
       <!-- Toolbar -->
       <div
@@ -106,14 +106,16 @@
           v-model:open="emojiPickerOpen"
           :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
         >
-          <UButton
-            icon="i-lucide-smile"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            class="cursor-pointer"
-            aria-label="Insert emoji"
-          />
+          <UTooltip text="Insert emoji">
+            <UButton
+              icon="i-lucide-smile"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              aria-label="Insert emoji"
+            />
+          </UTooltip>
           <template #content>
             <EmojiPickerPanel
               v-model:search="emojiSearchTerm"
@@ -126,14 +128,16 @@
           v-model:open="magicSymbolPickerOpen"
           :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
         >
-          <UButton
-            icon="i-mdi-cards-playing-outline"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            class="cursor-pointer"
-            aria-label="Insert Magic symbol"
-          />
+          <UTooltip text="Insert Magic symbol">
+            <UButton
+              icon="i-mdi-cards-playing-outline"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              aria-label="Insert Magic symbol"
+            />
+          </UTooltip>
           <template #content>
             <MagicSymbolPickerPanel
               v-model:search="magicSymbolSearchTerm"
@@ -145,7 +149,7 @@
       </div>
 
       <div
-        class="editor-shell flex-1 min-h-[65vh] w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+        class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
         @mousemove="onEditorMouseMove"
         @mouseleave="onEditorMouseLeave"
       >
@@ -171,10 +175,10 @@
     <!-- Split mode (editor + live preview side by side, lg+ only) -->
     <div
       v-else-if="editable && mode === 'split'"
-      class="flex grow min-h-0 gap-4"
+      class="flex h-[80vh] min-h-0 gap-4 overflow-hidden"
     >
       <!-- Left: editor -->
-      <div class="flex-1 min-w-0 flex flex-col gap-2">
+      <div class="flex-1 min-w-0 min-h-0 flex flex-col gap-2">
         <!-- Toolbar -->
         <div
           class="shrink-0 flex flex-wrap items-center gap-1 p-1.5 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
@@ -206,14 +210,16 @@
             v-model:open="emojiPickerOpen"
             :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
           >
-            <UButton
-              icon="i-lucide-smile"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              aria-label="Insert emoji"
-            />
+            <UTooltip text="Insert emoji">
+              <UButton
+                icon="i-lucide-smile"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="cursor-pointer"
+                aria-label="Insert emoji"
+              />
+            </UTooltip>
             <template #content>
               <EmojiPickerPanel
                 v-model:search="emojiSearchTerm"
@@ -226,14 +232,16 @@
             v-model:open="magicSymbolPickerOpen"
             :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
           >
-            <UButton
-              icon="i-mdi-cards-playing-outline"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              aria-label="Insert Magic symbol"
-            />
+            <UTooltip text="Insert Magic symbol">
+              <UButton
+                icon="i-mdi-cards-playing-outline"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="cursor-pointer"
+                aria-label="Insert Magic symbol"
+              />
+            </UTooltip>
             <template #content>
               <MagicSymbolPickerPanel
                 v-model:search="magicSymbolSearchTerm"
@@ -245,7 +253,7 @@
         </div>
 
         <div
-          class="editor-shell flex-1 min-h-[80vh] w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+          class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
           @mousemove="onEditorMouseMove"
           @mouseleave="onEditorMouseLeave"
         >
