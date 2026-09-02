@@ -122,6 +122,26 @@
             />
           </template>
         </UPopover>
+        <UPopover
+          v-model:open="magicSymbolPickerOpen"
+          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+        >
+          <UButton
+            icon="i-mdi-cards-playing-outline"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            class="cursor-pointer"
+            aria-label="Insert Magic symbol"
+          />
+          <template #content>
+            <MagicSymbolPickerPanel
+              v-model:search="magicSymbolSearchTerm"
+              :symbols="magicSymbols"
+              @select="insertMagicSymbol"
+            />
+          </template>
+        </UPopover>
       </div>
 
       <div
@@ -199,6 +219,26 @@
                 v-model:search="emojiSearchTerm"
                 :emojis="emojiResults"
                 @select="insertEmojiShortcode"
+              />
+            </template>
+          </UPopover>
+          <UPopover
+            v-model:open="magicSymbolPickerOpen"
+            :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+          >
+            <UButton
+              icon="i-mdi-cards-playing-outline"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              aria-label="Insert Magic symbol"
+            />
+            <template #content>
+              <MagicSymbolPickerPanel
+                v-model:search="magicSymbolSearchTerm"
+                :symbols="magicSymbols"
+                @select="insertMagicSymbol"
               />
             </template>
           </UPopover>
@@ -310,8 +350,14 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { emojify, search as searchEmoji } from 'node-emoji';
+import 'mana-font/css/mana.min.css';
 import { useCardsByName } from '~/composables/useCards';
 import { getCardImageUrl } from '~/utils/scryfall';
+import {
+  extractMagicSymbols,
+  magicSymbols,
+  restoreMagicSymbols,
+} from '~/utils/magicSymbols';
 
 const props = withDefaults(
   defineProps<{
@@ -621,6 +667,9 @@ const renderedHtml = computed(() => {
     return `CARDLINKTOKEN${i}CARDLINKTOKEN`;
   });
 
+  const extractedMagicSymbols = extractMagicSymbols(pre);
+  pre = extractedMagicSymbols.text;
+
   // Convert :shortcode: → unicode emoji after custom tokens are extracted
   // so card names / URLs can never be misinterpreted as emoji names.
   pre = emojify(pre);
@@ -665,6 +714,8 @@ const renderedHtml = computed(() => {
     return `<a class="card-inline-link" href="${href}">${name}</a>`;
   });
 
+  result = restoreMagicSymbols(result, extractedMagicSymbols.symbols);
+
   return result;
 });
 
@@ -704,6 +755,7 @@ function highlightMarkdown(src: string): string {
   add(/\(\([^)\n]+\)\)/g, 'tok-card-img');
   add(/\[\[[^\]\n]+\]\]/g, 'tok-card-link');
   add(/@\[youtube\]\([A-Za-z0-9_-]{11}\)/g, 'tok-youtube');
+  add(/\{[^{}\n]+\}/g, 'tok-magic-symbol');
   add(/:[a-z0-9_+-]+:/g, 'tok-emoji');
   add(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, 'tok-html');
   add(/!\[[^\]\n]*\]\([^)\n]+\)/g, 'tok-image');
@@ -1003,6 +1055,8 @@ interface EmojiEntry {
 
 const emojiPickerOpen = ref(false);
 const emojiSearchTerm = ref('');
+const magicSymbolPickerOpen = ref(false);
+const magicSymbolSearchTerm = ref('');
 
 const defaultEmojiNames = [
   'grinning',
@@ -1108,6 +1162,13 @@ function insertEmojiShortcode(name: string) {
   // Focus the textarea first so the shortcode is inserted at the caret.
   textareaRef.value?.focus();
   nextTick(() => insertAtCursor(`:${name}:`));
+}
+
+function insertMagicSymbol(token: string) {
+  magicSymbolPickerOpen.value = false;
+  magicSymbolSearchTerm.value = '';
+  textareaRef.value?.focus();
+  nextTick(() => insertAtCursor(`{${token}}`));
 }
 </script>
 
@@ -1255,6 +1316,13 @@ function insertEmojiShortcode(name: string) {
   color: #f87171;
   font-style: italic;
 }
+.primer-preview :deep(.magic-symbol) {
+  display: inline-block;
+  margin: 0 0.08em;
+  margin-inline-start: 0.08em !important;
+  font-size: 1.05em;
+  vertical-align: -0.08em;
+}
 
 /* --- Syntax-highlighted editor (overlay + transparent textarea) --- */
 .editor-shell {
@@ -1348,6 +1416,11 @@ function insertEmojiShortcode(name: string) {
 .highlight-content :deep(.tok-emoji) {
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.12);
+  border-radius: 3px;
+}
+.highlight-content :deep(.tok-magic-symbol) {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.12);
   border-radius: 3px;
 }
 .highlight-content :deep(.tok-heading) {
