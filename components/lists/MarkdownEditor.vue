@@ -360,7 +360,9 @@ import DOMPurify from 'dompurify';
 import { emojify, search as searchEmoji } from 'node-emoji';
 import 'mana-font/css/mana.min.css';
 import { useCardsByName } from '~/composables/useCards';
+import { useCommandersSet } from '~/composables/useBulkData';
 import { getCardImageUrl } from '~/utils/scryfall';
+import { getAffiliateLink } from '~/utils/tcgPlayer';
 import {
   extractMagicSymbols,
   magicSymbols,
@@ -608,19 +610,52 @@ const referencedCardNames = computed(() => {
 });
 
 const { cards: referencedCards } = useCardsByName(referencedCardNames);
+const { data: commanderNames } = useCommandersSet();
 
 // Map from card name (lowercase) → image URL for fast lookup during render.
 const cardImageMap = computed(() => {
-  const map = new Map<string, { imageUrl: string; oracleId: string }>();
+  const map = new Map<
+    string,
+    {
+      imageUrl: string;
+      oracleId: string;
+      isCommander: boolean;
+      price: string | null;
+      tcgplayerId?: number;
+    }
+  >();
   for (const card of referencedCards.value ?? []) {
     const imageUrl = getCardImageUrl(card.card_data, false, 'normal');
     map.set(card.card_data.name.toLowerCase(), {
       imageUrl,
       oracleId: card.card_data.oracle_id,
+      isCommander: commanderNames.value?.has(card.card_data.name) ?? false,
+      price: card.card_data.prices?.usd ?? null,
+      tcgplayerId: card.card_data.tcgplayer_id,
     });
   }
   return map;
 });
+
+const embeddedActionIcons = {
+  similar:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.19 2.25c-.26 0-.52.06-.77.15L3.06 5.45a1.994 1.994 0 0 0-1.09 2.6L6.93 20a2 2 0 0 0 1.81 1.25c.26 0 .53-.03.79-.15l7.37-3.05a2.02 2.02 0 0 0 1.23-1.8c.01-.25-.04-.54-.13-.8L13 3.5a1.95 1.95 0 0 0-1.81-1.25m3.48 0l3.45 8.35V4.25a2 2 0 0 0-2-2m4.01 1.54v9.03l2.43-5.86a1.99 1.99 0 0 0-1.09-2.6m-10.28-.14l4.98 12.02l-7.39 3.06L3.8 7.29"/></svg>',
+  popular:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0a5 5 0 0 1 1-3a1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></svg>',
+  recommend:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7l8.7 5l8.7-5M12 22V12"/></g></svg>',
+  buy: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></g></svg>',
+};
+
+function embeddedCardAction(
+  href: string,
+  label: string,
+  buttonLabel: string,
+  modifier: string,
+  icon: string,
+): string {
+  return `<a class="card-inline-action ${modifier}" href="${href}" aria-label="${label}" data-tooltip="${label}">${icon}<span>${buttonLabel}</span></a>`;
+}
 
 watch(
   () => props.modelValue,
@@ -711,7 +746,34 @@ const renderedHtml = computed(() => {
     if (!name) return '';
     const entry = cardImageMap.value.get(name.toLowerCase());
     if (!entry) return `<em class="card-unknown">${name}</em>`;
-    return `<a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" loading="lazy" /></a>`;
+    const encodedName = encodeURIComponent(name);
+    const commanderActions = entry.isCommander
+      ? embeddedCardAction(
+          `/popular-by-commander/all?commander=${encodedName}`,
+          'Popular Cards for this Commander',
+          'Popular',
+          'card-inline-action-popular',
+          embeddedActionIcons.popular,
+        ) +
+        embeddedCardAction(
+          `/search/all/deckbuilder?commander=${encodedName}`,
+          'Get Deck Recommendations for this Commander',
+          'Recommend',
+          'card-inline-action-recommend',
+          embeddedActionIcons.recommend,
+        )
+      : '';
+    const similarAction = embeddedCardAction(
+      `/search/all/similarity?card_name=${encodedName}&amp;searchType=similarity`,
+      'Find Similar Cards',
+      'Similar',
+      'card-inline-action-similar',
+      embeddedActionIcons.similar,
+    );
+    const buyAction = entry.tcgplayerId
+      ? `<a class="card-inline-action card-inline-action-buy" href="${getAffiliateLink(entry.tcgplayerId)}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${entry.price ? `Buy on TCGPlayer ($${entry.price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${entry.price ? ` $${entry.price}` : ''}</span></a>`
+      : '';
+    return `<span class="card-inline-embed"><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" loading="lazy" /></a><span class="card-inline-actions">${similarAction}${commanderActions}${buyAction}</span></span>`;
   });
 
   result = result.replace(/CARDLINKTOKEN(\d+)CARDLINKTOKEN/g, (_, idx) => {
@@ -1307,6 +1369,14 @@ function insertMagicSymbol(token: string) {
   text-align: center;
   text-decoration: none;
 }
+.primer-preview :deep(.card-inline-embed) {
+  display: flex;
+  width: fit-content;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem auto;
+}
 .primer-preview :deep(.card-inline-img) {
   display: inline-block;
   width: 200px;
@@ -1314,6 +1384,76 @@ function insertMagicSymbol(token: string) {
   border-radius: 10px;
   vertical-align: middle;
   margin: 0.25rem;
+}
+.primer-preview :deep(.card-inline-actions) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.primer-preview :deep(.card-inline-action) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 2rem;
+  min-width: 6.5rem;
+  gap: 0.35rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.375rem;
+  box-sizing: border-box;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+}
+.primer-preview :deep(.card-inline-action svg) {
+  width: 1rem;
+  height: 1rem;
+}
+.primer-preview :deep(.card-inline-action::after) {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  z-index: 20;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--ui-bg-inverted);
+  color: var(--ui-text-inverted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 0.2rem);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+.primer-preview :deep(.card-inline-action:hover::after),
+.primer-preview :deep(.card-inline-action:focus-visible::after) {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.primer-preview :deep(.card-inline-action:hover) {
+  background: rgba(127, 127, 127, 0.12);
+}
+.primer-preview :deep(.card-inline-action-similar) {
+  color: var(--ui-text-muted);
+}
+.primer-preview :deep(.card-inline-action-popular) {
+  color: var(--ui-error);
+}
+.primer-preview :deep(.card-inline-action-recommend) {
+  color: var(--ui-primary);
+}
+.primer-preview :deep(.card-inline-action-buy) {
+  color: var(--ui-success);
 }
 .primer-preview :deep(.card-inline-link) {
   color: #3b82f6;
