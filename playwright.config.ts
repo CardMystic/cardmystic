@@ -70,7 +70,7 @@ export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 2 : 1,
+  retries: isCI ? 2 : 0,
   // Built app handles concurrency well; bump workers if the suite grows
   // and CI starts feeling slow again. Note: this requires the backend
   // rate-limit bypass header (see `extraHTTPHeaders` below) — without

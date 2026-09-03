@@ -2,12 +2,7 @@ import type { CardColorType } from '~/models/cardModel';
 
 // Use CardColor values for colors
 export type CardColor =
-  | 'White'
-  | 'Blue'
-  | 'Black'
-  | 'Red'
-  | 'Green'
-  | 'Colorless';
+  'White' | 'Blue' | 'Black' | 'Red' | 'Green' | 'Colorless';
 export type Pairing = { name: string; colors: CardColor[] };
 
 export const pairings: Pairing[] = [

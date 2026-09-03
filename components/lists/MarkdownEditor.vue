@@ -73,7 +73,7 @@
     <!-- Edit-only mode -->
     <div
       v-if="editable && mode === 'edit'"
-      class="flex flex-col grow min-h-0 gap-2"
+      class="flex flex-col h-[80vh] min-h-0 gap-2 overflow-hidden"
     >
       <!-- Toolbar -->
       <div
@@ -106,14 +106,16 @@
           v-model:open="emojiPickerOpen"
           :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
         >
-          <UButton
-            icon="i-lucide-smile"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            class="cursor-pointer"
-            aria-label="Insert emoji"
-          />
+          <UTooltip text="Insert emoji">
+            <UButton
+              icon="i-lucide-smile"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              aria-label="Insert emoji"
+            />
+          </UTooltip>
           <template #content>
             <EmojiPickerPanel
               v-model:search="emojiSearchTerm"
@@ -122,10 +124,32 @@
             />
           </template>
         </UPopover>
+        <UPopover
+          v-model:open="magicSymbolPickerOpen"
+          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+        >
+          <UTooltip text="Insert Magic symbol">
+            <UButton
+              icon="i-mdi-cards-playing-outline"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+              aria-label="Insert Magic symbol"
+            />
+          </UTooltip>
+          <template #content>
+            <MagicSymbolPickerPanel
+              v-model:search="magicSymbolSearchTerm"
+              :symbols="magicSymbols"
+              @select="insertMagicSymbol"
+            />
+          </template>
+        </UPopover>
       </div>
 
       <div
-        class="editor-shell flex-1 min-h-[65vh] w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+        class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
         @mousemove="onEditorMouseMove"
         @mouseleave="onEditorMouseLeave"
       >
@@ -151,10 +175,10 @@
     <!-- Split mode (editor + live preview side by side, lg+ only) -->
     <div
       v-else-if="editable && mode === 'split'"
-      class="flex grow min-h-0 gap-4"
+      class="flex h-[80vh] min-h-0 gap-4 overflow-hidden"
     >
       <!-- Left: editor -->
-      <div class="flex-1 min-w-0 flex flex-col gap-2">
+      <div class="flex-1 min-w-0 min-h-0 flex flex-col gap-2">
         <!-- Toolbar -->
         <div
           class="shrink-0 flex flex-wrap items-center gap-1 p-1.5 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
@@ -186,14 +210,16 @@
             v-model:open="emojiPickerOpen"
             :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
           >
-            <UButton
-              icon="i-lucide-smile"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              aria-label="Insert emoji"
-            />
+            <UTooltip text="Insert emoji">
+              <UButton
+                icon="i-lucide-smile"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="cursor-pointer"
+                aria-label="Insert emoji"
+              />
+            </UTooltip>
             <template #content>
               <EmojiPickerPanel
                 v-model:search="emojiSearchTerm"
@@ -202,10 +228,32 @@
               />
             </template>
           </UPopover>
+          <UPopover
+            v-model:open="magicSymbolPickerOpen"
+            :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+          >
+            <UTooltip text="Insert Magic symbol">
+              <UButton
+                icon="i-mdi-cards-playing-outline"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="cursor-pointer"
+                aria-label="Insert Magic symbol"
+              />
+            </UTooltip>
+            <template #content>
+              <MagicSymbolPickerPanel
+                v-model:search="magicSymbolSearchTerm"
+                :symbols="magicSymbols"
+                @select="insertMagicSymbol"
+              />
+            </template>
+          </UPopover>
         </div>
 
         <div
-          class="editor-shell flex-1 min-h-[80vh] w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
+          class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
           @mousemove="onEditorMouseMove"
           @mouseleave="onEditorMouseLeave"
         >
@@ -236,6 +284,7 @@
       <div
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 px-1 overflow-y-auto"
+        @click="handlePreviewClick"
         @mousemove="onPreviewMouseMove"
         @mouseleave="onPreviewMouseLeave"
       >
@@ -253,6 +302,7 @@
     <div
       v-else
       class="primer-preview grow min-h-0 overflow-y-auto px-1"
+      @click="handlePreviewClick"
       @mousemove="onPreviewMouseMove"
       @mouseleave="onPreviewMouseLeave"
     >
@@ -265,7 +315,9 @@
       </p>
     </div>
 
-    <!-- Floating card preview shown while hovering over ((...)) / [[...]] tokens -->
+    <!-- Floating card preview shown while hovering (desktop) or after tapping
+         (mobile) a ((...)) / [[...]] token. Non-interactive: dismisses on
+         outside pointerdown or mouse leaving the source token. -->
     <Teleport to="body">
       <div
         v-if="tokenPreview"
@@ -310,8 +362,18 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { emojify, search as searchEmoji } from 'node-emoji';
+import 'mana-font/css/mana.min.css';
 import { useCardsByName } from '~/composables/useCards';
+import { useCommandersSet } from '~/composables/useBulkData';
+import { useLinkEmbeds, type LinkEmbedData } from '~/composables/useLinkEmbeds';
 import { getCardImageUrl } from '~/utils/scryfall';
+import { getAffiliateLink } from '~/utils/tcgPlayer';
+import {
+  extractMagicSymbols,
+  magicSymbols,
+  restoreMagicSymbols,
+} from '~/utils/magicSymbols';
+import { extractAndTokenizeLinkEmbeds } from '~/utils/linkEmbeds';
 
 const props = withDefaults(
   defineProps<{
@@ -343,6 +405,14 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
 
+const router = useRouter();
+
+// True when the user held a modifier that should still allow the browser's
+// default link behavior (open in new tab, save link as, etc.).
+function isModifiedClick(event: MouseEvent): boolean {
+  return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+}
+
 const mode = ref<'edit' | 'split' | 'preview'>(
   props.editable ? 'edit' : 'preview',
 );
@@ -352,6 +422,7 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const previewRef = ref<HTMLDivElement | null>(null);
 const highlightLayerRef = ref<HTMLDivElement | null>(null);
 const highlightContentRef = ref<HTMLDivElement | null>(null);
+let highlightResizeObserver: ResizeObserver | null = null;
 
 // --- Unsaved changes guard ---
 const showUnsavedModal = ref(false);
@@ -386,12 +457,28 @@ function handleBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
+function handleDocumentPointerDown(e: PointerEvent) {
+  if (!tokenPreview.value) return;
+  const el = e.target as HTMLElement | null;
+  // Skip closing when tapping the originating card link so the sibling click
+  // handler can re-open/re-position it without a visible flicker.
+  if (el?.closest('.card-inline-link')) return;
+  tokenPreview.value = null;
+}
+
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
+  document.addEventListener('pointerdown', handleDocumentPointerDown, true);
+  highlightResizeObserver = new ResizeObserver(syncHighlightScroll);
+  if (textareaRef.value) highlightResizeObserver.observe(textareaRef.value);
+  nextTick(syncHighlightScroll);
 });
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
+  document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
+  highlightResizeObserver?.disconnect();
+  highlightResizeObserver = null;
 });
 
 // --- Scroll sync: editor → preview ---
@@ -409,10 +496,22 @@ function onEditorScroll() {
 // Keep the syntax-highlight overlay aligned with the textarea's scroll position.
 function syncHighlightScroll() {
   const ta = textareaRef.value;
+  const layer = highlightLayerRef.value;
   const content = highlightContentRef.value;
-  if (!ta || !content) return;
+  if (!ta || !layer || !content) return;
+  // A textarea's client width excludes its vertical scrollbar. Mirror that
+  // usable width so soft-wrapped lines, highlighted text, and the caret stay
+  // aligned after the editor begins scrolling or changes layout.
+  layer.style.width = `${ta.clientWidth}px`;
   content.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
 }
+
+watch(textareaRef, (ta) => {
+  if (!highlightResizeObserver) return;
+  highlightResizeObserver.disconnect();
+  if (ta) highlightResizeObserver.observe(ta);
+  nextTick(syncHighlightScroll);
+});
 
 function onSplitScroll() {
   onEditorScroll();
@@ -472,7 +571,11 @@ function onEditorMouseMove(e: MouseEvent) {
         const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
         const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
         const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-        tokenPreview.value = { imageUrl: entry.imageUrl, x, y };
+        tokenPreview.value = {
+          imageUrl: entry.imageUrl,
+          x,
+          y,
+        };
         return;
       }
     }
@@ -507,7 +610,11 @@ function onPreviewMouseMove(e: MouseEvent) {
   const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
   const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
   const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-  tokenPreview.value = { imageUrl: entry.imageUrl, x, y };
+  tokenPreview.value = {
+    imageUrl: entry.imageUrl,
+    x,
+    y,
+  };
 }
 
 function onPreviewMouseLeave() {
@@ -536,19 +643,107 @@ const referencedCardNames = computed(() => {
 });
 
 const { cards: referencedCards } = useCardsByName(referencedCardNames);
+const { data: commanderNames } = useCommandersSet();
 
 // Map from card name (lowercase) → image URL for fast lookup during render.
 const cardImageMap = computed(() => {
-  const map = new Map<string, { imageUrl: string; oracleId: string }>();
+  const map = new Map<
+    string,
+    {
+      imageUrl: string;
+      oracleId: string;
+      isCommander: boolean;
+      price: string | null;
+      tcgplayerId?: number;
+      backImageUrl: string | null;
+    }
+  >();
   for (const card of referencedCards.value ?? []) {
     const imageUrl = getCardImageUrl(card.card_data, false, 'normal');
+    const flippedImageUrl = getCardImageUrl(card.card_data, true, 'normal');
+    const hasDistinctBack =
+      (card.card_data.card_faces?.length ?? 0) >= 2 &&
+      Boolean(flippedImageUrl) &&
+      flippedImageUrl !== imageUrl;
     map.set(card.card_data.name.toLowerCase(), {
       imageUrl,
       oracleId: card.card_data.oracle_id,
+      isCommander: commanderNames.value?.has(card.card_data.name) ?? false,
+      price: card.card_data.prices?.usd ?? null,
+      tcgplayerId: card.card_data.tcgplayer_id,
+      backImageUrl: hasDistinctBack ? flippedImageUrl : null,
     });
   }
   return map;
 });
+
+// --- Link unfurls: bare CardMystic URLs on their own line ---
+// Discord-style unfurl for decklists, articles, users, and search pages.
+// We pre-tokenize before markdown to keep marked's autolinker from turning
+// the URL into a plain anchor, then swap the token for the resolved unfurl
+// HTML (or a skeleton) after sanitize.
+const linkEmbedTargets = computed(() => {
+  const src = previewSource.value;
+  if (!src?.trim()) return [];
+  return extractAndTokenizeLinkEmbeds(src).targets;
+});
+const { embedMap: linkEmbedMap } = useLinkEmbeds(linkEmbedTargets);
+
+const embeddedActionIcons = {
+  similar:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.19 2.25c-.26 0-.52.06-.77.15L3.06 5.45a1.994 1.994 0 0 0-1.09 2.6L6.93 20a2 2 0 0 0 1.81 1.25c.26 0 .53-.03.79-.15l7.37-3.05a2.02 2.02 0 0 0 1.23-1.8c.01-.25-.04-.54-.13-.8L13 3.5a1.95 1.95 0 0 0-1.81-1.25m3.48 0l3.45 8.35V4.25a2 2 0 0 0-2-2m4.01 1.54v9.03l2.43-5.86a1.99 1.99 0 0 0-1.09-2.6m-10.28-.14l4.98 12.02l-7.39 3.06L3.8 7.29"/></svg>',
+  popular:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0a5 5 0 0 1 1-3a1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></svg>',
+  recommend:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7l8.7 5l8.7-5M12 22V12"/></g></svg>',
+  buy: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></g></svg>',
+  flip: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>',
+};
+
+function embeddedCardAction(
+  href: string,
+  label: string,
+  buttonLabel: string,
+  modifier: string,
+  icon: string,
+): string {
+  return `<a class="card-inline-action ${modifier}" href="${href}" aria-label="${label}" data-tooltip="${label}">${icon}<span>${buttonLabel}</span></a>`;
+}
+
+// Escape user-provided strings before injecting into raw HTML. All embed
+// content originates from API responses (decklist name, article title, etc.)
+// so callers must NOT double-escape values already safe by construction.
+function escapeEmbedHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderLinkEmbedCard(data: LinkEmbedData): string {
+  const href = escapeEmbedHtml(data.href);
+  const eyebrow = escapeEmbedHtml(data.eyebrow);
+  const title = escapeEmbedHtml(data.title);
+  const description = escapeEmbedHtml(data.description);
+  const meta = escapeEmbedHtml(data.meta);
+  const imageMarkup = data.imageUrl
+    ? `<span class="link-embed-image"><img src="${escapeEmbedHtml(data.imageUrl)}" alt="" loading="lazy" /></span>`
+    : '';
+  return `<a class="link-embed" href="${href}">${
+    eyebrow ? `<span class="link-embed-eyebrow">${eyebrow}</span>` : ''
+  }<span class="link-embed-title">${title}</span>${
+    description
+      ? `<span class="link-embed-description">${description}</span>`
+      : ''
+  }${meta ? `<span class="link-embed-meta">${meta}</span>` : ''}${imageMarkup}</a>`;
+}
+
+function renderLinkEmbedSkeleton(href: string): string {
+  const safeHref = escapeEmbedHtml(href);
+  return `<a class="link-embed link-embed-loading" href="${safeHref}" aria-busy="true"><span class="link-embed-skeleton-line link-embed-skeleton-line--sm"></span><span class="link-embed-skeleton-line link-embed-skeleton-line--lg"></span><span class="link-embed-skeleton-line link-embed-skeleton-line--md"></span><span class="link-embed-image link-embed-image-skeleton"></span></a>`;
+}
 
 watch(
   () => props.modelValue,
@@ -588,7 +783,14 @@ const renderedHtml = computed(() => {
   // Card link tokens: [[Card Name]]
   const cardLinkNames: string[] = [];
 
-  let pre = src.replace(/@\[youtube\]\(([A-Za-z0-9_-]{11})\)/g, (_, id) => {
+  // Full-line CardMystic URLs unfurl into embed cards. `extractAndTokenizeLinkEmbeds`
+  // rewrites those lines to LINKEMBEDTOKEN{n} markers (surrounded by blank
+  // lines) so marked treats them as block elements. Ordered target list is
+  // reused by the post-process replacer below.
+  const linkEmbedResult = extractAndTokenizeLinkEmbeds(src);
+  let pre = linkEmbedResult.processed;
+
+  pre = pre.replace(/@\[youtube\]\(([A-Za-z0-9_-]{11})\)/g, (_, id) => {
     const i = ytIds.push(id) - 1;
     return `\n\nYTEMBEDTOKEN${i}YTEMBEDTOKEN\n\n`;
   });
@@ -602,6 +804,9 @@ const renderedHtml = computed(() => {
     const i = cardLinkNames.push(name.trim()) - 1;
     return `CARDLINKTOKEN${i}CARDLINKTOKEN`;
   });
+
+  const extractedMagicSymbols = extractMagicSymbols(pre);
+  pre = extractedMagicSymbols.text;
 
   // Convert :shortcode: → unicode emoji after custom tokens are extracted
   // so card names / URLs can never be misinterpreted as emoji names.
@@ -619,6 +824,7 @@ const renderedHtml = computed(() => {
       'allowfullscreen',
       'class',
       'open',
+      'start',
     ],
     ADD_TAGS: ['details', 'summary', 'iframe'],
   });
@@ -635,19 +841,121 @@ const renderedHtml = computed(() => {
     if (!name) return '';
     const entry = cardImageMap.value.get(name.toLowerCase());
     if (!entry) return `<em class="card-unknown">${name}</em>`;
-    return `<a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" loading="lazy" /></a>`;
+    const encodedName = encodeURIComponent(name);
+    const commanderActions = entry.isCommander
+      ? embeddedCardAction(
+          `/popular-by-commander/all?commander=${encodedName}`,
+          'Popular Cards for this Commander',
+          'Popular',
+          'card-inline-action-popular',
+          embeddedActionIcons.popular,
+        ) +
+        embeddedCardAction(
+          `/search/all/deckbuilder?commander=${encodedName}`,
+          'Get Deck Recommendations for this Commander',
+          'Recommend',
+          'card-inline-action-recommend',
+          embeddedActionIcons.recommend,
+        )
+      : '';
+    const similarAction = embeddedCardAction(
+      `/search/all/similarity?card_name=${encodedName}&amp;searchType=similarity`,
+      'Find Similar Cards',
+      'Similar',
+      'card-inline-action-similar',
+      embeddedActionIcons.similar,
+    );
+    const buyAction = entry.tcgplayerId
+      ? `<a class="card-inline-action card-inline-action-buy" href="${getAffiliateLink(entry.tcgplayerId)}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${entry.price ? `Buy on TCGPlayer ($${entry.price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${entry.price ? ` $${entry.price}` : ''}</span></a>`
+      : '';
+    const flipAction = entry.backImageUrl
+      ? `<button type="button" class="card-inline-action card-inline-action-flip" aria-label="Flip Card" data-tooltip="Flip card" data-card-flip>${embeddedActionIcons.flip}<span>Flip</span></button>`
+      : '';
+    return `<span class="card-inline-embed" data-front-image="${entry.imageUrl}"${entry.backImageUrl ? ` data-back-image="${entry.backImageUrl}"` : ''}><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" data-card-face="front" loading="lazy" /></a><span class="card-inline-actions">${flipAction}${similarAction}${commanderActions}${buyAction}</span></span>`;
   });
 
   result = result.replace(/CARDLINKTOKEN(\d+)CARDLINKTOKEN/g, (_, idx) => {
     const name = cardLinkNames[Number(idx)];
     if (!name) return '';
-    const entry = cardImageMap.value.get(name.toLowerCase());
-    const href = entry ? `/card/${entry.oracleId}` : '#';
-    return `<a class="card-inline-link" href="${href}">${name}</a>`;
+    return `<span class="card-inline-link">${name}</span>`;
   });
+
+  result = result.replace(
+    /(?:<p>\s*)?LINKEMBEDTOKEN(\d+)LINKEMBEDTOKEN(?:\s*<\/p>)?/g,
+    (_, idx) => {
+      const target = linkEmbedResult.targets[Number(idx)];
+      if (!target) return '';
+      const data = linkEmbedMap.value.get(target.url);
+      return data
+        ? renderLinkEmbedCard(data)
+        : renderLinkEmbedSkeleton(target.href);
+    },
+  );
+
+  result = restoreMagicSymbols(result, extractedMagicSymbols.symbols);
 
   return result;
 });
+
+function handlePreviewClick(event: MouseEvent) {
+  const target = event.target as HTMLElement | null;
+
+  // [[Card Name]] tokens render as spans (no navigation). Tapping one opens
+  // the floating preview — the same affordance desktop users get on hover.
+  const cardLink = target?.closest<HTMLElement>('.card-inline-link');
+  if (cardLink) {
+    const name = (cardLink.textContent ?? '').trim();
+    const entry = cardImageMap.value.get(name.toLowerCase());
+    if (!entry) {
+      tokenPreview.value = null;
+      return;
+    }
+    const rect = cardLink.getBoundingClientRect();
+    const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
+    const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
+    const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
+    const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
+    tokenPreview.value = {
+      imageUrl: entry.imageUrl,
+      x,
+      y,
+    };
+    return;
+  }
+
+  // Intercept unfurl / inline card image links so navigation goes through the
+  // Vue router (SPA) instead of causing a full page reload — those anchors
+  // are injected as raw HTML and would otherwise trigger a hard nav.
+  const spaLink = target?.closest<HTMLAnchorElement>(
+    '.link-embed, .card-inline-img-link',
+  );
+  if (spaLink && !isModifiedClick(event)) {
+    const to = spaLink.getAttribute('href');
+    if (to && to.startsWith('/')) {
+      event.preventDefault();
+      tokenPreview.value = null;
+      router.push(to);
+      return;
+    }
+  }
+
+  const flipButton = target?.closest<HTMLButtonElement>('[data-card-flip]');
+  if (!flipButton) return;
+
+  const embed = flipButton.closest<HTMLElement>('.card-inline-embed');
+  const image = embed?.querySelector<HTMLImageElement>('.card-inline-img');
+  const frontImage = embed?.dataset.frontImage;
+  const backImage = embed?.dataset.backImage;
+  if (!image || !frontImage || !backImage) return;
+
+  const showBack = image.dataset.cardFace !== 'back';
+  image.src = showBack ? backImage : frontImage;
+  image.dataset.cardFace = showBack ? 'back' : 'front';
+  flipButton.setAttribute(
+    'aria-label',
+    showBack ? 'Show Front Face' : 'Show Back Face',
+  );
+}
 
 // --- Syntax highlighting for the raw markdown editor ---
 // Produces safe HTML mirroring the textarea contents with token spans so users
@@ -685,6 +993,7 @@ function highlightMarkdown(src: string): string {
   add(/\(\([^)\n]+\)\)/g, 'tok-card-img');
   add(/\[\[[^\]\n]+\]\]/g, 'tok-card-link');
   add(/@\[youtube\]\([A-Za-z0-9_-]{11}\)/g, 'tok-youtube');
+  add(/\{[^{}\n]+\}/g, 'tok-magic-symbol');
   add(/:[a-z0-9_+-]+:/g, 'tok-emoji');
   add(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, 'tok-html');
   add(/!\[[^\]\n]*\]\([^)\n]+\)/g, 'tok-image');
@@ -984,6 +1293,8 @@ interface EmojiEntry {
 
 const emojiPickerOpen = ref(false);
 const emojiSearchTerm = ref('');
+const magicSymbolPickerOpen = ref(false);
+const magicSymbolSearchTerm = ref('');
 
 const defaultEmojiNames = [
   'grinning',
@@ -1089,6 +1400,13 @@ function insertEmojiShortcode(name: string) {
   // Focus the textarea first so the shortcode is inserted at the caret.
   textareaRef.value?.focus();
   nextTick(() => insertAtCursor(`:${name}:`));
+}
+
+function insertMagicSymbol(token: string) {
+  magicSymbolPickerOpen.value = false;
+  magicSymbolSearchTerm.value = '';
+  textareaRef.value?.focus();
+  nextTick(() => insertAtCursor(`{${token}}`));
 }
 </script>
 
@@ -1219,6 +1537,14 @@ function insertEmojiShortcode(name: string) {
   text-align: center;
   text-decoration: none;
 }
+.primer-preview :deep(.card-inline-embed) {
+  display: flex;
+  width: fit-content;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem auto;
+}
 .primer-preview :deep(.card-inline-img) {
   display: inline-block;
   width: 200px;
@@ -1226,6 +1552,80 @@ function insertEmojiShortcode(name: string) {
   border-radius: 10px;
   vertical-align: middle;
   margin: 0.25rem;
+}
+.primer-preview :deep(.card-inline-actions) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.35rem;
+}
+.primer-preview :deep(.card-inline-action) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 2rem;
+  min-width: 6.5rem;
+  gap: 0.35rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.375rem;
+  box-sizing: border-box;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+}
+.primer-preview :deep(.card-inline-action svg) {
+  width: 1rem;
+  height: 1rem;
+}
+.primer-preview :deep(.card-inline-action::after) {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  z-index: 20;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--ui-bg-inverted);
+  color: var(--ui-text-inverted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 0.2rem);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+.primer-preview :deep(.card-inline-action:hover::after),
+.primer-preview :deep(.card-inline-action:focus-visible::after) {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.primer-preview :deep(.card-inline-action:hover) {
+  background: rgba(127, 127, 127, 0.12);
+}
+.primer-preview :deep(.card-inline-action-similar) {
+  color: var(--ui-text-muted);
+}
+.primer-preview :deep(.card-inline-action-popular) {
+  color: var(--ui-error);
+}
+.primer-preview :deep(.card-inline-action-recommend) {
+  color: var(--ui-primary);
+}
+.primer-preview :deep(.card-inline-action-buy) {
+  color: var(--ui-success);
+}
+.primer-preview :deep(.card-inline-action-flip) {
+  color: var(--ui-text-muted);
+  cursor: pointer;
 }
 .primer-preview :deep(.card-inline-link) {
   color: #3b82f6;
@@ -1235,6 +1635,144 @@ function insertEmojiShortcode(name: string) {
 .primer-preview :deep(.card-unknown) {
   color: #f87171;
   font-style: italic;
+}
+.primer-preview :deep(.magic-symbol) {
+  display: inline-block;
+  margin: 0 0.08em;
+  margin-inline-start: 0.08em !important;
+  font-size: 1.05em;
+  vertical-align: -0.08em;
+}
+
+/* --- Discord-style link unfurls --- */
+.primer-preview :deep(.link-embed) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-width: 520px;
+  margin: 0.75rem auto;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--ui-border);
+  border-left: 4px solid var(--ui-primary, #6366f1);
+  border-radius: 6px;
+  background: var(--ui-bg-elevated, rgba(0, 0, 0, 0.03));
+  text-decoration: none;
+  color: inherit;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  overflow: hidden;
+}
+.primer-preview :deep(.link-embed:hover) {
+  background: var(--ui-bg-accented, rgba(99, 102, 241, 0.06));
+  text-decoration: none;
+}
+.primer-preview :deep(.link-embed-eyebrow) {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ui-text-muted, #9ca3af);
+}
+.primer-preview :deep(.link-embed-title) {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #60a5fa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+.primer-preview :deep(.link-embed:hover .link-embed-title) {
+  text-decoration: underline;
+}
+.primer-preview :deep(.link-embed-description) {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--ui-text-muted, #9ca3af);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+.primer-preview :deep(.link-embed-meta) {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ui-text-muted, #9ca3af);
+}
+.primer-preview :deep(.link-embed-image) {
+  display: block;
+  margin-top: 0.375rem;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--ui-bg-muted, rgba(0, 0, 0, 0.05));
+}
+.primer-preview :deep(.link-embed-image img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+  border-radius: 0;
+}
+.primer-preview :deep(.link-embed-image-skeleton) {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: link-embed-shimmer 1.4s ease-in-out infinite;
+}
+.primer-preview :deep(.link-embed-skeleton-line) {
+  display: block;
+  height: 0.75rem;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: link-embed-shimmer 1.4s ease-in-out infinite;
+}
+.primer-preview :deep(.link-embed-skeleton-line--sm) {
+  width: 30%;
+}
+.primer-preview :deep(.link-embed-skeleton-line--md) {
+  width: 60%;
+}
+.primer-preview :deep(.link-embed-skeleton-line--lg) {
+  width: 85%;
+  height: 1rem;
+}
+@keyframes link-embed-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.dark .primer-preview :deep(.link-embed-image-skeleton),
+.dark .primer-preview :deep(.link-embed-skeleton-line) {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 75%
+  );
+  background-size: 200% 100%;
 }
 
 /* --- Syntax-highlighted editor (overlay + transparent textarea) --- */
@@ -1256,7 +1794,10 @@ function insertEmojiShortcode(name: string) {
 }
 .highlight-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   overflow: hidden;
   pointer-events: none;
   border-radius: inherit;
@@ -1305,51 +1846,48 @@ function insertEmojiShortcode(name: string) {
   color: rgb(156 163 175);
 }
 
-/* Token colors — tuned to work in both light and dark themes. */
+/* Token colors — tuned to work in both light and dark themes. Keep font
+   metrics unchanged so this mirror wraps exactly like the textarea. */
 .highlight-content :deep(.tok-html) {
   color: #d946ef;
-  font-weight: 600;
 }
 .highlight-content :deep(.tok-card-img) {
   color: #10b981;
-  font-weight: 600;
   background: rgba(16, 185, 129, 0.12);
   border-radius: 3px;
 }
 .highlight-content :deep(.tok-card-link) {
   color: #3b82f6;
-  font-weight: 600;
   background: rgba(59, 130, 246, 0.12);
   border-radius: 3px;
 }
 .highlight-content :deep(.tok-youtube) {
   color: #ef4444;
-  font-weight: 600;
 }
 .highlight-content :deep(.tok-emoji) {
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.12);
   border-radius: 3px;
 }
+.highlight-content :deep(.tok-magic-symbol) {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.12);
+  border-radius: 3px;
+}
 .highlight-content :deep(.tok-heading) {
   color: #f59e0b;
-  font-weight: 700;
 }
 .highlight-content :deep(.tok-bold) {
   color: #eab308;
-  font-weight: 700;
 }
 .highlight-content :deep(.tok-italic) {
   color: #eab308;
-  font-style: italic;
 }
 .highlight-content :deep(.tok-quote) {
   color: #94a3b8;
-  font-style: italic;
 }
 .highlight-content :deep(.tok-list) {
   color: #f97316;
-  font-weight: 700;
 }
 .highlight-content :deep(.tok-link) {
   color: #06b6d4;
@@ -1377,9 +1915,9 @@ function insertEmojiShortcode(name: string) {
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
   overflow: hidden;
-  pointer-events: none;
   z-index: 1000;
   background: #000;
+  pointer-events: none;
 }
 .editor-card-preview img {
   width: 100%;

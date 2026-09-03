@@ -64,8 +64,7 @@ const linkGroups = [
       },
       {
         label: 'Deck Recommender',
-        description:
-          'Get personalized deck recommendations based on your collection.',
+        description: 'Get personalized recommendations based on your deck.',
         icon: 'i-lucide-box',
         to: '/search/all/deckbuilder',
         tone: 'deck-recommender',

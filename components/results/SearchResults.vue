@@ -5,16 +5,49 @@
       <SearchResultsSkeleton
         :skeleton-count="skeletonCount"
         :default-group-by="defaultGroupBy"
+        :view="view"
       />
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
-      <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
-        <GroupBy
-          :default-value="defaultGroupBy"
-          @update:groupBy="handleGroupBy"
-        />
+      <!-- Mobile display controls use the same compact popover as deck lists. -->
+      <div class="flex justify-end mb-3 lg:hidden">
+        <UPopover>
+          <UButton
+            icon="i-lucide-settings-2"
+            color="neutral"
+            variant="outline"
+            label="Display"
+            class="cursor-pointer"
+          />
+          <template #content>
+            <div class="p-3 space-y-3">
+              <View :default-value="view" @update:view="handleView" />
+              <GroupBy
+                :default-value="groupBy"
+                @update:groupBy="handleGroupBy"
+              />
+              <SortComponent
+                :default-sort-by="sortBy"
+                :default-direction="sortDirection"
+                :has-als-score="hasAlsScore"
+                :has-ai-score="hasAiScore"
+                :has-popularity="hasPopularity"
+                @sort="handleSort"
+              />
+            </div>
+          </template>
+        </UPopover>
+      </div>
+
+      <div
+        class="hidden lg:flex flex-wrap items-center justify-center gap-4 mb-3"
+      >
+        <View :default-value="view" @update:view="handleView" />
+        <GroupBy :default-value="groupBy" @update:groupBy="handleGroupBy" />
         <SortComponent
+          :default-sort-by="sortBy"
+          :default-direction="sortDirection"
           :has-als-score="hasAlsScore"
           :has-ai-score="hasAiScore"
           :has-popularity="hasPopularity"
@@ -53,7 +86,8 @@
               groupedResults.length > 0 &&
               groupedResults[0].label
             "
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 mb-3"
+            class="grid mb-3"
+            :class="resultsGridClass"
           >
             <div
               @mouseenter="setPreviewCard(searchedCard)"
@@ -61,12 +95,27 @@
               @mouseleave="clearPendingPreviewCard(searchedCard.card_data.id)"
             >
               <Card
+                v-if="view === 'grid'"
                 :card="searchedCard"
                 :showCardInfo="true"
                 :is-searched="true"
                 :hide-progress-bar="false"
                 :hide-thumbs-down-button="true"
                 :is-commander="checkIsCommander(searchedCard)"
+                :is-flipped="flippedCards[searchedCard.card_data.id] ?? false"
+                @flip="handleCardFlip"
+                @partner-hover="handlePartnerHover"
+              />
+              <CardText
+                v-else
+                :card="searchedCard"
+                :show-card-info="true"
+                :is-searched="true"
+                :hide-progress-bar="false"
+                :hide-thumbs-down-button="true"
+                :is-commander="checkIsCommander(searchedCard)"
+                :is-commander-card="checkIsCommander(searchedCard)"
+                :is-deck-commander="false"
                 :is-flipped="flippedCards[searchedCard.card_data.id] ?? false"
                 @flip="handleCardFlip"
                 @partner-hover="handlePartnerHover"
@@ -125,7 +174,8 @@
               >
                 <div
                   :id="groupToId(group.label)"
-                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2 pb-4"
+                  class="grid pb-4"
+                  :class="resultsGridClass"
                 >
                   <div
                     v-for="result in group.cards"
@@ -135,6 +185,7 @@
                     @mouseleave="clearPendingPreviewCard(result.card_data.id)"
                   >
                     <Card
+                      v-if="view === 'grid'"
                       :card="result"
                       :showCardInfo="true"
                       :is-searched="false"
@@ -148,6 +199,23 @@
                       @flip="handleCardFlip"
                       @partner-hover="handlePartnerHover"
                     />
+                    <CardText
+                      v-else
+                      :card="result"
+                      :show-card-info="true"
+                      :is-searched="false"
+                      :hide-progress-bar="hideProgressBar"
+                      :hide-thumbs-down-button="hideThumbsDownButton"
+                      :show-add-to-deckbuilder-button="
+                        showAddToDeckbuilderButton
+                      "
+                      :is-commander="checkIsCommander(result)"
+                      :is-commander-card="checkIsCommander(result)"
+                      :is-deck-commander="false"
+                      :is-flipped="flippedCards[result.card_data.id] ?? false"
+                      @flip="handleCardFlip"
+                      @partner-hover="handlePartnerHover"
+                    />
                   </div>
                 </div>
               </template>
@@ -156,9 +224,7 @@
 
           <!-- Flat results (no grouping) -->
           <template v-else>
-            <div
-              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2"
-            >
+            <div class="grid" :class="resultsGridClass">
               <div
                 v-for="(result, index) in sortedResults"
                 :key="result.card_data.id"
@@ -167,6 +233,7 @@
                 @mouseleave="clearPendingPreviewCard(result.card_data.id)"
               >
                 <Card
+                  v-if="view === 'grid'"
                   :card="result"
                   :showCardInfo="true"
                   :is-searched="isSimilaritySearch && index === 0"
@@ -174,6 +241,21 @@
                   :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
                   :is-commander="checkIsCommander(result)"
+                  :is-flipped="flippedCards[result.card_data.id] ?? false"
+                  @flip="handleCardFlip"
+                  @partner-hover="handlePartnerHover"
+                />
+                <CardText
+                  v-else
+                  :card="result"
+                  :show-card-info="true"
+                  :is-searched="isSimilaritySearch && index === 0"
+                  :hide-progress-bar="hideProgressBar"
+                  :hide-thumbs-down-button="hideThumbsDownButton"
+                  :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
+                  :is-commander="checkIsCommander(result)"
+                  :is-commander-card="checkIsCommander(result)"
+                  :is-deck-commander="false"
                   :is-flipped="flippedCards[result.card_data.id] ?? false"
                   @flip="handleCardFlip"
                   @partner-hover="handlePartnerHover"
@@ -306,12 +388,26 @@ function handlePartnerHover(index: 0 | 1) {
 const sortBy = ref<string | undefined>(undefined);
 const sortDirection = ref<'asc' | 'desc'>('asc');
 
+// Display state. Text mode uses the same sorted/grouped Card data and hover
+// preview path as the card grid, so changing views does not reset results.
+const view = ref<'grid' | 'text'>('grid');
+
+const resultsGridClass = computed(() =>
+  view.value === 'text'
+    ? 'grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-x-4 gap-y-1'
+    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2',
+);
+
 // Grouping state
 const groupBy = ref<string | undefined>(props.defaultGroupBy);
 
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
   sortBy.value = sortOption;
   sortDirection.value = direction;
+}
+
+function handleView(value: string | undefined) {
+  view.value = value === 'text' ? 'text' : 'grid';
 }
 
 function handleGroupBy(value: string | undefined) {

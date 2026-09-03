@@ -393,7 +393,7 @@
                 @click="addFormatRow"
                 color="primary"
                 size="sm"
-                icon="i-lucide-plus"
+                icon="i-heroicons-plus"
               >
                 Add Format
               </UButton>

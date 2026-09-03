@@ -72,7 +72,7 @@ test.describe('Deck Recommender', () => {
     // Recommended cards grid should populate.
     const grid = page
       .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-4.lg\\:grid-cols-5.xl\\:grid-cols-6',
+        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
       )
       .first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });
@@ -164,7 +164,7 @@ test.describe('Deck Recommender', () => {
     // Results should render in the card grid.
     const grid = page
       .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-4.lg\\:grid-cols-5.xl\\:grid-cols-6',
+        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
       )
       .first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });

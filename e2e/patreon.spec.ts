@@ -68,10 +68,7 @@ const mockPatreonStatus = async (
 };
 
 const patreonSection = (page: Page) =>
-  page
-    .locator('section, div')
-    .filter({ hasText: 'Patreon Membership' })
-    .last();
+  page.locator('section, div').filter({ hasText: 'Patreon Membership' }).last();
 
 test.describe('Patreon integration', () => {
   test('not connected: shows Connect button and membership page link', async ({

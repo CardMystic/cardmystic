@@ -25,9 +25,7 @@ import PopularCommandersSearch from './PopularCommandersSearch.vue';
 import PopularByCommanderSearch from './PopularByCommanderSearch.vue';
 
 export type StatsType =
-  | 'popular-cards'
-  | 'popular-commanders'
-  | 'popular-by-commander';
+  'popular-cards' | 'popular-commanders' | 'popular-by-commander';
 
 const props = defineProps<{
   defaultStatsType?: StatsType;

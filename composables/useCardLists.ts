@@ -131,14 +131,9 @@ export function useOwnedDecklist(listId: Ref<string | null | undefined>) {
   const config = useRuntimeConfig();
 
   const { data, isLoading, error, refetch } = useQuery({
-queryKey: computed(
+    queryKey: computed(
       () =>
-        [
-          'user-lists',
-          'owned',
-          userProfile.value?.id,
-          listId.value,
-        ] as const,
+        ['user-lists', 'owned', userProfile.value?.id, listId.value] as const,
     ),
     queryFn: async () => {
       const { data: sessionData } = await supabase!.auth.getSession();

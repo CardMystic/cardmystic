@@ -17,7 +17,7 @@ import { expect, gotoHydrated, test } from './utils/fixtures';
  * are relative to the global test order, not this file):
  *
  *  ── Setup ──────────────────────────────────────────────────────────────
- *   38. Create a list via the New List modal and make it public via the
+ *   38. Create a list via the New Deck modal and make it public via the
  *       modal's visibility selector (owner-only UI; can also be flipped
  *       later from the banner selector on the deck page)
  *
@@ -130,7 +130,7 @@ test.describe('Decklist social & discovery', () => {
   test('creates a list and makes it public', async ({ page, request }) => {
     await gotoHydrated(page, '/lists');
 
-    await page.getByRole('button', { name: /new list/i }).click();
+    await page.getByRole('button', { name: /New Deck/i }).click();
     const dialog = page.getByRole('dialog', { name: /create new decklist/i });
     await expect(dialog).toBeVisible();
 
@@ -138,9 +138,13 @@ test.describe('Decklist social & discovery', () => {
 
     // Flip visibility to Public directly from the create modal — owners
     // can also change it later from the banner selector on the deck page.
+    // reka-ui's SelectTrigger inside a UModal can swallow the popover open
+    // on a plain Playwright click, so open the listbox via keyboard which
+    // reliably works from the focused trigger button.
     const visibilitySelect = dialog.getByTestId('create-visibility-select');
     await expect(visibilitySelect).toBeVisible();
-    await visibilitySelect.click();
+    await visibilitySelect.focus();
+    await visibilitySelect.press('Enter');
     await page.getByRole('option', { name: 'Public' }).click();
 
     const createCall = page.waitForResponse(
@@ -432,7 +436,8 @@ test.describe('Decklist social & discovery', () => {
     // The Liked/Saved views are now top-level toggle buttons rather than
     // collapsible folders — each click swaps the deck grid.
     const likedButton = page.getByRole('button', {
-      name: 'View Liked Decks',
+      name: 'Liked Decks',
+      exact: true,
     });
     await expect(likedButton).toBeVisible({ timeout: API_TIMEOUT });
     await likedButton.click();
@@ -444,7 +449,8 @@ test.describe('Decklist social & discovery', () => {
     });
 
     const savedButton = page.getByRole('button', {
-      name: 'View Saved Decks',
+      name: 'Saved Decks',
+      exact: true,
     });
     await expect(savedButton).toBeVisible();
     await savedButton.click();
@@ -544,13 +550,12 @@ test.describe('Decklist social & discovery', () => {
     const auth = await supabaseAuth(request);
     expect(auth, 'Supabase password grant must succeed').toBeTruthy();
 
-    const profileCall = page.waitForResponse(
-      (resp) =>
-        resp.url() === `${BACKEND}/user/profile/${auth!.userId}` && resp.ok(),
-      { timeout: API_TIMEOUT },
-    );
     await gotoHydrated(page, `/user/${auth!.userId}`);
-    await profileCall;
+    // Profile response is SSR-seeded via useSsrQuerySeed, so the client
+    // never re-fires it. Wait on rendered profile content instead.
+    await expect(
+      page.getByRole('heading', { name: 'Public Decklists' }),
+    ).toBeVisible({ timeout: API_TIMEOUT });
 
     await expect(
       page.getByRole('button', { name: /^(follow|following)$/i }),
