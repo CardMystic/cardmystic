@@ -37,9 +37,12 @@ export function usePatreon() {
     queryKey: ['patreon-status', computed(() => userProfile.value?.id)],
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
-      const response = await fetch(`${config.public.backendUrl}/patreon/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `${config.public.backendUrl}/patreon/status`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!response.ok) {
         throw new Error(`Failed to load Patreon status (${response.status})`);
       }
@@ -73,10 +76,13 @@ export function usePatreon() {
   const disconnectMutation = useMutation({
     mutationFn: async () => {
       const token = await getAuthToken(supabase!);
-      const response = await fetch(`${config.public.backendUrl}/patreon/connect`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `${config.public.backendUrl}/patreon/connect`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!response.ok) {
         throw new Error(`Failed to disconnect Patreon (${response.status})`);
       }

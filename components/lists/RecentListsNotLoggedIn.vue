@@ -25,14 +25,14 @@
         />
         <!-- Background art (shown once loaded) -->
         <div
-          class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-60 dark:opacity-50 transition-opacity duration-500"
+          class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-70 dark:opacity-50 transition-opacity duration-500"
           :class="
-            loadedImages[item.id] ? 'opacity-60 dark:opacity-50' : 'opacity-0'
+            loadedImages[item.id] ? 'opacity-70 dark:opacity-50' : 'opacity-0'
           "
           :style="{ backgroundImage: `url(${item.image})` }"
         />
         <div
-          class="absolute inset-0 bg-gradient-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent"
+          class="absolute inset-0 bg-gradient-to-t from-white/60 via-white/25 dark:from-black/80 dark:via-black/40 to-transparent"
         />
 
         <!-- Content -->

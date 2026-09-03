@@ -5,11 +5,11 @@
     <!-- Background Image -->
     <div
       v-if="getListImageUrl(list)"
-      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
+      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-70 group-hover:opacity-85 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
       :style="{ backgroundImage: `url(${getListImageUrl(list)})` }"
     ></div>
     <div
-      class="absolute inset-0 bg-linear-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent"
+      class="absolute inset-0 bg-linear-to-t from-white/60 via-white/25 dark:from-black/80 dark:via-black/40 to-transparent"
     ></div>
 
     <!-- Delete Button (visible on hover) -->

@@ -102,7 +102,7 @@
           color="neutral"
           class="cursor-pointer"
           variant="outline"
-          icon="i-lucide-plus"
+          icon="i-heroicons-plus"
           size="md"
           label="Add Copy"
           :disabled="(numCopies ?? 1) >= 100"

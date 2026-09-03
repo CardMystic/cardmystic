@@ -48,7 +48,9 @@ export const StartPatreonConnectResponseSchema = z.object({
         url.pathname === '/oauth2/authorize'
       );
     }, 'Expected a Patreon OAuth authorization URL')
-    .describe('Patreon OAuth authorize URL — redirect the browser here to connect'),
+    .describe(
+      'Patreon OAuth authorize URL — redirect the browser here to connect',
+    ),
 });
 export type StartPatreonConnectResponse = z.infer<
   typeof StartPatreonConnectResponseSchema

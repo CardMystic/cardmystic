@@ -44,7 +44,7 @@
         color="primary"
         variant="solid"
         size="lg"
-        icon="i-lucide-plus"
+        icon="i-heroicons-plus"
         class="cursor-pointer"
         @click="
           () => {

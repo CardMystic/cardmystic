@@ -1,12 +1,13 @@
 <template>
-  <div class="flex items-center gap-1 justify-center h-8">
-    <UIcon name="i-lucide-arrow-up-down" />
-    <span class="text-sm">Sort</span>
+  <div class="flex items-center gap-1 justify-start h-8">
+    <UIcon name="i-lucide-arrow-up-down" class="size-4 shrink-0" />
+    <span class="text-sm w-11">Sort</span>
     <USelect
       v-model="selectedSortValue"
       :items="sortOptions"
       placeholder="Select sort option"
-      class="cursor-pointer min-w-45"
+      size="sm"
+      class="cursor-pointer w-32"
     />
     <UButton
       v-if="selectedSortValue"

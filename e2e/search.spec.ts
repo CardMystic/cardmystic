@@ -43,7 +43,7 @@ const waitForSearchCall = (
 const resultsGrid = (page: import('@playwright/test').Page) =>
   page
     .locator(
-      'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-4.lg\\:grid-cols-5.xl\\:grid-cols-6',
+      'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
     )
     .first();
 
@@ -445,5 +445,54 @@ test.describe('SEO slug pages', () => {
     expect(response.ok()).toBeTruthy();
 
     await expectResultsRendered(page);
+  });
+});
+
+// ─── 8. Card Text view ────────────────────────────────────────────────
+
+/**
+ * The `CardText` component renders one row per card in "text" view
+ * mode (as opposed to the default grid of images). Coverage here
+ * exercises the shared row structure — name, mana cost, and the
+ * ARIA-labelled row wrapper — that both search results and card
+ * lists reuse.
+ */
+test.describe('Card Text view', () => {
+  test('switching to text view renders CardText rows with name + mana cost', async ({
+    page,
+  }) => {
+    const colbertCall = waitForSearchCall(page, '/search/colbert');
+    await gotoHydrated(page, '/search/all/smart/best-card-draw');
+    const response = await colbertCall;
+    expect(response.ok()).toBeTruthy();
+
+    // Wait for results to render as a grid first, then flip the view.
+    await expectResultsRendered(page);
+
+    // The View selector renders inside the search sidebar/filters.
+    // We switch by focusing the trigger and using keyboard because
+    // reka-ui SelectTriggers occasionally swallow clicks under
+    // Playwright when nested in scrollable containers.
+    const viewTrigger = page.getByRole('combobox').first();
+    // Fall back to label lookup if the first combobox isn't the View.
+    const byLabel = page.getByRole('button', { name: /Card Grid/i }).first();
+    const target = (await byLabel.count()) > 0 ? byLabel : viewTrigger;
+    await target.focus();
+    await target.press('Enter');
+    await page.getByRole('option', { name: 'Card Text' }).click();
+
+    // The grid should now contain `.card-text-row` elements instead of
+    // full card images. Assert at least a few rows render and expose
+    // an ARIA-labelled group with `N copies` in the label.
+    const rows = page.locator('.card-text-row');
+    await expect
+      .poll(async () => rows.count(), { timeout: SEARCH_TIMEOUT })
+      .toBeGreaterThan(2);
+
+    // Each row's outer element has role="group" and an aria-label
+    // ending in "N copies".
+    await expect(rows.first()).toHaveAttribute('aria-label', /.+, \d+ copies/);
+    // The role="group" is on the same element (not a wrapper).
+    await expect(rows.first()).toHaveAttribute('role', 'group');
   });
 });

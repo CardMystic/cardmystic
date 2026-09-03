@@ -6,11 +6,11 @@
     <!-- Banner background -->
     <div
       v-if="bannerImageUrl"
-      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
+      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-70 group-hover:opacity-85 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
       :style="{ backgroundImage: `url(${bannerImageUrl})` }"
     ></div>
     <div
-      class="absolute inset-0 bg-linear-to-t from-white/90 via-white/60 dark:from-black/90 dark:via-black/60 to-transparent"
+      class="absolute inset-0 bg-linear-to-t from-white/70 via-white/35 dark:from-black/90 dark:via-black/60 to-transparent"
     ></div>
 
     <div class="relative p-3 md:p-4">

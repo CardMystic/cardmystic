@@ -4,7 +4,7 @@
       <h1 class="text-3xl md:text-4xl font-bold">{{ pageHeading }}</h1>
       <UButton
         v-if="isAuthor"
-        icon="i-lucide-plus"
+        icon="i-heroicons-plus"
         color="primary"
         label="New Article"
         class="cursor-pointer"
@@ -19,7 +19,7 @@
         :color="view === 'mine' ? 'primary' : 'neutral'"
         :variant="view === 'mine' ? 'solid' : 'outline'"
         icon="i-lucide-newspaper"
-        label="View My Articles"
+        label="Your Articles"
         class="cursor-pointer"
         @click="setView('mine')"
       />
@@ -137,12 +137,12 @@ import { useToast } from '#imports';
 import ArticleCard from '~/components/articles/ArticleCard.vue';
 
 definePageMeta({
-  title: 'My Articles',
+  title: 'Your Articles',
   middleware: 'auth',
 });
 
 useSeoMeta({
-  title: 'My Articles | CardMystic',
+  title: 'Your Articles | CardMystic',
   robots: 'noindex, nofollow',
 });
 
@@ -160,7 +160,7 @@ watch(
   { immediate: true },
 );
 const pageHeading = computed(() =>
-  view.value === 'mine' ? 'My Articles' : 'Liked Articles',
+  view.value === 'mine' ? 'Your Articles' : 'Liked Articles',
 );
 
 const pageSize = 50;
