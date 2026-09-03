@@ -10,13 +10,47 @@
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
-      <div class="flex flex-wrap items-center justify-center gap-4 mb-3">
-        <View default-value="grid" @update:view="handleView" />
+      <!-- Mobile display controls use the same compact popover as deck lists. -->
+      <div class="flex justify-end mb-3 lg:hidden">
+        <UPopover>
+          <UButton
+            icon="i-lucide-settings-2"
+            color="neutral"
+            variant="outline"
+            label="Display"
+            class="cursor-pointer"
+          />
+          <template #content>
+            <div class="p-3 space-y-3">
+              <View :default-value="view" @update:view="handleView" />
+              <GroupBy
+                :default-value="groupBy"
+                @update:groupBy="handleGroupBy"
+              />
+              <SortComponent
+                :default-sort-by="sortBy"
+                :default-direction="sortDirection"
+                :has-als-score="hasAlsScore"
+                :has-ai-score="hasAiScore"
+                :has-popularity="hasPopularity"
+                @sort="handleSort"
+              />
+            </div>
+          </template>
+        </UPopover>
+      </div>
+
+      <div
+        class="hidden lg:flex flex-wrap items-center justify-center gap-4 mb-3"
+      >
+        <View :default-value="view" @update:view="handleView" />
         <GroupBy
-          :default-value="defaultGroupBy"
+          :default-value="groupBy"
           @update:groupBy="handleGroupBy"
         />
         <SortComponent
+          :default-sort-by="sortBy"
+          :default-direction="sortDirection"
           :has-als-score="hasAlsScore"
           :has-ai-score="hasAiScore"
           :has-popularity="hasPopularity"

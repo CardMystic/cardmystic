@@ -271,7 +271,7 @@ const isEligibleCommander = computed(() => {
 });
 
 const isCommanderCardComputed = computed(
-  () => props.isCommander ?? props.isCommanderCard ?? isEligibleCommander.value,
+  () => props.isCommander || props.isCommanderCard || isEligibleCommander.value,
 );
 
 const legalityKey = computed(() =>
@@ -408,6 +408,21 @@ const genericActions = computed(() => {
     });
   }
 
+  if (isCommanderCardComputed.value) {
+    actions.push(
+      {
+        label: 'Recommend Cards',
+        icon: 'i-lucide-box',
+        onSelect: getRecommendations,
+      },
+      {
+        label: 'Popular Cards',
+        icon: 'i-lucide-flame',
+        onSelect: viewPopularCards,
+      },
+    );
+  }
+
   if (canShowDeckMenu.value) {
     actions.push({
       label: 'Add to Deck',
@@ -423,21 +438,6 @@ const genericActions = computed(() => {
     icon: isInClipboard.value ? 'i-lucide-check' : 'i-lucide-copy',
     onSelect: toggleClipboard,
   });
-
-  if (isCommanderCardComputed.value) {
-    actions.push(
-      {
-        label: 'Recommend Cards',
-        icon: 'i-lucide-box',
-        onSelect: getRecommendations,
-      },
-      {
-        label: 'Popular Cards',
-        icon: 'i-lucide-flame',
-        onSelect: viewPopularCards,
-      },
-    );
-  }
 
   if (isDualFaced.value) {
     actions.push({
