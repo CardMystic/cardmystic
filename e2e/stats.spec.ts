@@ -36,25 +36,16 @@ test.describe('Popular Cards', () => {
   });
 
   test('loads and renders the top-cards list', async ({ page }) => {
-    const topCardsCall = page.waitForResponse(
-      (resp) =>
-        resp.url().startsWith(`${BACKEND}/deck-stats/top-cards`) &&
-        resp.request().method() === 'POST',
-      { timeout: SEARCH_TIMEOUT },
-    );
-
+    // We assert on rendered content (not `waitForResponse`) because Nuxt
+    // may fetch `/deck-stats/top-cards` server-side during SSR; that
+    // network event is invisible to Playwright's browser context and
+    // makes `waitForResponse` intermittently time out even though the
+    // page ends up populated correctly.
     await gotoHydrated(page, '/popular-cards/all');
-
-    const response = await topCardsCall;
-    expect(response.ok()).toBeTruthy();
-
-    const body = await response.json();
-    const results = Array.isArray(body?.results) ? body.results : [];
-    expect(results.length).toBeGreaterThan(0);
 
     const grid = page
       .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-4.lg\\:grid-cols-5.xl\\:grid-cols-6',
+        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
       )
       .first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });
@@ -136,25 +127,14 @@ test.describe('Popular Commanders', () => {
   });
 
   test('loads and renders the top-commanders list', async ({ page }) => {
-    const topCommandersCall = page.waitForResponse(
-      (resp) =>
-        resp.url().startsWith(`${BACKEND}/deck-stats/top-commanders`) &&
-        resp.request().method() === 'POST',
-      { timeout: SEARCH_TIMEOUT },
-    );
-
+    // Assert on rendered content rather than `waitForResponse`: the
+    // `/deck-stats/top-commanders` call may fire during SSR and be
+    // invisible to the browser network layer, which flaked this test.
     await gotoHydrated(page, '/popular-commanders/all');
-
-    const response = await topCommandersCall;
-    expect(response.ok()).toBeTruthy();
-
-    const body = await response.json();
-    const results = Array.isArray(body?.results) ? body.results : [];
-    expect(results.length).toBeGreaterThan(0);
 
     const grid = page
       .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-4.lg\\:grid-cols-5.xl\\:grid-cols-6',
+        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
       )
       .first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });
@@ -235,7 +215,7 @@ test.describe('Popular by Commander', () => {
     // Popular cards grid should populate.
     const grid = page
       .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-4.lg\\:grid-cols-5.xl\\:grid-cols-6',
+        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
       )
       .first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });

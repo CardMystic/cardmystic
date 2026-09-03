@@ -45,16 +45,14 @@ export function useTopCardsSearch(
           send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
         });
       }
-      return data.results.map(
-        (result): Card => ({
-          card_name: result.card_name,
-          card_data: result.card_data,
-          rank: result.count,
-          popularity: result.popularity,
-          ai_raw_score: result.ai_raw_score,
-          ai_normalized_score: result.ai_normalized_score,
-        }),
-      );
+      return data.results.map((result): Card => ({
+        card_name: result.card_name,
+        card_data: result.card_data,
+        rank: result.count,
+        popularity: result.popularity,
+        ai_raw_score: result.ai_raw_score,
+        ai_normalized_score: result.ai_normalized_score,
+      }));
     },
     staleTime: 1000 * 60 * 15,
     enabled: queryEnabled,
@@ -105,18 +103,16 @@ export function useTopCommandersSearch(
           send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
         });
       }
-      return data.results.map(
-        (result): Card => ({
-          card_name: result.card_data[0]?.name ?? result.commanders[0],
-          card_data: result.card_data[0],
-          partner_card_data:
-            result.card_data.length > 1 ? result.card_data[1] : undefined,
-          rank: result.count,
-          popularity: result.popularity,
-          ai_raw_score: result.ai_raw_score,
-          ai_normalized_score: result.ai_normalized_score,
-        }),
-      );
+      return data.results.map((result): Card => ({
+        card_name: result.card_data[0]?.name ?? result.commanders[0],
+        card_data: result.card_data[0],
+        partner_card_data:
+          result.card_data.length > 1 ? result.card_data[1] : undefined,
+        rank: result.count,
+        popularity: result.popularity,
+        ai_raw_score: result.ai_raw_score,
+        ai_normalized_score: result.ai_normalized_score,
+      }));
     },
     staleTime: 1000 * 60 * 15,
     enabled: queryEnabled,
@@ -167,16 +163,14 @@ export function usePopularByCommander(
           send_to: 'AW-17812762149/ZPjKCMa5u8EcEKXc5K1C',
         });
       }
-      return data.results.map(
-        (result): Card => ({
-          card_name: result.card_name,
-          card_data: result.card_data,
-          rank: result.count,
-          popularity: result.popularity,
-          ai_raw_score: result.ai_raw_score,
-          ai_normalized_score: result.ai_normalized_score,
-        }),
-      );
+      return data.results.map((result): Card => ({
+        card_name: result.card_name,
+        card_data: result.card_data,
+        rank: result.count,
+        popularity: result.popularity,
+        ai_raw_score: result.ai_raw_score,
+        ai_normalized_score: result.ai_normalized_score,
+      }));
     },
     staleTime: 1000 * 60 * 15,
     enabled: queryEnabled,
@@ -222,18 +216,16 @@ export function usePopularCommandersForCard(
         throw new Error(body?.message ?? 'Network response was not ok');
       }
       const data = (await response.json()) as PopularCommandersForCardResponse;
-      return data.results.map(
-        (result): Card => ({
-          card_name: result.card_data[0]?.name ?? result.commanders[0],
-          card_data: result.card_data[0],
-          partner_card_data:
-            result.card_data.length > 1 ? result.card_data[1] : undefined,
-          rank: result.count,
-          popularity: result.popularity,
-          ai_raw_score: result.ai_raw_score,
-          ai_normalized_score: result.ai_normalized_score,
-        }),
-      );
+      return data.results.map((result): Card => ({
+        card_name: result.card_data[0]?.name ?? result.commanders[0],
+        card_data: result.card_data[0],
+        partner_card_data:
+          result.card_data.length > 1 ? result.card_data[1] : undefined,
+        rank: result.count,
+        popularity: result.popularity,
+        ai_raw_score: result.ai_raw_score,
+        ai_normalized_score: result.ai_normalized_score,
+      }));
     },
     staleTime: 1000 * 60 * 15,
     enabled: queryEnabled,

@@ -315,7 +315,9 @@
       </p>
     </div>
 
-    <!-- Floating card preview shown while hovering over ((...)) / [[...]] tokens -->
+    <!-- Floating card preview shown while hovering (desktop) or after tapping
+         (mobile) a ((...)) / [[...]] token. Non-interactive: dismisses on
+         outside pointerdown or mouse leaving the source token. -->
     <Teleport to="body">
       <div
         v-if="tokenPreview"
@@ -363,6 +365,7 @@ import { emojify, search as searchEmoji } from 'node-emoji';
 import 'mana-font/css/mana.min.css';
 import { useCardsByName } from '~/composables/useCards';
 import { useCommandersSet } from '~/composables/useBulkData';
+import { useLinkEmbeds, type LinkEmbedData } from '~/composables/useLinkEmbeds';
 import { getCardImageUrl } from '~/utils/scryfall';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import {
@@ -370,6 +373,7 @@ import {
   magicSymbols,
   restoreMagicSymbols,
 } from '~/utils/magicSymbols';
+import { extractAndTokenizeLinkEmbeds } from '~/utils/linkEmbeds';
 
 const props = withDefaults(
   defineProps<{
@@ -400,6 +404,14 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
+
+const router = useRouter();
+
+// True when the user held a modifier that should still allow the browser's
+// default link behavior (open in new tab, save link as, etc.).
+function isModifiedClick(event: MouseEvent): boolean {
+  return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+}
 
 const mode = ref<'edit' | 'split' | 'preview'>(
   props.editable ? 'edit' : 'preview',
@@ -445,8 +457,18 @@ function handleBeforeUnload(e: BeforeUnloadEvent) {
   }
 }
 
+function handleDocumentPointerDown(e: PointerEvent) {
+  if (!tokenPreview.value) return;
+  const el = e.target as HTMLElement | null;
+  // Skip closing when tapping the originating card link so the sibling click
+  // handler can re-open/re-position it without a visible flicker.
+  if (el?.closest('.card-inline-link')) return;
+  tokenPreview.value = null;
+}
+
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
+  document.addEventListener('pointerdown', handleDocumentPointerDown, true);
   highlightResizeObserver = new ResizeObserver(syncHighlightScroll);
   if (textareaRef.value) highlightResizeObserver.observe(textareaRef.value);
   nextTick(syncHighlightScroll);
@@ -454,6 +476,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
+  document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
   highlightResizeObserver?.disconnect();
   highlightResizeObserver = null;
 });
@@ -548,7 +571,11 @@ function onEditorMouseMove(e: MouseEvent) {
         const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
         const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
         const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-        tokenPreview.value = { imageUrl: entry.imageUrl, x, y };
+        tokenPreview.value = {
+          imageUrl: entry.imageUrl,
+          x,
+          y,
+        };
         return;
       }
     }
@@ -583,7 +610,11 @@ function onPreviewMouseMove(e: MouseEvent) {
   const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
   const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
   const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-  tokenPreview.value = { imageUrl: entry.imageUrl, x, y };
+  tokenPreview.value = {
+    imageUrl: entry.imageUrl,
+    x,
+    y,
+  };
 }
 
 function onPreviewMouseLeave() {
@@ -646,6 +677,18 @@ const cardImageMap = computed(() => {
   return map;
 });
 
+// --- Link unfurls: bare CardMystic URLs on their own line ---
+// Discord-style unfurl for decklists, articles, users, and search pages.
+// We pre-tokenize before markdown to keep marked's autolinker from turning
+// the URL into a plain anchor, then swap the token for the resolved unfurl
+// HTML (or a skeleton) after sanitize.
+const linkEmbedTargets = computed(() => {
+  const src = previewSource.value;
+  if (!src?.trim()) return [];
+  return extractAndTokenizeLinkEmbeds(src).targets;
+});
+const { embedMap: linkEmbedMap } = useLinkEmbeds(linkEmbedTargets);
+
 const embeddedActionIcons = {
   similar:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.19 2.25c-.26 0-.52.06-.77.15L3.06 5.45a1.994 1.994 0 0 0-1.09 2.6L6.93 20a2 2 0 0 0 1.81 1.25c.26 0 .53-.03.79-.15l7.37-3.05a2.02 2.02 0 0 0 1.23-1.8c.01-.25-.04-.54-.13-.8L13 3.5a1.95 1.95 0 0 0-1.81-1.25m3.48 0l3.45 8.35V4.25a2 2 0 0 0-2-2m4.01 1.54v9.03l2.43-5.86a1.99 1.99 0 0 0-1.09-2.6m-10.28-.14l4.98 12.02l-7.39 3.06L3.8 7.29"/></svg>',
@@ -665,6 +708,41 @@ function embeddedCardAction(
   icon: string,
 ): string {
   return `<a class="card-inline-action ${modifier}" href="${href}" aria-label="${label}" data-tooltip="${label}">${icon}<span>${buttonLabel}</span></a>`;
+}
+
+// Escape user-provided strings before injecting into raw HTML. All embed
+// content originates from API responses (decklist name, article title, etc.)
+// so callers must NOT double-escape values already safe by construction.
+function escapeEmbedHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderLinkEmbedCard(data: LinkEmbedData): string {
+  const href = escapeEmbedHtml(data.href);
+  const eyebrow = escapeEmbedHtml(data.eyebrow);
+  const title = escapeEmbedHtml(data.title);
+  const description = escapeEmbedHtml(data.description);
+  const meta = escapeEmbedHtml(data.meta);
+  const imageMarkup = data.imageUrl
+    ? `<span class="link-embed-image"><img src="${escapeEmbedHtml(data.imageUrl)}" alt="" loading="lazy" /></span>`
+    : '';
+  return `<a class="link-embed" href="${href}">${
+    eyebrow ? `<span class="link-embed-eyebrow">${eyebrow}</span>` : ''
+  }<span class="link-embed-title">${title}</span>${
+    description
+      ? `<span class="link-embed-description">${description}</span>`
+      : ''
+  }${meta ? `<span class="link-embed-meta">${meta}</span>` : ''}${imageMarkup}</a>`;
+}
+
+function renderLinkEmbedSkeleton(href: string): string {
+  const safeHref = escapeEmbedHtml(href);
+  return `<a class="link-embed link-embed-loading" href="${safeHref}" aria-busy="true"><span class="link-embed-skeleton-line link-embed-skeleton-line--sm"></span><span class="link-embed-skeleton-line link-embed-skeleton-line--lg"></span><span class="link-embed-skeleton-line link-embed-skeleton-line--md"></span><span class="link-embed-image link-embed-image-skeleton"></span></a>`;
 }
 
 watch(
@@ -705,7 +783,14 @@ const renderedHtml = computed(() => {
   // Card link tokens: [[Card Name]]
   const cardLinkNames: string[] = [];
 
-  let pre = src.replace(/@\[youtube\]\(([A-Za-z0-9_-]{11})\)/g, (_, id) => {
+  // Full-line CardMystic URLs unfurl into embed cards. `extractAndTokenizeLinkEmbeds`
+  // rewrites those lines to LINKEMBEDTOKEN{n} markers (surrounded by blank
+  // lines) so marked treats them as block elements. Ordered target list is
+  // reused by the post-process replacer below.
+  const linkEmbedResult = extractAndTokenizeLinkEmbeds(src);
+  let pre = linkEmbedResult.processed;
+
+  pre = pre.replace(/@\[youtube\]\(([A-Za-z0-9_-]{11})\)/g, (_, id) => {
     const i = ytIds.push(id) - 1;
     return `\n\nYTEMBEDTOKEN${i}YTEMBEDTOKEN\n\n`;
   });
@@ -792,10 +877,20 @@ const renderedHtml = computed(() => {
   result = result.replace(/CARDLINKTOKEN(\d+)CARDLINKTOKEN/g, (_, idx) => {
     const name = cardLinkNames[Number(idx)];
     if (!name) return '';
-    const entry = cardImageMap.value.get(name.toLowerCase());
-    const href = entry ? `/card/${entry.oracleId}` : '#';
-    return `<a class="card-inline-link" href="${href}">${name}</a>`;
+    return `<span class="card-inline-link">${name}</span>`;
   });
+
+  result = result.replace(
+    /(?:<p>\s*)?LINKEMBEDTOKEN(\d+)LINKEMBEDTOKEN(?:\s*<\/p>)?/g,
+    (_, idx) => {
+      const target = linkEmbedResult.targets[Number(idx)];
+      if (!target) return '';
+      const data = linkEmbedMap.value.get(target.url);
+      return data
+        ? renderLinkEmbedCard(data)
+        : renderLinkEmbedSkeleton(target.href);
+    },
+  );
 
   result = restoreMagicSymbols(result, extractedMagicSymbols.symbols);
 
@@ -804,6 +899,46 @@ const renderedHtml = computed(() => {
 
 function handlePreviewClick(event: MouseEvent) {
   const target = event.target as HTMLElement | null;
+
+  // [[Card Name]] tokens render as spans (no navigation). Tapping one opens
+  // the floating preview — the same affordance desktop users get on hover.
+  const cardLink = target?.closest<HTMLElement>('.card-inline-link');
+  if (cardLink) {
+    const name = (cardLink.textContent ?? '').trim();
+    const entry = cardImageMap.value.get(name.toLowerCase());
+    if (!entry) {
+      tokenPreview.value = null;
+      return;
+    }
+    const rect = cardLink.getBoundingClientRect();
+    const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
+    const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
+    const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
+    const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
+    tokenPreview.value = {
+      imageUrl: entry.imageUrl,
+      x,
+      y,
+    };
+    return;
+  }
+
+  // Intercept unfurl / inline card image links so navigation goes through the
+  // Vue router (SPA) instead of causing a full page reload — those anchors
+  // are injected as raw HTML and would otherwise trigger a hard nav.
+  const spaLink = target?.closest<HTMLAnchorElement>(
+    '.link-embed, .card-inline-img-link',
+  );
+  if (spaLink && !isModifiedClick(event)) {
+    const to = spaLink.getAttribute('href');
+    if (to && to.startsWith('/')) {
+      event.preventDefault();
+      tokenPreview.value = null;
+      router.push(to);
+      return;
+    }
+  }
+
   const flipButton = target?.closest<HTMLButtonElement>('[data-card-flip]');
   if (!flipButton) return;
 
@@ -1509,6 +1644,137 @@ function insertMagicSymbol(token: string) {
   vertical-align: -0.08em;
 }
 
+/* --- Discord-style link unfurls --- */
+.primer-preview :deep(.link-embed) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-width: 520px;
+  margin: 0.75rem auto;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--ui-border);
+  border-left: 4px solid var(--ui-primary, #6366f1);
+  border-radius: 6px;
+  background: var(--ui-bg-elevated, rgba(0, 0, 0, 0.03));
+  text-decoration: none;
+  color: inherit;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+  overflow: hidden;
+}
+.primer-preview :deep(.link-embed:hover) {
+  background: var(--ui-bg-accented, rgba(99, 102, 241, 0.06));
+  text-decoration: none;
+}
+.primer-preview :deep(.link-embed-eyebrow) {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ui-text-muted, #9ca3af);
+}
+.primer-preview :deep(.link-embed-title) {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #60a5fa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+.primer-preview :deep(.link-embed:hover .link-embed-title) {
+  text-decoration: underline;
+}
+.primer-preview :deep(.link-embed-description) {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--ui-text-muted, #9ca3af);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+.primer-preview :deep(.link-embed-meta) {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ui-text-muted, #9ca3af);
+}
+.primer-preview :deep(.link-embed-image) {
+  display: block;
+  margin-top: 0.375rem;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--ui-bg-muted, rgba(0, 0, 0, 0.05));
+}
+.primer-preview :deep(.link-embed-image img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+  border-radius: 0;
+}
+.primer-preview :deep(.link-embed-image-skeleton) {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: link-embed-shimmer 1.4s ease-in-out infinite;
+}
+.primer-preview :deep(.link-embed-skeleton-line) {
+  display: block;
+  height: 0.75rem;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: link-embed-shimmer 1.4s ease-in-out infinite;
+}
+.primer-preview :deep(.link-embed-skeleton-line--sm) {
+  width: 30%;
+}
+.primer-preview :deep(.link-embed-skeleton-line--md) {
+  width: 60%;
+}
+.primer-preview :deep(.link-embed-skeleton-line--lg) {
+  width: 85%;
+  height: 1rem;
+}
+@keyframes link-embed-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.dark .primer-preview :deep(.link-embed-image-skeleton),
+.dark .primer-preview :deep(.link-embed-skeleton-line) {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 75%
+  );
+  background-size: 200% 100%;
+}
+
 /* --- Syntax-highlighted editor (overlay + transparent textarea) --- */
 .editor-shell {
   position: relative;
@@ -1649,9 +1915,9 @@ function insertMagicSymbol(token: string) {
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
   overflow: hidden;
-  pointer-events: none;
   z-index: 1000;
   background: #000;
+  pointer-events: none;
 }
 .editor-card-preview img {
   width: 100%;

@@ -69,11 +69,7 @@ export const useSearchHistory = () => {
     }: {
       query: string;
       searchType:
-        | 'smart'
-        | 'similarity'
-        | 'keyword'
-        | 'commander'
-        | 'recommend';
+        'smart' | 'similarity' | 'keyword' | 'commander' | 'recommend';
       filters?: any;
     }) => {
       if (!supabase) return;

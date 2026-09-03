@@ -44,10 +44,7 @@
         class="hidden lg:flex flex-wrap items-center justify-center gap-4 mb-3"
       >
         <View :default-value="view" @update:view="handleView" />
-        <GroupBy
-          :default-value="groupBy"
-          @update:groupBy="handleGroupBy"
-        />
+        <GroupBy :default-value="groupBy" @update:groupBy="handleGroupBy" />
         <SortComponent
           :default-sort-by="sortBy"
           :default-direction="sortDirection"

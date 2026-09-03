@@ -86,11 +86,7 @@
 import type { SelectItem } from '@nuxt/ui';
 
 export type SearchTabType =
-  | 'smart'
-  | 'similarity'
-  | 'commander'
-  | 'keyword'
-  | 'recommend';
+  'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend';
 
 const props = defineProps<{
   cardActive?: boolean;

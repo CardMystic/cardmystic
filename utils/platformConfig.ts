@@ -1,12 +1,7 @@
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 
 export type Platform =
-  | 'arena'
-  | 'mtgo'
-  | 'modern'
-  | 'paper'
-  | 'commander'
-  | 'all';
+  'arena' | 'mtgo' | 'modern' | 'paper' | 'commander' | 'all';
 
 /** Valid platform route params — used to validate [platform] in routes. */
 export const validPlatforms: Platform[] = [

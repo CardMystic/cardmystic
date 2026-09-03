@@ -147,9 +147,8 @@ export function useFollowStatus(userId: Ref<string | null | undefined>) {
   const config = useRuntimeConfig();
 
   const { data, isLoading, error } = useQuery({
-queryKey: computed(
-      () =>
-        ['follow-status', userId.value, userProfile.value?.id] as const,
+    queryKey: computed(
+      () => ['follow-status', userId.value, userProfile.value?.id] as const,
     ),
     queryFn: async () => {
       const token = await getAuthToken(supabase!);

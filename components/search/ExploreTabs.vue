@@ -64,9 +64,7 @@
 import type { SelectItem } from '@nuxt/ui';
 
 export type ExploreTabType =
-  | 'popular-cards'
-  | 'popular-commanders'
-  | 'popular-by-commander';
+  'popular-cards' | 'popular-commanders' | 'popular-by-commander';
 
 const props = defineProps<{
   statsType: ExploreTabType;

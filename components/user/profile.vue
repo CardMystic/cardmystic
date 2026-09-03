@@ -343,7 +343,8 @@ const handleSignOut = async () => {
 
             <template v-else-if="!patreonStatus">
               <p role="alert" class="text-sm text-red-500">
-                Unable to load your Patreon status. Please refresh and try again.
+                Unable to load your Patreon status. Please refresh and try
+                again.
               </p>
             </template>
 
