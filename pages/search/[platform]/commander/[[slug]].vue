@@ -23,6 +23,8 @@
       <!-- Results -->
       <div v-else class="mb-10 w-full">
         <SearchResults
+          preserve-result-order
+          :reranking-enabled="route.query.useRerank !== 'false'"
           :is-loading="isLoading"
           :search-results="searchResults"
           :query-param="displayQuery"
@@ -164,6 +166,7 @@ const wordSearch = computed(() => {
     limit: limitParam.value || undefined,
     filters: parsedFilters.value,
     exclude_card_data: false,
+    useRerank: route.query.useRerank !== 'false',
   });
 });
 

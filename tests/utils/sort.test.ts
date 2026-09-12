@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sortSearchResults, groupCards } from '~/utils/sort';
+import { sortSearchResults, groupCards, groupAndSortCards } from '~/utils/sort';
 import type { Card } from '~/models/cardModel';
 
 // ---------------------------------------------------------------------------
@@ -222,6 +222,35 @@ describe('sortSearchResults', () => {
     expect(result.map((c) => c.ai_normalized_score)).toEqual([0.9, 0.5, 0.2]);
   });
 
+  it('preserves server relevance order when requested even when old scores disagree', () => {
+    const cards = [
+      makeCard({ name: 'Rhystic Study', ai_normalized_score: 0.69 }),
+      makeCard({ name: 'Consecrated Sphinx', ai_normalized_score: 0.73 }),
+    ];
+    const result = sortSearchResults(cards, undefined, 'asc', true)!;
+    expect(result.map((card) => card.card_name)).toEqual([
+      'Rhystic Study',
+      'Consecrated Sphinx',
+    ]);
+    expect(result).not.toBe(cards);
+  });
+
+  it.each(['name', 'ai_score'])(
+    'honors an explicit %s sort when server order preservation is enabled',
+    (sortBy) => {
+      const cards = [
+        makeCard({ name: 'Rhystic Study', ai_normalized_score: 0.69 }),
+        makeCard({ name: 'Consecrated Sphinx', ai_normalized_score: 0.73 }),
+      ];
+      const direction = sortBy === 'ai_score' ? 'desc' : 'asc';
+      const result = sortSearchResults(cards, sortBy, direction, true)!;
+      expect(result.map((card) => card.card_name)).toEqual([
+        'Consecrated Sphinx',
+        'Rhystic Study',
+      ]);
+    },
+  );
+
   it('does not mutate the original array', () => {
     const cards = [makeCard({ name: 'Z' }), makeCard({ name: 'A' })];
     const original = [...cards];
@@ -281,5 +310,110 @@ describe('groupCards', () => {
     const instantGroup = groups.find((g) => g.label.includes('Instant'))!;
     // Label should reflect total copies (5), not card count (2)
     expect(instantGroup.label).toContain('5');
+  });
+});
+
+describe('groupAndSortCards relevance order', () => {
+  function relevanceResults() {
+    return [
+      makeCard({
+        name: 'First creature',
+        type_line: 'Creature',
+        ai_normalized_score: 0.3,
+      }),
+      makeCard({
+        name: 'First instant',
+        type_line: 'Instant',
+        ai_normalized_score: 0.2,
+      }),
+      makeCard({
+        name: 'Second creature',
+        type_line: 'Creature',
+        ai_normalized_score: 0.9,
+      }),
+      makeCard({
+        name: 'Second instant',
+        type_line: 'Instant',
+        ai_normalized_score: 0.8,
+      }),
+    ];
+  }
+
+  it('preserves relative relevance order within every group when requested', () => {
+    const groups = groupAndSortCards(
+      relevanceResults(),
+      'type',
+      undefined,
+      'asc',
+      undefined,
+      undefined,
+      true,
+    )!;
+    expect(
+      groups
+        .find((group) => group.label.includes('Creature'))!
+        .cards.map((card) => card.card_name),
+    ).toEqual(['First creature', 'Second creature']);
+    expect(
+      groups
+        .find((group) => group.label.includes('Instant'))!
+        .cards.map((card) => card.card_name),
+    ).toEqual(['First instant', 'Second instant']);
+  });
+
+  it('preserves relevance order when grouping is cleared', () => {
+    const cards = relevanceResults();
+    const groups = groupAndSortCards(
+      cards,
+      undefined,
+      undefined,
+      'asc',
+      undefined,
+      undefined,
+      true,
+    )!;
+    expect(groups).toHaveLength(1);
+    expect(groups[0].cards).toEqual(cards);
+  });
+
+  it('honors an explicit score sort within groups when server order preservation is enabled', () => {
+    const groups = groupAndSortCards(
+      relevanceResults(),
+      'type',
+      'ai_score',
+      'desc',
+      undefined,
+      undefined,
+      true,
+    )!;
+    expect(
+      groups
+        .find((group) => group.label.includes('Creature'))!
+        .cards.map((card) => card.card_name),
+    ).toEqual(['Second creature', 'First creature']);
+    expect(
+      groups
+        .find((group) => group.label.includes('Instant'))!
+        .cards.map((card) => card.card_name),
+    ).toEqual(['Second instant', 'First instant']);
+  });
+
+  it('keeps score ordering for callers that do not request server order', () => {
+    const groups = groupAndSortCards(
+      relevanceResults(),
+      'type',
+      undefined,
+      'asc',
+    )!;
+    expect(
+      groups
+        .find((group) => group.label.includes('Creature'))!
+        .cards.map((card) => card.card_name),
+    ).toEqual(['Second creature', 'First creature']);
+    expect(
+      groups
+        .find((group) => group.label.includes('Instant'))!
+        .cards.map((card) => card.card_name),
+    ).toEqual(['Second instant', 'First instant']);
   });
 });

@@ -53,7 +53,10 @@
       </div>
     </UFormField>
 
-    <QuickFilters v-model="state.filters" />
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <QuickFilters v-model="state.filters" />
+      <RerankToggle />
+    </div>
 
     <SuggestedSearches v-if="showSuggestedSearches" />
 
@@ -230,6 +233,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           ? JSON.stringify(requestFilters)
           : undefined,
       searchType: 'smart',
+      useRerank: String(route.query.useRerank !== 'false'),
     };
     filtersRef.value?.collapse();
     const targetPlatform = detectPlatformFromFilters(

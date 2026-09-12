@@ -28,6 +28,7 @@
                 @update:groupBy="handleGroupBy"
               />
               <SortComponent
+                :key="rerankingEnabled ? 'reranked' : 'original'"
                 :default-sort-by="sortBy"
                 :default-direction="sortDirection"
                 :has-als-score="hasAlsScore"
@@ -46,6 +47,7 @@
         <View :default-value="view" @update:view="handleView" />
         <GroupBy :default-value="groupBy" @update:groupBy="handleGroupBy" />
         <SortComponent
+          :key="rerankingEnabled ? 'reranked' : 'original'"
           :default-sort-by="sortBy"
           :default-direction="sortDirection"
           :has-als-score="hasAlsScore"
@@ -361,6 +363,8 @@ const props = withDefaults(
     hideSearchedCard?: boolean;
     hideThumbsDownButton?: boolean;
     defaultGroupBy?: string;
+    preserveResultOrder?: boolean;
+    rerankingEnabled?: boolean;
   }>(),
   {
     skeletonCount: 40,
@@ -387,6 +391,16 @@ function handlePartnerHover(index: 0 | 1) {
 // Sorting state
 const sortBy = ref<string | undefined>(undefined);
 const sortDirection = ref<'asc' | 'desc'>('asc');
+
+watch(
+  () => props.rerankingEnabled,
+  (enabled, wasEnabled) => {
+    if (enabled && wasEnabled === false) {
+      sortBy.value = undefined;
+      sortDirection.value = 'asc';
+    }
+  },
+);
 
 // Display state. Text mode uses the same sorted/grouped Card data and hover
 // preview path as the card grid, so changing views does not reset results.
@@ -441,6 +455,7 @@ const sortedResults = computed(() => {
       restCards,
       sortBy.value,
       sortDirection.value,
+      props.preserveResultOrder,
     );
     return sortedRest ? [firstCard, ...sortedRest] : [firstCard];
   }
@@ -449,6 +464,7 @@ const sortedResults = computed(() => {
     props.searchResults,
     sortBy.value,
     sortDirection.value,
+    props.preserveResultOrder,
   );
 });
 
@@ -483,6 +499,9 @@ const groupedResults = computed<CardGroup[] | null>(() => {
       groupBy.value,
       sortBy.value,
       sortDirection.value,
+      undefined,
+      undefined,
+      props.preserveResultOrder,
     );
   }
 
@@ -491,6 +510,9 @@ const groupedResults = computed<CardGroup[] | null>(() => {
     groupBy.value,
     sortBy.value,
     sortDirection.value,
+    undefined,
+    undefined,
+    props.preserveResultOrder,
   );
 });
 

@@ -11,10 +11,17 @@ export const ExampleQueryResponseSchema = z.object({
 export type WordSearch = z.infer<typeof WordSearchSchema>;
 export const WordSearchSchema = z.object({
   query: z.string(),
-  limit: z.number().min(1).optional(),
+  limit: z
+    .number()
+    .min(1)
+    .optional()
+    .describe(
+      'Maximum returned cards when supplied. Omit to return the full retrieved candidate pool (up to 200 cards). Filters may reduce the count.',
+    ),
   filters: CardSearchFiltersSchema.optional(),
   exclude_card_data: z.boolean().optional().default(false),
   isTryTopQuery: z.boolean().optional().default(false),
+  useRerank: z.boolean().optional().default(true),
 });
 
 export type SimilaritySearch = z.infer<typeof SimilaritySearchSchema>;

@@ -112,6 +112,7 @@ export function sortSearchResults(
   searchResults: Array<Card> | null | undefined,
   sortBy: string | null | undefined,
   sortDirection: 'asc' | 'desc',
+  preserveResultOrder = false,
 ): Array<Card> | null | undefined {
   if (!searchResults) {
     return searchResults;
@@ -120,8 +121,8 @@ export function sortSearchResults(
   const results = [...searchResults];
 
   if (!sortBy) {
-    // No explicit sort — use default score-based ordering
-    return results.sort(scoreTiebreaker);
+    // Reranked search order can differ from the original ColBERT score order.
+    return preserveResultOrder ? results : results.sort(scoreTiebreaker);
   }
 
   const direction = sortDirection === 'asc' ? 1 : -1;
@@ -390,26 +391,28 @@ export function groupAndSortCards(
   sortDirection: 'asc' | 'desc',
   copiesMap?: Record<string, number>,
   allCards?: Card[],
+  preserveResultOrder = false,
 ): CardGroup[] | null {
   if (!cards || cards.length === 0) return null;
 
   if (!groupBy) {
     // No grouping - return single group with sorted cards
-    const sorted = sortSearchResults(cards, sortBy, sortDirection) || cards;
+    const sorted =
+      sortSearchResults(cards, sortBy, sortDirection, preserveResultOrder) ||
+      cards;
     return [{ label: '', cards: sorted }];
   }
 
   const groups = groupCards(cards, groupBy, copiesMap, allCards ?? cards);
 
-  // Sort cards within each group (default to score descending when no sortBy)
-  return groups.map((group) => {
-    if (sortBy) {
-      return {
-        ...group,
-        cards:
-          sortSearchResults(group.cards, sortBy, sortDirection) || group.cards,
-      };
-    }
-    return { ...group, cards: [...group.cards].sort(scoreTiebreaker) };
-  });
+  return groups.map((group) => ({
+    ...group,
+    cards:
+      sortSearchResults(
+        group.cards,
+        sortBy,
+        sortDirection,
+        preserveResultOrder,
+      ) || group.cards,
+  }));
 }

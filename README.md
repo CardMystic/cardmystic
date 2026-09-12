@@ -22,6 +22,7 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 - Similarity search: find cards similar to a given card
   - Example Query: [Lightning Bolt](https://cardmystic.com/search/all/similarity?card_name=Lightning+Bolt)
 - Commander search: Smart search specifically for legendary creatures
+- Reranking toggle in Smart and Commander search: on by default, with a second relevance pass that can improve matches but takes longer. Turn it off to compare the original search order. Switching refreshes the current results and preserves the choice in the URL (`useRerank=false` or `true`); each mode is cached separately. With no explicit sort selected, results preserve the server ranking, including within groups. Selecting a sort such as price or Smart Score overrides that order. Turning reranking on clears any selected sort and restores the server ranking. Smart Score and the displayed match percentage remain the original ColBERT score; ordinary searches omit the result limit and return the full candidate pool (up to 200 cards) in either mode. An explicit limit still caps the returned count.
 - Keyword search: traditional text-based card search
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get personalized card recommendations
 - Platform-specific search: search filtered to Arena, MTGO, Modern, or Paper cards
