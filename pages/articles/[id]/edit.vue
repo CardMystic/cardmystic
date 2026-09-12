@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="mb-10 mt-6 w-full">
+  <div class="mb-10 mt-6 w-full">
     <!-- Back button -->
     <div class="mb-4 flex items-center justify-between">
       <UButton
@@ -44,7 +44,7 @@
     <template v-else>
       <!-- Article details -->
       <div
-        class="mb-6 p-4 border border-black-300 dark:border-gray-400 rounded-lg bg-white/60 dark:bg-black/40 space-y-4"
+        class="w-full max-w-4xl mx-auto mb-6 p-4 border border-black-300 dark:border-gray-400 rounded-lg bg-white/60 dark:bg-black/40 space-y-4"
       >
         <UFormField label="Title" required>
           <UInput
@@ -135,7 +135,14 @@
       </div>
 
       <!-- Markdown content editor -->
-      <div class="flex flex-col mb-5">
+      <UContainer
+        class="flex flex-col mb-5"
+        :class="
+          editorMode === 'preview'
+            ? undefined
+            : 'max-w-none px-0 sm:px-0 lg:px-0'
+        "
+      >
         <ClientOnly>
           <MarkdownEditor
             v-model="content"
@@ -144,12 +151,13 @@
             empty-message="This article has no content yet."
             placeholder="Write your article here. Markdown supported — use ((Card Name)) to embed a card image or [[Card Name]] to link a card."
             :save-handler="saveContent"
+            @mode-change="editorMode = $event"
           />
           <template #fallback>
             <USkeleton class="h-[60vh] w-full rounded-md" />
           </template>
         </ClientOnly>
-      </div>
+      </UContainer>
     </template>
 
     <!-- Delete confirmation -->
@@ -181,7 +189,7 @@
         </div>
       </template>
     </UModal>
-  </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -196,6 +204,8 @@ import {
   ARTICLE_DESCRIPTION_MAX_CHARS,
   ARTICLE_TITLE_MAX_CHARS,
 } from '~/models/articleModel';
+
+definePageMeta({ layout: 'editor' });
 
 const route = useRoute();
 const router = useRouter();
@@ -217,6 +227,7 @@ const title = ref('');
 const description = ref('');
 const imageUrl = ref<string | null>(null);
 const isPublished = ref(false);
+const editorMode = ref<'edit' | 'split' | 'preview'>('edit');
 const content = ref('');
 let seededArticleId: string | null = null;
 watch(

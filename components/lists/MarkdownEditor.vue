@@ -403,6 +403,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
+  (e: 'mode-change', mode: 'edit' | 'split' | 'preview'): void;
 }>();
 
 const router = useRouter();
@@ -416,6 +417,7 @@ function isModifiedClick(event: MouseEvent): boolean {
 const mode = ref<'edit' | 'split' | 'preview'>(
   props.editable ? 'edit' : 'preview',
 );
+watch(mode, (value) => emit('mode-change', value), { immediate: true });
 const draft = ref(props.modelValue);
 const lastSavedAt = ref<number | null>(null);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);

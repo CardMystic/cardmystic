@@ -1,5 +1,10 @@
 <template>
-  <div class="w-full flex flex-col mx-auto relative z-10 pt-4">
+  <div
+    class="w-full flex flex-col relative z-10 pt-4"
+    :class="{
+      'max-w-[1800px] mx-auto': !isCreator || editorMode === 'preview',
+    }"
+  >
     <!-- Back button -->
     <div class="mb-4">
       <UButton
@@ -20,6 +25,7 @@
           :editable="isCreator"
           :is-saving="isSaving"
           :save-handler="handleSave"
+          @mode-change="editorMode = $event"
         />
         <template #fallback>
           <USkeleton class="h-[60vh] w-full rounded-md" />
@@ -41,6 +47,8 @@ import {
 } from '~/models/cardListModel';
 import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 import { useToast } from '#imports';
+
+definePageMeta({ layout: 'editor' });
 
 const route = useRoute();
 const listId = route.params.id as string;
@@ -109,6 +117,7 @@ const list = computed(() => ownedList.value ?? publicDecklist.value ?? null);
 
 const isCreator = computed(() => !!ownedList.value);
 
+const editorMode = ref<'edit' | 'split' | 'preview'>('preview');
 const primerContent = ref('');
 const isSaving = ref(false);
 
