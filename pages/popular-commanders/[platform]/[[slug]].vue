@@ -17,6 +17,9 @@
       <div class="mb-10 w-full">
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults ?? []"
           :query-param="queryParam || 'top'"
           :help-text="`Showing the most popular ${platformName} commanders across all decks.`"
@@ -149,6 +152,6 @@ const topCommandersSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading } =
+const { searchResults, isLoading, isFetching, error, refetch } =
   useTopCommandersSearch(topCommandersSearch);
 </script>

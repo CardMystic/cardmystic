@@ -1,7 +1,16 @@
 <template>
   <!-- Results -->
-  <div class="mt-3 w-full" :class="{ 'pb-24': jumpToGroups.length > 0 }">
-    <template v-if="isLoading || deferringHeavyRender">
+  <div
+    class="mt-3 w-full"
+    :class="{ 'pb-24': !error && jumpToGroups.length > 0 }"
+  >
+    <SearchError
+      :error="error"
+      v-if="error"
+      :is-retrying="isFetching"
+      @retry="$emit('retry')"
+    />
+    <template v-else-if="isLoading || deferringHeavyRender">
       <SearchResultsSkeleton
         :skeleton-count="skeletonCount"
         :default-group-by="defaultGroupBy"
@@ -304,7 +313,7 @@
     </template>
   </div>
 
-  <LazyStickyActionFooter :show="jumpToGroups.length > 0">
+  <LazyStickyActionFooter :show="!error && jumpToGroups.length > 0">
     <template #right>
       <LazyJumpTo :groups="jumpToGroups" />
     </template>
@@ -349,6 +358,8 @@ function checkIsCommander(card: Card): boolean {
 const props = withDefaults(
   defineProps<{
     isLoading: boolean;
+    isFetching?: boolean;
+    error?: Error | null;
     searchResults: undefined | Card[];
     queryParam: string | null;
     skeletonCount?: number;
@@ -364,8 +375,12 @@ const props = withDefaults(
   }>(),
   {
     skeletonCount: 40,
+    isFetching: false,
+    error: null,
   },
 );
+
+defineEmits<{ retry: [] }>();
 
 // Flip state — tracks flipped cards by ID so grid card and preview stay in sync
 const flippedCards = ref<Record<string, boolean>>({});

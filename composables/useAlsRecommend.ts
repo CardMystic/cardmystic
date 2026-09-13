@@ -33,6 +33,7 @@ export function useAlsRecommend(
   const {
     data: searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -66,6 +67,7 @@ export function useAlsRecommend(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     notFound,
     refetch,

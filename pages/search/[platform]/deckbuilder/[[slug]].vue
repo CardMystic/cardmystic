@@ -68,6 +68,9 @@
         <SearchResults
           :show-add-to-deckbuilder-button="true"
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="
             decklistParam || commanderParam || partnerCommanderParam
@@ -246,7 +249,8 @@ const decklistCardNames = computed(() => {
   return parseDecklist(deckbuilderDecklist.value);
 });
 
-const { searchResults, isLoading, notFound } = useAlsRecommend(alsRequest);
+const { searchResults, isLoading, isFetching, error, refetch, notFound } =
+  useAlsRecommend(alsRequest);
 
 const { cards: commanderCards, isLoading: commanderCardsLoading } =
   useCardsByName(commanderNames);

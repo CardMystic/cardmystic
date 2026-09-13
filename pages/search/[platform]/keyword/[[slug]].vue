@@ -24,6 +24,9 @@
         <!-- Results -->
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="displayQuery"
           :help-text="
@@ -172,7 +175,8 @@ const keywordSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = useKeywordSearch(keywordSearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useKeywordSearch(keywordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

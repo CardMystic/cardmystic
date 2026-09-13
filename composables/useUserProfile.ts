@@ -57,8 +57,9 @@ export const useUserProfile = () => {
           // This is fine, the user logged out
           return null;
         }
-        console.error('Error fetching user:', error);
-        return null;
+        // Keep the last authenticated user on transient failures. Returning null
+        // unmounts owner-only editors and discards unsaved work during refresh.
+        throw error;
       }
       return user;
     },

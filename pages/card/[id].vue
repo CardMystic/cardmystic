@@ -560,23 +560,23 @@
                 <h3 class="legalities-title">Legalities</h3>
               </div>
 
-              <div
-                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1"
-              >
-                <div v-for="(format, name) in legalities" :key="name">
-                  <div class="legality-item">
-                    <UBadge
-                      class="legality-chip"
-                      :color="getLegalityColor(format)"
-                      variant="solid"
-                      size="xs"
-                    >
-                      {{ format }}
-                    </UBadge>
-                    <span class="format-name">{{
-                      standardizeFormatName(name)
-                    }}</span>
-                  </div>
+              <div class="legalities-grid">
+                <div
+                  v-for="(format, name) in legalities"
+                  :key="name"
+                  class="legality-item"
+                >
+                  <UBadge
+                    class="legality-chip"
+                    :color="getLegalityColor(format)"
+                    variant="solid"
+                    size="xs"
+                  >
+                    {{ format }}
+                  </UBadge>
+                  <span class="format-name">{{
+                    standardizeFormatName(name)
+                  }}</span>
                 </div>
               </div>
             </UCard>
@@ -635,6 +635,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isRecommendedCardsEffectivelyLoading"
+                  :is-fetching="isRecommendedFetching"
+                  :error="recommendedError"
+                  @retry="refetchRecommendedCards()"
                   :search-results="recommendedCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -680,6 +683,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCardsEffectivelyLoading"
+                  :is-fetching="isPopularCardsFetching"
+                  :error="popularCardsError"
+                  @retry="refetchPopularCards()"
                   :search-results="popularCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -706,6 +712,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
+                  :is-fetching="isSimilarCardsFetching"
+                  :error="similarCardsError"
+                  @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -747,6 +756,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCommandersEffectivelyLoading"
+                  :is-fetching="isPopularCommandersFetching"
+                  :error="popularCommandersError"
+                  @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -794,6 +806,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCommandersEffectivelyLoading"
+                  :is-fetching="isPopularCommandersFetching"
+                  :error="popularCommandersError"
+                  @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -820,6 +835,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
+                  :is-fetching="isSimilarCardsFetching"
+                  :error="similarCardsError"
+                  @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -1332,6 +1350,8 @@ const {
   similarCards,
   isSimilarCardsLoading,
   error: similarCardsError,
+  isFetching: isSimilarCardsFetching,
+  refetch: refetchSimilarCards,
 } = useSimilarCards(oracleIdParam, lazyCardNameForSimilar);
 
 const isSimilarCardsEffectivelyLoading = computed(() => {
@@ -1455,6 +1475,8 @@ const {
   searchResults: recommendedCards,
   isLoading: isRecommendedLoading,
   error: recommendedError,
+  isFetching: isRecommendedFetching,
+  refetch: refetchRecommendedCards,
 } = useAlsRecommend(alsRecommendRequest);
 
 const isRecommendedCardsEffectivelyLoading = computed(() => {
@@ -1486,6 +1508,8 @@ const {
   searchResults: popularCards,
   isLoading: isPopularCardsLoading,
   error: popularCardsError,
+  isFetching: isPopularCardsFetching,
+  refetch: refetchPopularCards,
 } = usePopularByCommander(popularByCommanderRequest);
 
 const isPopularCardsEffectivelyLoading = computed(() => {
@@ -1538,6 +1562,8 @@ const {
   searchResults: popularCommandersForCard,
   isLoading: isPopularCommandersLoading,
   error: popularCommandersError,
+  isFetching: isPopularCommandersFetching,
+  refetch: refetchPopularCommanders,
 } = usePopularCommandersForCard(popularCommandersForCardRequest);
 
 const isPopularCommandersEffectivelyLoading = computed(() => {
@@ -1714,14 +1740,23 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   font-weight: 600
   margin: 0
 
+// Column count follows the panel width, including when strategy content
+// shares the row on desktop.
+.legalities-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr))
+  gap: 4px 8px
+  padding: 4px
+
 // Legality Items
 .legality-item
   display: flex
-  flex-direction: row
   align-items: center
-  text-align: center
+  gap: 6px
+  min-width: 0
 
 .legality-chip
+  flex-shrink: 0
   font-size: 9px !important
   font-weight: 600
   min-width: 77.5px
@@ -1733,10 +1768,11 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     min-width: 71.2px
 
 .format-name
+  min-width: 0
+  overflow-wrap: anywhere
   font-size: 11px
   font-weight: bold
-  text-align: center
-  margin-left: 4px
+  text-align: left
   @media (max-width: 768px)
     font-size: 10px
 
