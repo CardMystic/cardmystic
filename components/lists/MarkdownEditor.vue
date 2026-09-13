@@ -44,7 +44,7 @@
         />
       </div>
       <div
-        v-if="editable && (mode === 'edit' || mode === 'split')"
+        v-if="editable && (mode !== 'preview' || saveInPreview)"
         class="flex items-center gap-2"
       >
         <span
@@ -61,9 +61,9 @@
           icon="i-lucide-save"
           color="success"
           variant="solid"
-          :label="isDirty ? 'Save' : 'Saved'"
+          :label="isDirty ? saveLabel : 'Saved'"
           class="cursor-pointer"
-          :disabled="!isDirty || isSaving"
+          :disabled="!isDirty || isSaving || saveDisabled"
           :loading="isSaving"
           @click="handleSave"
         />
@@ -380,6 +380,11 @@ const props = withDefaults(
     modelValue: string;
     editable: boolean;
     isSaving?: boolean;
+    /** Include surrounding form fields in the save button and leave guard. */
+    hasUnsavedChanges?: boolean;
+    saveDisabled?: boolean;
+    saveLabel?: string;
+    saveInPreview?: boolean;
     /** Message shown in preview mode when there is no content yet. */
     emptyMessage?: string;
     /** Placeholder text for the markdown editor textarea. */
@@ -398,11 +403,13 @@ const props = withDefaults(
       'Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported.',
     hasBackground: true,
     saveHandler: undefined,
+    saveLabel: 'Save',
   },
 );
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
+  (e: 'mode-change', mode: 'edit' | 'split' | 'preview'): void;
 }>();
 
 const router = useRouter();
@@ -416,6 +423,7 @@ function isModifiedClick(event: MouseEvent): boolean {
 const mode = ref<'edit' | 'split' | 'preview'>(
   props.editable ? 'edit' : 'preview',
 );
+watch(mode, (value) => emit('mode-change', value), { immediate: true });
 const draft = ref(props.modelValue);
 const lastSavedAt = ref<number | null>(null);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
@@ -756,9 +764,12 @@ watch(
   },
 );
 
-const isDirty = computed(() => draft.value !== props.modelValue);
+const isDirty = computed(
+  () => draft.value !== props.modelValue || props.hasUnsavedChanges,
+);
 
 async function handleSave() {
+  if (!isDirty.value || props.isSaving || props.saveDisabled) return;
   const value = draft.value;
   try {
     await props.saveHandler?.(value);

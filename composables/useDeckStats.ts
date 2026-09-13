@@ -22,6 +22,7 @@ export function useTopCardsSearch(
   const {
     data: searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -61,6 +62,7 @@ export function useTopCardsSearch(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -76,6 +78,7 @@ export function useTopCommandersSearch(
   const {
     data: searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -121,6 +124,7 @@ export function useTopCommandersSearch(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -136,6 +140,7 @@ export function usePopularByCommander(
   const {
     data: searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -179,6 +184,7 @@ export function usePopularByCommander(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -194,6 +200,7 @@ export function usePopularCommandersForCard(
   const {
     data: searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -234,6 +241,7 @@ export function usePopularCommandersForCard(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };

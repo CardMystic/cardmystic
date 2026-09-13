@@ -48,6 +48,9 @@
       <div class="mb-10 w-full">
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="commanderParam || ''"
           :help-text="helpText"
@@ -207,5 +210,6 @@ const searchParams = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = usePopularByCommander(searchParams);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  usePopularByCommander(searchParams);
 </script>

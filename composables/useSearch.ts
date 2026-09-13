@@ -28,6 +28,7 @@ export function useColbertSearch(
   const {
     data: searchResults,
     isLoading: isQueryLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -41,6 +42,7 @@ export function useColbertSearch(
           body: JSON.stringify(searchParams.value),
         },
       );
+      if (response.status === 204 || response.status === 404) return [];
       if (!response.ok) {
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Network response was not ok');
@@ -65,6 +67,7 @@ export function useColbertSearch(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -83,6 +86,7 @@ export function useSimilaritySearch(
   const {
     data: searchResults,
     isLoading: isQueryLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -120,6 +124,7 @@ export function useSimilaritySearch(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -138,6 +143,7 @@ export function useKeywordSearch(
   const {
     data: searchResults,
     isLoading: isQueryLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -175,6 +181,7 @@ export function useKeywordSearch(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -194,6 +201,7 @@ export function useSimilarCards(
   const {
     data: similarCards,
     isLoading: isSimilarCardsLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -227,6 +235,7 @@ export function useSimilarCards(
   return {
     similarCards,
     isSimilarCardsLoading,
+    isFetching,
     error,
     refetch,
   };

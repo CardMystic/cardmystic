@@ -24,6 +24,9 @@
         <!-- Results -->
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="displayQuery"
           :help-text="
@@ -174,7 +177,8 @@ const similaritySearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = useSimilaritySearch(similaritySearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(
