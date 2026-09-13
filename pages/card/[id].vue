@@ -635,6 +635,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isRecommendedCardsEffectivelyLoading"
+                  :is-fetching="isRecommendedFetching"
+                  :error="recommendedError"
+                  @retry="refetchRecommendedCards()"
                   :search-results="recommendedCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -680,6 +683,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCardsEffectivelyLoading"
+                  :is-fetching="isPopularCardsFetching"
+                  :error="popularCardsError"
+                  @retry="refetchPopularCards()"
                   :search-results="popularCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -706,6 +712,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
+                  :is-fetching="isSimilarCardsFetching"
+                  :error="similarCardsError"
+                  @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -747,6 +756,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCommandersEffectivelyLoading"
+                  :is-fetching="isPopularCommandersFetching"
+                  :error="popularCommandersError"
+                  @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -794,6 +806,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCommandersEffectivelyLoading"
+                  :is-fetching="isPopularCommandersFetching"
+                  :error="popularCommandersError"
+                  @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -820,6 +835,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
+                  :is-fetching="isSimilarCardsFetching"
+                  :error="similarCardsError"
+                  @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -1332,6 +1350,8 @@ const {
   similarCards,
   isSimilarCardsLoading,
   error: similarCardsError,
+  isFetching: isSimilarCardsFetching,
+  refetch: refetchSimilarCards,
 } = useSimilarCards(oracleIdParam, lazyCardNameForSimilar);
 
 const isSimilarCardsEffectivelyLoading = computed(() => {
@@ -1455,6 +1475,8 @@ const {
   searchResults: recommendedCards,
   isLoading: isRecommendedLoading,
   error: recommendedError,
+  isFetching: isRecommendedFetching,
+  refetch: refetchRecommendedCards,
 } = useAlsRecommend(alsRecommendRequest);
 
 const isRecommendedCardsEffectivelyLoading = computed(() => {
@@ -1486,6 +1508,8 @@ const {
   searchResults: popularCards,
   isLoading: isPopularCardsLoading,
   error: popularCardsError,
+  isFetching: isPopularCardsFetching,
+  refetch: refetchPopularCards,
 } = usePopularByCommander(popularByCommanderRequest);
 
 const isPopularCardsEffectivelyLoading = computed(() => {
@@ -1538,6 +1562,8 @@ const {
   searchResults: popularCommandersForCard,
   isLoading: isPopularCommandersLoading,
   error: popularCommandersError,
+  isFetching: isPopularCommandersFetching,
+  refetch: refetchPopularCommanders,
 } = usePopularCommandersForCard(popularCommandersForCardRequest);
 
 const isPopularCommandersEffectivelyLoading = computed(() => {

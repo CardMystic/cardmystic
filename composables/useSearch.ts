@@ -86,6 +86,7 @@ export function useSimilaritySearch(
   const {
     data: searchResults,
     isLoading: isQueryLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -123,6 +124,7 @@ export function useSimilaritySearch(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -141,6 +143,7 @@ export function useKeywordSearch(
   const {
     data: searchResults,
     isLoading: isQueryLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -178,6 +181,7 @@ export function useKeywordSearch(
   return {
     searchResults,
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -197,6 +201,7 @@ export function useSimilarCards(
   const {
     data: similarCards,
     isLoading: isSimilarCardsLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -230,6 +235,7 @@ export function useSimilarCards(
   return {
     similarCards,
     isSimilarCardsLoading,
+    isFetching,
     error,
     refetch,
   };

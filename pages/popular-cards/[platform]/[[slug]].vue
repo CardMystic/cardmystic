@@ -17,6 +17,9 @@
       <div class="mb-10 w-full">
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="queryParam || 'top'"
           :help-text="`Showing the most popular ${platformName} cards across all decks.`"
@@ -150,5 +153,6 @@ const topCardsSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = useTopCardsSearch(topCardsSearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useTopCardsSearch(topCardsSearch);
 </script>

@@ -26,12 +26,15 @@
       </UButton>
     </div>
 
-    <div v-if="error" class="text-center text-error mb-4">
-      Something went wrong while searching. Please try again.
-    </div>
+    <SearchError
+      v-if="error"
+      class="mb-4"
+      :is-retrying="isFetching"
+      @retry="refetch()"
+    />
 
     <div
-      v-if="isLoading"
+      v-else-if="isLoading"
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
     >
       <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
@@ -51,7 +54,7 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="totalPages > 1" class="mt-6 flex justify-center">
+    <div v-if="!error && totalPages > 1" class="mt-6 flex justify-center">
       <UPagination
         v-model:page="page"
         :total="totalCount"
@@ -60,7 +63,7 @@
     </div>
 
     <div
-      v-if="hasSearched && !isLoading && decklists.length === 0"
+      v-if="hasSearched && !error && !isLoading && decklists.length === 0"
       class="empty-state"
     >
       <UIcon name="i-lucide-search-x" class="text-5xl opacity-30 mb-3" />
@@ -155,8 +158,15 @@ watch(debouncedQuery, () => {
   page.value = 1;
 });
 
-const { decklists, totalCount, totalPages, isLoading, error } =
-  useDecklistSearch(debouncedQuery, page, pageSize);
+const {
+  decklists,
+  totalCount,
+  totalPages,
+  isLoading,
+  isFetching,
+  error,
+  refetch,
+} = useDecklistSearch(debouncedQuery, page, pageSize);
 
 const hasSearched = computed(() => debouncedQuery.value.trim().length > 0);
 

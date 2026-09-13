@@ -24,6 +24,9 @@
       <div v-else class="mb-10 w-full">
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="displayQuery"
           :help-text="
@@ -167,7 +170,8 @@ const wordSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = useColbertSearch(wordSearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

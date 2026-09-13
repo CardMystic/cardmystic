@@ -22,27 +22,11 @@
 
       <!-- Results -->
       <div v-else class="mb-10 w-full">
-        <UAlert
-          v-if="error"
-          class="mt-6"
-          color="error"
-          variant="outline"
-          icon="i-lucide-triangle-alert"
-          title="Search could not be completed"
-          description="We couldn't load cards for this search. Please try again."
-        >
-          <template #actions>
-            <UButton
-              label="Retry search"
-              color="error"
-              variant="soft"
-              :loading="isFetching"
-              @click="refetch()"
-            />
-          </template>
-        </UAlert>
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="displayQuery"
           :help-text="

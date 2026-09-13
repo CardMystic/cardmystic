@@ -6,6 +6,7 @@ import {
 } from '@tanstack/vue-query';
 import { computed, ref, watch, type Ref } from 'vue';
 import { useSupabase } from './useSupabase';
+import { saveArticle } from '~/utils/saveArticle';
 import {
   ArticleResponseSchema,
   GetLikedArticlesResponseSchema,
@@ -321,24 +322,19 @@ export function useArticleMutations() {
       articleId: string;
       updates: UpdateArticleRequest;
     }) => {
-      const token = await getAuthToken(supabase!);
-      const response = await fetch(
+      return saveArticle(
+        supabase!,
         `${config.public.backendUrl}/articles/${encodeURIComponent(input.articleId)}`,
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(input.updates),
-        },
+        input.updates,
       );
-      if (!response.ok) {
-        throw new Error(`Failed to update article (${response.status})`);
-      }
-      return ArticleResponseSchema.parse(await response.json());
     },
-    onSuccess: (result) => invalidateArticleCaches(result.article.id),
+    onSuccess: async (result) => {
+      // Cancel older reads before publishing the confirmed save to the cache.
+      const queryKey = ['articles', 'view', result.article.id];
+      await queryClient.cancelQueries({ queryKey });
+      queryClient.setQueryData(queryKey, result);
+      invalidateArticleCaches();
+    },
   });
 
   const deleteMutation = useMutation({
