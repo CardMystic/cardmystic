@@ -560,23 +560,23 @@
                 <h3 class="legalities-title">Legalities</h3>
               </div>
 
-              <div
-                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1"
-              >
-                <div v-for="(format, name) in legalities" :key="name">
-                  <div class="legality-item">
-                    <UBadge
-                      class="legality-chip"
-                      :color="getLegalityColor(format)"
-                      variant="solid"
-                      size="xs"
-                    >
-                      {{ format }}
-                    </UBadge>
-                    <span class="format-name">{{
-                      standardizeFormatName(name)
-                    }}</span>
-                  </div>
+              <div class="legalities-grid">
+                <div
+                  v-for="(format, name) in legalities"
+                  :key="name"
+                  class="legality-item"
+                >
+                  <UBadge
+                    class="legality-chip"
+                    :color="getLegalityColor(format)"
+                    variant="solid"
+                    size="xs"
+                  >
+                    {{ format }}
+                  </UBadge>
+                  <span class="format-name">{{
+                    standardizeFormatName(name)
+                  }}</span>
                 </div>
               </div>
             </UCard>
@@ -1740,14 +1740,23 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   font-weight: 600
   margin: 0
 
+// Column count follows the panel width, including when strategy content
+// shares the row on desktop.
+.legalities-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr))
+  gap: 4px 8px
+  padding: 4px
+
 // Legality Items
 .legality-item
   display: flex
-  flex-direction: row
   align-items: center
-  text-align: center
+  gap: 6px
+  min-width: 0
 
 .legality-chip
+  flex-shrink: 0
   font-size: 9px !important
   font-weight: 600
   min-width: 77.5px
@@ -1759,10 +1768,11 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     min-width: 71.2px
 
 .format-name
+  min-width: 0
+  overflow-wrap: anywhere
   font-size: 11px
   font-weight: bold
-  text-align: center
-  margin-left: 4px
+  text-align: left
   @media (max-width: 768px)
     font-size: 10px
 

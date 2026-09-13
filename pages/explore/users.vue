@@ -27,6 +27,7 @@
     </div>
 
     <SearchError
+      :error="error"
       v-if="error"
       class="mb-4"
       :is-retrying="isFetching"

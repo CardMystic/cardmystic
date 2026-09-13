@@ -292,3 +292,29 @@ test('an expired session keeps the editor open so the writer can sign in and ret
     'Unsaved draft',
   );
 });
+
+test('429 preserves the draft and displays the wait message without replaying the save', async ({
+  page,
+}) => {
+  let requests = 0;
+  await page.route(endpoint, (route) => {
+    requests++;
+    return route.fulfill({ status: 429, body: 'Rate limited' });
+  });
+  await page.getByPlaceholder('Article title').fill('Keep this title');
+  await page.locator('textarea.editor-textarea').fill('# Keep this draft');
+  await page.getByRole('button', { name: 'Save Article', exact: true }).click();
+  const alert = page
+    .getByRole('alert')
+    .filter({ hasText: 'Article could not be saved' });
+  await expect(alert).toContainText(
+    '429 Too Many Requests, Try again in 60 seconds',
+  );
+  await expect(page.locator('textarea.editor-textarea')).toHaveValue(
+    '# Keep this draft',
+  );
+  await expect(page.getByPlaceholder('Article title')).toHaveValue(
+    'Keep this title',
+  );
+  expect(requests).toBe(1);
+});

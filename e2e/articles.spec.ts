@@ -1,6 +1,7 @@
 import { BACKEND } from './utils/mocks';
 import { expect, gotoHydrated, test } from './utils/fixtures';
 import type { Page } from '@playwright/test';
+import { SearchArticlesResponseSchema } from '../models/articleModel';
 
 /**
  * E2E coverage for the Articles feature.
@@ -65,7 +66,15 @@ const mockArticles = async (page: Page) => {
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ articles: matches, nextCursor: null }),
+      body: JSON.stringify(
+        SearchArticlesResponseSchema.parse({
+          articles: matches,
+          totalCount: matches.length,
+          page: Number(url.searchParams.get('page') ?? 1),
+          pageSize: Number(url.searchParams.get('pageSize') ?? 50),
+          totalPages: 1,
+        }),
+      ),
     });
   });
   await page.route(`${BACKEND}/articles/view/${DETAIL.id}`, (route) => {
@@ -155,10 +164,17 @@ test.describe('Articles', () => {
       'Search articles by title or description…',
     );
     await input.fill('e2e article');
+    await expect(page).toHaveURL(/query=e2e(\+|%20)article/);
+    // Recent cards contain the same titles; ensure these are search results.
+    await expect(
+      page.getByRole('heading', { name: 'Recent Articles' }),
+    ).toBeHidden();
     await expect(
       page.getByRole('heading', { name: 'E2E Article 2' }),
     ).toBeVisible();
-    await expect(page).toHaveURL(/query=e2e(\+|%20)article/);
+    await expect(
+      page.getByRole('button', { name: 'Retry search' }),
+    ).toHaveCount(0);
 
     // Search without matches
     await input.fill('zzz-no-such-article');

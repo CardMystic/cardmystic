@@ -155,3 +155,33 @@ for (const [index, search] of searches.entries()) {
     expect(page.url()).toBe(originalUrl);
   });
 }
+
+for (const search of searches) {
+  test(`${search.name}: 429 shows the wait message without automatic retries`, async ({
+    page,
+  }) => {
+    let requests = 0;
+    await page.route(
+      (url) => url.pathname === search.endpoint,
+      (route) => {
+        requests++;
+        return route.fulfill({
+          status: 429,
+          contentType: 'text/html',
+          body: 'Too many requests',
+        });
+      },
+    );
+    await page.goto(search.path);
+    const alert = page.getByRole('alert').filter({ hasText: 'Retry search' });
+    await expect(alert).toContainText('429 Too Many Requests');
+    await expect(alert).toContainText('Try again in 60 seconds');
+    await expect(page.getByText(search.message, { exact: true })).toHaveCount(
+      0,
+    );
+    const initial = requests;
+    // Vue Query's first automatic retry normally starts after one second.
+    await page.waitForTimeout(1500);
+    expect(requests).toBe(initial);
+  });
+}

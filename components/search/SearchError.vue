@@ -3,8 +3,14 @@
     color="error"
     variant="outline"
     icon="i-lucide-triangle-alert"
-    title="Search could not be completed"
-    description="We couldn't load results for this search. Please try again."
+    :title="
+      rateLimited ? '429 Too Many Requests' : 'Search could not be completed'
+    "
+    :description="
+      rateLimited
+        ? 'Try again in 60 seconds'
+        : 'We couldn\'t load results for this search. Please try again.'
+    "
     role="alert"
   >
     <template #actions>
@@ -22,9 +28,16 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{ isRetrying?: boolean }>(), {
-  isRetrying: false,
-});
+const props = withDefaults(
+  defineProps<{ isRetrying?: boolean; error?: Error | null }>(),
+  {
+    isRetrying: false,
+  },
+);
+
+const rateLimited = computed(() =>
+  /\b429\b|too many requests/i.test(props.error?.message ?? ''),
+);
 
 defineEmits<{ retry: [] }>();
 </script>

@@ -5,6 +5,7 @@
     :class="{ 'pb-24': !error && jumpToGroups.length > 0 }"
   >
     <SearchError
+      :error="error"
       v-if="error"
       :is-retrying="isFetching"
       @retry="$emit('retry')"
