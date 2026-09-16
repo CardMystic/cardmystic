@@ -70,7 +70,7 @@
           class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
           @mouseenter="clearPendingPreviewCard()"
         >
-          <div class="preview-sticky">
+          <div v-if="isDesktopPreview" class="preview-sticky">
             <HoveredSearchResultPreview
               :card="previewCard"
               :query-param="queryParam"
@@ -177,7 +177,7 @@
               }"
             >
               <template
-                v-for="group in groupedResults"
+                v-for="group in visibleGroupedResults"
                 :key="group.label"
                 #[group.label]
               >
@@ -235,7 +235,7 @@
           <template v-else>
             <div class="grid" :class="resultsGridClass">
               <div
-                v-for="(result, index) in sortedResults"
+                v-for="(result, index) in visibleResults"
                 :key="result.card_data.id"
                 @mouseenter="setPreviewCard(result)"
                 @focusin="setPreviewCard(result)"
@@ -272,6 +272,15 @@
               </div>
             </div>
           </template>
+          <div v-if="hasMoreResults" class="flex justify-center mt-6">
+            <UButton
+              class="cursor-pointer"
+              color="neutral"
+              variant="outline"
+              :label="`Show ${Math.min(RESULTS_PER_BATCH, totalResults - visibleCount)} more (${visibleCount} of ${totalResults})`"
+              @click="visibleCount += RESULTS_PER_BATCH"
+            />
+          </div>
         </div>
       </div>
     </template>
@@ -330,7 +339,12 @@ const GroupBy = defineAsyncComponent(
 );
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
-import { useCommandersSet } from '~/composables/useBulkData';
+import { provideCommandersSet } from '~/composables/useBulkData';
+import { provideSearchHistory } from '~/composables/useSearchHistory';
+import { useDesktopPreview } from '~/composables/useIsMobile';
+
+provideSearchHistory();
+const isDesktopPreview = useDesktopPreview();
 
 const { getPageInfo } = usePageInfo();
 
@@ -349,7 +363,7 @@ onMounted(() => {
 });
 
 // Hoisted commander detection — single subscription shared by all Card children
-const { data: commandersSet } = useCommandersSet();
+const { data: commandersSet } = provideCommandersSet();
 function checkIsCommander(card: Card): boolean {
   if (!card?.card_data?.name || !commandersSet.value) return false;
   return commandersSet.value.has(card.card_data.name);
@@ -509,15 +523,38 @@ const groupedResults = computed<CardGroup[] | null>(() => {
   );
 });
 
+const RESULTS_PER_BATCH = 40;
+const visibleCount = ref(RESULTS_PER_BATCH);
+const totalResults = computed(() => sortedResults.value?.length ?? 0);
+const hasMoreResults = computed(() => visibleCount.value < totalResults.value);
+const visibleResults = computed(() =>
+  sortedResults.value?.slice(0, visibleCount.value),
+);
+const visibleGroupedResults = computed(() => {
+  let remaining = visibleCount.value - (searchedCard.value ? 1 : 0);
+  return (groupedResults.value ?? [])
+    .map((group) => {
+      const cards = group.cards.slice(0, Math.max(0, remaining));
+      remaining -= cards.length;
+      return { ...group, cards };
+    })
+    .filter((group) => group.cards.length > 0);
+});
+
+// New data or ordering starts at the first batch; changing grid/text view keeps
+// the amount already revealed. Sorting always considers the complete result set.
+watch([() => props.searchResults, groupBy, sortBy, sortDirection], () => {
+  visibleCount.value = RESULTS_PER_BATCH;
+});
+
 const jumpToGroups = computed(() =>
-  (groupedResults.value || [])
+  visibleGroupedResults.value
     .filter((group) => group.label)
     .map((group) => group.label),
 );
 
 const accordionItems = computed<AccordionItem[]>(() => {
-  if (!groupedResults.value) return [];
-  return groupedResults.value
+  return visibleGroupedResults.value
     .filter((g) => g.label)
     .map((g) => ({
       label: g.label,
@@ -582,6 +619,7 @@ function clearPendingPreviewCard(cardId?: string) {
 }
 
 function setPreviewCard(card: Card) {
+  if (!isDesktopPreview.value) return;
   const nextCardId = card.card_data.id;
   // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
   if (nextCardId === hoveredCardId.value) return;
@@ -609,9 +647,9 @@ onUnmounted(() => {
 });
 
 watch(
-  accordionItems,
-  (items) => {
-    openAccordionValues.value = items.map((i) => i.value as string);
+  groupedResults,
+  (groups) => {
+    openAccordionValues.value = (groups ?? []).map((group) => group.label);
   },
   { immediate: true },
 );

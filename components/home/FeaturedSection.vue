@@ -187,21 +187,21 @@ const {
   isFetching: isFetchingDecklists,
   error: decklistsError,
   refetch: refetchDecklists,
-} = useFeaturedDecklists(10);
+} = useFeaturedDecklists(3);
 const {
   users,
   isLoading: isLoadingUsers,
   isFetching: isFetchingUsers,
   error: usersError,
   refetch: refetchUsers,
-} = useFeaturedUsers(10);
+} = useFeaturedUsers(3);
 const {
   primers,
   isLoading: isLoadingPrimers,
   isFetching: isFetchingPrimers,
   error: primersError,
   refetch: refetchPrimers,
-} = useFeaturedPrimers(6);
+} = useFeaturedPrimers(2);
 
 const visibleDecklists = computed(() => decklists.value.slice(0, 3));
 const visibleUsers = computed(() => users.value.slice(0, 3));

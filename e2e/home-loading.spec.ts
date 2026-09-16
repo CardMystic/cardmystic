@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   BACKEND,
   SUPABASE,
@@ -107,7 +107,37 @@ const sections = [
   },
 ];
 
+async function revealHomeSections(page: Page) {
+  await page
+    .locator('[data-home-section="recent-lists"]')
+    .scrollIntoViewIfNeeded();
+  await page
+    .getByRole('heading', { name: 'Awesome Decklists & Users', exact: true })
+    .scrollIntoViewIfNeeded();
+  const articlesHeading = page.getByRole('heading', {
+    name: 'Recent Articles',
+    exact: true,
+  });
+  if (await articlesHeading.count())
+    await articlesHeading.scrollIntoViewIfNeeded();
+}
+
 test.beforeEach(async ({ page }) => {
+  // Keep this fixture-only suite independent of real account data and trackers.
+  await page.route(BACKEND + '/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    return route.fulfill({
+      json: path === '/search/example' ? { query: '', cards: [] } : [],
+    });
+  });
+  await page.route(SUPABASE + '/rest/v1/**', (route) =>
+    route.fulfill({ json: [] }),
+  );
+  await page.route(
+    /https:\/\/(?:www\.googletagmanager\.com|pagead2\.googlesyndication\.com)\//,
+    (route) =>
+      route.fulfill({ contentType: 'application/javascript', body: '' }),
+  );
   await mockSupabaseAuth(page);
   await page.route(SUPABASE + '/rest/v1/profiles**', (route) =>
     route.fulfill({
@@ -170,6 +200,7 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
       };
       return root.__vue_app__.config.globalProperties.$router.push('/');
     });
+    await revealHomeSections(page);
     const retryAlerts = page.getByRole('alert').filter({
       has: page.getByRole('button', { name: 'Retry', exact: true }),
     });
@@ -229,6 +260,7 @@ test('successful empty responses still show the real empty states', async ({
     };
     return root.__vue_app__.config.globalProperties.$router.push('/');
   });
+  await revealHomeSections(page);
   for (const section of sections) {
     if (section.emptyText)
       await expect(
@@ -238,4 +270,46 @@ test('successful empty responses still show the real empty states', async ({
   await expect(
     page.getByRole('button', { name: 'Retry', exact: true }),
   ).toHaveCount(0);
+});
+
+test('initial mobile home defers secondary requests until sections are visible', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  // Stale SSR data must refresh only once the corresponding section is visible.
+  await page.clock.setFixedTime(new Date(Date.now() + 10 * 60 * 1000));
+  const requested: URL[] = [];
+  for (const section of sections) {
+    await page.route(
+      (url) =>
+        url.origin === new URL(BACKEND).origin && url.pathname === section.path,
+      (route) => {
+        requested.push(new URL(route.request().url()));
+        return route.fulfill({ json: section.data });
+      },
+    );
+  }
+  await gotoHydrated(page, '/');
+  const input = page.getByPlaceholder('Describe the cards you want...');
+  await input.fill('artifact removal');
+  await expect(input).toHaveValue('artifact removal');
+  await expect(
+    page.getByRole('button', { name: 'Search', exact: true }),
+  ).toBeEnabled();
+  // Allow delayed hydration and auth work to settle while staying at the hero.
+  await page.waitForTimeout(1000);
+  expect(requested).toEqual([]);
+
+  await revealHomeSections(page);
+  for (const section of sections) {
+    await expect(page.getByText(section.result, { exact: true })).toBeVisible();
+  }
+  for (const [path, limit] of [
+    ['/supabase/card-lists/featured', '3'],
+    ['/user/featured', '3'],
+    ['/supabase/card-lists/featured-primers', '2'],
+  ]) {
+    const request = requested.find((url) => url.pathname === path);
+    expect(request?.searchParams.get('limit')).toBe(limit);
+  }
 });

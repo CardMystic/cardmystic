@@ -12,24 +12,27 @@
     @mouseleave="emit('partner-hover', 0)"
   >
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu"
+      v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
       :oracle-ids="[card.card_data.oracle_id]"
     />
 
-    <SetCommanderModal
+    <LazySetCommanderModal
+      v-if="showCommanderModal"
       :open="showCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event"
       @confirm="confirmSetCommander"
     />
-    <RemoveCommanderModal
+    <LazyRemoveCommanderModal
+      v-if="showClearCommanderModal"
       :open="showClearCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showClearCommanderModal = $event"
       @confirm="confirmClearCommander"
     />
-    <SetCopiesModal
+    <LazySetCopiesModal
+      v-if="showSetCopiesInput"
       :open="showSetCopiesInput"
       :card-name="card.card_data.name"
       :initial-copies="numCopies ?? 1"
@@ -38,6 +41,7 @@
     />
 
     <UModal
+      v-if="showConfirmModal"
       v-model:open="showConfirmModal"
       title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your feedback to improve our models."

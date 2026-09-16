@@ -15,3 +15,19 @@ export function useIsMobile() {
   }
   return isMobile;
 }
+
+/** Match the preview rail's xl breakpoint after hydration; no hidden images on mobile. */
+export function useDesktopPreview() {
+  const isDesktop = ref(false);
+  let query: MediaQueryList | undefined;
+  const update = () => {
+    isDesktop.value = query?.matches ?? false;
+  };
+  onMounted(() => {
+    query = window.matchMedia('(min-width: 1280px)');
+    update();
+    query.addEventListener('change', update);
+  });
+  onBeforeUnmount(() => query?.removeEventListener('change', update));
+  return readonly(isDesktop);
+}

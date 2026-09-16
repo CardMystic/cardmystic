@@ -71,22 +71,29 @@
 
   <!-- Everything below the fold -->
   <UContainer class="mt-10 mb-10">
-    <ExploreLinks class="mb-14" />
+    <LazyExploreLinks :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
-    <!-- User-specific sections when logged in -->
-    <ClientOnly>
-      <LazyRecentLists v-if="isLoggedIn" class="mb-14" />
-      <LazyRecentListsNotLoggedIn v-else class="mb-14" />
-      <template #fallback>
-        <LazyRecentListsNotLoggedIn class="mb-14" />
-      </template>
-    </ClientOnly>
+    <!-- Mount personalized content only when this section approaches view. -->
+    <div
+      ref="recentListsSection"
+      data-home-section="recent-lists"
+      class="mb-14"
+    >
+      <LazyRecentLists v-if="visibleSections.recentLists && isLoggedIn" />
+      <LazyRecentListsNotLoggedIn
+        v-else
+        :hydrate-on-visible="sectionVisibility"
+      />
+    </div>
 
-    <LazyFeaturedSection class="mb-14" />
+    <LazyFeaturedSection
+      :hydrate-on-visible="sectionVisibility"
+      class="mb-14"
+    />
 
-    <LazyRecentArticles class="mb-14" />
+    <LazyRecentArticles :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
-    <LazyQueryCount class="mb-14"></LazyQueryCount>
+    <LazyQueryCount :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
     <!-- How To Use & How It Works Section -->
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -134,22 +141,22 @@
         </div>
       </div>
     </div>
-    <LazyEfficiency class="mb-20" />
-    <ClientOnly>
-      <LazyExampleQueries class="mb-10" />
-      <template #fallback>
-        <ExampleQueriesSkeleton class="mb-10" />
-      </template>
-    </ClientOnly>
-    <ClientOnly>
-      <LazyTopQueries class="mb-10" />
-      <template #fallback>
-        <TopQueriesSkeleton class="mb-10" />
-      </template>
-    </ClientOnly>
-    <LazyMeetTheDevs class="mb-10" />
-    <LazySponsorships class="mb-10" />
-    <LazyJoinUs class="mb-10" />
+    <LazyEfficiency :hydrate-on-visible="sectionVisibility" class="mb-20" />
+    <div
+      ref="exampleQueriesSection"
+      data-home-section="example-queries"
+      class="mb-10"
+    >
+      <LazyExampleQueries v-if="visibleSections.exampleQueries" />
+      <ExampleQueriesSkeleton v-else />
+    </div>
+    <div ref="topQueriesSection" data-home-section="top-queries" class="mb-10">
+      <LazyTopQueries v-if="visibleSections.topQueries" />
+      <TopQueriesSkeleton v-else />
+    </div>
+    <LazyMeetTheDevs :hydrate-on-visible="sectionVisibility" class="mb-10" />
+    <LazySponsorships :hydrate-on-visible="sectionVisibility" class="mb-10" />
+    <LazyJoinUs :hydrate-on-visible="sectionVisibility" class="mb-10" />
   </UContainer>
 </template>
 
@@ -207,6 +214,47 @@ import { useUserProfile } from '~/composables/useUserProfile';
 // Check if user is logged in
 const { userProfile } = useUserProfile();
 const isLoggedIn = computed(() => !!userProfile.value);
+
+const sectionVisibility = { rootMargin: '200px' };
+const recentListsSection = ref<HTMLElement | null>(null);
+const exampleQueriesSection = ref<HTMLElement | null>(null);
+const topQueriesSection = ref<HTMLElement | null>(null);
+const visibleSections = reactive({
+  recentLists: false,
+  exampleQueries: false,
+  topQueries: false,
+});
+let sectionObserver: IntersectionObserver | undefined;
+
+// Client-only sections have no SSR component to hydrate lazily. Delay their
+// first mount so their queries and JavaScript also wait until needed.
+onMounted(() => {
+  const sections = [
+    [recentListsSection.value, 'recentLists'],
+    [exampleQueriesSection.value, 'exampleQueries'],
+    [topQueriesSection.value, 'topQueries'],
+  ] as const;
+
+  if (!('IntersectionObserver' in window)) {
+    for (const [, name] of sections) visibleSections[name] = true;
+    return;
+  }
+
+  sectionObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const section = sections.find(([element]) => element === entry.target);
+      if (section) visibleSections[section[1]] = true;
+      sectionObserver?.unobserve(entry.target);
+    }
+  }, sectionVisibility);
+
+  for (const [element] of sections) {
+    if (element) sectionObserver.observe(element);
+  }
+});
+
+onBeforeUnmount(() => sectionObserver?.disconnect());
 
 // Hardcoded hero cards, fanned out on the right side of the hero.
 // Each renders as an image link to its card detail page. The

@@ -77,14 +77,10 @@ export default defineNuxtConfig({
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
-  modules: [
-    '@nuxt/ui',
-    '@vee-validate/nuxt',
-    '@nuxtjs/device',
-    'nuxt-vitalizer',
-  ],
-  fonts: {
-    families: [{ name: 'Alfa Slab One', provider: 'google' }],
+  modules: ['@nuxt/ui', 'nuxt-vitalizer'],
+  vitalizer: {
+    // Avoid speculative downloads of unused legacy SVG font resources.
+    disablePrefetchLinks: true,
   },
   hooks: {},
   routeRules: {
