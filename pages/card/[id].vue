@@ -945,7 +945,28 @@ function navigateToExplore(
   router.push({ path: `/${type}/all`, query: saved ?? undefined });
 }
 
-const { card, llm, printings, error, pending } = useCardDetails(oracleIdParam);
+const { card, llm, printings, error, pending, ready } =
+  useCardDetails(oracleIdParam);
+await ready;
+
+if (import.meta.server && error.value) {
+  const status = error.value.status ?? 502;
+  setResponseStatus(
+    useRequestEvent()!,
+    status >= 400 && status <= 599 ? status : 502,
+  );
+}
+
+if (card.value && card.value.oracle_id !== oracleIdParam.value) {
+  await navigateTo(
+    {
+      path: `/card/${card.value.oracle_id}`,
+      query: route.query,
+      hash: route.hash,
+    },
+    { redirectCode: 301, replace: true },
+  );
+}
 
 const llmDetails = computed<LlmCardAttributes | null>(
   () => llm.value?.llm ?? null,
@@ -997,12 +1018,15 @@ const errorMessage = computed(() => {
   return err?.data?.message || err?.message || 'An error occurred';
 });
 
-const canonicalUrl = computed(
-  () =>
-    `https://cardmystic.com/card/${card.value?.oracle_id ?? oracleIdParam.value}`,
+const canonicalUrl = computed(() =>
+  card.value
+    ? `https://cardmystic.com/card/${card.value.oracle_id}`
+    : undefined,
 );
 // Dynamic SEO meta based on card data
 useSeoMeta({
+  robots: () => (card.value ? 'index, follow' : 'noindex, follow'),
+  ogUrl: () => canonicalUrl.value,
   title: () =>
     card.value
       ? `${card.value.name} (MTG) - CardMystic`
@@ -1050,45 +1074,44 @@ useSeoMeta({
 });
 
 // Add JSON-LD structured data for better SEO and rich snippets
-useHead({
-  link: [
-    {
-      rel: 'canonical',
-      href: canonicalUrl.value,
-    },
-  ],
-  script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: () => {
-        if (!card.value) return '';
-        return safeJsonLd({
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          name: card.value.name,
-          description:
-            card.value.oracle_text ||
-            card.value.card_faces?.[0]?.oracle_text ||
-            '',
-          image:
-            card.value?.image_uris?.normal ||
-            card.value?.card_faces?.[0]?.image_uris?.normal ||
-            'https://cardmystic.com/cardmystic_cards.png',
-          url: canonicalUrl.value,
-          brand: {
-            '@type': 'Brand',
-            name: 'Magic: The Gathering',
+useHead(() => ({
+  link: canonicalUrl.value
+    ? [{ rel: 'canonical', href: canonicalUrl.value }]
+    : [],
+  script: card.value
+    ? [
+        {
+          type: 'application/ld+json',
+          innerHTML: () => {
+            if (!card.value) return '';
+            return safeJsonLd({
+              '@context': 'https://schema.org',
+              '@type': 'WebPage',
+              name: card.value.name,
+              description:
+                card.value.oracle_text ||
+                card.value.card_faces?.[0]?.oracle_text ||
+                '',
+              image:
+                card.value?.image_uris?.normal ||
+                card.value?.card_faces?.[0]?.image_uris?.normal ||
+                'https://cardmystic.com/cardmystic_cards.png',
+              url: canonicalUrl.value,
+              brand: {
+                '@type': 'Brand',
+                name: 'Magic: The Gathering',
+              },
+              manufacturer: {
+                '@type': 'Organization',
+                name: 'Wizards of the Coast',
+              },
+              category: card.value.type_line || 'Trading Card',
+            });
           },
-          manufacturer: {
-            '@type': 'Organization',
-            name: 'Wizards of the Coast',
-          },
-          category: card.value.type_line || 'Trading Card',
-        });
-      },
-    },
-  ],
-});
+        },
+      ]
+    : [],
+}));
 
 // Save card view to history when card is loaded.
 // Deferred to onMounted so lastCard stays null during hydration (matches SSR).

@@ -17,21 +17,24 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
     llm: CardLlmResponse;
   };
 
-  const {
-    data: cardWithLlm,
-    error,
-    status: asyncStatus,
-  } = useAsyncData(
+  const request = useAsyncData(
     () => `card-${oracleId.value}`,
     async () => {
       if (!oracleId.value || oracleId.value === 'undefined') {
         throw new Error('No oracle ID provided');
       }
 
-      return await $fetch<CardWithLlmResponse>(
+      const result = await $fetch<CardWithLlmResponse>(
         `${config.public.backendUrl}/cards/with-llm/${oracleId.value}`,
         { signal: AbortSignal.timeout(10000) },
       );
+      if (!result?.card?.oracle_id) {
+        throw createError({
+          statusCode: 502,
+          statusMessage: 'Invalid card response',
+        });
+      }
+      return result;
     },
     {
       server: true,
@@ -39,6 +42,8 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
       watch: [oracleId],
     },
   );
+
+  const { data: cardWithLlm, error, status: asyncStatus } = request;
 
   // Preserve the existing `card` API shape so current call-sites keep working.
   const card = computed(() => cardWithLlm.value?.card ?? null);
@@ -65,6 +70,8 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
   });
 
   return {
+    // The page awaits this before setting HTTP status, redirects and metadata.
+    ready: request,
     card,
     llm,
     printings,
