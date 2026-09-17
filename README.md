@@ -259,7 +259,7 @@ Card data files (`card-names.min.json`, `commanders.min.json`, `card-oracle-ids.
 
 A static copy of `card-oracle-ids.min.json` is kept in `public/` **only** for sitemap generation (`server/routes/sitemap.xml.ts`), which imports it at build time for SEO purposes.
 
-When new Magic sets release or card data updates, the backend data files are updated automatically. The static `public/card-oracle-ids.min.json` should be refreshed periodically to keep the sitemap current.
+When new Magic sets release or card data updates, the backend data files are updated automatically. Run `pnpm update:card-oracle-ids` to refresh the static sitemap data from the production oracle-ID feed, then commit the file and rebuild. The command validates the feed before replacing it, including checking that it contains oracle IDs rather than printing IDs.
 
 # Database
 
