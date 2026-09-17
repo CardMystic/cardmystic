@@ -20,6 +20,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install --with-deps chromium",
+    "update:card-oracle-ids": "node scripts/update-card-oracle-ids.mjs",
     "gen:types": "npx supabase gen types typescript --project-id ddbgietanhxrozzmogur > database.types.ts"
   },
   "dependencies": {

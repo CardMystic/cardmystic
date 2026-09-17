@@ -41,18 +41,17 @@
       <!-- Partner commanders: two overlapping cards -->
       <template v-if="hasPartner">
         <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
-          <div
+          <NuxtLink
             class="partner-card partner-back"
             :class="{ 'partner-front': partnerFrontIndex === 1 }"
-            role="button"
-            tabindex="0"
+            :to="`/card/${card.partner_card_data!.oracle_id}`"
+            no-prefetch
             :aria-label="`View ${card.partner_card_data!.name}`"
             @mouseenter="
               partnerHoveredIndex = 1;
               emit('partner-hover', 1);
             "
-            @click="navigateToCard(card.partner_card_data!.oracle_id)"
-            @keydown.enter="navigateToCard(card.partner_card_data!.oracle_id)"
+            @click="saveCurrentSearchQuery(route.query)"
           >
             <img
               class="card-large cursor-pointer"
@@ -67,19 +66,18 @@
               loading="lazy"
               decoding="async"
             />
-          </div>
-          <div
+          </NuxtLink>
+          <NuxtLink
             class="partner-card"
             :class="{ 'partner-front': partnerFrontIndex === 0 }"
-            role="button"
-            tabindex="0"
+            :to="`/card/${card.card_data.oracle_id}`"
+            no-prefetch
             :aria-label="`View ${card.card_data.name}`"
             @mouseenter="
               partnerHoveredIndex = 0;
               emit('partner-hover', 0);
             "
-            @click="navigateToCard(card.card_data.oracle_id)"
-            @keydown.enter="navigateToCard(card.card_data.oracle_id)"
+            @click="saveCurrentSearchQuery(route.query)"
           >
             <img
               class="card-large cursor-pointer"
@@ -90,12 +88,18 @@
               loading="lazy"
               decoding="async"
             />
-          </div>
+          </NuxtLink>
         </div>
       </template>
 
       <!-- Single card (default) -->
-      <template v-else>
+      <NuxtLink
+        v-else
+        :to="`/card/${card.card_data.oracle_id}`"
+        no-prefetch
+        class="block"
+        @click="saveCurrentSearchQuery(route.query)"
+      >
         <img
           :class="sizeClass"
           :src="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
@@ -105,13 +109,12 @@
           loading="lazy"
           decoding="async"
           :ui="{}"
-          @click="navigateToCard(card.card_data.oracle_id)"
           class="cursor-pointer"
         />
         <div v-else class="image-placeholder">
           <p class="placeholder-text">{{ card.card_data.name }}</p>
         </div>
-      </template>
+      </NuxtLink>
 
       <LazyCardOverlayButtons
         :card="card"
@@ -610,17 +613,6 @@ function confirmDislike() {
     cardName: props.card.card_data.name,
   });
 }
-// Navigation helper
-function navigateToCard(cardId: string | undefined) {
-  saveCurrentSearchQuery(route.query);
-
-  if (!cardId) {
-    console.warn('Cannot navigate to card: ID is undefined');
-    return;
-  }
-  router.push(`/card/${cardId}`);
-}
-
 // Whether this card has both ALS and Smart scores (dual bar mode)
 const hasDualScores = computed(
   () =>

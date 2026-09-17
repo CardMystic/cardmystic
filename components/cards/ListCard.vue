@@ -35,20 +35,25 @@
 
     <div class="card-image-wrapper">
       <!-- Card image -->
-      <img
-        :class="'card-large'"
-        :src="getCardImageUrl(card.card_data, isFlipped)"
-        :alt="card.card_data.name"
-        @error="handleImageError"
-        v-if="getCardImageUrl(card.card_data, isFlipped)"
-        loading="lazy"
-        decoding="async"
-        @click="navigateToCard(card.card_data.oracle_id)"
-        class="cursor-pointer"
-      />
-      <div v-else class="image-placeholder">
-        <p class="placeholder-text">{{ card.card_data.name }}</p>
-      </div>
+      <NuxtLink
+        :to="`/card/${card.card_data.oracle_id}`"
+        no-prefetch
+        class="block"
+      >
+        <img
+          :class="'card-large'"
+          :src="getCardImageUrl(card.card_data, isFlipped)"
+          :alt="card.card_data.name"
+          @error="handleImageError"
+          v-if="getCardImageUrl(card.card_data, isFlipped)"
+          loading="lazy"
+          decoding="async"
+          class="cursor-pointer"
+        />
+        <div v-else class="image-placeholder">
+          <p class="placeholder-text">{{ card.card_data.name }}</p>
+        </div>
+      </NuxtLink>
 
       <LazyCardOverlayButtons
         :card="card"
@@ -376,11 +381,6 @@ function confirmSetCommander() {
 
 function confirmClearCommander() {
   emit('clearCommander', props.card.card_data.oracle_id);
-}
-
-function navigateToCard(cardId: string | undefined) {
-  if (!cardId) return;
-  router.push(`/card/${cardId}`);
 }
 
 function findSimilarCards() {
