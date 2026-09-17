@@ -35,16 +35,20 @@
     </UModal>
 
     <div class="preview-card-stack">
-      <div class="preview-image-wrapper">
+      <NuxtLink
+        class="preview-image-wrapper block"
+        :to="`/card/${activeCardData?.oracle_id}`"
+        no-prefetch
+        @click="saveCurrentSearchQuery(route.query)"
+      >
         <img
           :src="getCardImageUrl(activeCardData!, isFlipped, 'large')"
           :alt="activeCardData?.name"
           class="preview-image cursor-pointer"
           loading="eager"
           decoding="async"
-          @click="navigateToCard(activeCardData?.oracle_id)"
         />
-      </div>
+      </NuxtLink>
 
       <div class="space-y-2">
         <div>
@@ -338,12 +342,6 @@ function toggleClipboard() {
   }
 
   clipboard.add(clipboardCard.value);
-}
-
-function navigateToCard(cardId: string | undefined) {
-  saveCurrentSearchQuery(route.query);
-  if (!cardId) return;
-  router.push(`/card/${cardId}`);
 }
 
 function handleDislike() {

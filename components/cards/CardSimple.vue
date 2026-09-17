@@ -1,5 +1,9 @@
 <template>
-  <div class="card-simple">
+  <NuxtLink
+    :to="`/card/${card.card_data.oracle_id}`"
+    no-prefetch
+    class="card-simple block"
+  >
     <img
       :class="sizeClass"
       :src="getCardImageUrl(card.card_data, false, scryfallSize)"
@@ -8,20 +12,16 @@
       v-if="getCardImageUrl(card.card_data, false, scryfallSize)"
       loading="lazy"
       decoding="async"
-      @click="navigateToCard(card.card_data.oracle_id)"
       class="cursor-pointer"
     />
-  </div>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 import type { Card } from '~/models/cardModel';
-import { useRouter } from 'vue-router';
 import { getCardImageUrl } from '~/utils/scryfall';
-
-const router = useRouter();
 
 const props = defineProps({
   card: {
@@ -41,14 +41,6 @@ const sizeClass = computed(() => `card-${props.size}`);
 const scryfallSize = computed(() =>
   props.size === 'small' ? 'small' : 'normal',
 );
-
-function navigateToCard(cardId: string | undefined) {
-  if (!cardId) {
-    console.warn('Cannot navigate to card: ID is undefined');
-    return;
-  }
-  router.push(`/card/${cardId}`);
-}
 
 function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
