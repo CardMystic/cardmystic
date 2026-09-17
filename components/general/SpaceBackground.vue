@@ -103,8 +103,4 @@ onBeforeUnmount(() => {
     transform: translateY(0)
   to
     transform: translateY(-1000px)
-
-@media (prefers-reduced-motion: reduce)
-  .stars
-    animation: none
 </style>
