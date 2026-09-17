@@ -177,7 +177,7 @@
               }"
             >
               <template
-                v-for="group in visibleGroupedResults"
+                v-for="group in groupedResults"
                 :key="group.label"
                 #[group.label]
               >
@@ -235,7 +235,7 @@
           <template v-else>
             <div class="grid" :class="resultsGridClass">
               <div
-                v-for="(result, index) in visibleResults"
+                v-for="(result, index) in sortedResults"
                 :key="result.card_data.id"
                 @mouseenter="setPreviewCard(result)"
                 @focusin="setPreviewCard(result)"
@@ -272,15 +272,6 @@
               </div>
             </div>
           </template>
-          <div v-if="hasMoreResults" class="flex justify-center mt-6">
-            <UButton
-              class="cursor-pointer"
-              color="neutral"
-              variant="outline"
-              :label="`Show ${Math.min(RESULTS_PER_BATCH, totalResults - visibleCount)} more (${visibleCount} of ${totalResults})`"
-              @click="visibleCount += RESULTS_PER_BATCH"
-            />
-          </div>
         </div>
       </div>
     </template>
@@ -523,38 +514,14 @@ const groupedResults = computed<CardGroup[] | null>(() => {
   );
 });
 
-const RESULTS_PER_BATCH = 40;
-const visibleCount = ref(RESULTS_PER_BATCH);
-const totalResults = computed(() => sortedResults.value?.length ?? 0);
-const hasMoreResults = computed(() => visibleCount.value < totalResults.value);
-const visibleResults = computed(() =>
-  sortedResults.value?.slice(0, visibleCount.value),
-);
-const visibleGroupedResults = computed(() => {
-  let remaining = visibleCount.value - (searchedCard.value ? 1 : 0);
-  return (groupedResults.value ?? [])
-    .map((group) => {
-      const cards = group.cards.slice(0, Math.max(0, remaining));
-      remaining -= cards.length;
-      return { ...group, cards };
-    })
-    .filter((group) => group.cards.length > 0);
-});
-
-// New data or ordering starts at the first batch; changing grid/text view keeps
-// the amount already revealed. Sorting always considers the complete result set.
-watch([() => props.searchResults, groupBy, sortBy, sortDirection], () => {
-  visibleCount.value = RESULTS_PER_BATCH;
-});
-
 const jumpToGroups = computed(() =>
-  visibleGroupedResults.value
+  (groupedResults.value ?? [])
     .filter((group) => group.label)
     .map((group) => group.label),
 );
 
 const accordionItems = computed<AccordionItem[]>(() => {
-  return visibleGroupedResults.value
+  return (groupedResults.value ?? [])
     .filter((g) => g.label)
     .map((g) => ({
       label: g.label,
@@ -647,9 +614,9 @@ onUnmounted(() => {
 });
 
 watch(
-  groupedResults,
-  (groups) => {
-    openAccordionValues.value = (groups ?? []).map((group) => group.label);
+  accordionItems,
+  (items) => {
+    openAccordionValues.value = items.map((item) => item.value as string);
   },
   { immediate: true },
 );
