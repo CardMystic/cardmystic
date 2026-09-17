@@ -109,7 +109,7 @@ const sections = [
 
 async function revealHomeSections(page: Page) {
   await page
-    .locator('[data-home-section="recent-lists"]')
+    .getByRole('heading', { name: 'Recent Decklists', exact: true })
     .scrollIntoViewIfNeeded();
   await page
     .getByRole('heading', { name: 'Awesome Decklists & Users', exact: true })
@@ -120,6 +120,9 @@ async function revealHomeSections(page: Page) {
   });
   if (await articlesHeading.count())
     await articlesHeading.scrollIntoViewIfNeeded();
+  await page
+    .getByText('Total Searches Resolved', { exact: true })
+    .scrollIntoViewIfNeeded();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -272,7 +275,7 @@ test('successful empty responses still show the real empty states', async ({
   ).toHaveCount(0);
 });
 
-test('initial mobile home defers secondary requests until sections are visible', async ({
+test('initial mobile home loads recent decks and defers featured content until visible', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -298,7 +301,12 @@ test('initial mobile home defers secondary requests until sections are visible',
   ).toBeEnabled();
   // Allow delayed hydration and auth work to settle while staying at the hero.
   await page.waitForTimeout(1000);
-  expect(requested).toEqual([]);
+  expect(requested.some((url) => url.pathname === '/supabase/card-lists')).toBe(
+    true,
+  );
+  expect(
+    requested.filter((url) => url.pathname !== '/supabase/card-lists'),
+  ).toEqual([]);
 
   await revealHomeSections(page);
   for (const section of sections) {
