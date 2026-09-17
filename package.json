@@ -25,13 +25,9 @@
   },
   "dependencies": {
     "@nuxt/ui": "^3.3.7",
-    "@nuxtjs/device": "^3.2.4",
     "@supabase/supabase-js": "^2.112.1",
     "@tanstack/vue-query": "^5.101.4",
     "@tanstack/vue-query-devtools": "^5.91.0",
-    "@vee-validate/nuxt": "^4.15.1",
-    "@vee-validate/zod": "^4.15.1",
-    "@vue/devtools-api": "^8.2.1",
     "dompurify": "^3.4.13",
     "dotenv": "^16.6.1",
     "mana-font": "^1.18.0",
@@ -39,7 +35,6 @@
     "node-emoji": "^2.2.0",
     "nuxt": "^3.21.11",
     "nuxt-vitalizer": "^0.10.0",
-    "vee-validate": "^4.15.1",
     "vue": "^3.5.41",
     "vue-router": "^4.6.4",
     "zod": "^4.4.3"

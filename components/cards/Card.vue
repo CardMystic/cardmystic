@@ -9,12 +9,13 @@
     :ui="{ body: 'p-1 sm:p-1' }"
   >
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu"
+      v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
       :oracle-ids="[card.card_data.oracle_id]"
     />
     <!-- Confirmation Modal -->
     <UModal
+      v-if="showConfirmModal"
       v-model:open="showConfirmModal"
       title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -393,8 +394,7 @@ import { getCardImageUrl } from '~/utils/scryfall';
 const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
-const { saveSearchMutation } = useSearchHistory();
-const { userProfile } = useUserProfile();
+const { saveSearchMutation, userProfile } = useSearchHistory();
 
 // Shared singleton — one listener for all Card instances
 const isMobile = useIsMobile();

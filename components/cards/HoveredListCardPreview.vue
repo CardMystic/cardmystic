@@ -6,26 +6,29 @@
     :ui="{ body: 'p-4' }"
   >
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu"
+      v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
       :oracle-ids="[card.card_data.oracle_id]"
     />
 
-    <SetCommanderModal
+    <LazySetCommanderModal
+      v-if="showCommanderModal"
       :open="showCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event"
       @confirm="confirmSetCommander"
     />
 
-    <RemoveCommanderModal
+    <LazyRemoveCommanderModal
+      v-if="showClearCommanderModal"
       :open="showClearCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showClearCommanderModal = $event"
       @confirm="confirmClearCommander"
     />
 
-    <SetCopiesModal
+    <LazySetCopiesModal
+      v-if="showSetCopiesInput"
       :open="showSetCopiesInput"
       :card-name="card.card_data.name"
       :initial-copies="numCopies ?? 1"

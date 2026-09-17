@@ -13,7 +13,7 @@
           class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
           @mouseenter="clearPendingPreviewCard()"
         >
-          <div class="preview-sticky">
+          <div v-if="isDesktopPreview" class="preview-sticky">
             <HoveredListCardPreview
               :card="previewCard"
               :is-owner="isOwner"
@@ -590,7 +590,12 @@
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import type { AccordionItem } from '@nuxt/ui';
-import { useCommandersSet } from '~/composables/useBulkData';
+import { provideCommandersSet } from '~/composables/useBulkData';
+import { provideSearchHistory } from '~/composables/useSearchHistory';
+import { useDesktopPreview } from '~/composables/useIsMobile';
+
+provideSearchHistory();
+const isDesktopPreview = useDesktopPreview();
 import ListCard from '~/components/cards/ListCard.vue';
 import CardText from '~/components/cards/CardText.vue';
 
@@ -629,7 +634,7 @@ const cardGridClasses = computed(() =>
     : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2',
 );
 
-const { data: commandersSet } = useCommandersSet();
+const { data: commandersSet } = provideCommandersSet();
 
 function flattenGroups(groups: CardGroup[] | null | undefined): Card[] {
   if (!groups) return [];

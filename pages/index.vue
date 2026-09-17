@@ -1,6 +1,5 @@
 <template>
   <SpaceBackground :full="true">
-    <LazyCometDog />
     <div class="hero px-0 w-full flex flex-col items-center justify-center">
       <UContainer
         class="hero-grid grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-8 items-center w-full max-w-350 relative z-10"
@@ -72,7 +71,7 @@
 
   <!-- Everything below the fold -->
   <UContainer class="mt-10 mb-10">
-    <ExploreLinks class="mb-14" />
+    <LazyExploreLinks :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
     <!-- User-specific sections when logged in -->
     <ClientOnly>
@@ -83,11 +82,14 @@
       </template>
     </ClientOnly>
 
-    <LazyFeaturedSection class="mb-14" />
+    <LazyFeaturedSection
+      :hydrate-on-visible="sectionVisibility"
+      class="mb-14"
+    />
 
-    <LazyRecentArticles class="mb-14" />
+    <LazyRecentArticles :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
-    <LazyQueryCount class="mb-14"></LazyQueryCount>
+    <LazyQueryCount :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
     <!-- How To Use & How It Works Section -->
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,7 +137,7 @@
         </div>
       </div>
     </div>
-    <LazyEfficiency class="mb-20" />
+    <LazyEfficiency :hydrate-on-visible="sectionVisibility" class="mb-20" />
     <ClientOnly>
       <LazyExampleQueries class="mb-10" />
       <template #fallback>
@@ -148,9 +150,9 @@
         <TopQueriesSkeleton class="mb-10" />
       </template>
     </ClientOnly>
-    <LazyMeetTheDevs class="mb-10" />
-    <LazySponsorships class="mb-10" />
-    <LazyJoinUs class="mb-10" />
+    <LazyMeetTheDevs :hydrate-on-visible="sectionVisibility" class="mb-10" />
+    <LazySponsorships :hydrate-on-visible="sectionVisibility" class="mb-10" />
+    <LazyJoinUs :hydrate-on-visible="sectionVisibility" class="mb-10" />
   </UContainer>
 </template>
 
@@ -208,6 +210,8 @@ import { useUserProfile } from '~/composables/useUserProfile';
 // Check if user is logged in
 const { userProfile } = useUserProfile();
 const isLoggedIn = computed(() => !!userProfile.value);
+
+const sectionVisibility = { rootMargin: '200px' };
 
 // Hardcoded hero cards, fanned out on the right side of the hero.
 // Each renders as an image link to its card detail page. The

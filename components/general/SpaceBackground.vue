@@ -1,19 +1,21 @@
 <template>
   <div
+    ref="hero"
     class="particle-hero min-h-screen w-full relative overflow-hidden"
     :class="full ? '' : 'flex items-center justify-center px-4 py-12'"
   >
-    <div class="stars stars-small" :style="{ '--star-shadow': smallShadow }" />
     <div
-      class="stars stars-medium"
-      :style="{ '--star-shadow': mediumShadow }"
+      v-for="layer in starLayers"
+      :key="layer.size"
+      class="stars"
+      aria-hidden="true"
+      :style="{
+        backgroundImage: layer.image,
+        opacity: layer.opacity,
+        animationDuration: `${layer.duration}s`,
+        animationPlayState: isAnimating ? 'running' : 'paused',
+      }"
     />
-    <div class="stars stars-large" :style="{ '--star-shadow': largeShadow }" />
-    <div
-      class="stars stars-xlarge"
-      :style="{ '--star-shadow': xlargeShadow }"
-    />
-    <Comets :interval="30" />
     <div
       :class="
         full ? 'relative z-10 w-full h-full' : 'w-full max-w-md mx-auto z-10'
@@ -25,125 +27,80 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
-  defineProps<{
-    full?: boolean;
-  }>(),
-  { full: false },
-);
+withDefaults(defineProps<{ full?: boolean }>(), { full: false });
 
-// ---------------------------------------------------------------------------
-// Configuration
-// ---------------------------------------------------------------------------
-const FIELD_WIDTH = 3840;
-const FIELD_HEIGHT = 2000;
-const SMALL_COUNT = 2400;
-const MEDIUM_COUNT = 1200;
-const LARGE_COUNT = 140;
-const XLARGE_COUNT = 60;
-const STAR_COLOR = '#fff';
-
-// ---------------------------------------------------------------------------
-// Seeded PRNG — identical output on server and client for clean hydration.
-// ---------------------------------------------------------------------------
-function seededRandom(seed: number) {
-  return () => {
+// Repeat a small, deterministic texture instead of painting thousands of
+// box shadows. Density and drift speeds match the original 3840 × 2000 field.
+const TILE_WIDTH = 960;
+const TILE_HEIGHT = 1000;
+function starTexture(count: number, size: number, seed: number): string {
+  const random = () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
-}
-
-// ---------------------------------------------------------------------------
-// Build box-shadow strings. X spans FIELD_WIDTH to cover ultra-wide screens,
-// Y spans FIELD_HEIGHT which matches the vertical animation tile.
-// ---------------------------------------------------------------------------
-function generateShadows(count: number, seed: number): string {
-  const rand = seededRandom(seed);
-  const shadows: string[] = [];
+  const stars: string[] = [];
   for (let i = 0; i < count; i++) {
-    const x = Math.round(rand() * FIELD_WIDTH);
-    const y = Math.round(rand() * FIELD_HEIGHT);
-    shadows.push(`${x}px ${y}px ${STAR_COLOR}`);
+    // Keep the small halos inside the tile so its edges stay seamless.
+    const x = Math.round(8 + random() * (TILE_WIDTH - 16));
+    const y = Math.round(8 + random() * (TILE_HEIGHT - 16));
+    if (size >= 3) {
+      stars.push(
+        `<circle cx="${x}" cy="${y}" r="${size + 2}" fill="url(#glow)"/>`,
+      );
+    }
+    stars.push(`<circle cx="${x}" cy="${y}" r="${size / 2}" fill="white"/>`);
   }
-  return shadows.join(',');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${TILE_WIDTH}" height="${TILE_HEIGHT}" viewBox="0 0 ${TILE_WIDTH} ${TILE_HEIGHT}"><defs><radialGradient id="glow"><stop stop-color="#a855f7" stop-opacity=".6"/><stop offset="1" stop-color="#a855f7" stop-opacity="0"/></radialGradient></defs>${stars.join('')}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-// Four layers with different seeds so positions don't overlap
-const smallShadow = generateShadows(SMALL_COUNT, 42);
-const mediumShadow = generateShadows(MEDIUM_COUNT, 137);
-const largeShadow = generateShadows(LARGE_COUNT, 256);
-const xlargeShadow = generateShadows(XLARGE_COUNT, 389);
+const starLayers = [
+  { count: 300, size: 1, seed: 42, opacity: 0.35, duration: 90 },
+  { count: 150, size: 2, seed: 137, opacity: 0.55, duration: 60 },
+  { count: 18, size: 3, seed: 256, opacity: 0.8, duration: 35 },
+  { count: 8, size: 4, seed: 389, opacity: 0.9, duration: 22.5 },
+].map((layer) => ({
+  ...layer,
+  image: starTexture(layer.count, layer.size, layer.seed),
+}));
+
+const hero = ref<HTMLElement | null>(null);
+const isAnimating = ref(true);
+let inView = true;
+let observer: IntersectionObserver | undefined;
+function updateAnimation() {
+  isAnimating.value = inView && !document.hidden;
+}
+onMounted(() => {
+  observer = new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting;
+    updateAnimation();
+  });
+  if (hero.value) observer.observe(hero.value);
+  document.addEventListener('visibilitychange', updateAnimation);
+  updateAnimation();
+});
+onBeforeUnmount(() => {
+  observer?.disconnect();
+  document.removeEventListener('visibilitychange', updateAnimation);
+});
 </script>
 
 <style lang="sass" scoped>
 .particle-hero
-  position: relative
-  min-height: 100vh
-  background: #000000
-  overflow: hidden
+  background: #000
 
-// Shared star layer styles
 .stars
   position: absolute
-  top: 0
-  left: 0
-  background: transparent
-  box-shadow: var(--star-shadow)
+  inset: 0 0 -1000px
   pointer-events: none
-  border-radius: 50%
-  &::after
-    content: ''
-    position: absolute
-    top: 2000px
-    background: transparent
-    box-shadow: var(--star-shadow)
-    border-radius: 50%
-
-// ------ Small stars (1 px, slow drift) ------
-.stars-small
-  width: 1px
-  height: 1px
-  opacity: 0.35
-  animation: drift 180s linear infinite
-  &::after
-    width: 1px
-    height: 1px
-
-// ------ Medium stars (2 px, moderate drift) ------
-.stars-medium
-  width: 2px
-  height: 2px
-  opacity: 0.55
-  animation: drift 120s linear infinite
-  &::after
-    width: 2px
-    height: 2px
-
-// ------ Large stars (3 px, faster drift, purple glow) ------
-.stars-large
-  width: 3px
-  height: 3px
-  opacity: 0.8
-  animation: drift 70s linear infinite
-  filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.6))
-  &::after
-    width: 3px
-    height: 3px
-
-// ------ X-Large stars (4 px, fastest drift, strong purple glow) ------
-.stars-xlarge
-  width: 4px
-  height: 4px
-  opacity: 0.9
-  animation: drift 45s linear infinite
-  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.8)) drop-shadow(0 0 16px rgba(168, 85, 247, 0.4))
-  &::after
-    width: 4px
-    height: 4px
+  background-repeat: repeat
+  background-size: 960px 1000px
+  animation: drift linear infinite
 
 @keyframes drift
   from
     transform: translateY(0)
   to
-    transform: translateY(-2000px)
+    transform: translateY(-1000px)
 </style>

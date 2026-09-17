@@ -5,9 +5,26 @@ type SearchHistoryInsert = TablesInsert<'search_history'>;
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { computed } from 'vue';
+import { computed, inject, provide, type InjectionKey } from 'vue';
 
-export const useSearchHistory = () => {
+const historyActionsKey: InjectionKey<ReturnType<typeof createSearchHistory>> =
+  Symbol('search-history-actions');
+
+// A results parent owns one set of actions for its cards. Standalone consumers
+// still get their own scope; the history screen explicitly enables list reads.
+export const useSearchHistory = (options: { fetchHistory?: boolean } = {}) => {
+  const shared = inject(historyActionsKey, null);
+  if (shared && !options.fetchHistory) return shared;
+  return createSearchHistory(options.fetchHistory ?? false);
+};
+
+export const provideSearchHistory = () => {
+  const history = useSearchHistory();
+  provide(historyActionsKey, history);
+  return history;
+};
+
+const createSearchHistory = (fetchHistory: boolean) => {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
@@ -35,7 +52,7 @@ export const useSearchHistory = () => {
       if (error) throw error;
       return data;
     },
-    enabled: computed(() => !!userProfile.value?.id),
+    enabled: computed(() => fetchHistory && !!userProfile.value?.id),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -126,6 +143,7 @@ export const useSearchHistory = () => {
   });
 
   return {
+    userProfile,
     // Query data and states
     searchHistory,
     isLoadingHistory,

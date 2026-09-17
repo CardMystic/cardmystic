@@ -8,14 +8,16 @@
     ]"
     :ui="{ body: 'p-1 sm:p-1' }"
   >
-    <SetCommanderModal
+    <LazySetCommanderModal
+      v-if="showCommanderModal"
       :open="showCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event"
       @confirm="confirmSetCommander"
     />
 
-    <SetCopiesModal
+    <LazySetCopiesModal
+      v-if="showSetCopiesInput"
       :open="showSetCopiesInput"
       :card-name="card.card_data.name"
       :initial-copies="numCopies ?? 1"
@@ -23,7 +25,8 @@
       @confirm="confirmSetCopies"
     />
 
-    <RemoveCommanderModal
+    <LazyRemoveCommanderModal
+      v-if="showClearCommanderModal"
       :open="showClearCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showClearCommanderModal = $event"

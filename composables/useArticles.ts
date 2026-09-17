@@ -31,7 +31,7 @@ async function getAuthToken(
 export function useRecentArticles(limit = 3) {
   const config = useRuntimeConfig();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['articles', 'recent', limit],
     queryFn: async () => {
       const response = await fetch(
@@ -49,6 +49,7 @@ export function useRecentArticles(limit = 3) {
   return {
     articles: computed(() => data.value?.articles ?? []),
     isLoading,
+    isFetching,
     error,
     refetch,
   };
