@@ -6,12 +6,13 @@
     :ui="{ body: 'p-4' }"
   >
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu"
+      v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
       :oracle-ids="[activeCardData?.oracle_id ?? '']"
     />
 
     <UModal
+      v-if="showConfirmModal"
       v-model:open="showConfirmModal"
       title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"

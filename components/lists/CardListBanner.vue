@@ -139,6 +139,7 @@
 
   <!-- Edit Banner Modal -->
   <UModal
+    v-if="isOwner && isEditBannerModalOpen"
     v-model:open="isEditBannerModalOpen"
     title="Change Banner Image"
     description="Select a card to use as the banner image for this list"
@@ -244,8 +245,10 @@ const visibilityOptions = [
   { label: 'Public', value: 'public' },
 ];
 
-// Load card names from backend bulk data API
-const { data: rawCards, status: cardsQueryStatus } = useCardNames();
+// Only load editing data when the owner opens the banner picker.
+const { data: rawCards, status: cardsQueryStatus } = useCardNames(
+  () => !!props.isOwner && isEditBannerModalOpen.value,
+);
 const cardsStatus = computed(() =>
   cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
 );

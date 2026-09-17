@@ -5,6 +5,17 @@
       Built with CardMystic's powerful deck building tools!
     </p>
 
+    <SearchError
+      v-if="error"
+      :error="error"
+      title="Could not load your recent decklists"
+      description="Please try again."
+      retry-label="Retry"
+      :is-retrying="isFetching"
+      @retry="refetch()"
+      class="mb-4"
+    />
+
     <div
       v-if="isLoadingLists"
       class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4"
@@ -34,7 +45,7 @@
       </NuxtLink>
     </div>
 
-    <div v-else class="empty-state">
+    <div v-else-if="!error" class="empty-state">
       <UIcon name="i-lucide-inbox" class="text-5xl opacity-30 mb-3" />
       <p>You haven't created any decklists yet</p>
     </div>
@@ -92,7 +103,13 @@ import CardListLink from '~/components/lists/CardListLink.vue';
 // My Decklists view.
 const page = ref(1);
 const isCreateModalOpen = ref(false);
-const { decklists, isLoading: isLoadingLists } = useMyDecklists(page, 8);
+const {
+  decklists,
+  isLoading: isLoadingLists,
+  isFetching,
+  error,
+  refetch,
+} = useMyDecklists(page, 8);
 
 const recentLists = computed(() => {
   return [...decklists.value]

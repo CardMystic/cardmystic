@@ -15,6 +15,16 @@
 
     <ClientOnly>
       <!-- Decklists row -->
+      <SearchError
+        v-if="decklistsError"
+        :error="decklistsError"
+        title="Could not load featured decklists"
+        description="Please try again."
+        retry-label="Retry"
+        :is-retrying="isFetchingDecklists"
+        @retry="refetchDecklists()"
+        class="mb-4"
+      />
       <div
         v-if="isLoadingDecklists"
         class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 mb-4"
@@ -45,7 +55,7 @@
         </NuxtLink>
       </div>
 
-      <div v-else class="empty-state mb-4">
+      <div v-else-if="!decklistsError" class="empty-state mb-4">
         <UIcon name="i-lucide-stars" class="text-5xl opacity-30 mb-3" />
         <p class="mb-4">No featured decklists yet!</p>
         <UButton to="/explore/decklists" color="primary" variant="soft">
@@ -54,6 +64,16 @@
       </div>
 
       <!-- Users row -->
+      <SearchError
+        v-if="usersError"
+        :error="usersError"
+        title="Could not load featured users"
+        description="Please try again."
+        retry-label="Retry"
+        :is-retrying="isFetchingUsers"
+        @retry="refetchUsers()"
+        class="mb-4"
+      />
       <div
         v-if="isLoadingUsers"
         class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
@@ -82,7 +102,7 @@
         </NuxtLink>
       </div>
 
-      <div v-else class="empty-state">
+      <div v-else-if="!usersError" class="empty-state">
         <UIcon name="i-lucide-users" class="text-5xl opacity-30 mb-3" />
         <p class="mb-4">No featured users yet!</p>
         <UButton to="/explore/users" color="primary" variant="soft">
@@ -91,7 +111,9 @@
       </div>
 
       <!-- Primers row -->
-      <template v-if="isLoadingPrimers || visiblePrimers.length > 0">
+      <template
+        v-if="isLoadingPrimers || primersError || visiblePrimers.length > 0"
+      >
         <h2 class="section-title mt-14 mb-0">Suggested Primer Reads</h2>
         <p class="text-sm opacity-70 mb-4 text-center">
           Support us on
@@ -105,6 +127,17 @@
           to automatically get your primers featured!
         </p>
 
+        <SearchError
+          v-if="primersError"
+          :error="primersError"
+          title="Could not load suggested primers"
+          description="Please try again."
+          retry-label="Retry"
+          :is-retrying="isFetchingPrimers"
+          @retry="refetchPrimers()"
+          class="mb-4"
+        />
+
         <div
           v-if="isLoadingPrimers"
           class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4"
@@ -112,7 +145,10 @@
           <USkeleton v-for="i in 2" :key="i" class="primer-skeleton" />
         </div>
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+        <div
+          v-else-if="visiblePrimers.length > 0"
+          class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4"
+        >
           <FeaturedPrimerLink
             v-for="primer in visiblePrimers"
             :key="primer.decklist.id"
@@ -145,9 +181,27 @@ import PublicUserLink from '~/components/user/PublicUserLink.vue';
 import FeaturedPrimerLink from '~/components/home/FeaturedPrimerLink.vue';
 import { PATREON_MEMBERSHIP_URL } from '~/models/patreonModel';
 
-const { decklists, isLoading: isLoadingDecklists } = useFeaturedDecklists(10);
-const { users, isLoading: isLoadingUsers } = useFeaturedUsers(10);
-const { primers, isLoading: isLoadingPrimers } = useFeaturedPrimers(6);
+const {
+  decklists,
+  isLoading: isLoadingDecklists,
+  isFetching: isFetchingDecklists,
+  error: decklistsError,
+  refetch: refetchDecklists,
+} = useFeaturedDecklists(3);
+const {
+  users,
+  isLoading: isLoadingUsers,
+  isFetching: isFetchingUsers,
+  error: usersError,
+  refetch: refetchUsers,
+} = useFeaturedUsers(3);
+const {
+  primers,
+  isLoading: isLoadingPrimers,
+  isFetching: isFetchingPrimers,
+  error: primersError,
+  refetch: refetchPrimers,
+} = useFeaturedPrimers(2);
 
 const visibleDecklists = computed(() => decklists.value.slice(0, 3));
 const visibleUsers = computed(() => users.value.slice(0, 3));

@@ -21,7 +21,7 @@ import {
 export function useFeaturedDecklists(limit = 10) {
   const config = useRuntimeConfig();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['discovery', 'featured-decklists', limit],
     queryFn: async () => {
       const response = await fetch(
@@ -41,6 +41,7 @@ export function useFeaturedDecklists(limit = 10) {
   return {
     decklists: computed(() => data.value?.decklists ?? []),
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -54,7 +55,7 @@ export function useFeaturedDecklists(limit = 10) {
 export function useFeaturedUsers(limit = 10) {
   const config = useRuntimeConfig();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['discovery', 'featured-users', limit],
     queryFn: async () => {
       const response = await fetch(
@@ -72,6 +73,7 @@ export function useFeaturedUsers(limit = 10) {
   return {
     users: computed(() => data.value?.users ?? []),
     isLoading,
+    isFetching,
     error,
     refetch,
   };
@@ -86,7 +88,7 @@ export function useFeaturedUsers(limit = 10) {
 export function useFeaturedPrimers(limit = 6) {
   const config = useRuntimeConfig();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['discovery', 'featured-primers', limit],
     queryFn: async () => {
       const response = await fetch(
@@ -104,6 +106,7 @@ export function useFeaturedPrimers(limit = 6) {
   return {
     primers: computed(() => data.value?.primers ?? []),
     isLoading,
+    isFetching,
     error,
     refetch,
   };

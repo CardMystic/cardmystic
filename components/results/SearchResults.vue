@@ -70,7 +70,7 @@
           class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
           @mouseenter="clearPendingPreviewCard()"
         >
-          <div class="preview-sticky">
+          <div v-if="isDesktopPreview" class="preview-sticky">
             <HoveredSearchResultPreview
               :card="previewCard"
               :query-param="queryParam"
@@ -330,7 +330,12 @@ const GroupBy = defineAsyncComponent(
 );
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
-import { useCommandersSet } from '~/composables/useBulkData';
+import { provideCommandersSet } from '~/composables/useBulkData';
+import { provideSearchHistory } from '~/composables/useSearchHistory';
+import { useDesktopPreview } from '~/composables/useIsMobile';
+
+provideSearchHistory();
+const isDesktopPreview = useDesktopPreview();
 
 const { getPageInfo } = usePageInfo();
 
@@ -349,7 +354,7 @@ onMounted(() => {
 });
 
 // Hoisted commander detection — single subscription shared by all Card children
-const { data: commandersSet } = useCommandersSet();
+const { data: commandersSet } = provideCommandersSet();
 function checkIsCommander(card: Card): boolean {
   if (!card?.card_data?.name || !commandersSet.value) return false;
   return commandersSet.value.has(card.card_data.name);
@@ -510,14 +515,13 @@ const groupedResults = computed<CardGroup[] | null>(() => {
 });
 
 const jumpToGroups = computed(() =>
-  (groupedResults.value || [])
+  (groupedResults.value ?? [])
     .filter((group) => group.label)
     .map((group) => group.label),
 );
 
 const accordionItems = computed<AccordionItem[]>(() => {
-  if (!groupedResults.value) return [];
-  return groupedResults.value
+  return (groupedResults.value ?? [])
     .filter((g) => g.label)
     .map((g) => ({
       label: g.label,
@@ -582,6 +586,7 @@ function clearPendingPreviewCard(cardId?: string) {
 }
 
 function setPreviewCard(card: Card) {
+  if (!isDesktopPreview.value) return;
   const nextCardId = card.card_data.id;
   // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
   if (nextCardId === hoveredCardId.value) return;
@@ -611,7 +616,7 @@ onUnmounted(() => {
 watch(
   accordionItems,
   (items) => {
-    openAccordionValues.value = items.map((i) => i.value as string);
+    openAccordionValues.value = items.map((item) => item.value as string);
   },
   { immediate: true },
 );

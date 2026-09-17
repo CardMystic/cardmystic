@@ -195,7 +195,10 @@
   </div>
 
   <!-- Create Deck Modal -->
-  <CreateDeckModal v-model:open="isCreateModalOpen" />
+  <LazyCreateDeckModal
+    v-if="isCreateModalOpen"
+    v-model:open="isCreateModalOpen"
+  />
 </template>
 
 <script setup lang="ts">
