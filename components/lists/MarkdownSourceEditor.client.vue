@@ -36,6 +36,7 @@ import {
   emojiTag,
   youtubeTag,
   searchEmbedTag,
+  textColorTag,
   type MarkdownSourceEditorHandle,
   type EditorCardHover,
 } from '~/utils/markdownEditorSyntax';
@@ -73,6 +74,7 @@ const highlighting = HighlightStyle.define([
   { tag: emojiTag, class: 'cm-emoji' },
   { tag: youtubeTag, class: 'cm-youtube' },
   { tag: searchEmbedTag, class: 'cm-search-embed' },
+  { tag: textColorTag, class: 'cm-html' },
 ]);
 
 onMounted(() => {

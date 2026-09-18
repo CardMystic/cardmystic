@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { marked } from 'marked';
-import { markdownTextColorEdit } from '~/utils/markdownTextColor';
+import sanitizeHtml from 'sanitize-html';
+import {
+  markdownTextColorEdit,
+  parseColoredMarkdown,
+} from '~/utils/markdownTextColor';
 
 describe('Markdown text colors', () => {
   it('colors selected paragraph text without changing the surrounding text', () => {
@@ -14,9 +17,7 @@ describe('Markdown text colors', () => {
       source.slice(0, edit.range.from) +
         edit.text +
         source.slice(edit.range.to),
-    ).toBe(
-      'Keep this <span style="color: #dc2626">important phrase</span> visible.',
-    );
+    ).toBe('Keep this [important phrase]{color=#dc2626} visible.');
   });
 
   it('keeps heading, list and quote markers and blank paragraphs outside color spans', () => {
@@ -26,14 +27,23 @@ describe('Markdown text colors', () => {
       { from: 0, to: source.length },
       '#dc2626',
     )!;
-    const html = marked.parse(edit.text, { async: false });
+    const saved = sanitizeHtml(edit.text, {
+      allowedTags: ['details', 'summary'],
+      allowedAttributes: { details: ['open'] },
+      disallowedTagsMode: 'discard',
+    });
+    expect(saved).toContain('[Title]{color=#dc2626}');
+    expect(parseColoredMarkdown(saved)).toContain(
+      '<span style="color: #dc2626">Title</span>',
+    );
+    const html = parseColoredMarkdown(edit.text);
     expect(html).toContain(
       '<h1><span style="color: #dc2626">Title</span></h1>',
     );
     expect(html).toContain('<strong>paragraph</strong>');
     expect(html).toContain('<li><span style="color: #dc2626">Item</span></li>');
     expect(html).toContain('<blockquote>');
-    expect(edit.text).toContain('</span>\n\n<span');
+    expect(edit.text).toContain(']{color=#dc2626}\n\n[');
   });
 
   it('recolors the retained selection without nesting another wrapper', () => {
@@ -51,7 +61,7 @@ describe('Markdown text colors', () => {
       first.text.slice(0, second.range.from) +
         second.text +
         first.text.slice(second.range.to),
-    ).toBe('# <span style="color: #2563eb">Title</span>');
+    ).toBe('# [Title]{color=#2563eb}');
   });
 
   it('keeps multiline selections valid when applying another color', () => {
@@ -65,7 +75,7 @@ describe('Markdown text colors', () => {
       { from: first.selection.anchor, to: first.selection.head },
       '#2563eb',
     )!;
-    const html = marked.parse(second.text, { async: false });
+    const html = parseColoredMarkdown(second.text);
     expect(html).toContain('<h1>');
     expect(html).toContain('<p>');
     expect(html).not.toContain('#dc2626');
@@ -83,6 +93,26 @@ describe('Markdown text colors', () => {
     const result = 'Intro ' + edit.text;
     expect(result.slice(edit.selection.anchor, edit.selection.head)).toBe(
       'colored text',
+    );
+  });
+
+  it('renders inline Markdown while leaving code examples and ordinary links intact', () => {
+    const source = '[**bold** and [link](https://example.com)]{color=#DC2626}';
+    expect(parseColoredMarkdown(source)).toContain(
+      '<span style="color: #dc2626"><strong>bold</strong> and <a href="https://example.com">link</a></span>',
+    );
+    const tick = String.fromCharCode(96);
+    expect(parseColoredMarkdown(tick + source + tick)).not.toContain('<span');
+    expect(
+      parseColoredMarkdown(
+        tick.repeat(3) + '\n' + source + '\n' + tick.repeat(3),
+      ),
+    ).not.toContain('<span');
+    expect(
+      parseColoredMarkdown('[bad]{color=red;position:fixed}'),
+    ).not.toContain('<span');
+    expect(parseColoredMarkdown('[normal](https://example.com)')).toContain(
+      '<a href="https://example.com">normal</a>',
     );
   });
 

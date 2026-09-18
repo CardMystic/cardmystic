@@ -1,4 +1,72 @@
-/** Build an inline color edit while keeping Markdown block markers outside spans. */
+import { Marked, type TokenizerAndRendererExtension } from 'marked';
+
+/** Match one inline color, including nested Markdown links and escaped brackets. */
+export function matchMarkdownTextColor(source: string) {
+  if (!source.startsWith('[')) return null;
+  let depth = 1;
+  for (let i = 1; i < source.length; i++) {
+    const char = source[i];
+    if (char === '\n' || char === '\r') return null;
+    if (char === '\\') {
+      i++;
+      continue;
+    }
+    if (char.charCodeAt(0) === 96) {
+      let length = 1;
+      while (source[i + length] === char) length++;
+      const end = source.indexOf(char.repeat(length), i + length);
+      if (end !== -1) {
+        i = end + length - 1;
+        continue;
+      }
+    }
+    if (char === '[') depth++;
+    if (char !== ']') continue;
+    depth--;
+    if (depth !== 0) continue;
+    const suffix = source.slice(i + 1).match(/^\{color=(#[0-9a-f]{6})\}/i);
+    if (!suffix) return null;
+    return {
+      raw: source.slice(0, i + 1 + suffix[0].length),
+      text: source.slice(1, i),
+      color: suffix[1].toLowerCase(),
+    };
+  }
+  return null;
+}
+
+const colorExtension: TokenizerAndRendererExtension = {
+  name: 'textColor',
+  level: 'inline',
+  start: (source) => source.indexOf('['),
+  tokenizer(source) {
+    const color = matchMarkdownTextColor(source);
+    if (!color) return;
+    return {
+      type: 'textColor',
+      ...color,
+      tokens: this.lexer.inlineTokens(color.text),
+    };
+  },
+  renderer(token) {
+    return (
+      '<span style="color: ' +
+      token.color +
+      '">' +
+      this.parser.parseInline(token.tokens ?? []) +
+      '</span>'
+    );
+  },
+};
+
+const coloredMarkdown = new Marked({ extensions: [colorExtension] });
+
+/** Output still goes through the normal HTML sanitizer before display. */
+export function parseColoredMarkdown(source: string): string {
+  return coloredMarkdown.parse(source, { async: false });
+}
+
+/** Keep Markdown block markers outside the inline color syntax. */
 export function markdownTextColorEdit(
   source: string,
   selection: { from: number; to: number },
@@ -9,22 +77,27 @@ export function markdownTextColorEdit(
   const selected = source.slice(from, to) || 'colored text';
   let replaceFrom = from;
   let replaceTo = to;
-  // Applying another color to the selection left by this action replaces the
-  // existing wrapper, instead of accumulating nested spans.
-  const opening = source
-    .slice(0, from)
-    .match(/<span style="color: #[0-9a-f]{6}">$/i);
-  if (
-    !selected.includes('\n') &&
-    opening &&
-    source.slice(to).startsWith('</span>')
-  ) {
-    replaceFrom -= opening[0].length;
-    replaceTo += '</span>'.length;
+  const closing = source.slice(to).match(/^\]\{color=#[0-9a-f]{6}\}/i);
+  if (!selected.includes('\n') && source[from - 1] === '[' && closing) {
+    replaceFrom--;
+    replaceTo += closing[0].length;
+  } else {
+    // Convert the old HTML wrapper when recoloring a still-open draft.
+    const opening = source
+      .slice(0, from)
+      .match(/<span style="color: #[0-9a-f]{6}">$/i);
+    if (
+      !selected.includes('\n') &&
+      opening &&
+      source.slice(to).startsWith('</span>')
+    ) {
+      replaceFrom -= opening[0].length;
+      replaceTo += '</span>'.length;
+    }
   }
 
-  const open = `<span style="color: ${color.toLowerCase()}">`;
-  const close = '</span>';
+  const open = '[';
+  const close = ']{color=' + color.toLowerCase() + '}';
   let firstTextOffset = 0;
   let lastTextEnd = 0;
   let offset = 0;
@@ -39,13 +112,15 @@ export function markdownTextColorEdit(
       const prefix = atLineStart
         ? (line.match(/^(\s*(?:(?:#{1,6}|>|[-+*]|\d+[.)])\s+)*)/)?.[0] ?? '')
         : '';
-      const body = line
+      let body = line
         .slice(prefix.length)
-        .replace(/<span style="color: #[0-9a-f]{6}">/gi, open);
+        .replace(/\]\{color=#[0-9a-f]{6}\}/gi, close);
       if (!body) {
         offset += line.length + 1;
         return line;
       }
+      const existing = matchMarkdownTextColor(body);
+      if (existing?.raw === body) body = existing.text;
       const result = prefix + open + body + close;
       if (!firstTextOffset)
         firstTextOffset = offset + prefix.length + open.length;
