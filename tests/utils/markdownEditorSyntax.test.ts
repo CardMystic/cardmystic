@@ -12,6 +12,7 @@ const customTypes = new Set([
   'MysticEmoji',
   'YouTubeEmbed',
   'SearchEmbed',
+  'TextColorMark',
 ]);
 const markdownParser = parser.configure([GFM, cardMysticMarkdown]);
 function tokens(source: string) {
@@ -57,6 +58,16 @@ describe('CardMystic editor syntax', () => {
     expect(
       tokens(tick.repeat(3) + 'md\n' + syntax + '\n' + tick.repeat(3)),
     ).toEqual([]);
+  });
+
+  it('highlights color delimiters and preserves literal code examples', () => {
+    const syntax = '[red **text**]{color=#dc2626}';
+    expect(tokens(syntax)).toEqual([
+      { type: 'TextColorMark', text: '[' },
+      { type: 'TextColorMark', text: ']{color=#dc2626}' },
+    ]);
+    const tick = String.fromCharCode(96);
+    expect(tokens(tick + syntax + tick)).toEqual([]);
   });
 
   it('updates the syntax tree when a token is completed and undone', () => {

@@ -262,13 +262,15 @@
 </template>
 
 <script setup lang="ts">
-import { marked } from 'marked';
 import { refDebounced } from '~/utils/refDebounced';
 import type {
   MarkdownSourceEditorHandle,
   EditorCardHover,
 } from '~/utils/markdownEditorSyntax';
-import { markdownTextColorEdit } from '~/utils/markdownTextColor';
+import {
+  markdownTextColorEdit,
+  parseColoredMarkdown,
+} from '~/utils/markdownTextColor';
 import { sanitizeMarkdownHtml } from '~/utils/sanitizeMarkdown';
 import { emojify, search as searchEmoji } from 'node-emoji';
 import 'mana-font/css/mana.min.css';
@@ -700,7 +702,7 @@ const renderedHtml = computed(() => {
   // so card names / URLs can never be misinterpreted as emoji names.
   pre = emojify(pre);
 
-  const html = marked.parse(pre, { async: false }) as string;
+  const html = parseColoredMarkdown(pre);
   const sanitized = sanitizeMarkdownHtml(html);
 
   // --- Post-process: swap tokens back with final HTML ---

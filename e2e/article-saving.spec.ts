@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { createRequire } from 'node:module';
 import {
   BACKEND,
   SUPABASE as SUPABASE_URL,
@@ -7,6 +8,8 @@ import {
   mockSupabaseAuth,
   gotoHydrated,
 } from './utils/mocks';
+
+const sanitizeHtml = createRequire(import.meta.url)('sanitize-html');
 
 const initial = {
   id: '10000000-0000-4000-8000-000000000001',
@@ -474,7 +477,14 @@ test('colors headings and paragraph selections, supports custom colors, and save
   await page.route(endpoint, (route) => {
     const body = route.request().postDataJSON();
     requests.push(body);
-    return route.fulfill({ json: { article: { ...initial, ...body } } });
+    const content = sanitizeHtml(body.content, {
+      allowedTags: ['details', 'summary'],
+      allowedAttributes: { details: ['open'] },
+      disallowedTagsMode: 'discard',
+    });
+    return route.fulfill({
+      json: { article: { ...initial, ...body, content } },
+    });
   });
   const editor = page.getByRole('textbox', {
     name: 'Markdown editor',
@@ -521,7 +531,7 @@ test('colors headings and paragraph selections, supports custom colors, and save
   await expect
     .poll(() => requests.at(-1)?.content)
     .toBe(
-      '# <span style="color: #dc2626">Colored heading</span>\n\nNormal paragraph with <span style="color: #123abc">emphasis</span>.',
+      '# [Colored heading]{color=#dc2626}\n\nNormal paragraph with [emphasis]{color=#123abc}.',
     );
   await page.getByRole('button', { name: 'Back to Edit', exact: true }).click();
   await page.getByRole('button', { name: 'View Preview', exact: true }).click();
