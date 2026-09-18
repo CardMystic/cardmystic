@@ -147,6 +147,17 @@ test('all deferred search modes work and color filters render SVG symbols withou
   await page.setViewportSize({ width: 1440, height: 1000 });
   const manaRequests = trackManaAssets(page);
   await gotoHydrated(page, '/');
+  // Mode changes can briefly expose the Explore links as the form changes
+  // height. Reveal them explicitly so route prefetching cannot escape this
+  // asset budget just because the test finishes before the links are visible.
+  await page
+    .getByRole('navigation', { name: 'Explore CardMystic' })
+    .scrollIntoViewIfNeeded();
+  // This check measures background network activity, including lazy hydration
+  // and any route prefetches triggered by making the navigation visible.
+  await page.waitForLoadState('networkidle');
+  expect(manaRequests).toEqual([]);
+
   const search = page.locator('.search-container');
 
   for (const [mode, placeholder] of [
