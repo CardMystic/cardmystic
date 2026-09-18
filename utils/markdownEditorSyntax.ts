@@ -1,3 +1,4 @@
+import { matchMarkdownTextColor } from './markdownTextColor';
 import { Tag } from '@lezer/highlight';
 import type { MarkdownConfig } from '@lezer/markdown';
 
@@ -7,6 +8,7 @@ export const manaSymbolTag = Tag.define();
 export const emojiTag = Tag.define();
 export const youtubeTag = Tag.define();
 export const searchEmbedTag = Tag.define();
+export const textColorTag = Tag.define();
 
 // Extend Markdown's incremental inline parser. Code spans and fenced code
 // retain Markdown's own precedence, so token-looking examples stay code.
@@ -18,12 +20,25 @@ export const cardMysticMarkdown: MarkdownConfig = {
     { name: 'MysticEmoji', style: emojiTag },
     { name: 'YouTubeEmbed', style: youtubeTag },
     { name: 'SearchEmbed', style: searchEmbedTag },
+    { name: 'TextColorMark', style: textColorTag },
   ],
   parseInline: [
     {
       name: 'CardMysticTokens',
       before: 'Link',
       parse(cx, next, pos) {
+        if (next === 91 && matchMarkdownTextColor(cx.slice(pos, cx.end))) {
+          return cx.addElement(cx.elt('TextColorMark', pos, pos + 1));
+        }
+        if (next === 93) {
+          const closing = cx
+            .slice(pos, cx.end)
+            .match(/^\]\{color=#[0-9a-f]{6}\}/i);
+          if (closing)
+            return cx.addElement(
+              cx.elt('TextColorMark', pos, pos + closing[0].length),
+            );
+        }
         let name: string;
         let match: RegExpMatchArray | null;
         // Only slice the inline text at plausible token starts.
