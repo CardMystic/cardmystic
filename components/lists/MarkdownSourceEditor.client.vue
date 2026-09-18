@@ -35,6 +35,7 @@ import {
   manaSymbolTag,
   emojiTag,
   youtubeTag,
+  searchEmbedTag,
   type MarkdownSourceEditorHandle,
   type EditorCardHover,
 } from '~/utils/markdownEditorSyntax';
@@ -71,6 +72,7 @@ const highlighting = HighlightStyle.define([
   { tag: manaSymbolTag, class: 'cm-mana-symbol' },
   { tag: emojiTag, class: 'cm-emoji' },
   { tag: youtubeTag, class: 'cm-youtube' },
+  { tag: searchEmbedTag, class: 'cm-search-embed' },
 ]);
 
 onMounted(() => {
@@ -208,9 +210,9 @@ const handle: MarkdownSourceEditorHandle = {
     const selection = view?.state.selection.main;
     return { from: selection?.from ?? 0, to: selection?.to ?? 0 };
   },
-  replaceSelection(text, selection) {
+  replaceSelection(text, selection, replaceRange) {
     if (!view) return;
-    const range = view.state.selection.main;
+    const range = replaceRange ?? view.state.selection.main;
     view.dispatch({
       changes: { from: range.from, to: range.to, insert: text },
       selection: selection ?? { anchor: range.from + text.length },
@@ -251,7 +253,8 @@ defineExpose(handle);
 .markdown-source-editor .cm-code {
   color: #7c3aed;
 }
-.markdown-source-editor .cm-link {
+.markdown-source-editor .cm-link,
+.markdown-source-editor .cm-search-embed {
   color: #0891b2;
 }
 .markdown-source-editor .cm-html {

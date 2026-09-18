@@ -11,6 +11,7 @@ const customTypes = new Set([
   'ManaSymbol',
   'MysticEmoji',
   'YouTubeEmbed',
+  'SearchEmbed',
 ]);
 const markdownParser = parser.configure([GFM, cardMysticMarkdown]);
 function tokens(source: string) {
@@ -44,6 +45,17 @@ describe('CardMystic editor syntax', () => {
       tokens(
         '`[[Sol Ring]] {R} :smile:`\n\n```md\n((Lightning Bolt))\n```\n\n[[unfinished\n((unfinished\n{R\n:smile',
       ),
+    ).toEqual([]);
+  });
+
+  it('highlights explicit search syntax but leaves code examples literal', () => {
+    const syntax =
+      '@[search](https://cardmystic.com/search/all/smart?query=draw%20cards)';
+    const tick = String.fromCharCode(96);
+    expect(tokens(syntax)).toEqual([{ type: 'SearchEmbed', text: syntax }]);
+    expect(tokens(tick + syntax + tick)).toEqual([]);
+    expect(
+      tokens(tick.repeat(3) + 'md\n' + syntax + '\n' + tick.repeat(3)),
     ).toEqual([]);
   });
 

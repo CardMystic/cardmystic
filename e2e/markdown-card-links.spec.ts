@@ -6,8 +6,18 @@ const LIST_ID = '10000000-0000-4000-8000-000000000902';
 const BOLT_ID = '4457ed35-7c10-48c8-9776-456485fdf070';
 const ORACLE_ID = '6d3f4ed9-6d6f-4fec-89c9-1f39da1c2a2f';
 const OWNER_ID = '10000000-0000-4000-8000-000000000903';
+const SEARCH_HREF =
+  '/search/all/smart?searchType=smart&query=draw%20cards&limit=12';
+const SEARCH_SYNTAX = '@[search](https://cardmystic.com' + SEARCH_HREF + ')';
 const content = [
   '# Markdown card links',
+  SEARCH_SYNTAX,
+  '[draw cards](https://cardmystic.com' + SEARCH_HREF + ')',
+  String.fromCharCode(96).repeat(3) +
+    'md\n' +
+    SEARCH_SYNTAX +
+    '\n' +
+    String.fromCharCode(96).repeat(3),
   "[[Lightning Bolt]] and [[Thassa's Oracle]].",
   'Repeated mention: [[Lightning Bolt]].',
   '[[Unknown Card]] and [[Invalid ID Card]].',
@@ -477,4 +487,70 @@ test.describe('touch card mentions', () => {
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(new RegExp(`/card/${BOLT_ID}$`));
   });
+});
+
+for (const kind of ['article', 'primer'] as const) {
+  test(
+    kind + ' search embed edits the query and starts the selected search',
+    async ({ page }) => {
+      await openMarkdown(page, kind);
+      const embed = page.locator('.search-embed');
+      await expect(embed).toHaveCount(1);
+      await expect(
+        embed.getByRole('link', {
+          name: 'Smart Search: draw cards',
+          exact: true,
+        }),
+      ).toHaveAttribute('href', SEARCH_HREF);
+      await expect(
+        page.getByRole('link', { name: 'draw cards', exact: true }),
+      ).toHaveAttribute('href', 'https://cardmystic.com' + SEARCH_HREF);
+      await expect(
+        page.locator('.primer-preview pre code').last(),
+      ).toContainText('@[search](');
+      await expect(
+        embed.getByRole('searchbox', { name: 'Smart Search query' }),
+      ).toHaveValue('draw cards');
+      await page.route(BACKEND + '/search/colbert**', (route) =>
+        route.fulfill({ json: { results: [] } }),
+      );
+      const search = page.waitForRequest(
+        (request) =>
+          request.url().includes('/search/colbert') &&
+          request.method() === 'POST',
+      );
+      await embed
+        .getByRole('searchbox', { name: 'Smart Search query' })
+        .fill('creatures that draw cards');
+      await embed.getByRole('button', { name: 'TRY ME' }).click();
+      await expect(page).toHaveURL(/\/search\/all\/smart\?/);
+      const destination = new URL(page.url());
+      expect(destination.searchParams.get('query')).toBe(
+        'creatures that draw cards',
+      );
+      expect(destination.searchParams.get('limit')).toBe('12');
+      expect((await search).postDataJSON()).toMatchObject({
+        query: 'creatures that draw cards',
+      });
+    },
+  );
+}
+
+test('search embed links preserve the original query and support narrow screens', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openMarkdown(page);
+  const embed = page.locator('.search-embed');
+  await expect(embed.getByRole('button', { name: 'TRY ME' })).toBeVisible();
+  const box = await embed.boundingBox();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  await expect(embed.getByRole('searchbox')).toHaveValue('draw cards');
+  await embed
+    .getByRole('link', { name: 'Smart Search: draw cards', exact: true })
+    .click();
+  await expect(page).toHaveURL(new RegExp('/search/all/smart'));
+  expect(new URL(page.url()).searchParams.get('query')).toBe('draw cards');
+  expect(new URL(page.url()).searchParams.get('limit')).toBe('12');
 });
