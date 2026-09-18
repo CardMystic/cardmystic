@@ -24,6 +24,13 @@
     "gen:types": "npx supabase gen types typescript --project-id ddbgietanhxrozzmogur > database.types.ts"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.5",
+    "@codemirror/view": "^6.43.12",
+    "@lezer/highlight": "^1.2.3",
+    "@lezer/markdown": "^1.7.2",
     "@nuxt/ui": "^3.3.7",
     "@supabase/supabase-js": "^2.112.1",
     "@tanstack/vue-query": "^5.101.4",
