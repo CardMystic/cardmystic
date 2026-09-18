@@ -103,7 +103,9 @@ test('one button saves details and content, preserves failed edits, and works in
   await page
     .getByPlaceholder('What is this article about?')
     .fill('Updated description');
-  await page.locator('textarea.editor-textarea').fill('# Updated content');
+  await page
+    .getByRole('textbox', { name: 'Markdown editor', exact: true })
+    .fill('# Updated content');
   await page.getByRole('switch').click();
   const save = page.getByRole('button', { name: 'Save Article', exact: true });
   await expect(save).toHaveCount(1);
@@ -114,9 +116,9 @@ test('one button saves details and content, preserves failed edits, and works in
   await expect(
     page.getByRole('alert').filter({ hasText: 'Article could not be saved' }),
   ).toContainText('Database temporarily unavailable (500)');
-  await expect(page.locator('textarea.editor-textarea')).toHaveValue(
-    '# Updated content',
-  );
+  await expect(
+    page.getByRole('textbox', { name: 'Markdown editor', exact: true }),
+  ).toHaveText('# Updated content');
   expect(requests).toEqual([
     {
       title: 'Updated title',
@@ -164,19 +166,23 @@ test('edits made while saving stay unsaved and survive the response', async ({
     await gate;
     await route.fulfill({ json: { article: { ...initial, ...body } } });
   });
-  await page.locator('textarea.editor-textarea').fill('Submitted content');
+  await page
+    .getByRole('textbox', { name: 'Markdown editor', exact: true })
+    .fill('Submitted content');
   await page.getByPlaceholder('Article title').fill('Submitted title');
   const save = page.getByRole('button', { name: 'Save Article', exact: true });
   await save.click();
   await expect.poll(() => requests.length).toBe(1);
   await expect(save).toBeDisabled();
-  await page.locator('textarea.editor-textarea').fill('Newer content');
+  await page
+    .getByRole('textbox', { name: 'Markdown editor', exact: true })
+    .fill('Newer content');
   await page.getByPlaceholder('Article title').fill('Newer title');
   release();
   await expect(save).toBeEnabled();
-  await expect(page.locator('textarea.editor-textarea')).toHaveValue(
-    'Newer content',
-  );
+  await expect(
+    page.getByRole('textbox', { name: 'Markdown editor', exact: true }),
+  ).toHaveText('Newer content');
   await expect(page.getByPlaceholder('Article title')).toHaveValue(
     'Newer title',
   );
@@ -210,15 +216,17 @@ test('a token refresh and failed background user lookup do not discard the draft
         : { status: 500, json: { message: 'Try later' } },
     );
   });
-  await page.locator('textarea.editor-textarea').fill('Keep this draft');
+  await page
+    .getByRole('textbox', { name: 'Markdown editor', exact: true })
+    .fill('Keep this draft');
   await page.getByRole('button', { name: 'Save Article', exact: true }).click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'Article could not be saved' }),
   ).toContainText('Try later (500)');
   await expect.poll(() => failedUserChecks).toBeGreaterThan(0);
-  await expect(page.locator('textarea.editor-textarea')).toHaveValue(
-    'Keep this draft',
-  );
+  await expect(
+    page.getByRole('textbox', { name: 'Markdown editor', exact: true }),
+  ).toHaveText('Keep this draft');
   await expect(
     page.getByRole('button', { name: 'Save Article', exact: true }),
   ).toBeEnabled();
@@ -280,7 +288,9 @@ test('an expired session keeps the editor open so the writer can sign in and ret
     }),
   );
   await page.getByPlaceholder('Article title').fill('Unsaved title');
-  await page.locator('textarea.editor-textarea').fill('Unsaved draft');
+  await page
+    .getByRole('textbox', { name: 'Markdown editor', exact: true })
+    .fill('Unsaved draft');
   await page.getByRole('button', { name: 'Save Article', exact: true }).click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'Article could not be saved' }),
@@ -288,9 +298,9 @@ test('an expired session keeps the editor open so the writer can sign in and ret
   await expect(page.getByPlaceholder('Article title')).toHaveValue(
     'Unsaved title',
   );
-  await expect(page.locator('textarea.editor-textarea')).toHaveValue(
-    'Unsaved draft',
-  );
+  await expect(
+    page.getByRole('textbox', { name: 'Markdown editor', exact: true }),
+  ).toHaveText('Unsaved draft');
 });
 
 test('429 preserves the draft and displays the wait message without replaying the save', async ({
@@ -302,7 +312,9 @@ test('429 preserves the draft and displays the wait message without replaying th
     return route.fulfill({ status: 429, body: 'Rate limited' });
   });
   await page.getByPlaceholder('Article title').fill('Keep this title');
-  await page.locator('textarea.editor-textarea').fill('# Keep this draft');
+  await page
+    .getByRole('textbox', { name: 'Markdown editor', exact: true })
+    .fill('# Keep this draft');
   await page.getByRole('button', { name: 'Save Article', exact: true }).click();
   const alert = page
     .getByRole('alert')
@@ -310,11 +322,147 @@ test('429 preserves the draft and displays the wait message without replaying th
   await expect(alert).toContainText(
     '429 Too Many Requests, Try again in 60 seconds',
   );
-  await expect(page.locator('textarea.editor-textarea')).toHaveValue(
-    '# Keep this draft',
-  );
+  await expect(
+    page.getByRole('textbox', { name: 'Markdown editor', exact: true }),
+  ).toHaveText('# Keep this draft');
   await expect(page.getByPlaceholder('Article title')).toHaveValue(
     'Keep this title',
   );
   expect(requests).toBe(1);
+});
+
+test('formatting, selection and undo survive switching editor modes', async ({
+  page,
+}) => {
+  const editor = page.getByRole('textbox', {
+    name: 'Markdown editor',
+    exact: true,
+  });
+  await editor.fill('Selected words');
+  await editor.press('ControlOrMeta+a');
+  await page.getByRole('button', { name: 'Bold', exact: true }).click();
+  await expect(editor).toHaveText('**Selected words**');
+  await page
+    .getByRole('button', { name: 'Split Preview', exact: true })
+    .click();
+  await expect(page.locator('.primer-preview strong')).toHaveText(
+    'Selected words',
+  );
+  await page.getByRole('button', { name: 'Back to Edit', exact: true }).click();
+  await page.getByRole('button', { name: 'View Preview', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to Edit', exact: true }).click();
+  // The original selection is still selected, even after hiding the editor.
+  await page.getByRole('button', { name: 'Italic', exact: true }).click();
+  await expect(editor).toHaveText('**_Selected words_**');
+  await editor.press('ControlOrMeta+z');
+  await expect(editor).toHaveText('**Selected words**');
+  await editor.press('ControlOrMeta+z');
+  await expect(editor).toHaveText('Selected words');
+  await editor.press('ControlOrMeta+Shift+Z');
+  await expect(editor).toHaveText('**Selected words**');
+});
+
+test('custom syntax, hover images and symbol pickers work in the source editor', async ({
+  page,
+}) => {
+  await page.route(`${BACKEND}/cards/cards-by-names`, (route) =>
+    route.fulfill({
+      json: [
+        {
+          name: 'Sol Ring',
+          oracle_id: '00000000-0000-4000-8000-000000000001',
+          image_uris: { normal: '/ugin.webp' },
+        },
+      ],
+    }),
+  );
+  const editor = page.getByRole('textbox', {
+    name: 'Markdown editor',
+    exact: true,
+  });
+  await editor.fill('[[Sol Ring]] ((Sol Ring)) {R} :smile:');
+  await expect(editor.locator('.cm-card-link')).toHaveText('[[Sol Ring]]');
+  await expect(editor.locator('.cm-card-image')).toHaveText('((Sol Ring))');
+  await expect(editor.locator('.cm-mana-symbol')).toHaveText('{R}');
+  await expect(editor.locator('.cm-emoji')).toHaveText(':smile:');
+  await expect
+    .poll(async () => {
+      await editor.locator('.cm-card-link').hover();
+      return page.locator('img[src="/ugin.webp"]').count();
+    })
+    .toBeGreaterThan(0);
+  await editor.press('ControlOrMeta+End');
+  await page.getByRole('button', { name: 'Insert emoji', exact: true }).click();
+  await page.getByTitle(':fire:', { exact: true }).click();
+  await expect(editor).toContainText(':fire:');
+  await page
+    .getByRole('button', { name: 'Insert Magic symbol', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Insert White mana', exact: true })
+    .click();
+  await expect(editor).toContainText('{W}');
+  await expect(editor.locator('.cm-mana-symbol').last()).toHaveText('{W}');
+});
+
+test('split preview waits for a typing pause while saving uses the latest draft', async ({
+  page,
+}) => {
+  const requests: Record<string, unknown>[] = [];
+  await page.route(endpoint, (route) => {
+    const body = route.request().postDataJSON();
+    requests.push(body);
+    return route.fulfill({ json: { article: { ...initial, ...body } } });
+  });
+  const editor = page.getByRole('textbox', {
+    name: 'Markdown editor',
+    exact: true,
+  });
+  await page
+    .getByRole('button', { name: 'Split Preview', exact: true })
+    .click();
+  const preview = page.locator('.primer-preview');
+  await expect(preview).toContainText('Initial content');
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await editor.fill('# Fresh draft');
+  await page.clock.runFor(100);
+  await expect(editor).toHaveText('# Fresh draft');
+  await expect(preview).toContainText('Initial content');
+  await page.getByRole('button', { name: 'Save Article', exact: true }).click();
+  await expect.poll(() => requests.at(-1)?.content).toBe('# Fresh draft');
+  await page.clock.runFor(201);
+  await expect(preview).toContainText('Fresh draft');
+
+  await editor.fill('# Open immediately');
+  await page.getByRole('button', { name: 'Back to Edit', exact: true }).click();
+  await page.getByRole('button', { name: 'View Preview', exact: true }).click();
+  await expect(preview).toContainText('Open immediately');
+});
+
+test('large drafts render only visible source lines and preserve the full saved text', async ({
+  page,
+}) => {
+  const requests: Record<string, unknown>[] = [];
+  await page.route(endpoint, (route) => {
+    const body = route.request().postDataJSON();
+    requests.push(body);
+    return route.fulfill({ json: { article: { ...initial, ...body } } });
+  });
+  const editor = page.getByRole('textbox', {
+    name: 'Markdown editor',
+    exact: true,
+  });
+  const content = Array.from(
+    { length: 1500 },
+    (_, i) => `Paragraph ${i}: **Strategy** and _synergy_ with the deck.\n`,
+  ).join('\n');
+  await editor.fill(content);
+  await editor.press('ControlOrMeta+End');
+  await editor.pressSequentially('Latest ending');
+  expect(await editor.locator('.cm-line').count()).toBeLessThan(200);
+  await page.getByRole('button', { name: 'Save Article', exact: true }).click();
+  await expect
+    .poll(() => requests.at(-1)?.content)
+    .toBe(content + 'Latest ending');
 });
