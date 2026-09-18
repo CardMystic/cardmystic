@@ -24,30 +24,30 @@
           <Search :show-suggested-searches="true" />
         </div>
 
-        <!-- Right: fanned hero cards + Ready To Search example.
-             Self-hosted WebPs (~40 kB each) are much smaller than the
-             equivalent Scryfall `normal` JPGs (~100 kB each) and don't
-             add cross-origin DNS/connect time to LCP. Sized at the 2×
-             DPR of their CSS box so they look crisp on retina without
-             wasted bytes. -->
+        <!-- Desktop artwork stays server-rendered. Mobile selects an inline
+             placeholder so hidden images never download before hydration. -->
         <div class="hero-right">
           <NuxtLink
             v-for="card in heroCards"
             :key="card.id"
             :to="`/card/${card.id}`"
+            no-prefetch
             class="hero-card"
             :class="card.position"
           >
-            <img
-              :src="card.image"
-              :alt="card.name"
-              width="360"
-              height="502"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-              class="hero-card-img"
-            />
+            <picture>
+              <source media="(min-width: 1024px)" :srcset="card.image" />
+              <img
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                :alt="card.name"
+                width="360"
+                height="502"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+                class="hero-card-img"
+              />
+            </picture>
           </NuxtLink>
 
           <!-- Example query matching the cards above -->
@@ -56,6 +56,7 @@
               path: '/search/all/smart',
               query: { query: readyToSearch.query },
             }"
+            no-prefetch
             class="ready-card"
           >
             <div class="flex items-start justify-between gap-2">
@@ -179,13 +180,12 @@ useSeoMeta({
 
 useHead({
   link: [
-    // Preload the hero card images so the browser can fetch them
-    // in parallel with the HTML document instead of waiting for the
-    // `<img>` tags to be discovered during render.
+    // Match the picture sources and layout breakpoint: preload only on desktop.
     {
       rel: 'preload',
       as: 'image',
       href: '/ugin.webp',
+      media: '(min-width: 1024px)',
       type: 'image/webp',
       fetchpriority: 'high',
     },
@@ -193,6 +193,7 @@ useHead({
       rel: 'preload',
       as: 'image',
       href: '/kaalia.webp',
+      media: '(min-width: 1024px)',
       type: 'image/webp',
       fetchpriority: 'high',
     },
@@ -301,8 +302,7 @@ setPageInfo({
   height: 560px
   margin: 0 auto
   @media (max-width: 1023px)
-    max-width: 400px
-    height: 470px
+    display: none
 
 .hero-card
   position: absolute

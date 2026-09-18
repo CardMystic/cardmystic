@@ -207,6 +207,7 @@ const MAX_DECK_SIZE = 200;
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import Filters from './Filters.vue';
@@ -265,6 +266,7 @@ const schema = z.object({
 type Schema = z.output<typeof schema>;
 
 const route = useRoute();
+const pageDefaults = useSearchPageDefaults();
 
 const isOnDeckbuilderPage = computed(() => route.path.includes('/deckbuilder'));
 const onSaveToDeck = computed(() =>
@@ -290,7 +292,9 @@ const numCardsInDecklist: Ref<number> = computed(() => {
 });
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
-const commanderParam = computed(() => String(route.query.commander || ''));
+const commanderParam = computed(() =>
+  String(pageDefaults?.query ?? route.query.commander ?? ''),
+);
 const partnerCommanderParam = computed(() =>
   String(route.query.partnerCommander || ''),
 );
@@ -308,6 +312,12 @@ const parsedFilters = computed(() => {
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
+  if (pageDefaults) {
+    return CardSearchFiltersSchema.parse({
+      ...base,
+      ...pageDefaults.filters.value,
+    });
+  }
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(
       JSON.parse(String(route.query.filters)),

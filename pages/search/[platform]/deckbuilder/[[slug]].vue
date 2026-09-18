@@ -119,10 +119,12 @@ import {
 import { parseDecklist } from '~/utils/decklist';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import { getSeoEntry } from '~/utils/seoQueries';
+import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 
 const { decklist: deckbuilderDecklist, showSaveAllModal } = useDeckbuilder();
 
 const route = useRoute();
+const pagePath = route.path;
 const platform = String(route.params.platform) as Platform;
 const slug = route.params.slug ? String(route.params.slug) : undefined;
 
@@ -172,6 +174,9 @@ const parsedFilters = computed(() => {
     seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters,
   );
 });
+provideSearchPageDefaults(
+  seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
+);
 
 useSeoMeta({
   robots: () =>
@@ -261,6 +266,8 @@ const { saveSearchQuery } = useSearchType();
 watch(
   () => route.query,
   (query) => {
+    // The outgoing page can remain mounted while the next route loads.
+    if (route.path !== pagePath) return;
     if (query.decklist || query.commander) saveSearchQuery('recommend', query);
   },
   { immediate: true },

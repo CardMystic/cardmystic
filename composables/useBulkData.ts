@@ -71,6 +71,7 @@ function createCommandersSet() {
     queryFn: async () => {
       const response = await fetch(
         `${config.public.backendUrl}/bulkdata/commanders.min.json`,
+        { signal: AbortSignal.timeout(5000) },
       );
       if (!response.ok) {
         throw new Error('Failed to fetch commanders');

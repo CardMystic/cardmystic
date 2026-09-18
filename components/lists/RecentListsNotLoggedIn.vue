@@ -17,19 +17,18 @@
           v-if="!loadedImages[item.id]"
           class="absolute inset-0 rounded-none"
         />
-        <!-- Hidden img to detect load -->
+        <!-- Native lazy loading keeps decorative art out of eager page loads. -->
         <img
           :src="item.image"
-          class="hidden"
-          @load="loadedImages[item.id] = true"
-        />
-        <!-- Background art (shown once loaded) -->
-        <div
-          class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-70 dark:opacity-50 transition-opacity duration-500"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          fetchpriority="low"
+          class="absolute inset-0 w-full h-full object-cover object-[center_10%] transition-opacity duration-500"
           :class="
             loadedImages[item.id] ? 'opacity-70 dark:opacity-50' : 'opacity-0'
           "
-          :style="{ backgroundImage: `url(${item.image})` }"
+          @load="loadedImages[item.id] = true"
         />
         <div
           class="absolute inset-0 bg-gradient-to-t from-white/60 via-white/25 dark:from-black/80 dark:via-black/40 to-transparent"

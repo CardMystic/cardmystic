@@ -28,6 +28,11 @@ export default defineNuxtConfig({
         },
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        // Verify AdSense ownership without loading ads while awaiting approval.
+        {
+          name: 'google-adsense-account',
+          content: 'ca-pub-8668014466736799',
+        },
       ],
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2' }],
       script: [
@@ -38,11 +43,6 @@ export default defineNuxtConfig({
         },
         {
           innerHTML: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','AW-17812762149');`,
-        },
-        {
-          async: true,
-          src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8668014466736799',
-          crossorigin: 'anonymous',
         },
       ],
     },

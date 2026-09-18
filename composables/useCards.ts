@@ -11,6 +11,7 @@ import type { CardLlmResponse } from '~/models/llmModel';
  */
 export function useCardDetails(oracleId: ComputedRef<string>) {
   const config = useRuntimeConfig();
+  const headers = useBackendRequestHeaders();
 
   type CardWithLlmResponse = {
     card: ScryfallCard;
@@ -26,7 +27,7 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
 
       const result = await $fetch<CardWithLlmResponse>(
         `${config.public.backendUrl}/cards/with-llm/${oracleId.value}`,
-        { signal: AbortSignal.timeout(10000) },
+        { headers, signal: AbortSignal.timeout(10000) },
       );
       if (!result?.card?.oracle_id) {
         throw createError({
@@ -140,6 +141,7 @@ export function useCardsByOracleIds(
  */
 export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
   const config = useRuntimeConfig();
+  const headers = useBackendRequestHeaders();
 
   const queryOptions = {
     queryKey: computed(() => [
@@ -155,6 +157,8 @@ export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
         {
           method: 'POST',
           body: { cardNames: nameList },
+          headers,
+          signal: AbortSignal.timeout(5000),
         },
       );
       return (scryfallCards || []).map(
@@ -174,12 +178,13 @@ export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
     staleTime: 1000 * 60 * 15,
   };
 
-  const { data, isLoading, error, refetch } = useQuery(queryOptions);
+  const { data, isLoading, error, refetch, suspense } = useQuery(queryOptions);
 
   return {
     cards: data,
     isLoading,
     error,
     refetch,
+    suspense,
   };
 }

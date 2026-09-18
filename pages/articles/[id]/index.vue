@@ -62,17 +62,12 @@
       <ArticleSocialBar :article="article" />
 
       <!-- Markdown content -->
-      <ClientOnly>
-        <MarkdownEditor
-          :model-value="article.content"
-          :editable="false"
-          :has-background="false"
-          empty-message="This article has no content yet."
-        />
-        <template #fallback>
-          <USkeleton class="h-96 w-full rounded-md" />
-        </template>
-      </ClientOnly>
+      <MarkdownEditor
+        :model-value="article.content"
+        :editable="false"
+        :has-background="false"
+        empty-message="This article has no content yet."
+      />
 
       <!-- Comments -->
       <ArticleComments

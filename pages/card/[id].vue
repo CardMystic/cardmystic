@@ -166,9 +166,11 @@
               variant="solid"
               icon="i-lucide-box"
               size="lg"
-              @click="getRecommendations"
+              :to="recommendationsSearchLink"
+              no-prefetch
+              @click="saveRecommendationsSearch"
               class="cursor-pointer"
-              aria-label="Get Deck Recommendations for this Commander"
+              :aria-label="`Recommended cards for ${card.name}`"
             />
           </UTooltip>
           <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
@@ -177,9 +179,11 @@
               variant="solid"
               icon="i-lucide-flame"
               size="lg"
-              @click="viewPopularCards"
+              :to="popularSearchLink"
+              no-prefetch
+              @click="savePopularSearch"
               class="cursor-pointer"
-              aria-label="Popular Cards for this Commander"
+              :aria-label="`Popular cards for ${card.name}`"
             />
           </UTooltip>
           <UTooltip text="Find similar cards">
@@ -188,9 +192,11 @@
               variant="solid"
               icon="i-mdi-cards-outline"
               size="lg"
-              @click="findSimilarCards"
+              :to="similarSearchLink"
+              no-prefetch
+              @click="saveSimilarSearch"
               class="cursor-pointer"
-              aria-label="Find similar cards"
+              :aria-label="`Cards similar to ${card.name}`"
             />
           </UTooltip>
           <UButton
@@ -404,9 +410,11 @@
                   variant="solid"
                   icon="i-lucide-box"
                   size="lg"
-                  @click="getRecommendations"
+                  :to="recommendationsSearchLink"
+                  no-prefetch
+                  @click="saveRecommendationsSearch"
                   class="cursor-pointer"
-                  aria-label="Get Deck Recommendations for this Commander"
+                  :aria-label="`Recommended cards for ${card.name}`"
                 />
               </UTooltip>
               <UTooltip
@@ -418,9 +426,11 @@
                   variant="solid"
                   icon="i-lucide-flame"
                   size="lg"
-                  @click="viewPopularCards"
+                  :to="popularSearchLink"
+                  no-prefetch
+                  @click="savePopularSearch"
                   class="cursor-pointer"
-                  aria-label="Popular Cards for this Commander"
+                  :aria-label="`Popular cards for ${card.name}`"
                 />
               </UTooltip>
               <UTooltip text="Find similar cards">
@@ -429,9 +439,11 @@
                   variant="solid"
                   icon="i-mdi-cards-outline"
                   size="lg"
-                  @click="findSimilarCards"
+                  :to="similarSearchLink"
+                  no-prefetch
+                  @click="saveSimilarSearch"
                   class="cursor-pointer"
-                  aria-label="Find similar cards"
+                  :aria-label="`Cards similar to ${card.name}`"
                 />
               </UTooltip>
               <UButton
@@ -625,13 +637,14 @@
                   </UButton>
                 </div>
                 <div class="flex justify-end mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="getRecommendations"
+                    :to="recommendationsSearchLink"
+                    no-prefetch
+                    @click="saveRecommendationsSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Recommended cards for {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isRecommendedCardsEffectivelyLoading"
@@ -673,13 +686,14 @@
                   </UButton>
                 </div>
                 <div class="flex justify-end mt-2 mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="viewPopularCards"
+                    :to="popularSearchLink"
+                    no-prefetch
+                    @click="savePopularSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Popular cards for {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isPopularCardsEffectivelyLoading"
@@ -702,13 +716,14 @@
                   Similar Cards
                 </h3>
                 <div class="flex justify-end mt-2 mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="findSimilarCards"
+                    :to="similarSearchLink"
+                    no-prefetch
+                    @click="saveSimilarSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Cards similar to {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
@@ -825,13 +840,14 @@
                   Similar Cards
                 </h3>
                 <div class="flex justify-end mt-2 mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="findSimilarCards"
+                    :to="similarSearchLink"
+                    no-prefetch
+                    @click="saveSimilarSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Cards similar to {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
@@ -889,6 +905,7 @@ import {
   standardizeFormatName,
 } from '@/utils/scryfall';
 import { safeJsonLd } from '~/utils/safeJsonLd';
+import { getSearchLink } from '~/utils/searchLinks';
 
 const route = useRoute();
 const router = useRouter();
@@ -896,16 +913,10 @@ const isFlipped = ref(false);
 const showMobileDetails = ref(false);
 const selectedPrinting = ref<string>('');
 
-// Keep last valid oracle ID so the page doesn't flicker to an empty/loading
-// state when navigating away (route param briefly becomes empty during transition).
-const _lastValidOracleId = ref(String(route.params.id) || '');
-watch(
-  () => route.params.id,
-  (id) => {
-    if (id) _lastValidOracleId.value = String(id);
-  },
-);
-const oracleIdParam = computed(() => _lastValidOracleId.value);
+// Nuxt keys this page by its card path. Keep each instance bound to that card
+// while an asynchronous destination (which may also have an id param) loads.
+const pageOracleId = String(route.params.id || '');
+const oracleIdParam = computed(() => pageOracleId);
 const { saveCardViewMutation } = useCardHistory();
 const { lastCard, setLastOpenedCard } = useLastOpenedCard();
 const { searchType, getPath, restoreSearchQuery } = useSearchType();
@@ -1331,7 +1342,29 @@ watch(
   { immediate: true },
 );
 
-function findSimilarCards() {
+const similarSearchLink = computed(() =>
+  getSearchLink({
+    platform: 'all',
+    searchType: 'similarity',
+    query: card.value?.name ?? '',
+  }),
+);
+const recommendationsSearchLink = computed(() =>
+  getSearchLink({
+    platform: 'all',
+    searchType: 'recommend',
+    query: card.value?.name ?? '',
+  }),
+);
+const popularSearchLink = computed(() =>
+  getSearchLink({
+    platform: 'all',
+    searchType: 'popular-by-commander',
+    query: card.value?.name ?? '',
+  }),
+);
+
+function saveSimilarSearch() {
   if (!card.value) return;
 
   const queryParams = {
@@ -1339,15 +1372,13 @@ function findSimilarCards() {
   };
 
   saveSearchQuery('similarity', queryParams);
-  router.push({ path: '/search/all/similarity', query: queryParams });
 }
 
-function getRecommendations() {
+function saveRecommendationsSearch() {
   const commanderName = card.value?.name;
   if (!commanderName) return;
   const queryParams = { commander: commanderName };
   saveSearchQuery('recommend', queryParams);
-  router.push({ path: '/search/all/deckbuilder', query: queryParams });
   queueMicrotask(() => {
     saveSearchMutation.mutate({
       query: commanderName,
@@ -1357,11 +1388,10 @@ function getRecommendations() {
   });
 }
 
-function viewPopularCards() {
+function savePopularSearch() {
   if (!card.value?.name) return;
   const queryParams = { commander: card.value.name };
   saveSearchQuery('popular-by-commander', queryParams);
-  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 
 // Use the similar cards composable - only fetch when 'similar' tab has been activated

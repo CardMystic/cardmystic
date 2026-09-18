@@ -6,6 +6,7 @@ import {
   fakeJwt,
   mockSupabaseAuth,
   gotoHydrated,
+  waitForHydration,
 } from './utils/mocks';
 
 const deck = {
@@ -125,7 +126,7 @@ async function revealHomeSections(page: Page) {
     .scrollIntoViewIfNeeded();
 }
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page }, testInfo) => {
   // Keep this fixture-only suite independent of real account data and trackers.
   await page.route(BACKEND + '/**', (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -141,29 +142,31 @@ test.beforeEach(async ({ page }) => {
     (route) =>
       route.fulfill({ contentType: 'application/javascript', body: '' }),
   );
-  await mockSupabaseAuth(page);
-  await page.route(SUPABASE + '/rest/v1/profiles**', (route) =>
-    route.fulfill({
-      json: {
-        id: FAKE_USER.id,
-        username: 'home-reader',
-        avatar_card_name: null,
+  if (!testInfo.tags.includes('@anonymous')) {
+    await mockSupabaseAuth(page);
+    await page.route(SUPABASE + '/rest/v1/profiles**', (route) =>
+      route.fulfill({
+        json: {
+          id: FAKE_USER.id,
+          username: 'home-reader',
+          avatar_card_name: null,
+        },
+      }),
+    );
+    await page.addInitScript(
+      ({ key, session }) => localStorage.setItem(key, JSON.stringify(session)),
+      {
+        key: 'sb-' + new URL(SUPABASE).hostname.split('.')[0] + '-auth-token',
+        session: {
+          access_token: fakeJwt(),
+          refresh_token: 'fake-refresh',
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'bearer',
+          user: FAKE_USER,
+        },
       },
-    }),
-  );
-  await page.addInitScript(
-    ({ key, session }) => localStorage.setItem(key, JSON.stringify(session)),
-    {
-      key: 'sb-' + new URL(SUPABASE).hostname.split('.')[0] + '-auth-token',
-      session: {
-        access_token: fakeJwt(),
-        refresh_token: 'fake-refresh',
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        token_type: 'bearer',
-        user: FAKE_USER,
-      },
-    },
-  );
+    );
+  }
   await page.route(BACKEND + '/metrics/query_count', (route) =>
     route.fulfill({ json: { totalQueries: 346242 } }),
   );
@@ -321,3 +324,128 @@ test('initial mobile home loads recent decks and defers featured content until v
     expect(request?.searchParams.get('limit')).toBe(limit);
   }
 });
+
+test(
+  'anonymous desktop home loads every section on direct visit and hard reload',
+  { tag: '@anonymous' },
+  async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    // Expire any prerendered query snapshot so this checks client requests too.
+    await page.clock.setFixedTime(new Date(Date.now() + 10 * 60 * 1000));
+    const pageErrors: string[] = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message));
+
+    const publicSections = sections.filter(
+      (section) => section.path !== '/supabase/card-lists',
+    );
+    for (const section of publicSections) {
+      await page.route(
+        (url) =>
+          url.origin === new URL(BACKEND).origin &&
+          url.pathname === section.path,
+        (route) => route.fulfill({ json: section.data }),
+      );
+    }
+    const exampleQuery = 'Artifacts that produce mana';
+    const topQuery = 'Creatures that draw cards';
+    await page.route(BACKEND + '/search/example', (route) =>
+      route.fulfill({
+        json: {
+          query: exampleQuery,
+          cards: [
+            {
+              card_name: 'Sol Ring',
+              rank: 1,
+              card_data: {
+                id: '20000000-0000-4000-8000-000000000001',
+                oracle_id: '20000000-0000-4000-8000-000000000002',
+                name: 'Sol Ring',
+                mana_cost: '{1}',
+                cmc: 1,
+                type_line: 'Artifact',
+                oracle_text: '{T}: Add {C}{C}.',
+                colors: [],
+                color_identity: [],
+                keywords: [],
+                games: ['paper'],
+                legalities: { commander: 'legal' },
+                prices: { usd: '1.00' },
+                image_uris: {
+                  normal: 'https://cards.scryfall.io/normal/sol-ring.jpg',
+                },
+                layout: 'normal',
+                rarity: 'uncommon',
+                set: 'cmm',
+                collector_number: '396',
+              },
+            },
+          ],
+        },
+      }),
+    );
+    await page.route(BACKEND + '/cache/top', (route) =>
+      route.fulfill({
+        json: [
+          {
+            query: topQuery,
+            hitCount: 42,
+            lastAccessed: '2026-01-01T00:00:00Z',
+            isCached: true,
+          },
+        ],
+      }),
+    );
+    await page.route(
+      /https:\/\/(?:api|cards)\.scryfall\.(?:com|io)\//,
+      (route) =>
+        route.fulfill({
+          contentType: 'image/svg+xml',
+          body: '<svg xmlns="http://www.w3.org/2000/svg" width="146" height="204"><rect width="146" height="204" fill="#8f6edf"/></svg>',
+        }),
+    );
+
+    try {
+      for (const visit of ['direct visit', 'hard reload']) {
+        await test.step(visit, async () => {
+          if (visit === 'direct visit') {
+            await gotoHydrated(page, '/');
+          } else {
+            // Reload the document rather than navigating through Vue Router.
+            await page.reload();
+            await waitForHydration(page);
+          }
+          await expect(
+            page.getByText('Login To Create Decklists!', { exact: true }),
+          ).toBeVisible();
+          await revealHomeSections(page);
+          for (const section of publicSections) {
+            await expect(
+              page.getByText(section.result, { exact: true }),
+            ).toBeVisible();
+          }
+          const metrics = page
+            .getByText('Total Searches Resolved', { exact: true })
+            .locator('..')
+            .locator('..');
+          await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
+          const example = page.locator('.example-content');
+          await example.scrollIntoViewIfNeeded();
+          await expect(example).toContainText(exampleQuery);
+          await expect(
+            example.getByAltText('Sol Ring', { exact: true }),
+          ).toBeVisible();
+          const top = page.locator('.top-queries-container').first();
+          await top.scrollIntoViewIfNeeded();
+          await expect(top).toContainText('Top Searches This Week');
+          await expect(top).toContainText(topQuery);
+          await expect(
+            page.getByRole('button', { name: 'Retry', exact: true }),
+          ).toHaveCount(0);
+        });
+      }
+    } finally {
+      // A startup exception must fail this test even if SSR looks complete.
+      expect(pageErrors).toEqual([]);
+    }
+  },
+);

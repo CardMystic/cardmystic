@@ -53,6 +53,14 @@ export function parseLinkEmbedTarget(
   const path = pathOnly.replace(/\/+$/, '') || '/';
   if (path.includes(' ')) return null;
 
+  // Malformed percent escapes in authored markdown must remain ordinary text,
+  // rather than throw while extracting embeds during server rendering.
+  try {
+    decodeURIComponent(path);
+  } catch {
+    return null;
+  }
+
   let m: RegExpMatchArray | null;
 
   m = path.match(/^\/lists\/([^/]+)$/);

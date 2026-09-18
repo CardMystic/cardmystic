@@ -4,11 +4,15 @@
     class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group min-h-65 md:min-h-97.5"
   >
     <!-- Banner background -->
-    <div
+    <img
       v-if="bannerImageUrl"
-      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-70 group-hover:opacity-85 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
-      :style="{ backgroundImage: `url(${bannerImageUrl})` }"
-    ></div>
+      class="absolute inset-0 w-full h-full object-cover object-[center_10%] opacity-70 group-hover:opacity-85 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
+      :src="bannerImageUrl"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+    />
     <div
       class="absolute inset-0 bg-linear-to-t from-white/70 via-white/35 dark:from-black/90 dark:via-black/60 to-transparent"
     ></div>

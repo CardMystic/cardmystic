@@ -10,7 +10,7 @@ dotenv.config({ path: '.env.test' });
 /**
  * Playwright config for CardMystic end-to-end tests.
  *
- * Tests run against a local Nuxt dev server which Playwright spins up
+ * Tests run against a built Nuxt server which Playwright spins up
  * automatically. CI uses the same flow, just headless.
  *
  * These are integration e2e tests: by default they hit the REAL backend
@@ -51,7 +51,7 @@ for (const [key, value] of Object.entries(TEST_PUBLIC_ENV)) {
   process.env[key] = value;
 }
 
-// Always run e2e against the built Nuxt server (Nitro on port 3000).
+// Always run e2e against the built Nuxt server (Nitro on port 5173 by default).
 // Vite dev mode streams chunks lazily and was the source of multi-minute
 // CI runs and flaky hydration races, so we never use it for tests.
 //
@@ -59,8 +59,8 @@ for (const [key, value] of Object.entries(TEST_PUBLIC_ENV)) {
 // dedicated step so build failures surface directly instead of being
 // hidden inside Playwright's webServer output).
 const isCI = !!process.env.CI;
-const PORT = 5173;
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173';
+const PORT = new URL(BASE_URL).port || '80';
 const SERVER_COMMAND = process.env.PLAYWRIGHT_SKIP_BUILD
   ? 'node .output/server/index.mjs'
   : 'pnpm build && node .output/server/index.mjs';
@@ -102,13 +102,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  // Reused if already running locally so devs can iterate quickly with
-  // `pnpm test:e2e:ui` (start the built server once in another terminal
-  // with `node .output/server/index.mjs`). CI always builds fresh.
+  // Reuse must be explicit: an unrelated Vite dev server on this port can
+  // reload during lazy route imports and invalidate browser contexts. To
+  // reuse a manually started built server, set PLAYWRIGHT_REUSE_SERVER=1.
+  // Set PLAYWRIGHT_BASE_URL to select another local port.
   webServer: {
     command: SERVER_COMMAND,
     url: BASE_URL,
-    reuseExistingServer: !isCI,
+    reuseExistingServer: !isCI && process.env.PLAYWRIGHT_REUSE_SERVER === '1',
     // Cold builds can take ~30s; bump generously so flaky CI runners
     // don't time out before Nitro is ready.
     timeout: 300_000,
