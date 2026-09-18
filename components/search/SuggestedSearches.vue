@@ -13,7 +13,8 @@
         color="neutral"
         variant="outline"
         class="cursor-pointer rounded-pill"
-        @click="runSearch(query)"
+        :to="{ path: '/search/all/smart', query: { query } }"
+        no-prefetch
       >
         {{ query }}
       </UButton>
@@ -39,9 +40,8 @@
 
 <script setup lang="ts">
 // Curated example queries shown under the home hero search bar.
-// Clicking one immediately runs a Smart Search. Search routes are
-// nested (/search/[platform]/[type]/[[slug]]) and have no stable
-// route name, so we navigate by path.
+// These queries have no equivalent curated page; keep their exact searches
+// as crawlable links without prefetching results for every chip.
 const baseQueries = [
   'creatures that draw cards',
   'lands that make any color',
@@ -60,9 +60,4 @@ const showAll = ref(false);
 const visibleQueries = computed(() =>
   showAll.value ? [...baseQueries, ...moreQueries] : baseQueries,
 );
-
-const router = useRouter();
-function runSearch(query: string) {
-  router.push({ path: '/search/all/smart', query: { query } });
-}
 </script>

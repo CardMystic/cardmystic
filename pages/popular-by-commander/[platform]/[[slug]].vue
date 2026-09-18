@@ -79,6 +79,7 @@ import { usePopularByCommander } from '~/composables/useDeckStats';
 import { useCardsByName } from '~/composables/useCards';
 import { isValidPlatform, type Platform } from '~/utils/platformConfig';
 import { getSeoEntry } from '~/utils/seoQueries';
+import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
@@ -183,6 +184,9 @@ const parsedFilters = computed(() => {
   }
   return CardSearchFiltersSchema.parse(seoEntry?.filters || {});
 });
+provideSearchPageDefaults(
+  seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
+);
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({

@@ -13,7 +13,7 @@
       @click="clearColors"
     >
       <span class="flex items-center gap-1">
-        <ManaIcon
+        <ManaColorIcon
           v-for="color in modelValue.selectedColors"
           :key="color"
           :type="cardColorToSymbol(color)"
@@ -57,7 +57,7 @@
         >
           <template #label>
             <span class="flex items-center gap-1 ml-2">
-              <ManaIcon
+              <ManaColorIcon
                 :type="
                   cardColorToSymbol((item as { value: CardColorType }).value)
                 "
@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import ManaIcon from '~/components/general/ManaIcon.vue';
+import ManaColorIcon from '~/components/general/ManaColorIcon.vue';
 import { CardColor, type CardColorType } from '~/models/cardModel';
 import { cardColorToSymbol } from '~/utils/cardHelpers';
 import type { CheckboxGroupItem } from '@nuxt/ui';

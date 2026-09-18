@@ -19,18 +19,13 @@
 
     <!-- Primer editor / viewer -->
     <div class="flex flex-col mb-5">
-      <ClientOnly>
-        <MarkdownEditor
-          v-model="primerContent"
-          :editable="isCreator"
-          :is-saving="isSaving"
-          :save-handler="handleSave"
-          @mode-change="editorMode = $event"
-        />
-        <template #fallback>
-          <USkeleton class="h-[60vh] w-full rounded-md" />
-        </template>
-      </ClientOnly>
+      <MarkdownEditor
+        v-model="primerContent"
+        :editable="isCreator"
+        :is-saving="isSaving"
+        :save-handler="handleSave"
+        @mode-change="editorMode = $event"
+      />
     </div>
   </div>
 </template>

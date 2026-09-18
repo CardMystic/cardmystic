@@ -45,6 +45,9 @@
           v-if="article.avatar_card_name"
           :src="avatarImageUrl"
           :alt="article.username ?? 'Author'"
+          loading="lazy"
+          decoding="async"
+          fetchpriority="low"
           class="w-6 h-6 rounded-full object-cover shrink-0"
         />
         <UIcon

@@ -19,6 +19,7 @@
             v-for="link in group.links"
             :key="link.to"
             :to="link.to"
+            no-prefetch
             :aria-label="link.label"
             :class="['destination-card', `destination-card--${link.tone}`]"
           >

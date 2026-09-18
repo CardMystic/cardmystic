@@ -3,11 +3,15 @@
     :to="`/user/${profile.id}`"
     class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
   >
-    <div
+    <img
       v-if="bannerImageUrl"
-      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
-      :style="{ backgroundImage: `url(${bannerImageUrl})` }"
-    ></div>
+      class="absolute inset-0 w-full h-full object-cover object-[center_10%] opacity-60 group-hover:opacity-80 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
+      :src="bannerImageUrl"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+    />
     <div
       class="absolute inset-0 bg-linear-to-t from-white/80 via-white/40 dark:from-black/80 dark:via-black/40 to-transparent"
     ></div>
