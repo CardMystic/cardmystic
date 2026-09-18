@@ -15,7 +15,7 @@ export function sanitizeMarkdownHtml(html: string): string {
       'input',
     ],
     allowedAttributes: {
-      '*': ['class', 'title'],
+      '*': ['class', 'title', 'style'],
       a: ['href'],
       img: ['src', 'alt', { name: 'loading', values: ['lazy', 'eager'] }],
       details: ['open'],
@@ -46,7 +46,12 @@ export function sanitizeMarkdownHtml(html: string): string {
       'svg',
       'math',
     ],
-    parseStyleAttributes: false,
+    // Only text color is author-controlled; positioning, URLs and other CSS
+    // stay disallowed. Use the same policy for previews and public SSR.
+    allowedStyles: {
+      '*': { color: [/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i, /^[a-z]+$/i] },
+    },
+    parseStyleAttributes: true,
     nestingLimit: 100,
     // marked emits disabled inputs for task lists. Preserve their appearance
     // without admitting interactive form controls from authored HTML.

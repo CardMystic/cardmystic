@@ -6,6 +6,7 @@ export const cardLinkTag = Tag.define();
 export const manaSymbolTag = Tag.define();
 export const emojiTag = Tag.define();
 export const youtubeTag = Tag.define();
+export const searchEmbedTag = Tag.define();
 
 // Extend Markdown's incremental inline parser. Code spans and fenced code
 // retain Markdown's own precedence, so token-looking examples stay code.
@@ -16,6 +17,7 @@ export const cardMysticMarkdown: MarkdownConfig = {
     { name: 'ManaSymbol', style: manaSymbolTag },
     { name: 'MysticEmoji', style: emojiTag },
     { name: 'YouTubeEmbed', style: youtubeTag },
+    { name: 'SearchEmbed', style: searchEmbedTag },
   ],
   parseInline: [
     {
@@ -38,10 +40,13 @@ export const cardMysticMarkdown: MarkdownConfig = {
           name = 'MysticEmoji';
           match = cx.slice(pos, cx.end).match(/^:[a-z0-9_+-]+:/);
         } else if (next === 64) {
-          name = 'YouTubeEmbed';
-          match = cx
-            .slice(pos, cx.end)
-            .match(/^@\[youtube\]\([A-Za-z0-9_-]{11}\)/);
+          const text = cx.slice(pos, cx.end);
+          match = text.match(/^@\[search\]\([^\n]+\)/);
+          name = 'SearchEmbed';
+          if (!match) {
+            name = 'YouTubeEmbed';
+            match = text.match(/^@\[youtube\]\([A-Za-z0-9_-]{11}\)/);
+          }
         } else {
           return -1;
         }
@@ -59,6 +64,7 @@ export interface MarkdownSourceEditorHandle {
   replaceSelection(
     text: string,
     selection?: { anchor: number; head: number },
+    range?: { from: number; to: number },
   ): void;
 }
 

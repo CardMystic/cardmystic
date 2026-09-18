@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import devtoolsJson from 'vite-plugin-devtools-json';
+import staticWebAppConfig from './public/staticwebapp.config.json';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -62,6 +63,13 @@ export default defineNuxtConfig({
     port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
   },
   build: {},
+  nitro: {
+    azure: {
+      // The Azure preset otherwise falls back to Node 18 for engines ranges.
+      // Share the runtime and routing settings with the generated SWA config.
+      config: staticWebAppConfig,
+    },
+  },
   runtimeConfig: {
     // The private keys which are only available server-side
     backendUrl: 'http://localhost:3000',
