@@ -466,3 +466,98 @@ test('large drafts render only visible source lines and preserve the full saved 
     .poll(() => requests.at(-1)?.content)
     .toBe(content + 'Latest ending');
 });
+
+test('colors headings and paragraph selections, supports custom colors, and saves the formatting', async ({
+  page,
+}) => {
+  const requests: Record<string, unknown>[] = [];
+  await page.route(endpoint, (route) => {
+    const body = route.request().postDataJSON();
+    requests.push(body);
+    return route.fulfill({ json: { article: { ...initial, ...body } } });
+  });
+  const editor = page.getByRole('textbox', {
+    name: 'Markdown editor',
+    exact: true,
+  });
+  await editor.fill('# Colored heading\n\nNormal paragraph with emphasis.');
+  await editor.press('ControlOrMeta+Home');
+  await editor.press('Shift+End');
+  await page.getByRole('button', { name: 'Text color', exact: true }).click();
+  await page.getByRole('button', { name: 'Red', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Split Preview', exact: true })
+    .click();
+  const preview = page.locator('.primer-preview');
+  const title = preview
+    .getByRole('heading', { name: 'Colored heading' })
+    .locator('span');
+  await expect(title).toHaveCSS('color', 'rgb(220, 38, 38)');
+
+  // The selected heading text stays selected so another color replaces it.
+  await page.getByRole('button', { name: 'Text color', exact: true }).click();
+  await page.getByRole('button', { name: 'Blue', exact: true }).click();
+  await expect(title).toHaveCSS('color', 'rgb(37, 99, 235)');
+  await editor.press('ControlOrMeta+z');
+  await expect(title).toHaveCSS('color', 'rgb(220, 38, 38)');
+
+  await editor.press('ControlOrMeta+End');
+  await editor.press('ArrowLeft');
+  for (let i = 0; i < 'emphasis'.length; i++)
+    await editor.press('Shift+ArrowLeft');
+  await page.getByRole('button', { name: 'Text color', exact: true }).click();
+  await page.getByLabel('Custom text color', { exact: true }).fill('#123abc');
+  await page.getByRole('button', { name: 'Apply color', exact: true }).click();
+  await expect(preview.locator('p span')).toHaveText('emphasis');
+  await expect(preview.locator('p span')).toHaveCSS(
+    'color',
+    'rgb(18, 58, 188)',
+  );
+  await expect(preview.locator('p')).toHaveText(
+    'Normal paragraph with emphasis.',
+  );
+
+  await page.getByRole('button', { name: 'Save Article', exact: true }).click();
+  await expect
+    .poll(() => requests.at(-1)?.content)
+    .toBe(
+      '# <span style="color: #dc2626">Colored heading</span>\n\nNormal paragraph with <span style="color: #123abc">emphasis</span>.',
+    );
+  await page.getByRole('button', { name: 'Back to Edit', exact: true }).click();
+  await page.getByRole('button', { name: 'View Preview', exact: true }).click();
+  await expect(title).toHaveCSS('color', 'rgb(220, 38, 38)');
+  await expect(preview.locator('p span')).toHaveCSS(
+    'color',
+    'rgb(18, 58, 188)',
+  );
+});
+
+test('the search embed toolbar inserts separate highlighted syntax and previews it', async ({
+  page,
+}) => {
+  const editor = page.getByRole('textbox', {
+    name: 'Markdown editor',
+    exact: true,
+  });
+  await editor.fill('');
+  const url =
+    'https://cardmystic.com/search/all/smart?searchType=smart&query=draw%20cards';
+  page.once('dialog', (dialog) => dialog.accept(url));
+  await page
+    .getByRole('button', { name: 'Embed a CardMystic search', exact: true })
+    .click();
+  await expect(editor.locator('.cm-search-embed')).toHaveText(
+    '@[search](' + url + ')',
+  );
+  await page
+    .getByRole('button', { name: 'Split Preview', exact: true })
+    .click();
+  const embed = page.locator('.primer-preview .search-embed');
+  await expect(
+    embed.getByRole('link', { name: 'Smart Search: draw cards', exact: true }),
+  ).toBeVisible();
+  await expect(
+    embed.getByRole('searchbox', { name: 'Smart Search query' }),
+  ).toHaveValue('draw cards');
+  await expect(embed.getByRole('button', { name: 'TRY ME' })).toBeVisible();
+});

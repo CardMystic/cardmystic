@@ -162,4 +162,23 @@ describe('sanitizeMarkdownHtml', () => {
       '<p>CARDLINKTOKEN0CARDLINKTOKEN CARDIMGTOKEN1CARDIMGTOKEN YTEMBEDTOKEN2YTEMBEDTOKEN</p>';
     expect(sanitizeMarkdownHtml(html)).toBe(html);
   });
+  it('preserves heading and inline text colors but strips every other inline CSS property', () => {
+    const output = sanitizeMarkdownHtml(
+      '<h1 style="color:red;position:fixed">Title</h1>' +
+        '<p>Normal <span style="color:#dc2626;background:url(https://tracker.test);display:none">colored</span></p>',
+    );
+    expect(output).toBe(
+      '<h1 style="color:red">Title</h1><p>Normal <span style="color:#dc2626">colored</span></p>',
+    );
+  });
+
+  it.each([
+    'url(https://tracker.test)',
+    'expression(alert(1))',
+    'var(--untrusted)',
+  ])('rejects unsupported color expressions: %s', (color) => {
+    expect(
+      sanitizeMarkdownHtml('<span style="color:' + color + '">Text</span>'),
+    ).toBe('<span>Text</span>');
+  });
 });

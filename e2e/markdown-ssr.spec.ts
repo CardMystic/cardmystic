@@ -29,6 +29,8 @@ const DRAFT_TEXT = 'Unpublished draft body must never enter anonymous HTML.';
 
 const content = [
   '# SSR body visible before JavaScript',
+  '@[search](https://cardmystic.com/search/all/smart?searchType=smart&query=draw%20cards&limit=12)',
+  '[draw cards](https://cardmystic.com/search/all/smart?searchType=smart&query=draw%20cards&limit=12)',
   "[[Lightning Bolt]] and [[Thassa's Oracle]].",
   'Repeated mention: [[Lightning Bolt]].',
   '((Lightning Bolt))',
@@ -40,6 +42,8 @@ const content = [
   '<a href="javascript:window.__markdownInjected=1">Unsafe link</a>',
   '<iframe src="javascript:window.__markdownInjected=1"></iframe>',
   'Mana symbol: {R}.',
+  '## <span style="color: #dc2626">Colored heading</span>',
+  'Normal text and <span style="color: #2563eb; position: fixed">blue text</span>.',
   '<details open><summary>Strategy details</summary><p>Keep a useful opening hand.</p></details>',
   '| Card | Count |\n| --- | --- |\n| Lightning Bolt | 1 |',
   '- [x] Read the primer',
@@ -362,6 +366,19 @@ for (const [kind, path] of [
             name: 'SSR body visible before JavaScript',
           }),
         ).toHaveCount(1);
+        await expect(
+          body
+            .getByRole('heading', { name: 'Colored heading' })
+            .locator('span'),
+        ).toHaveCSS('color', 'rgb(220, 38, 38)');
+        await expect(body.getByText('blue text', { exact: true })).toHaveCSS(
+          'color',
+          'rgb(37, 99, 235)',
+        );
+        await expect(body.getByText('blue text', { exact: true })).toHaveCSS(
+          'position',
+          'static',
+        );
         const links = body.locator('a.card-inline-link');
         await expect(links).toHaveCount(3);
         await expect(links.nth(0)).toHaveAttribute('href', '/card/' + BOLT_ID);
@@ -406,6 +423,39 @@ for (const [kind, path] of [
         expect(fixtureRequests.every((request) => !request.authorized)).toBe(
           true,
         );
+        const searchEmbed = body.locator('.search-embed');
+        await expect(
+          searchEmbed.getByRole('link', {
+            name: 'Smart Search: draw cards',
+            exact: true,
+          }),
+        ).toHaveAttribute(
+          'href',
+          '/search/all/smart?searchType=smart&query=draw%20cards&limit=12',
+        );
+        await expect(searchEmbed.getByRole('searchbox')).toHaveValue(
+          'draw cards',
+        );
+        await expect(
+          body.getByRole('link', { name: 'draw cards', exact: true }),
+        ).toHaveAttribute(
+          'href',
+          'https://cardmystic.com/search/all/smart?searchType=smart&query=draw%20cards&limit=12',
+        );
+        // JavaScript is disabled: the rendered GET form must still navigate.
+        await page.route('**/search/all/smart?**', (route) =>
+          route.fulfill({
+            contentType: 'text/html',
+            body: '<p>Search destination</p>',
+          }),
+        );
+        await searchEmbed.getByRole('searchbox').fill('draw more cards');
+        await searchEmbed.getByRole('button', { name: 'TRY ME' }).click();
+        await expect(page).toHaveURL(/\/search\/all\/smart\?/);
+        expect(new URL(page.url()).searchParams.get('query')).toBe(
+          'draw more cards',
+        );
+        expect(new URL(page.url()).searchParams.get('limit')).toBe('12');
       } finally {
         await context.close();
       }

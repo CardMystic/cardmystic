@@ -525,9 +525,12 @@ test.describe('Decklist social & discovery', () => {
     await expect(
       page.getByRole('link', { name: /back to decklist/i }),
     ).toBeVisible({ timeout: API_TIMEOUT });
-    await expect(
-      page.getByPlaceholder(/Describe how this deck wins/).first(),
-    ).toBeVisible({ timeout: 60_000 });
+    const editor = page.getByRole('textbox', {
+      name: 'Markdown editor',
+      exact: true,
+    });
+    await expect(editor).toBeVisible({ timeout: 60_000 });
+    await expect(editor).toBeEditable();
   });
 
   // ---------------------------------------------------------------------------

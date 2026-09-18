@@ -107,6 +107,24 @@
             class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
           />
           <UPopover
+            v-model:open="textColorPickerOpen"
+            :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+          >
+            <UTooltip text="Text color">
+              <UButton
+                icon="i-lucide-palette"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="cursor-pointer"
+                aria-label="Text color"
+              />
+            </UTooltip>
+            <template #content>
+              <TextColorPickerPanel @select="applyTextColor" />
+            </template>
+          </UPopover>
+          <UPopover
             v-model:open="emojiPickerOpen"
             :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
           >
@@ -168,6 +186,7 @@
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 px-1 overflow-y-auto"
         @click="handlePreviewClick"
+        @submit="handleSearchEmbedSubmit"
         @pointermove="onPreviewPointerMove"
         @pointerleave="onPreviewPointerLeave"
       >
@@ -186,6 +205,7 @@
       v-if="!editable || mode === 'preview'"
       class="primer-preview grow min-h-0 overflow-y-auto px-1"
       @click="handlePreviewClick"
+      @submit="handleSearchEmbedSubmit"
       @pointermove="onPreviewPointerMove"
       @pointerleave="onPreviewPointerLeave"
     >
@@ -248,6 +268,7 @@ import type {
   MarkdownSourceEditorHandle,
   EditorCardHover,
 } from '~/utils/markdownEditorSyntax';
+import { markdownTextColorEdit } from '~/utils/markdownTextColor';
 import { sanitizeMarkdownHtml } from '~/utils/sanitizeMarkdown';
 import { emojify, search as searchEmoji } from 'node-emoji';
 import 'mana-font/css/mana.min.css';
@@ -261,6 +282,11 @@ import {
   magicSymbols,
   restoreMagicSymbols,
 } from '~/utils/magicSymbols';
+import {
+  extractSearchEmbeds,
+  parseSearchEmbedUrl,
+  renderSearchEmbed,
+} from '~/utils/searchEmbeds';
 import { extractAndTokenizeLinkEmbeds } from '~/utils/linkEmbeds';
 
 const props = withDefaults(
@@ -646,7 +672,10 @@ const renderedHtml = computed(() => {
   // rewrites those lines to LINKEMBEDTOKEN{n} markers (surrounded by blank
   // lines) so marked treats them as block elements. Ordered target list is
   // reused by the post-process replacer below.
-  const linkEmbedResult = extractAndTokenizeLinkEmbeds(src);
+  const searchEmbedResult = extractSearchEmbeds(src);
+  const linkEmbedResult = extractAndTokenizeLinkEmbeds(
+    searchEmbedResult.processed,
+  );
   let pre = linkEmbedResult.processed;
 
   pre = pre.replace(/@\[youtube\]\(([A-Za-z0-9_-]{11})\)/g, (_, id) => {
@@ -753,10 +782,36 @@ const renderedHtml = computed(() => {
     },
   );
 
+  result = result.replace(
+    /(?:<p>\s*)?CMSEARCHTOKEN(\d+)CMSEARCHTOKEN(?:\s*<\/p>)?/g,
+    (_, index) => {
+      const embed = searchEmbedResult.embeds[Number(index)];
+      return embed ? renderSearchEmbed(embed) : '';
+    },
+  );
+
   result = restoreMagicSymbols(result, extractedMagicSymbols.symbols);
 
   return result;
 });
+
+function handleSearchEmbedSubmit(event: Event) {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || !form.matches('.search-embed-form'))
+    return;
+  const embed = parseSearchEmbedUrl(form.dataset.searchHref ?? '');
+  if (!embed) return;
+  event.preventDefault();
+  const params = new URLSearchParams();
+  for (const [key, value] of new FormData(form)) {
+    if (typeof value === 'string') params.append(key, value);
+  }
+  const href =
+    params.get(embed.queryKey) === embed.query
+      ? embed.href
+      : embed.action + '?' + params.toString();
+  router.push(href);
+}
 
 function handlePreviewClick(event: MouseEvent) {
   const target = event.target as HTMLElement | null;
@@ -790,7 +845,7 @@ function handlePreviewClick(event: MouseEvent) {
   // These anchors are injected as raw HTML. Route ordinary activations through
   // Vue while keeping the browser's native new-tab and modifier-link behavior.
   const spaLink = target?.closest<HTMLAnchorElement>(
-    '.link-embed, .card-inline-img-link, .card-inline-link',
+    '.link-embed, .search-embed-link, .card-inline-img-link, .card-inline-link',
   );
   if (spaLink && event.button === 0 && !isModifiedClick(event)) {
     const to = spaLink.getAttribute('href');
@@ -835,6 +890,7 @@ type ToolbarActionId =
   | 'table'
   | 'collapsible'
   | 'youtube'
+  | 'search-embed'
   | 'card-image'
   | 'card-link';
 
@@ -872,6 +928,11 @@ const toolbarGroups: ToolbarAction[][] = [
       tooltip: 'Collapsible section',
     },
     { id: 'youtube', icon: 'i-lucide-youtube', tooltip: 'YouTube embed' },
+    {
+      id: 'search-embed',
+      icon: 'i-lucide-search',
+      tooltip: 'Embed a CardMystic search',
+    },
   ],
   [
     {
@@ -954,6 +1015,25 @@ function applyAction(id: ToolbarActionId) {
           `<details open>\n<summary>Details</summary>\n\nContent here.\n\n</details>\n\n`,
       );
       return;
+    case 'search-embed': {
+      const input = window.prompt(
+        'CardMystic search URL',
+        selected ||
+          'https://cardmystic.com/search/all/smart?query=draw%20cards',
+      );
+      if (!input) return;
+      if (!parseSearchEmbedUrl(input)) {
+        window.alert('Enter a valid CardMystic search URL.');
+        return;
+      }
+      insertAtCursor(
+        ensureBlockBoundary(value, start) +
+          '@[search](' +
+          input.trim() +
+          ')\n\n',
+      );
+      return;
+    }
     case 'youtube': {
       const input = window.prompt('YouTube URL or Video ID');
       if (!input) return;
@@ -1035,6 +1115,18 @@ function applyListPrefix(
 
 function insertAtCursor(text: string) {
   sourceEditorRef.value?.replaceSelection(text);
+}
+
+const textColorPickerOpen = ref(false);
+
+function applyTextColor(color: string) {
+  const editor = sourceEditorRef.value;
+  if (!editor) return;
+  const edit = markdownTextColorEdit(draft.value, editor.getSelection(), color);
+  if (!edit) return;
+  editor.replaceSelection(edit.text, edit.selection, edit.range);
+  textColorPickerOpen.value = false;
+  nextTick(() => sourceEditorRef.value?.focus());
 }
 
 // --- Emoji picker ---
@@ -1511,6 +1603,103 @@ function insertMagicSymbol(token: string) {
   width: 85%;
   height: 1rem;
 }
+
+/* Explicit search embeds remain usable as ordinary links and GET forms. */
+.primer-preview :deep(.search-embed) {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid var(--ui-border-accented);
+  border-radius: 1rem;
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--ui-primary) 9%, var(--ui-bg)),
+    var(--ui-bg)
+  );
+}
+.primer-preview :deep(.search-embed-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.primer-preview :deep(.search-embed-link) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ui-text-highlighted);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.primer-preview :deep(.search-embed-link:hover) {
+  color: var(--ui-primary);
+  text-decoration: underline;
+}
+.primer-preview :deep(.search-embed-link svg) {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  color: var(--ui-primary);
+}
+.primer-preview :deep(.search-embed-platform) {
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  text-align: right;
+}
+.primer-preview :deep(.search-embed-bar) {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.375rem;
+  border: 1px solid var(--ui-border-accented);
+  border-radius: 0.75rem;
+  background: var(--ui-bg);
+}
+.primer-preview :deep(.search-embed-input) {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0.625rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--ui-text-highlighted);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.primer-preview :deep(.search-embed-submit) {
+  flex-shrink: 0;
+  align-self: center;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1rem;
+  background: var(--ui-primary);
+  color: var(--ui-bg);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+.primer-preview :deep(.search-embed-submit:hover) {
+  filter: brightness(1.08);
+}
+.primer-preview :deep(.search-embed-input:focus-visible),
+.primer-preview :deep(.search-embed-submit:focus-visible),
+.primer-preview :deep(.search-embed-link:focus-visible) {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+@media (max-width: 420px) {
+  .primer-preview :deep(.search-embed) {
+    padding: 0.75rem;
+  }
+  .primer-preview :deep(.search-embed-submit) {
+    padding: 0.7rem;
+  }
+}
+
 @keyframes link-embed-shimmer {
   0% {
     background-position: 200% 0;
