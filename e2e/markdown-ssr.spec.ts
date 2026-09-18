@@ -510,9 +510,9 @@ test('a private primer loads for its owner after anonymous SSR without leaking i
   expect(response?.status()).toBe(200);
   expect(await response!.text()).not.toContain(PRIVATE_TEXT);
   await waitForHydration(page);
-  await expect(page.locator('textarea.editor-textarea')).toHaveValue(
-    PRIVATE_TEXT,
-  );
+  await expect(
+    page.getByRole('textbox', { name: 'Markdown editor', exact: true }),
+  ).toHaveText(PRIVATE_TEXT);
   const primerRequests = fixtureRequests.filter(
     (request) => request.path === '/supabase/card-lists/primer/' + PRIVATE_ID,
   );

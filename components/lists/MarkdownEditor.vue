@@ -70,114 +70,13 @@
       </div>
     </div>
 
-    <!-- Edit-only mode -->
+    <!-- Keep one CodeMirror instance mounted across mode changes so undo,
+         selection and scroll position survive switching views. -->
     <div
-      v-if="editable && mode === 'edit'"
-      class="flex flex-col h-[80vh] min-h-0 gap-2 overflow-hidden"
-    >
-      <!-- Toolbar -->
-      <div
-        class="shrink-0 flex flex-wrap items-center gap-1 p-1.5 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
-      >
-        <template v-for="(group, gi) in toolbarGroups" :key="gi">
-          <div
-            v-if="gi > 0"
-            class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
-          />
-          <UTooltip
-            v-for="action in group"
-            :key="action.id"
-            :text="action.tooltip"
-          >
-            <UButton
-              :icon="action.icon"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              @click="applyAction(action.id)"
-            />
-          </UTooltip>
-        </template>
-        <div
-          class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
-        />
-        <UPopover
-          v-model:open="emojiPickerOpen"
-          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
-        >
-          <UTooltip text="Insert emoji">
-            <UButton
-              icon="i-lucide-smile"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              aria-label="Insert emoji"
-            />
-          </UTooltip>
-          <template #content>
-            <EmojiPickerPanel
-              v-model:search="emojiSearchTerm"
-              :emojis="emojiResults"
-              @select="insertEmojiShortcode"
-            />
-          </template>
-        </UPopover>
-        <UPopover
-          v-model:open="magicSymbolPickerOpen"
-          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
-        >
-          <UTooltip text="Insert Magic symbol">
-            <UButton
-              icon="i-mdi-cards-playing-outline"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              aria-label="Insert Magic symbol"
-            />
-          </UTooltip>
-          <template #content>
-            <MagicSymbolPickerPanel
-              v-model:search="magicSymbolSearchTerm"
-              :symbols="magicSymbols"
-              @select="insertMagicSymbol"
-            />
-          </template>
-        </UPopover>
-      </div>
-
-      <div
-        class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
-        @mousemove="onEditorMouseMove"
-        @mouseleave="onEditorMouseLeave"
-      >
-        <div ref="highlightLayerRef" class="highlight-layer" aria-hidden="true">
-          <div
-            ref="highlightContentRef"
-            class="highlight-content"
-            v-html="highlightedDraft"
-          />
-        </div>
-        <textarea
-          ref="textareaRef"
-          v-model="draft"
-          :placeholder="placeholder"
-          class="editor-textarea"
-          spellcheck="true"
-          @scroll="syncHighlightScroll"
-          @input="syncHighlightScroll"
-        />
-      </div>
-    </div>
-
-    <!-- Split mode (editor + live preview side by side, lg+ only) -->
-    <div
-      v-else-if="editable && mode === 'split'"
+      v-if="editable"
+      v-show="mode !== 'preview'"
       class="flex h-[80vh] min-h-0 gap-4 overflow-hidden"
     >
-      <!-- Left: editor -->
       <div class="flex-1 min-w-0 min-h-0 flex flex-col gap-2">
         <!-- Toolbar -->
         <div
@@ -195,6 +94,7 @@
             >
               <UButton
                 :icon="action.icon"
+                :aria-label="action.tooltip"
                 color="neutral"
                 variant="ghost"
                 size="sm"
@@ -252,36 +152,19 @@
           </UPopover>
         </div>
 
-        <div
-          class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
-          @mousemove="onEditorMouseMove"
-          @mouseleave="onEditorMouseLeave"
-        >
-          <div
-            ref="highlightLayerRef"
-            class="highlight-layer"
-            aria-hidden="true"
-          >
-            <div
-              ref="highlightContentRef"
-              class="highlight-content"
-              v-html="highlightedDraft"
-            />
-          </div>
-          <textarea
-            ref="textareaRef"
-            v-model="draft"
-            placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
-            class="editor-textarea"
-            spellcheck="true"
-            @scroll="onSplitScroll"
-            @input="syncHighlightScroll"
-          />
-        </div>
+        <LazyMarkdownSourceEditor
+          ref="sourceEditorRef"
+          v-model="draft"
+          :placeholder="placeholder"
+          :active="mode !== 'preview'"
+          @scroll="onEditorScroll"
+          @card-hover="onEditorCardHover"
+          @card-leave="tokenPreview = null"
+        />
       </div>
-
       <!-- Right: live preview -->
       <div
+        v-if="mode === 'split'"
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 px-1 overflow-y-auto"
         @click="handlePreviewClick"
@@ -300,7 +183,7 @@
 
     <!-- Preview-only mode -->
     <div
-      v-else
+      v-if="!editable || mode === 'preview'"
       class="primer-preview grow min-h-0 overflow-y-auto px-1"
       @click="handlePreviewClick"
       @pointermove="onPreviewPointerMove"
@@ -360,6 +243,11 @@
 
 <script setup lang="ts">
 import { marked } from 'marked';
+import { refDebounced } from '~/utils/refDebounced';
+import type {
+  MarkdownSourceEditorHandle,
+  EditorCardHover,
+} from '~/utils/markdownEditorSyntax';
 import { sanitizeMarkdownHtml } from '~/utils/sanitizeMarkdown';
 import { emojify, search as searchEmoji } from 'node-emoji';
 import 'mana-font/css/mana.min.css';
@@ -387,7 +275,7 @@ const props = withDefaults(
     saveInPreview?: boolean;
     /** Message shown in preview mode when there is no content yet. */
     emptyMessage?: string;
-    /** Placeholder text for the markdown editor textarea. */
+    /** Placeholder text for the Markdown source editor. */
     placeholder?: string;
     hasBackground?: boolean;
     /**
@@ -433,11 +321,8 @@ watch(
 );
 const draft = ref(props.modelValue);
 const lastSavedAt = ref<number | null>(null);
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const sourceEditorRef = ref<MarkdownSourceEditorHandle | null>(null);
 const previewRef = ref<HTMLDivElement | null>(null);
-const highlightLayerRef = ref<HTMLDivElement | null>(null);
-const highlightContentRef = ref<HTMLDivElement | null>(null);
-let highlightResizeObserver: ResizeObserver | null = null;
 
 // --- Unsaved changes guard ---
 const showUnsavedModal = ref(false);
@@ -485,66 +370,23 @@ function handleDocumentPointerDown(e: PointerEvent) {
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
   document.addEventListener('pointerdown', handleDocumentPointerDown, true);
-  highlightResizeObserver = new ResizeObserver(syncHighlightScroll);
-  if (textareaRef.value) highlightResizeObserver.observe(textareaRef.value);
-  nextTick(syncHighlightScroll);
 });
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
   document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
-  highlightResizeObserver?.disconnect();
-  highlightResizeObserver = null;
 });
 
 // --- Scroll sync: editor → preview ---
-function onEditorScroll() {
-  const ta = textareaRef.value;
-  const pr = previewRef.value;
-  if (!ta || !pr) return;
-  const maxEditorScroll = ta.scrollHeight - ta.clientHeight;
-  if (maxEditorScroll <= 0) return;
-  const ratio = ta.scrollTop / maxEditorScroll;
-  const maxPreviewScroll = pr.scrollHeight - pr.clientHeight;
-  pr.scrollTop = ratio * maxPreviewScroll;
+function onEditorScroll(position: { top: number; max: number }) {
+  const preview = previewRef.value;
+  if (!preview || mode.value !== 'split' || position.max <= 0) return;
+  preview.scrollTop =
+    (position.top / position.max) *
+    (preview.scrollHeight - preview.clientHeight);
 }
 
-// Keep the syntax-highlight overlay aligned with the textarea's scroll position.
-function syncHighlightScroll() {
-  const ta = textareaRef.value;
-  const layer = highlightLayerRef.value;
-  const content = highlightContentRef.value;
-  if (!ta || !layer || !content) return;
-  // A textarea's client width excludes its vertical scrollbar. Mirror that
-  // usable width so soft-wrapped lines, highlighted text, and the caret stay
-  // aligned after the editor begins scrolling or changes layout.
-  layer.style.width = `${ta.clientWidth}px`;
-  content.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
-}
-
-watch(textareaRef, (ta) => {
-  if (!highlightResizeObserver) return;
-  highlightResizeObserver.disconnect();
-  if (ta) highlightResizeObserver.observe(ta);
-  nextTick(syncHighlightScroll);
-});
-
-function onSplitScroll() {
-  onEditorScroll();
-  syncHighlightScroll();
-}
-
-watch(
-  () => draft.value,
-  () => {
-    nextTick(syncHighlightScroll);
-  },
-);
-
-// --- Card token hover preview (raw editor) ---
-// The highlight overlay is `pointer-events: none` so the textarea stays fully
-// interactive. To surface hover previews for ((Card)) / [[Card]] tokens we
-// hit-test the token span rects against the mouse position on mousemove.
+// --- Card token hover preview ---
 const tokenPreview = ref<{
   imageUrl: string;
   x: number;
@@ -556,53 +398,19 @@ const PREVIEW_HEIGHT = 307; // 220 * 1.395 (MTG card aspect)
 const CARD_DOUBLE_TAP_MS = 450;
 let lastCardTap: { element: HTMLElement; time: number } | null = null;
 
-function onEditorMouseMove(e: MouseEvent) {
-  const layer = highlightContentRef.value;
-  if (!layer) {
+function onEditorCardHover(card: EditorCardHover) {
+  const entry = cardImageMap.value.get(card.name.toLowerCase());
+  if (!entry) {
     tokenPreview.value = null;
     return;
   }
-  const spans = layer.querySelectorAll<HTMLElement>(
-    '.tok-card-img, .tok-card-link',
-  );
-  for (const span of spans) {
-    const rects = span.getClientRects();
-    for (const rect of rects) {
-      if (
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom
-      ) {
-        const raw = span.textContent ?? '';
-        const name = raw
-          .replace(/^\(\(|\)\)$/g, '')
-          .replace(/^\[\[|\]\]$/g, '')
-          .trim();
-        const entry = cardImageMap.value.get(name.toLowerCase());
-        if (!entry) {
-          tokenPreview.value = null;
-          return;
-        }
-        // Position above the token by default; flip below if too close to top.
-        const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
-        const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
-        const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
-        const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-        tokenPreview.value = {
-          imageUrl: entry.imageUrl,
-          x,
-          y,
-        };
-        return;
-      }
-    }
-  }
-  tokenPreview.value = null;
-}
-
-function onEditorMouseLeave() {
-  tokenPreview.value = null;
+  const preferredTop = card.top - PREVIEW_HEIGHT - 8;
+  const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
+  tokenPreview.value = {
+    imageUrl: entry.imageUrl,
+    x: Math.min(Math.max(card.left, 8), Math.max(maxX, 8)),
+    y: preferredTop < 8 ? card.bottom + 8 : preferredTop,
+  };
 }
 
 // --- Card token hover preview (rendered preview pane) ---
@@ -648,14 +456,20 @@ function onPreviewPointerLeave(event: PointerEvent) {
   lastCardTap = null;
 }
 
-// --- Card embeds: ((Card Name)) and [[Card Name]] ---
-// Collect all unique card names referenced in the current preview source.
-const previewSource = computed(() => {
-  // When editable, always read from the live draft so newly-typed tokens are
-  // resolved for hover previews even before switching to preview/split mode.
-  const src = props.editable ? draft.value : props.modelValue;
-  return src ?? '';
+// Keep typing and saves on the live draft. Preview rendering and card/link
+// lookups wait for a short pause while the user edits.
+const debouncedDraft = refDebounced(draft, 200);
+watch(mode, (value) => {
+  // Opening split view explicitly should show the latest text immediately.
+  if (value === 'split') debouncedDraft.value = draft.value;
 });
+const previewSource = computed(() => {
+  if (!props.editable) return props.modelValue ?? '';
+  return mode.value === 'preview' ? draft.value : debouncedDraft.value;
+});
+
+// --- Card embeds: ((Card Name)) and [[Card Name]] ---
+// Explicit full preview and read-only rendering stay immediate, including SSR.
 
 const referencedCardNames = computed(() => {
   const names = new Set<string>();
@@ -1006,85 +820,6 @@ function handlePreviewClick(event: MouseEvent) {
   );
 }
 
-// --- Syntax highlighting for the raw markdown editor ---
-// Produces safe HTML mirroring the textarea contents with token spans so users
-// can visually distinguish HTML tags, card embeds, links, etc.
-const highlightedDraft = computed(() => highlightMarkdown(draft.value));
-
-interface HighlightMatch {
-  start: number;
-  end: number;
-  cls: string;
-}
-
-function escapeHighlightHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function highlightMarkdown(src: string): string {
-  if (!src) return '';
-
-  const matches: HighlightMatch[] = [];
-  const add = (re: RegExp, cls: string) => {
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(src)) !== null) {
-      if (m[0].length === 0) {
-        re.lastIndex++;
-        continue;
-      }
-      matches.push({ start: m.index, end: m.index + m[0].length, cls });
-    }
-  };
-
-  // Higher-priority patterns first so they win when overlapping.
-  add(/```[\s\S]*?```/g, 'tok-code-block');
-  add(/`[^`\n]+`/g, 'tok-code');
-  add(/\(\([^)\n]+\)\)/g, 'tok-card-img');
-  add(/\[\[[^\]\n]+\]\]/g, 'tok-card-link');
-  add(/@\[youtube\]\([A-Za-z0-9_-]{11}\)/g, 'tok-youtube');
-  add(/\{[^{}\n]+\}/g, 'tok-magic-symbol');
-  add(/:[a-z0-9_+-]+:/g, 'tok-emoji');
-  add(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, 'tok-html');
-  add(/!\[[^\]\n]*\]\([^)\n]+\)/g, 'tok-image');
-  add(/\[[^\]\n]+\]\([^)\n]+\)/g, 'tok-link');
-  add(/^#{1,6}\s.*$/gm, 'tok-heading');
-  add(/\*\*[^*\n]+\*\*/g, 'tok-bold');
-  add(/(?<!\w)_[^_\n]+_(?!\w)/g, 'tok-italic');
-  add(/^>\s.*$/gm, 'tok-quote');
-  add(/^\s*(?:-{3,}|\*{3,})\s*$/gm, 'tok-hr');
-  add(/^\s*(?:[-*+]|\d+\.)\s/gm, 'tok-list');
-
-  // Prefer earlier start; on ties, prefer the longer match.
-  matches.sort((a, b) => a.start - b.start || b.end - a.end);
-
-  // Drop matches that overlap already-claimed ranges (first-wins after sort).
-  const kept: HighlightMatch[] = [];
-  let cursor = 0;
-  for (const m of matches) {
-    if (m.start >= cursor) {
-      kept.push(m);
-      cursor = m.end;
-    }
-  }
-
-  let out = '';
-  let pos = 0;
-  for (const m of kept) {
-    if (m.start > pos) out += escapeHighlightHtml(src.slice(pos, m.start));
-    out += `<span class="${m.cls}">${escapeHighlightHtml(
-      src.slice(m.start, m.end),
-    )}</span>`;
-    pos = m.end;
-  }
-  if (pos < src.length) out += escapeHighlightHtml(src.slice(pos));
-
-  // Textareas render a trailing newline as an empty line; mirror that in the
-  // overlay so line counts stay aligned.
-  if (src.endsWith('\n')) out += '\n';
-
-  return out;
-}
-
 type ToolbarActionId =
   | 'h1'
   | 'h2'
@@ -1152,14 +887,10 @@ const toolbarGroups: ToolbarAction[][] = [
   ],
 ];
 
-// Flat list used only for action lookup
-const toolbarActions: ToolbarAction[] = toolbarGroups.flat();
-
 function applyAction(id: ToolbarActionId) {
-  const el = textareaRef.value;
-  if (!el) return;
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
+  const editor = sourceEditorRef.value;
+  if (!editor) return;
+  const { from: start, to: end } = editor.getSelection();
   const value = draft.value;
   const selected = value.slice(start, end);
 
@@ -1259,17 +990,10 @@ function applyAction(id: ToolbarActionId) {
     ? ensureBlockBoundary(value, start) + before + text + after
     : before + text + after;
 
-  // Use execCommand so the browser undo stack is preserved.
-  el.focus();
-  el.setSelectionRange(start, end);
-  document.execCommand('insertText', false, insertion);
-
-  nextTick(() => {
-    if (!textareaRef.value) return;
-    textareaRef.value.focus();
-    const selStart = start + insertion.length - after.length - text.length;
-    const selEnd = selStart + text.length;
-    textareaRef.value.setSelectionRange(selStart, selEnd);
+  const selStart = start + insertion.length - after.length - text.length;
+  editor.replaceSelection(insertion, {
+    anchor: selStart,
+    head: selStart + text.length,
   });
 }
 
@@ -1286,10 +1010,9 @@ function applyListPrefix(
   placeholder: string,
   numbered = false,
 ) {
-  const el = textareaRef.value;
-  if (!el) return;
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
+  const editor = sourceEditorRef.value;
+  if (!editor) return;
+  const { from: start, to: end } = editor.getSelection();
   const value = draft.value;
   const selected = value.slice(start, end);
 
@@ -1304,32 +1027,14 @@ function applyListPrefix(
   const boundary = ensureBlockBoundary(value, start);
   const insertion = boundary + prefixed;
 
-  el.focus();
-  el.setSelectionRange(start, end);
-  document.execCommand('insertText', false, insertion);
-
-  nextTick(() => {
-    if (!textareaRef.value) return;
-    textareaRef.value.focus();
-    const selStart = start + boundary.length;
-    const selEnd = selStart + prefixed.length;
-    textareaRef.value.setSelectionRange(selStart, selEnd);
+  editor.replaceSelection(insertion, {
+    anchor: start + boundary.length,
+    head: start + boundary.length + prefixed.length,
   });
 }
 
 function insertAtCursor(text: string) {
-  const el = textareaRef.value;
-  if (!el) return;
-  const start = el.selectionStart;
-  el.focus();
-  document.execCommand('insertText', false, text);
-  nextTick(() => {
-    if (!textareaRef.value) return;
-    textareaRef.value.setSelectionRange(
-      start + text.length,
-      start + text.length,
-    );
-  });
+  sourceEditorRef.value?.replaceSelection(text);
 }
 
 // --- Emoji picker ---
@@ -1446,15 +1151,15 @@ const emojiResults = computed<EmojiEntry[]>(() => {
 function insertEmojiShortcode(name: string) {
   emojiPickerOpen.value = false;
   emojiSearchTerm.value = '';
-  // Focus the textarea first so the shortcode is inserted at the caret.
-  textareaRef.value?.focus();
+  // Restore editor focus so the shortcode is inserted at its saved selection.
+  sourceEditorRef.value?.focus();
   nextTick(() => insertAtCursor(`:${name}:`));
 }
 
 function insertMagicSymbol(token: string) {
   magicSymbolPickerOpen.value = false;
   magicSymbolSearchTerm.value = '';
-  textareaRef.value?.focus();
+  sourceEditorRef.value?.focus();
   nextTick(() => insertAtCursor(`{${token}}`));
 }
 </script>
@@ -1824,136 +1529,6 @@ function insertMagicSymbol(token: string) {
   );
   background-size: 200% 100%;
 }
-
-/* --- Syntax-highlighted editor (overlay + transparent textarea) --- */
-.editor-shell {
-  position: relative;
-  overflow: hidden;
-}
-/* Shared type metrics — both layers MUST match exactly for caret/highlight alignment. */
-.highlight-layer,
-.editor-textarea {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
-  font-size: 1rem;
-  line-height: 1.5;
-  letter-spacing: 0;
-  tab-size: 4;
-  -moz-tab-size: 4;
-}
-.highlight-layer {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
-  pointer-events: none;
-  border-radius: inherit;
-}
-.highlight-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem;
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  will-change: transform;
-  color: rgb(107 114 128); /* base tone for un-tokenized text */
-}
-:global(.dark) .highlight-content {
-  color: rgb(148 163 184);
-}
-.editor-textarea {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 1rem;
-  margin: 0;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: transparent;
-  caret-color: rgb(17 24 39);
-  resize: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  box-sizing: border-box;
-}
-.editor-textarea::selection {
-  background: rgba(59, 130, 246, 0.35);
-  color: transparent;
-}
-.editor-textarea::placeholder {
-  color: rgb(156 163 175);
-}
-
-/* Token colors — tuned to work in both light and dark themes. Keep font
-   metrics unchanged so this mirror wraps exactly like the textarea. */
-.highlight-content :deep(.tok-html) {
-  color: #d946ef;
-}
-.highlight-content :deep(.tok-card-img) {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-card-link) {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-youtube) {
-  color: #ef4444;
-}
-.highlight-content :deep(.tok-emoji) {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-magic-symbol) {
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-heading) {
-  color: #f59e0b;
-}
-.highlight-content :deep(.tok-bold) {
-  color: #eab308;
-}
-.highlight-content :deep(.tok-italic) {
-  color: #eab308;
-}
-.highlight-content :deep(.tok-quote) {
-  color: #94a3b8;
-}
-.highlight-content :deep(.tok-list) {
-  color: #f97316;
-}
-.highlight-content :deep(.tok-link) {
-  color: #06b6d4;
-}
-.highlight-content :deep(.tok-image) {
-  color: #14b8a6;
-}
-.highlight-content :deep(.tok-code),
-.highlight-content :deep(.tok-code-block) {
-  color: #a78bfa;
-  background: rgba(167, 139, 250, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-hr) {
-  color: #64748b;
-}
 </style>
 
 <!-- Unscoped: the token preview is teleported to <body> and can't inherit scoped styles. -->
@@ -1974,11 +1549,5 @@ function insertMagicSymbol(token: string) {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-/* Dark-mode caret: kept unscoped because Vue's :global(.dark) in scoped styles
-   did not reliably compile to a matching descendant selector here. */
-.dark .editor-textarea {
-  caret-color: #ffffff;
 }
 </style>
