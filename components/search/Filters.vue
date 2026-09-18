@@ -33,7 +33,7 @@
             @click="clearColorChip"
           >
             <span class="flex items-center gap-1">
-              <ManaIcon
+              <ManaColorIcon
                 v-for="color in selectedColors"
                 :key="color"
                 :type="cardColorToSymbol(color)"
@@ -284,7 +284,7 @@
                 >
                   <template #label="{ item }">
                     <span class="ml-2">
-                      <ManaIcon
+                      <ManaColorIcon
                         :type="
                           cardColorToSymbol(
                             (item as { value: CardColorType }).value,
@@ -432,7 +432,7 @@ import {
 } from '~/models/cardModel';
 import { cardColorToSymbol } from '~/utils/cardHelpers';
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
-import ManaIcon from '../general/ManaIcon.vue';
+import ManaColorIcon from '../general/ManaColorIcon.vue';
 import type {
   AccordionItem,
   CheckboxGroupItem,

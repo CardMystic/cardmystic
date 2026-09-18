@@ -94,6 +94,24 @@ describe('parseLinkEmbedTarget', () => {
     });
   });
 
+  it.each([
+    '/lists/%',
+    'https://cardmystic.com/articles/%E0%A4%A',
+    '/user/%ZZ',
+    '/search/all/keyword/%',
+    '/popular-by-commander/all/%C0%AF',
+  ])('ignores malformed URL encoding in %s', (url) => {
+    expect(parseLinkEmbedTarget(url)).toBeNull();
+  });
+
+  it('still decodes valid encoded URL segments', () => {
+    expect(parseLinkEmbedTarget('/search/all/smart/caf%C3%A9')).toEqual({
+      href: '/search/all/smart/caf%C3%A9',
+      type: 'search',
+      search: { platform: 'all', searchType: 'smart', slug: 'caf\u00e9' },
+    });
+  });
+
   it('ignores non-CardMystic and unknown paths', () => {
     expect(parseLinkEmbedTarget('https://example.com/lists/abc')).toBeNull();
     expect(parseLinkEmbedTarget('/random/path')).toBeNull();
@@ -162,6 +180,24 @@ describe('extractAndTokenizeLinkEmbeds', () => {
     expect(targets).toHaveLength(1);
     const matches = processed.match(/LINKEMBEDTOKEN0LINKEMBEDTOKEN/g) ?? [];
     expect(matches).toHaveLength(2);
+  });
+
+  it('preserves malformed links without losing subsequent valid embeds', () => {
+    const malformed = 'https://cardmystic.com/articles/%';
+    const source = [malformed, '', '/lists/abc-123'].join('\n');
+    expect(extractLinkEmbedTargets(source)).toEqual([
+      {
+        href: '/lists/abc-123',
+        type: 'decklist',
+        id: 'abc-123',
+        url: '/lists/abc-123',
+      },
+    ]);
+    const { processed, targets } = extractAndTokenizeLinkEmbeds(source);
+    expect(processed).toContain(malformed);
+    expect(processed).toContain('LINKEMBEDTOKEN0LINKEMBEDTOKEN');
+    expect(targets).toHaveLength(1);
+    expect(targets[0].href).toBe('/lists/abc-123');
   });
 
   it('leaves non-matching lines untouched', () => {

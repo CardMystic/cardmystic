@@ -54,6 +54,7 @@ function switchType(type: StatsType) {
 
 // Restore query when arriving via navbar (no active query params)
 onMounted(() => {
+  if (route.params.slug) return;
   const type = statsType.value;
   const hasQuery =
     (type === 'popular-by-commander' && route.query.commander) ||

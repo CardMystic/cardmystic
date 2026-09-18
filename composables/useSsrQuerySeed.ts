@@ -22,6 +22,7 @@ export async function useSsrQuerySeed<T>(opts: {
   queryKey: readonly unknown[];
 }): Promise<Ref<T | null>> {
   const config = useRuntimeConfig();
+  const headers = useBackendRequestHeaders();
   const queryClient = useQueryClient();
 
   // useAsyncData's generic pipes through `PickFrom<T, KeysOf<T>>`, which
@@ -29,7 +30,9 @@ export async function useSsrQuerySeed<T>(opts: {
   // `unknown` so callers get a clean `Ref<T | null>`.
   const asyncResult = (await useAsyncData(opts.cacheKey, async () => {
     try {
-      const raw = await $fetch(`${config.public.backendUrl}${opts.path}`);
+      const raw = await $fetch(`${config.public.backendUrl}${opts.path}`, {
+        headers,
+      });
       return opts.schema.parse(raw);
     } catch {
       return null;

@@ -10,7 +10,10 @@ export function usePrimer(listId: Ref<string | null | undefined>) {
   const config = useRuntimeConfig();
   const supabase = process.server ? null : useSupabase();
 
-  const enabled = computed(() => !!listId.value);
+  // The page seeds public text during SSR. An anonymous background request
+  // for a private primer would cache a fresh null and delay the owner's
+  // authenticated request after hydration.
+  const enabled = computed(() => import.meta.client && !!listId.value);
 
   const { data, isPending, refetch } = useQuery({
     queryKey: computed(() => ['primer', listId.value]),

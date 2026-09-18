@@ -14,6 +14,8 @@ export interface SeoQuery {
   /** The actual query string sent to the search API */
   query: string;
   searchType: SeoSearchType;
+  /** Canonical source card for similarity-page backlinks. */
+  oracleId?: string;
   filters?: Partial<CardSearchFilters>;
   /** SEO page title (appears in <title> and <h1>) */
   title: string;
@@ -21,11 +23,13 @@ export interface SeoQuery {
   description: string;
 }
 
+// Source oracle IDs verified against /bulkdata/card-name-to-oracle-id.min.json.
 // ─── Similar Cards ───────────────────────────────────────────────
 export const similarQueries: SeoQuery[] = [
   {
     slug: 'lightning-bolt',
     query: 'Lightning Bolt',
+    oracleId: '4457ed35-7c10-48c8-9776-456485fdf070',
     searchType: 'similarity',
     title: 'Cards Similar to Lightning Bolt',
     description:
@@ -34,6 +38,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'counterspell',
     query: 'Counterspell',
+    oracleId: 'cc187110-1148-4090-bbb8-e205694a39f5',
     searchType: 'similarity',
     title: 'Cards Similar to Counterspell',
     description:
@@ -42,6 +47,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'swords-to-plowshares',
     query: 'Swords to Plowshares',
+    oracleId: 'b1544f21-7e98-461b-aed5-e748b0168c52',
     searchType: 'similarity',
     title: 'Cards Similar to Swords to Plowshares',
     description:
@@ -50,6 +56,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'sol-ring',
     query: 'Sol Ring',
+    oracleId: '6ad8011d-3471-4369-9d68-b264cc027487',
     searchType: 'similarity',
     title: 'Cards Similar to Sol Ring',
     description:
@@ -58,6 +65,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'path-to-exile',
     query: 'Path to Exile',
+    oracleId: 'd683d985-9888-4d21-8b5f-69e69ce4a03b',
     searchType: 'similarity',
     title: 'Cards Similar to Path to Exile',
     description:
@@ -66,6 +74,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'thoughtseize',
     query: 'Thoughtseize',
+    oracleId: 'edd8d1e8-be43-4c38-bb3a-83081fbaf0b5',
     searchType: 'similarity',
     title: 'Cards Similar to Thoughtseize',
     description:
@@ -74,6 +83,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'brainstorm',
     query: 'Brainstorm',
+    oracleId: '36cd2364-d113-47d1-b2c4-b088d9eb88dd',
     searchType: 'similarity',
     title: 'Cards Similar to Brainstorm',
     description:
@@ -82,6 +92,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'dark-ritual',
     query: 'Dark Ritual',
+    oracleId: '53f7c868-b03e-4fc2-8dcf-a75bbfa3272b',
     searchType: 'similarity',
     title: 'Cards Similar to Dark Ritual',
     description:
@@ -90,6 +101,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'wrath-of-god',
     query: 'Wrath of God',
+    oracleId: '34515b16-c9a4-4f98-8c77-416a7a523407',
     searchType: 'similarity',
     title: 'Cards Similar to Wrath of God',
     description:
@@ -98,6 +110,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'birds-of-paradise',
     query: 'Birds of Paradise',
+    oracleId: 'd3a0b660-358c-41bd-9cd2-41fbf3491b1a',
     searchType: 'similarity',
     title: 'Cards Similar to Birds of Paradise',
     description:
@@ -106,6 +119,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'fetchlands',
     query: 'Flooded Strand',
+    oracleId: 'f3c7af78-a77d-4134-82a2-a5ce84285a84',
     searchType: 'similarity',
     title: 'Cards Similar to Fetch Lands',
     description:
@@ -114,6 +128,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'rhystic-study',
     query: 'Rhystic Study',
+    oracleId: '53236dd7-845a-444c-96d5-f41ed7325d8f',
     searchType: 'similarity',
     title: 'Cards Similar to Rhystic Study',
     description:
@@ -122,6 +137,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'cyclonic-rift',
     query: 'Cyclonic Rift',
+    oracleId: 'd75b9c82-1b49-4c3e-a1b5-aeef57d6644b',
     searchType: 'similarity',
     title: 'Cards Similar to Cyclonic Rift',
     description:
@@ -130,6 +146,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'demonic-tutor',
     query: 'Demonic Tutor',
+    oracleId: '82004860-e589-4e38-8d61-8c0210e4ea39',
     searchType: 'similarity',
     title: 'Cards Similar to Demonic Tutor',
     description:
@@ -138,6 +155,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'llanowar-elves',
     query: 'Llanowar Elves',
+    oracleId: '68954295-54e3-4303-a6bc-fc4547a4e3a3',
     searchType: 'similarity',
     title: 'Cards Similar to Llanowar Elves',
     description:
@@ -147,6 +165,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'ad-nauseam',
     query: 'Ad Nauseam',
+    oracleId: '981b0e21-e5e6-4a1e-bfde-679d56623f7f',
     searchType: 'similarity',
     title: 'Cards Similar to Ad Nauseam',
     description:
@@ -155,6 +174,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'ancient-tomb',
     query: 'Ancient Tomb',
+    oracleId: '23467047-6dba-4498-b783-1ebc4f74b8c2',
     searchType: 'similarity',
     title: 'Cards Similar to Ancient Tomb',
     description:
@@ -163,6 +183,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'aura-shards',
     query: 'Aura Shards',
+    oracleId: '8d03d050-391c-4311-8c42-4ee632d40fdc',
     searchType: 'similarity',
     title: 'Cards Similar to Aura Shards',
     description:
@@ -171,6 +192,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'bolas-citadel',
     query: "Bolas's Citadel",
+    oracleId: '2bd111bb-ce02-414c-b5b7-e0e037d8d96b',
     searchType: 'similarity',
     title: "Cards Similar to Bolas's Citadel",
     description:
@@ -179,6 +201,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'braids-cabal-minion',
     query: 'Braids, Cabal Minion',
+    oracleId: 'd85aa59b-c6aa-4b2f-885c-59d6e5e6e8b9',
     searchType: 'similarity',
     title: 'Cards Similar to Braids, Cabal Minion',
     description:
@@ -187,6 +210,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'carpet-of-flowers',
     query: 'Carpet of Flowers',
+    oracleId: '2ffc6372-f63b-4f32-8dd0-2d7938aeb412',
     searchType: 'similarity',
     title: 'Cards Similar to Carpet of Flowers',
     description:
@@ -195,6 +219,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'consecrated-sphinx',
     query: 'Consecrated Sphinx',
+    oracleId: '311a449d-dc74-46e6-9a47-6a597931f736',
     searchType: 'similarity',
     title: 'Cards Similar to Consecrated Sphinx',
     description:
@@ -203,6 +228,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'craterhoof-behemoth',
     query: 'Craterhoof Behemoth',
+    oracleId: '8c52bd39-0586-48ca-b263-17210cf9feb6',
     searchType: 'similarity',
     title: 'Cards Similar to Craterhoof Behemoth',
     description:
@@ -211,6 +237,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'deflecting-swat',
     query: 'Deflecting Swat',
+    oracleId: 'ae120613-97d6-4393-b39d-c3e6c076f5d6',
     searchType: 'similarity',
     title: 'Cards Similar to Deflecting Swat',
     description:
@@ -219,6 +246,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'demonic-consultation',
     query: 'Demonic Consultation',
+    oracleId: '9a1412db-45ad-46ea-8f12-a85d203113d8',
     searchType: 'similarity',
     title: 'Cards Similar to Demonic Consultation',
     description:
@@ -227,6 +255,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'dockside-extortionist',
     query: 'Dockside Extortionist',
+    oracleId: '697bcfe1-ecbf-42a1-bfc7-0766d48ca56b',
     searchType: 'similarity',
     title: 'Cards Similar to Dockside Extortionist',
     description:
@@ -235,6 +264,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'doubling-season',
     query: 'Doubling Season',
+    oracleId: '01546b7d-a233-4176-8843-d732074dc5b6',
     searchType: 'similarity',
     title: 'Cards Similar to Doubling Season',
     description:
@@ -243,6 +273,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'drannith-magistrate',
     query: 'Drannith Magistrate',
+    oracleId: 'aadd10d0-6dd0-4bdc-8d93-ff08e29a5863',
     searchType: 'similarity',
     title: 'Cards Similar to Drannith Magistrate',
     description:
@@ -251,6 +282,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'elesh-norn-grand-cenobite',
     query: 'Elesh Norn, Grand Cenobite',
+    oracleId: '958d71ff-c9f7-46f0-96ca-79e7f4d65a16',
     searchType: 'similarity',
     title: 'Cards Similar to Elesh Norn, Grand Cenobite',
     description:
@@ -259,6 +291,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'emrakul-the-aeons-torn',
     query: 'Emrakul, the Aeons Torn',
+    oracleId: '900ca697-ad38-4b2b-bc74-2ff7eb6ea951',
     searchType: 'similarity',
     title: 'Cards Similar to Emrakul, the Aeons Torn',
     description:
@@ -267,6 +300,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'enlightened-tutor',
     query: 'Enlightened Tutor',
+    oracleId: 'c5229c17-b7be-4b05-b683-f2277edc4849',
     searchType: 'similarity',
     title: 'Cards Similar to Enlightened Tutor',
     description:
@@ -275,6 +309,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'expropriate',
     query: 'Expropriate',
+    oracleId: 'a69265b2-0e37-4d86-866e-e4a923233b4d',
     searchType: 'similarity',
     title: 'Cards Similar to Expropriate',
     description:
@@ -283,6 +318,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'fierce-guardianship',
     query: 'Fierce Guardianship',
+    oracleId: 'd09c9cba-fdd2-479b-ad5d-d05181c3e3f9',
     searchType: 'similarity',
     title: 'Cards Similar to Fierce Guardianship',
     description:
@@ -291,6 +327,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'food-chain',
     query: 'Food Chain',
+    oracleId: '5c8e5092-962e-49ef-ab82-8434e475e4e7',
     searchType: 'similarity',
     title: 'Cards Similar to Food Chain',
     description:
@@ -299,6 +336,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'force-of-will',
     query: 'Force of Will',
+    oracleId: '956381ba-6d37-4a8a-846c-bad79222dbee',
     searchType: 'similarity',
     title: 'Cards Similar to Force of Will',
     description:
@@ -307,6 +345,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'gaeas-cradle',
     query: "Gaea's Cradle",
+    oracleId: '7c427c3d-ecd8-45ef-bebd-8f10f4a311db',
     searchType: 'similarity',
     title: "Cards Similar to Gaea's Cradle",
     description:
@@ -315,6 +354,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'grave-pact',
     query: 'Grave Pact',
+    oracleId: '6f4ac4a4-53ec-4bc9-8f5c-d4b801d867b2',
     searchType: 'similarity',
     title: 'Cards Similar to Grave Pact',
     description:
@@ -323,6 +363,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'humility',
     query: 'Humility',
+    oracleId: 'ed7bdb3e-5c51-4547-9266-76a791e0b2b0',
     searchType: 'similarity',
     title: 'Cards Similar to Humility',
     description:
@@ -331,6 +372,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'imperial-seal',
     query: 'Imperial Seal',
+    oracleId: '16cd0b90-f70c-4efa-b252-8de8784ef9a3',
     searchType: 'similarity',
     title: 'Cards Similar to Imperial Seal',
     description:
@@ -339,6 +381,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'intruder-alarm',
     query: 'Intruder Alarm',
+    oracleId: '1e943e04-e213-4781-b1a7-935aad8790e1',
     searchType: 'similarity',
     title: 'Cards Similar to Intruder Alarm',
     description:
@@ -347,6 +390,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'jeweled-lotus',
     query: 'Jeweled Lotus',
+    oracleId: '23216e59-f147-4bb7-a698-12777c2f8584',
     searchType: 'similarity',
     title: 'Cards Similar to Jeweled Lotus',
     description:
@@ -355,6 +399,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'jin-gitaxias-core-augur',
     query: 'Jin-Gitaxias, Core Augur',
+    oracleId: 'eb23aed0-c450-4e57-96f2-2866dceca004',
     searchType: 'similarity',
     title: 'Cards Similar to Jin-Gitaxias, Core Augur',
     description:
@@ -363,6 +408,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'kinnan-bonder-prodigy',
     query: 'Kinnan, Bonder Prodigy',
+    oracleId: '8d11aa49-d4cd-48b1-aa0f-8548fa733416',
     searchType: 'similarity',
     title: 'Cards Similar to Kinnan, Bonder Prodigy',
     description:
@@ -371,6 +417,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'korvold-fae-cursed-king',
     query: 'Korvold, Fae-Cursed King',
+    oracleId: '9ae669dd-7e60-4649-b96e-35da28be641a',
     searchType: 'similarity',
     title: 'Cards Similar to Korvold, Fae-Cursed King',
     description:
@@ -379,6 +426,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'land-tax',
     query: 'Land Tax',
+    oracleId: 'd2d9ecea-7925-420e-98b9-2f87f41f387c',
     searchType: 'similarity',
     title: 'Cards Similar to Land Tax',
     description:
@@ -387,6 +435,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'leovold-emissary-of-trest',
     query: 'Leovold, Emissary of Trest',
+    oracleId: 'd5d91377-fd66-4dbe-a092-07f2ea379ca7',
     searchType: 'similarity',
     title: 'Cards Similar to Leovold, Emissary of Trest',
     description:
@@ -395,6 +444,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'mana-crypt',
     query: 'Mana Crypt',
+    oracleId: '2c63e4e1-89d2-4bc6-a232-94e75c4b1c8a',
     searchType: 'similarity',
     title: 'Cards Similar to Mana Crypt',
     description:
@@ -403,6 +453,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'mana-drain',
     query: 'Mana Drain',
+    oracleId: '74d3277a-38e5-4732-afed-084a56148f20',
     searchType: 'similarity',
     title: 'Cards Similar to Mana Drain',
     description:
@@ -411,6 +462,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'mana-vault',
     query: 'Mana Vault',
+    oracleId: '736892cb-a34b-4bb9-b56c-e26e3db207a2',
     searchType: 'similarity',
     title: 'Cards Similar to Mana Vault',
     description:
@@ -419,6 +471,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'mystic-remora',
     query: 'Mystic Remora',
+    oracleId: '8a52f3c0-2552-4425-b2e3-5496eb2232a7',
     searchType: 'similarity',
     title: 'Cards Similar to Mystic Remora',
     description:
@@ -427,6 +480,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'narset-parter-of-veils',
     query: 'Narset, Parter of Veils',
+    oracleId: 'ab26fbe2-e808-48b9-8d0d-3fbb6c3d554f',
     searchType: 'similarity',
     title: 'Cards Similar to Narset, Parter of Veils',
     description:
@@ -435,6 +489,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'natural-order',
     query: 'Natural Order',
+    oracleId: '8c1fe337-375a-4add-93b6-0ac39ed72b4f',
     searchType: 'similarity',
     title: 'Cards Similar to Natural Order',
     description:
@@ -443,6 +498,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'necropotence',
     query: 'Necropotence',
+    oracleId: '94a844d2-0574-45a7-b347-e0e329767c42',
     searchType: 'similarity',
     title: 'Cards Similar to Necropotence',
     description:
@@ -451,6 +507,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'omniscience',
     query: 'Omniscience',
+    oracleId: '730e39e6-c61d-48b5-8827-bfd952bf1be7',
     searchType: 'similarity',
     title: 'Cards Similar to Omniscience',
     description:
@@ -459,6 +516,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'opposition-agent',
     query: 'Opposition Agent',
+    oracleId: '1f438b8f-fe23-4f3b-ab2e-f6c33676c462',
     searchType: 'similarity',
     title: 'Cards Similar to Opposition Agent',
     description:
@@ -467,6 +525,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'seedborn-muse',
     query: 'Seedborn Muse',
+    oracleId: '463865bc-087e-477b-9e86-84e77f1ad931',
     searchType: 'similarity',
     title: 'Cards Similar to Seedborn Muse',
     description:
@@ -475,6 +534,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'serra-ascendant',
     query: 'Serra Ascendant',
+    oracleId: '27ad3e00-6ffb-48f7-8469-8868d066d1e2',
     searchType: 'similarity',
     title: 'Cards Similar to Serra Ascendant',
     description:
@@ -483,6 +543,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'smothering-tithe',
     query: 'Smothering Tithe',
+    oracleId: '153376c9-dffd-458c-8ce3-a4c8269bc4e9',
     searchType: 'similarity',
     title: 'Cards Similar to Smothering Tithe',
     description:
@@ -491,6 +552,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'stasis',
     query: 'Stasis',
+    oracleId: 'a8cf1379-0195-4e11-b994-481ef1284245',
     searchType: 'similarity',
     title: 'Cards Similar to Stasis',
     description:
@@ -499,6 +561,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'survival-of-the-fittest',
     query: 'Survival of the Fittest',
+    oracleId: '119d719d-e965-45b4-9bc9-ac03211b10c2',
     searchType: 'similarity',
     title: 'Cards Similar to Survival of the Fittest',
     description:
@@ -507,6 +570,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'sylvan-library',
     query: 'Sylvan Library',
+    oracleId: '92eed395-62ca-4293-882b-8565c40daab5',
     searchType: 'similarity',
     title: 'Cards Similar to Sylvan Library',
     description:
@@ -515,6 +579,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'teferi-time-raveler',
     query: 'Teferi, Time Raveler',
+    oracleId: 'ae7604bb-4818-45a3-960c-cf3d83f15964',
     searchType: 'similarity',
     title: 'Cards Similar to Teferi, Time Raveler',
     description:
@@ -523,6 +588,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'thassas-oracle',
     query: "Thassa's Oracle",
+    oracleId: '1de1b591-a73f-4974-b507-8c63e07a0868',
     searchType: 'similarity',
     title: "Cards Similar to Thassa's Oracle",
     description:
@@ -531,6 +597,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'tooth-and-nail',
     query: 'Tooth and Nail',
+    oracleId: '382b7873-e78d-473b-8346-d92d16e8f634',
     searchType: 'similarity',
     title: 'Cards Similar to Tooth and Nail',
     description:
@@ -539,6 +606,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'urza-lord-high-artificer',
     query: 'Urza, Lord High Artificer',
+    oracleId: 'e87906d2-db1a-4e19-b910-adb4eb339945',
     searchType: 'similarity',
     title: 'Cards Similar to Urza, Lord High Artificer',
     description:
@@ -547,6 +615,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'vampiric-tutor',
     query: 'Vampiric Tutor',
+    oracleId: 'ededbdae-d9dc-4206-9335-d7158f2d7700',
     searchType: 'similarity',
     title: 'Cards Similar to Vampiric Tutor',
     description:
@@ -555,6 +624,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'vorinclex-voice-of-hunger',
     query: 'Vorinclex, Voice of Hunger',
+    oracleId: 'dbf0ad03-ab31-49d2-89b1-05b45948a61f',
     searchType: 'similarity',
     title: 'Cards Similar to Vorinclex, Voice of Hunger',
     description:
@@ -563,6 +633,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'winter-orb',
     query: 'Winter Orb',
+    oracleId: '1dcbd583-3388-4b34-a7cd-131648aa6abd',
     searchType: 'similarity',
     title: 'Cards Similar to Winter Orb',
     description:
@@ -572,6 +643,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'edgar-markov',
     query: 'Edgar Markov',
+    oracleId: '41e2790d-49f5-4e98-b8d9-04179f47f13a',
     searchType: 'similarity',
     title: 'Cards Similar to Edgar Markov',
     description:
@@ -580,6 +652,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'the-ur-dragon',
     query: 'The Ur-Dragon',
+    oracleId: '87b22b09-4f6d-4bc5-9cfc-663e4c7c6981',
     searchType: 'similarity',
     title: 'Cards Similar to The Ur-Dragon',
     description:
@@ -588,6 +661,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'atraxa-praetors-voice',
     query: "Atraxa, Praetors' Voice",
+    oracleId: '7e6b9b59-cd68-4e3c-827b-38833c92d6eb',
     searchType: 'similarity',
     title: "Cards Similar to Atraxa, Praetors' Voice",
     description:
@@ -596,6 +670,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'muldrotha-the-gravetide',
     query: 'Muldrotha, the Gravetide',
+    oracleId: 'e4625704-1d52-44e4-804f-2f45644d76ac',
     searchType: 'similarity',
     title: 'Cards Similar to Muldrotha, the Gravetide',
     description:
@@ -604,6 +679,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'tymna-the-weaver',
     query: 'Tymna the Weaver',
+    oracleId: 'd15642e4-e61c-4d29-af48-de837991245e',
     searchType: 'similarity',
     title: 'Cards Similar to Tymna the Weaver',
     description:
@@ -612,6 +688,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'thrasios-triton-hero',
     query: 'Thrasios, Triton Hero',
+    oracleId: '3d867016-2601-4a37-a73d-308898d3bd37',
     searchType: 'similarity',
     title: 'Cards Similar to Thrasios, Triton Hero',
     description:
@@ -620,6 +697,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'sensei-divining-top',
     query: "Sensei's Divining Top",
+    oracleId: '13575cf9-65c1-4861-b21e-eb2155e07766',
     searchType: 'similarity',
     title: "Cards Similar to Sensei's Divining Top",
     description:
@@ -628,6 +706,7 @@ export const similarQueries: SeoQuery[] = [
   {
     slug: 'esper-sentinel',
     query: 'Esper Sentinel',
+    oracleId: '5def9f38-0a0b-4e8d-9f9d-29dcb46520b4',
     searchType: 'similarity',
     title: 'Cards Similar to Esper Sentinel',
     description:

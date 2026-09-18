@@ -190,9 +190,14 @@ export const mockSupabaseAuth = async (page: Page) => {
 export const waitForHydration = async (page: Page) => {
   await page.waitForFunction(
     () => {
-      const el = document.getElementById('__nuxt');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return !!el && !!(el as any).__vue_app__;
+      const el = document.getElementById('__nuxt') as
+        | (HTMLElement & {
+            __vue_app__?: { $nuxt?: { isHydrating: boolean } };
+          })
+        | null;
+      // Vue attaches the app before Nuxt's async page/layout hydration finishes.
+      // Wait for its suspense boundary so inputs have their reactive listeners.
+      return el?.__vue_app__?.$nuxt?.isHydrating === false;
     },
     undefined,
     { timeout: 30_000 },

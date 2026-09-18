@@ -19,7 +19,7 @@
         class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/segment:flex group-focus-within/segment:flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-medium bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 whitespace-nowrap z-20 shadow-md"
         role="tooltip"
       >
-        <ManaIcon :type="segment.key" />
+        <ManaColorIcon :type="segment.key" />
         <span>{{ segment.percent }}%</span>
       </div>
     </div>
@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import ManaColorIcon from '~/components/general/ManaColorIcon.vue';
 import type { ColorRatios } from '~/models/cardListModel';
 
 const props = defineProps<{ ratios: ColorRatios }>();

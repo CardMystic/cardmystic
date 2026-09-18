@@ -15,13 +15,14 @@
     </div>
 
     <div class="suggestion-grid" aria-label="Suggested searches">
-      <button
+      <NuxtLink
         v-for="suggestion in config.suggestions"
         :key="suggestion.label"
-        type="button"
+        :to="suggestionLink(suggestion.label)"
+        no-prefetch
+        @click="saveSuggestion(suggestion.label)"
         class="suggestion-card"
         :aria-label="`Try ${suggestion.label}`"
-        @click="runSuggestion(suggestion.label)"
       >
         <span class="suggestion-icon-wrap">
           <UIcon
@@ -36,13 +37,14 @@
           class="suggestion-arrow"
           aria-hidden="true"
         />
-      </button>
+      </NuxtLink>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import type { LocationQueryRaw } from 'vue-router';
+import type { LocationQuery } from 'vue-router';
+import { getSearchLink } from '~/utils/searchLinks';
 import type { Platform } from '~/utils/platformConfig';
 
 type LandingSearchType =
@@ -210,19 +212,20 @@ const landingConfigs: Record<LandingSearchType, LandingConfig> = {
 };
 
 const config = computed(() => landingConfigs[props.searchType]);
-const router = useRouter();
+const { saveSearchQuery } = useSearchType();
 
-function runSuggestion(value: string) {
-  const segment =
-    props.searchType === 'recommend' ? 'deckbuilder' : props.searchType;
-  const query: LocationQueryRaw = { searchType: props.searchType };
-
+function saveSuggestion(value: string) {
+  const query: LocationQuery = { searchType: props.searchType };
   if (props.searchType === 'similarity') query.card_name = value;
   else if (props.searchType === 'recommend') query.commander = value;
   else query.query = value;
+  saveSearchQuery(props.searchType, query);
+}
 
-  router.push({
-    path: `/search/${props.platform}/${segment}`,
+function suggestionLink(query: string) {
+  return getSearchLink({
+    platform: props.platform,
+    searchType: props.searchType,
     query,
   });
 }

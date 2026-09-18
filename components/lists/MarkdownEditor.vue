@@ -285,8 +285,8 @@
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 px-1 overflow-y-auto"
         @click="handlePreviewClick"
-        @mousemove="onPreviewMouseMove"
-        @mouseleave="onPreviewMouseLeave"
+        @pointermove="onPreviewPointerMove"
+        @pointerleave="onPreviewPointerLeave"
       >
         <div v-if="renderedHtml" v-html="renderedHtml"></div>
         <p
@@ -303,8 +303,8 @@
       v-else
       class="primer-preview grow min-h-0 overflow-y-auto px-1"
       @click="handlePreviewClick"
-      @mousemove="onPreviewMouseMove"
-      @mouseleave="onPreviewMouseLeave"
+      @pointermove="onPreviewPointerMove"
+      @pointerleave="onPreviewPointerLeave"
     >
       <div v-if="renderedHtml" v-html="renderedHtml"></div>
       <p
@@ -360,7 +360,7 @@
 
 <script setup lang="ts">
 import { marked } from 'marked';
-import DOMPurify from 'dompurify';
+import { sanitizeMarkdownHtml } from '~/utils/sanitizeMarkdown';
 import { emojify, search as searchEmoji } from 'node-emoji';
 import 'mana-font/css/mana.min.css';
 import { useCardsByName } from '~/composables/useCards';
@@ -424,6 +424,13 @@ const mode = ref<'edit' | 'split' | 'preview'>(
   props.editable ? 'edit' : 'preview',
 );
 watch(mode, (value) => emit('mode-change', value), { immediate: true });
+// Ownership can become available after the public server render hydrates.
+watch(
+  () => props.editable,
+  (editable) => {
+    mode.value = editable ? 'edit' : 'preview';
+  },
+);
 const draft = ref(props.modelValue);
 const lastSavedAt = ref<number | null>(null);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
@@ -466,11 +473,12 @@ function handleBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 function handleDocumentPointerDown(e: PointerEvent) {
-  if (!tokenPreview.value) return;
   const el = e.target as HTMLElement | null;
-  // Skip closing when tapping the originating card link so the sibling click
-  // handler can re-open/re-position it without a visible flicker.
-  if (el?.closest('.card-inline-link')) return;
+  // Keep the preview open while tapping its link again. Any other interaction
+  // ends the pending double tap, including a tap on a different card.
+  const cardLink = el?.closest('.card-inline-link');
+  if (cardLink !== lastCardTap?.element) lastCardTap = null;
+  if (cardLink) return;
   tokenPreview.value = null;
 }
 
@@ -545,6 +553,8 @@ const tokenPreview = ref<{
 
 const PREVIEW_WIDTH = 220;
 const PREVIEW_HEIGHT = 307; // 220 * 1.395 (MTG card aspect)
+const CARD_DOUBLE_TAP_MS = 450;
+let lastCardTap: { element: HTMLElement; time: number } | null = null;
 
 function onEditorMouseMove(e: MouseEvent) {
   const layer = highlightContentRef.value;
@@ -598,13 +608,18 @@ function onEditorMouseLeave() {
 // --- Card token hover preview (rendered preview pane) ---
 // The preview pane is `overflow-y-auto`, which clips CSS-only tooltip
 // approaches. Reuse the teleported floating preview by hit-testing the
-// rendered `.card-inline-link` elements on mousemove.
-function onPreviewMouseMove(e: MouseEvent) {
+// rendered `.card-inline-link` elements on pointer movement.
+function onPreviewPointerMove(event: PointerEvent) {
+  if (event.pointerType !== 'touch') showCardLinkPreview(event);
+}
+
+function showCardLinkPreview(e: MouseEvent) {
   const target = (e.target as HTMLElement | null)?.closest(
     '.card-inline-link',
   ) as HTMLElement | null;
   if (!target) {
     tokenPreview.value = null;
+    lastCardTap = null;
     return;
   }
   const name = (target.textContent ?? '').trim();
@@ -625,8 +640,12 @@ function onPreviewMouseMove(e: MouseEvent) {
   };
 }
 
-function onPreviewMouseLeave() {
+function onPreviewPointerLeave(event: PointerEvent) {
+  // Touch ends with pointerleave, followed by synthetic mouse events. Neither
+  // should dismiss the preview or cancel the pending second tap.
+  if (event.pointerType === 'touch') return;
   tokenPreview.value = null;
+  lastCardTap = null;
 }
 
 // --- Card embeds: ((Card Name)) and [[Card Name]] ---
@@ -650,8 +669,18 @@ const referencedCardNames = computed(() => {
   return [...names];
 });
 
-const { cards: referencedCards } = useCardsByName(referencedCardNames);
-const { data: commanderNames } = useCommandersSet();
+const { cards: referencedCards, suspense: resolveReferencedCards } =
+  useCardsByName(referencedCardNames);
+const { data: commanderNames, suspense: resolveCommanders } =
+  useCommandersSet();
+
+onServerPrefetch(async () => {
+  if (!referencedCardNames.value.length) return;
+  // Resolve the same cached queries the browser uses, so canonical card links
+  // are present in the response and hydration does not repeat their requests.
+  // A lookup failure must not prevent readers from seeing the article/primer.
+  await Promise.allSettled([resolveReferencedCards(), resolveCommanders()]);
+});
 
 // Map from card name (lowercase) → image URL for fast lookup during render.
 const cardImageMap = computed(() => {
@@ -730,6 +759,12 @@ function escapeEmbedHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function isOracleId(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
 function renderLinkEmbedCard(data: LinkEmbedData): string {
   const href = escapeEmbedHtml(data.href);
   const eyebrow = escapeEmbedHtml(data.eyebrow);
@@ -785,7 +820,6 @@ async function handleSave() {
 const renderedHtml = computed(() => {
   const src = previewSource.value;
   if (!src?.trim()) return '';
-  if (!import.meta.client) return '';
 
   // --- Pre-process: extract special tokens before markdown sees them ---
   const ytIds: string[] = [];
@@ -824,34 +858,30 @@ const renderedHtml = computed(() => {
   pre = emojify(pre);
 
   const html = marked.parse(pre, { async: false }) as string;
-  const sanitized = DOMPurify.sanitize(html, {
-    ALLOWED_ATTR: [
-      'href',
-      'src',
-      'alt',
-      'title',
-      'loading',
-      'frameborder',
-      'allowfullscreen',
-      'class',
-      'open',
-      'start',
-    ],
-    ADD_TAGS: ['details', 'summary', 'iframe'],
-  });
+  const sanitized = sanitizeMarkdownHtml(html);
 
   // --- Post-process: swap tokens back with final HTML ---
-  let result = sanitized.replace(/YTEMBEDTOKEN(\d+)YTEMBEDTOKEN/g, (_, idx) => {
-    const id = ytIds[Number(idx)];
-    if (!id) return '';
-    return `<div class="youtube-embed"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen loading="lazy" title="YouTube video"></iframe></div>`;
-  });
+  let result = sanitized.replace(
+    /(?:<p>\s*)?YTEMBEDTOKEN(\d+)YTEMBEDTOKEN(?:\s*<\/p>)?/g,
+    (_, idx) => {
+      const id = ytIds[Number(idx)];
+      if (!id) return '';
+      return `<div class="youtube-embed"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen loading="lazy" title="YouTube video"></iframe></div>`;
+    },
+  );
 
   result = result.replace(/CARDIMGTOKEN(\d+)CARDIMGTOKEN/g, (_, idx) => {
     const name = cardImgNames[Number(idx)];
     if (!name) return '';
     const entry = cardImageMap.value.get(name.toLowerCase());
-    if (!entry) return `<em class="card-unknown">${name}</em>`;
+    if (!entry || !isOracleId(entry.oracleId))
+      return `<em class="card-unknown">${escapeEmbedHtml(name)}</em>`;
+    const safeName = escapeEmbedHtml(name);
+    const imageUrl = escapeEmbedHtml(entry.imageUrl);
+    const backImageUrl = entry.backImageUrl
+      ? escapeEmbedHtml(entry.backImageUrl)
+      : null;
+    const price = entry.price ? escapeEmbedHtml(entry.price) : null;
     const encodedName = encodeURIComponent(name);
     const commanderActions = entry.isCommander
       ? embeddedCardAction(
@@ -877,18 +907,24 @@ const renderedHtml = computed(() => {
       embeddedActionIcons.similar,
     );
     const buyAction = entry.tcgplayerId
-      ? `<a class="card-inline-action card-inline-action-buy" href="${getAffiliateLink(entry.tcgplayerId)}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${entry.price ? `Buy on TCGPlayer ($${entry.price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${entry.price ? ` $${entry.price}` : ''}</span></a>`
+      ? `<a class="card-inline-action card-inline-action-buy" href="${escapeEmbedHtml(getAffiliateLink(entry.tcgplayerId))}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${price ? ` $${price}` : ''}</span></a>`
       : '';
     const flipAction = entry.backImageUrl
       ? `<button type="button" class="card-inline-action card-inline-action-flip" aria-label="Flip Card" data-tooltip="Flip card" data-card-flip>${embeddedActionIcons.flip}<span>Flip</span></button>`
       : '';
-    return `<span class="card-inline-embed" data-front-image="${entry.imageUrl}"${entry.backImageUrl ? ` data-back-image="${entry.backImageUrl}"` : ''}><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" data-card-face="front" loading="lazy" /></a><span class="card-inline-actions">${flipAction}${similarAction}${commanderActions}${buyAction}</span></span>`;
+    return `<span class="card-inline-embed" data-front-image="${imageUrl}"${backImageUrl ? ` data-back-image="${backImageUrl}"` : ''}><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${imageUrl}" alt="${safeName}" data-card-face="front" loading="lazy" /></a><span class="card-inline-actions">${flipAction}${similarAction}${commanderActions}${buyAction}</span></span>`;
   });
 
   result = result.replace(/CARDLINKTOKEN(\d+)CARDLINKTOKEN/g, (_, idx) => {
     const name = cardLinkNames[Number(idx)];
     if (!name) return '';
-    return `<span class="card-inline-link">${name}</span>`;
+    const safeName = escapeEmbedHtml(name);
+    const entry = cardImageMap.value.get(name.toLowerCase());
+    // Unresolved names stay plain text instead of linking to a missing card.
+    if (!entry || !isOracleId(entry.oracleId)) {
+      return `<span class="card-unknown">${safeName}</span>`;
+    }
+    return `<a class="card-inline-link" href="/card/${entry.oracleId}">${safeName}</a>`;
   });
 
   result = result.replace(
@@ -911,38 +947,40 @@ const renderedHtml = computed(() => {
 function handlePreviewClick(event: MouseEvent) {
   const target = event.target as HTMLElement | null;
 
-  // [[Card Name]] tokens render as spans (no navigation). Tapping one opens
-  // the floating preview — the same affordance desktop users get on hover.
-  const cardLink = target?.closest<HTMLElement>('.card-inline-link');
+  const cardLink = target?.closest<HTMLAnchorElement>('.card-inline-link');
   if (cardLink) {
-    const name = (cardLink.textContent ?? '').trim();
-    const entry = cardImageMap.value.get(name.toLowerCase());
-    if (!entry) {
-      tokenPreview.value = null;
-      return;
+    // Preserve modifier clicks, middle clicks, and keyboard activation. Touch
+    // clicks use two quick taps on the same link; browsers do not consistently
+    // emit dblclick for touch, so track the taps directly.
+    if (event.button !== 0 || isModifiedClick(event)) return;
+    const pointerType = (event as PointerEvent).pointerType;
+    const isTouchClick =
+      event.detail > 0 &&
+      (pointerType === 'touch' ||
+        (!pointerType &&
+          window.matchMedia('(hover: none) and (pointer: coarse)').matches));
+    if (isTouchClick) {
+      const isSecondTap =
+        lastCardTap?.element === cardLink &&
+        event.timeStamp - lastCardTap.time <= CARD_DOUBLE_TAP_MS;
+      if (!isSecondTap) {
+        event.preventDefault();
+        lastCardTap = { element: cardLink, time: event.timeStamp };
+        showCardLinkPreview(event);
+        return;
+      }
     }
-    const rect = cardLink.getBoundingClientRect();
-    const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
-    const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
-    const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
-    const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-    tokenPreview.value = {
-      imageUrl: entry.imageUrl,
-      x,
-      y,
-    };
-    return;
+    lastCardTap = null;
   }
 
-  // Intercept unfurl / inline card image links so navigation goes through the
-  // Vue router (SPA) instead of causing a full page reload — those anchors
-  // are injected as raw HTML and would otherwise trigger a hard nav.
+  // These anchors are injected as raw HTML. Route ordinary activations through
+  // Vue while keeping the browser's native new-tab and modifier-link behavior.
   const spaLink = target?.closest<HTMLAnchorElement>(
-    '.link-embed, .card-inline-img-link',
+    '.link-embed, .card-inline-img-link, .card-inline-link',
   );
-  if (spaLink && !isModifiedClick(event)) {
+  if (spaLink && event.button === 0 && !isModifiedClick(event)) {
     const to = spaLink.getAttribute('href');
-    if (to && to.startsWith('/')) {
+    if (to && to.startsWith('/') && !to.startsWith('//')) {
       event.preventDefault();
       tokenPreview.value = null;
       router.push(to);
@@ -1642,6 +1680,7 @@ function insertMagicSymbol(token: string) {
   color: #3b82f6;
   text-decoration: underline;
   cursor: pointer;
+  touch-action: manipulation;
 }
 .primer-preview :deep(.card-unknown) {
   color: #f87171;
