@@ -14,6 +14,31 @@ export type Database = {
   };
   public: {
     Tables: {
+      preferences: {
+        Row: {
+          user_id: string;
+          deck_view: string;
+          deck_group_by: string | null;
+          deck_sort_by: string | null;
+          deck_sort_direction: string;
+        };
+        Insert: {
+          user_id: string;
+          deck_view?: string;
+          deck_group_by?: string | null;
+          deck_sort_by?: string | null;
+          deck_sort_direction?: string;
+        };
+        Update: {
+          user_id?: string;
+          deck_view?: string;
+          deck_group_by?: string | null;
+          deck_sort_by?: string | null;
+          deck_sort_direction?: string;
+        };
+        Relationships: [];
+      };
+
       article_comments: {
         Row: {
           article_id: string;

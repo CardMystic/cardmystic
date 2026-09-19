@@ -61,7 +61,7 @@ export function isLegal(
   typeLine?: string,
   oracleText?: string,
 ): LegalityResult {
-  if (!legalities) {
+  if (formatToLegalityKey(format) === 'any' || !legalities) {
     return { legal: true };
   }
 

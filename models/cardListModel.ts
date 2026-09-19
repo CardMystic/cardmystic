@@ -135,9 +135,9 @@ export const SetCommanderResponseSchema = z.object({
 
 // ---- Create List ----
 
-export const CardListFormatSchema = CardFormat.describe(
-  'The format for the card list',
-);
+export const CardListFormatSchema = z
+  .enum(['Any', ...CardFormat.options])
+  .describe('The format for the card list');
 
 export const CreateListSchema = z.object({
   name: z.string().min(1).max(200).describe('The name of the card list'),
@@ -219,7 +219,7 @@ export const UpdateNumCopiesSchema = z.object({
     .int()
     .min(1)
     .max(100)
-    .describe('The new number of copies (1-100)'),
+    .describe('The new number of copies'),
   fromBoard: BoardSchema.optional().describe(
     'Required only when the card exists in multiple boards in this list. The board the card currently lives in.',
   ),
@@ -623,3 +623,5 @@ export const DeleteDecklistCommentResponseSchema = z.object({
 export type DeleteDecklistCommentResponse = z.infer<
   typeof DeleteDecklistCommentResponseSchema
 >;
+
+export type CardListFormatType = z.infer<typeof CardListFormatSchema>;

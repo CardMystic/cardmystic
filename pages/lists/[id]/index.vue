@@ -152,10 +152,12 @@
           class="cursor-pointer"
         />
         <template #content>
-          <div class="p-3 space-y-3">
-            <View :default-value="view" @update:view="handleView" />
-            <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
-            <Sort default-sort-by="cmc" @sort="handleSort" />
+          <div class="p-3 space-y-3 w-72 max-w-[calc(100vw-2rem)]">
+            <DeckDisplayControls
+              :preferences="preferences"
+              :disabled="preferencesLoading || !!preferencesError"
+              @change="updatePreferences"
+            />
           </div>
         </template>
       </UPopover>
@@ -163,10 +165,16 @@
 
     <!-- Group By + Sort: inline on desktop -->
     <div class="hidden lg:flex justify-end gap-2">
-      <View :default-value="view" @update:view="handleView" />
-      <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
-      <Sort default-sort-by="cmc" @sort="handleSort" />
+      <DeckDisplayControls
+        :preferences="preferences"
+        :disabled="preferencesLoading || !!preferencesError"
+        @change="updatePreferences"
+      />
     </div>
+
+    <p v-if="preferencesError" role="alert" class="text-sm text-error">
+      Display preferences could not be loaded. Please reload to try again.
+    </p>
 
     <!-- Cards Results -->
     <ClientOnly>
@@ -542,24 +550,16 @@ const loading = computed(
     (oracleIds.value.length > 0 && cards.value.length === 0),
 );
 
-// Sorting + grouping state
-const sortBy = ref<string | undefined>('cmc');
-const sortDirection = ref<'asc' | 'desc'>('asc');
-const groupBy = ref<string | undefined>('type');
-const view = ref<'grid' | 'text'>('grid');
-
-function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
-  sortBy.value = sortOption;
-  sortDirection.value = direction;
-}
-
-function handleView(value: 'grid' | 'text') {
-  view.value = value;
-}
-
-function handleGroupBy(value: string | undefined) {
-  groupBy.value = value;
-}
+const {
+  preferences,
+  isLoading: preferencesLoading,
+  error: preferencesError,
+  updatePreferences,
+} = useDeckPreferences();
+const sortBy = computed(() => preferences.value.deck_sort_by ?? undefined);
+const sortDirection = computed(() => preferences.value.deck_sort_direction);
+const groupBy = computed(() => preferences.value.deck_group_by ?? undefined);
+const view = computed(() => preferences.value.deck_view);
 
 // Handle removing a card from the list
 async function handleRemoveCard(

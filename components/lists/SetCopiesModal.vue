@@ -11,7 +11,7 @@
         min="1"
         max="100"
         autofocus
-        @keyup.enter="onConfirm"
+        @keyup.enter="onConfirm()"
         @keyup.escape="modelOpen = false"
       />
     </template>
@@ -63,9 +63,11 @@ watch(
 );
 
 function onConfirm(close?: () => void) {
-  const nextValue = parseInt(copiesInputValue.value, 10);
-  if (!Number.isNaN(nextValue) && nextValue >= 1 && nextValue <= 100) {
+  const nextValue = Number(copiesInputValue.value);
+  if (Number.isInteger(nextValue) && nextValue >= 1 && nextValue <= 100) {
     emit('confirm', nextValue);
+  } else {
+    return;
   }
   if (close) {
     close();

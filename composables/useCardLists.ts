@@ -1,3 +1,4 @@
+import { fetchAllRows } from '~/utils/fetchAllRows';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
 import {
@@ -7,7 +8,7 @@ import {
   keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, type Ref } from 'vue';
-import type { CardFormatType } from '~/models/cardModel';
+import type { CardListFormatType } from '~/models/cardListModel';
 import {
   GetActiveUserDecklistsResponseSchema,
   GetOwnedDecklistResponseSchema,
@@ -182,7 +183,7 @@ export const useCardLists = () => {
     name: string,
     description?: string,
     commanders?: string[],
-    format?: CardFormatType,
+    format?: CardListFormatType,
     visibility?: 'private' | 'public',
   ) => {
     if (!supabase) return;
@@ -233,7 +234,7 @@ export const useCardLists = () => {
       name: string;
       description?: string;
       commanders?: string[];
-      format?: CardFormatType;
+      format?: CardListFormatType;
       visibility?: 'private' | 'public';
     }) => {
       if (!supabase) return;
@@ -434,11 +435,15 @@ export const useCardLists = () => {
       queryKey: computed(() => ['list-items', listIdRef.value]),
       queryFn: async () => {
         if (!supabase) return [];
-        const { data, error } = await supabase
-          .from('card_list_items')
-          .select('*')
-          .eq('list_id', listIdRef.value)
-          .order('created_at', { ascending: false });
+        const { data, error } = await fetchAllRows((from, to) =>
+          supabase
+            .from('card_list_items')
+            .select('*')
+            .eq('list_id', listIdRef.value)
+            .order('created_at', { ascending: false })
+            .order('id')
+            .range(from, to),
+        );
 
         if (error) throw error;
         return data;
@@ -749,7 +754,7 @@ export const useCardLists = () => {
     },
   });
 
-  const updateFormat = async (listId: string, format: CardFormatType) => {
+  const updateFormat = async (listId: string, format: CardListFormatType) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -786,7 +791,7 @@ export const useCardLists = () => {
       format,
     }: {
       listId: string;
-      format: CardFormatType;
+      format: CardListFormatType;
     }) => {
       if (!supabase) return;
       return updateFormat(listId, format);

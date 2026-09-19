@@ -85,7 +85,7 @@
 import { useCardLists } from '~/composables/useCardLists';
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import { CardFormat, type CardFormatType } from '~/models/cardModel';
+import { CardListFormatSchema } from '~/models/cardListModel';
 import { useToast } from '#imports';
 
 const props = defineProps<{
@@ -115,7 +115,8 @@ const toast = useToast();
 
 const newListName = ref('');
 const newListDescription = ref('');
-const newListFormat = ref<CardFormatType>('Commander');
+const newListFormat =
+  ref<(typeof CardListFormatSchema.options)[number]>('Commander');
 const newListVisibility = ref<'private' | 'public'>('private');
 const newListCommander = ref('');
 const newListPartnerCommander = ref('');
@@ -123,7 +124,7 @@ const commanderSearchTerm = ref('');
 const partnerSearchTerm = ref('');
 const createLoading = computed(() => createListMutation.isPending.value);
 
-const formatOptions = CardFormat.options;
+const formatOptions = CardListFormatSchema.options;
 const visibilityOptions = [
   { label: 'Private', value: 'private' as const },
   { label: 'Public', value: 'public' as const },
