@@ -287,7 +287,7 @@ const externalItems: NavigationMenuItem[] = [
       </UPopover>
 
       <!-- Logo -->
-      <div class="flex flex-row">
+      <div class="flex flex-row items-center">
         <!-- Clipboard Button -->
         <ClipboardMenu class="cursor-pointer" />
 
@@ -299,7 +299,7 @@ const externalItems: NavigationMenuItem[] = [
             <!-- Login/Register Button with Tooltip -->
             <UButton
               class="cursor-pointer ml-2"
-              color="secondary"
+              color="primary"
               variant="solid"
               icon="i-lucide-user"
               label="Login"
