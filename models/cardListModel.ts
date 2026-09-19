@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { CardFormat } from './cardModel';
 import { PaginationInfoSchema, PaginationQuerySchema } from './paginationModel';
 
-export const MAX_DECKLIST_CARDS = 500;
+export const MAX_DECKLIST_CARDS = 1000;
 
 export const BoardSchema = z
   .enum(['Mainboard', 'Sideboard', 'Considering'])
