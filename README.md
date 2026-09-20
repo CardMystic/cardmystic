@@ -85,6 +85,23 @@ Configure environment variables (and edit as needed):
 cp .env_defaults .env
 ```
 
+### PostHog analytics
+
+PostHog is configured with CardMystic's public project key and US ingestion host.
+The browser-only plugin captures page views (including client-side navigation)
+and interactions. It does not identify signed-in accounts, and session replay
+is disabled. Production and staging use separate browser cookies.
+
+Analytics is disabled during `nuxt dev` and on localhost, including local
+production previews. To disable it on a deployment, set
+`NUXT_PUBLIC_POSTHOG_ENABLED=false`. To use a different project, set
+`NUXT_PUBLIC_POSTHOG_KEY` and `NUXT_PUBLIC_POSTHOG_HOST`. These are public
+browser settings; never use a PostHog personal API key here. Supply overrides
+when building and redeploy so prerendered pages receive the same settings.
+
+To verify a deployment, visit it, navigate to another page, and check for
+`$pageview` events in PostHog's activity feed.
+
 ### Development Server
 
 Start the development server on `http://localhost:5173`:

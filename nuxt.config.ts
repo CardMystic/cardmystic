@@ -82,10 +82,24 @@ export default defineNuxtConfig({
       backendUrl:
         process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
       maintenanceMode: process.env.NUXT_PUBLIC_MAINTENANCE_MODE || '',
+      // This is a public browser project key, not a PostHog personal API key.
+      posthogKey:
+        process.env.NUXT_PUBLIC_POSTHOG_KEY ??
+        'phc_unytRsmdB7UFsyGafmA5JsnsEU7r9SBH7SM2sWmG3LfQ',
+      posthogHost:
+        process.env.NUXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+      posthogEnabled: process.env.NUXT_PUBLIC_POSTHOG_ENABLED ?? 'true',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
   modules: ['@nuxt/ui', 'nuxt-vitalizer'],
+  icon: {
+    // Keep plus icons immediately available. A delayed loading icon can otherwise
+    // race a name change and register its CSS under the plus icon's selector.
+    clientBundle: {
+      icons: ['heroicons:plus', 'lucide:plus'],
+    },
+  },
   vitalizer: {
     // Avoid speculative downloads of unused legacy SVG font resources.
     disablePrefetchLinks: true,

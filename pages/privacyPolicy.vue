@@ -85,8 +85,9 @@
         </ul>
 
         <p class="mt-4">
-          We do not sell, rent, or share your personal information with third
-          parties.
+          We do not sell or rent your personal information. We use service
+          providers, including Supabase and PostHog, to operate the site and
+          understand how it is used.
         </p>
       </div>
     </UCard>
@@ -113,6 +114,13 @@
       <div class="text-2xl font-bold">🧩 Third-Party Services</div>
 
       <div class="mt-2 text-base">
+        <p class="mb-4">
+          We use PostHog to understand page visits and interactions with the
+          site, using cookies and browser storage. Analytics data is sent to
+          PostHog's US service to help us improve CardMystic. We do not
+          associate these events with your account ID, and session replay is
+          disabled.
+        </p>
         <p>
           Card data displayed on CardMystic is sourced from
           <a
