@@ -172,9 +172,9 @@ onBeforeUnmount(() => followingObserver?.disconnect());
       </ClientOnly>
 
       <div class="grid gap-6 lg:grid-cols-5 lg:items-stretch">
-        <!-- Following: stretches to match the profile card height on desktop -->
+        <!-- Keep Following out of desktop row sizing so Profile determines its height. -->
         <UCard
-          class="shadow-2xl lg:col-span-2 flex flex-col"
+          class="shadow-2xl lg:col-span-2 flex flex-col min-h-0 lg:[contain:size]"
           :ui="{ body: 'flex-1 flex flex-col min-h-0' }"
         >
           <div class="flex items-center justify-between gap-2 mb-4">

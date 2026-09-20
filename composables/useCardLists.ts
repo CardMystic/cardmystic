@@ -314,7 +314,11 @@ export const useCardLists = () => {
     },
   });
 
-  const addCardsByNameToList = async (listId: string, cardNames: string[]) => {
+  const addCardsByNameToList = async (
+    listId: string,
+    cardNames: string[],
+    board: 'Mainboard' | 'Sideboard' | 'Considering' = 'Mainboard',
+  ) => {
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -349,6 +353,7 @@ export const useCardLists = () => {
         body: {
           listId,
           cardNames,
+          board,
         },
       });
       return response;
@@ -362,11 +367,13 @@ export const useCardLists = () => {
     mutationFn: async ({
       listId,
       cardNames,
+      board,
     }: {
       listId: string;
       cardNames: string[];
+      board?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
-      return addCardsByNameToList(listId, cardNames);
+      return addCardsByNameToList(listId, cardNames, board);
     },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });

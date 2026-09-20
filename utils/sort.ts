@@ -3,6 +3,7 @@ import type { Card } from '~/models/cardModel';
 import { pairings } from '~/utils/colorPairings';
 
 export type CardGroup = {
+  key?: string;
   label: string;
   cards: Card[];
 };
@@ -377,6 +378,7 @@ export function groupCards(
     }
 
     return {
+      key: groupBy + ':' + key,
       label,
       cards: groupCards,
     };

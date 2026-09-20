@@ -157,7 +157,7 @@
                 variant="ghost"
                 @click="
                   () => {
-                    openAccordionValues = labeledGroups.map((g) => g.label);
+                    openAccordionValues = labeledGroups.map(groupKey);
                   }
                 "
               />
@@ -183,7 +183,7 @@
             >
               <template
                 v-for="group in labeledGroups"
-                :key="group.label"
+                :key="groupKey(group)"
                 #[group.label]
               >
                 <div
@@ -348,7 +348,7 @@
               >
                 <template
                   v-for="group in sideboardLabeled"
-                  :key="group.label"
+                  :key="groupKey(group)"
                   #[group.label]
                 >
                   <div :class="[cardGridClasses, 'p-2']">
@@ -506,7 +506,7 @@
               >
                 <template
                   v-for="group in consideringLabeled"
-                  :key="group.label"
+                  :key="groupKey(group)"
                   #[group.label]
                 >
                   <div :class="[cardGridClasses, 'p-2']">
@@ -656,23 +656,32 @@ const labeledGroups = computed(() => {
   return props.groups.filter((g) => g.label);
 });
 
+function groupKey(group: CardGroup): string {
+  return group.key ?? group.label;
+}
+
 const accordionItems = computed<AccordionItem[]>(() => {
   return labeledGroups.value.map((g) => ({
     label: g.label,
-    value: g.label,
+    value: groupKey(g),
     slot: g.label,
   }));
 });
 
-const openAccordionValues = ref<string[]>([]);
-
-watch(
-  labeledGroups,
-  (groups) => {
-    openAccordionValues.value = groups.map((g) => g.label);
-  },
-  { immediate: true },
-);
+// Track stable group keys, not labels containing counts that change on edits.
+function groupExpansion(groups: Ref<CardGroup[]>) {
+  const expanded = ref<Record<string, boolean>>({});
+  return computed({
+    get: () =>
+      groups.value.map(groupKey).filter((key) => expanded.value[key] !== false),
+    set: (open: string[]) => {
+      const selected = new Set(open);
+      for (const group of groups.value)
+        expanded.value[groupKey(group)] = selected.has(groupKey(group));
+    },
+  });
+}
+const openAccordionValues = groupExpansion(labeledGroups);
 
 // Sideboard accordion
 const sideboardLabeled = computed(() => {
@@ -686,19 +695,12 @@ const sideboardUngrouped = computed(() => {
 const sideboardAccordionItems = computed<AccordionItem[]>(() => {
   return sideboardLabeled.value.map((g) => ({
     label: g.label,
-    value: g.label,
+    value: groupKey(g),
     slot: g.label,
   }));
 });
 const sideboardExpanded = ref(false);
-const openSideboardValues = ref<string[]>([]);
-watch(
-  sideboardLabeled,
-  (groups) => {
-    openSideboardValues.value = groups.map((g) => g.label);
-  },
-  { immediate: true },
-);
+const openSideboardValues = groupExpansion(sideboardLabeled);
 
 // Considering accordion
 const consideringLabeled = computed(() => {
@@ -712,19 +714,12 @@ const consideringUngrouped = computed(() => {
 const consideringAccordionItems = computed<AccordionItem[]>(() => {
   return consideringLabeled.value.map((g) => ({
     label: g.label,
-    value: g.label,
+    value: groupKey(g),
     slot: g.label,
   }));
 });
 const consideringExpanded = ref(false);
-const openConsideringValues = ref<string[]>([]);
-watch(
-  consideringLabeled,
-  (groups) => {
-    openConsideringValues.value = groups.map((g) => g.label);
-  },
-  { immediate: true },
-);
+const openConsideringValues = groupExpansion(consideringLabeled);
 
 const flippedCards = ref<Record<string, boolean>>({});
 
@@ -775,7 +770,7 @@ watch(
   { immediate: true },
 );
 
-const HOVER_PREVIEW_DELAY_MS = 200;
+const HOVER_PREVIEW_DELAY_MS = 75;
 let _hoverRafId: number | null = null;
 let _hoverDelayId: ReturnType<typeof setTimeout> | null = null;
 let _pendingPreviewCardId: string | null = null;

@@ -48,7 +48,7 @@
     <!-- Actions + Add Card (owner only) -->
     <div v-if="list && isOwner" class="mb-2">
       <div class="flex flex-wrap items-center justify-between">
-        <div class="flex gap-2 mb-2">
+        <div class="flex flex-wrap gap-2 mb-2">
           <UTooltip text="View the primer for this deck">
             <UButton
               :to="`/lists/${listId}/primer`"
@@ -64,11 +64,13 @@
               icon="i-lucide-box"
               color="primary"
               variant="solid"
-              label="Recommend"
+              aria-label="Recommend"
               @click="goToRecommend"
               class="cursor-pointer h-8"
               size="sm"
-            />
+            >
+              <span class="hidden md:inline">Recommend</span>
+            </UButton>
           </UTooltip>
           <UTooltip text="Copy card names">
             <UButton
@@ -80,6 +82,23 @@
               class="cursor-pointer"
             >
               <span class="hidden md:inline">Copy</span>
+            </UButton>
+          </UTooltip>
+          <UTooltip text="Compare with another deck">
+            <UButton
+              icon="i-lucide-scale"
+              aria-label="Compare decks"
+              color="primary"
+              variant="outline"
+              :disabled="loading"
+              @click="
+                () => {
+                  isCompareModalOpen = true;
+                }
+              "
+              class="cursor-pointer"
+            >
+              <span class="hidden md:inline">Compare Deck</span>
             </UButton>
           </UTooltip>
           <UTooltip text="Bulk edit cards">
@@ -116,8 +135,8 @@
         <UInputMenu
           v-model="selectedCardToAdd"
           v-model:search-term="addCardSearchTerm"
-          :loading="isAddCardBusy || loading"
-          :disabled="loading || !oracleMapReady"
+          :aria-busy="isAddCardBusy"
+          :disabled="loading || !addCardCatalogReady || addCardLoading"
           :items="filteredAddCards"
           placeholder="Add a card to the deck..."
           icon="i-heroicons-plus"
@@ -127,6 +146,21 @@
       </div>
     </div>
 
+    <div
+      v-if="isOwner && addCardCatalogError"
+      role="alert"
+      class="mb-2 flex items-center gap-2 text-sm text-error"
+    >
+      Could not load the card catalog.
+      <UButton
+        label="Retry card catalog"
+        size="sm"
+        variant="link"
+        :loading="isAddCardBusy"
+        @click="retryCardCatalog"
+      />
+    </div>
+
     <!-- Mobile add cards and display controls-->
     <div class="lg:hidden flex flex-row justify-between">
       <!-- Mobile add cards input (owner only) -->
@@ -134,8 +168,8 @@
         v-if="isOwner"
         v-model="selectedCardToAdd"
         v-model:search-term="addCardSearchTerm"
-        :loading="isAddCardBusy"
-        :disabled="!oracleMapReady"
+        :aria-busy="isAddCardBusy"
+        :disabled="loading || !addCardCatalogReady || addCardLoading"
         :items="filteredAddCards"
         placeholder="Add a card to the deck..."
         icon="i-heroicons-plus"
@@ -212,13 +246,22 @@
   </div>
 
   <!-- Bulk Edit Modal (owner only) -->
-  <BulkAddCardsModal
+  <LazyBulkAddCardsModal
     v-if="isOwner"
     v-model:open="isBulkEditModalOpen"
     :list-id="listId"
     :mainboard-names="mainboardNames"
     :sideboard-names="sideboardNames"
     :considering-names="consideringNames"
+  />
+
+  <LazyDeckCompareModal
+    v-if="isOwner"
+    v-model:open="isCompareModalOpen"
+    :list-id="listId"
+    :cards="cards"
+    :items="listItems ?? []"
+    :loading="loading"
   />
 
   <!-- Duplicate Card Confirmation Modal -->
@@ -248,7 +291,7 @@
 
   <BackToTop />
 
-  <StickyActionFooter :show="showStickyFooter">
+  <StickyActionFooter :show="showStickyFooter && !isCompareModalOpen">
     <template #left>
       <DeckStats
         :card-count="mainDeckCardCount"
@@ -791,6 +834,7 @@ async function confirmAddDuplicate() {
 
 // Bulk edit state
 const isBulkEditModalOpen = ref(false);
+const isCompareModalOpen = ref(false);
 
 function boardLines(board: 'Mainboard' | 'Sideboard' | 'Considering') {
   if (!listItems.value || listItems.value.length === 0) return [];
@@ -850,15 +894,34 @@ function goToRecommend() {
   });
 }
 
-const { data: rawCards, status: cardsQueryStatus } = useCardNames(isOwner);
-const { data: cardNameToOracleId, isSuccess: oracleMapReady } =
-  useCardNameToOracleId(isOwner);
-const cardsStatus = computed(() =>
-  cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
+const {
+  data: rawCards,
+  isFetching: fetchingCardNames,
+  error: cardNamesError,
+  refetch: refetchCardNames,
+} = useCardNames(isOwner);
+const {
+  data: cardNameToOracleId,
+  isFetching: fetchingOracleMap,
+  error: oracleMapError,
+  refetch: refetchOracleMap,
+} = useCardNameToOracleId(isOwner);
+const addCardCatalogReady = computed(
+  () => !!rawCards.value && !!cardNameToOracleId.value,
 );
+const addCardCatalogError = computed(
+  () =>
+    !addCardCatalogReady.value &&
+    !!(cardNamesError.value || oracleMapError.value),
+);
+// An unsuccessful query is not necessarily still loading (it may have failed).
 const isAddCardBusy = computed(
-  () => addCardLoading.value || !oracleMapReady.value,
+  () =>
+    addCardLoading.value || fetchingCardNames.value || fetchingOracleMap.value,
 );
+async function retryCardCatalog() {
+  await Promise.all([refetchCardNames(), refetchOracleMap()]);
+}
 
 // Commander autocomplete
 const setCommanderLoading = ref(false);

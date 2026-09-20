@@ -566,7 +566,7 @@ watch(
   },
 );
 
-const HOVER_PREVIEW_DELAY_MS = 200;
+const HOVER_PREVIEW_DELAY_MS = 75;
 let _hoverRafId: number | null = null;
 let _hoverDelayId: ReturnType<typeof setTimeout> | null = null;
 let _pendingPreviewCardId: string | null = null;
