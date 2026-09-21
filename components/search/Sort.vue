@@ -3,7 +3,9 @@
     <UIcon name="i-lucide-arrow-up-down" class="size-4 shrink-0" />
     <span class="text-sm w-11">Sort</span>
     <USelect
-      v-model="selectedSortValue"
+      :model-value="selectedSortValue"
+      @update:model-value="selectSort"
+      aria-label="Search sorting"
       :items="sortOptions"
       placeholder="Select sort option"
       size="sm"
@@ -35,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
   defaultSortBy?: string;
@@ -67,25 +69,26 @@ const sortOptions = computed(() => {
 const selectedSortValue = ref<string | undefined>(props.defaultSortBy);
 const sortDirection = ref<'asc' | 'desc'>(props.defaultDirection ?? 'asc');
 
-onMounted(() => {
-  if (props.defaultSortBy) {
-    emit('sort', props.defaultSortBy, sortDirection.value);
-  }
-});
-
 const emit = defineEmits<{
   (e: 'sort', sortBy: string | undefined, direction: 'asc' | 'desc'): void;
 }>();
 
 const scoreOptions = ['ai_score', 'deck_score', 'popularity'];
 
-function updateSort(defaultDesc = false) {
-  if (selectedSortValue.value) {
-    if (defaultDesc && scoreOptions.includes(selectedSortValue.value)) {
-      sortDirection.value = 'desc';
-    }
-    emit('sort', selectedSortValue.value, sortDirection.value);
-  }
+// Incoming choices are synchronization, not new selections. In particular,
+// syncing an ascending score sort must not apply the descending default again.
+watch(
+  [() => props.defaultSortBy, () => props.defaultDirection],
+  ([sortBy, direction]) => {
+    selectedSortValue.value = sortBy;
+    sortDirection.value = direction ?? 'asc';
+  },
+);
+
+function selectSort(value: string) {
+  selectedSortValue.value = value;
+  if (scoreOptions.includes(value)) sortDirection.value = 'desc';
+  emit('sort', value, sortDirection.value);
 }
 
 function toggleSortDirection() {
@@ -98,11 +101,6 @@ function clearSort() {
   sortDirection.value = 'asc';
   emit('sort', undefined, 'asc');
 }
-
-// Watch for changes to selectedSortValue
-watch(selectedSortValue, () => {
-  updateSort(true);
-});
 </script>
 
 <style scoped lang="sass"></style>

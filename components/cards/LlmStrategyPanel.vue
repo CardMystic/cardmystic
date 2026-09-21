@@ -277,7 +277,8 @@ function meterColor(percent: number) {
 .llm-card
   border-radius: 24px
   border: 1px solid rgba(147, 114, 255, 0.3)
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
+  color: var(--ui-text)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .llm-title
@@ -309,12 +310,12 @@ function meterColor(percent: number) {
 .meter-label
   font-size: 0.9rem
   font-weight: 600
-  color: rgba(255, 255, 255, 0.9)
+  color: var(--ui-text-toned)
 
 .meter-value
   font-size: 0.85rem
   font-weight: 700
-  color: rgba(187, 247, 208, 0.95)
+  color: var(--ui-text)
 
 .chart-wrap
   display: flex
@@ -352,14 +353,14 @@ function meterColor(percent: number) {
   stroke-width: 1
 
 .label
-  fill: rgba(255, 255, 255, 0.9)
+  fill: var(--ui-text-toned)
   font-size: 11px
   font-weight: 600
 
 .summary-text
   font-size: 1rem
   line-height: 1.35
-  color: rgba(255, 255, 255, 0.95)
+  color: var(--ui-text)
 
 .roles-wrap
   display: flex

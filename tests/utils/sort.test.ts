@@ -258,6 +258,104 @@ describe('groupCards', () => {
     );
   });
 
+  it.each(['color', 'colorIdentity'])(
+    'separates all lands from nonland colorless cards when grouping by %s',
+    (groupBy) => {
+      const spell = makeCard({ colors: ['U'], color_identity: ['U'] });
+      const solRing = makeCard({ name: 'Sol Ring', type_line: 'Artifact' });
+      const island = makeCard({
+        name: 'Island',
+        type_line: 'Basic Land — Island',
+        color_identity: ['U'],
+      });
+      const wastes = makeCard({ name: 'Wastes', type_line: 'Basic Land' });
+      const arbor = makeCard({
+        name: 'Dryad Arbor',
+        type_line: 'Land Creature — Forest Dryad',
+        colors: ['G'],
+        color_identity: ['G'],
+      });
+      const groups = groupCards(
+        [wastes, island, solRing, arbor, spell],
+        groupBy,
+        {
+          [island.card_data.oracle_id]: 3,
+          [wastes.card_data.oracle_id]: 2,
+          [solRing.card_data.oracle_id]: 2,
+        },
+      );
+
+      expect(groups.map((group) => group.key)).toEqual([
+        `${groupBy}:U`,
+        `${groupBy}:Colorless`,
+        `${groupBy}:Lands`,
+      ]);
+      expect(groups[1].label).toBe('Colorless (2)');
+      expect(groups[1].cards).toEqual([solRing]);
+      expect(groups[2].label).toBe('Lands (6)');
+      expect(groups[2].cards).toEqual([wastes, island, arbor]);
+    },
+  );
+
+  it.each(['color', 'colorIdentity'])(
+    'uses the front-face type to separate double-faced lands when grouping by %s',
+    (groupBy) => {
+      const spell = makeCard({
+        name: 'Sink into Stupor',
+        type_line: 'Instant // Land',
+        color_identity: ['U'],
+      });
+      delete spell.card_data.colors;
+      spell.card_data.layout = 'modal_dfc';
+      spell.card_data.card_faces = [
+        {
+          object: 'card_face',
+          name: 'Sink into Stupor',
+          type_line: 'Instant',
+          colors: ['U'],
+        },
+        {
+          object: 'card_face',
+          name: 'Soporific Springs',
+          type_line: 'Land',
+          colors: [],
+        },
+      ];
+      const land = makeCard({
+        name: 'Riverglide Pathway',
+        type_line: 'Land // Land',
+        color_identity: ['U', 'R'],
+      });
+      land.card_data.layout = 'modal_dfc';
+      land.card_data.card_faces = [
+        {
+          object: 'card_face',
+          name: 'Riverglide Pathway',
+          type_line: 'Land',
+          colors: [],
+        },
+        {
+          object: 'card_face',
+          name: 'Lavaglide Pathway',
+          type_line: 'Land',
+          colors: [],
+        },
+      ];
+      const groups = groupCards([land, spell], groupBy);
+      expect(groups.map((group) => group.key)).toEqual([
+        `${groupBy}:U`,
+        `${groupBy}:Lands`,
+      ]);
+      expect(groups[0].cards).toEqual([spell]);
+      expect(groups[1].cards).toEqual([land]);
+
+      // Aggregate type lines must not classify the land back of a spell as a land.
+      delete spell.card_data.card_faces;
+      spell.card_data.colors = ['U'];
+      expect(groupCards([spell], groupBy)[0].key).toBe(`${groupBy}:U`);
+    },
+  );
+
   it('groups by cmc', () => {
     const cards = [
       makeCard({ cmc: 2 }),
@@ -268,6 +366,44 @@ describe('groupCards', () => {
     expect(groups).toHaveLength(2);
     const cmc2 = groups.find((g) => g.label.includes('2'))!;
     expect(cmc2.cards).toHaveLength(2);
+  });
+
+  it('keeps front-face color distinct from the color identity of both faces', () => {
+    const card = makeCard({ color_identity: ['W', 'B'] });
+    delete card.card_data.colors;
+    card.card_data.card_faces = [
+      {
+        object: 'card_face',
+        name: 'Front',
+        type_line: 'Creature',
+        colors: ['W'],
+      },
+      {
+        object: 'card_face',
+        name: 'Back',
+        type_line: 'Creature',
+        colors: ['B'],
+      },
+    ];
+    expect(groupCards([card], 'color')[0].key).toBe('color:W');
+    expect(groupCards([card], 'colorIdentity')[0].key).toBe('colorIdentity:WB');
+  });
+
+  it('preserves explicitly colorless cards even if a face or identity has colors', () => {
+    const card = makeCard({ colors: [], color_identity: ['U'] });
+    card.card_data.card_faces = [
+      {
+        object: 'card_face',
+        name: 'Front',
+        type_line: 'Creature',
+        colors: ['U'],
+      },
+    ];
+    expect(groupCards([card], 'color')[0].key).toBe('color:Colorless');
+    delete card.card_data.card_faces;
+    expect(groupCards([card], 'color')[0].key).toBe('color:Colorless');
+    delete card.card_data.colors;
+    expect(groupCards([card], 'color')[0].key).toBe('color:Colorless');
   });
 
   it('respects copiesMap in group label count', () => {

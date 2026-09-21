@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/vue-query';
-import { computed, type Ref, type ComputedRef } from 'vue';
+import { computed, type ComputedRef } from 'vue';
+import { useSearchQualityResults } from '~/composables/useSearchQualityResults';
 import type { Card } from '~/models/cardModel';
 import type {
   WordSearch,
@@ -8,12 +9,6 @@ import type {
 } from '~/models/searchModel';
 
 export type SearchType = 'colbert' | 'similarity' | 'keyword';
-
-interface UseSearchOptions<T> {
-  searchParams: ComputedRef<T | undefined>;
-  searchType: SearchType;
-  staleTime?: number;
-}
 
 /**
  * Composable for Smart/ColBERT search
@@ -24,15 +19,16 @@ export function useColbertSearch(
   const config = useRuntimeConfig();
 
   const queryEnabled = computed(() => !!searchParams.value?.query);
+  const queryKey = computed(() => ['search', 'colbert', searchParams.value]);
 
   const {
-    data: searchResults,
+    data: rawSearchResults,
     isLoading: isQueryLoading,
     isFetching,
     error,
     refetch,
   } = useQuery({
-    queryKey: computed(() => ['search', 'colbert', searchParams.value]),
+    queryKey,
     queryFn: async () => {
       const response = await fetch(
         `${config.public.backendUrl}/search/colbert`,
@@ -58,6 +54,15 @@ export function useColbertSearch(
     enabled: queryEnabled,
   });
 
+  const {
+    results: searchResults,
+    hiddenResultCount,
+    loadMoreResults,
+  } = useSearchQualityResults(rawSearchResults, queryKey, () => ({
+    mode: 'smart',
+    ratio: config.public.smartSearchQualityRatio,
+  }));
+
   const isLoading = computed(
     () =>
       isQueryLoading.value ||
@@ -66,6 +71,8 @@ export function useColbertSearch(
 
   return {
     searchResults,
+    hiddenResultCount,
+    loadMoreResults,
     isLoading,
     isFetching,
     error,
@@ -82,15 +89,16 @@ export function useSimilaritySearch(
   const config = useRuntimeConfig();
 
   const queryEnabled = computed(() => !!searchParams.value?.card_name);
+  const queryKey = computed(() => ['search', 'similarity', searchParams.value]);
 
   const {
-    data: searchResults,
+    data: rawSearchResults,
     isLoading: isQueryLoading,
     isFetching,
     error,
     refetch,
   } = useQuery({
-    queryKey: computed(() => ['search', 'similarity', searchParams.value]),
+    queryKey,
     queryFn: async () => {
       const response = await fetch(
         `${config.public.backendUrl}/search/similarity`,
@@ -100,6 +108,7 @@ export function useSimilaritySearch(
           body: JSON.stringify(searchParams.value),
         },
       );
+      if (response.status === 204 || response.status === 404) return [];
       if (!response.ok) {
         const body = await response.json().catch(() => null);
         throw new Error(body?.message ?? 'Network response was not ok');
@@ -115,6 +124,16 @@ export function useSimilaritySearch(
     enabled: queryEnabled,
   });
 
+  const {
+    results: searchResults,
+    hiddenResultCount,
+    loadMoreResults,
+  } = useSearchQualityResults(rawSearchResults, queryKey, () => ({
+    mode: 'similarity',
+    preserveFirst: true,
+    ratio: config.public.similaritySearchQualityRatio,
+  }));
+
   const isLoading = computed(
     () =>
       isQueryLoading.value ||
@@ -123,6 +142,8 @@ export function useSimilaritySearch(
 
   return {
     searchResults,
+    hiddenResultCount,
+    loadMoreResults,
     isLoading,
     isFetching,
     error,
@@ -197,15 +218,16 @@ export function useSimilarCards(
   const config = useRuntimeConfig();
 
   const queryEnabled = computed(() => !!cardName.value);
+  const queryKey = computed(() => ['card-details-similar-cards', cardId.value]);
 
   const {
-    data: similarCards,
+    data: rawSimilarCards,
     isLoading: isSimilarCardsLoading,
     isFetching,
     error,
     refetch,
   } = useQuery({
-    queryKey: computed(() => ['card-details-similar-cards', cardId.value]),
+    queryKey,
     queryFn: async () => {
       if (!cardName.value) return [];
 
@@ -222,6 +244,7 @@ export function useSimilarCards(
         },
       );
 
+      if (response.status === 204 || response.status === 404) return [];
       if (!response.ok) {
         throw new Error('Failed to fetch similar cards');
       }
@@ -232,8 +255,20 @@ export function useSimilarCards(
     enabled: queryEnabled,
   });
 
+  const {
+    results: similarCards,
+    hiddenResultCount,
+    loadMoreResults,
+  } = useSearchQualityResults(rawSimilarCards, queryKey, () => ({
+    mode: 'similarity',
+    preserveFirst: true,
+    ratio: config.public.similaritySearchQualityRatio,
+  }));
+
   return {
     similarCards,
+    hiddenResultCount,
+    loadMoreResults,
     isSimilarCardsLoading,
     isFetching,
     error,

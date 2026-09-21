@@ -203,7 +203,7 @@
 import { refDebounced } from '~/utils/refDebounced';
 import { useCardLists } from '~/composables/useCardLists';
 import { useCardNames } from '~/composables/useBulkData';
-import { CardFormat, type CardFormatType } from '~/models/cardModel';
+import { CardListFormatSchema } from '~/models/cardListModel';
 import { useToast } from '#imports';
 
 const props = defineProps<{
@@ -236,8 +236,9 @@ const editedDescription = ref('');
 
 // Format editing state
 const isEditingFormat = ref(false);
-const editedFormat = ref<CardFormatType>('Commander');
-const formatOptions = CardFormat.options;
+const editedFormat =
+  ref<(typeof CardListFormatSchema.options)[number]>('Commander');
+const formatOptions = CardListFormatSchema.options;
 
 // Visibility selector options (owner only)
 const visibilityOptions = [
