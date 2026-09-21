@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import staticWebAppConfig from './public/staticwebapp.config.json';
+import { DEFAULT_SEARCH_QUALITY_RATIOS } from './utils/searchQuality';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -82,6 +83,9 @@ export default defineNuxtConfig({
       backendUrl:
         process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
       maintenanceMode: process.env.NUXT_PUBLIC_MAINTENANCE_MODE || '',
+      // Override with matching NUXT_PUBLIC_* environment variables at startup/build.
+      smartSearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.smart,
+      similaritySearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.similarity,
       // This is a public browser project key, not a PostHog personal API key.
       posthogKey:
         process.env.NUXT_PUBLIC_POSTHOG_KEY ??

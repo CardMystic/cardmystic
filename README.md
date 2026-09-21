@@ -26,7 +26,7 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get personalized card recommendations
 - Platform-specific search: search filtered to Arena, MTGO, Modern, or Paper cards
   - Example: [Arena Smart Search](https://cardmystic.com/search/arena/smart)
-- Card Lists: Create and manage custom card collections with commander designation
+- Deck Lists: Create and manage your decks with our deck builder interface.
 - User accounts with authentication (Supabase)
 - Filter by colors, types, converted mana cost, power/toughness, etc.
 - View card details including different printings, price, and legality
@@ -298,7 +298,15 @@ To generate the Supabase database types (when the schema changes) run:
 npm run gen:types
 ```
 
-## 🙏 Acknowledgements
+### Deck display preferences
 
-- [Scryfall](https://scryfall.com/) for card data
-- [Moxfield](https://moxfield.com/) for deck data
+Deck display controls save automatically to `localStorage` under `cm.deck-preferences.v1:<deckId>`.
+
+### Search quality cutoffs
+
+Set these public application settings in `.env` to adjust the initial shown search results (results that don't meet the cutoff will be hidden behind a "Show More" button):
+
+```dotenv
+NUXT_PUBLIC_SMART_SEARCH_QUALITY_RATIO=0.8
+NUXT_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO=0.8
+```

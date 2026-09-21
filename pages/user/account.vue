@@ -167,10 +167,6 @@ onBeforeUnmount(() => followingObserver?.disconnect());
         </ClientOnly>
       </UCard>
 
-      <ClientOnly>
-        <DeckPreferencesSettings />
-      </ClientOnly>
-
       <div class="grid gap-6 lg:grid-cols-5 lg:items-stretch">
         <!-- Keep Following out of desktop row sizing so Profile determines its height. -->
         <UCard

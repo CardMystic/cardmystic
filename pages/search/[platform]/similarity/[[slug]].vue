@@ -40,6 +40,8 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
+          :hidden-result-count="hiddenResultCount"
+          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -194,8 +196,15 @@ const similaritySearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading, isFetching, error, refetch } =
-  useSimilaritySearch(similaritySearch);
+const {
+  searchResults,
+  hiddenResultCount,
+  loadMoreResults,
+  isLoading,
+  isFetching,
+  error,
+  refetch,
+} = useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

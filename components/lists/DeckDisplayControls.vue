@@ -7,7 +7,7 @@
         :items="deckViewOptions"
         :disabled="disabled"
         aria-label="Deck view"
-        class="w-32"
+        class="w-40"
         size="sm"
       />
     </label>

@@ -5,6 +5,7 @@
     <USelect
       v-model="selectedGroupBy"
       :items="groupByOptions"
+      aria-label="Search grouping"
       placeholder="None"
       size="sm"
       class="cursor-pointer w-32"
@@ -39,6 +40,14 @@ const groupByOptions = [
 ];
 
 const selectedGroupBy = ref<string | undefined>(props.defaultValue);
+
+// Keep mounted desktop controls in sync with the mobile popover and vice versa.
+watch(
+  () => props.defaultValue,
+  (value) => {
+    selectedGroupBy.value = value;
+  },
+);
 
 function clearGroupBy() {
   selectedGroupBy.value = undefined;

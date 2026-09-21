@@ -148,15 +148,24 @@ async function setup(page: Page, failCatalog = false) {
   await page.route(SUPABASE + '/rest/v1/profiles**', (route) =>
     route.fulfill({ json: { id: FAKE_USER.id, username: 'Tester' } }),
   );
-  await page.route(SUPABASE + '/rest/v1/preferences**', (route) =>
-    route.fulfill({
-      json: {
-        deck_view: 'text',
-        deck_group_by: 'type',
-        deck_sort_by: 'name',
-        deck_sort_direction: 'asc',
-      },
-    }),
+  await page.addInitScript(
+    (deckIds) => {
+      for (const deckId of deckIds) {
+        const key = 'cm.deck-preferences.v1:' + deckId;
+        if (localStorage.getItem(key) === null) {
+          localStorage.setItem(
+            key,
+            JSON.stringify({
+              deck_view: 'text',
+              deck_group_by: 'type',
+              deck_sort_by: 'name',
+              deck_sort_direction: 'asc',
+            }),
+          );
+        }
+      }
+    },
+    [listId, otherId],
   );
   await page.addInitScript(
     ({ key, user, token }) => {
@@ -742,8 +751,8 @@ test('comparison accepts another action while saving without resizing', async ({
   await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
   const list = dialog.getByRole('list', { name: 'Card differences' });
   await expect(list.getByRole('listitem')).toHaveCount(5);
-  const deckCount = dialog.getByText(/Cards In Your Deck:/);
-  await expect(deckCount).toHaveText('Cards In Your Deck: 8');
+  const deckCount = dialog.getByText(/Your Deck has/);
+  await expect(deckCount).toHaveText(/Your Deck has\s*8\s*cards/);
   await list.getByRole('link', { name: 'Counterspell', exact: true }).hover();
   const before = await dialog.boundingBox();
   const listBefore = await list.boundingBox();
@@ -764,7 +773,7 @@ test('comparison accepts another action while saving without resizing', async ({
     await expect(
       list.getByRole('link', { name: 'Lightning Bolt', exact: true }),
     ).toHaveCount(0);
-    await expect(deckCount).toHaveText('Cards In Your Deck: 9');
+    await expect(deckCount).toHaveText(/Your Deck has\s*9\s*cards/);
     expect(state.items().some((row) => row.oracle_id === ids[3])).toBe(false);
     expect(state.items().some((row) => row.oracle_id === ids[2])).toBe(true);
     const during = await dialog.boundingBox();
@@ -780,7 +789,7 @@ test('comparison accepts another action while saving without resizing', async ({
   await expect(
     page.getByText('Removed Lightning Bolt', { exact: true }),
   ).toBeVisible();
-  await expect(deckCount).toHaveText('Cards In Your Deck: 9');
+  await expect(deckCount).toHaveText(/Your Deck has\s*9\s*cards/);
   expect(state.items().some((row) => row.oracle_id === ids[3])).toBe(true);
   expect(state.items().some((row) => row.oracle_id === ids[2])).toBe(false);
   expect((await dialog.boundingBox())!.height).toBeCloseTo(before!.height, 0);

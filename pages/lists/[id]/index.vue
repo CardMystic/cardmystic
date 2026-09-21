@@ -3,14 +3,6 @@
     class="mx-auto py-8 relative z-10 w-full"
     :class="{ 'pb-24': showStickyFooter }"
   >
-    <!-- Page Background Image (blurred, behind all content) -->
-    <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
-      <div
-        class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-40 dark:opacity-20 blur-sm"
-        :style="{ backgroundImage: `url(${bannerImageUrl})` }"
-      ></div>
-    </div>
-
     <CardListBanner
       :list="list"
       :is-loading="isLoadingLists"
@@ -189,7 +181,7 @@
           <div class="p-3 space-y-3 w-72 max-w-[calc(100vw-2rem)]">
             <DeckDisplayControls
               :preferences="preferences"
-              :disabled="preferencesLoading || !!preferencesError"
+              :disabled="preferencesLoading"
               @change="updatePreferences"
             />
           </div>
@@ -201,13 +193,13 @@
     <div class="hidden lg:flex justify-end gap-2">
       <DeckDisplayControls
         :preferences="preferences"
-        :disabled="preferencesLoading || !!preferencesError"
+        :disabled="preferencesLoading"
         @change="updatePreferences"
       />
     </div>
 
     <p v-if="preferencesError" role="alert" class="text-sm text-error">
-      Display preferences could not be loaded. Please reload to try again.
+      {{ preferencesError }}
     </p>
 
     <!-- Cards Results -->
@@ -397,13 +389,6 @@ useDecklistViewTracker(
 // Primer existence drives the non-owner Primer button state
 const { primerText } = usePrimer(listIdRef);
 const hasPrimer = computed(() => !!primerText.value?.trim());
-
-// Banner background image URL
-const bannerImageUrl = computed(() => {
-  const cardName = list.value?.avatar_card_name;
-  if (!cardName) return null;
-  return scryfallArtCropUrl(cardName);
-});
 
 // ---- SEO ----
 const canonicalUrl = computed(() => `https://cardmystic.com/lists/${listId}`);
@@ -598,7 +583,7 @@ const {
   isLoading: preferencesLoading,
   error: preferencesError,
   updatePreferences,
-} = useDeckPreferences();
+} = useDeckPreferences(listId);
 const sortBy = computed(() => preferences.value.deck_sort_by ?? undefined);
 const sortDirection = computed(() => preferences.value.deck_sort_direction);
 const groupBy = computed(() => preferences.value.deck_group_by ?? undefined);

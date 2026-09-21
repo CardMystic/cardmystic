@@ -1,108 +1,87 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import {
+  computed,
+  onMounted,
+  ref,
+  toValue,
+  watch,
+  type MaybeRefOrGetter,
+} from 'vue';
 import {
   DeckPreferencesSchema,
   defaultDeckPreferences,
   type DeckPreferences,
 } from '~/models/preferencesModel';
 
-export function useDeckPreferences({
-  persist = false,
-}: { persist?: boolean } = {}) {
-  const supabase = process.server ? null : useSupabase();
-  const { userProfile, loading: userLoading } = useUserProfile();
-  const userId = computed(() => userProfile.value?.id);
-  const client = useQueryClient();
-  const toast = useToast();
-  // Deck controls override account defaults only for this mounted page.
-  // Account settings explicitly opt into saving defaults.
-  const overrides = ref<Partial<DeckPreferences>>({});
-  watch(userId, () => {
-    overrides.value = {};
-  });
-  const key = (id: string | undefined) => ['preferences', id] as const;
-  const query = useQuery({
-    queryKey: computed(() => key(userId.value)),
-    enabled: computed(() => !!supabase && !!userId.value),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-    queryFn: async () => {
-      const id = userId.value;
-      if (!supabase || !id) return { ...defaultDeckPreferences };
-      const { data, error } = await supabase
-        .from('preferences')
-        .select('deck_view, deck_group_by, deck_sort_by, deck_sort_direction')
-        .eq('user_id', id)
-        .maybeSingle();
-      if (error) throw error;
-      return DeckPreferencesSchema.parse(data ?? defaultDeckPreferences);
-    },
-  });
-  const mutation = useMutation({
-    mutationKey: ['save-deck-preferences'],
-    // Serialize rapid edits across every mounted instance of this composable.
-    scope: { id: 'save-deck-preferences' },
-    mutationFn: async ({
-      id,
-      patch,
-    }: {
-      id: string;
-      patch: Partial<DeckPreferences>;
-    }) => {
-      if (!supabase) throw new Error('Please sign in to save preferences.');
-      const { error } = await supabase
-        .from('preferences')
-        .upsert({ user_id: id, ...patch }, { onConflict: 'user_id' });
-      if (error) throw error;
-    },
-    onMutate: async ({ id, patch }) => {
-      await client.cancelQueries({ queryKey: key(id) });
-      const previous = client.getQueryData<DeckPreferences>(key(id));
-      const optimistic = { ...(previous ?? defaultDeckPreferences), ...patch };
-      const cached = client.setQueryData(key(id), optimistic);
-      return { previous, optimistic: cached };
-    },
-    onError: (_error, { id }, context) => {
-      // An older failed write must not roll back newer local choices.
-      if (context && client.getQueryData(key(id)) === context.optimistic) {
-        client.setQueryData(
-          key(id),
-          context.previous ?? { ...defaultDeckPreferences },
-        );
-      }
-      if (userId.value === id)
-        toast.add({
-          title: 'Could not save display preferences',
-          description: 'Please try again.',
-          color: 'error',
-        });
-    },
-    onSettled: (_data, _error, { id }) => {
-      if (client.isMutating({ mutationKey: ['save-deck-preferences'] }) === 1) {
-        void client.invalidateQueries({ queryKey: key(id) });
-      }
-    },
-  });
-  function updatePreferences(patch: Partial<DeckPreferences>) {
-    const parsed = DeckPreferencesSchema.partial().parse(patch);
-    if (!persist) {
-      overrides.value = { ...overrides.value, ...parsed };
+export const DECK_PREFERENCES_STORAGE_PREFIX = 'cm.deck-preferences.v1:';
+
+export function useDeckPreferences(deckId: MaybeRefOrGetter<string>) {
+  const id = computed(() => toValue(deckId));
+  const preferences = ref<DeckPreferences>({ ...defaultDeckPreferences });
+  const isLoading = ref(true);
+  const error = ref<string | null>(null);
+
+  function restorePreferences() {
+    preferences.value = { ...defaultDeckPreferences };
+    error.value = null;
+    if (isLoading.value || !id.value) return;
+
+    let saved: string | null;
+    try {
+      saved = localStorage.getItem(DECK_PREFERENCES_STORAGE_PREFIX + id.value);
+    } catch {
+      error.value =
+        'Saved display settings could not be loaded. Changes will apply to this visit.';
       return;
     }
-    if (userId.value) mutation.mutate({ id: userId.value, patch: parsed });
+    if (!saved) return;
+    try {
+      const stored: unknown = JSON.parse(saved);
+      // The former simple view is now Card Grid; keep the deck's other choices.
+      if (
+        stored &&
+        typeof stored === 'object' &&
+        'deck_view' in stored &&
+        stored.deck_view === 'simple'
+      ) {
+        stored.deck_view = 'grid';
+      }
+      const parsed = DeckPreferencesSchema.safeParse(stored);
+      if (parsed.success) preferences.value = parsed.data;
+    } catch {
+      // Corrupt browser data must not prevent viewing or changing a deck.
+    }
   }
-  return {
-    preferences: computed(() => ({
-      ...(userId.value
-        ? (query.data.value ?? defaultDeckPreferences)
-        : defaultDeckPreferences),
-      ...overrides.value,
-    })),
-    isLoading: computed(
-      () => userLoading.value || (!!userId.value && query.isPending.value),
-    ),
-    error: query.error,
-    isSaving: mutation.isPending,
-    retry: query.refetch,
-    updatePreferences,
-  };
+
+  // Read browser settings after hydration so the server and initial client agree.
+  onMounted(() => {
+    isLoading.value = false;
+    restorePreferences();
+  });
+  watch(id, restorePreferences, { flush: 'sync' });
+
+  function updatePreferences(patch: Partial<DeckPreferences>) {
+    if (isLoading.value || !id.value) return;
+    preferences.value = {
+      ...preferences.value,
+      ...DeckPreferencesSchema.partial().parse(patch),
+    };
+    try {
+      const key = DECK_PREFERENCES_STORAGE_PREFIX + id.value;
+      const isDefault = Object.entries(defaultDeckPreferences).every(
+        ([setting, value]) =>
+          preferences.value[setting as keyof DeckPreferences] === value,
+      );
+      if (isDefault) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, JSON.stringify(preferences.value));
+      }
+      error.value = null;
+    } catch {
+      error.value =
+        'Display settings could not be saved in this browser. Changes will apply to this visit.';
+    }
+  }
+
+  return { preferences, isLoading, error, updatePreferences };
 }

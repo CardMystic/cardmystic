@@ -39,6 +39,11 @@ const TEST_PUBLIC_ENV: Record<string, string> = {
     process.env.E2E_PUBLIC_RECAPTCHA_SITE_KEY ??
     process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY ??
     'test-recaptcha-site-key',
+  // Keep standard fixtures deterministic; override explicitly for config regressions.
+  NUXT_PUBLIC_SMART_SEARCH_QUALITY_RATIO:
+    process.env.E2E_PUBLIC_SMART_SEARCH_QUALITY_RATIO ?? '0.8',
+  NUXT_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO:
+    process.env.E2E_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO ?? '0.8',
   NUXT_PUBLIC_BACKEND_URL:
     process.env.E2E_PUBLIC_BACKEND_URL ??
     process.env.NUXT_PUBLIC_BACKEND_URL ??

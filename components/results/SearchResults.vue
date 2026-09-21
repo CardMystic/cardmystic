@@ -1,9 +1,6 @@
 <template>
   <!-- Results -->
-  <div
-    class="mt-3 w-full"
-    :class="{ 'pb-24': !error && jumpToGroups.length > 0 }"
-  >
+  <div class="mt-3 w-full">
     <SearchError
       :error="error"
       v-if="error"
@@ -148,13 +145,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="
-                  () => {
-                    openAccordionValues = accordionItems.map(
-                      (i) => i.value as string,
-                    );
-                  }
-                "
+                @click="expandAllGroups"
               />
               <UButton
                 class="cursor-pointer"
@@ -163,7 +154,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="openAccordionValues = []"
+                @click="collapseAllGroups"
               />
             </div>
             <UAccordion
@@ -178,8 +169,8 @@
             >
               <template
                 v-for="group in groupedResults"
-                :key="group.label"
-                #[group.label]
+                :key="groupKey(group)"
+                #[groupKey(group)]
               >
                 <div
                   :id="groupToId(group.label)"
@@ -276,6 +267,12 @@
       </div>
     </template>
 
+    <template v-else-if="hiddenResultCount > 0">
+      <p class="py-6 text-center text-muted">
+        Additional matches are available.
+      </p>
+    </template>
+
     <template v-else-if="!queryParam">
       <div>
         <UAlert
@@ -311,6 +308,25 @@
         </div>
       </UContainer>
     </template>
+
+    <div
+      v-if="
+        hiddenResultCount > 0 &&
+        !isLoading &&
+        !isFetching &&
+        !error &&
+        !deferringHeavyRender
+      "
+      class="flex justify-center py-6"
+    >
+      <UButton
+        label="Load more"
+        color="primary"
+        variant="outline"
+        size="lg"
+        @click="$emit('loadMore')"
+      />
+    </div>
   </div>
 
   <LazyStickyActionFooter :show="!error && jumpToGroups.length > 0">
@@ -323,6 +339,10 @@
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
+import {
+  cardGroupKey as groupKey,
+  useCardGroupExpansion,
+} from '~/composables/useCardGroupExpansion';
 import type { AccordionItem } from '@nuxt/ui';
 import SortComponent from '~/components/search/Sort.vue';
 const GroupBy = defineAsyncComponent(
@@ -366,6 +386,7 @@ const props = withDefaults(
     isFetching?: boolean;
     error?: Error | null;
     searchResults: undefined | Card[];
+    hiddenResultCount?: number;
     queryParam: string | null;
     skeletonCount?: number;
     helpText?: string;
@@ -380,12 +401,13 @@ const props = withDefaults(
   }>(),
   {
     skeletonCount: 40,
+    hiddenResultCount: 0,
     isFetching: false,
     error: null,
   },
 );
 
-defineEmits<{ retry: [] }>();
+defineEmits<{ retry: []; loadMore: [] }>();
 
 // Flip state — tracks flipped cards by ID so grid card and preview stay in sync
 const flippedCards = ref<Record<string, boolean>>({});
@@ -525,12 +547,16 @@ const accordionItems = computed<AccordionItem[]>(() => {
     .filter((g) => g.label)
     .map((g) => ({
       label: g.label,
-      value: g.label,
-      slot: g.label,
+      value: groupKey(g),
+      slot: groupKey(g),
     }));
 });
 
-const openAccordionValues = ref<string[]>([]);
+const {
+  openValues: openAccordionValues,
+  expandAll: expandAllGroups,
+  collapseAll: collapseAllGroups,
+} = useCardGroupExpansion(groupedResults);
 const hoveredCardId = ref<string | null>(null);
 
 const previewCard = computed(() => {
@@ -612,14 +638,6 @@ function setPreviewCard(card: Card) {
 onUnmounted(() => {
   clearPendingPreviewCard();
 });
-
-watch(
-  accordionItems,
-  (items) => {
-    openAccordionValues.value = items.map((item) => item.value as string);
-  },
-  { immediate: true },
-);
 
 function groupToId(label: string): string {
   return (

@@ -155,11 +155,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="
-                  () => {
-                    openAccordionValues = labeledGroups.map(groupKey);
-                  }
-                "
+                @click="expandAllGroups"
               />
               <UButton
                 icon="i-lucide-chevrons-up"
@@ -167,7 +163,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="openAccordionValues = []"
+                @click="collapseAllGroups"
               />
             </div>
             <UAccordion
@@ -184,7 +180,7 @@
               <template
                 v-for="group in labeledGroups"
                 :key="groupKey(group)"
-                #[group.label]
+                #[groupKey(group)]
               >
                 <div
                   :id="groupToId(group.label)"
@@ -349,7 +345,7 @@
                 <template
                   v-for="group in sideboardLabeled"
                   :key="groupKey(group)"
-                  #[group.label]
+                  #[groupKey(group)]
                 >
                   <div :class="[cardGridClasses, 'p-2']">
                     <div
@@ -507,7 +503,7 @@
                 <template
                   v-for="group in consideringLabeled"
                   :key="groupKey(group)"
-                  #[group.label]
+                  #[groupKey(group)]
                 >
                   <div :class="[cardGridClasses, 'p-2']">
                     <div
@@ -588,7 +584,12 @@
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
+import type { DeckPreferences } from '~/models/preferencesModel';
 import type { CardGroup } from '~/utils/sort';
+import {
+  cardGroupKey as groupKey,
+  useCardGroupExpansion,
+} from '~/composables/useCardGroupExpansion';
 import type { AccordionItem } from '@nuxt/ui';
 import { provideCommandersSet } from '~/composables/useBulkData';
 import { provideSearchHistory } from '~/composables/useSearchHistory';
@@ -599,7 +600,7 @@ const isDesktopPreview = useDesktopPreview();
 import ListCard from '~/components/cards/ListCard.vue';
 import CardText from '~/components/cards/CardText.vue';
 
-type CardView = 'grid' | 'text';
+type CardView = DeckPreferences['deck_view'];
 
 const props = withDefaults(
   defineProps<{
@@ -656,32 +657,19 @@ const labeledGroups = computed(() => {
   return props.groups.filter((g) => g.label);
 });
 
-function groupKey(group: CardGroup): string {
-  return group.key ?? group.label;
-}
-
 const accordionItems = computed<AccordionItem[]>(() => {
   return labeledGroups.value.map((g) => ({
     label: g.label,
     value: groupKey(g),
-    slot: g.label,
+    slot: groupKey(g),
   }));
 });
 
-// Track stable group keys, not labels containing counts that change on edits.
-function groupExpansion(groups: Ref<CardGroup[]>) {
-  const expanded = ref<Record<string, boolean>>({});
-  return computed({
-    get: () =>
-      groups.value.map(groupKey).filter((key) => expanded.value[key] !== false),
-    set: (open: string[]) => {
-      const selected = new Set(open);
-      for (const group of groups.value)
-        expanded.value[groupKey(group)] = selected.has(groupKey(group));
-    },
-  });
-}
-const openAccordionValues = groupExpansion(labeledGroups);
+const {
+  openValues: openAccordionValues,
+  expandAll: expandAllGroups,
+  collapseAll: collapseAllGroups,
+} = useCardGroupExpansion(labeledGroups);
 
 // Sideboard accordion
 const sideboardLabeled = computed(() => {
@@ -696,11 +684,12 @@ const sideboardAccordionItems = computed<AccordionItem[]>(() => {
   return sideboardLabeled.value.map((g) => ({
     label: g.label,
     value: groupKey(g),
-    slot: g.label,
+    slot: groupKey(g),
   }));
 });
 const sideboardExpanded = ref(false);
-const openSideboardValues = groupExpansion(sideboardLabeled);
+const { openValues: openSideboardValues } =
+  useCardGroupExpansion(sideboardLabeled);
 
 // Considering accordion
 const consideringLabeled = computed(() => {
@@ -715,11 +704,12 @@ const consideringAccordionItems = computed<AccordionItem[]>(() => {
   return consideringLabeled.value.map((g) => ({
     label: g.label,
     value: groupKey(g),
-    slot: g.label,
+    slot: groupKey(g),
   }));
 });
 const consideringExpanded = ref(false);
-const openConsideringValues = groupExpansion(consideringLabeled);
+const { openValues: openConsideringValues } =
+  useCardGroupExpansion(consideringLabeled);
 
 const flippedCards = ref<Record<string, boolean>>({});
 
@@ -790,6 +780,8 @@ function clearPendingPreviewCard(cardId?: string) {
 }
 
 function setPreviewCard(card: Card, board: Board = 'Mainboard') {
+  // Touch interactions must not schedule updates for a preview that is hidden.
+  if (!isDesktopPreview.value) return;
   const nextCardId = card.card_data.id;
   // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
   if (nextCardId === hoveredCardId.value && board === hoveredBoard.value)
@@ -813,6 +805,10 @@ function setPreviewCard(card: Card, board: Board = 'Mainboard') {
     _hoverDelayId = null;
   }, HOVER_PREVIEW_DELAY_MS);
 }
+
+watch(isDesktopPreview, (enabled) => {
+  if (!enabled) clearPendingPreviewCard();
+});
 
 onUnmounted(() => {
   clearPendingPreviewCard();

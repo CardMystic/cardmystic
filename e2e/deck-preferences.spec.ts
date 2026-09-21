@@ -8,13 +8,8 @@ import {
   gotoHydrated,
 } from './utils/mocks';
 
-const defaults = {
-  deck_view: 'grid',
-  deck_group_by: 'type',
-  deck_sort_by: 'cmc',
-  deck_sort_direction: 'asc',
-};
 const listId = '10000000-0000-4000-8000-000000000001';
+const otherListId = '10000000-0000-4000-8000-000000000002';
 async function navigate(page: Page, path: string) {
   await page.evaluate((href) => {
     const root = document.getElementById('__nuxt') as unknown as {
@@ -80,137 +75,167 @@ async function setup(page: Page) {
   await page.route(BACKEND + '/supabase/card-lists/view/*', (route) =>
     route.fulfill({ status: 404, json: {} }),
   );
-  let saved: Record<string, unknown> = { ...defaults };
-  let fail = false;
-  const writes: Record<string, unknown>[] = [];
-  await page.route(SUPABASE + '/rest/v1/preferences**', async (route) => {
-    if (route.request().method() === 'POST') {
-      const patch = route.request().postDataJSON();
-      writes.push(patch);
-      if (fail)
-        return route.fulfill({ status: 500, json: { message: 'Save failed' } });
-      saved = { ...saved, ...patch };
-      return route.fulfill({ status: 201, body: '' });
-    }
-    expect(new URL(route.request().url()).searchParams.get('user_id')).toBe(
-      'eq.' + FAKE_USER.id,
-    );
-    return route.fulfill({ json: saved });
-  });
   await gotoHydrated(page, '/about');
   await navigate(page, '/lists/' + listId);
   await expect(
     page.getByRole('combobox', { name: 'Deck view', exact: true }),
   ).toBeEnabled();
-  return {
-    writes,
-    saved: () => saved,
-    fail: () => {
-      fail = true;
-    },
-  };
 }
 async function choose(page: Page, field: string, option: string) {
   await page.getByRole('combobox', { name: field, exact: true }).click();
   await page.getByRole('option', { name: option, exact: true }).click();
 }
-test('only account settings save defaults; deck changes stay local for the visit', async ({
+test('saved deck display choices migrate and persist independently across reloads and deck navigation', async ({
   page,
 }) => {
-  const state = await setup(page);
+  await page.addInitScript((deckId) => {
+    const key = 'cm.deck-preferences.v1:' + deckId;
+    if (localStorage.getItem(key) === null) {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          deck_view: 'simple',
+          deck_group_by: 'color',
+          deck_sort_by: 'price',
+          deck_sort_direction: 'asc',
+        }),
+      );
+    }
+  }, listId);
+  await setup(page);
+  // Retiring the old view must preserve that deck's other saved choices.
+  await expect(
+    page.getByRole('combobox', { name: 'Deck view', exact: true }),
+  ).toContainText('Card Grid');
+  await expect(
+    page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
+  ).toContainText('Color');
+  await expect(
+    page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
+  ).toContainText('Price');
   await choose(page, 'Deck view', 'Card Text');
   await choose(page, 'Deck grouping', 'None');
   await choose(page, 'Deck sorting', 'Name');
   await page.getByRole('button', { name: 'Ascending', exact: true }).click();
+
+  async function expectDeckAChoices() {
+    await expect(
+      page.getByRole('combobox', { name: 'Deck view', exact: true }),
+    ).toContainText('Card Text');
+    await expect(
+      page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
+    ).toContainText('None');
+    await expect(
+      page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
+    ).toContainText('Name');
+    await expect(
+      page.getByRole('button', { name: 'Descending', exact: true }),
+    ).toBeVisible();
+  }
+
+  await page.reload();
+  await expectDeckAChoices();
+
+  async function expectDeckBDefaults() {
+    await expect(
+      page.getByRole('combobox', { name: 'Deck view', exact: true }),
+    ).toContainText('Card Grid');
+    await expect(
+      page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
+    ).toContainText('Card Type');
+    await expect(
+      page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
+    ).toContainText('Mana Value');
+    await expect(
+      page.getByRole('button', { name: 'Ascending', exact: true }),
+    ).toBeVisible();
+  }
+
+  async function savedDeckBPreferences() {
+    const saved = await page.evaluate(
+      (deckId) => localStorage.getItem('cm.deck-preferences.v1:' + deckId),
+      otherListId,
+    );
+    return saved ? JSON.parse(saved) : null;
+  }
+
+  await navigate(page, '/lists/' + otherListId);
+  await expectDeckBDefaults();
+  await expect.poll(savedDeckBPreferences).toBeNull();
+  await choose(page, 'Deck sorting', 'Price');
+  await expect
+    .poll(savedDeckBPreferences)
+    .toMatchObject({ deck_sort_by: 'price' });
+
+  await navigate(page, '/lists/' + listId);
+  await expectDeckAChoices();
+  await navigate(page, '/lists/' + otherListId);
   await expect(
     page.getByRole('combobox', { name: 'Deck view', exact: true }),
-  ).toContainText('Card Text');
+  ).toContainText('Card Grid');
   await expect(
-    page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
-  ).toContainText('None');
-  expect(state.writes).toHaveLength(0);
-  expect(state.saved()).toEqual(defaults);
+    page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
+  ).toContainText('Price');
+  await choose(page, 'Deck grouping', 'Color');
+  await choose(page, 'Deck sorting', 'Mana Value');
+  await expect.poll(savedDeckBPreferences).toMatchObject({
+    deck_group_by: 'color',
+    deck_sort_by: 'cmc',
+  });
+  await choose(page, 'Deck grouping', 'Card Type');
+  await expect.poll(savedDeckBPreferences).toBeNull();
+
+  await page.reload();
+  await expectDeckBDefaults();
+  await expect.poll(savedDeckBPreferences).toBeNull();
+  await navigate(page, '/lists/' + listId);
+  await expectDeckAChoices();
 
   await navigate(page, '/user/account');
   await expect(
     page.getByRole('heading', { name: 'Deck display preferences' }),
-  ).toBeVisible();
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('combobox', { name: 'Deck view', exact: true }),
+  ).toHaveCount(0);
+});
+
+test('invalid saved settings use defaults and blocked storage still allows changes for the visit', async ({
+  page,
+}) => {
+  await page.addInitScript((deckId) => {
+    localStorage.setItem('cm.deck-preferences.v1:' + deckId, '{invalid json');
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith('cm.deck-preferences.v1:')) {
+        throw new DOMException('Storage is full', 'QuotaExceededError');
+      }
+      return setItem.call(this, key, value);
+    };
+  }, listId);
+  await setup(page);
   await expect(
     page.getByRole('combobox', { name: 'Deck view', exact: true }),
   ).toContainText('Card Grid');
   await expect(
     page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
   ).toContainText('Card Type');
-  await choose(page, 'Deck view', 'Card Text');
-  await choose(page, 'Deck grouping', 'None');
-  await choose(page, 'Deck sorting', 'Name');
-  await page.getByRole('button', { name: 'Ascending', exact: true }).click();
-  await expect.poll(state.saved).toMatchObject({
-    deck_view: 'text',
-    deck_group_by: null,
-    deck_sort_by: 'name',
-    deck_sort_direction: 'desc',
-  });
-  expect(state.writes).toHaveLength(4);
-  expect(state.writes[1]).toEqual({
-    user_id: FAKE_USER.id,
-    deck_group_by: null,
-  });
-  await page.reload();
   await expect(
-    page.getByRole('combobox', { name: 'Deck view', exact: true }),
-  ).toContainText('Card Text');
-  await expect(
-    page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
-  ).toContainText('None');
+    page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
+  ).toContainText('Mana Value');
 
-  await navigate(page, '/lists/' + listId);
-  await expect(
-    page.getByRole('combobox', { name: 'Deck view', exact: true }),
-  ).toContainText('Card Text');
-  await expect(
-    page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
-  ).toContainText('Name');
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Display', exact: true }).click();
-  await choose(page, 'Deck view', 'Card Grid');
-  await choose(page, 'Deck sorting', 'None');
-  await expect(
-    page.getByRole('combobox', { name: 'Deck view', exact: true }),
-  ).toContainText('Card Grid');
-  expect(state.saved().deck_view).toBe('text');
-  expect(state.writes).toHaveLength(4);
-  await page.getByRole('button', { name: 'Display', exact: true }).click();
-  await expect(
-    page.getByRole('dialog', { name: 'Display', exact: true }),
-  ).toBeHidden();
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await navigate(page, '/lists/10000000-0000-4000-8000-000000000002');
-  await expect(
-    page.getByRole('combobox', { name: 'Deck view', exact: true }),
-  ).toContainText('Card Text');
-  await expect(
-    page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
-  ).toContainText('Name');
-  await choose(page, 'Deck view', 'Card Grid');
-  await page.reload();
-  await expect(
-    page.getByRole('combobox', { name: 'Deck view', exact: true }),
-  ).toContainText('Card Text');
-  expect(state.writes).toHaveLength(4);
-});
-test('failed account preference writes show an error and restore the saved choice', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  await navigate(page, '/user/account');
-  state.fail();
   await choose(page, 'Deck view', 'Card Text');
   await expect(
-    page.getByText('Could not save display preferences', { exact: true }),
+    page.getByText(
+      'Display settings could not be saved in this browser. Changes will apply to this visit.',
+      { exact: true },
+    ),
   ).toBeVisible();
   await expect(
     page.getByRole('combobox', { name: 'Deck view', exact: true }),
-  ).toContainText('Card Grid');
-  expect(state.saved().deck_view).toBe('grid');
+  ).toContainText('Card Text');
+  await choose(page, 'Deck grouping', 'None');
+  await expect(
+    page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
+  ).toContainText('None');
 });

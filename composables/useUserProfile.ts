@@ -1,5 +1,6 @@
 import { useSupabase } from './useSupabase';
 import { useRecaptcha } from './useRecaptcha';
+import { DECK_PREFERENCES_STORAGE_PREFIX } from './useDeckPreferences';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import {
   LoginResponseSchema,
@@ -102,9 +103,13 @@ export const useUserProfile = () => {
       // Sign out from Supabase
       await supabase.auth.signOut();
 
-      // Clear local storage to be sure
+      // Keep browser display choices; remove auth, account, and other cached data.
       if (typeof window !== 'undefined') {
-        localStorage.clear();
+        for (const key of Object.keys(localStorage)) {
+          if (!key.startsWith(DECK_PREFERENCES_STORAGE_PREFIX)) {
+            localStorage.removeItem(key);
+          }
+        }
         sessionStorage.clear();
       }
 
