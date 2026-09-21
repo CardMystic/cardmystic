@@ -88,9 +88,11 @@ cp .env_defaults .env
 ### PostHog analytics
 
 PostHog is configured with CardMystic's public project key and US ingestion host.
-The browser-only plugin captures page views (including client-side navigation)
-and interactions. It does not identify signed-in accounts, and session replay
-is disabled. Production and staging use separate browser cookies.
+The browser-only plugin captures page views and interactions after Analytics
+consent. Google Ads conversion tracking requires separate Advertising consent.
+Cookie settings in the footer let visitors change their choices. Account
+identification and session replay are disabled. Production and staging use
+separate browser cookies.
 
 Analytics is disabled during `nuxt dev` and on localhost, including local
 production previews. To disable it on a deployment, set

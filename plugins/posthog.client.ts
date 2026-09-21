@@ -1,36 +1,45 @@
 import posthog from 'posthog-js';
+import { isLocalBrowser } from '~/utils/cookieConsent';
 
 export default defineNuxtPlugin({
   name: 'posthog',
-  // Auth removes OAuth tokens from the URL before analytics can capture it.
   enforce: 'post',
+  dependsOn: ['cookie-consent'],
   setup() {
     const config = useRuntimeConfig().public;
-    const hostname = window.location.hostname;
-    const isLocalhost =
-      ['localhost', '127.0.0.1', '[::1]', '::1'].includes(hostname) ||
-      hostname.endsWith('.localhost');
-
-    // Keep development, local previews, and disabled deployments out of analytics.
     if (
       import.meta.dev ||
-      isLocalhost ||
+      isLocalBrowser() ||
       String(config.posthogEnabled) !== 'true' ||
       !config.posthogKey
-    ) {
+    )
       return;
-    }
-
-    posthog.init(config.posthogKey, {
-      api_host: config.posthogHost,
-      defaults: '2026-05-30',
-      person_profiles: 'identified_only',
-      // Includes the initial page and subsequent Nuxt router navigations.
-      capture_pageview: 'history_change',
-      // Keep production and next.cardmystic.com sessions separate.
-      cross_subdomain_cookie: false,
-      // Account identification and session replay are outside this integration.
-      disable_session_recording: true,
-    });
+    const { consent } = useCookieConsent();
+    let initialized = false;
+    watch(
+      () => consent.value?.analytics === true,
+      (allowed) => {
+        if (!allowed) {
+          if (initialized) posthog.opt_out_capturing();
+          return;
+        }
+        if (!initialized) {
+          posthog.init(config.posthogKey, {
+            api_host: config.posthogHost,
+            defaults: '2026-05-30',
+            person_profiles: 'identified_only',
+            capture_pageview: 'history_change',
+            cross_subdomain_cookie: false,
+            disable_session_recording: true,
+            opt_out_capturing_by_default: true,
+            opt_out_persistence_by_default: true,
+          });
+          initialized = true;
+        }
+        posthog.opt_in_capturing({ captureEventName: false });
+        posthog.capture('$pageview');
+      },
+      { immediate: true, flush: 'sync' },
+    );
   },
 });

@@ -1,3 +1,4 @@
+import { COOKIE_CONSENT_KEY } from '~/utils/cookieConsent';
 import { useSupabase } from './useSupabase';
 import { useRecaptcha } from './useRecaptcha';
 import { DECK_PREFERENCES_STORAGE_PREFIX } from './useDeckPreferences';
@@ -103,10 +104,13 @@ export const useUserProfile = () => {
       // Sign out from Supabase
       await supabase.auth.signOut();
 
-      // Keep browser display choices; remove auth, account, and other cached data.
+      // Keep browser preferences and consent; remove auth, account, and cached data.
       if (typeof window !== 'undefined') {
         for (const key of Object.keys(localStorage)) {
-          if (!key.startsWith(DECK_PREFERENCES_STORAGE_PREFIX)) {
+          if (
+            !key.startsWith(DECK_PREFERENCES_STORAGE_PREFIX) &&
+            key !== COOKIE_CONSENT_KEY
+          ) {
             localStorage.removeItem(key);
           }
         }

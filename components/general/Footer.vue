@@ -91,6 +91,17 @@
             class="ml-2 text-purple-300 hover:text-purple-200 underline text-[10px]"
             >Privacy Policy
           </NuxtLink>
+          <button
+            type="button"
+            class="ml-2 min-h-11 px-2 text-purple-300 underline text-xs"
+            @click="
+              () => {
+                settingsOpen = true;
+              }
+            "
+          >
+            Cookie settings
+          </button>
         </p>
         <p class="mt-2">
           Experiencing issues? Contact us at
@@ -107,6 +118,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+const { settingsOpen } = useCookieConsent();
 
 const {
   public: { commitHash: fullCommitHash },

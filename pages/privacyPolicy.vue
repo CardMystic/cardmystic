@@ -115,9 +115,9 @@
 
       <div class="mt-2 text-base">
         <p class="mb-4">
-          We use PostHog to understand page visits and interactions with the
-          site, using cookies and browser storage. Analytics data is sent to
-          PostHog's US service to help us improve CardMystic. We do not
+          With your Analytics consent, we use PostHog to understand page visits
+          and interactions, using cookies and browser storage. Analytics data is
+          sent to PostHog's US service to help us improve CardMystic. We do not
           associate these events with your account ID, and session replay is
           disabled.
         </p>
@@ -134,75 +134,40 @@
     </UCard>
 
     <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">� Advertising & Cookies</div>
-
-      <div class="mt-2 text-base">
+      <div class="text-2xl font-bold">Advertising & Cookie Choices</div>
+      <div class="mt-2 text-base space-y-4">
         <p>
-          CardMystic uses
+          With your Advertising consent, Google Ads measures conversions such as
+          signups and searches. Google Ads and PostHog are not enabled until you
+          accept their respective categories. Session replay and advertising
+          personalization are disabled.
+        </p>
+        <p>
+          Choose Accept all, Reject optional, or Customize in the privacy
+          banner. You can change or withdraw your choices at any time using
+          Cookie settings in the footer. We remember your choice in this browser
+          for up to six months. Sign-in and requested display preferences work
+          independently of these optional choices.
+        </p>
+        <p>
+          Separately, we estimate daily visitors, including guests, without
+          cookies. For this metric, the backend uses a daily-changing salted
+          hash of IP address and browser information; it does not store raw IP
+          addresses or account IDs in the metric. Daily hashes and salts expire
+          within 48 hours, while aggregate daily totals are retained. This
+          estimate runs independently of optional PostHog and Google Ads
+          tracking and does not recognize visitors across days.
+        </p>
+        <p>
+          Learn how Google processes data in its
           <a
-            href="https://adsense.google.com"
+            href="https://policies.google.com/technologies/partner-sites"
             target="_blank"
             rel="noopener"
             class="text-primary underline"
-            >Google AdSense</a
-          >
-          to display advertisements on our site. Google and its third-party
-          vendors use cookies and similar technologies to serve ads based on
-          your prior visits to CardMystic and other websites across the
-          internet.
+            >partner sites policy</a
+          >.
         </p>
-
-        <p class="mt-4">
-          We may also use cookies and similar technologies for analytics,
-          measuring ad performance, and improving the overall user experience.
-        </p>
-
-        <p class="mt-4 font-semibold">Managing your ad preferences</p>
-        <ul class="list-disc ml-6 mt-2">
-          <li>
-            You can opt out of personalized advertising by visiting
-            <a
-              href="https://www.google.com/settings/ads"
-              target="_blank"
-              rel="noopener"
-              class="text-primary underline"
-              >Google Ads Settings</a
-            >.
-          </li>
-          <li>
-            You can opt out of third-party vendor use of cookies for
-            personalized ads by visiting
-            <a
-              href="https://www.aboutads.info"
-              target="_blank"
-              rel="noopener"
-              class="text-primary underline"
-              >www.aboutads.info</a
-            >.
-          </li>
-          <li>
-            Learn more about how Google uses information from sites that use its
-            services at
-            <a
-              href="https://policies.google.com/technologies/partner-sites"
-              target="_blank"
-              rel="noopener"
-              class="text-primary underline"
-              >Google's Partner Sites policy</a
-            >.
-          </li>
-          <li>
-            Review
-            <a
-              href="https://policies.google.com/privacy"
-              target="_blank"
-              rel="noopener"
-              class="text-primary underline"
-              >Google's Privacy Policy</a
-            >
-            for more information about how Google handles data.
-          </li>
-        </ul>
       </div>
     </UCard>
 
