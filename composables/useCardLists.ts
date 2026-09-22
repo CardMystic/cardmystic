@@ -490,31 +490,35 @@ export const useCardLists = () => {
 
   const removeCardFromList = async (
     listId: string,
-    oracleId: string,
+    oracleId: string | string[],
     board?: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
     if (!supabase) return;
 
+    const oracleIds = Array.isArray(oracleId) ? oracleId : [oracleId];
+    if (!oracleIds.length) return;
+    if (Array.isArray(oracleId)) {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error('User not authenticated');
+      if (!board) throw new Error('A board is required for batch removal');
+      return await $fetch<{ removedCount: number }>(
+        `${useRuntimeConfig().public.backendUrl}/supabase/card-lists/remove-cards`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: { listId, board, oracleIds },
+        },
+      );
+    }
     let query = supabase
       .from('card_list_items')
       .delete()
       .eq('list_id', listId)
       .eq('oracle_id', oracleId);
     if (board) query = query.eq('board', board);
-
-    const { data, error } = await query.select();
+    const { error } = await query;
     if (error) throw error;
-
-    if (!data || data.length === 0) {
-      console.warn(
-        'No card found to delete with listId:',
-        listId,
-        'oracleId:',
-        oracleId,
-        'board:',
-        board,
-      );
-    }
   };
 
   const removeCardFromListMutation = useMutation({
@@ -524,13 +528,16 @@ export const useCardLists = () => {
       board,
     }: {
       listId: string;
-      oracleId: string;
+      oracleId: string | string[];
       board?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
       if (!supabase) return;
       return removeCardFromList(listId, oracleId, board);
     },
     onMutate: async ({ listId, oracleId, board }) => {
+      const removedIds = new Set(
+        Array.isArray(oracleId) ? oracleId : [oracleId],
+      );
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['list-items', listId] });
       await queryClient.cancelQueries({ queryKey: ['list-cards', listId] });
@@ -542,7 +549,7 @@ export const useCardLists = () => {
         { queryKey: ['list-items', listId] },
         (old) =>
           old?.filter((item: any) => {
-            if (item.oracle_id !== oracleId) return true;
+            if (!removedIds.has(item.oracle_id)) return true;
             if (board && item.board !== board) return true;
             return false;
           }),
@@ -556,12 +563,13 @@ export const useCardLists = () => {
           if (!old) return old;
           const items =
             queryClient.getQueryData<any[]>(['list-items', listId]) ?? [];
-          const stillReferenced = items.some(
-            (item: any) => item.oracle_id === oracleId,
+          const remainingIds = new Set(
+            items.map((item: any) => item.oracle_id),
           );
-          if (stillReferenced) return old;
           return old.filter(
-            (card: any) => card.card_data.oracle_id !== oracleId,
+            (card: any) =>
+              !removedIds.has(card.card_data.oracle_id) ||
+              remainingIds.has(card.card_data.oracle_id),
           );
         },
       );

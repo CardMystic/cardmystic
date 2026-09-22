@@ -242,20 +242,43 @@ async function setup(page: Page, failCatalog = false) {
   await page.route(SUPABASE + '/rest/v1/card_list_items**', async (route) => {
     const url = new URL(route.request().url());
     const board = url.searchParams.get('board')?.replace('eq.', '');
-    const oracleId = url.searchParams.get('oracle_id')?.replace('eq.', '');
+    const oracleFilter = url.searchParams.get('oracle_id') ?? '';
+    const oracleIds = oracleFilter.startsWith('in.(')
+      ? oracleFilter.slice(4, -1).split(',')
+      : [oracleFilter.replace('eq.', '')];
     if (route.request().method() === 'DELETE') {
       const gate = writeGate;
       writeGate = null;
       await gate;
       writes.push('remove');
       const removed = items.filter(
-        (row) => row.oracle_id === oracleId && (!board || row.board === board),
+        (row) =>
+          oracleIds.includes(row.oracle_id) && (!board || row.board === board),
       );
       items = items.filter((row) => !removed.includes(row));
       return route.fulfill({ json: removed });
     }
     return route.fulfill({ json: items });
   });
+  await page.route(
+    BACKEND + '/supabase/card-lists/remove-cards',
+    async (route) => {
+      const body = route.request().postDataJSON();
+      expect(body.listId).toBe(listId);
+      expect(route.request().method()).toBe('POST');
+      expect(new URL(route.request().url()).search).toBe('');
+      const gate = writeGate;
+      writeGate = null;
+      await gate;
+      writes.push('remove');
+      const removed = items.filter(
+        (row) =>
+          body.oracleIds.includes(row.oracle_id) && row.board === body.board,
+      );
+      items = items.filter((row) => !removed.includes(row));
+      return route.fulfill({ json: { removedCount: removed.length } });
+    },
+  );
   await page.route(BACKEND + '/cards/cards-by-oracle-ids', (route) => {
     const requested: string[] = route.request().postDataJSON().oracleIds;
     return route.fulfill({
@@ -793,4 +816,35 @@ test('comparison accepts another action while saving without resizing', async ({
   expect(state.items().some((row) => row.oracle_id === ids[3])).toBe(true);
   expect(state.items().some((row) => row.oracle_id === ids[2])).toBe(false);
   expect((await dialog.boundingBox())!.height).toBeCloseTo(before!.height, 0);
+});
+
+test('Add All and Remove All each send one batch and preserve the other board', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await page
+    .getByRole('button', { name: 'Compare decks', exact: true })
+    .click();
+  const dialog = page.getByRole('dialog', {
+    name: 'Compare decks',
+    exact: true,
+  });
+  await dialog
+    .getByRole('textbox', { name: 'Decklist or CardMystic URL' })
+    .fill('2 Counterspell\n3 Forest');
+  await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Remove All', exact: true }).click();
+  await expect(
+    page.getByText('Removed 3 cards', { exact: true }),
+  ).toBeVisible();
+  expect(state.writes).toEqual(['remove']);
+  expect(state.items()).toEqual([item(0, 4, 'Sideboard')]);
+  await dialog.getByRole('button', { name: 'Add All', exact: true }).click();
+  await expect(dialog.getByText('The cards and counts match.')).toBeVisible();
+  expect(state.writes).toEqual(['remove', 'add']);
+  expect(state.items()).toEqual([
+    item(0, 4, 'Sideboard'),
+    item(3, 2),
+    item(4, 3),
+  ]);
 });

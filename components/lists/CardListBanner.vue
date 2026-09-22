@@ -46,6 +46,7 @@
             <USelect
               v-model="editedFormat"
               :items="formatOptions"
+              aria-label="List format"
               size="sm"
               class="w-48 bg-black/50 rounded"
               @blur="updateListFormat"
@@ -56,12 +57,15 @@
             <span class="text-gray-300 text-sm font-medium">{{
               list.format || 'Commander'
             }}</span>
-            <UIcon
+            <button
               v-if="isOwner"
-              name="i-lucide-pencil"
-              class="w-3.5 h-3.5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+              type="button"
+              aria-label="Edit list format"
+              class="inline-flex p-1 text-gray-400 hover:text-white cursor-pointer transition-colors"
               @click="startEditingFormat"
-            />
+            >
+              <UIcon name="i-lucide-pencil" class="w-3.5 h-3.5" />
+            </button>
           </template>
           <!-- Visibility selector (owner only) -->
           <USelect

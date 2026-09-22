@@ -74,6 +74,17 @@ export type AddCardsByOracleIdsResponse = z.infer<
   typeof AddCardsByOracleIdsResponseSchema
 >;
 
+// ---- Remove Cards ----
+
+export const RemoveCardsSchema = z.object({
+  listId: z.guid(),
+  board: BoardSchema,
+  oracleIds: z.array(z.uuid()).min(1).max(MAX_DECKLIST_CARDS),
+});
+export type RemoveCardsRequest = z.infer<typeof RemoveCardsSchema>;
+export const RemoveCardsResponseSchema = z.object({ removedCount: z.number() });
+export type RemoveCardsResponse = z.infer<typeof RemoveCardsResponseSchema>;
+
 // ---- Bulk Edit ----
 
 export const BulkEditCardSchema = z.object({

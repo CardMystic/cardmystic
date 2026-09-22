@@ -9,7 +9,9 @@ const sdk = vi.hoisted(() => ({
   capture: vi.fn(),
 }));
 const { init } = sdk;
-vi.mock('posthog-js', () => ({ default: sdk }));
+let resolveSdk: (() => void) | undefined;
+let delaySdk = false;
+const importSdk = vi.fn();
 let consent = ref<CookieConsent | null>(null);
 
 type Plugin = { name: string; enforce: string; setup: () => void };
@@ -29,6 +31,16 @@ async function loadPlugin() {
 beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
+  delaySdk = false;
+  resolveSdk = undefined;
+  vi.doMock('posthog-js', async () => {
+    importSdk();
+    if (delaySdk)
+      await new Promise<void>((resolve) => {
+        resolveSdk = resolve;
+      });
+    return { default: sdk };
+  });
   config = {
     public: {
       posthogKey: 'phc_test_project',
@@ -53,24 +65,46 @@ afterEach(() => {
 });
 
 describe('PostHog client integration', () => {
+  it('does not initialize if consent is withdrawn during the SDK download', async () => {
+    delaySdk = true;
+    const plugin = await loadPlugin();
+    plugin.setup();
+    await vi.waitFor(() => expect(importSdk).toHaveBeenCalledTimes(1));
+    consent.value!.analytics = false;
+    resolveSdk!();
+    await vi.dynamicImportSettled();
+    expect(init).not.toHaveBeenCalled();
+    expect(sdk.opt_in_capturing).not.toHaveBeenCalled();
+    expect(sdk.capture).not.toHaveBeenCalled();
+    consent.value!.analytics = true;
+    await vi.dynamicImportSettled();
+    expect(init).toHaveBeenCalledTimes(1);
+    expect(sdk.capture).toHaveBeenCalledExactlyOnceWith('$pageview');
+  });
+
   it('waits for Analytics consent and stops immediately when it is withdrawn', async () => {
     consent.value = null;
     const plugin = await loadPlugin();
     plugin.setup();
+    await vi.dynamicImportSettled();
     expect(init).not.toHaveBeenCalled();
+    expect(importSdk).not.toHaveBeenCalled();
     consent.value = {
       analytics: false,
       advertising: true,
       updatedAt: Date.now(),
     };
     expect(init).not.toHaveBeenCalled();
+    expect(importSdk).not.toHaveBeenCalled();
     consent.value.analytics = true;
+    await vi.dynamicImportSettled();
     expect(init).toHaveBeenCalledTimes(1);
     expect(sdk.opt_in_capturing).toHaveBeenCalledTimes(1);
     expect(sdk.capture).toHaveBeenCalledExactlyOnceWith('$pageview');
     consent.value.analytics = false;
     expect(sdk.opt_out_capturing).toHaveBeenCalledTimes(1);
     consent.value.analytics = true;
+    await vi.dynamicImportSettled();
     expect(init).toHaveBeenCalledTimes(1);
     expect(sdk.opt_in_capturing).toHaveBeenCalledTimes(2);
   });
@@ -84,6 +118,7 @@ describe('PostHog client integration', () => {
   it('initializes the configured project with SPA pageviews and replay disabled', async () => {
     const plugin = await loadPlugin();
     plugin.setup();
+    await vi.dynamicImportSettled();
 
     expect(init).toHaveBeenCalledExactlyOnceWith('phc_test_project', {
       api_host: 'https://us.i.posthog.com',
@@ -103,8 +138,10 @@ describe('PostHog client integration', () => {
       window.location.hostname = hostname;
       const plugin = await loadPlugin();
       plugin.setup();
+      await vi.dynamicImportSettled();
 
       expect(init).not.toHaveBeenCalled();
+      expect(importSdk).not.toHaveBeenCalled();
     },
   );
 
@@ -114,8 +151,10 @@ describe('PostHog client integration', () => {
       config.public.posthogEnabled = enabled;
       const plugin = await loadPlugin();
       plugin.setup();
+      await vi.dynamicImportSettled();
 
       expect(init).not.toHaveBeenCalled();
+      expect(importSdk).not.toHaveBeenCalled();
     },
   );
 
@@ -123,8 +162,10 @@ describe('PostHog client integration', () => {
     config.public.posthogKey = '';
     const plugin = await loadPlugin();
     plugin.setup();
+    await vi.dynamicImportSettled();
 
     expect(init).not.toHaveBeenCalled();
+    expect(importSdk).not.toHaveBeenCalled();
   });
 
   it('supports a boolean enabled setting and configured ingestion host', async () => {
@@ -132,6 +173,7 @@ describe('PostHog client integration', () => {
     config.public.posthogHost = 'https://eu.i.posthog.com';
     const plugin = await loadPlugin();
     plugin.setup();
+    await vi.dynamicImportSettled();
 
     expect(init).toHaveBeenCalledExactlyOnceWith(
       'phc_test_project',
