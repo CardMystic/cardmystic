@@ -1,4 +1,3 @@
-import posthog from 'posthog-js';
 import { isLocalBrowser } from '~/utils/cookieConsent';
 
 export default defineNuxtPlugin({
@@ -15,13 +14,29 @@ export default defineNuxtPlugin({
     )
       return;
     const { consent } = useCookieConsent();
+    let posthog: typeof import('posthog-js').default | undefined;
+    let loading: Promise<typeof import('posthog-js')> | undefined;
     let initialized = false;
+    let consentVersion = 0;
     watch(
       () => consent.value?.analytics === true,
-      (allowed) => {
+      async (allowed) => {
+        const version = ++consentVersion;
         if (!allowed) {
-          if (initialized) posthog.opt_out_capturing();
+          if (initialized) posthog?.opt_out_capturing();
           return;
+        }
+        if (!posthog) {
+          try {
+            loading ??= import('posthog-js');
+            const module = await loading;
+            // Consent can change while the SDK downloads, including rapid toggles.
+            if (version !== consentVersion || !consent.value?.analytics) return;
+            posthog = module.default;
+          } catch {
+            loading = undefined;
+            return;
+          }
         }
         if (!initialized) {
           posthog.init(config.posthogKey, {

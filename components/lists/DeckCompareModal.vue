@@ -743,22 +743,20 @@ async function apply(action: Action, entries: Entry[]) {
       });
       if (result?.invalidCardNames.length)
         actionError = 'Not added: ' + result.invalidCardNames.join(', ');
+    } else if (action === 'extra') {
+      await removeCardFromListMutation.mutateAsync({
+        listId: props.listId,
+        oracleId: entries.map((card) => card.oracleId),
+        board: board.value,
+      });
     } else {
       for (const card of entries) {
-        if (action === 'count') {
-          await updateNumCopiesMutation.mutateAsync({
-            listId: props.listId,
-            cardName: card.name,
-            numCopies: card.quantity,
-            fromBoard: board.value,
-          });
-        } else {
-          await removeCardFromListMutation.mutateAsync({
-            listId: props.listId,
-            oracleId: card.oracleId,
-            board: board.value,
-          });
-        }
+        await updateNumCopiesMutation.mutateAsync({
+          listId: props.listId,
+          cardName: card.name,
+          numCopies: card.quantity,
+          fromBoard: board.value,
+        });
       }
     }
   } catch (cause) {

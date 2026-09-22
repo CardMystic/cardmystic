@@ -59,9 +59,7 @@ test('privacy choices default off, persist, and can be withdrawn from the footer
   ).toBeChecked();
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-    banner
-      .getByRole('button', { name: 'Reject optional', exact: true })
-      .click(),
+    banner.getByRole('button', { name: 'Reject all', exact: true }).click(),
   ]);
   await expect(banner).toBeHidden();
   expect(
