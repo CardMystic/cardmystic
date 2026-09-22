@@ -28,6 +28,8 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
+          :hidden-result-count="hiddenResultCount"
+          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -174,8 +176,15 @@ const wordSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading, isFetching, error, refetch } =
-  useColbertSearch(wordSearch);
+const {
+  searchResults,
+  hiddenResultCount,
+  loadMoreResults,
+  isLoading,
+  isFetching,
+  error,
+  refetch,
+} = useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

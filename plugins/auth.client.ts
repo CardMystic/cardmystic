@@ -31,7 +31,7 @@ const captureOAuthHash = (): {
   return { access_token, refresh_token };
 };
 
-export default defineNuxtPlugin(async () => {
+export default defineNuxtPlugin(async (nuxtApp) => {
   // Must run before any other plugin / router activity that could mutate
   // the URL. Nuxt client plugins run synchronously at app startup, so
   // reading window.location.hash here is the earliest reliable point.
@@ -56,8 +56,10 @@ export default defineNuxtPlugin(async () => {
       console.error('[auth] Failed to apply OAuth session from URL:', error);
     } else if (sessionStorage.getItem('pendingOAuthSignup') === 'true') {
       // Fire Google Ads conversion for Sign-up via Google OAuth
-      window.gtag?.('event', 'conversion', {
-        send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
+      nuxtApp.hook('app:mounted', () => {
+        window.gtag?.('event', 'conversion', {
+          send_to: 'AW-17812762149/EYNLCLnnzsEcEKXc5K1C',
+        });
       });
       sessionStorage.removeItem('pendingOAuthSignup');
     }

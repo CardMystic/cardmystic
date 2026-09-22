@@ -20,6 +20,13 @@ describe('formatToLegalityKey', () => {
 // isLegal
 // ---------------------------------------------------------------------------
 describe('isLegal', () => {
+  it('allows any card and quantity in Any format', () => {
+    expect(
+      isLegal({ commander: 'banned', modern: 'not_legal' }, 'Any', 99),
+    ).toEqual({ legal: true });
+    expect(isLegal({}, 'Any', 99)).toEqual({ legal: true });
+  });
+
   it('returns legal when legalities are undefined', () => {
     expect(isLegal(undefined, 'commander').legal).toBe(true);
   });

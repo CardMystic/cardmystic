@@ -10,14 +10,10 @@
 
     <div class="min-w-0 flex-1">
       <div
-        v-if="view === 'grid'"
+        v-if="view !== 'text'"
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2"
       >
-        <CardSkeleton
-          v-for="i in skeletonCount"
-          :key="`skeleton-${i}`"
-          :showCardInfo="true"
-        />
+        <ListCardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" />
       </div>
 
       <div
@@ -43,10 +39,13 @@
 </template>
 
 <script setup lang="ts">
+import type { DeckPreferences } from '~/models/preferencesModel';
+import ListCardSkeleton from '~/components/cards/ListCardSkeleton.vue';
+
 withDefaults(
   defineProps<{
     skeletonCount?: number;
-    view?: 'grid' | 'text';
+    view?: DeckPreferences['deck_view'];
   }>(),
   {
     skeletonCount: 40,

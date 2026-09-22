@@ -3,14 +3,6 @@
     class="mx-auto py-8 relative z-10 w-full"
     :class="{ 'pb-24': showStickyFooter }"
   >
-    <!-- Page Background Image (blurred, behind all content) -->
-    <div v-if="bannerImageUrl" class="fixed inset-0 -z-10">
-      <div
-        class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-40 dark:opacity-20 blur-sm"
-        :style="{ backgroundImage: `url(${bannerImageUrl})` }"
-      ></div>
-    </div>
-
     <CardListBanner
       :list="list"
       :is-loading="isLoadingLists"
@@ -48,7 +40,7 @@
     <!-- Actions + Add Card (owner only) -->
     <div v-if="list && isOwner" class="mb-2">
       <div class="flex flex-wrap items-center justify-between">
-        <div class="flex gap-2 mb-2">
+        <div class="flex flex-wrap gap-2 mb-2">
           <UTooltip text="View the primer for this deck">
             <UButton
               :to="`/lists/${listId}/primer`"
@@ -64,11 +56,13 @@
               icon="i-lucide-box"
               color="primary"
               variant="solid"
-              label="Recommend"
+              aria-label="Recommend"
               @click="goToRecommend"
               class="cursor-pointer h-8"
               size="sm"
-            />
+            >
+              <span class="hidden md:inline">Recommend</span>
+            </UButton>
           </UTooltip>
           <UTooltip text="Copy card names">
             <UButton
@@ -80,6 +74,23 @@
               class="cursor-pointer"
             >
               <span class="hidden md:inline">Copy</span>
+            </UButton>
+          </UTooltip>
+          <UTooltip text="Compare with another deck">
+            <UButton
+              icon="i-lucide-scale"
+              aria-label="Compare decks"
+              color="primary"
+              variant="outline"
+              :disabled="loading"
+              @click="
+                () => {
+                  isCompareModalOpen = true;
+                }
+              "
+              class="cursor-pointer"
+            >
+              <span class="hidden md:inline">Compare Deck</span>
             </UButton>
           </UTooltip>
           <UTooltip text="Bulk edit cards">
@@ -116,8 +127,8 @@
         <UInputMenu
           v-model="selectedCardToAdd"
           v-model:search-term="addCardSearchTerm"
-          :loading="isAddCardBusy || loading"
-          :disabled="loading || !oracleMapReady"
+          :aria-busy="isAddCardBusy"
+          :disabled="loading || !addCardCatalogReady || addCardLoading"
           :items="filteredAddCards"
           placeholder="Add a card to the deck..."
           icon="i-heroicons-plus"
@@ -127,6 +138,21 @@
       </div>
     </div>
 
+    <div
+      v-if="isOwner && addCardCatalogError"
+      role="alert"
+      class="mb-2 flex items-center gap-2 text-sm text-error"
+    >
+      Could not load the card catalog.
+      <UButton
+        label="Retry card catalog"
+        size="sm"
+        variant="link"
+        :loading="isAddCardBusy"
+        @click="retryCardCatalog"
+      />
+    </div>
+
     <!-- Mobile add cards and display controls-->
     <div class="lg:hidden flex flex-row justify-between">
       <!-- Mobile add cards input (owner only) -->
@@ -134,8 +160,8 @@
         v-if="isOwner"
         v-model="selectedCardToAdd"
         v-model:search-term="addCardSearchTerm"
-        :loading="isAddCardBusy"
-        :disabled="!oracleMapReady"
+        :aria-busy="isAddCardBusy"
+        :disabled="loading || !addCardCatalogReady || addCardLoading"
         :items="filteredAddCards"
         placeholder="Add a card to the deck..."
         icon="i-heroicons-plus"
@@ -152,10 +178,12 @@
           class="cursor-pointer"
         />
         <template #content>
-          <div class="p-3 space-y-3">
-            <View :default-value="view" @update:view="handleView" />
-            <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
-            <Sort default-sort-by="cmc" @sort="handleSort" />
+          <div class="p-3 space-y-3 w-72 max-w-[calc(100vw-2rem)]">
+            <DeckDisplayControls
+              :preferences="preferences"
+              :disabled="preferencesLoading"
+              @change="updatePreferences"
+            />
           </div>
         </template>
       </UPopover>
@@ -163,10 +191,16 @@
 
     <!-- Group By + Sort: inline on desktop -->
     <div class="hidden lg:flex justify-end gap-2">
-      <View :default-value="view" @update:view="handleView" />
-      <GroupBy default-value="type" @update:groupBy="handleGroupBy" />
-      <Sort default-sort-by="cmc" @sort="handleSort" />
+      <DeckDisplayControls
+        :preferences="preferences"
+        :disabled="preferencesLoading"
+        @change="updatePreferences"
+      />
     </div>
+
+    <p v-if="preferencesError" role="alert" class="text-sm text-error">
+      {{ preferencesError }}
+    </p>
 
     <!-- Cards Results -->
     <ClientOnly>
@@ -204,13 +238,22 @@
   </div>
 
   <!-- Bulk Edit Modal (owner only) -->
-  <BulkAddCardsModal
+  <LazyBulkAddCardsModal
     v-if="isOwner"
     v-model:open="isBulkEditModalOpen"
     :list-id="listId"
     :mainboard-names="mainboardNames"
     :sideboard-names="sideboardNames"
     :considering-names="consideringNames"
+  />
+
+  <LazyDeckCompareModal
+    v-if="isOwner"
+    v-model:open="isCompareModalOpen"
+    :list-id="listId"
+    :cards="cards"
+    :items="listItems ?? []"
+    :loading="loading"
   />
 
   <!-- Duplicate Card Confirmation Modal -->
@@ -240,7 +283,7 @@
 
   <BackToTop />
 
-  <StickyActionFooter :show="showStickyFooter">
+  <StickyActionFooter :show="showStickyFooter && !isCompareModalOpen">
     <template #left>
       <DeckStats
         :card-count="mainDeckCardCount"
@@ -346,13 +389,6 @@ useDecklistViewTracker(
 // Primer existence drives the non-owner Primer button state
 const { primerText } = usePrimer(listIdRef);
 const hasPrimer = computed(() => !!primerText.value?.trim());
-
-// Banner background image URL
-const bannerImageUrl = computed(() => {
-  const cardName = list.value?.avatar_card_name;
-  if (!cardName) return null;
-  return scryfallArtCropUrl(cardName);
-});
 
 // ---- SEO ----
 const canonicalUrl = computed(() => `https://cardmystic.com/lists/${listId}`);
@@ -542,24 +578,16 @@ const loading = computed(
     (oracleIds.value.length > 0 && cards.value.length === 0),
 );
 
-// Sorting + grouping state
-const sortBy = ref<string | undefined>('cmc');
-const sortDirection = ref<'asc' | 'desc'>('asc');
-const groupBy = ref<string | undefined>('type');
-const view = ref<'grid' | 'text'>('grid');
-
-function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
-  sortBy.value = sortOption;
-  sortDirection.value = direction;
-}
-
-function handleView(value: 'grid' | 'text') {
-  view.value = value;
-}
-
-function handleGroupBy(value: string | undefined) {
-  groupBy.value = value;
-}
+const {
+  preferences,
+  isLoading: preferencesLoading,
+  error: preferencesError,
+  updatePreferences,
+} = useDeckPreferences(listId);
+const sortBy = computed(() => preferences.value.deck_sort_by ?? undefined);
+const sortDirection = computed(() => preferences.value.deck_sort_direction);
+const groupBy = computed(() => preferences.value.deck_group_by ?? undefined);
+const view = computed(() => preferences.value.deck_view);
 
 // Handle removing a card from the list
 async function handleRemoveCard(
@@ -791,6 +819,7 @@ async function confirmAddDuplicate() {
 
 // Bulk edit state
 const isBulkEditModalOpen = ref(false);
+const isCompareModalOpen = ref(false);
 
 function boardLines(board: 'Mainboard' | 'Sideboard' | 'Considering') {
   if (!listItems.value || listItems.value.length === 0) return [];
@@ -850,15 +879,34 @@ function goToRecommend() {
   });
 }
 
-const { data: rawCards, status: cardsQueryStatus } = useCardNames(isOwner);
-const { data: cardNameToOracleId, isSuccess: oracleMapReady } =
-  useCardNameToOracleId(isOwner);
-const cardsStatus = computed(() =>
-  cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
+const {
+  data: rawCards,
+  isFetching: fetchingCardNames,
+  error: cardNamesError,
+  refetch: refetchCardNames,
+} = useCardNames(isOwner);
+const {
+  data: cardNameToOracleId,
+  isFetching: fetchingOracleMap,
+  error: oracleMapError,
+  refetch: refetchOracleMap,
+} = useCardNameToOracleId(isOwner);
+const addCardCatalogReady = computed(
+  () => !!rawCards.value && !!cardNameToOracleId.value,
 );
+const addCardCatalogError = computed(
+  () =>
+    !addCardCatalogReady.value &&
+    !!(cardNamesError.value || oracleMapError.value),
+);
+// An unsuccessful query is not necessarily still loading (it may have failed).
 const isAddCardBusy = computed(
-  () => addCardLoading.value || !oracleMapReady.value,
+  () =>
+    addCardLoading.value || fetchingCardNames.value || fetchingOracleMap.value,
 );
+async function retryCardCatalog() {
+  await Promise.all([refetchCardNames(), refetchOracleMap()]);
+}
 
 // Commander autocomplete
 const setCommanderLoading = ref(false);

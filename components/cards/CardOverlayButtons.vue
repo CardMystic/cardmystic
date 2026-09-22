@@ -42,31 +42,37 @@
   </div>
 
   <div
-    v-if="(showMenuControl && hasMenuItems) || showCopyCountBadge"
+    v-if="showMenuControl || showCopyCountBadge"
     class="card-menu-overlay"
     :class="{ 'with-copy-count': showCopyCountBadge }"
   >
+    <div v-if="showMenuControl" class="menu-wrapper" @click.stop>
+      <UDropdownMenu :items="menuItems ?? []">
+        <UButton
+          class="card-menu-trigger cursor-pointer"
+          tabindex="0"
+          aria-label="Card options"
+          color="neutral"
+          variant="solid"
+          size="md"
+          square
+        >
+          <span
+            class="card-menu-surface rounded-md bg-inverted"
+            aria-hidden="true"
+          >
+            <UIcon name="i-lucide-ellipsis-vertical" class="size-5" />
+          </span>
+        </UButton>
+      </UDropdownMenu>
+    </div>
+
     <div
       v-if="showCopyCountBadge"
       class="copy-count-wrapper"
       :class="{ 'multi-copy': copyCount > 1 }"
     >
       <span class="copy-count-badge p-1">x{{ copyCount }}</span>
-    </div>
-
-    <div v-if="showMenuControl && hasMenuItems" class="menu-wrapper">
-      <UDropdownMenu :items="menuItems ?? []">
-        <UButton
-          class="cursor-pointer"
-          tabindex="0"
-          aria-label="Card options"
-          color="neutral"
-          variant="solid"
-          size="xs"
-          square
-          icon="i-lucide-ellipsis-vertical"
-        />
-      </UDropdownMenu>
     </div>
   </div>
 </template>
@@ -177,6 +183,17 @@ function handleClipboardClick() {
   transition: opacity 0.2s;
 }
 
+:global(
+  .card-image-container:has(
+      :focus-visible,
+      .card-menu-trigger[data-state='open']
+    )
+    .card-action-overlay
+),
+:global(
+  .card-image-wrapper:has(:focus-visible, .card-menu-trigger[data-state='open'])
+    .card-action-overlay
+),
 :global(.card-image-container:hover .card-action-overlay:not(.clipboard-added)),
 :global(.card-image-wrapper:hover .card-action-overlay:not(.clipboard-added)) {
   opacity: 0.7;
@@ -193,6 +210,7 @@ function handleClipboardClick() {
   z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 6px;
   pointer-events: auto;
 }
@@ -210,6 +228,17 @@ function handleClipboardClick() {
   opacity: 1;
 }
 
+:global(
+  .card-image-container:has(
+      :focus-visible,
+      .card-menu-trigger[data-state='open']
+    )
+    .copy-count-wrapper
+),
+:global(
+  .card-image-wrapper:has(:focus-visible, .card-menu-trigger[data-state='open'])
+    .copy-count-wrapper
+),
 :global(.card-image-container:hover .copy-count-wrapper),
 :global(.card-image-wrapper:hover .copy-count-wrapper) {
   opacity: 1;
@@ -220,9 +249,39 @@ function handleClipboardClick() {
   transition: opacity 0.2s;
 }
 
+:global(
+  .card-image-container:has(
+      :focus-visible,
+      .card-menu-trigger[data-state='open']
+    )
+    .menu-wrapper
+),
+:global(
+  .card-image-wrapper:has(:focus-visible, .card-menu-trigger[data-state='open'])
+    .menu-wrapper
+),
 :global(.card-image-container:hover .menu-wrapper),
 :global(.card-image-wrapper:hover .menu-wrapper) {
   opacity: 1;
+}
+
+.menu-wrapper :deep(.card-menu-trigger) {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+}
+
+.menu-wrapper :deep(.card-menu-surface) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.menu-wrapper :deep(.card-menu-trigger:hover .card-menu-surface) {
+  opacity: 0.9;
 }
 
 .copy-count-badge {
@@ -242,7 +301,7 @@ function handleClipboardClick() {
   font-size: 1.3rem;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (hover: none) {
   .card-action-overlay,
   .card-action-overlay.clipboard-added {
     opacity: 0.7 !important;
@@ -257,6 +316,17 @@ function handleClipboardClick() {
   .card-menu-overlay.with-copy-count {
     left: 12px;
     top: 30px;
+  }
+
+  .menu-wrapper :deep(.card-menu-trigger) {
+    /* Enlarge the touch target without covering more art or moving the visible button. */
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    margin: -6px;
+    padding: 6px;
+    touch-action: manipulation;
   }
 
   .copy-count-wrapper,

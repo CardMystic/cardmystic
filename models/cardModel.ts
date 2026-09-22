@@ -108,15 +108,6 @@ const purchaseUrisSchema = z.object({
   cardhoarder: z.url().optional(),
 });
 
-// Preview Schema
-const previewSchema = z
-  .object({
-    source: z.string(),
-    source_uri: z.string(),
-    previewed_at: z.string(),
-  })
-  .optional();
-
 // Card Face Schema (for double-faced cards)
 const cardFaceSchema = z.object({
   object: z.literal('card_face'),
@@ -225,7 +216,6 @@ export const ScryfallCardSchema = z.object({
   prices: z.object({}).catchall(z.string().nullable()),
   related_uris: relatedUrisSchema,
   purchase_uris: purchaseUrisSchema.optional(),
-  preview: previewSchema,
   card_faces: z.array(cardFaceSchema).optional(),
 });
 

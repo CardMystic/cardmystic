@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import staticWebAppConfig from './public/staticwebapp.config.json';
+import { DEFAULT_SEARCH_QUALITY_RATIOS } from './utils/searchQuality';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -36,16 +37,6 @@ export default defineNuxtConfig({
         },
       ],
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2' }],
-      script: [
-        // Google tag (gtag.js)
-        {
-          src: 'https://www.googletagmanager.com/gtag/js?id=AW-17812762149',
-          async: true,
-        },
-        {
-          innerHTML: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','AW-17812762149');`,
-        },
-      ],
     },
   },
   components: [
@@ -82,10 +73,27 @@ export default defineNuxtConfig({
       backendUrl:
         process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
       maintenanceMode: process.env.NUXT_PUBLIC_MAINTENANCE_MODE || '',
+      // Override with matching NUXT_PUBLIC_* environment variables at startup/build.
+      smartSearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.smart,
+      similaritySearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.similarity,
+      // This is a public browser project key, not a PostHog personal API key.
+      posthogKey:
+        process.env.NUXT_PUBLIC_POSTHOG_KEY ??
+        'phc_unytRsmdB7UFsyGafmA5JsnsEU7r9SBH7SM2sWmG3LfQ',
+      posthogHost:
+        process.env.NUXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+      posthogEnabled: process.env.NUXT_PUBLIC_POSTHOG_ENABLED ?? 'true',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
   modules: ['@nuxt/ui', 'nuxt-vitalizer'],
+  icon: {
+    // Keep plus icons immediately available. A delayed loading icon can otherwise
+    // race a name change and register its CSS under the plus icon's selector.
+    clientBundle: {
+      icons: ['heroicons:plus', 'lucide:plus'],
+    },
+  },
   vitalizer: {
     // Avoid speculative downloads of unused legacy SVG font resources.
     disablePrefetchLinks: true,

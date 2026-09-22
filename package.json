@@ -41,6 +41,7 @@
     "node-emoji": "^2.2.0",
     "nuxt": "^3.21.11",
     "nuxt-vitalizer": "^0.10.0",
+    "posthog-js": "^1.434.2",
     "sanitize-html": "^2.17.7",
     "vue": "^3.5.41",
     "vue-router": "^4.6.4",

@@ -1,10 +1,5 @@
 <template>
-  <UCard
-    v-if="card"
-    variant="subtle"
-    class="preview-root"
-    :ui="{ body: 'p-4' }"
-  >
+  <div v-if="card" class="preview-root p-4">
     <LazyAddToDeckModal
       v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
@@ -167,7 +162,7 @@
         "
       />
     </div>
-  </UCard>
+  </div>
 </template>
 
 <script setup lang="ts">

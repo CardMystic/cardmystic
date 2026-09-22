@@ -16,14 +16,6 @@
         />
       </div>
     </ClientOnly>
-    <!-- Background Image -->
-    <div v-if="cardArtUrl" class="fixed inset-0 z-0">
-      <div
-        class="absolute inset-0 bg-cover bg-center opacity-80 dark:opacity-60 blur-sm"
-        :style="{ backgroundImage: `url(${cardArtUrl})` }"
-      ></div>
-    </div>
-
     <div
       v-if="pending || (!card && !error)"
       class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10"
@@ -731,6 +723,8 @@
                   :error="similarCardsError"
                   @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
+                  :hidden-result-count="hiddenSimilarResultCount"
+                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -855,6 +849,8 @@
                   :error="similarCardsError"
                   @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
+                  :hidden-result-count="hiddenSimilarResultCount"
+                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -899,7 +895,6 @@ import {
 } from '@/utils/tcgPlayer';
 import {
   getCardImageUrl,
-  getCardArtUrl,
   formatsToIgnore,
   getLegalityColor,
   standardizeFormatName,
@@ -1203,13 +1198,6 @@ const cardImageUrl = computed(() => {
   return getCardImageUrl(printingData as ScryfallCard, isFlipped.value);
 });
 
-// Art URL for background
-const cardArtUrl = computed(() => {
-  const printingData = currentPrinting.value;
-  if (!printingData) return '';
-  return getCardArtUrl(printingData as ScryfallCard, isFlipped.value);
-});
-
 const { setPageInfo } = usePageInfo();
 watchEffect(() => {
   if (card.value) {
@@ -1401,6 +1389,8 @@ const lazyCardNameForSimilar = computed(() =>
 );
 const {
   similarCards,
+  hiddenResultCount: hiddenSimilarResultCount,
+  loadMoreResults: loadMoreSimilarResults,
   isSimilarCardsLoading,
   error: similarCardsError,
   isFetching: isSimilarCardsFetching,
@@ -1698,13 +1688,14 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
 .card-image-container:hover .card-image
   transform: scale(1.03)
 
+// Elevated panel surfaces stay distinct from the plain page background in both themes.
 // Card Details Card Styling (header + description combined)
 .card-details-card
   border-radius: 24px
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
   margin-bottom: 8px
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .card-title
@@ -1780,7 +1771,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
   margin-bottom: 0
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .legalities-header
@@ -1835,7 +1826,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
   margin-bottom: 8px
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .price-header
@@ -1945,7 +1936,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     left: 200%
     opacity: 0
 
-// Page wrapper with background
+// Card detail page layout
 .page-wrapper
   position: relative
   min-height: 100vh
@@ -1960,7 +1951,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   border-radius: 24px
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
   overflow: visible !important
 
