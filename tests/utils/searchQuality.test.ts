@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_SEARCH_QUALITY_RATIOS,
   filterSearchResultsByQuality,
   resolveSearchQualityRatio,
 } from '~/utils/searchQuality';
@@ -13,20 +14,19 @@ const names = (results: Result[]) => results.map((entry) => entry.name);
 
 describe('semantic search quality filtering', () => {
   it.each([
-    { mode: 'smart' as const, best: 0.8, boundary: 0.68 },
-    { mode: 'similarity' as const, best: 0.8, boundary: 0.64 },
+    { mode: 'smart' as const, ratio: 0.85, best: 0.8, boundary: 0.68 },
+    { mode: 'similarity' as const, ratio: 0.8, best: 0.8, boundary: 0.64 },
   ])(
     'includes the literal decimal $boundary boundary for $mode with best $best',
-    ({ mode, best, boundary }) => {
+    ({ mode, ratio, best, boundary }) => {
       const cards = [
         result('best', best),
         result('decimal boundary', boundary),
         result('below boundary', boundary - 0.00000001),
       ];
-      expect(names(filterSearchResultsByQuality(cards, { mode }))).toEqual([
-        'best',
-        'decimal boundary',
-      ]);
+      expect(
+        names(filterSearchResultsByQuality(cards, { mode, ratio })),
+      ).toEqual(['best', 'decimal boundary']);
     },
   );
 
@@ -135,8 +135,12 @@ describe('runtime search quality ratios', () => {
   it.each([undefined, ' ', '85%', true, -0.1, 1.01, Infinity])(
     'uses each search default for invalid value %s',
     (value) => {
-      expect(resolveSearchQualityRatio(value, 'smart')).toBe(0.85);
-      expect(resolveSearchQualityRatio(value, 'similarity')).toBe(0.8);
+      expect(resolveSearchQualityRatio(value, 'smart')).toBe(
+        DEFAULT_SEARCH_QUALITY_RATIOS.smart,
+      );
+      expect(resolveSearchQualityRatio(value, 'similarity')).toBe(
+        DEFAULT_SEARCH_QUALITY_RATIOS.similarity,
+      );
     },
   );
 
