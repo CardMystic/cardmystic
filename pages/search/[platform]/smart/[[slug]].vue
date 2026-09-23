@@ -28,6 +28,7 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
+          :reranking-enabled="route.query.useRerank !== 'false'"
           :hidden-result-count="hiddenResultCount"
           @load-more="loadMoreResults"
           :query-param="displayQuery"
@@ -173,6 +174,7 @@ const wordSearch = computed(() => {
     limit: limitParam.value || undefined,
     filters: parsedFilters.value,
     exclude_card_data: false,
+    useRerank: route.query.useRerank !== 'false',
   });
 });
 
