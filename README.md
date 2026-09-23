@@ -27,7 +27,7 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get personalized card recommendations
 - Platform-specific search: search filtered to Arena, MTGO, Modern, or Paper cards
   - Example: [Arena Smart Search](https://cardmystic.com/search/arena/smart)
-- Card Lists: Create and manage custom card collections with commander designation
+- Deck Lists: Create and manage your decks with our deck builder interface.
 - User accounts with authentication (Supabase)
 - Filter by colors, types, converted mana cost, power/toughness, etc.
 - View card details including different printings, price, and legality
@@ -85,6 +85,25 @@ Configure environment variables (and edit as needed):
 ```bash
 cp .env_defaults .env
 ```
+
+### PostHog analytics
+
+PostHog is configured with CardMystic's public project key and US ingestion host.
+The browser-only plugin captures page views and interactions after Analytics
+consent. Google Ads conversion tracking requires separate Advertising consent.
+Cookie settings in the footer let visitors change their choices. Account
+identification and session replay are disabled. Production and staging use
+separate browser cookies.
+
+Analytics is disabled during `nuxt dev` and on localhost, including local
+production previews. To disable it on a deployment, set
+`NUXT_PUBLIC_POSTHOG_ENABLED=false`. To use a different project, set
+`NUXT_PUBLIC_POSTHOG_KEY` and `NUXT_PUBLIC_POSTHOG_HOST`. These are public
+browser settings; never use a PostHog personal API key here. Supply overrides
+when building and redeploy so prerendered pages receive the same settings.
+
+To verify a deployment, visit it, navigate to another page, and check for
+`$pageview` events in PostHog's activity feed.
 
 ### Development Server
 
@@ -260,7 +279,7 @@ Card data files (`card-names.min.json`, `commanders.min.json`, `card-oracle-ids.
 
 A static copy of `card-oracle-ids.min.json` is kept in `public/` **only** for sitemap generation (`server/routes/sitemap.xml.ts`), which imports it at build time for SEO purposes.
 
-When new Magic sets release or card data updates, the backend data files are updated automatically. The static `public/card-oracle-ids.min.json` should be refreshed periodically to keep the sitemap current.
+When new Magic sets release or card data updates, the backend data files are updated automatically. Run `pnpm update:card-oracle-ids` to refresh the static sitemap data from the production oracle-ID feed, then commit the file and rebuild. The command validates the feed before replacing it, including checking that it contains oracle IDs rather than printing IDs.
 
 # Database
 
@@ -282,7 +301,15 @@ To generate the Supabase database types (when the schema changes) run:
 npm run gen:types
 ```
 
-## 🙏 Acknowledgements
+### Deck display preferences
 
-- [Scryfall](https://scryfall.com/) for card data
-- [Moxfield](https://moxfield.com/) for deck data
+Deck display controls save automatically to `localStorage` under `cm.deck-preferences.v1:<deckId>`.
+
+### Search quality cutoffs
+
+Set these public application settings in `.env` to adjust the initial shown search results (results that don't meet the cutoff will be hidden behind a "Show More" button):
+
+```dotenv
+NUXT_PUBLIC_SMART_SEARCH_QUALITY_RATIO=0.8
+NUXT_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO=0.8
+```

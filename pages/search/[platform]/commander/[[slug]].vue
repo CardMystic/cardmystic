@@ -26,7 +26,12 @@
           preserve-result-order
           :reranking-enabled="route.query.useRerank !== 'false'"
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
+          :hidden-result-count="hiddenResultCount"
+          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -52,6 +57,7 @@ import { WordSearchSchema } from '~/models/searchModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useColbertSearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
+import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import {
   isValidPlatform,
   getPlatformFilters,
@@ -61,6 +67,7 @@ import {
 } from '~/utils/platformConfig';
 
 const route = useRoute();
+const pagePath = route.path;
 const platform = String(route.params.platform) as Platform;
 const slug = route.params.slug ? String(route.params.slug) : undefined;
 
@@ -144,6 +151,9 @@ const parsedFilters = computed(() => {
       : { ...platformFilters, isCommander: true },
   );
 });
+provideSearchPageDefaults(
+  seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
+);
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
@@ -170,12 +180,22 @@ const wordSearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = useColbertSearch(wordSearch);
+const {
+  searchResults,
+  hiddenResultCount,
+  loadMoreResults,
+  isLoading,
+  isFetching,
+  error,
+  refetch,
+} = useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(
   () => route.query,
   (query) => {
+    // The outgoing page can remain mounted while the next route loads.
+    if (route.path !== pagePath) return;
     if (query.query) saveSearchQuery('commander', query);
   },
   { immediate: true },

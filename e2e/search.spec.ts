@@ -153,9 +153,9 @@ test.describe('Search landing pages', () => {
       await expect(
         page.getByRole('heading', { level: 2, name: landing.heading }),
       ).toBeVisible();
-      await expect(page.getByLabel(/^Try /)).toHaveCount(6);
+      await expect(page.getByRole('link', { name: /^Try / })).toHaveCount(6);
       await expect(
-        page.getByRole('button', {
+        page.getByRole('link', {
           name: `Try ${landing.suggestion}`,
           exact: true,
         }),
@@ -166,7 +166,7 @@ test.describe('Search landing pages', () => {
   test('a Smart Search suggestion starts a real search', async ({ page }) => {
     await gotoHydrated(page, '/search/all/smart');
     await page
-      .getByRole('button', { name: 'Try Creatures that draw cards' })
+      .getByRole('link', { name: 'Try Creatures that draw cards' })
       .click();
 
     await expect(page).toHaveURL(

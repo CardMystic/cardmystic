@@ -1,17 +1,13 @@
 <template>
-  <UCard
-    v-if="card"
-    variant="subtle"
-    class="preview-root"
-    :ui="{ body: 'p-4' }"
-  >
+  <div v-if="card" class="preview-root p-4">
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu"
+      v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
       :oracle-ids="[activeCardData?.oracle_id ?? '']"
     />
 
     <UModal
+      v-if="showConfirmModal"
       v-model:open="showConfirmModal"
       title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your judgement to improve our models. Thank you for your feedback!"
@@ -35,16 +31,20 @@
     </UModal>
 
     <div class="preview-card-stack">
-      <div class="preview-image-wrapper">
+      <NuxtLink
+        class="preview-image-wrapper block"
+        :to="`/card/${activeCardData?.oracle_id}`"
+        no-prefetch
+        @click="saveCurrentSearchQuery(route.query)"
+      >
         <img
           :src="getCardImageUrl(activeCardData!, isFlipped, 'large')"
           :alt="activeCardData?.name"
           class="preview-image cursor-pointer"
           loading="eager"
           decoding="async"
-          @click="navigateToCard(activeCardData?.oracle_id)"
         />
-      </div>
+      </NuxtLink>
 
       <div class="space-y-2">
         <div>
@@ -162,7 +162,7 @@
         "
       />
     </div>
-  </UCard>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -338,12 +338,6 @@ function toggleClipboard() {
   }
 
   clipboard.add(clipboardCard.value);
-}
-
-function navigateToCard(cardId: string | undefined) {
-  saveCurrentSearchQuery(route.query);
-  if (!cardId) return;
-  router.push(`/card/${cardId}`);
 }
 
 function handleDislike() {

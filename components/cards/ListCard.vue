@@ -1,21 +1,21 @@
 <template>
-  <UCard
-    variant="subtle"
-    :class="[
-      'card-root',
-      isDeckCommander ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '',
-      legalityWarning ? 'illegal-card-bg' : '',
-    ]"
-    :ui="{ body: 'p-1 sm:p-1' }"
-  >
-    <SetCommanderModal
+  <div class="card-root list-card">
+    <LazyAddToDeckModal
+      v-if="showAddToDeckModal"
+      v-model:open="showAddToDeckModal"
+      :oracle-ids="[card.card_data.oracle_id]"
+    />
+
+    <LazySetCommanderModal
+      v-if="showCommanderModal"
       :open="showCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event"
       @confirm="confirmSetCommander"
     />
 
-    <SetCopiesModal
+    <LazySetCopiesModal
+      v-if="showSetCopiesInput"
       :open="showSetCopiesInput"
       :card-name="card.card_data.name"
       :initial-copies="numCopies ?? 1"
@@ -23,7 +23,8 @@
       @confirm="confirmSetCopies"
     />
 
-    <RemoveCommanderModal
+    <LazyRemoveCommanderModal
+      v-if="showClearCommanderModal"
       :open="showClearCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showClearCommanderModal = $event"
@@ -32,20 +33,26 @@
 
     <div class="card-image-wrapper">
       <!-- Card image -->
-      <img
-        :class="'card-large'"
-        :src="getCardImageUrl(card.card_data, isFlipped)"
-        :alt="card.card_data.name"
-        @error="handleImageError"
-        v-if="getCardImageUrl(card.card_data, isFlipped)"
-        loading="lazy"
-        decoding="async"
-        @click="navigateToCard(card.card_data.oracle_id)"
-        class="cursor-pointer"
-      />
-      <div v-else class="image-placeholder">
-        <p class="placeholder-text">{{ card.card_data.name }}</p>
-      </div>
+      <NuxtLink
+        :to="`/card/${card.card_data.oracle_id}`"
+        no-prefetch
+        class="block"
+      >
+        <img
+          :src="imageUrl"
+          :alt="card.card_data.name"
+          @error="handleImageError"
+          v-if="imageUrl"
+          width="488"
+          height="680"
+          loading="lazy"
+          decoding="async"
+          class="card-large cursor-pointer"
+        />
+        <div v-else class="image-placeholder">
+          <p class="placeholder-text">{{ card.card_data.name }}</p>
+        </div>
+      </NuxtLink>
 
       <LazyCardOverlayButtons
         :card="card"
@@ -73,76 +80,11 @@
         </div>
       </div>
     </div>
-
-    <!-- Action Buttons -->
-    <div class="flex flex-row items-center text-center gap-1 w-full mt-1">
-      <!-- Buy on TCGPlayer -->
-      <UTooltip text="Buy on TCGPlayer" :popper="{ placement: 'top' }">
-        <UButton
-          v-if="card.card_data.tcgplayer_id"
-          :to="getAffiliateLink(card.card_data.tcgplayer_id)"
-          external
-          color="success"
-          variant="outline"
-          class="cursor-pointer"
-          :size="isMobile ? 'xs' : 'sm'"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Buy on TCGPlayer"
-        >
-          {{
-            card.card_data.prices.usd ? `$${card.card_data.prices.usd}` : 'Buy'
-          }}
-        </UButton>
-      </UTooltip>
-
-      <!-- Desktop buttons (hidden on mobile) -->
-      <UTooltip text="Find similar cards" :popper="{ placement: 'top' }">
-        <UButton
-          color="neutral"
-          variant="outline"
-          class="inline-flex cursor-pointer"
-          icon="i-mdi-cards-outline"
-          :size="isMobile ? 'xs' : 'sm'"
-          @click="findSimilarCards"
-          aria-label="Find Similar Cards"
-        />
-      </UTooltip>
-      <UTooltip
-        text="Popular Cards for this Commander"
-        :popper="{ placement: 'top' }"
-      >
-        <UButton
-          v-if="isCommanderCardComputed"
-          color="error"
-          variant="outline"
-          class="inline-flex cursor-pointer"
-          icon="i-lucide-flame"
-          :size="isMobile ? 'xs' : 'sm'"
-          @click="viewPopularCards"
-          aria-label="Popular Cards for this Commander"
-        />
-      </UTooltip>
-      <UTooltip
-        text="Get Deck Recommendations for this Commander"
-        :popper="{ placement: 'top' }"
-      >
-        <UButton
-          v-if="isCommanderCardComputed"
-          color="primary"
-          variant="outline"
-          class="hidden sm:inline-flex cursor-pointer"
-          icon="i-lucide-box"
-          :size="isMobile ? 'xs' : 'sm'"
-          @click="getRecommendations"
-          aria-label="Get Deck Recommendations for this Commander"
-        />
-      </UTooltip>
-    </div>
-  </UCard>
+  </div>
 </template>
 
 <script setup lang="ts">
+import type { DropdownMenuItem } from '@nuxt/ui';
 import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
@@ -158,9 +100,6 @@ import { useSearchHistory } from '~/composables/useSearchHistory';
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
-const isMobile = useIsMobile();
-
-const { data: commanders } = useCommandersSet();
 
 const props = defineProps<{
   card: Card;
@@ -198,10 +137,18 @@ const emit = defineEmits<{
   (e: 'flip', cardId: string): void;
 }>();
 
+// Deck results already resolve commander eligibility once for the whole list.
+const commanderQuery =
+  props.isCommanderCard === undefined ? useCommandersSet() : null;
+
 const isFlippedInternal = ref(false);
 const isFlipped = computed(() =>
   props.isFlipped !== undefined ? props.isFlipped : isFlippedInternal.value,
 );
+const imageUrl = computed(() =>
+  getCardImageUrl(props.card.card_data, isFlipped.value),
+);
+const showAddToDeckModal = ref(false);
 const showCommanderModal = ref(false);
 const showClearCommanderModal = ref(false);
 const showSetCopiesInput = ref(false);
@@ -231,8 +178,49 @@ const isCommanderCardComputed = computed(() => {
   return isEligibleCommander.value;
 });
 
-const cardOverlayMenuItems = computed(() => {
-  if (!props.isOwner) return [];
+const cardOverlayMenuItems = computed<DropdownMenuItem[][]>(() => {
+  const generalActions: DropdownMenuItem[] = [
+    {
+      label: 'Add to Deck',
+      icon: 'i-lucide-library-big',
+      onSelect() {
+        showAddToDeckModal.value = true;
+      },
+    },
+  ];
+
+  if (props.card.card_data.tcgplayer_id) {
+    generalActions.push({
+      label: props.card.card_data.prices.usd
+        ? `Buy on TCGPlayer · $${props.card.card_data.prices.usd}`
+        : 'Buy on TCGPlayer',
+      icon: 'i-heroicons-shopping-cart',
+      to: getAffiliateLink(props.card.card_data.tcgplayer_id),
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    });
+  }
+  generalActions.push({
+    label: 'Find Similar Cards',
+    icon: 'i-mdi-cards-outline',
+    onSelect: findSimilarCards,
+  });
+  if (isCommanderCardComputed.value) {
+    generalActions.push(
+      {
+        label: 'Popular Cards for this Commander',
+        icon: 'i-lucide-flame',
+        onSelect: viewPopularCards,
+      },
+      {
+        label: 'Get Deck Recommendations',
+        icon: 'i-lucide-box',
+        onSelect: getRecommendations,
+      },
+    );
+  }
+
+  if (!props.isOwner) return [generalActions];
   const copies = props.numCopies ?? 1;
   const copyActions = props.isDeckCommander
     ? []
@@ -287,8 +275,17 @@ const cardOverlayMenuItems = computed(() => {
       },
     }));
 
-  const commanderActions =
-    isCommanderCardComputed.value && !props.isDeckCommander
+  const commanderActions = props.isDeckCommander
+    ? [
+        {
+          label: 'Remove Commander',
+          icon: 'i-lucide-crown',
+          onSelect() {
+            showClearCommanderModal.value = true;
+          },
+        },
+      ]
+    : isCommanderCardComputed.value
       ? [
           {
             label: 'Set as Commander',
@@ -311,9 +308,13 @@ const cardOverlayMenuItems = computed(() => {
     },
   ];
 
-  return [copyActions, boardActions, commanderActions, removeAction].filter(
-    (g) => g.length > 0,
-  );
+  return [
+    generalActions,
+    copyActions,
+    boardActions,
+    commanderActions,
+    removeAction,
+  ].filter((group) => group.length > 0);
 });
 
 const legalityKey = computed(() => {
@@ -347,9 +348,7 @@ const legalityWarning = computed(() => {
 });
 
 const isEligibleCommander = computed(() => {
-  if (!commanders.value || commanders.value.size === 0) return false;
-  const name = props.card.card_data.name;
-  return commanders.value.has(name);
+  return commanderQuery?.data.value?.has(props.card.card_data.name) ?? false;
 });
 
 const isDualFaced = computed(() => {
@@ -373,11 +372,6 @@ function confirmSetCommander() {
 
 function confirmClearCommander() {
   emit('clearCommander', props.card.card_data.oracle_id);
-}
-
-function navigateToCard(cardId: string | undefined) {
-  if (!cardId) return;
-  router.push(`/card/${cardId}`);
 }
 
 function findSimilarCards() {
@@ -426,6 +420,9 @@ function handleImageError(event: Event) {
   margin: 0 auto;
   display: block;
   box-sizing: border-box;
+  /* Reserve the image footprint before lazy images or offscreen content render. */
+  aspect-ratio: 5 / 7;
+  content-visibility: auto;
 }
 
 .card-image-wrapper {
@@ -437,6 +434,8 @@ function handleImageError(event: Event) {
 .card-large {
   aspect-ratio: 5/7;
   width: 100%;
+  height: auto;
+  display: block;
   object-fit: cover;
   border-radius: 14px;
 }
@@ -464,19 +463,6 @@ function handleImageError(event: Event) {
   text-align: center;
 }
 
-.manacost-text {
-  font-size: 14px;
-}
-
-.commander-card-bg {
-  border: 1.5px solid rgba(234, 179, 8, 0.4);
-}
-
-.illegal-card-bg {
-  background: #3a2020 !important;
-  border: 1.5px solid rgba(239, 68, 68, 0.3);
-}
-
 .legality-overlay {
   position: absolute;
   inset: 0;
@@ -498,11 +484,19 @@ function handleImageError(event: Event) {
   max-width: 80%;
 }
 
-.card-image-wrapper img {
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
+@media (hover: hover) and (pointer: fine) {
+  .card-root:hover,
+  .card-root:focus-within {
+    /* Release paint containment so hover growth is not clipped. */
+    content-visibility: visible;
+  }
 
-.card-image-wrapper:hover img {
-  transform: scale(1.03);
+  .card-root .card-image-wrapper img {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-root .card-image-wrapper:hover img {
+    transform: scale(1.03);
+  }
 }
 </style>

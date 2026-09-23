@@ -11,27 +11,31 @@ import type { CardLlmResponse } from '~/models/llmModel';
  */
 export function useCardDetails(oracleId: ComputedRef<string>) {
   const config = useRuntimeConfig();
+  const headers = useBackendRequestHeaders();
 
   type CardWithLlmResponse = {
     card: ScryfallCard;
     llm: CardLlmResponse;
   };
 
-  const {
-    data: cardWithLlm,
-    error,
-    status: asyncStatus,
-  } = useAsyncData(
+  const request = useAsyncData(
     () => `card-${oracleId.value}`,
     async () => {
       if (!oracleId.value || oracleId.value === 'undefined') {
         throw new Error('No oracle ID provided');
       }
 
-      return await $fetch<CardWithLlmResponse>(
+      const result = await $fetch<CardWithLlmResponse>(
         `${config.public.backendUrl}/cards/with-llm/${oracleId.value}`,
-        { signal: AbortSignal.timeout(10000) },
+        { headers, signal: AbortSignal.timeout(10000) },
       );
+      if (!result?.card?.oracle_id) {
+        throw createError({
+          statusCode: 502,
+          statusMessage: 'Invalid card response',
+        });
+      }
+      return result;
     },
     {
       server: true,
@@ -39,6 +43,8 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
       watch: [oracleId],
     },
   );
+
+  const { data: cardWithLlm, error, status: asyncStatus } = request;
 
   // Preserve the existing `card` API shape so current call-sites keep working.
   const card = computed(() => cardWithLlm.value?.card ?? null);
@@ -65,6 +71,8 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
   });
 
   return {
+    // The page awaits this before setting HTTP status, redirects and metadata.
+    ready: request,
     card,
     llm,
     printings,
@@ -133,6 +141,7 @@ export function useCardsByOracleIds(
  */
 export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
   const config = useRuntimeConfig();
+  const headers = useBackendRequestHeaders();
 
   const queryOptions = {
     queryKey: computed(() => [
@@ -148,6 +157,8 @@ export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
         {
           method: 'POST',
           body: { cardNames: nameList },
+          headers,
+          signal: AbortSignal.timeout(5000),
         },
       );
       return (scryfallCards || []).map(
@@ -167,12 +178,13 @@ export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
     staleTime: 1000 * 60 * 15,
   };
 
-  const { data, isLoading, error, refetch } = useQuery(queryOptions);
+  const { data, isLoading, error, refetch, suspense } = useQuery(queryOptions);
 
   return {
     cards: data,
     isLoading,
     error,
     refetch,
+    suspense,
   };
 }

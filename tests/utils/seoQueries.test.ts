@@ -16,6 +16,7 @@ import {
   getAllSeoSlugs,
 } from '~/utils/seoQueries';
 import type { SeoQuery } from '~/utils/seoQueries';
+import cardOracleIds from '~/public/card-oracle-ids.min.json';
 
 const allGroups: [string, SeoQuery[]][] = [
   ['similarQueries', similarQueries],
@@ -62,6 +63,17 @@ describe('SEO query data invariants', () => {
     for (const q of similarQueries) {
       expect(q.searchType).toBe('similarity');
     }
+  });
+
+  it('similarity backlinks use known oracle IDs rather than printing IDs', () => {
+    const knownIds = new Set(cardOracleIds);
+    for (const entry of similarQueries) {
+      expect(entry.oracleId, entry.query).toBeTruthy();
+      expect(knownIds.has(entry.oracleId!), entry.query).toBe(true);
+    }
+    expect(getSeoEntry('all', 'similarity', 'thassas-oracle')?.oracleId).toBe(
+      '1de1b591-a73f-4974-b507-8c63e07a0868',
+    );
   });
 
   it('deckbuilder entries use commander names as deck recommendation queries', () => {

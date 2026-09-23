@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/vue-query';
-import { toValue, type MaybeRefOrGetter } from 'vue';
+import {
+  inject,
+  provide,
+  toValue,
+  type InjectionKey,
+  type MaybeRefOrGetter,
+} from 'vue';
 
 const STALE_TIME = 1000 * 60 * 60 * 24; // 24 hours
 
@@ -42,8 +48,22 @@ export function useCommanders() {
   });
 }
 
-/** Same cached query as useCommanders(), but returns a Set for O(1) lookups. */
+const commandersKey: InjectionKey<ReturnType<typeof createCommandersSet>> =
+  Symbol('commanders-set');
+
+export function provideCommandersSet() {
+  const commanders = useCommandersSet();
+  provide(commandersKey, commanders);
+  return commanders;
+}
+
+/** Reuse the parent list's observer and derived Set when available. */
 export function useCommandersSet() {
+  return inject(commandersKey, null) ?? createCommandersSet();
+}
+
+/** Same cached query as useCommanders(), but returns a Set for O(1) lookups. */
+function createCommandersSet() {
   const config = useRuntimeConfig();
 
   return useQuery<string[], Error, Set<string>>({
@@ -51,6 +71,7 @@ export function useCommandersSet() {
     queryFn: async () => {
       const response = await fetch(
         `${config.public.backendUrl}/bulkdata/commanders.min.json`,
+        { signal: AbortSignal.timeout(5000) },
       );
       if (!response.ok) {
         throw new Error('Failed to fetch commanders');
@@ -58,25 +79,6 @@ export function useCommandersSet() {
       return response.json();
     },
     select: (data) => new Set(data),
-    staleTime: STALE_TIME,
-    refetchOnWindowFocus: false,
-  });
-}
-
-export function useCardOracleIds() {
-  const config = useRuntimeConfig();
-
-  return useQuery<string[]>({
-    queryKey: ['bulkdata', 'card-oracle-ids'],
-    queryFn: async () => {
-      const response = await fetch(
-        `${config.public.backendUrl}/bulkdata/card-oracle-ids.min.json`,
-      );
-      if (!response.ok) {
-        throw new Error('Failed to fetch card oracle IDs');
-      }
-      return response.json();
-    },
     staleTime: STALE_TIME,
     refetchOnWindowFocus: false,
   });

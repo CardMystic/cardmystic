@@ -44,7 +44,7 @@
         />
       </div>
       <div
-        v-if="editable && (mode === 'edit' || mode === 'split')"
+        v-if="editable && (mode !== 'preview' || saveInPreview)"
         class="flex items-center gap-2"
       >
         <span
@@ -61,123 +61,22 @@
           icon="i-lucide-save"
           color="success"
           variant="solid"
-          :label="isDirty ? 'Save' : 'Saved'"
+          :label="isDirty ? saveLabel : 'Saved'"
           class="cursor-pointer"
-          :disabled="!isDirty || isSaving"
+          :disabled="!isDirty || isSaving || saveDisabled"
           :loading="isSaving"
           @click="handleSave"
         />
       </div>
     </div>
 
-    <!-- Edit-only mode -->
+    <!-- Keep one CodeMirror instance mounted across mode changes so undo,
+         selection and scroll position survive switching views. -->
     <div
-      v-if="editable && mode === 'edit'"
-      class="flex flex-col h-[80vh] min-h-0 gap-2 overflow-hidden"
-    >
-      <!-- Toolbar -->
-      <div
-        class="shrink-0 flex flex-wrap items-center gap-1 p-1.5 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
-      >
-        <template v-for="(group, gi) in toolbarGroups" :key="gi">
-          <div
-            v-if="gi > 0"
-            class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
-          />
-          <UTooltip
-            v-for="action in group"
-            :key="action.id"
-            :text="action.tooltip"
-          >
-            <UButton
-              :icon="action.icon"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              @click="applyAction(action.id)"
-            />
-          </UTooltip>
-        </template>
-        <div
-          class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
-        />
-        <UPopover
-          v-model:open="emojiPickerOpen"
-          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
-        >
-          <UTooltip text="Insert emoji">
-            <UButton
-              icon="i-lucide-smile"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              aria-label="Insert emoji"
-            />
-          </UTooltip>
-          <template #content>
-            <EmojiPickerPanel
-              v-model:search="emojiSearchTerm"
-              :emojis="emojiResults"
-              @select="insertEmojiShortcode"
-            />
-          </template>
-        </UPopover>
-        <UPopover
-          v-model:open="magicSymbolPickerOpen"
-          :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
-        >
-          <UTooltip text="Insert Magic symbol">
-            <UButton
-              icon="i-mdi-cards-playing-outline"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              class="cursor-pointer"
-              aria-label="Insert Magic symbol"
-            />
-          </UTooltip>
-          <template #content>
-            <MagicSymbolPickerPanel
-              v-model:search="magicSymbolSearchTerm"
-              :symbols="magicSymbols"
-              @select="insertMagicSymbol"
-            />
-          </template>
-        </UPopover>
-      </div>
-
-      <div
-        class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
-        @mousemove="onEditorMouseMove"
-        @mouseleave="onEditorMouseLeave"
-      >
-        <div ref="highlightLayerRef" class="highlight-layer" aria-hidden="true">
-          <div
-            ref="highlightContentRef"
-            class="highlight-content"
-            v-html="highlightedDraft"
-          />
-        </div>
-        <textarea
-          ref="textareaRef"
-          v-model="draft"
-          :placeholder="placeholder"
-          class="editor-textarea"
-          spellcheck="true"
-          @scroll="syncHighlightScroll"
-          @input="syncHighlightScroll"
-        />
-      </div>
-    </div>
-
-    <!-- Split mode (editor + live preview side by side, lg+ only) -->
-    <div
-      v-else-if="editable && mode === 'split'"
+      v-if="editable"
+      v-show="mode !== 'preview'"
       class="flex h-[80vh] min-h-0 gap-4 overflow-hidden"
     >
-      <!-- Left: editor -->
       <div class="flex-1 min-w-0 min-h-0 flex flex-col gap-2">
         <!-- Toolbar -->
         <div
@@ -195,6 +94,7 @@
             >
               <UButton
                 :icon="action.icon"
+                :aria-label="action.tooltip"
                 color="neutral"
                 variant="ghost"
                 size="sm"
@@ -206,6 +106,24 @@
           <div
             class="w-px h-5 self-center shrink-0 bg-gray-300 dark:bg-gray-600 mx-0.5"
           />
+          <UPopover
+            v-model:open="textColorPickerOpen"
+            :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
+          >
+            <UTooltip text="Text color">
+              <UButton
+                icon="i-lucide-palette"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                class="cursor-pointer"
+                aria-label="Text color"
+              />
+            </UTooltip>
+            <template #content>
+              <TextColorPickerPanel @select="applyTextColor" />
+            </template>
+          </UPopover>
           <UPopover
             v-model:open="emojiPickerOpen"
             :content="{ side: 'bottom', align: 'start', sideOffset: 8 }"
@@ -252,41 +170,25 @@
           </UPopover>
         </div>
 
-        <div
-          class="editor-shell flex-1 min-h-0 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 focus-within:ring-2 focus-within:ring-primary-500"
-          @mousemove="onEditorMouseMove"
-          @mouseleave="onEditorMouseLeave"
-        >
-          <div
-            ref="highlightLayerRef"
-            class="highlight-layer"
-            aria-hidden="true"
-          >
-            <div
-              ref="highlightContentRef"
-              class="highlight-content"
-              v-html="highlightedDraft"
-            />
-          </div>
-          <textarea
-            ref="textareaRef"
-            v-model="draft"
-            placeholder="Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported."
-            class="editor-textarea"
-            spellcheck="true"
-            @scroll="onSplitScroll"
-            @input="syncHighlightScroll"
-          />
-        </div>
+        <LazyMarkdownSourceEditor
+          ref="sourceEditorRef"
+          v-model="draft"
+          :placeholder="placeholder"
+          :active="mode !== 'preview'"
+          @scroll="onEditorScroll"
+          @card-hover="onEditorCardHover"
+          @card-leave="tokenPreview = null"
+        />
       </div>
-
       <!-- Right: live preview -->
       <div
+        v-if="mode === 'split'"
         ref="previewRef"
         class="primer-preview flex-1 min-w-0 min-h-0 px-1 overflow-y-auto"
         @click="handlePreviewClick"
-        @mousemove="onPreviewMouseMove"
-        @mouseleave="onPreviewMouseLeave"
+        @submit="handleSearchEmbedSubmit"
+        @pointermove="onPreviewPointerMove"
+        @pointerleave="onPreviewPointerLeave"
       >
         <div v-if="renderedHtml" v-html="renderedHtml"></div>
         <p
@@ -300,11 +202,12 @@
 
     <!-- Preview-only mode -->
     <div
-      v-else
+      v-if="!editable || mode === 'preview'"
       class="primer-preview grow min-h-0 overflow-y-auto px-1"
       @click="handlePreviewClick"
-      @mousemove="onPreviewMouseMove"
-      @mouseleave="onPreviewMouseLeave"
+      @submit="handleSearchEmbedSubmit"
+      @pointermove="onPreviewPointerMove"
+      @pointerleave="onPreviewPointerLeave"
     >
       <div v-if="renderedHtml" v-html="renderedHtml"></div>
       <p
@@ -359,8 +262,16 @@
 </template>
 
 <script setup lang="ts">
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
+import { refDebounced } from '~/utils/refDebounced';
+import type {
+  MarkdownSourceEditorHandle,
+  EditorCardHover,
+} from '~/utils/markdownEditorSyntax';
+import {
+  markdownTextColorEdit,
+  parseColoredMarkdown,
+} from '~/utils/markdownTextColor';
+import { sanitizeMarkdownHtml } from '~/utils/sanitizeMarkdown';
 import { emojify, search as searchEmoji } from 'node-emoji';
 import 'mana-font/css/mana.min.css';
 import { useCardsByName } from '~/composables/useCards';
@@ -373,6 +284,11 @@ import {
   magicSymbols,
   restoreMagicSymbols,
 } from '~/utils/magicSymbols';
+import {
+  extractSearchEmbeds,
+  parseSearchEmbedUrl,
+  renderSearchEmbed,
+} from '~/utils/searchEmbeds';
 import { extractAndTokenizeLinkEmbeds } from '~/utils/linkEmbeds';
 
 const props = withDefaults(
@@ -380,9 +296,14 @@ const props = withDefaults(
     modelValue: string;
     editable: boolean;
     isSaving?: boolean;
+    /** Include surrounding form fields in the save button and leave guard. */
+    hasUnsavedChanges?: boolean;
+    saveDisabled?: boolean;
+    saveLabel?: string;
+    saveInPreview?: boolean;
     /** Message shown in preview mode when there is no content yet. */
     emptyMessage?: string;
-    /** Placeholder text for the markdown editor textarea. */
+    /** Placeholder text for the Markdown source editor. */
     placeholder?: string;
     hasBackground?: boolean;
     /**
@@ -398,11 +319,13 @@ const props = withDefaults(
       'Describe how this deck wins, key combos, mulligan guide, sideboard plans, etc. Markdown supported.',
     hasBackground: true,
     saveHandler: undefined,
+    saveLabel: 'Save',
   },
 );
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
+  (e: 'mode-change', mode: 'edit' | 'split' | 'preview'): void;
 }>();
 
 const router = useRouter();
@@ -416,13 +339,18 @@ function isModifiedClick(event: MouseEvent): boolean {
 const mode = ref<'edit' | 'split' | 'preview'>(
   props.editable ? 'edit' : 'preview',
 );
+watch(mode, (value) => emit('mode-change', value), { immediate: true });
+// Ownership can become available after the public server render hydrates.
+watch(
+  () => props.editable,
+  (editable) => {
+    mode.value = editable ? 'edit' : 'preview';
+  },
+);
 const draft = ref(props.modelValue);
 const lastSavedAt = ref<number | null>(null);
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const sourceEditorRef = ref<MarkdownSourceEditorHandle | null>(null);
 const previewRef = ref<HTMLDivElement | null>(null);
-const highlightLayerRef = ref<HTMLDivElement | null>(null);
-const highlightContentRef = ref<HTMLDivElement | null>(null);
-let highlightResizeObserver: ResizeObserver | null = null;
 
 // --- Unsaved changes guard ---
 const showUnsavedModal = ref(false);
@@ -458,77 +386,35 @@ function handleBeforeUnload(e: BeforeUnloadEvent) {
 }
 
 function handleDocumentPointerDown(e: PointerEvent) {
-  if (!tokenPreview.value) return;
   const el = e.target as HTMLElement | null;
-  // Skip closing when tapping the originating card link so the sibling click
-  // handler can re-open/re-position it without a visible flicker.
-  if (el?.closest('.card-inline-link')) return;
+  // Keep the preview open while tapping its link again. Any other interaction
+  // ends the pending double tap, including a tap on a different card.
+  const cardLink = el?.closest('.card-inline-link');
+  if (cardLink !== lastCardTap?.element) lastCardTap = null;
+  if (cardLink) return;
   tokenPreview.value = null;
 }
 
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
   document.addEventListener('pointerdown', handleDocumentPointerDown, true);
-  highlightResizeObserver = new ResizeObserver(syncHighlightScroll);
-  if (textareaRef.value) highlightResizeObserver.observe(textareaRef.value);
-  nextTick(syncHighlightScroll);
 });
 
 onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
   document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
-  highlightResizeObserver?.disconnect();
-  highlightResizeObserver = null;
 });
 
 // --- Scroll sync: editor → preview ---
-function onEditorScroll() {
-  const ta = textareaRef.value;
-  const pr = previewRef.value;
-  if (!ta || !pr) return;
-  const maxEditorScroll = ta.scrollHeight - ta.clientHeight;
-  if (maxEditorScroll <= 0) return;
-  const ratio = ta.scrollTop / maxEditorScroll;
-  const maxPreviewScroll = pr.scrollHeight - pr.clientHeight;
-  pr.scrollTop = ratio * maxPreviewScroll;
+function onEditorScroll(position: { top: number; max: number }) {
+  const preview = previewRef.value;
+  if (!preview || mode.value !== 'split' || position.max <= 0) return;
+  preview.scrollTop =
+    (position.top / position.max) *
+    (preview.scrollHeight - preview.clientHeight);
 }
 
-// Keep the syntax-highlight overlay aligned with the textarea's scroll position.
-function syncHighlightScroll() {
-  const ta = textareaRef.value;
-  const layer = highlightLayerRef.value;
-  const content = highlightContentRef.value;
-  if (!ta || !layer || !content) return;
-  // A textarea's client width excludes its vertical scrollbar. Mirror that
-  // usable width so soft-wrapped lines, highlighted text, and the caret stay
-  // aligned after the editor begins scrolling or changes layout.
-  layer.style.width = `${ta.clientWidth}px`;
-  content.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
-}
-
-watch(textareaRef, (ta) => {
-  if (!highlightResizeObserver) return;
-  highlightResizeObserver.disconnect();
-  if (ta) highlightResizeObserver.observe(ta);
-  nextTick(syncHighlightScroll);
-});
-
-function onSplitScroll() {
-  onEditorScroll();
-  syncHighlightScroll();
-}
-
-watch(
-  () => draft.value,
-  () => {
-    nextTick(syncHighlightScroll);
-  },
-);
-
-// --- Card token hover preview (raw editor) ---
-// The highlight overlay is `pointer-events: none` so the textarea stays fully
-// interactive. To surface hover previews for ((Card)) / [[Card]] tokens we
-// hit-test the token span rects against the mouse position on mousemove.
+// --- Card token hover preview ---
 const tokenPreview = ref<{
   imageUrl: string;
   x: number;
@@ -537,66 +423,39 @@ const tokenPreview = ref<{
 
 const PREVIEW_WIDTH = 220;
 const PREVIEW_HEIGHT = 307; // 220 * 1.395 (MTG card aspect)
+const CARD_DOUBLE_TAP_MS = 450;
+let lastCardTap: { element: HTMLElement; time: number } | null = null;
 
-function onEditorMouseMove(e: MouseEvent) {
-  const layer = highlightContentRef.value;
-  if (!layer) {
+function onEditorCardHover(card: EditorCardHover) {
+  const entry = cardImageMap.value.get(card.name.toLowerCase());
+  if (!entry) {
     tokenPreview.value = null;
     return;
   }
-  const spans = layer.querySelectorAll<HTMLElement>(
-    '.tok-card-img, .tok-card-link',
-  );
-  for (const span of spans) {
-    const rects = span.getClientRects();
-    for (const rect of rects) {
-      if (
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom
-      ) {
-        const raw = span.textContent ?? '';
-        const name = raw
-          .replace(/^\(\(|\)\)$/g, '')
-          .replace(/^\[\[|\]\]$/g, '')
-          .trim();
-        const entry = cardImageMap.value.get(name.toLowerCase());
-        if (!entry) {
-          tokenPreview.value = null;
-          return;
-        }
-        // Position above the token by default; flip below if too close to top.
-        const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
-        const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
-        const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
-        const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-        tokenPreview.value = {
-          imageUrl: entry.imageUrl,
-          x,
-          y,
-        };
-        return;
-      }
-    }
-  }
-  tokenPreview.value = null;
-}
-
-function onEditorMouseLeave() {
-  tokenPreview.value = null;
+  const preferredTop = card.top - PREVIEW_HEIGHT - 8;
+  const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
+  tokenPreview.value = {
+    imageUrl: entry.imageUrl,
+    x: Math.min(Math.max(card.left, 8), Math.max(maxX, 8)),
+    y: preferredTop < 8 ? card.bottom + 8 : preferredTop,
+  };
 }
 
 // --- Card token hover preview (rendered preview pane) ---
 // The preview pane is `overflow-y-auto`, which clips CSS-only tooltip
 // approaches. Reuse the teleported floating preview by hit-testing the
-// rendered `.card-inline-link` elements on mousemove.
-function onPreviewMouseMove(e: MouseEvent) {
+// rendered `.card-inline-link` elements on pointer movement.
+function onPreviewPointerMove(event: PointerEvent) {
+  if (event.pointerType !== 'touch') showCardLinkPreview(event);
+}
+
+function showCardLinkPreview(e: MouseEvent) {
   const target = (e.target as HTMLElement | null)?.closest(
     '.card-inline-link',
   ) as HTMLElement | null;
   if (!target) {
     tokenPreview.value = null;
+    lastCardTap = null;
     return;
   }
   const name = (target.textContent ?? '').trim();
@@ -617,18 +476,28 @@ function onPreviewMouseMove(e: MouseEvent) {
   };
 }
 
-function onPreviewMouseLeave() {
+function onPreviewPointerLeave(event: PointerEvent) {
+  // Touch ends with pointerleave, followed by synthetic mouse events. Neither
+  // should dismiss the preview or cancel the pending second tap.
+  if (event.pointerType === 'touch') return;
   tokenPreview.value = null;
+  lastCardTap = null;
 }
 
-// --- Card embeds: ((Card Name)) and [[Card Name]] ---
-// Collect all unique card names referenced in the current preview source.
-const previewSource = computed(() => {
-  // When editable, always read from the live draft so newly-typed tokens are
-  // resolved for hover previews even before switching to preview/split mode.
-  const src = props.editable ? draft.value : props.modelValue;
-  return src ?? '';
+// Keep typing and saves on the live draft. Preview rendering and card/link
+// lookups wait for a short pause while the user edits.
+const debouncedDraft = refDebounced(draft, 200);
+watch(mode, (value) => {
+  // Opening split view explicitly should show the latest text immediately.
+  if (value === 'split') debouncedDraft.value = draft.value;
 });
+const previewSource = computed(() => {
+  if (!props.editable) return props.modelValue ?? '';
+  return mode.value === 'preview' ? draft.value : debouncedDraft.value;
+});
+
+// --- Card embeds: ((Card Name)) and [[Card Name]] ---
+// Explicit full preview and read-only rendering stay immediate, including SSR.
 
 const referencedCardNames = computed(() => {
   const names = new Set<string>();
@@ -642,8 +511,18 @@ const referencedCardNames = computed(() => {
   return [...names];
 });
 
-const { cards: referencedCards } = useCardsByName(referencedCardNames);
-const { data: commanderNames } = useCommandersSet();
+const { cards: referencedCards, suspense: resolveReferencedCards } =
+  useCardsByName(referencedCardNames);
+const { data: commanderNames, suspense: resolveCommanders } =
+  useCommandersSet();
+
+onServerPrefetch(async () => {
+  if (!referencedCardNames.value.length) return;
+  // Resolve the same cached queries the browser uses, so canonical card links
+  // are present in the response and hydration does not repeat their requests.
+  // A lookup failure must not prevent readers from seeing the article/primer.
+  await Promise.allSettled([resolveReferencedCards(), resolveCommanders()]);
+});
 
 // Map from card name (lowercase) → image URL for fast lookup during render.
 const cardImageMap = computed(() => {
@@ -722,6 +601,12 @@ function escapeEmbedHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function isOracleId(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
 function renderLinkEmbedCard(data: LinkEmbedData): string {
   const href = escapeEmbedHtml(data.href);
   const eyebrow = escapeEmbedHtml(data.eyebrow);
@@ -756,9 +641,12 @@ watch(
   },
 );
 
-const isDirty = computed(() => draft.value !== props.modelValue);
+const isDirty = computed(
+  () => draft.value !== props.modelValue || props.hasUnsavedChanges,
+);
 
 async function handleSave() {
+  if (!isDirty.value || props.isSaving || props.saveDisabled) return;
   const value = draft.value;
   try {
     await props.saveHandler?.(value);
@@ -774,7 +662,6 @@ async function handleSave() {
 const renderedHtml = computed(() => {
   const src = previewSource.value;
   if (!src?.trim()) return '';
-  if (!import.meta.client) return '';
 
   // --- Pre-process: extract special tokens before markdown sees them ---
   const ytIds: string[] = [];
@@ -787,7 +674,10 @@ const renderedHtml = computed(() => {
   // rewrites those lines to LINKEMBEDTOKEN{n} markers (surrounded by blank
   // lines) so marked treats them as block elements. Ordered target list is
   // reused by the post-process replacer below.
-  const linkEmbedResult = extractAndTokenizeLinkEmbeds(src);
+  const searchEmbedResult = extractSearchEmbeds(src);
+  const linkEmbedResult = extractAndTokenizeLinkEmbeds(
+    searchEmbedResult.processed,
+  );
   let pre = linkEmbedResult.processed;
 
   pre = pre.replace(/@\[youtube\]\(([A-Za-z0-9_-]{11})\)/g, (_, id) => {
@@ -812,35 +702,31 @@ const renderedHtml = computed(() => {
   // so card names / URLs can never be misinterpreted as emoji names.
   pre = emojify(pre);
 
-  const html = marked.parse(pre, { async: false }) as string;
-  const sanitized = DOMPurify.sanitize(html, {
-    ALLOWED_ATTR: [
-      'href',
-      'src',
-      'alt',
-      'title',
-      'loading',
-      'frameborder',
-      'allowfullscreen',
-      'class',
-      'open',
-      'start',
-    ],
-    ADD_TAGS: ['details', 'summary', 'iframe'],
-  });
+  const html = parseColoredMarkdown(pre);
+  const sanitized = sanitizeMarkdownHtml(html);
 
   // --- Post-process: swap tokens back with final HTML ---
-  let result = sanitized.replace(/YTEMBEDTOKEN(\d+)YTEMBEDTOKEN/g, (_, idx) => {
-    const id = ytIds[Number(idx)];
-    if (!id) return '';
-    return `<div class="youtube-embed"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen loading="lazy" title="YouTube video"></iframe></div>`;
-  });
+  let result = sanitized.replace(
+    /(?:<p>\s*)?YTEMBEDTOKEN(\d+)YTEMBEDTOKEN(?:\s*<\/p>)?/g,
+    (_, idx) => {
+      const id = ytIds[Number(idx)];
+      if (!id) return '';
+      return `<div class="youtube-embed"><iframe src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen loading="lazy" title="YouTube video"></iframe></div>`;
+    },
+  );
 
   result = result.replace(/CARDIMGTOKEN(\d+)CARDIMGTOKEN/g, (_, idx) => {
     const name = cardImgNames[Number(idx)];
     if (!name) return '';
     const entry = cardImageMap.value.get(name.toLowerCase());
-    if (!entry) return `<em class="card-unknown">${name}</em>`;
+    if (!entry || !isOracleId(entry.oracleId))
+      return `<em class="card-unknown">${escapeEmbedHtml(name)}</em>`;
+    const safeName = escapeEmbedHtml(name);
+    const imageUrl = escapeEmbedHtml(entry.imageUrl);
+    const backImageUrl = entry.backImageUrl
+      ? escapeEmbedHtml(entry.backImageUrl)
+      : null;
+    const price = entry.price ? escapeEmbedHtml(entry.price) : null;
     const encodedName = encodeURIComponent(name);
     const commanderActions = entry.isCommander
       ? embeddedCardAction(
@@ -866,18 +752,24 @@ const renderedHtml = computed(() => {
       embeddedActionIcons.similar,
     );
     const buyAction = entry.tcgplayerId
-      ? `<a class="card-inline-action card-inline-action-buy" href="${getAffiliateLink(entry.tcgplayerId)}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${entry.price ? `Buy on TCGPlayer ($${entry.price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${entry.price ? ` $${entry.price}` : ''}</span></a>`
+      ? `<a class="card-inline-action card-inline-action-buy" href="${escapeEmbedHtml(getAffiliateLink(entry.tcgplayerId))}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${price ? ` $${price}` : ''}</span></a>`
       : '';
     const flipAction = entry.backImageUrl
       ? `<button type="button" class="card-inline-action card-inline-action-flip" aria-label="Flip Card" data-tooltip="Flip card" data-card-flip>${embeddedActionIcons.flip}<span>Flip</span></button>`
       : '';
-    return `<span class="card-inline-embed" data-front-image="${entry.imageUrl}"${entry.backImageUrl ? ` data-back-image="${entry.backImageUrl}"` : ''}><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${entry.imageUrl}" alt="${name}" data-card-face="front" loading="lazy" /></a><span class="card-inline-actions">${flipAction}${similarAction}${commanderActions}${buyAction}</span></span>`;
+    return `<span class="card-inline-embed" data-front-image="${imageUrl}"${backImageUrl ? ` data-back-image="${backImageUrl}"` : ''}><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${imageUrl}" alt="${safeName}" data-card-face="front" loading="lazy" /></a><span class="card-inline-actions">${flipAction}${similarAction}${commanderActions}${buyAction}</span></span>`;
   });
 
   result = result.replace(/CARDLINKTOKEN(\d+)CARDLINKTOKEN/g, (_, idx) => {
     const name = cardLinkNames[Number(idx)];
     if (!name) return '';
-    return `<span class="card-inline-link">${name}</span>`;
+    const safeName = escapeEmbedHtml(name);
+    const entry = cardImageMap.value.get(name.toLowerCase());
+    // Unresolved names stay plain text instead of linking to a missing card.
+    if (!entry || !isOracleId(entry.oracleId)) {
+      return `<span class="card-unknown">${safeName}</span>`;
+    }
+    return `<a class="card-inline-link" href="/card/${entry.oracleId}">${safeName}</a>`;
   });
 
   result = result.replace(
@@ -892,46 +784,74 @@ const renderedHtml = computed(() => {
     },
   );
 
+  result = result.replace(
+    /(?:<p>\s*)?CMSEARCHTOKEN(\d+)CMSEARCHTOKEN(?:\s*<\/p>)?/g,
+    (_, index) => {
+      const embed = searchEmbedResult.embeds[Number(index)];
+      return embed ? renderSearchEmbed(embed) : '';
+    },
+  );
+
   result = restoreMagicSymbols(result, extractedMagicSymbols.symbols);
 
   return result;
 });
 
+function handleSearchEmbedSubmit(event: Event) {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || !form.matches('.search-embed-form'))
+    return;
+  const embed = parseSearchEmbedUrl(form.dataset.searchHref ?? '');
+  if (!embed) return;
+  event.preventDefault();
+  const params = new URLSearchParams();
+  for (const [key, value] of new FormData(form)) {
+    if (typeof value === 'string') params.append(key, value);
+  }
+  const href =
+    params.get(embed.queryKey) === embed.query
+      ? embed.href
+      : embed.action + '?' + params.toString();
+  router.push(href);
+}
+
 function handlePreviewClick(event: MouseEvent) {
   const target = event.target as HTMLElement | null;
 
-  // [[Card Name]] tokens render as spans (no navigation). Tapping one opens
-  // the floating preview — the same affordance desktop users get on hover.
-  const cardLink = target?.closest<HTMLElement>('.card-inline-link');
+  const cardLink = target?.closest<HTMLAnchorElement>('.card-inline-link');
   if (cardLink) {
-    const name = (cardLink.textContent ?? '').trim();
-    const entry = cardImageMap.value.get(name.toLowerCase());
-    if (!entry) {
-      tokenPreview.value = null;
-      return;
+    // Preserve modifier clicks, middle clicks, and keyboard activation. Touch
+    // clicks use two quick taps on the same link; browsers do not consistently
+    // emit dblclick for touch, so track the taps directly.
+    if (event.button !== 0 || isModifiedClick(event)) return;
+    const pointerType = (event as PointerEvent).pointerType;
+    const isTouchClick =
+      event.detail > 0 &&
+      (pointerType === 'touch' ||
+        (!pointerType &&
+          window.matchMedia('(hover: none) and (pointer: coarse)').matches));
+    if (isTouchClick) {
+      const isSecondTap =
+        lastCardTap?.element === cardLink &&
+        event.timeStamp - lastCardTap.time <= CARD_DOUBLE_TAP_MS;
+      if (!isSecondTap) {
+        event.preventDefault();
+        lastCardTap = { element: cardLink, time: event.timeStamp };
+        showCardLinkPreview(event);
+        return;
+      }
     }
-    const rect = cardLink.getBoundingClientRect();
-    const preferredTop = rect.top - PREVIEW_HEIGHT - 8;
-    const y = preferredTop < 8 ? rect.bottom + 8 : preferredTop;
-    const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
-    const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
-    tokenPreview.value = {
-      imageUrl: entry.imageUrl,
-      x,
-      y,
-    };
-    return;
+    lastCardTap = null;
   }
 
-  // Intercept unfurl / inline card image links so navigation goes through the
-  // Vue router (SPA) instead of causing a full page reload — those anchors
-  // are injected as raw HTML and would otherwise trigger a hard nav.
+  // These anchors are injected as raw HTML. Route ordinary activations through
+  // Vue while keeping the browser's native new-tab and modifier-link behavior.
   const spaLink = target?.closest<HTMLAnchorElement>(
-    '.link-embed, .card-inline-img-link',
+    '.link-embed, .search-embed-link, .card-inline-img-link, .card-inline-link',
   );
-  if (spaLink && !isModifiedClick(event)) {
+  if (spaLink && event.button === 0 && !isModifiedClick(event)) {
     const to = spaLink.getAttribute('href');
-    if (to && to.startsWith('/')) {
+    if (to && to.startsWith('/') && !to.startsWith('//')) {
       event.preventDefault();
       tokenPreview.value = null;
       router.push(to);
@@ -957,85 +877,6 @@ function handlePreviewClick(event: MouseEvent) {
   );
 }
 
-// --- Syntax highlighting for the raw markdown editor ---
-// Produces safe HTML mirroring the textarea contents with token spans so users
-// can visually distinguish HTML tags, card embeds, links, etc.
-const highlightedDraft = computed(() => highlightMarkdown(draft.value));
-
-interface HighlightMatch {
-  start: number;
-  end: number;
-  cls: string;
-}
-
-function escapeHighlightHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function highlightMarkdown(src: string): string {
-  if (!src) return '';
-
-  const matches: HighlightMatch[] = [];
-  const add = (re: RegExp, cls: string) => {
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(src)) !== null) {
-      if (m[0].length === 0) {
-        re.lastIndex++;
-        continue;
-      }
-      matches.push({ start: m.index, end: m.index + m[0].length, cls });
-    }
-  };
-
-  // Higher-priority patterns first so they win when overlapping.
-  add(/```[\s\S]*?```/g, 'tok-code-block');
-  add(/`[^`\n]+`/g, 'tok-code');
-  add(/\(\([^)\n]+\)\)/g, 'tok-card-img');
-  add(/\[\[[^\]\n]+\]\]/g, 'tok-card-link');
-  add(/@\[youtube\]\([A-Za-z0-9_-]{11}\)/g, 'tok-youtube');
-  add(/\{[^{}\n]+\}/g, 'tok-magic-symbol');
-  add(/:[a-z0-9_+-]+:/g, 'tok-emoji');
-  add(/<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?\/?>/g, 'tok-html');
-  add(/!\[[^\]\n]*\]\([^)\n]+\)/g, 'tok-image');
-  add(/\[[^\]\n]+\]\([^)\n]+\)/g, 'tok-link');
-  add(/^#{1,6}\s.*$/gm, 'tok-heading');
-  add(/\*\*[^*\n]+\*\*/g, 'tok-bold');
-  add(/(?<!\w)_[^_\n]+_(?!\w)/g, 'tok-italic');
-  add(/^>\s.*$/gm, 'tok-quote');
-  add(/^\s*(?:-{3,}|\*{3,})\s*$/gm, 'tok-hr');
-  add(/^\s*(?:[-*+]|\d+\.)\s/gm, 'tok-list');
-
-  // Prefer earlier start; on ties, prefer the longer match.
-  matches.sort((a, b) => a.start - b.start || b.end - a.end);
-
-  // Drop matches that overlap already-claimed ranges (first-wins after sort).
-  const kept: HighlightMatch[] = [];
-  let cursor = 0;
-  for (const m of matches) {
-    if (m.start >= cursor) {
-      kept.push(m);
-      cursor = m.end;
-    }
-  }
-
-  let out = '';
-  let pos = 0;
-  for (const m of kept) {
-    if (m.start > pos) out += escapeHighlightHtml(src.slice(pos, m.start));
-    out += `<span class="${m.cls}">${escapeHighlightHtml(
-      src.slice(m.start, m.end),
-    )}</span>`;
-    pos = m.end;
-  }
-  if (pos < src.length) out += escapeHighlightHtml(src.slice(pos));
-
-  // Textareas render a trailing newline as an empty line; mirror that in the
-  // overlay so line counts stay aligned.
-  if (src.endsWith('\n')) out += '\n';
-
-  return out;
-}
-
 type ToolbarActionId =
   | 'h1'
   | 'h2'
@@ -1051,6 +892,7 @@ type ToolbarActionId =
   | 'table'
   | 'collapsible'
   | 'youtube'
+  | 'search-embed'
   | 'card-image'
   | 'card-link';
 
@@ -1088,6 +930,11 @@ const toolbarGroups: ToolbarAction[][] = [
       tooltip: 'Collapsible section',
     },
     { id: 'youtube', icon: 'i-lucide-youtube', tooltip: 'YouTube embed' },
+    {
+      id: 'search-embed',
+      icon: 'i-lucide-search',
+      tooltip: 'Embed a CardMystic search',
+    },
   ],
   [
     {
@@ -1103,14 +950,10 @@ const toolbarGroups: ToolbarAction[][] = [
   ],
 ];
 
-// Flat list used only for action lookup
-const toolbarActions: ToolbarAction[] = toolbarGroups.flat();
-
 function applyAction(id: ToolbarActionId) {
-  const el = textareaRef.value;
-  if (!el) return;
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
+  const editor = sourceEditorRef.value;
+  if (!editor) return;
+  const { from: start, to: end } = editor.getSelection();
   const value = draft.value;
   const selected = value.slice(start, end);
 
@@ -1174,6 +1017,25 @@ function applyAction(id: ToolbarActionId) {
           `<details open>\n<summary>Details</summary>\n\nContent here.\n\n</details>\n\n`,
       );
       return;
+    case 'search-embed': {
+      const input = window.prompt(
+        'CardMystic search URL',
+        selected ||
+          'https://cardmystic.com/search/all/smart?query=draw%20cards',
+      );
+      if (!input) return;
+      if (!parseSearchEmbedUrl(input)) {
+        window.alert('Enter a valid CardMystic search URL.');
+        return;
+      }
+      insertAtCursor(
+        ensureBlockBoundary(value, start) +
+          '@[search](' +
+          input.trim() +
+          ')\n\n',
+      );
+      return;
+    }
     case 'youtube': {
       const input = window.prompt('YouTube URL or Video ID');
       if (!input) return;
@@ -1210,17 +1072,10 @@ function applyAction(id: ToolbarActionId) {
     ? ensureBlockBoundary(value, start) + before + text + after
     : before + text + after;
 
-  // Use execCommand so the browser undo stack is preserved.
-  el.focus();
-  el.setSelectionRange(start, end);
-  document.execCommand('insertText', false, insertion);
-
-  nextTick(() => {
-    if (!textareaRef.value) return;
-    textareaRef.value.focus();
-    const selStart = start + insertion.length - after.length - text.length;
-    const selEnd = selStart + text.length;
-    textareaRef.value.setSelectionRange(selStart, selEnd);
+  const selStart = start + insertion.length - after.length - text.length;
+  editor.replaceSelection(insertion, {
+    anchor: selStart,
+    head: selStart + text.length,
   });
 }
 
@@ -1237,10 +1092,9 @@ function applyListPrefix(
   placeholder: string,
   numbered = false,
 ) {
-  const el = textareaRef.value;
-  if (!el) return;
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
+  const editor = sourceEditorRef.value;
+  if (!editor) return;
+  const { from: start, to: end } = editor.getSelection();
   const value = draft.value;
   const selected = value.slice(start, end);
 
@@ -1255,32 +1109,26 @@ function applyListPrefix(
   const boundary = ensureBlockBoundary(value, start);
   const insertion = boundary + prefixed;
 
-  el.focus();
-  el.setSelectionRange(start, end);
-  document.execCommand('insertText', false, insertion);
-
-  nextTick(() => {
-    if (!textareaRef.value) return;
-    textareaRef.value.focus();
-    const selStart = start + boundary.length;
-    const selEnd = selStart + prefixed.length;
-    textareaRef.value.setSelectionRange(selStart, selEnd);
+  editor.replaceSelection(insertion, {
+    anchor: start + boundary.length,
+    head: start + boundary.length + prefixed.length,
   });
 }
 
 function insertAtCursor(text: string) {
-  const el = textareaRef.value;
-  if (!el) return;
-  const start = el.selectionStart;
-  el.focus();
-  document.execCommand('insertText', false, text);
-  nextTick(() => {
-    if (!textareaRef.value) return;
-    textareaRef.value.setSelectionRange(
-      start + text.length,
-      start + text.length,
-    );
-  });
+  sourceEditorRef.value?.replaceSelection(text);
+}
+
+const textColorPickerOpen = ref(false);
+
+function applyTextColor(color: string) {
+  const editor = sourceEditorRef.value;
+  if (!editor) return;
+  const edit = markdownTextColorEdit(draft.value, editor.getSelection(), color);
+  if (!edit) return;
+  editor.replaceSelection(edit.text, edit.selection, edit.range);
+  textColorPickerOpen.value = false;
+  nextTick(() => sourceEditorRef.value?.focus());
 }
 
 // --- Emoji picker ---
@@ -1397,15 +1245,15 @@ const emojiResults = computed<EmojiEntry[]>(() => {
 function insertEmojiShortcode(name: string) {
   emojiPickerOpen.value = false;
   emojiSearchTerm.value = '';
-  // Focus the textarea first so the shortcode is inserted at the caret.
-  textareaRef.value?.focus();
+  // Restore editor focus so the shortcode is inserted at its saved selection.
+  sourceEditorRef.value?.focus();
   nextTick(() => insertAtCursor(`:${name}:`));
 }
 
 function insertMagicSymbol(token: string) {
   magicSymbolPickerOpen.value = false;
   magicSymbolSearchTerm.value = '';
-  textareaRef.value?.focus();
+  sourceEditorRef.value?.focus();
   nextTick(() => insertAtCursor(`{${token}}`));
 }
 </script>
@@ -1631,6 +1479,7 @@ function insertMagicSymbol(token: string) {
   color: #3b82f6;
   text-decoration: underline;
   cursor: pointer;
+  touch-action: manipulation;
 }
 .primer-preview :deep(.card-unknown) {
   color: #f87171;
@@ -1756,6 +1605,103 @@ function insertMagicSymbol(token: string) {
   width: 85%;
   height: 1rem;
 }
+
+/* Explicit search embeds remain usable as ordinary links and GET forms. */
+.primer-preview :deep(.search-embed) {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid var(--ui-border-accented);
+  border-radius: 1rem;
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--ui-primary) 9%, var(--ui-bg)),
+    var(--ui-bg)
+  );
+}
+.primer-preview :deep(.search-embed-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.primer-preview :deep(.search-embed-link) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ui-text-highlighted);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.primer-preview :deep(.search-embed-link:hover) {
+  color: var(--ui-primary);
+  text-decoration: underline;
+}
+.primer-preview :deep(.search-embed-link svg) {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  color: var(--ui-primary);
+}
+.primer-preview :deep(.search-embed-platform) {
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  text-align: right;
+}
+.primer-preview :deep(.search-embed-bar) {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.375rem;
+  border: 1px solid var(--ui-border-accented);
+  border-radius: 0.75rem;
+  background: var(--ui-bg);
+}
+.primer-preview :deep(.search-embed-input) {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0.625rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--ui-text-highlighted);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.primer-preview :deep(.search-embed-submit) {
+  flex-shrink: 0;
+  align-self: center;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1rem;
+  background: var(--ui-primary);
+  color: var(--ui-bg);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+.primer-preview :deep(.search-embed-submit:hover) {
+  filter: brightness(1.08);
+}
+.primer-preview :deep(.search-embed-input:focus-visible),
+.primer-preview :deep(.search-embed-submit:focus-visible),
+.primer-preview :deep(.search-embed-link:focus-visible) {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+@media (max-width: 420px) {
+  .primer-preview :deep(.search-embed) {
+    padding: 0.75rem;
+  }
+  .primer-preview :deep(.search-embed-submit) {
+    padding: 0.7rem;
+  }
+}
+
 @keyframes link-embed-shimmer {
   0% {
     background-position: 200% 0;
@@ -1773,136 +1719,6 @@ function insertMagicSymbol(token: string) {
     rgba(255, 255, 255, 0.06) 75%
   );
   background-size: 200% 100%;
-}
-
-/* --- Syntax-highlighted editor (overlay + transparent textarea) --- */
-.editor-shell {
-  position: relative;
-  overflow: hidden;
-}
-/* Shared type metrics — both layers MUST match exactly for caret/highlight alignment. */
-.highlight-layer,
-.editor-textarea {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
-  font-size: 1rem;
-  line-height: 1.5;
-  letter-spacing: 0;
-  tab-size: 4;
-  -moz-tab-size: 4;
-}
-.highlight-layer {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
-  pointer-events: none;
-  border-radius: inherit;
-}
-.highlight-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem;
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  will-change: transform;
-  color: rgb(107 114 128); /* base tone for un-tokenized text */
-}
-:global(.dark) .highlight-content {
-  color: rgb(148 163 184);
-}
-.editor-textarea {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 1rem;
-  margin: 0;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: transparent;
-  caret-color: rgb(17 24 39);
-  resize: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  box-sizing: border-box;
-}
-.editor-textarea::selection {
-  background: rgba(59, 130, 246, 0.35);
-  color: transparent;
-}
-.editor-textarea::placeholder {
-  color: rgb(156 163 175);
-}
-
-/* Token colors — tuned to work in both light and dark themes. Keep font
-   metrics unchanged so this mirror wraps exactly like the textarea. */
-.highlight-content :deep(.tok-html) {
-  color: #d946ef;
-}
-.highlight-content :deep(.tok-card-img) {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-card-link) {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-youtube) {
-  color: #ef4444;
-}
-.highlight-content :deep(.tok-emoji) {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-magic-symbol) {
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-heading) {
-  color: #f59e0b;
-}
-.highlight-content :deep(.tok-bold) {
-  color: #eab308;
-}
-.highlight-content :deep(.tok-italic) {
-  color: #eab308;
-}
-.highlight-content :deep(.tok-quote) {
-  color: #94a3b8;
-}
-.highlight-content :deep(.tok-list) {
-  color: #f97316;
-}
-.highlight-content :deep(.tok-link) {
-  color: #06b6d4;
-}
-.highlight-content :deep(.tok-image) {
-  color: #14b8a6;
-}
-.highlight-content :deep(.tok-code),
-.highlight-content :deep(.tok-code-block) {
-  color: #a78bfa;
-  background: rgba(167, 139, 250, 0.12);
-  border-radius: 3px;
-}
-.highlight-content :deep(.tok-hr) {
-  color: #64748b;
 }
 </style>
 
@@ -1924,11 +1740,5 @@ function insertMagicSymbol(token: string) {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-/* Dark-mode caret: kept unscoped because Vue's :global(.dark) in scoped styles
-   did not reliably compile to a matching descendant selector here. */
-.dark .editor-textarea {
-  caret-color: #ffffff;
 }
 </style>

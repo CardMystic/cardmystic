@@ -114,8 +114,10 @@ import { useRoute } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
+const pageDefaults = useSearchPageDefaults();
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
 import Filters from './Filters.vue';
 
@@ -150,7 +152,9 @@ const { saveSearchMutation } = useSearchHistory();
 
 type Schema = z.output<typeof schema>;
 
-const queryParam = computed(() => String(route.query.query || ''));
+const queryParam = computed(() =>
+  String(pageDefaults?.query ?? route.query.query ?? ''),
+);
 import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 const parsedFilters = computed(() => {
@@ -160,6 +164,12 @@ const parsedFilters = computed(() => {
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
   if (props.platform === 'paper') base.isPaper = true;
+  if (pageDefaults) {
+    return CardSearchFiltersSchema.parse({
+      ...base,
+      ...pageDefaults.filters.value,
+    });
+  }
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(
       JSON.parse(String(route.query.filters)),

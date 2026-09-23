@@ -2,12 +2,16 @@
   <div
     class="relative border max-w-125 h-full flex flex-col border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
   >
-    <!-- Background Image -->
-    <div
+    <!-- Decorative artwork uses native lazy loading even when the tile is mounted. -->
+    <img
       v-if="getListImageUrl(list)"
-      class="absolute inset-0 bg-cover bg-position-[center_10%] opacity-70 group-hover:opacity-85 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
-      :style="{ backgroundImage: `url(${getListImageUrl(list)})` }"
-    ></div>
+      :src="getListImageUrl(list) ?? undefined"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+      class="absolute inset-0 w-full h-full object-cover object-[center_10%] opacity-70 group-hover:opacity-85 dark:opacity-50 dark:group-hover:opacity-80 transition-opacity"
+    />
     <div
       class="absolute inset-0 bg-linear-to-t from-white/60 via-white/25 dark:from-black/80 dark:via-black/40 to-transparent"
     ></div>
@@ -16,7 +20,7 @@
     <UButton
       v-if="showDeleteButton"
       @click.stop="confirmDelete"
-      class="cursor-pointer absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
+      class="cursor-pointer absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity z-20"
       color="error"
       variant="solid"
       icon="i-lucide-trash-2"
@@ -24,13 +28,17 @@
       aria-label="Delete list"
     />
 
-    <!-- Content (clickable) -->
-    <div
-      class="relative flex flex-col flex-1 p-2 md:p-4"
-      @click="router.push(`/lists/${list.id}`)"
-    >
+    <div class="relative flex flex-col flex-1 p-2 md:p-4">
       <h3 class="text-base md:text-xl font-bold mb-1 md:mb-2">
-        {{ list.name }}
+        <!-- Stretch the named link across the tile while leaving its other
+             controls above it, outside the link. -->
+        <NuxtLink
+          :to="`/lists/${list.id}`"
+          no-prefetch
+          class="after:absolute after:inset-0 after:z-10 after:rounded-lg focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-primary focus-visible:after:-outline-offset-2"
+        >
+          {{ list.name }}
+        </NuxtLink>
       </h3>
       <p
         v-if="list.description"
@@ -91,8 +99,8 @@
         <NuxtLink
           v-if="showAuthor && list.username"
           :to="`/user/${list.user_id}`"
-          class="flex items-center gap-1 hover:text-primary truncate"
-          @click.stop
+          no-prefetch
+          class="relative z-20 flex items-center gap-1 hover:text-primary truncate"
         >
           <UIcon name="i-lucide-user" class="w-3 h-3 md:w-4 md:h-4 shrink-0" />
           <span class="truncate">{{ list.username }}</span>
@@ -108,13 +116,17 @@
 
       <!-- Color identity distribution across the Mainboard. `mt-auto` pins the
            bar to the bottom of the card so shorter cards align visually. -->
-      <div v-if="list.color_ratios" class="mt-auto pt-2 md:pt-3">
+      <div v-if="list.color_ratios" class="relative z-20 mt-auto pt-2 md:pt-3">
         <ColorRatioBar :ratios="list.color_ratios" />
       </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <UModal v-model:open="isDeleteModalOpen" title="Delete List">
+    <UModal
+      v-if="isDeleteModalOpen"
+      v-model:open="isDeleteModalOpen"
+      title="Delete List"
+    >
       <template #content>
         <div class="p-4 space-y-4">
           <p class="text-gray-600 dark:text-gray-400">
@@ -152,7 +164,6 @@
 import { formatShortDate } from '~/utils/dateFormatter';
 import { useCardLists } from '~/composables/useCardLists';
 
-const router = useRouter();
 import { useToast } from '#imports';
 import type { DecklistSummary } from '~/models/cardListModel';
 

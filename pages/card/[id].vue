@@ -16,14 +16,6 @@
         />
       </div>
     </ClientOnly>
-    <!-- Background Image -->
-    <div v-if="cardArtUrl" class="fixed inset-0 z-0">
-      <div
-        class="absolute inset-0 bg-cover bg-center opacity-80 dark:opacity-60 blur-sm"
-        :style="{ backgroundImage: `url(${cardArtUrl})` }"
-      ></div>
-    </div>
-
     <div
       v-if="pending || (!card && !error)"
       class="flex flex-col items-center justify-center w-full min-h-[70vh] fixed inset-0 z-10"
@@ -166,9 +158,11 @@
               variant="solid"
               icon="i-lucide-box"
               size="lg"
-              @click="getRecommendations"
+              :to="recommendationsSearchLink"
+              no-prefetch
+              @click="saveRecommendationsSearch"
               class="cursor-pointer"
-              aria-label="Get Deck Recommendations for this Commander"
+              :aria-label="`Recommended cards for ${card.name}`"
             />
           </UTooltip>
           <UTooltip v-if="isCommander" text="Popular Cards for this Commander">
@@ -177,9 +171,11 @@
               variant="solid"
               icon="i-lucide-flame"
               size="lg"
-              @click="viewPopularCards"
+              :to="popularSearchLink"
+              no-prefetch
+              @click="savePopularSearch"
               class="cursor-pointer"
-              aria-label="Popular Cards for this Commander"
+              :aria-label="`Popular cards for ${card.name}`"
             />
           </UTooltip>
           <UTooltip text="Find similar cards">
@@ -188,9 +184,11 @@
               variant="solid"
               icon="i-mdi-cards-outline"
               size="lg"
-              @click="findSimilarCards"
+              :to="similarSearchLink"
+              no-prefetch
+              @click="saveSimilarSearch"
               class="cursor-pointer"
-              aria-label="Find similar cards"
+              :aria-label="`Cards similar to ${card.name}`"
             />
           </UTooltip>
           <UButton
@@ -404,9 +402,11 @@
                   variant="solid"
                   icon="i-lucide-box"
                   size="lg"
-                  @click="getRecommendations"
+                  :to="recommendationsSearchLink"
+                  no-prefetch
+                  @click="saveRecommendationsSearch"
                   class="cursor-pointer"
-                  aria-label="Get Deck Recommendations for this Commander"
+                  :aria-label="`Recommended cards for ${card.name}`"
                 />
               </UTooltip>
               <UTooltip
@@ -418,9 +418,11 @@
                   variant="solid"
                   icon="i-lucide-flame"
                   size="lg"
-                  @click="viewPopularCards"
+                  :to="popularSearchLink"
+                  no-prefetch
+                  @click="savePopularSearch"
                   class="cursor-pointer"
-                  aria-label="Popular Cards for this Commander"
+                  :aria-label="`Popular cards for ${card.name}`"
                 />
               </UTooltip>
               <UTooltip text="Find similar cards">
@@ -429,9 +431,11 @@
                   variant="solid"
                   icon="i-mdi-cards-outline"
                   size="lg"
-                  @click="findSimilarCards"
+                  :to="similarSearchLink"
+                  no-prefetch
+                  @click="saveSimilarSearch"
                   class="cursor-pointer"
-                  aria-label="Find similar cards"
+                  :aria-label="`Cards similar to ${card.name}`"
                 />
               </UTooltip>
               <UButton
@@ -560,23 +564,23 @@
                 <h3 class="legalities-title">Legalities</h3>
               </div>
 
-              <div
-                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-1 p-1"
-              >
-                <div v-for="(format, name) in legalities" :key="name">
-                  <div class="legality-item">
-                    <UBadge
-                      class="legality-chip"
-                      :color="getLegalityColor(format)"
-                      variant="solid"
-                      size="xs"
-                    >
-                      {{ format }}
-                    </UBadge>
-                    <span class="format-name">{{
-                      standardizeFormatName(name)
-                    }}</span>
-                  </div>
+              <div class="legalities-grid">
+                <div
+                  v-for="(format, name) in legalities"
+                  :key="name"
+                  class="legality-item"
+                >
+                  <UBadge
+                    class="legality-chip"
+                    :color="getLegalityColor(format)"
+                    variant="solid"
+                    size="xs"
+                  >
+                    {{ format }}
+                  </UBadge>
+                  <span class="format-name">{{
+                    standardizeFormatName(name)
+                  }}</span>
                 </div>
               </div>
             </UCard>
@@ -625,16 +629,20 @@
                   </UButton>
                 </div>
                 <div class="flex justify-end mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="getRecommendations"
+                    :to="recommendationsSearchLink"
+                    no-prefetch
+                    @click="saveRecommendationsSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Recommended cards for {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isRecommendedCardsEffectivelyLoading"
+                  :is-fetching="isRecommendedFetching"
+                  :error="recommendedError"
+                  @retry="refetchRecommendedCards()"
                   :search-results="recommendedCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -670,16 +678,20 @@
                   </UButton>
                 </div>
                 <div class="flex justify-end mt-2 mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="viewPopularCards"
+                    :to="popularSearchLink"
+                    no-prefetch
+                    @click="savePopularSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Popular cards for {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isPopularCardsEffectivelyLoading"
+                  :is-fetching="isPopularCardsFetching"
+                  :error="popularCardsError"
+                  @retry="refetchPopularCards()"
                   :search-results="popularCards ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -696,17 +708,23 @@
                   Similar Cards
                 </h3>
                 <div class="flex justify-end mt-2 mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="findSimilarCards"
+                    :to="similarSearchLink"
+                    no-prefetch
+                    @click="saveSimilarSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Cards similar to {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
+                  :is-fetching="isSimilarCardsFetching"
+                  :error="similarCardsError"
+                  @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
+                  :hidden-result-count="hiddenSimilarResultCount"
+                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -747,6 +765,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCommandersEffectivelyLoading"
+                  :is-fetching="isPopularCommandersFetching"
+                  :error="popularCommandersError"
+                  @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -794,6 +815,9 @@
                 </div>
                 <SearchResults
                   :is-loading="isPopularCommandersEffectivelyLoading"
+                  :is-fetching="isPopularCommandersFetching"
+                  :error="popularCommandersError"
+                  @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
@@ -810,17 +834,23 @@
                   Similar Cards
                 </h3>
                 <div class="flex justify-end mt-2 mb-2">
-                  <button
-                    type="button"
+                  <NuxtLink
                     class="text-xs text-gray-400 underline cursor-pointer hover:text-white"
-                    @click="findSimilarCards"
+                    :to="similarSearchLink"
+                    no-prefetch
+                    @click="saveSimilarSearch"
                   >
-                    Go To Full Search Page
-                  </button>
+                    Cards similar to {{ card.name }}
+                  </NuxtLink>
                 </div>
                 <SearchResults
                   :is-loading="isSimilarCardsEffectivelyLoading"
+                  :is-fetching="isSimilarCardsFetching"
+                  :error="similarCardsError"
+                  @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
+                  :hidden-result-count="hiddenSimilarResultCount"
+                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -865,12 +895,12 @@ import {
 } from '@/utils/tcgPlayer';
 import {
   getCardImageUrl,
-  getCardArtUrl,
   formatsToIgnore,
   getLegalityColor,
   standardizeFormatName,
 } from '@/utils/scryfall';
 import { safeJsonLd } from '~/utils/safeJsonLd';
+import { getSearchLink } from '~/utils/searchLinks';
 
 const route = useRoute();
 const router = useRouter();
@@ -878,16 +908,10 @@ const isFlipped = ref(false);
 const showMobileDetails = ref(false);
 const selectedPrinting = ref<string>('');
 
-// Keep last valid oracle ID so the page doesn't flicker to an empty/loading
-// state when navigating away (route param briefly becomes empty during transition).
-const _lastValidOracleId = ref(String(route.params.id) || '');
-watch(
-  () => route.params.id,
-  (id) => {
-    if (id) _lastValidOracleId.value = String(id);
-  },
-);
-const oracleIdParam = computed(() => _lastValidOracleId.value);
+// Nuxt keys this page by its card path. Keep each instance bound to that card
+// while an asynchronous destination (which may also have an id param) loads.
+const pageOracleId = String(route.params.id || '');
+const oracleIdParam = computed(() => pageOracleId);
 const { saveCardViewMutation } = useCardHistory();
 const { lastCard, setLastOpenedCard } = useLastOpenedCard();
 const { searchType, getPath, restoreSearchQuery } = useSearchType();
@@ -927,7 +951,28 @@ function navigateToExplore(
   router.push({ path: `/${type}/all`, query: saved ?? undefined });
 }
 
-const { card, llm, printings, error, pending } = useCardDetails(oracleIdParam);
+const { card, llm, printings, error, pending, ready } =
+  useCardDetails(oracleIdParam);
+await ready;
+
+if (import.meta.server && error.value) {
+  const status = error.value.status ?? 502;
+  setResponseStatus(
+    useRequestEvent()!,
+    status >= 400 && status <= 599 ? status : 502,
+  );
+}
+
+if (card.value && card.value.oracle_id !== oracleIdParam.value) {
+  await navigateTo(
+    {
+      path: `/card/${card.value.oracle_id}`,
+      query: route.query,
+      hash: route.hash,
+    },
+    { redirectCode: 301, replace: true },
+  );
+}
 
 const llmDetails = computed<LlmCardAttributes | null>(
   () => llm.value?.llm ?? null,
@@ -979,12 +1024,15 @@ const errorMessage = computed(() => {
   return err?.data?.message || err?.message || 'An error occurred';
 });
 
-const canonicalUrl = computed(
-  () =>
-    `https://cardmystic.com/card/${card.value?.oracle_id ?? oracleIdParam.value}`,
+const canonicalUrl = computed(() =>
+  card.value
+    ? `https://cardmystic.com/card/${card.value.oracle_id}`
+    : undefined,
 );
 // Dynamic SEO meta based on card data
 useSeoMeta({
+  robots: () => (card.value ? 'index, follow' : 'noindex, follow'),
+  ogUrl: () => canonicalUrl.value,
   title: () =>
     card.value
       ? `${card.value.name} (MTG) - CardMystic`
@@ -1032,45 +1080,44 @@ useSeoMeta({
 });
 
 // Add JSON-LD structured data for better SEO and rich snippets
-useHead({
-  link: [
-    {
-      rel: 'canonical',
-      href: canonicalUrl.value,
-    },
-  ],
-  script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: () => {
-        if (!card.value) return '';
-        return safeJsonLd({
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          name: card.value.name,
-          description:
-            card.value.oracle_text ||
-            card.value.card_faces?.[0]?.oracle_text ||
-            '',
-          image:
-            card.value?.image_uris?.normal ||
-            card.value?.card_faces?.[0]?.image_uris?.normal ||
-            'https://cardmystic.com/cardmystic_cards.png',
-          url: canonicalUrl.value,
-          brand: {
-            '@type': 'Brand',
-            name: 'Magic: The Gathering',
+useHead(() => ({
+  link: canonicalUrl.value
+    ? [{ rel: 'canonical', href: canonicalUrl.value }]
+    : [],
+  script: card.value
+    ? [
+        {
+          type: 'application/ld+json',
+          innerHTML: () => {
+            if (!card.value) return '';
+            return safeJsonLd({
+              '@context': 'https://schema.org',
+              '@type': 'WebPage',
+              name: card.value.name,
+              description:
+                card.value.oracle_text ||
+                card.value.card_faces?.[0]?.oracle_text ||
+                '',
+              image:
+                card.value?.image_uris?.normal ||
+                card.value?.card_faces?.[0]?.image_uris?.normal ||
+                'https://cardmystic.com/cardmystic_cards.png',
+              url: canonicalUrl.value,
+              brand: {
+                '@type': 'Brand',
+                name: 'Magic: The Gathering',
+              },
+              manufacturer: {
+                '@type': 'Organization',
+                name: 'Wizards of the Coast',
+              },
+              category: card.value.type_line || 'Trading Card',
+            });
           },
-          manufacturer: {
-            '@type': 'Organization',
-            name: 'Wizards of the Coast',
-          },
-          category: card.value.type_line || 'Trading Card',
-        });
-      },
-    },
-  ],
-});
+        },
+      ]
+    : [],
+}));
 
 // Save card view to history when card is loaded.
 // Deferred to onMounted so lastCard stays null during hydration (matches SSR).
@@ -1149,13 +1196,6 @@ const cardImageUrl = computed(() => {
   const printingData = currentPrinting.value;
   if (!printingData) return '';
   return getCardImageUrl(printingData as ScryfallCard, isFlipped.value);
-});
-
-// Art URL for background
-const cardArtUrl = computed(() => {
-  const printingData = currentPrinting.value;
-  if (!printingData) return '';
-  return getCardArtUrl(printingData as ScryfallCard, isFlipped.value);
 });
 
 const { setPageInfo } = usePageInfo();
@@ -1290,7 +1330,29 @@ watch(
   { immediate: true },
 );
 
-function findSimilarCards() {
+const similarSearchLink = computed(() =>
+  getSearchLink({
+    platform: 'all',
+    searchType: 'similarity',
+    query: card.value?.name ?? '',
+  }),
+);
+const recommendationsSearchLink = computed(() =>
+  getSearchLink({
+    platform: 'all',
+    searchType: 'recommend',
+    query: card.value?.name ?? '',
+  }),
+);
+const popularSearchLink = computed(() =>
+  getSearchLink({
+    platform: 'all',
+    searchType: 'popular-by-commander',
+    query: card.value?.name ?? '',
+  }),
+);
+
+function saveSimilarSearch() {
   if (!card.value) return;
 
   const queryParams = {
@@ -1298,15 +1360,13 @@ function findSimilarCards() {
   };
 
   saveSearchQuery('similarity', queryParams);
-  router.push({ path: '/search/all/similarity', query: queryParams });
 }
 
-function getRecommendations() {
+function saveRecommendationsSearch() {
   const commanderName = card.value?.name;
   if (!commanderName) return;
   const queryParams = { commander: commanderName };
   saveSearchQuery('recommend', queryParams);
-  router.push({ path: '/search/all/deckbuilder', query: queryParams });
   queueMicrotask(() => {
     saveSearchMutation.mutate({
       query: commanderName,
@@ -1316,11 +1376,10 @@ function getRecommendations() {
   });
 }
 
-function viewPopularCards() {
+function savePopularSearch() {
   if (!card.value?.name) return;
   const queryParams = { commander: card.value.name };
   saveSearchQuery('popular-by-commander', queryParams);
-  router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
 
 // Use the similar cards composable - only fetch when 'similar' tab has been activated
@@ -1330,8 +1389,12 @@ const lazyCardNameForSimilar = computed(() =>
 );
 const {
   similarCards,
+  hiddenResultCount: hiddenSimilarResultCount,
+  loadMoreResults: loadMoreSimilarResults,
   isSimilarCardsLoading,
   error: similarCardsError,
+  isFetching: isSimilarCardsFetching,
+  refetch: refetchSimilarCards,
 } = useSimilarCards(oracleIdParam, lazyCardNameForSimilar);
 
 const isSimilarCardsEffectivelyLoading = computed(() => {
@@ -1455,6 +1518,8 @@ const {
   searchResults: recommendedCards,
   isLoading: isRecommendedLoading,
   error: recommendedError,
+  isFetching: isRecommendedFetching,
+  refetch: refetchRecommendedCards,
 } = useAlsRecommend(alsRecommendRequest);
 
 const isRecommendedCardsEffectivelyLoading = computed(() => {
@@ -1486,6 +1551,8 @@ const {
   searchResults: popularCards,
   isLoading: isPopularCardsLoading,
   error: popularCardsError,
+  isFetching: isPopularCardsFetching,
+  refetch: refetchPopularCards,
 } = usePopularByCommander(popularByCommanderRequest);
 
 const isPopularCardsEffectivelyLoading = computed(() => {
@@ -1538,6 +1605,8 @@ const {
   searchResults: popularCommandersForCard,
   isLoading: isPopularCommandersLoading,
   error: popularCommandersError,
+  isFetching: isPopularCommandersFetching,
+  refetch: refetchPopularCommanders,
 } = usePopularCommandersForCard(popularCommandersForCardRequest);
 
 const isPopularCommandersEffectivelyLoading = computed(() => {
@@ -1619,13 +1688,14 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
 .card-image-container:hover .card-image
   transform: scale(1.03)
 
+// Elevated panel surfaces stay distinct from the plain page background in both themes.
 // Card Details Card Styling (header + description combined)
 .card-details-card
   border-radius: 24px
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
   margin-bottom: 8px
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .card-title
@@ -1701,7 +1771,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
   margin-bottom: 0
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .legalities-header
@@ -1714,14 +1784,23 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   font-weight: 600
   margin: 0
 
+// Column count follows the panel width, including when strategy content
+// shares the row on desktop.
+.legalities-grid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr))
+  gap: 4px 8px
+  padding: 4px
+
 // Legality Items
 .legality-item
   display: flex
-  flex-direction: row
   align-items: center
-  text-align: center
+  gap: 6px
+  min-width: 0
 
 .legality-chip
+  flex-shrink: 0
   font-size: 9px !important
   font-weight: 600
   min-width: 77.5px
@@ -1733,10 +1812,11 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     min-width: 71.2px
 
 .format-name
+  min-width: 0
+  overflow-wrap: anywhere
   font-size: 11px
   font-weight: bold
-  text-align: center
-  margin-left: 4px
+  text-align: left
   @media (max-width: 768px)
     font-size: 10px
 
@@ -1746,7 +1826,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
   margin-bottom: 8px
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
 
 .price-header
@@ -1856,7 +1936,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
     left: 200%
     opacity: 0
 
-// Page wrapper with background
+// Card detail page layout
 .page-wrapper
   position: relative
   min-height: 100vh
@@ -1871,7 +1951,7 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
   border-radius: 24px
   border: 1px solid rgba(147, 114, 255, 0.3)
   position: relative
-  background: var(--ui-bg)
+  background: var(--ui-bg-elevated)
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
   overflow: visible !important
 

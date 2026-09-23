@@ -7,6 +7,18 @@
         fallback-description="Search a card name to find cards with similar effects."
       />
 
+      <p v-if="seoEntry?.oracleId" class="text-center text-sm text-muted">
+        View
+        <NuxtLink
+          :to="`/card/${seoEntry.oracleId}`"
+          no-prefetch
+          class="text-primary underline underline-offset-2"
+        >
+          {{ seoEntry.query }}
+        </NuxtLink>
+        for its rules text, printings, and prices.
+      </p>
+
       <Search
         default-search-type="similarity"
         :platform="searchPlatformProp"
@@ -24,7 +36,12 @@
         <!-- Results -->
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
+          :hidden-result-count="hiddenResultCount"
+          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -54,6 +71,7 @@ import { SimilaritySearchSchema } from '~/models/searchModel';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useSimilaritySearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
+import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import {
   isValidPlatform,
   getPlatformFilters,
@@ -62,6 +80,7 @@ import {
   type Platform,
 } from '~/utils/platformConfig';
 const route = useRoute();
+const pagePath = route.path;
 const platform = String(route.params.platform) as Platform;
 const slug = route.params.slug ? String(route.params.slug) : undefined;
 
@@ -143,6 +162,9 @@ const parsedFilters = computed(() => {
     seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters,
   );
 });
+provideSearchPageDefaults(
+  seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
+);
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 watch(
@@ -174,12 +196,22 @@ const similaritySearch = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = useSimilaritySearch(similaritySearch);
+const {
+  searchResults,
+  hiddenResultCount,
+  loadMoreResults,
+  isLoading,
+  isFetching,
+  error,
+  refetch,
+} = useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(
   () => route.query,
   (query) => {
+    // The outgoing page can remain mounted while the next route loads.
+    if (route.path !== pagePath) return;
     if (query.card_name) saveSearchQuery('similarity', query);
   },
   { immediate: true },

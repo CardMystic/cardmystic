@@ -214,7 +214,7 @@ const {
   historyError,
   deleteSearchHistoryMutation,
   clearAllHistoryMutation,
-} = useSearchHistory();
+} = useSearchHistory({ fetchHistory: true });
 const router = useRouter();
 const toast = useToast();
 

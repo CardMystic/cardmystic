@@ -203,10 +203,13 @@ Example URLs:
 
 ### How to keep it updated
 
-- Regenerate card-oracle-ids.min.json when:
+- Run `pnpm update:card-oracle-ids` when:
   - New sets release
   - Cards are added or removed
-- The sitemap updates automatically as soon as the file changes
+- Commit the refreshed file and rebuild to update the sitemap.
+- Legacy printing URLs redirect permanently to `/card/{oracle_id}`; canonical, Open Graph and JSON-LD URLs use that same oracle URL.
+- Missing or invalid cards return HTTP errors and `noindex`, while preserving the error screen.
+- `e2e/card-seo.spec.ts` checks server-rendered card metadata, redirects, HTTP errors and crawlable card links against a fixture backend.
 
 ## Mental model
 

@@ -680,10 +680,9 @@ test.describe('Card lists CRUD', () => {
       )
       .toBeGreaterThan(0);
 
-    // The ListCard for Lightning Bolt should carry the `.illegal-card-bg` class
-    // because Red is outside Atraxa's WUBG color identity.
+    // Red is outside Atraxa's WUBG color identity, so the card shows a warning.
     const boltCard = page
-      .locator('.illegal-card-bg:has(img[alt*="Lightning Bolt"])')
+      .locator('.card-image-wrapper:has(img[alt*="Lightning Bolt"])')
       .first();
     await expect(boltCard).toBeVisible({ timeout: API_TIMEOUT });
 
@@ -770,7 +769,7 @@ test.describe('Card lists CRUD', () => {
     // ── Step 3: verify the singleton overlay is shown on Counterspell ───
     // Legality is reactive — no reload required.
     const illegalCard = page
-      .locator(`.illegal-card-bg:has(img[alt="${SINGLETON_TEST_CARD}"])`)
+      .locator(`.card-image-wrapper:has(img[alt="${SINGLETON_TEST_CARD}"])`)
       .first();
     await expect(illegalCard).toBeVisible({ timeout: API_TIMEOUT });
 
@@ -845,8 +844,12 @@ test.describe('Card lists CRUD', () => {
       .toBeGreaterThan(0);
 
     // GroupBy + Sort controls visible.
-    await expect(page.getByText(/^group$/i).first()).toBeVisible();
-    await expect(page.getByText(/^sort$/i).first()).toBeVisible();
+    await expect(
+      page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
+    ).toBeVisible();
 
     // Toggle the sort direction button — should not throw, page remains responsive.
     const sortToggle = page

@@ -1,31 +1,29 @@
 <template>
-  <UCard
-    v-if="card"
-    variant="outline"
-    class="preview-root"
-    :ui="{ body: 'p-4' }"
-  >
+  <div v-if="card" class="preview-root p-4">
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu"
+      v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
       :oracle-ids="[card.card_data.oracle_id]"
     />
 
-    <SetCommanderModal
+    <LazySetCommanderModal
+      v-if="showCommanderModal"
       :open="showCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event"
       @confirm="confirmSetCommander"
     />
 
-    <RemoveCommanderModal
+    <LazyRemoveCommanderModal
+      v-if="showClearCommanderModal"
       :open="showClearCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showClearCommanderModal = $event"
       @confirm="confirmClearCommander"
     />
 
-    <SetCopiesModal
+    <LazySetCopiesModal
+      v-if="showSetCopiesInput"
       :open="showSetCopiesInput"
       :card-name="card.card_data.name"
       :initial-copies="numCopies ?? 1"
@@ -34,19 +32,22 @@
     />
 
     <div class="preview-card-stack">
-      <div class="preview-image-wrapper">
+      <NuxtLink
+        class="preview-image-wrapper block"
+        :to="`/card/${card.card_data.oracle_id}`"
+        no-prefetch
+      >
         <img
           :src="getCardImageUrl(card.card_data, isFlipped, 'large')"
           :alt="card.card_data.name"
           class="preview-image cursor-pointer"
           loading="eager"
           decoding="async"
-          @click="navigateToCard(card?.card_data.oracle_id)"
         />
         <span v-if="!isCommanderOfDecklist" class="copy-count-pill"
           >x{{ numCopies ?? 1 }}</span
         >
-      </div>
+      </NuxtLink>
 
       <div class="space-y-2">
         <div>
@@ -107,7 +108,7 @@
         "
       />
     </div>
-  </UCard>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -259,11 +260,6 @@ function confirmSetCommander() {
 function confirmClearCommander() {
   if (!props.card) return;
   emit('clearCommander', props.card.card_data.oracle_id);
-}
-
-function navigateToCard(cardId: string | undefined) {
-  if (!cardId) return;
-  router.push(`/card/${cardId}`);
 }
 
 function findSimilarCards() {

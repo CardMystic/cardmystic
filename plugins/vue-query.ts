@@ -42,7 +42,13 @@ export default defineNuxtPlugin((nuxt) => {
 
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { staleTime: 300000 },
+      queries: {
+        staleTime: 300000,
+        retry: (failureCount, error) =>
+          import.meta.client === true &&
+          failureCount < 3 &&
+          !/\b429\b|too many requests/i.test(error.message),
+      },
     },
   });
   const options: VueQueryPluginOptions = { queryClient };

@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="mb-10 mt-6 w-full">
+  <div class="mb-10 mt-6 w-full">
     <!-- Back button -->
     <div class="mb-4 flex items-center justify-between">
       <UButton
@@ -18,6 +18,7 @@
         label="Delete Article"
         class="cursor-pointer"
         :loading="isDeleting"
+        :disabled="isUpdating || isUploadingImage"
         @click="
           () => {
             showDeleteModal = true;
@@ -33,7 +34,7 @@
     </div>
 
     <!-- Not the owner / not found -->
-    <div v-else-if="!article || !isOwner" class="empty-state">
+    <div v-else-if="!article || !canEdit" class="empty-state">
       <UIcon name="i-lucide-lock" class="text-5xl opacity-30 mb-3" />
       <p class="mb-4">You don't have permission to edit this article.</p>
       <UButton to="/explore/articles" color="primary" variant="soft">
@@ -44,7 +45,7 @@
     <template v-else>
       <!-- Article details -->
       <div
-        class="mb-6 p-4 border border-black-300 dark:border-gray-400 rounded-lg bg-white/60 dark:bg-black/40 space-y-4"
+        class="w-full max-w-4xl mx-auto mb-6 p-4 border border-black-300 dark:border-gray-400 rounded-lg bg-white/60 dark:bg-black/40 space-y-4"
       >
         <UFormField label="Title" required>
           <UInput
@@ -93,6 +94,7 @@
               :label="imageUrl ? 'Replace Image' : 'Upload Image'"
               class="cursor-pointer"
               :loading="isUploadingImage"
+              :disabled="isUpdating || isDeleting"
               @click="fileInputRef?.click()"
             />
             <UButton
@@ -101,6 +103,7 @@
               color="error"
               variant="ghost"
               label="Remove"
+              :disabled="isUpdating || isUploadingImage || isDeleting"
               class="cursor-pointer"
               @click="removeCurrentImage"
             />
@@ -115,27 +118,28 @@
               </span>
             </template>
           </USwitch>
-          <div class="flex items-center gap-2">
-            <span
-              v-if="detailsDirty"
-              class="text-xs text-gray-500 dark:text-gray-400 italic"
-              >Unsaved changes</span
-            >
-            <UButton
-              icon="i-lucide-save"
-              color="success"
-              label="Save Details"
-              class="cursor-pointer"
-              :disabled="!detailsDirty || !title.trim()"
-              :loading="isUpdating"
-              @click="saveDetails"
-            />
-          </div>
         </div>
       </div>
 
+      <UAlert
+        v-if="saveError"
+        role="alert"
+        color="error"
+        variant="outline"
+        title="Article could not be saved"
+        :description="saveError"
+        class="w-full max-w-4xl mx-auto mb-4"
+      />
+
       <!-- Markdown content editor -->
-      <div class="flex flex-col mb-5">
+      <UContainer
+        class="flex flex-col mb-5"
+        :class="
+          editorMode === 'preview'
+            ? undefined
+            : 'max-w-none px-0 sm:px-0 lg:px-0'
+        "
+      >
         <ClientOnly>
           <MarkdownEditor
             v-model="content"
@@ -143,13 +147,18 @@
             :is-saving="isUpdating"
             empty-message="This article has no content yet."
             placeholder="Write your article here. Markdown supported — use ((Card Name)) to embed a card image or [[Card Name]] to link a card."
-            :save-handler="saveContent"
+            :save-handler="saveArticle"
+            :has-unsaved-changes="detailsDirty"
+            :save-disabled="!title.trim() || isUploadingImage || isDeleting"
+            save-label="Save Article"
+            :save-in-preview="true"
+            @mode-change="editorMode = $event"
           />
           <template #fallback>
             <USkeleton class="h-[60vh] w-full rounded-md" />
           </template>
         </ClientOnly>
-      </div>
+      </UContainer>
     </template>
 
     <!-- Delete confirmation -->
@@ -181,12 +190,11 @@
         </div>
       </template>
     </UModal>
-  </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { onBeforeRouteLeave } from 'vue-router';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useArticle, useArticleMutations } from '~/composables/useArticles';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useSupabase } from '~/composables/useSupabase';
@@ -196,6 +204,8 @@ import {
   ARTICLE_DESCRIPTION_MAX_CHARS,
   ARTICLE_TITLE_MAX_CHARS,
 } from '~/models/articleModel';
+
+definePageMeta({ layout: 'editor' });
 
 const route = useRoute();
 const router = useRouter();
@@ -211,13 +221,38 @@ const isOwner = computed(
   () => !!article.value && article.value.user_id === userProfile.value?.id,
 );
 
+// Keep an already-authorized editor mounted if the session expires mid-edit.
+// The endpoint still checks ownership on every save; another signed-in user
+// does not inherit access to this editor.
+const editorArticleId = ref<string | null>(null);
+watch(
+  [articleId, isOwner],
+  ([id, owner]) => {
+    if (owner) editorArticleId.value = id;
+  },
+  { immediate: true },
+);
+const canEdit = computed(
+  () =>
+    isOwner.value ||
+    (!userProfile.value && editorArticleId.value === articleId.value),
+);
+
 // Editable fields, seeded once from the loaded article so refetches don't
 // clobber in-progress edits.
 const title = ref('');
 const description = ref('');
 const imageUrl = ref<string | null>(null);
 const isPublished = ref(false);
+const editorMode = ref<'edit' | 'split' | 'preview'>('edit');
 const content = ref('');
+const saveError = ref<string | null>(null);
+const savedDetails = ref({
+  title: '',
+  description: '',
+  imageUrl: null as string | null,
+  isPublished: false,
+});
 let seededArticleId: string | null = null;
 watch(
   article,
@@ -229,71 +264,71 @@ watch(
     imageUrl.value = value.image_url;
     isPublished.value = value.is_published;
     content.value = value.content;
+    savedDetails.value = {
+      title: value.title,
+      description: value.description,
+      imageUrl: value.image_url,
+      isPublished: value.is_published,
+    };
   },
   { immediate: true },
 );
 
 const detailsDirty = computed(
   () =>
-    !!article.value &&
-    (title.value !== article.value.title ||
-      description.value !== article.value.description ||
-      imageUrl.value !== article.value.image_url ||
-      isPublished.value !== article.value.is_published),
+    title.value !== savedDetails.value.title ||
+    description.value !== savedDetails.value.description ||
+    imageUrl.value !== savedDetails.value.imageUrl ||
+    isPublished.value !== savedDetails.value.isPublished,
 );
 
-async function saveDetails() {
+async function saveArticle(value: string) {
+  const details = {
+    title: title.value.trim(),
+    description: description.value.trim(),
+    imageUrl: imageUrl.value,
+    isPublished: isPublished.value,
+  };
+  const submittedTitle = title.value;
+  const submittedDescription = description.value;
+  saveError.value = null;
   try {
-    await updateArticle(articleId.value, {
-      title: title.value.trim(),
-      description: description.value.trim(),
-      imageUrl: imageUrl.value,
-      isPublished: isPublished.value,
-    });
-    // Once saved, the backend owns cleanup of the previously-persisted image;
-    // any pending upload we uploaded during this session is now the persisted
-    // one, so it's no longer "orphaned" and shouldn't be cleaned up locally.
+    // A lost response does not prove the write failed. Never delete a cover
+    // that may have been persisted, even if the user later leaves or replaces it.
+    if (pendingImagePath.value) submittedImagePaths.add(pendingImagePath.value);
+    await updateArticle(articleId.value, { ...details, content: value });
+    // Only mark the submitted snapshot saved. Typing while saving must stay dirty.
+    savedDetails.value = details;
+    if (title.value === submittedTitle) title.value = details.title;
+    if (description.value === submittedDescription)
+      description.value = details.description;
     pendingImagePath.value = null;
-    toast.add({ title: 'Article details saved', icon: 'i-lucide-check' });
-  } catch (e: any) {
-    toast.add({
-      title: 'Error saving article',
-      description: e?.message,
-      color: 'error',
-    });
-  }
-}
-
-async function saveContent(value: string) {
-  try {
-    await updateArticle(articleId.value, { content: value });
-    toast.add({ title: 'Article content saved', icon: 'i-lucide-check' });
-  } catch (e: any) {
-    toast.add({
-      title: 'Error saving article',
-      description: e?.message,
-      color: 'error',
-    });
-    // Rethrow so MarkdownEditor keeps the draft dirty and re-enables retry.
-    throw e;
+    toast.add({ title: 'Article saved', icon: 'i-lucide-check' });
+  } catch (error) {
+    saveError.value =
+      error instanceof Error ? error.message : 'Please try saving again.';
+    // MarkdownEditor keeps its draft and leave guard active after rejection.
+    throw error;
   }
 }
 
 // --- Cover image upload to the public article-images storage bucket ---
 //
 // Uploads happen immediately (so authors can preview the image before saving)
-// but the reader never sees a picture until Save Details is clicked. To keep
+// but the reader never sees a picture until Save Article is clicked. To keep
 // the bucket at most one image per article, we:
 //   1. Track the storage path of any image we've uploaded during this session
 //      but haven't yet persisted (`pendingImagePath`).
 //   2. Delete the pending image when the author replaces it, removes it,
-//      navigates away, or unmounts before saving.
+//      navigates away, or unmounts before saving. Once submitted, an image
+//      may be persisted even if the response fails, so only the backend cleans it up.
 //   3. Let the backend delete the previously-persisted image on save/delete
 //      of the article.
 const supabase = process.server ? null : useSupabase();
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const isUploadingImage = ref(false);
 const pendingImagePath = ref<string | null>(null);
+const submittedImagePaths = new Set<string>();
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_IMAGE_TYPES = [
@@ -305,7 +340,7 @@ const ALLOWED_IMAGE_TYPES = [
 
 /** Best-effort delete of a storage object; never throws. */
 async function deletePendingUpload(path: string): Promise<void> {
-  if (!supabase) return;
+  if (!supabase || submittedImagePaths.has(path)) return;
   try {
     await supabase.storage.from('article-images').remove([path]);
   } catch {
@@ -381,32 +416,13 @@ async function removeCurrentImage() {
   }
 }
 
-// Clean up any unsaved pending upload when the author leaves the editor.
-// `onBeforeRouteLeave` catches in-app navigation and `onBeforeUnmount` is a
-// safety net; `beforeunload` handles hard tab close (best-effort — modern
-// browsers restrict what fires there).
-function cleanupPendingOnLeave(): void {
-  const pending = pendingImagePath.value;
-  if (!pending) return;
-  pendingImagePath.value = null;
-  // Fire and forget; navigation shouldn't wait on storage cleanup.
-  void deletePendingUpload(pending);
-}
-
-onBeforeRouteLeave(() => {
-  cleanupPendingOnLeave();
-});
+// Clean up only after navigation actually completes. A leave/unload guard
+// can be cancelled; deleting there would break the cover image on "Stay".
+// An in-flight save may already have persisted the image, so leave it intact.
 onBeforeUnmount(() => {
-  cleanupPendingOnLeave();
-  if (beforeUnloadHandler) {
-    window.removeEventListener('beforeunload', beforeUnloadHandler);
-    beforeUnloadHandler = null;
+  if (!isUpdating.value && pendingImagePath.value) {
+    void deletePendingUpload(pendingImagePath.value);
   }
-});
-let beforeUnloadHandler: (() => void) | null = null;
-onMounted(() => {
-  beforeUnloadHandler = () => cleanupPendingOnLeave();
-  window.addEventListener('beforeunload', beforeUnloadHandler);
 });
 
 const showDeleteModal = ref(false);

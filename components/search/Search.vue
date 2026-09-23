@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <SearchTabs @select="setSearchType" />
+    <SearchTabs @select="selectSearchType" />
 
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
@@ -38,14 +38,22 @@ defineOptions({ name: 'SearchForm' });
 import { useRoute } from 'vue-router';
 
 import AISearch from './AISearch.vue';
-import SimilaritySearch from './SimilaritySearch.vue';
-import CommanderSearch from './CommanderSearch.vue';
-import KeywordSearch from './KeywordSearch.vue';
-import ALSSearch from './ALSSearch.vue';
+import type { SearchTabType } from './SearchTabs.vue';
 import {
   detectPlatformFromFilters,
   type Platform,
 } from '~/utils/platformConfig';
+
+// Keep the initial Smart Search ready while loading other modes only when used.
+// Async components still render on the server when their mode is selected.
+const SimilaritySearch = defineAsyncComponent(
+  () => import('./SimilaritySearch.vue'),
+);
+const CommanderSearch = defineAsyncComponent(
+  () => import('./CommanderSearch.vue'),
+);
+const KeywordSearch = defineAsyncComponent(() => import('./KeywordSearch.vue'));
+const ALSSearch = defineAsyncComponent(() => import('./ALSSearch.vue'));
 
 // Define props
 const props = defineProps<{
@@ -96,7 +104,12 @@ if (props.defaultSearchType) {
 // This handles navigating via the Navbar dropdown, where the route changes but searchType may not.
 onMounted(() => {
   // Don't restore searches on the home page or SEO slug pages
-  if (route.path === '/' || !route.path.startsWith('/search')) return;
+  if (
+    route.path === '/' ||
+    !route.path.startsWith('/search') ||
+    route.params.slug
+  )
+    return;
 
   const restored = restoreSearchQuery(searchType.value);
   if (!restored) return;
@@ -122,9 +135,12 @@ onMounted(() => {
   }
 });
 
-// Watch for search type changes
-watch(searchType, (newType) => {
-  if (process.server) return;
+// Only an explicit tab selection should navigate. Page setup also updates the
+// shared search type, including while the previous page is still mounted.
+function selectSearchType(newType: SearchTabType) {
+  if (newType === searchType.value) return;
+  setSearchType(newType);
+  if (route.path === '/') return;
 
   // Navigate to the new search type's path.
   // Only preserve the current platform if the saved filters explicitly contain a platform flag;
@@ -135,10 +151,10 @@ watch(searchType, (newType) => {
     : undefined;
   const targetPlatform = detectPlatformFromFilters(savedFilters);
   const targetPath = getPath(newType, targetPlatform);
-  if (route.path !== targetPath && route.path !== '/') {
+  if (route.path !== targetPath) {
     router.push({ path: targetPath, query: savedQuery });
   }
-});
+}
 </script>
 
 <style scoped>

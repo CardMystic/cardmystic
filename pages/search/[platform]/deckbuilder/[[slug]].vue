@@ -68,6 +68,9 @@
         <SearchResults
           :show-add-to-deckbuilder-button="true"
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="
             decklistParam || commanderParam || partnerCommanderParam
@@ -116,10 +119,12 @@ import {
 import { parseDecklist } from '~/utils/decklist';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import { getSeoEntry } from '~/utils/seoQueries';
+import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 
 const { decklist: deckbuilderDecklist, showSaveAllModal } = useDeckbuilder();
 
 const route = useRoute();
+const pagePath = route.path;
 const platform = String(route.params.platform) as Platform;
 const slug = route.params.slug ? String(route.params.slug) : undefined;
 
@@ -169,6 +174,9 @@ const parsedFilters = computed(() => {
     seoEntry ? { ...seoEntry.filters, ...platformFilters } : platformFilters,
   );
 });
+provideSearchPageDefaults(
+  seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
+);
 
 useSeoMeta({
   robots: () =>
@@ -246,7 +254,8 @@ const decklistCardNames = computed(() => {
   return parseDecklist(deckbuilderDecklist.value);
 });
 
-const { searchResults, isLoading, notFound } = useAlsRecommend(alsRequest);
+const { searchResults, isLoading, isFetching, error, refetch, notFound } =
+  useAlsRecommend(alsRequest);
 
 const { cards: commanderCards, isLoading: commanderCardsLoading } =
   useCardsByName(commanderNames);
@@ -257,6 +266,8 @@ const { saveSearchQuery } = useSearchType();
 watch(
   () => route.query,
   (query) => {
+    // The outgoing page can remain mounted while the next route loads.
+    if (route.path !== pagePath) return;
     if (query.decklist || query.commander) saveSearchQuery('recommend', query);
   },
   { immediate: true },

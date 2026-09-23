@@ -160,6 +160,7 @@ import { useRoute } from 'vue-router';
 import { refDebounced } from '~/utils/refDebounced';
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import {
   detectPlatformFromFilters,
   type Platform,
@@ -170,6 +171,7 @@ import Filters from '~/components/search/Filters.vue';
 
 const router = useRouter();
 const route = useRoute();
+const pageDefaults = useSearchPageDefaults();
 
 const currentPlatform = computed(() => {
   if (route.params.platform) return String(route.params.platform);
@@ -188,11 +190,16 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>;
 
-const commanderParam = computed(() => String(route.query.commander || ''));
+const commanderParam = computed(() =>
+  String(pageDefaults?.query ?? route.query.commander ?? ''),
+);
 const partnerParam = computed(() => String(route.query.partner || ''));
 const queryParam = computed(() => String(route.query.query || ''));
 
 const parsedFilters = computed(() => {
+  if (pageDefaults) {
+    return CardSearchFiltersSchema.parse(pageDefaults.filters.value);
+  }
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(
       JSON.parse(String(route.query.filters)),

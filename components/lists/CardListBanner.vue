@@ -46,6 +46,7 @@
             <USelect
               v-model="editedFormat"
               :items="formatOptions"
+              aria-label="List format"
               size="sm"
               class="w-48 bg-black/50 rounded"
               @blur="updateListFormat"
@@ -56,12 +57,15 @@
             <span class="text-gray-300 text-sm font-medium">{{
               list.format || 'Commander'
             }}</span>
-            <UIcon
+            <button
               v-if="isOwner"
-              name="i-lucide-pencil"
-              class="w-3.5 h-3.5 text-gray-400 hover:text-white cursor-pointer transition-colors"
+              type="button"
+              aria-label="Edit list format"
+              class="inline-flex p-1 text-gray-400 hover:text-white cursor-pointer transition-colors"
               @click="startEditingFormat"
-            />
+            >
+              <UIcon name="i-lucide-pencil" class="w-3.5 h-3.5" />
+            </button>
           </template>
           <!-- Visibility selector (owner only) -->
           <USelect
@@ -139,6 +143,7 @@
 
   <!-- Edit Banner Modal -->
   <UModal
+    v-if="isOwner && isEditBannerModalOpen"
     v-model:open="isEditBannerModalOpen"
     title="Change Banner Image"
     description="Select a card to use as the banner image for this list"
@@ -202,7 +207,7 @@
 import { refDebounced } from '~/utils/refDebounced';
 import { useCardLists } from '~/composables/useCardLists';
 import { useCardNames } from '~/composables/useBulkData';
-import { CardFormat, type CardFormatType } from '~/models/cardModel';
+import { CardListFormatSchema } from '~/models/cardListModel';
 import { useToast } from '#imports';
 
 const props = defineProps<{
@@ -235,8 +240,9 @@ const editedDescription = ref('');
 
 // Format editing state
 const isEditingFormat = ref(false);
-const editedFormat = ref<CardFormatType>('Commander');
-const formatOptions = CardFormat.options;
+const editedFormat =
+  ref<(typeof CardListFormatSchema.options)[number]>('Commander');
+const formatOptions = CardListFormatSchema.options;
 
 // Visibility selector options (owner only)
 const visibilityOptions = [
@@ -244,8 +250,10 @@ const visibilityOptions = [
   { label: 'Public', value: 'public' },
 ];
 
-// Load card names from backend bulk data API
-const { data: rawCards, status: cardsQueryStatus } = useCardNames();
+// Only load editing data when the owner opens the banner picker.
+const { data: rawCards, status: cardsQueryStatus } = useCardNames(
+  () => !!props.isOwner && isEditBannerModalOpen.value,
+);
 const cardsStatus = computed(() =>
   cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
 );

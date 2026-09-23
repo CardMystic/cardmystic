@@ -95,6 +95,7 @@ import { useRoute } from 'vue-router';
 const router = useRouter();
 import type { FormSubmitEvent } from '@nuxt/ui';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
 import Filters from './Filters.vue';
 
@@ -115,16 +116,25 @@ const schema = z.object({
 type Schema = z.output<typeof schema>;
 
 const route = useRoute();
+const pageDefaults = useSearchPageDefaults();
 
 const currentPlatform = computed(() => {
   if (route.params.platform) return String(route.params.platform);
   return getPlatformFromPath(route.path);
 });
 
-const queryParam = computed(() => String(route.query.query || ''));
+const queryParam = computed(() =>
+  String(pageDefaults?.query ?? route.query.query ?? ''),
+);
 import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 const parsedFilters = computed(() => {
+  if (pageDefaults) {
+    return CardSearchFiltersSchema.parse({
+      selectedColorFilterOption: 'Match Exactly',
+      ...pageDefaults.filters.value,
+    });
+  }
   if (route.query.filters) {
     return CardSearchFiltersSchema.parse(
       JSON.parse(String(route.query.filters)),

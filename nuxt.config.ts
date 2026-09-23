@@ -1,5 +1,7 @@
 import { execSync } from 'child_process';
 import devtoolsJson from 'vite-plugin-devtools-json';
+import staticWebAppConfig from './public/staticwebapp.config.json';
+import { DEFAULT_SEARCH_QUALITY_RATIOS } from './utils/searchQuality';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -28,23 +30,13 @@ export default defineNuxtConfig({
         },
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        // Verify AdSense ownership without loading ads while awaiting approval.
+        {
+          name: 'google-adsense-account',
+          content: 'ca-pub-8668014466736799',
+        },
       ],
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2' }],
-      script: [
-        // Google tag (gtag.js)
-        {
-          src: 'https://www.googletagmanager.com/gtag/js?id=AW-17812762149',
-          async: true,
-        },
-        {
-          innerHTML: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','AW-17812762149');`,
-        },
-        {
-          async: true,
-          src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8668014466736799',
-          crossorigin: 'anonymous',
-        },
-      ],
     },
   },
   components: [
@@ -62,6 +54,13 @@ export default defineNuxtConfig({
     port: process.env.NUXT_PORT ? parseInt(process.env.NUXT_PORT) : 5173,
   },
   build: {},
+  nitro: {
+    azure: {
+      // The Azure preset otherwise falls back to Node 18 for engines ranges.
+      // Share the runtime and routing settings with the generated SWA config.
+      config: staticWebAppConfig,
+    },
+  },
   runtimeConfig: {
     // The private keys which are only available server-side
     backendUrl: 'http://localhost:3000',
@@ -74,17 +73,30 @@ export default defineNuxtConfig({
       backendUrl:
         process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
       maintenanceMode: process.env.NUXT_PUBLIC_MAINTENANCE_MODE || '',
+      // Override with matching NUXT_PUBLIC_* environment variables at startup/build.
+      smartSearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.smart,
+      similaritySearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.similarity,
+      // This is a public browser project key, not a PostHog personal API key.
+      posthogKey:
+        process.env.NUXT_PUBLIC_POSTHOG_KEY ??
+        'phc_unytRsmdB7UFsyGafmA5JsnsEU7r9SBH7SM2sWmG3LfQ',
+      posthogHost:
+        process.env.NUXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+      posthogEnabled: process.env.NUXT_PUBLIC_POSTHOG_ENABLED ?? 'true',
     },
   },
   plugins: ['~/plugins/vue-query.ts'],
-  modules: [
-    '@nuxt/ui',
-    '@vee-validate/nuxt',
-    '@nuxtjs/device',
-    'nuxt-vitalizer',
-  ],
-  fonts: {
-    families: [{ name: 'Alfa Slab One', provider: 'google' }],
+  modules: ['@nuxt/ui', 'nuxt-vitalizer'],
+  icon: {
+    // Keep plus icons immediately available. A delayed loading icon can otherwise
+    // race a name change and register its CSS under the plus icon's selector.
+    clientBundle: {
+      icons: ['heroicons:plus', 'lucide:plus'],
+    },
+  },
+  vitalizer: {
+    // Avoid speculative downloads of unused legacy SVG font resources.
+    disablePrefetchLinks: true,
   },
   hooks: {},
   routeRules: {

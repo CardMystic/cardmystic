@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLoading || articles.length > 0">
+  <div v-if="isLoading || error || articles.length > 0">
     <h2 class="section-title mb-0">Recent Articles</h2>
     <p class="text-sm opacity-70 mb-4 text-center">
       Want to become a writer? Contact us on
@@ -21,6 +21,17 @@
       to get started!
     </p>
 
+    <SearchError
+      v-if="error"
+      :error="error"
+      title="Could not load recent articles"
+      description="Please try again."
+      retry-label="Retry"
+      :is-retrying="isFetching"
+      @retry="refetch()"
+      class="mb-4"
+    />
+
     <div
       v-if="isLoading"
       class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
@@ -28,7 +39,10 @@
       <USkeleton v-for="i in 4" :key="i" class="article-skeleton" />
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
+    <div
+      v-else-if="articles.length > 0"
+      class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
+    >
       <ArticleCard
         v-for="article in articles"
         :key="article.id"
@@ -52,7 +66,8 @@
 import { useRecentArticles } from '~/composables/useArticles';
 import ArticleCard from '~/components/articles/ArticleCard.vue';
 
-const { articles, isLoading } = useRecentArticles(3);
+const { articles, isLoading, isFetching, error, refetch } =
+  useRecentArticles(3);
 </script>
 
 <style scoped lang="sass">

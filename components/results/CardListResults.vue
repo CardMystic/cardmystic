@@ -13,7 +13,7 @@
           class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
           @mouseenter="clearPendingPreviewCard()"
         >
-          <div class="preview-sticky">
+          <div v-if="isDesktopPreview" class="preview-sticky">
             <HoveredListCardPreview
               :card="previewCard"
               :is-owner="isOwner"
@@ -155,11 +155,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="
-                  () => {
-                    openAccordionValues = labeledGroups.map((g) => g.label);
-                  }
-                "
+                @click="expandAllGroups"
               />
               <UButton
                 icon="i-lucide-chevrons-up"
@@ -167,7 +163,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="openAccordionValues = []"
+                @click="collapseAllGroups"
               />
             </div>
             <UAccordion
@@ -183,8 +179,8 @@
             >
               <template
                 v-for="group in labeledGroups"
-                :key="group.label"
-                #[group.label]
+                :key="groupKey(group)"
+                #[groupKey(group)]
               >
                 <div
                   :id="groupToId(group.label)"
@@ -348,8 +344,8 @@
               >
                 <template
                   v-for="group in sideboardLabeled"
-                  :key="group.label"
-                  #[group.label]
+                  :key="groupKey(group)"
+                  #[groupKey(group)]
                 >
                   <div :class="[cardGridClasses, 'p-2']">
                     <div
@@ -506,8 +502,8 @@
               >
                 <template
                   v-for="group in consideringLabeled"
-                  :key="group.label"
-                  #[group.label]
+                  :key="groupKey(group)"
+                  #[groupKey(group)]
                 >
                   <div :class="[cardGridClasses, 'p-2']">
                     <div
@@ -588,13 +584,23 @@
 
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
+import type { DeckPreferences } from '~/models/preferencesModel';
 import type { CardGroup } from '~/utils/sort';
+import {
+  cardGroupKey as groupKey,
+  useCardGroupExpansion,
+} from '~/composables/useCardGroupExpansion';
 import type { AccordionItem } from '@nuxt/ui';
-import { useCommandersSet } from '~/composables/useBulkData';
+import { provideCommandersSet } from '~/composables/useBulkData';
+import { provideSearchHistory } from '~/composables/useSearchHistory';
+import { useDesktopPreview } from '~/composables/useIsMobile';
+
+provideSearchHistory();
+const isDesktopPreview = useDesktopPreview();
 import ListCard from '~/components/cards/ListCard.vue';
 import CardText from '~/components/cards/CardText.vue';
 
-type CardView = 'grid' | 'text';
+type CardView = DeckPreferences['deck_view'];
 
 const props = withDefaults(
   defineProps<{
@@ -629,7 +635,7 @@ const cardGridClasses = computed(() =>
     : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2',
 );
 
-const { data: commandersSet } = useCommandersSet();
+const { data: commandersSet } = provideCommandersSet();
 
 function flattenGroups(groups: CardGroup[] | null | undefined): Card[] {
   if (!groups) return [];
@@ -654,20 +660,16 @@ const labeledGroups = computed(() => {
 const accordionItems = computed<AccordionItem[]>(() => {
   return labeledGroups.value.map((g) => ({
     label: g.label,
-    value: g.label,
-    slot: g.label,
+    value: groupKey(g),
+    slot: groupKey(g),
   }));
 });
 
-const openAccordionValues = ref<string[]>([]);
-
-watch(
-  labeledGroups,
-  (groups) => {
-    openAccordionValues.value = groups.map((g) => g.label);
-  },
-  { immediate: true },
-);
+const {
+  openValues: openAccordionValues,
+  expandAll: expandAllGroups,
+  collapseAll: collapseAllGroups,
+} = useCardGroupExpansion(labeledGroups);
 
 // Sideboard accordion
 const sideboardLabeled = computed(() => {
@@ -681,19 +683,13 @@ const sideboardUngrouped = computed(() => {
 const sideboardAccordionItems = computed<AccordionItem[]>(() => {
   return sideboardLabeled.value.map((g) => ({
     label: g.label,
-    value: g.label,
-    slot: g.label,
+    value: groupKey(g),
+    slot: groupKey(g),
   }));
 });
 const sideboardExpanded = ref(false);
-const openSideboardValues = ref<string[]>([]);
-watch(
-  sideboardLabeled,
-  (groups) => {
-    openSideboardValues.value = groups.map((g) => g.label);
-  },
-  { immediate: true },
-);
+const { openValues: openSideboardValues } =
+  useCardGroupExpansion(sideboardLabeled);
 
 // Considering accordion
 const consideringLabeled = computed(() => {
@@ -707,19 +703,13 @@ const consideringUngrouped = computed(() => {
 const consideringAccordionItems = computed<AccordionItem[]>(() => {
   return consideringLabeled.value.map((g) => ({
     label: g.label,
-    value: g.label,
-    slot: g.label,
+    value: groupKey(g),
+    slot: groupKey(g),
   }));
 });
 const consideringExpanded = ref(false);
-const openConsideringValues = ref<string[]>([]);
-watch(
-  consideringLabeled,
-  (groups) => {
-    openConsideringValues.value = groups.map((g) => g.label);
-  },
-  { immediate: true },
-);
+const { openValues: openConsideringValues } =
+  useCardGroupExpansion(consideringLabeled);
 
 const flippedCards = ref<Record<string, boolean>>({});
 
@@ -770,7 +760,7 @@ watch(
   { immediate: true },
 );
 
-const HOVER_PREVIEW_DELAY_MS = 200;
+const HOVER_PREVIEW_DELAY_MS = 75;
 let _hoverRafId: number | null = null;
 let _hoverDelayId: ReturnType<typeof setTimeout> | null = null;
 let _pendingPreviewCardId: string | null = null;
@@ -790,6 +780,8 @@ function clearPendingPreviewCard(cardId?: string) {
 }
 
 function setPreviewCard(card: Card, board: Board = 'Mainboard') {
+  // Touch interactions must not schedule updates for a preview that is hidden.
+  if (!isDesktopPreview.value) return;
   const nextCardId = card.card_data.id;
   // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
   if (nextCardId === hoveredCardId.value && board === hoveredBoard.value)
@@ -813,6 +805,10 @@ function setPreviewCard(card: Card, board: Board = 'Mainboard') {
     _hoverDelayId = null;
   }, HOVER_PREVIEW_DELAY_MS);
 }
+
+watch(isDesktopPreview, (enabled) => {
+  if (!enabled) clearPendingPreviewCard();
+});
 
 onUnmounted(() => {
   clearPendingPreviewCard();

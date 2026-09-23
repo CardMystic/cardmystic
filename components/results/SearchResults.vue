@@ -1,7 +1,13 @@
 <template>
   <!-- Results -->
-  <div class="mt-3 w-full" :class="{ 'pb-24': jumpToGroups.length > 0 }">
-    <template v-if="isLoading || deferringHeavyRender">
+  <div class="mt-3 w-full">
+    <SearchError
+      :error="error"
+      v-if="error"
+      :is-retrying="isFetching"
+      @retry="$emit('retry')"
+    />
+    <template v-else-if="isLoading || deferringHeavyRender">
       <SearchResultsSkeleton
         :skeleton-count="skeletonCount"
         :default-group-by="defaultGroupBy"
@@ -63,7 +69,7 @@
           class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
           @mouseenter="clearPendingPreviewCard()"
         >
-          <div class="preview-sticky">
+          <div v-if="isDesktopPreview" class="preview-sticky">
             <HoveredSearchResultPreview
               :card="previewCard"
               :query-param="queryParam"
@@ -141,13 +147,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="
-                  () => {
-                    openAccordionValues = accordionItems.map(
-                      (i) => i.value as string,
-                    );
-                  }
-                "
+                @click="expandAllGroups"
               />
               <UButton
                 class="cursor-pointer"
@@ -156,7 +156,7 @@
                 size="xs"
                 color="neutral"
                 variant="ghost"
-                @click="openAccordionValues = []"
+                @click="collapseAllGroups"
               />
             </div>
             <UAccordion
@@ -171,8 +171,8 @@
             >
               <template
                 v-for="group in groupedResults"
-                :key="group.label"
-                #[group.label]
+                :key="groupKey(group)"
+                #[groupKey(group)]
               >
                 <div
                   :id="groupToId(group.label)"
@@ -269,6 +269,12 @@
       </div>
     </template>
 
+    <template v-else-if="hiddenResultCount > 0">
+      <p class="py-6 text-center text-muted">
+        Additional matches are available.
+      </p>
+    </template>
+
     <template v-else-if="!queryParam">
       <div>
         <UAlert
@@ -304,9 +310,28 @@
         </div>
       </UContainer>
     </template>
+
+    <div
+      v-if="
+        hiddenResultCount > 0 &&
+        !isLoading &&
+        !isFetching &&
+        !error &&
+        !deferringHeavyRender
+      "
+      class="flex justify-center py-6"
+    >
+      <UButton
+        label="Load more"
+        color="primary"
+        variant="outline"
+        size="lg"
+        @click="$emit('loadMore')"
+      />
+    </div>
   </div>
 
-  <LazyStickyActionFooter :show="jumpToGroups.length > 0">
+  <LazyStickyActionFooter :show="!error && jumpToGroups.length > 0">
     <template #right>
       <LazyJumpTo :groups="jumpToGroups" />
     </template>
@@ -316,6 +341,10 @@
 <script lang="ts" setup>
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
+import {
+  cardGroupKey as groupKey,
+  useCardGroupExpansion,
+} from '~/composables/useCardGroupExpansion';
 import type { AccordionItem } from '@nuxt/ui';
 import SortComponent from '~/components/search/Sort.vue';
 const GroupBy = defineAsyncComponent(
@@ -323,7 +352,12 @@ const GroupBy = defineAsyncComponent(
 );
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
-import { useCommandersSet } from '~/composables/useBulkData';
+import { provideCommandersSet } from '~/composables/useBulkData';
+import { provideSearchHistory } from '~/composables/useSearchHistory';
+import { useDesktopPreview } from '~/composables/useIsMobile';
+
+provideSearchHistory();
+const isDesktopPreview = useDesktopPreview();
 
 const { getPageInfo } = usePageInfo();
 
@@ -342,7 +376,7 @@ onMounted(() => {
 });
 
 // Hoisted commander detection — single subscription shared by all Card children
-const { data: commandersSet } = useCommandersSet();
+const { data: commandersSet } = provideCommandersSet();
 function checkIsCommander(card: Card): boolean {
   if (!card?.card_data?.name || !commandersSet.value) return false;
   return commandersSet.value.has(card.card_data.name);
@@ -351,7 +385,10 @@ function checkIsCommander(card: Card): boolean {
 const props = withDefaults(
   defineProps<{
     isLoading: boolean;
+    isFetching?: boolean;
+    error?: Error | null;
     searchResults: undefined | Card[];
+    hiddenResultCount?: number;
     queryParam: string | null;
     skeletonCount?: number;
     helpText?: string;
@@ -368,8 +405,13 @@ const props = withDefaults(
   }>(),
   {
     skeletonCount: 40,
+    hiddenResultCount: 0,
+    isFetching: false,
+    error: null,
   },
 );
+
+defineEmits<{ retry: []; loadMore: [] }>();
 
 // Flip state — tracks flipped cards by ID so grid card and preview stay in sync
 const flippedCards = ref<Record<string, boolean>>({});
@@ -517,23 +559,26 @@ const groupedResults = computed<CardGroup[] | null>(() => {
 });
 
 const jumpToGroups = computed(() =>
-  (groupedResults.value || [])
+  (groupedResults.value ?? [])
     .filter((group) => group.label)
     .map((group) => group.label),
 );
 
 const accordionItems = computed<AccordionItem[]>(() => {
-  if (!groupedResults.value) return [];
-  return groupedResults.value
+  return (groupedResults.value ?? [])
     .filter((g) => g.label)
     .map((g) => ({
       label: g.label,
-      value: g.label,
-      slot: g.label,
+      value: groupKey(g),
+      slot: groupKey(g),
     }));
 });
 
-const openAccordionValues = ref<string[]>([]);
+const {
+  openValues: openAccordionValues,
+  expandAll: expandAllGroups,
+  collapseAll: collapseAllGroups,
+} = useCardGroupExpansion(groupedResults);
 const hoveredCardId = ref<string | null>(null);
 
 const previewCard = computed(() => {
@@ -569,7 +614,7 @@ watch(
   },
 );
 
-const HOVER_PREVIEW_DELAY_MS = 200;
+const HOVER_PREVIEW_DELAY_MS = 75;
 let _hoverRafId: number | null = null;
 let _hoverDelayId: ReturnType<typeof setTimeout> | null = null;
 let _pendingPreviewCardId: string | null = null;
@@ -589,6 +634,7 @@ function clearPendingPreviewCard(cardId?: string) {
 }
 
 function setPreviewCard(card: Card) {
+  if (!isDesktopPreview.value) return;
   const nextCardId = card.card_data.id;
   // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
   if (nextCardId === hoveredCardId.value) return;
@@ -614,14 +660,6 @@ function setPreviewCard(card: Card) {
 onUnmounted(() => {
   clearPendingPreviewCard();
 });
-
-watch(
-  accordionItems,
-  (items) => {
-    openAccordionValues.value = items.map((i) => i.value as string);
-  },
-  { immediate: true },
-);
 
 function groupToId(label: string): string {
   return (

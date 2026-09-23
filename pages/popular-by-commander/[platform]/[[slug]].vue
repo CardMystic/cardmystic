@@ -48,6 +48,9 @@
       <div class="mb-10 w-full">
         <SearchResults
           :is-loading="isLoading"
+          :is-fetching="isFetching"
+          :error="error"
+          @retry="refetch()"
           :search-results="searchResults"
           :query-param="commanderParam || ''"
           :help-text="helpText"
@@ -76,6 +79,7 @@ import { usePopularByCommander } from '~/composables/useDeckStats';
 import { useCardsByName } from '~/composables/useCards';
 import { isValidPlatform, type Platform } from '~/utils/platformConfig';
 import { getSeoEntry } from '~/utils/seoQueries';
+import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 
 const route = useRoute();
 const platform = String(route.params.platform) as Platform;
@@ -180,6 +184,9 @@ const parsedFilters = computed(() => {
   }
   return CardSearchFiltersSchema.parse(seoEntry?.filters || {});
 });
+provideSearchPageDefaults(
+  seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
+);
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 setPageInfo({
@@ -207,5 +214,6 @@ const searchParams = computed(() => {
   });
 });
 
-const { searchResults, isLoading } = usePopularByCommander(searchParams);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  usePopularByCommander(searchParams);
 </script>

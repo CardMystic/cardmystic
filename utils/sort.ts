@@ -3,6 +3,7 @@ import type { Card } from '~/models/cardModel';
 import { pairings } from '~/utils/colorPairings';
 
 export type CardGroup = {
+  key?: string;
   label: string;
   cards: Card[];
 };
@@ -244,8 +245,18 @@ function getColorGroupKey(colorIdentity: string[]): string {
   return sorted.join('');
 }
 
+// Use the front face so spell/land cards stay with spells, while land/land
+// cards and land creatures get a separate Lands group.
+function isLandForColorGrouping(card: Card): boolean {
+  const frontType =
+    card.card_data.card_faces?.[0]?.type_line ??
+    card.card_data.type_line?.split('//')[0] ??
+    '';
+  return /\bland\b/i.test(frontType.split('—')[0]);
+}
+
 function getColorLabel(key: string): string {
-  if (key === 'Colorless') return 'Colorless';
+  if (key === 'Colorless' || key === 'Lands') return key;
   // Convert letter key to color names and look up pairing
   const colorNames = key
     .split('')
@@ -277,7 +288,16 @@ export function groupCards(
         key = getCardTypePrimary(card.card_data.type_line ?? '');
         break;
       case 'color':
-        key = getColorGroupKey(card.card_data.colors ?? []);
+        // Double-faced cards keep their colors on each face. Group by the
+        // front face when the overall card has no colors field; an explicit
+        // empty array still means colorless (not its commander identity).
+        key = isLandForColorGrouping(card)
+          ? 'Lands'
+          : getColorGroupKey(
+              card.card_data.colors ??
+                card.card_data.card_faces?.[0]?.colors ??
+                [],
+            );
         break;
       case 'colorIdentity': {
         const ci = card.partner_card_data
@@ -288,7 +308,7 @@ export function groupCards(
               ]),
             ]
           : card.card_data.color_identity;
-        key = getColorGroupKey(ci);
+        key = isLandForColorGrouping(card) ? 'Lands' : getColorGroupKey(ci);
         break;
       }
       case 'cmc':
@@ -314,8 +334,10 @@ export function groupCards(
       }
       case 'color':
       case 'colorIdentity': {
-        // Sort: mono colors in WUBRG, then 2-color, 3-color, etc., then Colorless last
-        if (a === 'Colorless' && b === 'Colorless') return 0;
+        // Sort colored groups first, then nonland Colorless cards, then Lands.
+        if (a === b) return 0;
+        if (a === 'Lands') return 1;
+        if (b === 'Lands') return -1;
         if (a === 'Colorless') return 1;
         if (b === 'Colorless') return -1;
         // Sort by number of colors first, then by WUBRG position
@@ -378,6 +400,7 @@ export function groupCards(
     }
 
     return {
+      key: groupBy + ':' + key,
       label,
       cards: groupCards,
     };

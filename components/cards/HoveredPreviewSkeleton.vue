@@ -1,5 +1,5 @@
 <template>
-  <UCard variant="outline" class="preview-root" :ui="{ body: 'p-4' }">
+  <div class="preview-root p-4">
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
         <USkeleton class="preview-image" />
@@ -39,7 +39,7 @@
         <USkeleton class="h-10 w-full rounded-lg" />
       </div>
     </div>
-  </UCard>
+  </div>
 </template>
 
 <style scoped>

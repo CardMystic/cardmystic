@@ -1,6 +1,19 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+@layer base {
+  /* Use a pointer for enabled buttons throughout the app, including Nuxt UI. */
+  :where(
+      button,
+      [role='button'],
+      input[type='button'],
+      input[type='submit'],
+      input[type='reset']
+    ):not(:disabled):not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+}
+
 /* mana-font ships generic `.ms-N` selectors (e.g. `.ms-2::before { content: "\eXXX" }`)
    that collide with Tailwind v4's margin-inline-start utilities (`ms-0`..`ms-20`).
    Without this override, Tailwind elements using `ms-N` margins get an injected

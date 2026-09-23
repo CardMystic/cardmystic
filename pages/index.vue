@@ -1,6 +1,5 @@
 <template>
   <SpaceBackground :full="true">
-    <LazyCometDog />
     <div class="hero px-0 w-full flex flex-col items-center justify-center">
       <UContainer
         class="hero-grid grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-8 items-center w-full max-w-350 relative z-10"
@@ -25,30 +24,30 @@
           <Search :show-suggested-searches="true" />
         </div>
 
-        <!-- Right: fanned hero cards + Ready To Search example.
-             Self-hosted WebPs (~40 kB each) are much smaller than the
-             equivalent Scryfall `normal` JPGs (~100 kB each) and don't
-             add cross-origin DNS/connect time to LCP. Sized at the 2×
-             DPR of their CSS box so they look crisp on retina without
-             wasted bytes. -->
+        <!-- Desktop artwork stays server-rendered. Mobile selects an inline
+             placeholder so hidden images never download before hydration. -->
         <div class="hero-right">
           <NuxtLink
             v-for="card in heroCards"
             :key="card.id"
             :to="`/card/${card.id}`"
+            no-prefetch
             class="hero-card"
             :class="card.position"
           >
-            <img
-              :src="card.image"
-              :alt="card.name"
-              width="360"
-              height="502"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-              class="hero-card-img"
-            />
+            <picture>
+              <source media="(min-width: 1024px)" :srcset="card.image" />
+              <img
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                :alt="card.name"
+                width="360"
+                height="502"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+                class="hero-card-img"
+              />
+            </picture>
           </NuxtLink>
 
           <!-- Example query matching the cards above -->
@@ -57,6 +56,7 @@
               path: '/search/all/smart',
               query: { query: readyToSearch.query },
             }"
+            no-prefetch
             class="ready-card"
           >
             <div class="flex items-start justify-between gap-2">
@@ -72,7 +72,7 @@
 
   <!-- Everything below the fold -->
   <UContainer class="mt-10 mb-10">
-    <ExploreLinks class="mb-14" />
+    <LazyExploreLinks :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
     <!-- User-specific sections when logged in -->
     <ClientOnly>
@@ -83,11 +83,14 @@
       </template>
     </ClientOnly>
 
-    <LazyFeaturedSection class="mb-14" />
+    <LazyFeaturedSection
+      :hydrate-on-visible="sectionVisibility"
+      class="mb-14"
+    />
 
-    <LazyRecentArticles class="mb-14" />
+    <LazyRecentArticles :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
-    <LazyQueryCount class="mb-14"></LazyQueryCount>
+    <LazyQueryCount :hydrate-on-visible="sectionVisibility" class="mb-14" />
 
     <!-- How To Use & How It Works Section -->
     <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,7 +138,7 @@
         </div>
       </div>
     </div>
-    <LazyEfficiency class="mb-20" />
+    <LazyEfficiency :hydrate-on-visible="sectionVisibility" class="mb-20" />
     <ClientOnly>
       <LazyExampleQueries class="mb-10" />
       <template #fallback>
@@ -148,9 +151,9 @@
         <TopQueriesSkeleton class="mb-10" />
       </template>
     </ClientOnly>
-    <LazyMeetTheDevs class="mb-10" />
-    <LazySponsorships class="mb-10" />
-    <LazyJoinUs class="mb-10" />
+    <LazyMeetTheDevs :hydrate-on-visible="sectionVisibility" class="mb-10" />
+    <LazySponsorships :hydrate-on-visible="sectionVisibility" class="mb-10" />
+    <LazyJoinUs :hydrate-on-visible="sectionVisibility" class="mb-10" />
   </UContainer>
 </template>
 
@@ -177,13 +180,12 @@ useSeoMeta({
 
 useHead({
   link: [
-    // Preload the hero card images so the browser can fetch them
-    // in parallel with the HTML document instead of waiting for the
-    // `<img>` tags to be discovered during render.
+    // Match the picture sources and layout breakpoint: preload only on desktop.
     {
       rel: 'preload',
       as: 'image',
       href: '/ugin.webp',
+      media: '(min-width: 1024px)',
       type: 'image/webp',
       fetchpriority: 'high',
     },
@@ -191,6 +193,7 @@ useHead({
       rel: 'preload',
       as: 'image',
       href: '/kaalia.webp',
+      media: '(min-width: 1024px)',
       type: 'image/webp',
       fetchpriority: 'high',
     },
@@ -208,6 +211,8 @@ import { useUserProfile } from '~/composables/useUserProfile';
 // Check if user is logged in
 const { userProfile } = useUserProfile();
 const isLoggedIn = computed(() => !!userProfile.value);
+
+const sectionVisibility = { rootMargin: '200px' };
 
 // Hardcoded hero cards, fanned out on the right side of the hero.
 // Each renders as an image link to its card detail page. The
@@ -297,8 +302,7 @@ setPageInfo({
   height: 560px
   margin: 0 auto
   @media (max-width: 1023px)
-    max-width: 400px
-    height: 470px
+    display: none
 
 .hero-card
   position: absolute

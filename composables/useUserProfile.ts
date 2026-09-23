@@ -1,5 +1,7 @@
+import { COOKIE_CONSENT_KEY } from '~/utils/cookieConsent';
 import { useSupabase } from './useSupabase';
 import { useRecaptcha } from './useRecaptcha';
+import { DECK_PREFERENCES_STORAGE_PREFIX } from './useDeckPreferences';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import {
   LoginResponseSchema,
@@ -57,8 +59,9 @@ export const useUserProfile = () => {
           // This is fine, the user logged out
           return null;
         }
-        console.error('Error fetching user:', error);
-        return null;
+        // Keep the last authenticated user on transient failures. Returning null
+        // unmounts owner-only editors and discards unsaved work during refresh.
+        throw error;
       }
       return user;
     },
@@ -101,9 +104,16 @@ export const useUserProfile = () => {
       // Sign out from Supabase
       await supabase.auth.signOut();
 
-      // Clear local storage to be sure
+      // Keep browser preferences and consent; remove auth, account, and cached data.
       if (typeof window !== 'undefined') {
-        localStorage.clear();
+        for (const key of Object.keys(localStorage)) {
+          if (
+            !key.startsWith(DECK_PREFERENCES_STORAGE_PREFIX) &&
+            key !== COOKIE_CONSENT_KEY
+          ) {
+            localStorage.removeItem(key);
+          }
+        }
         sessionStorage.clear();
       }
 

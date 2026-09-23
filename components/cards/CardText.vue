@@ -12,24 +12,27 @@
     @mouseleave="emit('partner-hover', 0)"
   >
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu"
+      v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
       :oracle-ids="[card.card_data.oracle_id]"
     />
 
-    <SetCommanderModal
+    <LazySetCommanderModal
+      v-if="showCommanderModal"
       :open="showCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showCommanderModal = $event"
       @confirm="confirmSetCommander"
     />
-    <RemoveCommanderModal
+    <LazyRemoveCommanderModal
+      v-if="showClearCommanderModal"
       :open="showClearCommanderModal"
       :card-name="card.card_data.name"
       @update:open="showClearCommanderModal = $event"
       @confirm="confirmClearCommander"
     />
-    <SetCopiesModal
+    <LazySetCopiesModal
+      v-if="showSetCopiesInput"
       :open="showSetCopiesInput"
       :card-name="card.card_data.name"
       :initial-copies="numCopies ?? 1"
@@ -38,6 +41,7 @@
     />
 
     <UModal
+      v-if="showConfirmModal"
       v-model:open="showConfirmModal"
       title="Confirm Poor Result?"
       description="Please confirm if you believe this card does not match your search. We use your feedback to improve our models."
@@ -63,27 +67,29 @@
     </span>
 
     <div class="min-w-0 flex-1 flex items-center gap-1.5">
-      <button
-        type="button"
+      <NuxtLink
+        :to="`/card/${card.card_data.oracle_id}`"
+        no-prefetch
         class="card-name"
-        @click="navigateToCard(card.card_data.oracle_id)"
+        @click="rememberSearch"
         @mouseenter="emit('partner-hover', 0)"
         @focus="emit('partner-hover', 0)"
       >
         {{ displayName }}
-      </button>
+      </NuxtLink>
 
       <template v-if="card.partner_card_data">
         <span class="text-muted text-xs">+</span>
-        <button
-          type="button"
+        <NuxtLink
+          :to="`/card/${card.partner_card_data.oracle_id}`"
+          no-prefetch
           class="card-name partner-name"
-          @click="navigateToCard(card.partner_card_data.oracle_id)"
+          @click="rememberSearch"
           @mouseenter="emit('partner-hover', 1)"
           @focus="emit('partner-hover', 1)"
         >
           {{ card.partner_card_data.name }}
-        </button>
+        </NuxtLink>
       </template>
 
       <UTooltip v-if="isDeckCommander" text="Commander">
@@ -599,8 +605,12 @@ function flipCard() {
     isFlippedInternal.value = !isFlippedInternal.value;
   emit('flip', props.card.card_data.id);
 }
-function navigateToCard(cardId: string | undefined) {
+function rememberSearch() {
   if (route.path.startsWith('/search/')) saveCurrentSearchQuery(route.query);
+}
+
+function navigateToCard(cardId: string | undefined) {
+  rememberSearch();
   if (cardId) router.push(`/card/${cardId}`);
 }
 function findSimilarCards() {
