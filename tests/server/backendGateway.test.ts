@@ -76,6 +76,28 @@ describe('private backend gateway', () => {
     ).toBe(true);
     expect(isSameOriginRequest({}, 'http://localhost')).toBe(true);
   });
+  it('removes inherited navigation metadata only for internal server fetches', () => {
+    const incoming = {
+      origin: 'https://external.example',
+      'sec-fetch-site': 'cross-site',
+      'sec-fetch-mode': 'navigate',
+      'sec-fetch-dest': 'document',
+      authorization: 'Bearer user-session',
+      'content-type': 'application/json',
+      'user-agent': 'browser',
+    };
+    expect(backendHeaders(incoming, 'server-key', '192.0.2.10', true)).toEqual({
+      'x-api-key': 'server-key',
+      'x-cardmystic-client-ip': '192.0.2.10',
+      authorization: 'Bearer user-session',
+      'content-type': 'application/json',
+      'user-agent': 'browser',
+    });
+    expect(backendHeaders(incoming, 'server-key')).toEqual({
+      'x-api-key': 'server-key',
+      ...incoming,
+    });
+  });
   it('overwrites service credentials and forwarding headers while preserving the user JWT', () => {
     expect(
       backendHeaders(

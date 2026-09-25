@@ -135,6 +135,10 @@ const fixtureRequests: {
   path: string;
   authorized: boolean;
   clientIp?: string;
+  origin?: string;
+  fetchSite?: string;
+  fetchMode?: string;
+  fetchDest?: string;
 }[] = [];
 const gatewayRequests: {
   body: string;
@@ -171,6 +175,13 @@ async function handleFixture(
   }
 
   const path = new URL(request.url!, 'http://fixture.test').pathname;
+  if (path === '/external-card-link') {
+    response.writeHead(200, { 'Content-Type': 'text/html' });
+    response.end(
+      `<a href="${previewUrl}/card/${BOLT_ID}">View Lightning Bolt</a>`,
+    );
+    return;
+  }
   if (
     !path.startsWith('/supabase-auth/') &&
     request.headers['x-api-key'] !==
@@ -182,7 +193,22 @@ async function handleFixture(
   const authorized = request.headers.authorization === 'Bearer ' + OWNER_TOKEN;
   const clientIp = request.headers['x-cardmystic-client-ip'] as
     string | undefined;
-  fixtureRequests.push({ path, authorized, clientIp });
+  fixtureRequests.push({
+    path,
+    authorized,
+    clientIp,
+    origin: request.headers.origin,
+    fetchSite: request.headers['sec-fetch-site'] as string | undefined,
+    fetchMode: request.headers['sec-fetch-mode'] as string | undefined,
+    fetchDest: request.headers['sec-fetch-dest'] as string | undefined,
+  });
+  if (path === '/cards/with-llm/' + BOLT_ID) {
+    json(response, {
+      card: { ...cards[0], cmc: 1, layout: 'normal' },
+      llm: null,
+    });
+    return;
+  }
   if (path === '/search/keyword') {
     let body = '';
     for await (const chunk of request) body += chunk.toString();
@@ -519,6 +545,77 @@ for (const [kind, path] of [
     },
   );
 }
+
+for (const site of ['cross-site', 'same-site']) {
+  test(`${site} navigation keeps card, article, and primer SSR data`, async ({
+    request,
+  }) => {
+    const headers = {
+      'sec-fetch-site': site,
+      'sec-fetch-mode': 'navigate',
+      'sec-fetch-dest': 'document',
+      origin: 'https://external.example',
+    };
+    for (const [path, expectedText] of [
+      ['/card/' + BOLT_ID, 'Lightning Bolt (MTG) - CardMystic'],
+      ['/articles/' + ARTICLE_ID, 'SSR body visible before JavaScript'],
+      ['/lists/' + LIST_ID + '/primer', 'SSR body visible before JavaScript'],
+    ]) {
+      const response = await request.get(previewUrl + path, { headers });
+      expect(response.status(), path).toBe(200);
+      expect(await response.text(), path).toContain(expectedText);
+    }
+    expect(fixtureRequests.length).toBeGreaterThan(0);
+    for (const upstream of fixtureRequests) {
+      expect(['127.0.0.1', '::ffff:127.0.0.1']).toContain(upstream.clientIp);
+      expect(upstream.origin).toBeUndefined();
+      expect(upstream.fetchSite).toBeUndefined();
+      // Node fetch may add its own cors mode after navigation headers are removed.
+      expect(upstream.fetchMode).not.toBe('navigate');
+      expect(upstream.fetchDest).toBeUndefined();
+    }
+
+    // Browser-supplied headers must never impersonate inherited Nitro context.
+    fixtureRequests.length = 0;
+    const direct = await request.get(
+      previewUrl + '/api/backend/cards/with-llm/' + BOLT_ID,
+      {
+        headers: {
+          ...headers,
+          origin: previewUrl,
+          backendInternalRequest: 'true',
+          'x-backend-internal-request': 'true',
+        },
+      },
+    );
+    expect(direct.status()).toBe(403);
+    expect(fixtureRequests).toHaveLength(0);
+  });
+}
+
+test('an external card link renders successfully before and after hydration', async ({
+  page,
+}) => {
+  await page.route('https://**', (route) => route.abort());
+  // localhost -> 127.0.0.1 produces a real cross-site browser navigation.
+  await page.goto(
+    backendUrl.replace('127.0.0.1', 'localhost') + '/external-card-link',
+  );
+  const navigation = page.waitForResponse(
+    (response) => response.url() === previewUrl + '/card/' + BOLT_ID,
+  );
+  await page.getByRole('link', { name: 'View Lightning Bolt' }).click();
+  const response = await navigation;
+  expect(response.status()).toBe(200);
+  expect(await response.text()).toContain('Lightning Bolt (MTG) - CardMystic');
+  await waitForHydration(page);
+  await expect(page.locator('.card-title-text')).toHaveText('Lightning Bolt');
+  expect(
+    fixtureRequests.filter(
+      (entry) => entry.path === '/cards/with-llm/' + BOLT_ID,
+    ),
+  ).toHaveLength(1);
+});
 
 test('a failed card lookup leaves the server-rendered article readable', async ({
   browser,

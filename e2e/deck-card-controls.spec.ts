@@ -77,6 +77,44 @@ for (const owner of [true, false]) {
   });
 }
 
+test('list-card clipboard controls preserve metadata after flipping and remove the card again', async ({
+  page,
+}) => {
+  const state = await setupDeckDisplay(page, { owner: false });
+  const card = cardByName(page, state.cards[0].name);
+  await card.getByRole('button', { name: 'Flip Card', exact: true }).click();
+  await expect(card.getByRole('img')).toHaveAttribute('src', /back/);
+
+  await card.getByRole('button', { name: 'Add Card', exact: true }).click();
+  const added = card.getByRole('button', { name: 'Card Added', exact: true });
+  await expect(added).toHaveAttribute('title', 'Added to clipboard');
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('cm.clipboard.v1')!),
+  );
+  expect(saved.order).toEqual([state.cards[0].id]);
+  expect(saved.items[state.cards[0].id]).toMatchObject({
+    id: state.cards[0].id,
+    oracleId: state.cards[0].oracle_id,
+    name: state.cards[0].name,
+    set: state.cards[0].set,
+    price: state.cards[0].prices.usd,
+    imageUrl: expect.stringContaining('/front/'),
+  });
+
+  await added.click();
+  await expect(
+    card.getByRole('button', { name: 'Add Card', exact: true }),
+  ).toHaveAttribute('title', 'Add to clipboard');
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('cm.clipboard.v1')!),
+    ),
+  ).toMatchObject({
+    items: {},
+    order: [],
+  });
+});
+
 test('slow card images keep the card grid stable while scrolling on mobile', async ({
   page,
 }) => {

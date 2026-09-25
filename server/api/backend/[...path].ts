@@ -9,7 +9,14 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
   const incoming = getRequestHeaders(event);
   const requestUrl = getRequestURL(event, { xForwardedHost: false });
-  if (!isSameOriginRequest(incoming, requestUrl.origin, config.frontendUrl)) {
+  // useRequestFetch inherits the navigation's browser headers, including
+  // cross-site metadata when the visitor followed a link from another site.
+  // Only a child local fetch inherits this server-owned top-level marker.
+  const internalRequest = event.context.backendInternalRequest === true;
+  if (
+    !internalRequest &&
+    !isSameOriginRequest(incoming, requestUrl.origin, config.frontendUrl)
+  ) {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
   }
   if (
@@ -39,6 +46,7 @@ export default defineEventHandler(async (event) => {
     incoming,
     config.backendApiKey,
     event.context.backendClientIp ?? undefined,
+    internalRequest,
   );
   // Explicit headers prevent client-supplied keys, cookies, Host, and forwarding
   // headers from reaching the backend. Bearer JWTs retain per-user authorization.

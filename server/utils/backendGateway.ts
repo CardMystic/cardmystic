@@ -69,6 +69,7 @@ export function backendHeaders(
   incoming: Record<string, string | undefined>,
   key: string,
   clientIp?: string,
+  internalRequest = false,
 ): Record<string, string> {
   const headers: Record<string, string> = { 'x-api-key': key };
   for (const name of [
@@ -82,6 +83,10 @@ export function backendHeaders(
     'sec-fetch-dest',
     'x-cardmystic-test',
   ]) {
+    // Navigation metadata describes the browser's page request, not a child
+    // server-side fetch. Keep user authorization and the verified visitor IP.
+    if (internalRequest && (name === 'origin' || name.startsWith('sec-fetch-')))
+      continue;
     if (incoming[name]) headers[name] = incoming[name]!;
   }
   if (clientIp) headers['x-cardmystic-client-ip'] = clientIp;
