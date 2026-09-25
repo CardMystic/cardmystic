@@ -34,6 +34,21 @@ const requireTestUser = () => {
   );
 };
 
+test.describe('Protected routes', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('logged-out visitors are redirected away from Account', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/user/account');
+
+    await expect(page).toHaveURL(new URL('/', page.url()).href);
+    await expect(
+      page.getByRole('button', { name: 'Connect to Patreon' }),
+    ).toHaveCount(0);
+  });
+});
+
 test.describe('Login page', () => {
   test.beforeEach(async ({ page }) => {
     await setupRecaptchaStubs(page);

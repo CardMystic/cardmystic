@@ -1,29 +1,13 @@
-export default defineNuxtRouteMiddleware(async (to, from) => {
+export default defineNuxtRouteMiddleware(async () => {
   if (import.meta.server) return; // don't redirect during SSR
-  const { userProfile, loading } = useUserProfile();
+  const { userProfile, loading, fetchUser } = useUserProfile();
 
-  // If auth state is known immediately, act on it
-  if (!loading.value) {
-    if (!userProfile.value) {
-      return navigateTo('/');
-    }
-    return;
+  // A slow session lookup is still pending authentication, not a logout.
+  // Join the existing query (including retries) before deciding to redirect.
+  if (loading.value) {
+    await fetchUser({ cancelRefetch: false });
   }
 
-  // Auth state still loading — wait up to 3 seconds, then redirect if unresolved
-  await Promise.race([
-    new Promise<void>((resolve) => {
-      const unwatch = watch(loading, (isLoading) => {
-        if (!isLoading) {
-          unwatch();
-          resolve();
-        }
-      });
-    }),
-    new Promise<void>((resolve) => setTimeout(resolve, 3000)),
-  ]);
-
-  // Redirect to home if not authenticated
   if (!userProfile.value) {
     return navigateTo('/');
   }
