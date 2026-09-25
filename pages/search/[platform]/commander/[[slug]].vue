@@ -114,7 +114,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Semantic ${platformName} commander search on CardMystic.`,
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Commander Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -125,7 +125,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Semantic ${platformName} commander search on CardMystic.`,
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Commander Search' });

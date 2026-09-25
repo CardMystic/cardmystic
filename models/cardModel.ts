@@ -228,5 +228,9 @@ export const CardSchema = z.object({
   als_score: z.number().optional(),
   ai_raw_score: z.number().optional(),
   ai_normalized_score: z.number().optional(),
+  ai_rerank_score: z.preprocess(
+    (score) => (score === null ? undefined : score),
+    z.number().optional(),
+  ),
   popularity: z.number().optional(),
 });

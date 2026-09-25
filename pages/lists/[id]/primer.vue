@@ -159,7 +159,7 @@ async function handleSave(value: string) {
 }
 
 // ---- SEO ----
-const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
+const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_preview.png';
 
 const canonicalUrl = computed(
   () => `https://cardmystic.com/lists/${listId}/primer`,

@@ -28,6 +28,7 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
+          preserve-result-order
           :reranking-enabled="route.query.useRerank !== 'false'"
           :hidden-result-count="hiddenResultCount"
           @load-more="loadMoreResults"
@@ -114,7 +115,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Semantic ${platformName} card search on CardMystic.`,
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Smart Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -125,7 +126,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Semantic ${platformName} card search on CardMystic.`,
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Smart Search' });

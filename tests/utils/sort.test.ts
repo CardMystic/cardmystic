@@ -553,3 +553,26 @@ describe('groupAndSortCards relevance order', () => {
     ).toEqual(['Second instant', 'First instant']);
   });
 });
+
+it('Smart Score uses Jev scores when present and ColBERT otherwise', () => {
+  const cards = [
+    {
+      ...makeCard({ name: 'ColBERT best', ai_normalized_score: 0.9 }),
+      ai_rerank_score: 0.2,
+    },
+    {
+      ...makeCard({ name: 'Jev best', ai_normalized_score: 0.4 }),
+      ai_rerank_score: 0.95,
+    },
+  ];
+  expect(
+    sortSearchResults(cards, 'ai_score', 'desc')?.map((card) => card.card_name),
+  ).toEqual(['Jev best', 'ColBERT best']);
+  expect(
+    sortSearchResults(
+      cards.map((card) => ({ ...card, ai_rerank_score: undefined })),
+      'ai_score',
+      'desc',
+    )?.map((card) => card.card_name),
+  ).toEqual(['ColBERT best', 'Jev best']);
+});

@@ -112,7 +112,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Keyword search for ${platformName} cards on CardMystic.`,
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Keyword Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -123,7 +123,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Keyword search for ${platformName} cards on CardMystic.`,
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Keyword Search' });

@@ -127,7 +127,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `${platformName} similarity search on CardMystic.`,
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Similarity Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -138,7 +138,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `${platformName} similarity search on CardMystic.`,
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Similarity Search' });

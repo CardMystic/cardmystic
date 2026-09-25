@@ -25,10 +25,19 @@ export function resolveSearchQualityRatio(
   return Number.isFinite(ratio) && ratio >= 0 && ratio <= 1 ? ratio : fallback;
 }
 
-type ScoredResult = { ai_normalized_score?: number };
+type ScoredResult = {
+  ai_normalized_score?: number;
+  ai_rerank_score?: number | null;
+};
 
-function normalizedScore(result: ScoredResult): number | undefined {
-  const score = result.ai_normalized_score;
+function normalizedScore(
+  result: ScoredResult,
+  mode: SearchQualityMode,
+): number | undefined {
+  const score =
+    mode === 'smart'
+      ? (result.ai_rerank_score ?? result.ai_normalized_score)
+      : result.ai_normalized_score;
   // Unscored or malformed nonfinite results have no usable quality evidence.
   if (typeof score !== 'number' || !Number.isFinite(score)) return undefined;
   return Math.min(Math.max(score, 0), 1);
@@ -41,14 +50,14 @@ export function filterSearchResultsByQuality<T extends ScoredResult>(
 ): T[] {
   let bestScore = 0;
   for (let index = preserveFirst ? 1 : 0; index < results.length; index++) {
-    const score = normalizedScore(results[index]);
+    const score = normalizedScore(results[index], mode);
     if (score !== undefined && score > bestScore) bestScore = score;
   }
 
   const minimumScore = bestScore * resolveSearchQualityRatio(ratio, mode);
   return results.filter((result, index) => {
     if (preserveFirst && index === 0) return true;
-    const score = normalizedScore(result);
+    const score = normalizedScore(result, mode);
     // Decimal API scores can differ from the multiplied cutoff by one rounding step.
     return (
       score === undefined ||

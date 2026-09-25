@@ -1057,7 +1057,7 @@ useSeoMeta({
   ogImage: () =>
     card.value?.image_uris?.normal ||
     card.value?.card_faces?.[0]?.image_uris?.normal ||
-    'https://cardmystic.com/cardmystic_cards.png',
+    'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () =>
     card.value
       ? `${card.value.name} MTG card artwork`
@@ -1076,7 +1076,7 @@ useSeoMeta({
   twitterImage: () =>
     card.value?.image_uris?.normal ||
     card.value?.card_faces?.[0]?.image_uris?.normal ||
-    'https://cardmystic.com/cardmystic_cards.png',
+    'https://cardmystic.com/cardmystic_preview.png',
 });
 
 // Add JSON-LD structured data for better SEO and rich snippets
@@ -1101,7 +1101,7 @@ useHead(() => ({
               image:
                 card.value?.image_uris?.normal ||
                 card.value?.card_faces?.[0]?.image_uris?.normal ||
-                'https://cardmystic.com/cardmystic_cards.png',
+                'https://cardmystic.com/cardmystic_preview.png',
               url: canonicalUrl.value,
               brand: {
                 '@type': 'Brand',

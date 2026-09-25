@@ -175,3 +175,24 @@ describe('runtime search quality ratios', () => {
     ).toEqual(['best', 'tied']);
   });
 });
+
+it('uses Jev for Smart quality cutoff and ColBERT when reranking is absent', () => {
+  const cards = [
+    { name: 'Jev best', ai_rerank_score: 0.95, ai_normalized_score: 0.4 },
+    { name: 'ColBERT best', ai_rerank_score: 0.2, ai_normalized_score: 0.9 },
+  ];
+  expect(names(filterSearchResultsByQuality(cards, { mode: 'smart' }))).toEqual(
+    ['Jev best'],
+  );
+  expect(
+    names(
+      filterSearchResultsByQuality(
+        cards.map((card) => ({ ...card, ai_rerank_score: null })),
+        { mode: 'smart' },
+      ),
+    ),
+  ).toEqual(['ColBERT best']);
+  expect(
+    names(filterSearchResultsByQuality(cards, { mode: 'similarity' })),
+  ).toEqual(['ColBERT best']);
+});

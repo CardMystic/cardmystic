@@ -134,14 +134,13 @@
       >
         <!-- Smart score bar (when search scores present) -->
         <template v-if="hasDualScores">
-          <UTooltip
-            text="Vector Score: how relevant this card is to your query"
-          >
+          <UTooltip :text="semanticScoreTooltip">
             <div
               class="flex flex-row items-center justify-center text-center w-full mt-0.5"
             >
               <UProgress
                 v-model="normalizedScore"
+                :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
                 class="my-0 mr-2"
                 size="md"
                 :color="scoreColor"
@@ -177,7 +176,7 @@
             :text="
               isAlsOnly
                 ? 'Synergy score: how relevant this card is to your decklist'
-                : 'Vector Score: how relevant this card is to your query'
+                : semanticScoreTooltip
             "
           >
             <div
@@ -185,6 +184,7 @@
             >
               <UProgress
                 v-model="normalizedScore"
+                :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
                 class="my-0 mr-2"
                 size="md"
                 :color="scoreColor"
@@ -614,30 +614,33 @@ function confirmDislike() {
   });
 }
 // Whether this card has both ALS and Smart scores (dual bar mode)
+const semanticScore = computed(
+  () => props.card.ai_rerank_score ?? props.card.ai_normalized_score,
+);
+const semanticScoreLabel = computed(() =>
+  props.card.ai_rerank_score != null ? 'Rerank score' : 'Vector score',
+);
+const semanticScoreTooltip = computed(
+  () => `${semanticScoreLabel.value}: how relevant this card is to your query`,
+);
+
 const hasDualScores = computed(
-  () =>
-    props.card.als_score !== undefined &&
-    props.card.ai_normalized_score !== undefined,
+  () => props.card.als_score !== undefined && semanticScore.value !== undefined,
 );
 
 // Whether this card has only an ALS score (no AI)
 const isAlsOnly = computed(
-  () =>
-    props.card.als_score !== undefined &&
-    props.card.ai_normalized_score === undefined,
+  () => props.card.als_score !== undefined && semanticScore.value === undefined,
 );
 
 // Whether any displayable score exists
 const hasAnyScore = computed(
-  () =>
-    props.card.ai_normalized_score !== undefined ||
-    props.card.als_score !== undefined,
+  () => semanticScore.value !== undefined || props.card.als_score !== undefined,
 );
 
-// Primary score: prefer ai_normalized_score, fall back to als_score
+// Primary score: Jev when present, then ColBERT, then ALS
 const primaryScore = computed(() => {
-  if (props.card.ai_normalized_score !== undefined)
-    return props.card.ai_normalized_score;
+  if (semanticScore.value !== undefined) return semanticScore.value;
   if (props.card.als_score !== undefined) return props.card.als_score;
   return undefined;
 });
