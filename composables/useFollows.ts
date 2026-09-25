@@ -49,7 +49,7 @@ export function useFollows() {
     }) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/user/follow/${encodeURIComponent(userId)}`,
+        `${config.public.backendPath}/user/follow/${encodeURIComponent(userId)}`,
         {
           method: follow ? 'POST' : 'DELETE',
           headers: {
@@ -107,7 +107,7 @@ export function useFollowingList(limit = 25) {
       const params = new URLSearchParams({ limit: String(limit) });
       if (pageParam) params.set('cursor', pageParam);
       const response = await fetch(
-        `${config.public.backendUrl}/user/following?${params}`,
+        `${config.public.backendPath}/user/following?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -153,7 +153,7 @@ export function useFollowStatus(userId: Ref<string | null | undefined>) {
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/user/follow-status/${encodeURIComponent(userId.value!)}`,
+        `${config.public.backendPath}/user/follow-status/${encodeURIComponent(userId.value!)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -189,7 +189,7 @@ export function useAccountStats() {
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/user/account-stats`,
+        `${config.public.backendPath}/user/account-stats`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {

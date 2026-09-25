@@ -29,7 +29,7 @@ export function useTopCardsSearch(
     queryKey: computed(() => ['deck-stats', 'top-cards', searchParams.value]),
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/deck-stats/top-cards`,
+        `${config.public.backendPath}/deck-stats/top-cards`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -89,7 +89,7 @@ export function useTopCommandersSearch(
     ]),
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/deck-stats/top-commanders`,
+        `${config.public.backendPath}/deck-stats/top-commanders`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -151,7 +151,7 @@ export function usePopularByCommander(
     ]),
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/deck-stats/popular-by-commander`,
+        `${config.public.backendPath}/deck-stats/popular-by-commander`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -211,7 +211,7 @@ export function usePopularCommandersForCard(
     ]),
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/deck-stats/popular-commanders-for-card`,
+        `${config.public.backendPath}/deck-stats/popular-commanders-for-card`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

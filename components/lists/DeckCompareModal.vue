@@ -503,7 +503,7 @@ const {
   queryKey: computed(() => ['compare-card-images', referenceIds.value]),
   queryFn: () =>
     $fetch<ScryfallCard[]>(
-      config.public.backendUrl + '/cards/cards-by-oracle-ids',
+      config.public.backendPath + '/cards/cards-by-oracle-ids',
       {
         method: 'POST',
         body: { oracleIds: referenceIds.value },
@@ -648,7 +648,7 @@ async function compare() {
         );
       }
       const response = await fetch(
-        config.public.backendUrl + '/supabase/card-lists/view/' + id,
+        config.public.backendPath + '/supabase/card-lists/view/' + id,
       );
       if (!response.ok)
         throw new Error(

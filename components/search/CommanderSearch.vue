@@ -54,7 +54,13 @@
     </UFormField>
     <CommanderFilters v-model="state.filters" />
 
-    <QuickFilters v-model="state.filters" :show="['arena', 'mtgo', 'paper']" />
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <QuickFilters
+        v-model="state.filters"
+        :show="['arena', 'mtgo', 'paper']"
+      />
+      <RerankToggle />
+    </div>
 
     <Filters
       v-if="!showFilters"
@@ -253,6 +259,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           ? JSON.stringify(formData.filters)
           : undefined,
       searchType: 'commander',
+      useRerank: String(route.query.useRerank !== 'false'),
     };
     filtersRef.value?.collapse();
     const targetPlatform = detectPlatformFromFilters(

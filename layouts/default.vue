@@ -3,7 +3,7 @@
     <navbar />
     <main class="main-content">
       <UContainer
-        class="px-1 flex responsive-align max-w-[1800px]"
+        class="px-1 flex responsive-align max-w-[2000px]"
         style="padding-top: 0px"
       >
         <slot />

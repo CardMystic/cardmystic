@@ -8,7 +8,7 @@ export function useQueryMetrics() {
     queryKey: ['totalQueries'],
     queryFn: async () => {
       const response = await $fetch<{ totalQueries: number }>(
-        `${config.public.backendUrl}/metrics/query_count`,
+        `${config.public.backendPath}/metrics/query_count`,
       );
       return response.totalQueries;
     },

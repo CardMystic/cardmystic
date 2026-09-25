@@ -15,7 +15,7 @@ export function useTopQueries() {
   } = useQuery({
     queryKey: ['cache', 'topQueries'],
     queryFn: async () => {
-      const response = await fetch(`${config.public.backendUrl}/cache/top`);
+      const response = await fetch(`${config.public.backendPath}/cache/top`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

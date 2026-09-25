@@ -96,22 +96,6 @@
       </div>
     </UFormField>
 
-    <UFormField name="limit" class="mb-2">
-      <UInput
-        v-model.number="state.limit"
-        type="number"
-        inputmode="numeric"
-        pattern="[0-9]*"
-        :min="1"
-        :max="1000"
-        placeholder="Results limit (default: 99, max: 500)"
-        icon="i-lucide-hash"
-        class="w-full"
-        :ui="{ base: 'text-base h-10' }"
-        @keydown="filterNonNumericKeys"
-      />
-    </UFormField>
-
     <UFormField name="decklist">
       <div class="relative">
         <UTextarea
@@ -223,36 +207,12 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 
 const { getPath, getPlatformFromPath } = useSearchType();
 
-const allowedKeys = new Set([
-  'Backspace',
-  'Delete',
-  'Tab',
-  'ArrowLeft',
-  'ArrowRight',
-  'Home',
-  'End',
-]);
-function filterNonNumericKeys(e: KeyboardEvent) {
-  if (allowedKeys.has(e.key) || e.ctrlKey || e.metaKey) return;
-  if (!/^\d$/.test(e.key)) e.preventDefault();
-}
-
 const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
 
 const schema = z.object({
   description: z.string().optional(),
   commander: z.string().optional(),
   partnerCommander: z.string().optional(),
-  limit: z
-    .union([
-      z
-        .number()
-        .refine((v) => !isNaN(v), { message: 'Must be a valid number' })
-        .pipe(z.number().min(1).max(500)),
-      z.literal(''),
-    ])
-    .optional()
-    .transform((v) => (typeof v === 'number' && !isNaN(v) ? v : undefined)),
   decklist: z
     .string()
     .optional()
@@ -298,10 +258,6 @@ const commanderParam = computed(() =>
 const partnerCommanderParam = computed(() =>
   String(route.query.partnerCommander || ''),
 );
-const limitParam = computed(() => {
-  const raw = Number(route.query.limit);
-  return raw > 0 ? raw : undefined;
-});
 
 import { hasAdvancedFilters } from '~/utils/quickFilters';
 
@@ -335,7 +291,6 @@ const state = reactive<Partial<Schema>>({
   description: descriptionParam.value || '',
   commander: commanderParam.value || '',
   partnerCommander: partnerCommanderParam.value || '',
-  limit: limitParam.value,
   decklist: decklistParam.value || '',
   filters: parsedFilters.value || {
     selectedColorFilterOption: 'Color Identity',
@@ -494,7 +449,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       description: event.data.description || undefined,
       commander: event.data.commander || undefined,
       partnerCommander: event.data.partnerCommander || undefined,
-      limit: event.data.limit || undefined,
+      limit: 100,
       filters:
         requestFilters && Object.keys(requestFilters).length > 0
           ? JSON.stringify(requestFilters)
@@ -510,7 +465,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         commander: event.data.commander || undefined,
         partnerCommander: event.data.partnerCommander || undefined,
         decklist: event.data.decklist || undefined,
-        limit: event.data.limit || undefined,
+        limit: 100,
       },
     });
 
@@ -549,11 +504,6 @@ watch(commanderParam, (newVal) => {
 watch(partnerCommanderParam, (newVal) => {
   if (newVal !== state.partnerCommander) {
     state.partnerCommander = newVal;
-  }
-});
-watch(limitParam, (newVal) => {
-  if (newVal !== state.limit) {
-    state.limit = newVal;
   }
 });
 </script>

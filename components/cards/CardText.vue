@@ -344,11 +344,15 @@ const scoreIndicators = computed(() => {
     tone: 'success' | 'warning' | 'error';
   }> = [];
 
-  if (props.card.ai_normalized_score !== undefined) {
-    const score = toDisplayPercent(props.card.ai_normalized_score);
+  const semanticScore =
+    props.card.ai_rerank_score ?? props.card.ai_normalized_score;
+  if (semanticScore !== undefined) {
+    const score = toDisplayPercent(semanticScore);
+    const label =
+      props.card.ai_rerank_score != null ? 'Rerank score' : 'Vector score';
     indicators.push({
-      label: 'Vector score',
-      tooltip: 'Vector score: how relevant this card is to your query',
+      label,
+      tooltip: `${label}: how relevant this card is to your query`,
       icon: 'i-lucide-brain',
       display: Math.round(score).toString(),
       tone: scoreTone(score),

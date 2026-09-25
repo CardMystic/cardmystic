@@ -40,7 +40,7 @@ export function useAlsRecommend(
     queryKey: computed(() => ['als-recommend', searchParams.value]),
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/als/recommend`,
+        `${config.public.backendPath}/als/recommend`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

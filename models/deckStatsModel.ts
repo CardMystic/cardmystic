@@ -7,7 +7,7 @@ import { ScryfallCardSchema } from './cardModel';
 // -----------------------------------
 
 export const TopCardsRequestSchema = z.object({
-  limit: z.number().int().min(1).max(500).default(50),
+  limit: z.number().int().min(1).max(100).default(100),
   query: z
     .string()
     .min(1)
@@ -26,7 +26,7 @@ export const TopCardsRequestSchema = z.object({
 export type TopCardsRequest = z.infer<typeof TopCardsRequestSchema>;
 
 export const TopCommandersRequestSchema = z.object({
-  limit: z.number().int().min(1).max(500).default(50),
+  limit: z.number().int().min(1).max(100).default(100),
   query: z
     .string()
     .min(1)
@@ -50,7 +50,7 @@ export const PopularByCommanderRequestSchema = z.object({
     .min(1)
     .max(2)
     .describe('1 or 2 commander names (case-insensitive)'),
-  limit: z.number().int().min(1).max(500).default(50),
+  limit: z.number().int().min(1).max(100).default(100),
   query: z
     .string()
     .min(1)
@@ -71,7 +71,7 @@ export const PopularCommandersForCardRequestSchema = z.object({
     .min(1)
     .max(200)
     .describe('The card name to look up (case-insensitive)'),
-  limit: z.number().int().min(1).max(500).default(50),
+  limit: z.number().int().min(1).max(100).default(100),
   query: z
     .string()
     .min(1)

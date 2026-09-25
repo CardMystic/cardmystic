@@ -723,8 +723,6 @@
                   :error="similarCardsError"
                   @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
-                  :hidden-result-count="hiddenSimilarResultCount"
-                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -849,8 +847,6 @@
                   :error="similarCardsError"
                   @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
-                  :hidden-result-count="hiddenSimilarResultCount"
-                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -1057,7 +1053,7 @@ useSeoMeta({
   ogImage: () =>
     card.value?.image_uris?.normal ||
     card.value?.card_faces?.[0]?.image_uris?.normal ||
-    'https://cardmystic.com/cardmystic_cards.png',
+    'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () =>
     card.value
       ? `${card.value.name} MTG card artwork`
@@ -1076,7 +1072,7 @@ useSeoMeta({
   twitterImage: () =>
     card.value?.image_uris?.normal ||
     card.value?.card_faces?.[0]?.image_uris?.normal ||
-    'https://cardmystic.com/cardmystic_cards.png',
+    'https://cardmystic.com/cardmystic_preview.png',
 });
 
 // Add JSON-LD structured data for better SEO and rich snippets
@@ -1101,7 +1097,7 @@ useHead(() => ({
               image:
                 card.value?.image_uris?.normal ||
                 card.value?.card_faces?.[0]?.image_uris?.normal ||
-                'https://cardmystic.com/cardmystic_cards.png',
+                'https://cardmystic.com/cardmystic_preview.png',
               url: canonicalUrl.value,
               brand: {
                 '@type': 'Brand',
@@ -1389,8 +1385,6 @@ const lazyCardNameForSimilar = computed(() =>
 );
 const {
   similarCards,
-  hiddenResultCount: hiddenSimilarResultCount,
-  loadMoreResults: loadMoreSimilarResults,
   isSimilarCardsLoading,
   error: similarCardsError,
   isFetching: isSimilarCardsFetching,
@@ -1509,7 +1503,7 @@ const alsRecommendRequest = computed(() => {
   if (!isCommander.value || !card.value?.name) return undefined;
   return {
     commanders: [card.value.name],
-    limit: 99,
+    limit: 100,
     query: appliedRecommendQuery.value || undefined,
   };
 });

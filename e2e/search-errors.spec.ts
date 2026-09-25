@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { backendPath } from './utils/mocks';
 
 const paginatedEmpty = (key: string) => ({
   [key]: [],
@@ -103,7 +104,7 @@ for (const [index, search] of searches.entries()) {
     const requests: string[] = [];
 
     await page.route(
-      (url) => url.pathname === search.endpoint,
+      (url) => backendPath(url) === search.endpoint,
       async (route) => {
         const request = route.request();
         requests.push(
@@ -162,7 +163,7 @@ for (const search of searches) {
   }) => {
     let requests = 0;
     await page.route(
-      (url) => url.pathname === search.endpoint,
+      (url) => backendPath(url) === search.endpoint,
       (route) => {
         requests++;
         return route.fulfill({

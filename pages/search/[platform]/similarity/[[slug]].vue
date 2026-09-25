@@ -40,8 +40,6 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
-          :hidden-result-count="hiddenResultCount"
-          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -127,7 +125,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `${platformName} similarity search on CardMystic.`,
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Similarity Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -138,15 +136,12 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `${platformName} similarity search on CardMystic.`,
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Similarity Search' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : undefined;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -196,15 +191,8 @@ const similaritySearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  hiddenResultCount,
-  loadMoreResults,
-  isLoading,
-  isFetching,
-  error,
-  refetch,
-} = useSimilaritySearch(similaritySearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

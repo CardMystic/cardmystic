@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
   BACKEND,
+  backendPath,
   SUPABASE,
   FAKE_USER,
   fakeJwt,
@@ -129,7 +130,8 @@ async function revealHomeSections(page: Page) {
 test.beforeEach(async ({ page }, testInfo) => {
   // Keep this fixture-only suite independent of real account data and trackers.
   await page.route(BACKEND + '/**', (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const path = backendPath(route.request().url());
+    if (path === null) return route.fallback();
     return route.fulfill({
       json: path === '/search/example' ? { query: '', cards: [] } : [],
     });
@@ -179,9 +181,7 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
     const recovering = new Set<string>();
     for (const section of sections) {
       await page.route(
-        (url) =>
-          url.origin === new URL(BACKEND).origin &&
-          url.pathname === section.path,
+        (url) => backendPath(url) === section.path,
         (route) => {
           if (recovering.has(section.path))
             return route.fulfill({ json: section.data });
@@ -248,8 +248,7 @@ test('successful empty responses still show the real empty states', async ({
 }) => {
   for (const section of sections) {
     await page.route(
-      (url) =>
-        url.origin === new URL(BACKEND).origin && url.pathname === section.path,
+      (url) => backendPath(url) === section.path,
       (route) => route.fulfill({ json: section.empty }),
     );
   }
@@ -287,8 +286,7 @@ test('initial mobile home loads recent decks and defers featured content until v
   const requested: URL[] = [];
   for (const section of sections) {
     await page.route(
-      (url) =>
-        url.origin === new URL(BACKEND).origin && url.pathname === section.path,
+      (url) => backendPath(url) === section.path,
       (route) => {
         requested.push(new URL(route.request().url()));
         return route.fulfill({ json: section.data });
@@ -304,11 +302,11 @@ test('initial mobile home loads recent decks and defers featured content until v
   ).toBeEnabled();
   // Allow delayed hydration and auth work to settle while staying at the hero.
   await page.waitForTimeout(1000);
-  expect(requested.some((url) => url.pathname === '/supabase/card-lists')).toBe(
-    true,
-  );
   expect(
-    requested.filter((url) => url.pathname !== '/supabase/card-lists'),
+    requested.some((url) => backendPath(url) === '/supabase/card-lists'),
+  ).toBe(true);
+  expect(
+    requested.filter((url) => backendPath(url) !== '/supabase/card-lists'),
   ).toEqual([]);
 
   await revealHomeSections(page);
@@ -320,7 +318,7 @@ test('initial mobile home loads recent decks and defers featured content until v
     ['/user/featured', '3'],
     ['/supabase/card-lists/featured-primers', '2'],
   ]) {
-    const request = requested.find((url) => url.pathname === path);
+    const request = requested.find((url) => backendPath(url) === path);
     expect(request?.searchParams.get('limit')).toBe(limit);
   }
 });
@@ -340,9 +338,7 @@ test(
     );
     for (const section of publicSections) {
       await page.route(
-        (url) =>
-          url.origin === new URL(BACKEND).origin &&
-          url.pathname === section.path,
+        (url) => backendPath(url) === section.path,
         (route) => route.fulfill({ json: section.data }),
       );
     }

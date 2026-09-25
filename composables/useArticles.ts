@@ -35,7 +35,7 @@ export function useRecentArticles(limit = 3) {
     queryKey: ['articles', 'recent', limit],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/articles/recent?limit=${limit}`,
+        `${config.public.backendPath}/articles/recent?limit=${limit}`,
       );
       if (!response.ok) {
         throw new Error(`Failed to load recent articles (${response.status})`);
@@ -77,7 +77,7 @@ export function useArticleSearch(
         pageSize: String(pageSize),
       });
       const response = await fetch(
-        `${config.public.backendUrl}/articles/search?${params}`,
+        `${config.public.backendPath}/articles/search?${params}`,
       );
       if (!response.ok) {
         throw new Error(`Failed to search articles (${response.status})`);
@@ -123,7 +123,7 @@ export function useMyArticles(
         pageSize: String(pageSize),
       });
       const response = await fetch(
-        `${config.public.backendUrl}/articles/mine?${params}`,
+        `${config.public.backendPath}/articles/mine?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -175,7 +175,7 @@ export function useLikedArticles(
         pageSize: String(pageSize),
       });
       const response = await fetch(
-        `${config.public.backendUrl}/articles/liked?${params}`,
+        `${config.public.backendPath}/articles/liked?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -225,7 +225,7 @@ export function useArticle(articleId: Ref<string | null | undefined>) {
         if (token) headers.Authorization = `Bearer ${token}`;
       }
       const response = await fetch(
-        `${config.public.backendUrl}/articles/view/${encodeURIComponent(articleId.value)}`,
+        `${config.public.backendPath}/articles/view/${encodeURIComponent(articleId.value)}`,
         { headers },
       );
       if (response.status === 404) return null;
@@ -268,7 +268,7 @@ export function useArticleViewTracker(
       if (recordedForId.value === articleId.value) return;
       recordedForId.value = articleId.value;
       fetch(
-        `${config.public.backendUrl}/articles/view/${encodeURIComponent(articleId.value)}`,
+        `${config.public.backendPath}/articles/view/${encodeURIComponent(articleId.value)}`,
         { method: 'POST' },
       ).catch(() => {
         // Best-effort — ignore failures
@@ -300,7 +300,7 @@ export function useArticleMutations() {
     mutationFn: async (article: CreateArticleRequest) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/articles/create`,
+        `${config.public.backendPath}/articles/create`,
         {
           method: 'POST',
           headers: {
@@ -325,7 +325,7 @@ export function useArticleMutations() {
     }) => {
       return saveArticle(
         supabase!,
-        `${config.public.backendUrl}/articles/${encodeURIComponent(input.articleId)}`,
+        `${config.public.backendPath}/articles/${encodeURIComponent(input.articleId)}`,
         input.updates,
       );
     },
@@ -342,7 +342,7 @@ export function useArticleMutations() {
     mutationFn: async (articleId: string) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/articles/${encodeURIComponent(articleId)}`,
+        `${config.public.backendPath}/articles/${encodeURIComponent(articleId)}`,
         {
           method: 'DELETE',
           headers: {

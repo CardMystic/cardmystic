@@ -52,7 +52,7 @@ export function useLinkEmbeds(targets: Ref<LinkEmbedTarget[]>) {
         decklistIds.value.map(async (id) => {
           try {
             const res = await fetch(
-              `${config.public.backendUrl}/supabase/card-lists/view/${encodeURIComponent(id)}`,
+              `${config.public.backendPath}/supabase/card-lists/view/${encodeURIComponent(id)}`,
             );
             if (!res.ok) return null;
             return [
@@ -80,7 +80,7 @@ export function useLinkEmbeds(targets: Ref<LinkEmbedTarget[]>) {
         articleIds.value.map(async (id) => {
           try {
             const res = await fetch(
-              `${config.public.backendUrl}/articles/view/${encodeURIComponent(id)}`,
+              `${config.public.backendPath}/articles/view/${encodeURIComponent(id)}`,
             );
             if (!res.ok) return null;
             return [id, ArticleResponseSchema.parse(await res.json())] as const;
@@ -105,7 +105,7 @@ export function useLinkEmbeds(targets: Ref<LinkEmbedTarget[]>) {
         userIds.value.map(async (id) => {
           try {
             const res = await fetch(
-              `${config.public.backendUrl}/user/profile/${encodeURIComponent(id)}`,
+              `${config.public.backendPath}/user/profile/${encodeURIComponent(id)}`,
             );
             if (!res.ok) return null;
             return [

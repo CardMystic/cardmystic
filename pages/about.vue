@@ -90,7 +90,7 @@ useSeoMeta({
   ogDescription:
     'Learn about CardMystic, a smart search engine for Magic: The Gathering cards.',
   ogType: 'website',
-  ogImage: () => 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: () => 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => 'CardMystic - About',
 });
 

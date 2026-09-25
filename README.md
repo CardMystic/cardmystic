@@ -22,6 +22,7 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 - Similarity search: find cards similar to a given card
   - Example Query: [Lightning Bolt](https://cardmystic.com/search/all/similarity?card_name=Lightning+Bolt)
 - Commander search: Smart search specifically for legendary creatures
+- Reranking toggle in Smart and Commander search: on by default, with a second relevance pass that can improve matches but takes longer. Turn it off to compare the original search order. Switching refreshes the current results and preserves the choice in the URL (`useRerank=false` or `true`); each mode is cached separately. With no explicit sort selected, results preserve the server ranking, including within groups. Selecting a sort such as price or Smart Score overrides that order. Turning reranking on clears any selected sort and restores the server ranking. Smart Score and the displayed match percentage remain the original ColBERT score; ordinary searches request up to 100 cards in either mode. Ungrouped results paginate 40 cards at a time; grouped results show complete groups without pagination.
 - Keyword search: traditional text-based card search
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get personalized card recommendations
 - Platform-specific search: search filtered to Arena, MTGO, Modern, or Paper cards
@@ -50,9 +51,9 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 ## 🖥️ Server
 
-The CardMystic server code is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server/api/proxy/[...path].ts`
+The CardMystic server code is not contained in this repository. Browser requests go through the private server gateway in `server/api/backend/[...path].ts`.
 
-[API Documentation](https://api.cardmystic.com/documentation)
+Backend API documentation requires the private service key.
 
 ## 🤖 Models
 
@@ -210,7 +211,8 @@ Copy [`.env.test.example`](.env.test.example) to `.env.test` (gitignored) and fi
 NUXT_PUBLIC_SUPABASE_URL=https://ddbgietanhxrozzmogur.supabase.co
 NUXT_PUBLIC_SUPABASE_KEY=<your-supabase-anon-key>
 NUXT_PUBLIC_RECAPTCHA_SITE_KEY=<your-recaptcha-site-key>
-NUXT_PUBLIC_BACKEND_URL=https://api.next.cardmystic.com
+NUXT_BACKEND_URL=https://api.next.cardmystic.com
+NUXT_BACKEND_API_KEY=<matching-backend-service-key>
 
 # Real Supabase test user used by login + logout tests.
 # Tests skip cleanly if these are unset.
@@ -239,7 +241,9 @@ The Playwright config (`playwright.config.ts`) auto-loads `.env.test` via `doten
 
 **Pointing at a different backend**
 
-Override `NUXT_PUBLIC_BACKEND_URL` in `.env.test` to hit prod (`https://api.cardmystic.com`) or a local backend (`http://localhost:3000`). For local backend runs you'll usually also override `NUXT_PUBLIC_SUPABASE_URL` to a local Supabase instance.
+Playwright loads `.env.test`, not `.env`. After the API gateway migration, rename any old `NUXT_PUBLIC_BACKEND_URL` setting to `NUXT_BACKEND_URL` and add the matching private `NUXT_BACKEND_API_KEY`; the suite fails early when this configuration is missing.
+
+Override `NUXT_BACKEND_URL` in `.env.test` to hit prod (`https://api.cardmystic.com`) or a local backend (`http://localhost:3000`). For local backend runs you'll usually also override `NUXT_PUBLIC_SUPABASE_URL` to a local Supabase instance.
 
 ### ⚠️ Cost: stop the `next` containers when not in use
 
@@ -298,17 +302,4 @@ To generate the Supabase database types (when the schema changes) run:
 
 ```bash
 npm run gen:types
-```
-
-### Deck display preferences
-
-Deck display controls save automatically to `localStorage` under `cm.deck-preferences.v1:<deckId>`.
-
-### Search quality cutoffs
-
-Set these public application settings in `.env` to adjust the initial shown search results (results that don't meet the cutoff will be hidden behind a "Show More" button):
-
-```dotenv
-NUXT_PUBLIC_SMART_SEARCH_QUALITY_RATIO=0.8
-NUXT_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO=0.8
 ```

@@ -80,7 +80,7 @@ export const useRecaptcha = () => {
         success: boolean;
         score?: number;
         message?: string;
-      }>(`${config.public.backendUrl}/recaptcha/verify`, {
+      }>(`${config.public.backendPath}/recaptcha/verify`, {
         method: 'POST',
         body: {
           token,

@@ -4,41 +4,38 @@
     class="card-action-overlay"
     :class="{ 'clipboard-added': isInClipboard }"
   >
-    <UTooltip
+    <UButton
       v-if="showClipboardControl"
-      :text="isInClipboard ? 'Added to clipboard' : 'Add to clipboard'"
+      :title="isInClipboard ? 'Added to clipboard' : 'Add to clipboard'"
+      class="cursor-pointer"
+      tabindex="0"
+      :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
+      :color="isInClipboard ? 'success' : 'neutral'"
+      variant="solid"
+      size="md"
+      square
+      @click.stop="handleClipboardClick"
     >
-      <UButton
-        class="cursor-pointer"
-        tabindex="0"
-        :aria-label="isInClipboard ? 'Card Added' : 'Add Card'"
-        :color="isInClipboard ? 'success' : 'neutral'"
-        variant="solid"
-        size="md"
-        square
-        @click.stop="handleClipboardClick"
-      >
-        <UIcon
-          :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'"
-          class="action-icon"
-        />
-      </UButton>
-    </UTooltip>
+      <UIcon
+        :name="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'"
+        class="action-icon"
+      />
+    </UButton>
 
-    <UTooltip v-if="showFlipControl" text="Flip card">
-      <UButton
-        class="cursor-pointer"
-        tabindex="0"
-        aria-label="Flip Card"
-        color="neutral"
-        variant="solid"
-        size="md"
-        square
-        @click.stop="emit('flip')"
-      >
-        <UIcon name="i-heroicons-arrow-path" class="action-icon" />
-      </UButton>
-    </UTooltip>
+    <UButton
+      v-if="showFlipControl"
+      title="Flip card"
+      class="cursor-pointer"
+      tabindex="0"
+      aria-label="Flip Card"
+      color="neutral"
+      variant="solid"
+      size="md"
+      square
+      @click.stop="emit('flip')"
+    >
+      <UIcon name="i-heroicons-arrow-path" class="action-icon" />
+    </UButton>
   </div>
 
   <div
@@ -152,19 +149,21 @@ const cardClipData = computed(() => {
 });
 
 const isInClipboard = computed(() => {
-  if (!cardClipData.value) return false;
-  return clipboard.has(cardClipData.value.id);
+  const id = resolvedCardData.value?.id;
+  return Boolean(id && clipboard.has(id));
 });
 
 function handleClipboardClick() {
-  if (!cardClipData.value) return;
+  const cardData = resolvedCardData.value;
+  if (!cardData) return;
 
   if (isInClipboard.value) {
-    clipboard.remove(cardClipData.value.id);
+    clipboard.remove(cardData.id);
     return;
   }
 
-  clipboard.add(cardClipData.value);
+  // The payload (including its image URL) is only needed when adding a card.
+  if (cardClipData.value) clipboard.add(cardClipData.value);
 }
 </script>
 

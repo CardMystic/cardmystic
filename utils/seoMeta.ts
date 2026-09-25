@@ -3,7 +3,8 @@ import type { DecklistSummary } from '~/models/cardListModel';
 import type { PublicProfile } from '~/models/userModel';
 import { scryfallArtCropUrl } from '~/utils/scryfall';
 
-export const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
+export const FALLBACK_OG_IMAGE =
+  'https://cardmystic.com/cardmystic_preview.png';
 
 export interface SeoMeta {
   title: string;

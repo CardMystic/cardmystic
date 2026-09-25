@@ -48,7 +48,7 @@ export function useDecklistViewTracker(
       if (recordedForId.value === listId.value) return;
       recordedForId.value = listId.value;
       fetch(
-        `${config.public.backendUrl}/supabase/card-lists/view/${encodeURIComponent(listId.value)}`,
+        `${config.public.backendPath}/supabase/card-lists/view/${encodeURIComponent(listId.value)}`,
         { method: 'POST' },
       ).catch(() => {
         // Best-effort — ignore failures
@@ -80,7 +80,7 @@ export function useDecklistSocial(listId: Ref<string | null | undefined>) {
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/social/${encodeURIComponent(listId.value!)}`,
+        `${config.public.backendPath}/supabase/card-lists/social/${encodeURIComponent(listId.value!)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -109,7 +109,7 @@ export function useDecklistSocial(listId: Ref<string | null | undefined>) {
     mutationFn: async (liked: boolean) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/like/${encodeURIComponent(listId.value!)}`,
+        `${config.public.backendPath}/supabase/card-lists/like/${encodeURIComponent(listId.value!)}`,
         {
           method: liked ? 'POST' : 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
@@ -136,7 +136,7 @@ export function useDecklistSocial(listId: Ref<string | null | undefined>) {
     mutationFn: async (saved: boolean) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/save/${encodeURIComponent(listId.value!)}`,
+        `${config.public.backendPath}/supabase/card-lists/save/${encodeURIComponent(listId.value!)}`,
         {
           method: saved ? 'POST' : 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
@@ -196,7 +196,7 @@ export function useDecklistComments(
       const params = new URLSearchParams({ limit: String(limit) });
       if (pageParam) params.set('cursor', pageParam);
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/comments/${encodeURIComponent(listId.value!)}?${params}`,
+        `${config.public.backendPath}/supabase/card-lists/comments/${encodeURIComponent(listId.value!)}?${params}`,
       );
       if (!response.ok) {
         throw new Error(`Failed to load comments (${response.status})`);
@@ -224,7 +224,7 @@ export function useDecklistComments(
     mutationFn: async (body: string) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/comments/${encodeURIComponent(listId.value!)}`,
+        `${config.public.backendPath}/supabase/card-lists/comments/${encodeURIComponent(listId.value!)}`,
         {
           method: 'POST',
           headers: {
@@ -246,7 +246,7 @@ export function useDecklistComments(
     mutationFn: async (commentId: string) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/comment/${encodeURIComponent(commentId)}`,
+        `${config.public.backendPath}/supabase/card-lists/comment/${encodeURIComponent(commentId)}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
@@ -316,7 +316,7 @@ function useReactedDecklists(
         pageSize: String(pageSize),
       });
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/${endpoint}?${params}`,
+        `${config.public.backendPath}/supabase/card-lists/${endpoint}?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {

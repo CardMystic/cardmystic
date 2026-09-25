@@ -1,7 +1,6 @@
 import { execSync } from 'child_process';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import staticWebAppConfig from './public/staticwebapp.config.json';
-import { DEFAULT_SEARCH_QUALITY_RATIOS } from './utils/searchQuality';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -63,19 +62,17 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     // The private keys which are only available server-side
-    backendUrl: 'http://localhost:3000',
+    backendUrl: process.env.NUXT_BACKEND_URL || 'http://localhost:3000',
+    backendApiKey: '',
+    frontendUrl: process.env.NUXT_FRONTEND_URL || '',
     // Keys within public are also exposed client-side
     public: {
       commitHash: getCommitHash(),
       recaptchaSiteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || '',
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL || '',
       supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY || '',
-      backendUrl:
-        process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
+      backendPath: '/api/backend',
       maintenanceMode: process.env.NUXT_PUBLIC_MAINTENANCE_MODE || '',
-      // Override with matching NUXT_PUBLIC_* environment variables at startup/build.
-      smartSearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.smart,
-      similaritySearchQualityRatio: DEFAULT_SEARCH_QUALITY_RATIOS.similarity,
       // This is a public browser project key, not a PostHog personal API key.
       posthogKey:
         process.env.NUXT_PUBLIC_POSTHOG_KEY ??

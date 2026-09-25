@@ -12,6 +12,7 @@ import type { CardLlmResponse } from '~/models/llmModel';
 export function useCardDetails(oracleId: ComputedRef<string>) {
   const config = useRuntimeConfig();
   const headers = useBackendRequestHeaders();
+  const requestFetch = useRequestFetch();
 
   type CardWithLlmResponse = {
     card: ScryfallCard;
@@ -25,8 +26,8 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
         throw new Error('No oracle ID provided');
       }
 
-      const result = await $fetch<CardWithLlmResponse>(
-        `${config.public.backendUrl}/cards/with-llm/${oracleId.value}`,
+      const result = await requestFetch<CardWithLlmResponse>(
+        `${config.public.backendPath}/cards/with-llm/${oracleId.value}`,
         { headers, signal: AbortSignal.timeout(10000) },
       );
       if (!result?.card?.oracle_id) {
@@ -110,7 +111,7 @@ export function useCardsByOracleIds(
       if (ids.length === 0) return [];
 
       const cardsData = await $fetch(
-        `${config.public.backendUrl}/cards/cards-by-oracle-ids`,
+        `${config.public.backendPath}/cards/cards-by-oracle-ids`,
         {
           method: 'POST',
           body: { oracleIds: ids },
@@ -142,6 +143,7 @@ export function useCardsByOracleIds(
 export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
   const config = useRuntimeConfig();
   const headers = useBackendRequestHeaders();
+  const requestFetch = useRequestFetch();
 
   const queryOptions = {
     queryKey: computed(() => [
@@ -152,8 +154,8 @@ export function useCardsByName(names: ComputedRef<string[]> | Ref<string[]>) {
       const nameList =
         (names as ComputedRef<string[]>).value ??
         (names as Ref<string[]>).value;
-      const scryfallCards = await $fetch<ScryfallCard[]>(
-        `${config.public.backendUrl}/cards/cards-by-names`,
+      const scryfallCards = await requestFetch<ScryfallCard[]>(
+        `${config.public.backendPath}/cards/cards-by-names`,
         {
           method: 'POST',
           body: { cardNames: nameList },

@@ -23,13 +23,13 @@
       <!-- Results -->
       <div v-else class="mb-10 w-full">
         <SearchResults
+          preserve-result-order
+          :reranking-enabled="route.query.useRerank !== 'false'"
           :is-loading="isLoading"
           :is-fetching="isFetching"
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
-          :hidden-result-count="hiddenResultCount"
-          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -112,7 +112,7 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Semantic ${platformName} commander search on CardMystic.`,
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Commander Search`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -123,15 +123,12 @@ useSeoMeta({
     seoEntry
       ? seoEntry.description
       : `Semantic ${platformName} commander search on CardMystic.`,
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Commander Search' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : undefined;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -174,18 +171,12 @@ const wordSearch = computed(() => {
     limit: limitParam.value || undefined,
     filters: parsedFilters.value,
     exclude_card_data: false,
+    useRerank: route.query.useRerank !== 'false',
   });
 });
 
-const {
-  searchResults,
-  hiddenResultCount,
-  loadMoreResults,
-  isLoading,
-  isFetching,
-  error,
-  refetch,
-} = useColbertSearch(wordSearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(
