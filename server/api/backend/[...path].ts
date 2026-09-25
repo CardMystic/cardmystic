@@ -62,15 +62,31 @@ export default defineEventHandler(async (event) => {
       redirect: 'manual',
       signal: AbortSignal.timeout(25_000),
     },
-    onResponse: (responseEvent) => {
-      setResponseHeader(responseEvent, 'cache-control', 'private, no-store');
+    onResponse: (responseEvent, response) => {
+      // These headers describe the upstream connection, not our response.
+      // Azure buffers the decoded body; forwarding "chunked" makes it invalid.
+      const connectionHeaders = (response.headers.get('connection') ?? '')
+        .split(',')
+        .map((name) => name.trim().toLowerCase())
+        .filter(Boolean);
       for (const name of [
+        'connection',
+        'keep-alive',
+        'proxy-authenticate',
+        'proxy-authorization',
+        'proxy-connection',
+        'te',
+        'trailer',
+        'transfer-encoding',
+        'upgrade',
+        ...connectionHeaders,
         'set-cookie',
         'x-api-key',
         'access-control-allow-origin',
         'access-control-allow-credentials',
       ])
         removeResponseHeader(responseEvent, name);
+      setResponseHeader(responseEvent, 'cache-control', 'private, no-store');
     },
   });
 });
