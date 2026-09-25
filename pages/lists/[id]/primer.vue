@@ -2,7 +2,7 @@
   <div
     class="w-full flex flex-col relative z-10 pt-4"
     :class="{
-      'max-w-[1800px] mx-auto': !isCreator || editorMode === 'preview',
+      'max-w-[2000px] mx-auto': !isCreator || editorMode === 'preview',
     }"
   >
     <!-- Back button -->
@@ -46,6 +46,7 @@ import { useToast } from '#imports';
 definePageMeta({ layout: 'editor' });
 
 const route = useRoute();
+const requestFetch = useRequestFetch();
 const listId = route.params.id as string;
 const toast = useToast();
 const config = useRuntimeConfig();
@@ -66,8 +67,8 @@ const { data: ssrPrimerResponse } = await useAsyncData(
   `primer-content-ssr-${listId}`,
   async () => {
     try {
-      const raw = await $fetch(
-        `${config.public.backendUrl}/supabase/card-lists/primer/${encodeURIComponent(listId)}`,
+      const raw = await requestFetch(
+        `${config.public.backendPath}/supabase/card-lists/primer/${encodeURIComponent(listId)}`,
       );
       return GetPrimerResponseSchema.parse(raw);
     } catch {
@@ -94,7 +95,8 @@ const { data: ssrOgImageUrl } = await useAsyncData(
     if (!ssrSocialCardName.value) return null;
     return fetchDirectArtCropUrl(
       ssrSocialCardName.value,
-      config.public.backendUrl,
+      config.public.backendPath,
+      requestFetch,
     );
   },
 );
@@ -138,7 +140,7 @@ async function handleSave(value: string) {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData?.session?.access_token;
     if (!token) throw new Error('Not authenticated');
-    await $fetch(`${config.public.backendUrl}/supabase/card-lists/primer`, {
+    await $fetch(`${config.public.backendPath}/supabase/card-lists/primer`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
       body: { listId, text: value },
@@ -159,7 +161,7 @@ async function handleSave(value: string) {
 }
 
 // ---- SEO ----
-const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_cards.png';
+const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_preview.png';
 
 const canonicalUrl = computed(
   () => `https://cardmystic.com/lists/${listId}/primer`,

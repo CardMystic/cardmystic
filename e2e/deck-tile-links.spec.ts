@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import {
   BACKEND,
+  backendPath,
   SUPABASE,
   FAKE_USER,
   fakeJwt,
@@ -35,7 +36,8 @@ test.beforeEach(async ({ page }) => {
   // Server-rendered discovery data must refresh through these browser fixtures.
   await page.clock.setFixedTime(new Date(Date.now() + 10 * 60 * 1000));
   await page.route(BACKEND + '/**', (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const path = backendPath(route.request().url());
+    if (path === null) return route.fallback();
     const responses: Record<string, unknown> = {
       '/supabase/card-lists/featured': { decklists: [deck] },
       '/supabase/card-lists': {

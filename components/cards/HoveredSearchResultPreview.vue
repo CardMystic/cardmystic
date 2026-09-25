@@ -76,6 +76,8 @@
               />
               <UProgress
                 :model-value="normalizedScore"
+                :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
+                :title="isAlsOnly ? 'Synergy score' : semanticScoreTooltip"
                 class="flex-1"
                 size="lg"
                 :color="scoreColor"
@@ -108,6 +110,8 @@
               />
               <UProgress
                 :model-value="normalizedScore"
+                :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
+                :title="isAlsOnly ? 'Synergy score' : semanticScoreTooltip"
                 class="flex-1"
                 size="lg"
                 :color="scoreColor"
@@ -258,27 +262,33 @@ const isInClipboard = computed(() => {
   return clipboard.has(clipboardCard.value.id);
 });
 
+const semanticScore = computed(
+  () => props.card?.ai_rerank_score ?? props.card?.ai_normalized_score,
+);
+const semanticScoreLabel = computed(() =>
+  props.card?.ai_rerank_score != null ? 'Rerank score' : 'Vector score',
+);
+const semanticScoreTooltip = computed(
+  () => `${semanticScoreLabel.value}: how relevant this card is to your query`,
+);
+
 const hasDualScores = computed(
   () =>
-    props.card?.als_score !== undefined &&
-    props.card?.ai_normalized_score !== undefined,
+    props.card?.als_score !== undefined && semanticScore.value !== undefined,
 );
 
 const isAlsOnly = computed(
   () =>
-    props.card?.als_score !== undefined &&
-    props.card?.ai_normalized_score === undefined,
+    props.card?.als_score !== undefined && semanticScore.value === undefined,
 );
 
 const hasAnyScore = computed(
   () =>
-    props.card?.ai_normalized_score !== undefined ||
-    props.card?.als_score !== undefined,
+    semanticScore.value !== undefined || props.card?.als_score !== undefined,
 );
 
 const primaryScore = computed(() => {
-  if (props.card?.ai_normalized_score !== undefined)
-    return props.card.ai_normalized_score;
+  if (semanticScore.value !== undefined) return semanticScore.value;
   if (props.card?.als_score !== undefined) return props.card.als_score;
   return undefined;
 });

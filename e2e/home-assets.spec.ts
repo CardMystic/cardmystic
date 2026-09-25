@@ -1,12 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
-import { BACKEND, SUPABASE, gotoHydrated } from './utils/mocks';
+import { BACKEND, backendPath, SUPABASE, gotoHydrated } from './utils/mocks';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test.beforeEach(async ({ page }) => {
   // These rendering checks are anonymous and independent of live account data.
   await page.route(BACKEND + '/**', (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const path = backendPath(route.request().url());
+    if (path === null) return route.fallback();
     const responses: Record<string, unknown> = {
       '/search/example': { query: '', cards: [] },
       '/metrics/query_count': { totalQueries: 346242 },

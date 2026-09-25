@@ -33,13 +33,13 @@ useSeoMeta({
   ogDescription: () =>
     'Create a free CardMystic account to save your favorite MTG cards, build custom lists, and get personalized Magic: The Gathering card recommendations.',
   ogType: 'website',
-  ogImage: () => 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: () => 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => 'CardMystic - Magic: The Gathering card search',
   twitterCard: 'summary',
   twitterTitle: () => 'Create Account - CardMystic',
   twitterDescription: () =>
     'Create a free CardMystic account to save MTG cards, build custom lists, and get personalized recommendations.',
-  twitterImage: () => 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: () => 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 const { userProfile } = useUserProfile();

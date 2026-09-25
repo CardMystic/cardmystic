@@ -7,6 +7,17 @@ import dotenv from 'dotenv';
 // override.
 dotenv.config({ path: '.env.test' });
 
+// A legacy public URL otherwise silently selects the remote default backend.
+if (
+  process.env.NUXT_PUBLIC_BACKEND_URL &&
+  !process.env.E2E_BACKEND_URL &&
+  !process.env.NUXT_BACKEND_URL
+) {
+  throw new Error(
+    'E2E configuration: replace NUXT_PUBLIC_BACKEND_URL with NUXT_BACKEND_URL in .env.test.',
+  );
+}
+
 /**
  * Playwright config for CardMystic end-to-end tests.
  *
@@ -23,10 +34,10 @@ dotenv.config({ path: '.env.test' });
  * running, e.g. to point at prod or a local backend.
  */
 
-// Test public config. Defaults match the `dev` branch deploy targets so
+// Test server config (private service credentials stay in the Node test/server processes). Defaults match the `dev` branch deploy targets so
 // CI runs validate the latest of all 3 containers (frontend, backend,
 // research) deployed to *.next.cardmystic.com together.
-const TEST_PUBLIC_ENV: Record<string, string> = {
+const TEST_SERVER_ENV: Record<string, string> = {
   NUXT_PUBLIC_SUPABASE_URL:
     process.env.E2E_PUBLIC_SUPABASE_URL ??
     process.env.NUXT_PUBLIC_SUPABASE_URL ??
@@ -39,20 +50,16 @@ const TEST_PUBLIC_ENV: Record<string, string> = {
     process.env.E2E_PUBLIC_RECAPTCHA_SITE_KEY ??
     process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY ??
     'test-recaptcha-site-key',
-  // Keep standard fixtures deterministic; override explicitly for config regressions.
-  NUXT_PUBLIC_SMART_SEARCH_QUALITY_RATIO:
-    process.env.E2E_PUBLIC_SMART_SEARCH_QUALITY_RATIO ?? '0.8',
-  NUXT_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO:
-    process.env.E2E_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO ?? '0.8',
-  NUXT_PUBLIC_BACKEND_URL:
-    process.env.E2E_PUBLIC_BACKEND_URL ??
-    process.env.NUXT_PUBLIC_BACKEND_URL ??
+  NUXT_BACKEND_API_KEY: process.env.NUXT_BACKEND_API_KEY ?? '',
+  NUXT_BACKEND_URL:
+    process.env.E2E_BACKEND_URL ??
+    process.env.NUXT_BACKEND_URL ??
     'https://api.next.cardmystic.com',
 };
 
 // Mirror these into the test runner's process.env so mocks.ts reads the
 // same values as the dev server.
-for (const [key, value] of Object.entries(TEST_PUBLIC_ENV)) {
+for (const [key, value] of Object.entries(TEST_SERVER_ENV)) {
   process.env[key] = value;
 }
 
@@ -120,6 +127,6 @@ export default defineConfig({
     timeout: 300_000,
     stdout: 'pipe',
     stderr: 'pipe',
-    env: { ...TEST_PUBLIC_ENV, PORT: String(PORT), HOST: '127.0.0.1' },
+    env: { ...TEST_SERVER_ENV, PORT: String(PORT), HOST: '127.0.0.1' },
   },
 });

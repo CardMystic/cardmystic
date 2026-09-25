@@ -24,6 +24,13 @@ dotenv.config({ path: '.env.test' });
  * unauthenticated PRs (forks) still run the public-surface tests.
  */
 export default async function globalSetup(config: FullConfig) {
+  // Fail before browser tests turn one stale setting into dozens of timeouts.
+  // Keep service credentials explicitly scoped to the selected test backend.
+  if (!/^[!-~]{32,}$/.test(process.env.NUXT_BACKEND_API_KEY ?? '')) {
+    throw new Error(
+      'E2E configuration: set NUXT_BACKEND_API_KEY in .env.test (at least 32 printable ASCII characters without whitespace), matching BACKEND_API_KEY on the selected backend. Playwright loads .env.test, not .env.',
+    );
+  }
   const email = process.env.E2E_TEST_EMAIL ?? '';
   const password = process.env.E2E_TEST_PASSWORD ?? '';
   const supabaseUrl =

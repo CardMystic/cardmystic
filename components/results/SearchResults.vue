@@ -1,6 +1,6 @@
 <template>
   <!-- Results -->
-  <div class="mt-3 w-full">
+  <div ref="resultsTop" class="mt-3 w-full scroll-mt-24">
     <SearchError
       :error="error"
       v-if="error"
@@ -34,6 +34,7 @@
                 @update:groupBy="handleGroupBy"
               />
               <SortComponent
+                :key="rerankingEnabled ? 'reranked' : 'original'"
                 :default-sort-by="sortBy"
                 :default-direction="sortDirection"
                 :has-als-score="hasAlsScore"
@@ -52,12 +53,31 @@
         <View :default-value="view" @update:view="handleView" />
         <GroupBy :default-value="groupBy" @update:groupBy="handleGroupBy" />
         <SortComponent
+          :key="rerankingEnabled ? 'reranked' : 'original'"
           :default-sort-by="sortBy"
           :default-direction="sortDirection"
           :has-als-score="hasAlsScore"
           :has-ai-score="hasAiScore"
           :has-popularity="hasPopularity"
           @sort="handleSort"
+        />
+      </div>
+
+      <div
+        v-if="!hasGroups && totalResults > PAGE_SIZE"
+        class="flex flex-col items-center gap-2 py-4"
+      >
+        <p class="text-sm text-muted" role="status">
+          {{ pageStart + 1 }}–{{ pageEnd }} of {{ totalResults }} cards
+        </p>
+        <UPagination
+          :page="currentPage"
+          :total="totalResults"
+          :items-per-page="PAGE_SIZE"
+          :sibling-count="1"
+          :ui="{ first: 'hidden', last: 'hidden' }"
+          aria-label="Search results pagination"
+          @update:page="changePage"
         />
       </div>
 
@@ -84,7 +104,7 @@
         </aside>
 
         <div class="min-w-0 flex-1">
-          <!-- Searched card pinned at top when grouped (similarity search) -->
+          <!-- The similarity reference stays above complete groups. -->
           <div
             v-if="
               searchedCard &&
@@ -226,7 +246,7 @@
           <template v-else>
             <div class="grid" :class="resultsGridClass">
               <div
-                v-for="(result, index) in sortedResults"
+                v-for="result in paginatedResults"
                 :key="result.card_data.id"
                 @mouseenter="setPreviewCard(result)"
                 @focusin="setPreviewCard(result)"
@@ -236,7 +256,9 @@
                   v-if="view === 'grid'"
                   :card="result"
                   :showCardInfo="true"
-                  :is-searched="isSimilaritySearch && index === 0"
+                  :is-searched="
+                    result.card_data.id === searchedCard?.card_data.id
+                  "
                   :hide-progress-bar="hideProgressBar"
                   :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
@@ -249,7 +271,9 @@
                   v-else
                   :card="result"
                   :show-card-info="true"
-                  :is-searched="isSimilaritySearch && index === 0"
+                  :is-searched="
+                    result.card_data.id === searchedCard?.card_data.id
+                  "
                   :hide-progress-bar="hideProgressBar"
                   :hide-thumbs-down-button="hideThumbsDownButton"
                   :show-add-to-deckbuilder-button="showAddToDeckbuilderButton"
@@ -265,12 +289,23 @@
           </template>
         </div>
       </div>
-    </template>
-
-    <template v-else-if="hiddenResultCount > 0">
-      <p class="py-6 text-center text-muted">
-        Additional matches are available.
-      </p>
+      <div
+        v-if="!hasGroups && totalResults > PAGE_SIZE"
+        class="flex flex-col items-center gap-2 py-4"
+      >
+        <p class="text-sm text-muted" role="status">
+          {{ pageStart + 1 }}–{{ pageEnd }} of {{ totalResults }} cards
+        </p>
+        <UPagination
+          :page="currentPage"
+          :total="totalResults"
+          :items-per-page="PAGE_SIZE"
+          :sibling-count="1"
+          :ui="{ first: 'hidden', last: 'hidden' }"
+          aria-label="Search results pagination"
+          @update:page="changePage"
+        />
+      </div>
     </template>
 
     <template v-else-if="!queryParam">
@@ -308,25 +343,6 @@
         </div>
       </UContainer>
     </template>
-
-    <div
-      v-if="
-        hiddenResultCount > 0 &&
-        !isLoading &&
-        !isFetching &&
-        !error &&
-        !deferringHeavyRender
-      "
-      class="flex justify-center py-6"
-    >
-      <UButton
-        label="Load more"
-        color="primary"
-        variant="outline"
-        size="lg"
-        @click="$emit('loadMore')"
-      />
-    </div>
   </div>
 
   <LazyStickyActionFooter :show="!error && jumpToGroups.length > 0">
@@ -355,12 +371,13 @@ import { provideSearchHistory } from '~/composables/useSearchHistory';
 import { useDesktopPreview } from '~/composables/useIsMobile';
 
 provideSearchHistory();
+provideCardFeedback();
 const isDesktopPreview = useDesktopPreview();
 
 const { getPageInfo } = usePageInfo();
 
 // On SPA navigations with cached results, isLoading is false immediately and
-// rendering ~100 Card components synchronously freezes the old view for
+// rendering a page of Card components synchronously can freeze the old view for
 // seconds. Show skeletons for one frame first so the user sees a loading
 // state instead of a frozen page. Inactive during hydration (must match SSR).
 const nuxtApp = useNuxtApp();
@@ -386,7 +403,6 @@ const props = withDefaults(
     isFetching?: boolean;
     error?: Error | null;
     searchResults: undefined | Card[];
-    hiddenResultCount?: number;
     queryParam: string | null;
     skeletonCount?: number;
     helpText?: string;
@@ -398,16 +414,32 @@ const props = withDefaults(
     hideSearchedCard?: boolean;
     hideThumbsDownButton?: boolean;
     defaultGroupBy?: string;
+    preserveResultOrder?: boolean;
+    rerankingEnabled?: boolean;
   }>(),
   {
     skeletonCount: 40,
-    hiddenResultCount: 0,
     isFetching: false,
     error: null,
   },
 );
 
-defineEmits<{ retry: []; loadMore: [] }>();
+defineEmits<{ retry: [] }>();
+
+const PAGE_SIZE = 40;
+const currentPage = ref(1);
+const resultsTop = ref<HTMLElement | null>(null);
+const totalResults = computed(() => props.searchResults?.length ?? 0);
+const pageStart = computed(() => (currentPage.value - 1) * PAGE_SIZE);
+const pageEnd = computed(() =>
+  Math.min(pageStart.value + PAGE_SIZE, totalResults.value),
+);
+
+async function changePage(page: number) {
+  currentPage.value = page;
+  await nextTick();
+  resultsTop.value?.scrollIntoView({ block: 'start' });
+}
 
 // Flip state — tracks flipped cards by ID so grid card and preview stay in sync
 const flippedCards = ref<Record<string, boolean>>({});
@@ -429,6 +461,16 @@ function handlePartnerHover(index: 0 | 1) {
 // Sorting state
 const sortBy = ref<string | undefined>(undefined);
 const sortDirection = ref<'asc' | 'desc'>('asc');
+
+watch(
+  () => props.rerankingEnabled,
+  (enabled, wasEnabled) => {
+    if (enabled && wasEnabled === false) {
+      sortBy.value = undefined;
+      sortDirection.value = 'asc';
+    }
+  },
+);
 
 // Display state. Text mode uses the same sorted/grouped Card data and hover
 // preview path as the card grid, so changing views does not reset results.
@@ -455,6 +497,22 @@ function handleView(value: string | undefined) {
 function handleGroupBy(value: string | undefined) {
   groupBy.value = value;
 }
+
+// Start from the beginning whenever the result set or its ordering changes.
+// Switching between card grid/text keeps the current page.
+watch(
+  [
+    () => props.queryParam,
+    () => props.searchResults,
+    () => props.rerankingEnabled,
+    groupBy,
+    sortBy,
+    sortDirection,
+  ],
+  () => {
+    currentPage.value = 1;
+  },
+);
 
 // Detect which score types are available in the current results
 const hasAlsScore = computed(
@@ -483,6 +541,7 @@ const sortedResults = computed(() => {
       restCards,
       sortBy.value,
       sortDirection.value,
+      props.preserveResultOrder,
     );
     return sortedRest ? [firstCard, ...sortedRest] : [firstCard];
   }
@@ -491,6 +550,7 @@ const sortedResults = computed(() => {
     props.searchResults,
     sortBy.value,
     sortDirection.value,
+    props.preserveResultOrder,
   );
 });
 
@@ -507,7 +567,7 @@ const searchedCard = computed(() => {
   return props.searchResults[0];
 });
 
-// Computed grouped results
+// Grouped views show complete groups without pagination.
 const groupedResults = computed<CardGroup[] | null>(() => {
   if (
     !groupBy.value ||
@@ -525,6 +585,9 @@ const groupedResults = computed<CardGroup[] | null>(() => {
       groupBy.value,
       sortBy.value,
       sortDirection.value,
+      undefined,
+      undefined,
+      props.preserveResultOrder,
     );
   }
 
@@ -533,7 +596,22 @@ const groupedResults = computed<CardGroup[] | null>(() => {
     groupBy.value,
     sortBy.value,
     sortDirection.value,
+    undefined,
+    undefined,
+    props.preserveResultOrder,
   );
+});
+
+const paginatedResults = computed(() =>
+  sortedResults.value?.slice(pageStart.value, pageEnd.value),
+);
+
+const hasGroups = computed(() => !!groupedResults.value?.[0]?.label);
+
+const visibleCards = computed(() => {
+  if (!hasGroups.value) return paginatedResults.value ?? [];
+  const cards = (groupedResults.value ?? []).flatMap((group) => group.cards);
+  return searchedCard.value ? [searchedCard.value, ...cards] : cards;
 });
 
 const jumpToGroups = computed(() =>
@@ -560,18 +638,15 @@ const {
 const hoveredCardId = ref<string | null>(null);
 
 const previewCard = computed(() => {
-  if (!props.searchResults?.length) return undefined;
+  if (!visibleCards.value.length) return undefined;
 
   const hoveredCard = hoveredCardId.value
-    ? props.searchResults.find(
+    ? visibleCards.value.find(
         (card) => card.card_data.id === hoveredCardId.value,
       )
     : undefined;
 
-  if (hoveredCard) return hoveredCard;
-  return (
-    searchedCard.value ?? sortedResults.value?.[0] ?? props.searchResults[0]
-  );
+  return hoveredCard ?? visibleCards.value[0];
 });
 
 const previewIsSearched = computed(() => {
@@ -634,6 +709,11 @@ function setPreviewCard(card: Card) {
     _hoverDelayId = null;
   }, HOVER_PREVIEW_DELAY_MS);
 }
+
+watch([currentPage, visibleCards], () => {
+  clearPendingPreviewCard();
+  hoveredCardId.value = null;
+});
 
 onUnmounted(() => {
   clearPendingPreviewCard();

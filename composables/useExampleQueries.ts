@@ -16,7 +16,7 @@ export function useExampleQueries() {
     queryKey: ['search', 'example'],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/search/example`,
+        `${config.public.backendPath}/search/example`,
         {
           method: 'GET',
         },

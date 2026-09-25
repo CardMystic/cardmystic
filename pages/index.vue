@@ -170,7 +170,7 @@ useSeoMeta({
   ogDescription:
     'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
   ogType: 'website',
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => 'CardMystic - Smart Search Engine for Magic: The Gathering',
   twitterCard: 'summary_large_image',
   twitterTitle: 'CardMystic - Smart Search Engine for Magic: The Gathering',
@@ -271,7 +271,7 @@ setPageInfo({
   font-weight: 600
   letter-spacing: 0.35em
   text-transform: uppercase
-  color: var(--ui-highlight)
+  color: var(--ui-text-highlighted)
 
 .hero-title
   font-size: clamp(3rem, 6vw, 5.5rem)

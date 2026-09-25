@@ -16,7 +16,7 @@ export function useCardNames(enabled?: MaybeRefOrGetter<boolean>) {
     queryKey: ['bulkdata', 'card-names'],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/bulkdata/card-names.min.json`,
+        `${config.public.backendPath}/bulkdata/card-names.min.json`,
       );
       if (!response.ok) {
         throw new Error('Failed to fetch card names');
@@ -36,7 +36,7 @@ export function useCommanders() {
     queryKey: ['bulkdata', 'commanders'],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/bulkdata/commanders.min.json`,
+        `${config.public.backendPath}/bulkdata/commanders.min.json`,
       );
       if (!response.ok) {
         throw new Error('Failed to fetch commanders');
@@ -70,7 +70,7 @@ function createCommandersSet() {
     queryKey: ['bulkdata', 'commanders'],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/bulkdata/commanders.min.json`,
+        `${config.public.backendPath}/bulkdata/commanders.min.json`,
         { signal: AbortSignal.timeout(5000) },
       );
       if (!response.ok) {
@@ -97,7 +97,7 @@ export function useCardNameToOracleId(enabled?: MaybeRefOrGetter<boolean>) {
     queryKey: ['bulkdata', 'card-name-to-oracle-id'],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/bulkdata/card-name-to-oracle-id.min.json`,
+        `${config.public.backendPath}/bulkdata/card-name-to-oracle-id.min.json`,
       );
       if (!response.ok) {
         throw new Error('Failed to fetch card name to oracle ID map');
@@ -125,7 +125,7 @@ export function usePartnerCommanders() {
     queryKey: ['bulkdata', 'partner-commanders'],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/bulkdata/partner-commanders`,
+        `${config.public.backendPath}/bulkdata/partner-commanders`,
       );
       if (!response.ok) {
         throw new Error('Failed to fetch partner commanders');

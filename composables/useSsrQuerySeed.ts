@@ -23,6 +23,7 @@ export async function useSsrQuerySeed<T>(opts: {
 }): Promise<Ref<T | null>> {
   const config = useRuntimeConfig();
   const headers = useBackendRequestHeaders();
+  const requestFetch = useRequestFetch();
   const queryClient = useQueryClient();
 
   // useAsyncData's generic pipes through `PickFrom<T, KeysOf<T>>`, which
@@ -30,9 +31,12 @@ export async function useSsrQuerySeed<T>(opts: {
   // `unknown` so callers get a clean `Ref<T | null>`.
   const asyncResult = (await useAsyncData(opts.cacheKey, async () => {
     try {
-      const raw = await $fetch(`${config.public.backendUrl}${opts.path}`, {
-        headers,
-      });
+      const raw = await requestFetch(
+        `${config.public.backendPath}${opts.path}`,
+        {
+          headers,
+        },
+      );
       return opts.schema.parse(raw);
     } catch {
       return null;

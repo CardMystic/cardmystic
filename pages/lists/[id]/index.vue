@@ -317,6 +317,7 @@ import { buildDecklistSeo } from '~/utils/seoMeta';
 import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 import type { Card } from '~/models/cardModel';
 const route = useRoute();
+const requestFetch = useRequestFetch();
 const listId = route.params.id as string;
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
@@ -344,7 +345,8 @@ const { data: ssrOgImageUrl } = await useAsyncData(
     if (!ssrPrimaryCardName.value) return null;
     return fetchDirectArtCropUrl(
       ssrPrimaryCardName.value,
-      runtimeConfig.public.backendUrl,
+      runtimeConfig.public.backendPath,
+      requestFetch,
     );
   },
 );

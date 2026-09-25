@@ -41,7 +41,7 @@ export function useMyDecklists(page: Ref<number>, pageSize = 50) {
         pageSize: String(pageSize),
       });
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists?${params}`,
+        `${config.public.backendPath}/supabase/card-lists?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -98,7 +98,7 @@ export function useMyDecklistsSearch(query: Ref<string>, limit = 25) {
         limit: String(limit),
       });
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/mine/search?${params}`,
+        `${config.public.backendPath}/supabase/card-lists/mine/search?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -141,7 +141,7 @@ export function useOwnedDecklist(listId: Ref<string | null | undefined>) {
       const token = sessionData?.session?.access_token;
       if (!token) throw new Error('No authentication token available');
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/mine/${encodeURIComponent(listId.value!)}`,
+        `${config.public.backendPath}/supabase/card-lists/mine/${encodeURIComponent(listId.value!)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (response.status === 404) return null;
@@ -204,7 +204,7 @@ export const useCardLists = () => {
 
     const config = useRuntimeConfig();
     const response = await $fetch<{ id: string; name: string }>(
-      `${config.public.backendUrl}/supabase/card-lists/create`,
+      `${config.public.backendPath}/supabase/card-lists/create`,
       {
         method: 'POST',
         headers: {
@@ -273,7 +273,7 @@ export const useCardLists = () => {
         updatedCount: number;
         invalidOracleIds: string[];
       }>(
-        `${config.public.backendUrl}/supabase/card-lists/add-cards-by-oracle-id`,
+        `${config.public.backendPath}/supabase/card-lists/add-cards-by-oracle-id`,
         {
           method: 'POST',
           headers: {
@@ -345,7 +345,7 @@ export const useCardLists = () => {
         updatedCount: number;
         invalidCardNames: string[];
         message?: string;
-      }>(`${config.public.backendUrl}/supabase/card-lists/add-cards-by-name`, {
+      }>(`${config.public.backendPath}/supabase/card-lists/add-cards-by-name`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -403,7 +403,7 @@ export const useCardLists = () => {
     const config = useRuntimeConfig();
     try {
       const response = await $fetch<BulkEditResponse>(
-        `${config.public.backendUrl}/supabase/card-lists/bulk-edit`,
+        `${config.public.backendPath}/supabase/card-lists/bulk-edit`,
         {
           method: 'POST',
           headers: {
@@ -470,7 +470,7 @@ export const useCardLists = () => {
         if (oracleIds.value.length === 0) return [];
 
         const cardsData: any[] = await $fetch(
-          `${config.public.backendUrl}/cards/cards-by-oracle-ids`,
+          `${config.public.backendPath}/cards/cards-by-oracle-ids`,
           {
             method: 'POST',
             body: { oracleIds: oracleIds.value },
@@ -503,7 +503,7 @@ export const useCardLists = () => {
       if (!token) throw new Error('User not authenticated');
       if (!board) throw new Error('A board is required for batch removal');
       return await $fetch<{ removedCount: number }>(
-        `${useRuntimeConfig().public.backendUrl}/supabase/card-lists/remove-cards`,
+        `${useRuntimeConfig().public.backendPath}/supabase/card-lists/remove-cards`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -698,7 +698,7 @@ export const useCardLists = () => {
 
     const config = useRuntimeConfig();
     const response = await $fetch(
-      `${config.public.backendUrl}/supabase/card-lists/set-commander`,
+      `${config.public.backendPath}/supabase/card-lists/set-commander`,
       {
         method: 'POST',
         headers: {
@@ -786,7 +786,7 @@ export const useCardLists = () => {
     const response = await $fetch<{
       format: string;
       commandersCleared: boolean;
-    }>(`${config.public.backendUrl}/supabase/card-lists/update-format`, {
+    }>(`${config.public.backendPath}/supabase/card-lists/update-format`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -836,7 +836,7 @@ export const useCardLists = () => {
 
     const config = useRuntimeConfig();
     const response = await $fetch<{ visibility: string }>(
-      `${config.public.backendUrl}/supabase/card-lists/update-visibility`,
+      `${config.public.backendPath}/supabase/card-lists/update-visibility`,
       {
         method: 'PUT',
         headers: {
@@ -893,7 +893,7 @@ export const useCardLists = () => {
     const response = await $fetch<{
       cardName: string;
       numCopies: number;
-    }>(`${config.public.backendUrl}/supabase/card-lists/update-num-copies`, {
+    }>(`${config.public.backendPath}/supabase/card-lists/update-num-copies`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -953,7 +953,7 @@ export const useCardLists = () => {
       cardName: string;
       board: string;
       message?: string;
-    }>(`${config.public.backendUrl}/supabase/card-lists/change-board`, {
+    }>(`${config.public.backendPath}/supabase/card-lists/change-board`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,

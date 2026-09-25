@@ -155,10 +155,7 @@ const hasSearchInput = computed(
   () => !!decklistParam.value || commanderNames.value.length > 0,
 );
 const firstCommanderName = computed(() => commanderParam.value || '');
-const limitParam = computed(() => {
-  const raw = Number(route.query.limit);
-  return raw > 0 ? raw : 99;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -210,7 +207,7 @@ useSeoMeta({
       : firstCommanderName.value
         ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
         : `Build your ${platformName} deck with personalized card recommendations.`,
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || `${platformName} Deck Builder`,
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -225,7 +222,7 @@ useSeoMeta({
       : firstCommanderName.value
         ? `Get ${platformName} card recommendations for your ${firstCommanderName.value} deck!`
         : `Build your ${platformName} deck with personalized card recommendations.`,
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Deck Recommender' });

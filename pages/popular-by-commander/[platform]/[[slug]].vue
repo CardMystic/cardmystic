@@ -154,7 +154,7 @@ useSeoMeta({
   ogDescription: () =>
     seoEntry?.description ||
     'Find the most popular cards for any commander on CardMystic.',
-  ogImage: 'https://cardmystic.com/cardmystic_cards.png',
+  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
   ogImageAlt: () => seoEntry?.title || 'Popular Cards by Commander',
   twitterCard: 'summary_large_image',
   twitterTitle: () =>
@@ -166,15 +166,12 @@ useSeoMeta({
   twitterDescription: () =>
     seoEntry?.description ||
     'Find the most popular cards for any commander on CardMystic.',
-  twitterImage: 'https://cardmystic.com/cardmystic_cards.png',
+  twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
 definePageMeta({ title: 'Popular Cards by Commander' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : 100;
-});
+const limitParam = computed(() => 100);
 
 const parsedFilters = computed(() => {
   if (route.query?.filters) {

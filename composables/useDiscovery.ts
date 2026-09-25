@@ -25,7 +25,7 @@ export function useFeaturedDecklists(limit = 10) {
     queryKey: ['discovery', 'featured-decklists', limit],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/featured?limit=${limit}`,
+        `${config.public.backendPath}/supabase/card-lists/featured?limit=${limit}`,
       );
       if (!response.ok) {
         throw new Error(
@@ -59,7 +59,7 @@ export function useFeaturedUsers(limit = 10) {
     queryKey: ['discovery', 'featured-users', limit],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/user/featured?limit=${limit}`,
+        `${config.public.backendPath}/user/featured?limit=${limit}`,
       );
       if (!response.ok) {
         throw new Error(`Failed to load featured users (${response.status})`);
@@ -92,7 +92,7 @@ export function useFeaturedPrimers(limit = 6) {
     queryKey: ['discovery', 'featured-primers', limit],
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/featured-primers?limit=${limit}`,
+        `${config.public.backendPath}/supabase/card-lists/featured-primers?limit=${limit}`,
       );
       if (!response.ok) {
         throw new Error(`Failed to load featured primers (${response.status})`);
@@ -140,7 +140,7 @@ export function useDecklistSearch(
         page: String(page.value),
         pageSize: String(pageSize),
       });
-      const url = `${config.public.backendUrl}/supabase/card-lists/search?${params}`;
+      const url = `${config.public.backendPath}/supabase/card-lists/search?${params}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to search decklists (${response.status})`);
@@ -191,7 +191,7 @@ export function useUserSearch(
         page: String(page.value),
         pageSize: String(pageSize),
       });
-      const url = `${config.public.backendUrl}/user/search?${params}`;
+      const url = `${config.public.backendPath}/user/search?${params}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to search users (${response.status})`);
@@ -227,7 +227,7 @@ export function usePublicUserProfile(userId: Ref<string | null | undefined>) {
     queryKey: computed(() => ['discovery', 'public-profile', userId.value]),
     queryFn: async (): Promise<GetUserProfileResponse | null> => {
       if (!userId.value) return null;
-      const url = `${config.public.backendUrl}/user/profile/${encodeURIComponent(userId.value)}`;
+      const url = `${config.public.backendPath}/user/profile/${encodeURIComponent(userId.value)}`;
       const response = await fetch(url);
       if (response.status === 404) {
         throw createError({ statusCode: 404, statusMessage: 'User not found' });
@@ -265,7 +265,7 @@ export function usePublicDecklist(listId: Ref<string | null | undefined>) {
     queryKey: computed(() => ['discovery', 'public-decklist', listId.value]),
     queryFn: async () => {
       if (!listId.value) return null;
-      const url = `${config.public.backendUrl}/supabase/card-lists/view/${encodeURIComponent(listId.value)}`;
+      const url = `${config.public.backendPath}/supabase/card-lists/view/${encodeURIComponent(listId.value)}`;
       const response = await fetch(url);
       if (response.status === 404) {
         return null;

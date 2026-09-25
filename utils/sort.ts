@@ -35,8 +35,13 @@ const colorOrder: Record<string, number> = {
   G: 5,
 };
 
+function getSemanticScore(card: Card): number | undefined {
+  return card.ai_rerank_score ?? card.ai_normalized_score;
+}
+
 function getEffectiveScore(card: Card): number {
-  if (card.ai_normalized_score !== undefined) return card.ai_normalized_score;
+  const semanticScore = getSemanticScore(card);
+  if (semanticScore !== undefined) return semanticScore;
   if (card.als_score !== undefined) return card.als_score;
   return 0;
 }
@@ -74,11 +79,10 @@ function sortAwareTiebreaker(
     case 'popularity': {
       // Tie on popularity → prefer higher AI score, then ALS
       if (
-        a.ai_normalized_score !== undefined &&
-        b.ai_normalized_score !== undefined
+        getSemanticScore(a) !== undefined &&
+        getSemanticScore(b) !== undefined
       ) {
-        const diff =
-          (b.ai_normalized_score ?? 0) - (a.ai_normalized_score ?? 0);
+        const diff = (getSemanticScore(b) ?? 0) - (getSemanticScore(a) ?? 0);
         if (diff !== 0) return diff;
       }
       return (b.als_score ?? 0) - (a.als_score ?? 0);
@@ -86,11 +90,10 @@ function sortAwareTiebreaker(
     case 'deck_score': {
       // Tie on deck/ALS score → prefer higher AI score, then popularity
       if (
-        a.ai_normalized_score !== undefined &&
-        b.ai_normalized_score !== undefined
+        getSemanticScore(a) !== undefined &&
+        getSemanticScore(b) !== undefined
       ) {
-        const diff =
-          (b.ai_normalized_score ?? 0) - (a.ai_normalized_score ?? 0);
+        const diff = (getSemanticScore(b) ?? 0) - (getSemanticScore(a) ?? 0);
         if (diff !== 0) return diff;
       }
       return (b.popularity ?? 0) - (a.popularity ?? 0);
@@ -113,6 +116,7 @@ export function sortSearchResults(
   searchResults: Array<Card> | null | undefined,
   sortBy: string | null | undefined,
   sortDirection: 'asc' | 'desc',
+  preserveResultOrder = false,
 ): Array<Card> | null | undefined {
   if (!searchResults) {
     return searchResults;
@@ -121,8 +125,8 @@ export function sortSearchResults(
   const results = [...searchResults];
 
   if (!sortBy) {
-    // No explicit sort — use default score-based ordering
-    return results.sort(scoreTiebreaker);
+    // Reranked search order can differ from the original ColBERT score order.
+    return preserveResultOrder ? results : results.sort(scoreTiebreaker);
   }
 
   const direction = sortDirection === 'asc' ? 1 : -1;
@@ -191,8 +195,8 @@ export function sortSearchResults(
       }
 
       case 'ai_score': {
-        const aValue = a.ai_normalized_score ?? 0;
-        const bValue = b.ai_normalized_score ?? 0;
+        const aValue = getSemanticScore(a) ?? 0;
+        const bValue = getSemanticScore(b) ?? 0;
         primary = direction * (aValue - bValue);
         return compareWithTiebreaker(primary, a, b, sortBy);
       }
@@ -413,26 +417,28 @@ export function groupAndSortCards(
   sortDirection: 'asc' | 'desc',
   copiesMap?: Record<string, number>,
   allCards?: Card[],
+  preserveResultOrder = false,
 ): CardGroup[] | null {
   if (!cards || cards.length === 0) return null;
 
   if (!groupBy) {
     // No grouping - return single group with sorted cards
-    const sorted = sortSearchResults(cards, sortBy, sortDirection) || cards;
+    const sorted =
+      sortSearchResults(cards, sortBy, sortDirection, preserveResultOrder) ||
+      cards;
     return [{ label: '', cards: sorted }];
   }
 
   const groups = groupCards(cards, groupBy, copiesMap, allCards ?? cards);
 
-  // Sort cards within each group (default to score descending when no sortBy)
-  return groups.map((group) => {
-    if (sortBy) {
-      return {
-        ...group,
-        cards:
-          sortSearchResults(group.cards, sortBy, sortDirection) || group.cards,
-      };
-    }
-    return { ...group, cards: [...group.cards].sort(scoreTiebreaker) };
-  });
+  return groups.map((group) => ({
+    ...group,
+    cards:
+      sortSearchResults(
+        group.cards,
+        sortBy,
+        sortDirection,
+        preserveResultOrder,
+      ) || group.cards,
+  }));
 }

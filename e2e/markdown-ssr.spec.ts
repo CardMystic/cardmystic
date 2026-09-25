@@ -131,7 +131,21 @@ function decklist(id: string) {
 }
 
 const batches: string[][] = [];
-const fixtureRequests: { path: string; authorized: boolean }[] = [];
+const fixtureRequests: {
+  path: string;
+  authorized: boolean;
+  clientIp?: string;
+  origin?: string;
+  fetchSite?: string;
+  fetchMode?: string;
+  fetchDest?: string;
+}[] = [];
+const gatewayRequests: {
+  body: string;
+  cookie?: string;
+  authorized: boolean;
+  clientIp?: string;
+}[] = [];
 let backend: Server;
 let preview: ChildProcess;
 let previewUrl = '';
@@ -161,8 +175,56 @@ async function handleFixture(
   }
 
   const path = new URL(request.url!, 'http://fixture.test').pathname;
+  if (path === '/external-card-link') {
+    response.writeHead(200, { 'Content-Type': 'text/html' });
+    response.end(
+      `<a href="${previewUrl}/card/${BOLT_ID}">View Lightning Bolt</a>`,
+    );
+    return;
+  }
+  if (
+    !path.startsWith('/supabase-auth/') &&
+    request.headers['x-api-key'] !==
+      'fixture-backend-key-at-least-32-characters'
+  ) {
+    json(response, { message: 'API key required' }, 401);
+    return;
+  }
   const authorized = request.headers.authorization === 'Bearer ' + OWNER_TOKEN;
-  fixtureRequests.push({ path, authorized });
+  const clientIp = request.headers['x-cardmystic-client-ip'] as
+    string | undefined;
+  fixtureRequests.push({
+    path,
+    authorized,
+    clientIp,
+    origin: request.headers.origin,
+    fetchSite: request.headers['sec-fetch-site'] as string | undefined,
+    fetchMode: request.headers['sec-fetch-mode'] as string | undefined,
+    fetchDest: request.headers['sec-fetch-dest'] as string | undefined,
+  });
+  if (path === '/cards/with-llm/' + BOLT_ID) {
+    json(response, {
+      card: { ...cards[0], cmc: 1, layout: 'normal' },
+      llm: null,
+    });
+    return;
+  }
+  if (path === '/search/keyword') {
+    let body = '';
+    for await (const chunk of request) body += chunk.toString();
+    gatewayRequests.push({
+      body,
+      authorized,
+      clientIp,
+      cookie: request.headers.cookie,
+    });
+    response.setHeader('Retry-After', '9');
+    response.setHeader('Cache-Control', 'public, max-age=3600');
+    response.setHeader('X-API-Key', 'never-expose-service-headers');
+    response.setHeader('Set-Cookie', 'unexpected=private');
+    json(response, { message: 'Too many requests' }, 429);
+    return;
+  }
   if (path === '/cards/cards-by-names') {
     let raw = '';
     for await (const chunk of request) raw += chunk.toString();
@@ -289,7 +351,9 @@ test.beforeAll(async () => {
       PORT: String(port),
       NITRO_HOST: '127.0.0.1',
       NITRO_PORT: String(port),
-      NUXT_PUBLIC_BACKEND_URL: backendUrl,
+      NUXT_BACKEND_URL: backendUrl,
+      NUXT_BACKEND_API_KEY: 'fixture-backend-key-at-least-32-characters',
+      NUXT_FRONTEND_URL: previewUrl,
       NUXT_PUBLIC_SUPABASE_URL: backendUrl + '/supabase-auth',
       NUXT_PUBLIC_SUPABASE_KEY: 'test-anon-key',
       NUXT_PUBLIC_MAINTENANCE_MODE: '',
@@ -341,6 +405,7 @@ test.afterAll(async () => {
 test.beforeEach(() => {
   batches.length = 0;
   fixtureRequests.length = 0;
+  gatewayRequests.length = 0;
 });
 
 for (const [kind, path] of [
@@ -359,6 +424,24 @@ for (const [kind, path] of [
         expect(response?.status()).toBe(200);
         const html = await response!.text();
         expect(html).toContain('SSR body visible before JavaScript');
+        expect(html).not.toContain(
+          'fixture-backend-key-at-least-32-characters',
+        );
+        const ssrRequests = fixtureRequests.filter(
+          (entry) =>
+            entry.path.startsWith('/cards/') ||
+            entry.path.startsWith('/articles/') ||
+            entry.path.startsWith('/supabase/card-lists/'),
+        );
+        expect(ssrRequests.length).toBeGreaterThan(0);
+        expect(
+          ssrRequests.every(
+            (entry) =>
+              entry.clientIp === '127.0.0.1' ||
+              entry.clientIp === '::ffff:127.0.0.1',
+          ),
+          JSON.stringify(ssrRequests),
+        ).toBe(true);
         expect(html).toContain('/card/' + BOLT_ID);
         const body = page.locator('.primer-preview');
         await expect(
@@ -462,6 +545,77 @@ for (const [kind, path] of [
     },
   );
 }
+
+for (const site of ['cross-site', 'same-site']) {
+  test(`${site} navigation keeps card, article, and primer SSR data`, async ({
+    request,
+  }) => {
+    const headers = {
+      'sec-fetch-site': site,
+      'sec-fetch-mode': 'navigate',
+      'sec-fetch-dest': 'document',
+      origin: 'https://external.example',
+    };
+    for (const [path, expectedText] of [
+      ['/card/' + BOLT_ID, 'Lightning Bolt (MTG) - CardMystic'],
+      ['/articles/' + ARTICLE_ID, 'SSR body visible before JavaScript'],
+      ['/lists/' + LIST_ID + '/primer', 'SSR body visible before JavaScript'],
+    ]) {
+      const response = await request.get(previewUrl + path, { headers });
+      expect(response.status(), path).toBe(200);
+      expect(await response.text(), path).toContain(expectedText);
+    }
+    expect(fixtureRequests.length).toBeGreaterThan(0);
+    for (const upstream of fixtureRequests) {
+      expect(['127.0.0.1', '::ffff:127.0.0.1']).toContain(upstream.clientIp);
+      expect(upstream.origin).toBeUndefined();
+      expect(upstream.fetchSite).toBeUndefined();
+      // Node fetch may add its own cors mode after navigation headers are removed.
+      expect(upstream.fetchMode).not.toBe('navigate');
+      expect(upstream.fetchDest).toBeUndefined();
+    }
+
+    // Browser-supplied headers must never impersonate inherited Nitro context.
+    fixtureRequests.length = 0;
+    const direct = await request.get(
+      previewUrl + '/api/backend/cards/with-llm/' + BOLT_ID,
+      {
+        headers: {
+          ...headers,
+          origin: previewUrl,
+          backendInternalRequest: 'true',
+          'x-backend-internal-request': 'true',
+        },
+      },
+    );
+    expect(direct.status()).toBe(403);
+    expect(fixtureRequests).toHaveLength(0);
+  });
+}
+
+test('an external card link renders successfully before and after hydration', async ({
+  page,
+}) => {
+  await page.route('https://**', (route) => route.abort());
+  // localhost -> 127.0.0.1 produces a real cross-site browser navigation.
+  await page.goto(
+    backendUrl.replace('127.0.0.1', 'localhost') + '/external-card-link',
+  );
+  const navigation = page.waitForResponse(
+    (response) => response.url() === previewUrl + '/card/' + BOLT_ID,
+  );
+  await page.getByRole('link', { name: 'View Lightning Bolt' }).click();
+  const response = await navigation;
+  expect(response.status()).toBe(200);
+  expect(await response.text()).toContain('Lightning Bolt (MTG) - CardMystic');
+  await waitForHydration(page);
+  await expect(page.locator('.card-title-text')).toHaveText('Lightning Bolt');
+  expect(
+    fixtureRequests.filter(
+      (entry) => entry.path === '/cards/with-llm/' + BOLT_ID,
+    ),
+  ).toHaveLength(1);
+});
 
 test('a failed card lookup leaves the server-rendered article readable', async ({
   browser,
@@ -568,4 +722,64 @@ test('a private primer loads for its owner after anonymous SSR without leaking i
   );
   expect(primerRequests[0].authorized).toBe(false);
   expect(primerRequests.some((request) => request.authorized)).toBe(true);
+});
+
+test('gateway authenticates upstream, preserves JWT/body/errors, and blocks foreign origins and private routes', async ({
+  request,
+}) => {
+  const direct = await request.get(backendUrl + '/cards/cards-by-names');
+  expect(direct.status()).toBe(401);
+  const foreign = await request.post(
+    previewUrl + '/api/backend/search/keyword',
+    {
+      headers: {
+        origin: 'https://foreign.example',
+        'sec-fetch-site': 'cross-site',
+      },
+      data: { query: 'blocked' },
+    },
+  );
+  expect(foreign.status()).toBe(403);
+  const diagnostics = await request.get(
+    previewUrl + '/api/backend/cache/stats',
+  );
+  expect(diagnostics.status()).toBe(404);
+  expect(gatewayRequests).toEqual([]);
+
+  const response = await request.post(
+    previewUrl + '/api/backend/search/keyword',
+    {
+      headers: {
+        origin: previewUrl,
+        'sec-fetch-site': 'same-origin',
+        authorization: 'Bearer ' + OWNER_TOKEN,
+        'x-api-key': 'attacker-key',
+        'x-cardmystic-client-ip': '6.6.6.6',
+        'x-forwarded-for': '6.6.6.6',
+        cookie: 'should-not-reach-backend=1',
+      },
+      data: { query: 'card draw', limit: 40 },
+    },
+  );
+  expect(response.status()).toBe(429);
+  expect(await response.json()).toEqual({ message: 'Too many requests' });
+  expect(response.headers()['retry-after']).toBe('9');
+  expect(response.headers()['cache-control']).toBe('private, no-store');
+  for (const header of [
+    'x-api-key',
+    'set-cookie',
+    'access-control-allow-origin',
+  ]) {
+    expect(response.headers()[header]).toBeUndefined();
+  }
+  expect(gatewayRequests).toHaveLength(1);
+  expect(JSON.parse(gatewayRequests[0].body)).toEqual({
+    query: 'card draw',
+    limit: 40,
+  });
+  expect(gatewayRequests[0].authorized).toBe(true);
+  expect(gatewayRequests[0].cookie).toBeUndefined();
+  expect(['127.0.0.1', '::ffff:127.0.0.1']).toContain(
+    gatewayRequests[0].clientIp,
+  );
 });

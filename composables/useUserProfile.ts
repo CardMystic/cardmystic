@@ -148,7 +148,7 @@ export const useUserProfile = () => {
       const { data: sessionData } = await supabase!.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
       if (!accessToken) throw new Error('Not authenticated');
-      const res = await fetch(`${config.public.backendUrl}/user/username`, {
+      const res = await fetch(`${config.public.backendPath}/user/username`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -170,7 +170,7 @@ export const useUserProfile = () => {
     const accessToken = sessionData?.session?.access_token;
     if (!accessToken) return;
     try {
-      await fetch(`${config.public.backendUrl}/user/ping`, {
+      await fetch(`${config.public.backendPath}/user/ping`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -181,7 +181,7 @@ export const useUserProfile = () => {
 
   const recordOAuthSignup = async (accessToken: string) => {
     try {
-      await fetch(`${config.public.backendUrl}/user/signup/record`, {
+      await fetch(`${config.public.backendPath}/user/signup/record`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -211,7 +211,7 @@ export const useUserProfile = () => {
       if (!accessToken) throw new Error('Not authenticated');
 
       const res = await fetch(
-        `${config.public.backendUrl}/user/update-password`,
+        `${config.public.backendPath}/user/update-password`,
         {
           method: 'PUT',
           headers: {
@@ -310,7 +310,7 @@ export const useUserProfile = () => {
     if (!verified)
       throw new Error('Security verification failed. Please try again.');
 
-    const res = await fetch(`${config.public.backendUrl}/user/login`, {
+    const res = await fetch(`${config.public.backendPath}/user/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
@@ -331,7 +331,7 @@ export const useUserProfile = () => {
     if (!verified)
       throw new Error('Security verification failed. Please try again.');
 
-    const res = await fetch(`${config.public.backendUrl}/user/signup`, {
+    const res = await fetch(`${config.public.backendPath}/user/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
