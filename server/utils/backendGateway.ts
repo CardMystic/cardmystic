@@ -1,3 +1,5 @@
+import { BACKEND_USER_AUTH_HEADER } from '../../utils/backendRequestHeaders';
+
 const routeFamilies =
   /^(?:cards|search|als|deck-stats|articles|user|supabase\/card-lists)(?:\/|$)/;
 const publicEndpoints = new Set([
@@ -70,10 +72,10 @@ export function backendHeaders(
   key: string,
   clientIp?: string,
   internalRequest = false,
+  azureManagedRequest = false,
 ): Record<string, string> {
   const headers: Record<string, string> = { 'x-api-key': key };
   for (const name of [
-    'authorization',
     'content-type',
     'accept',
     'user-agent',
@@ -89,6 +91,11 @@ export function backendHeaders(
       continue;
     if (incoming[name]) headers[name] = incoming[name]!;
   }
+  // Azure's Authorization is a platform token, not the Supabase user JWT.
+  const authorization =
+    incoming[BACKEND_USER_AUTH_HEADER] ??
+    (azureManagedRequest ? undefined : incoming.authorization);
+  if (authorization) headers.authorization = authorization;
   if (clientIp) headers['x-cardmystic-client-ip'] = clientIp;
   return headers;
 }
