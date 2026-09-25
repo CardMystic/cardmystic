@@ -1,4 +1,4 @@
-import { BACKEND } from './utils/mocks';
+import { BACKEND, SUPABASE } from './utils/mocks';
 import { expect, gotoHydrated, test } from './utils/fixtures';
 import type { Page } from '@playwright/test';
 
@@ -87,6 +87,25 @@ test.describe('Patreon integration', () => {
     await expect(
       section.getByRole('button', { name: 'Disconnect Patreon' }),
     ).toHaveCount(0);
+  });
+
+  test('slow session validation keeps the signed-in user on Account', async ({
+    signedInPage: page,
+  }) => {
+    await mockPatreonStatus(page, { status: NOT_CONNECTED });
+    await page.route(`${SUPABASE}/auth/v1/user`, async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      // Reproduce a real session lookup exceeding the former 3-second guard.
+      await new Promise((resolve) => setTimeout(resolve, 4_000));
+      await route.continue();
+    });
+
+    await gotoHydrated(page, '/user/account');
+
+    await expect(page).toHaveURL(/\/user\/account$/);
+    await expect(
+      patreonSection(page).getByRole('button', { name: 'Connect to Patreon' }),
+    ).toBeVisible();
   });
 
   test('connected with active Featured tier: shows badge, no billing warning', async ({
