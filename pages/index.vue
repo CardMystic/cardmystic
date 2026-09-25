@@ -271,7 +271,7 @@ setPageInfo({
   font-weight: 600
   letter-spacing: 0.35em
   text-transform: uppercase
-  color: var(--ui-highlight)
+  color: var(--ui-text-highlighted)
 
 .hero-title
   font-size: clamp(3rem, 6vw, 5.5rem)

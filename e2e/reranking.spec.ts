@@ -120,14 +120,25 @@ test('Smart Search toggles the active ranking and keeps URL state across history
   await page.goForward();
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await expectRenderedRanking(page, offNames);
+  // Reload clears the client cache. Check each fresh response: uncached Jev
+  // requests can legitimately return a different ranking for the same query.
+  const reloadedOffResponsePromise = waitForRanking(page, false);
   await page.reload();
+  const reloadedOffResponse = await reloadedOffResponsePromise;
+  expect(reloadedOffResponse.request().postDataJSON()).toEqual({
+    ...onPayload,
+    useRerank: false,
+  });
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-  await expectRenderedRanking(page, offNames);
+  await expectRenderedRanking(page, await cardNames(reloadedOffResponse));
 
+  const freshOnResponsePromise = waitForRanking(page, true);
   await toggle.click();
+  const freshOnResponse = await freshOnResponsePromise;
+  expect(freshOnResponse.request().postDataJSON()).toEqual(onPayload);
   await expect(page).toHaveURL(/useRerank=true/);
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-  await expectRenderedRanking(page, onNames);
+  await expectRenderedRanking(page, await cardNames(freshOnResponse));
 });
 
 test('turning reranking off before searching carries through subsequent Smart Search submissions', async ({

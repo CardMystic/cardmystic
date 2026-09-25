@@ -65,7 +65,7 @@
           description="Choose whether to add only the new cards or add all cards."
         />
 
-        <span class="text-orange-400 font-medium">{{ cardCount }}</span> card{{
+        <span class="text-highlighted font-medium">{{ cardCount }}</span> card{{
           cardCount === 1 ? '' : 's'
         }}
         will be added to the deck.

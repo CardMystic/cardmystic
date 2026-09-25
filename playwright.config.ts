@@ -7,6 +7,17 @@ import dotenv from 'dotenv';
 // override.
 dotenv.config({ path: '.env.test' });
 
+// A legacy public URL otherwise silently selects the remote default backend.
+if (
+  process.env.NUXT_PUBLIC_BACKEND_URL &&
+  !process.env.E2E_BACKEND_URL &&
+  !process.env.NUXT_BACKEND_URL
+) {
+  throw new Error(
+    'E2E configuration: replace NUXT_PUBLIC_BACKEND_URL with NUXT_BACKEND_URL in .env.test.',
+  );
+}
+
 /**
  * Playwright config for CardMystic end-to-end tests.
  *

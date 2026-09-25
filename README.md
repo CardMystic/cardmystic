@@ -241,6 +241,8 @@ The Playwright config (`playwright.config.ts`) auto-loads `.env.test` via `doten
 
 **Pointing at a different backend**
 
+Playwright loads `.env.test`, not `.env`. After the API gateway migration, rename any old `NUXT_PUBLIC_BACKEND_URL` setting to `NUXT_BACKEND_URL` and add the matching private `NUXT_BACKEND_API_KEY`; the suite fails early when this configuration is missing.
+
 Override `NUXT_BACKEND_URL` in `.env.test` to hit prod (`https://api.cardmystic.com`) or a local backend (`http://localhost:3000`). For local backend runs you'll usually also override `NUXT_PUBLIC_SUPABASE_URL` to a local Supabase instance.
 
 ### ⚠️ Cost: stop the `next` containers when not in use

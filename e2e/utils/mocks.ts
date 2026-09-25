@@ -32,6 +32,16 @@ const BACKEND_URL =
 export const BACKEND = BACKEND_URL;
 export const SUPABASE = SUPABASE_URL;
 
+/** Return the upstream path only for requests to the frontend API gateway. */
+export function backendPath(value: string | URL): string | null {
+  const url = new URL(value);
+  const backend = new URL(BACKEND);
+  return url.origin === backend.origin &&
+    url.pathname.startsWith(backend.pathname + '/')
+    ? url.pathname.slice(backend.pathname.length)
+    : null;
+}
+
 /**
  * Real Supabase test user credentials, provided via env. Tests that
  * need a real session should call `requireTestUser()` to skip cleanly

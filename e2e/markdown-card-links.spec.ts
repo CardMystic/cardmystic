@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { BACKEND, SUPABASE, gotoHydrated } from './utils/mocks';
+import { BACKEND, backendPath, SUPABASE, gotoHydrated } from './utils/mocks';
 
 const ARTICLE_ID = '10000000-0000-4000-8000-000000000901';
 const LIST_ID = '10000000-0000-4000-8000-000000000902';
@@ -106,7 +106,8 @@ async function openMarkdown(
   );
   await page.route(`${SUPABASE}/**`, (route) => route.fulfill({ json: [] }));
   await page.route(`${BACKEND}/**`, (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const path = backendPath(route.request().url());
+    if (path === null) return route.fallback();
     if (path === '/cards/cards-by-names') {
       batches.push(route.request().postDataJSON().cardNames);
       return route.fulfill({ json: cards });
@@ -236,7 +237,7 @@ test('Back from a primer card link keeps the card visible while the primer loads
 
   const wrongCardRequests: string[] = [];
   page.on('request', (request) => {
-    const path = new URL(request.url()).pathname;
+    const path = backendPath(request.url());
     if (path === '/cards/with-llm/' + LIST_ID) {
       wrongCardRequests.push(path);
     }
