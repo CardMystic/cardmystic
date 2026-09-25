@@ -28,7 +28,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     lastAttempt = Date.now();
     try {
       const response = await fetch(
-        `${config.public.backendUrl}/metrics/visit`,
+        `${config.public.backendPath}/metrics/visit`,
         { method: 'POST', credentials: 'omit' },
       );
       if (response.ok) recordedDay = day;

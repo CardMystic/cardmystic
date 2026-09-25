@@ -46,7 +46,7 @@ export function useArticleSocial(articleId: Ref<string | null | undefined>) {
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/articles/social/${encodeURIComponent(articleId.value!)}`,
+        `${config.public.backendPath}/articles/social/${encodeURIComponent(articleId.value!)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -65,7 +65,7 @@ export function useArticleSocial(articleId: Ref<string | null | undefined>) {
     mutationFn: async (liked: boolean) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/articles/like/${encodeURIComponent(articleId.value!)}`,
+        `${config.public.backendPath}/articles/like/${encodeURIComponent(articleId.value!)}`,
         {
           method: liked ? 'POST' : 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
@@ -122,7 +122,7 @@ export function useArticleComments(
       const params = new URLSearchParams({ limit: String(limit) });
       if (pageParam) params.set('cursor', pageParam);
       const response = await fetch(
-        `${config.public.backendUrl}/articles/comments/${encodeURIComponent(articleId.value!)}?${params}`,
+        `${config.public.backendPath}/articles/comments/${encodeURIComponent(articleId.value!)}?${params}`,
       );
       if (!response.ok) {
         throw new Error(`Failed to load comments (${response.status})`);
@@ -150,7 +150,7 @@ export function useArticleComments(
     mutationFn: async (body: string) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/articles/comments/${encodeURIComponent(articleId.value!)}`,
+        `${config.public.backendPath}/articles/comments/${encodeURIComponent(articleId.value!)}`,
         {
           method: 'POST',
           headers: {
@@ -172,7 +172,7 @@ export function useArticleComments(
     mutationFn: async (commentId: string) => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/articles/comment/${encodeURIComponent(commentId)}`,
+        `${config.public.backendPath}/articles/comment/${encodeURIComponent(commentId)}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },

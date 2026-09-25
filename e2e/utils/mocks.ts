@@ -27,7 +27,7 @@ const SUPABASE_URL =
   process.env.NUXT_PUBLIC_SUPABASE_URL ??
   'https://ddbgietanhxrozzmogur.supabase.co';
 const BACKEND_URL =
-  process.env.NUXT_PUBLIC_BACKEND_URL ?? 'https://api.next.cardmystic.com';
+  (process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173') + '/api/backend';
 
 export const BACKEND = BACKEND_URL;
 export const SUPABASE = SUPABASE_URL;

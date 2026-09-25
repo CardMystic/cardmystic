@@ -115,10 +115,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Popular Commanders' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : 100;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type ComputedRef } from 'vue';
-import { useSearchQualityResults } from '~/composables/useSearchQualityResults';
 import type { Card } from '~/models/cardModel';
 import type {
   WordSearch,
@@ -22,7 +21,7 @@ export function useColbertSearch(
   const queryKey = computed(() => ['search', 'colbert', searchParams.value]);
 
   const {
-    data: rawSearchResults,
+    data: searchResults,
     isLoading: isQueryLoading,
     isFetching,
     error,
@@ -31,7 +30,7 @@ export function useColbertSearch(
     queryKey,
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/search/colbert`,
+        `${config.public.backendPath}/search/colbert`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -54,15 +53,6 @@ export function useColbertSearch(
     enabled: queryEnabled,
   });
 
-  const {
-    results: searchResults,
-    hiddenResultCount,
-    loadMoreResults,
-  } = useSearchQualityResults(rawSearchResults, queryKey, () => ({
-    mode: 'smart',
-    ratio: config.public.smartSearchQualityRatio,
-  }));
-
   const isLoading = computed(
     () =>
       isQueryLoading.value ||
@@ -71,8 +61,6 @@ export function useColbertSearch(
 
   return {
     searchResults,
-    hiddenResultCount,
-    loadMoreResults,
     isLoading,
     isFetching,
     error,
@@ -92,7 +80,7 @@ export function useSimilaritySearch(
   const queryKey = computed(() => ['search', 'similarity', searchParams.value]);
 
   const {
-    data: rawSearchResults,
+    data: searchResults,
     isLoading: isQueryLoading,
     isFetching,
     error,
@@ -101,7 +89,7 @@ export function useSimilaritySearch(
     queryKey,
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/search/similarity`,
+        `${config.public.backendPath}/search/similarity`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -124,16 +112,6 @@ export function useSimilaritySearch(
     enabled: queryEnabled,
   });
 
-  const {
-    results: searchResults,
-    hiddenResultCount,
-    loadMoreResults,
-  } = useSearchQualityResults(rawSearchResults, queryKey, () => ({
-    mode: 'similarity',
-    preserveFirst: true,
-    ratio: config.public.similaritySearchQualityRatio,
-  }));
-
   const isLoading = computed(
     () =>
       isQueryLoading.value ||
@@ -142,8 +120,6 @@ export function useSimilaritySearch(
 
   return {
     searchResults,
-    hiddenResultCount,
-    loadMoreResults,
     isLoading,
     isFetching,
     error,
@@ -171,7 +147,7 @@ export function useKeywordSearch(
     queryKey: computed(() => ['search', 'keyword', searchParams.value]),
     queryFn: async () => {
       const response = await fetch(
-        `${config.public.backendUrl}/search/keyword`,
+        `${config.public.backendPath}/search/keyword`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -221,7 +197,7 @@ export function useSimilarCards(
   const queryKey = computed(() => ['card-details-similar-cards', cardId.value]);
 
   const {
-    data: rawSimilarCards,
+    data: similarCards,
     isLoading: isSimilarCardsLoading,
     isFetching,
     error,
@@ -232,12 +208,13 @@ export function useSimilarCards(
       if (!cardName.value) return [];
 
       const response = await fetch(
-        `${config.public.backendUrl}/search/similarity`,
+        `${config.public.backendPath}/search/similarity`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             card_name: cardName.value,
+            limit: 100,
             filters: undefined,
             exclude_card_data: false,
           }),
@@ -255,20 +232,8 @@ export function useSimilarCards(
     enabled: queryEnabled,
   });
 
-  const {
-    results: similarCards,
-    hiddenResultCount,
-    loadMoreResults,
-  } = useSearchQualityResults(rawSimilarCards, queryKey, () => ({
-    mode: 'similarity',
-    preserveFirst: true,
-    ratio: config.public.similaritySearchQualityRatio,
-  }));
-
   return {
     similarCards,
-    hiddenResultCount,
-    loadMoreResults,
     isSimilarCardsLoading,
     isFetching,
     error,

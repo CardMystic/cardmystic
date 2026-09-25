@@ -26,7 +26,7 @@ export function usePrimer(listId: Ref<string | null | undefined>) {
         if (token) headers.Authorization = `Bearer ${token}`;
       }
       const response = await fetch(
-        `${config.public.backendUrl}/supabase/card-lists/primer/${encodeURIComponent(listId.value)}`,
+        `${config.public.backendPath}/supabase/card-lists/primer/${encodeURIComponent(listId.value)}`,
         { headers },
       );
       // 401 (private, not owner) / 404 (unknown list): no readable primer.

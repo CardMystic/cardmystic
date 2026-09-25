@@ -92,6 +92,7 @@ import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 definePageMeta({ title: 'User Profile' });
 
 const route = useRoute();
+const requestFetch = useRequestFetch();
 const userId = computed(() => String(route.params.userId ?? ''));
 const runtimeConfig = useRuntimeConfig();
 
@@ -114,7 +115,8 @@ const { data: ssrOgImageUrl } = await useAsyncData(
     if (!ssrAvatarCardName.value) return null;
     return fetchDirectArtCropUrl(
       ssrAvatarCardName.value,
-      runtimeConfig.public.backendUrl,
+      runtimeConfig.public.backendPath,
+      requestFetch,
     );
   },
 );

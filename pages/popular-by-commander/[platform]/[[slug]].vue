@@ -171,10 +171,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Popular Cards by Commander' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : 100;
-});
+const limitParam = computed(() => 100);
 
 const parsedFilters = computed(() => {
   if (route.query?.filters) {

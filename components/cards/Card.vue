@@ -55,14 +55,10 @@
           >
             <img
               class="card-large cursor-pointer"
-              :src="
-                getCardImageUrl(card.partner_card_data!, false, scryfallSize)
-              "
+              :src="partnerImageUrl"
               :alt="card.partner_card_data!.name"
               @error="handleImageError"
-              v-if="
-                getCardImageUrl(card.partner_card_data!, false, scryfallSize)
-              "
+              v-if="partnerImageUrl"
               loading="lazy"
               decoding="async"
             />
@@ -81,10 +77,10 @@
           >
             <img
               class="card-large cursor-pointer"
-              :src="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
+              :src="cardImageUrl"
               :alt="card.card_data.name"
               @error="handleImageError"
-              v-if="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
+              v-if="cardImageUrl"
               loading="lazy"
               decoding="async"
             />
@@ -102,10 +98,10 @@
       >
         <img
           :class="sizeClass"
-          :src="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
+          :src="cardImageUrl"
           :alt="card.card_data.name"
           @error="handleImageError"
-          v-if="getCardImageUrl(card.card_data, isFlipped, scryfallSize)"
+          v-if="cardImageUrl"
           loading="lazy"
           decoding="async"
           :ui="{}"
@@ -134,46 +130,47 @@
       >
         <!-- Smart score bar (when search scores present) -->
         <template v-if="hasDualScores">
-          <UTooltip :text="semanticScoreTooltip">
+          <span :title="semanticScoreTooltip">
             <div
               class="flex flex-row items-center justify-center text-center w-full mt-0.5"
             >
-              <UProgress
-                v-model="normalizedScore"
+              <progress
+                :value="normalizedScore"
                 :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
                 class="my-0 mr-2"
-                size="md"
-                :color="scoreColor"
-              />
+                max="100"
+                :data-color="scoreColor"
+              ></progress>
               <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
                 <UIcon name="i-lucide-brain" class="w-3 h-3 shrink-0" />
                 {{ Math.round(normalizedScore) }}%
               </p>
             </div>
-          </UTooltip>
-          <UTooltip
-            text="Synergy score: how relevant this card is to your decklist"
+          </span>
+          <span
+            title="Synergy score: how relevant this card is to your decklist"
           >
             <div
               class="flex flex-row items-center justify-center text-center w-full"
             >
-              <UProgress
-                v-model="alsDisplayScore"
+              <progress
+                :value="alsDisplayScore"
+                aria-label="Synergy score"
                 class="my-0 mr-2"
-                size="md"
-                :color="alsScoreColor"
-              />
+                max="100"
+                :data-color="alsScoreColor"
+              ></progress>
               <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
                 <UIcon name="i-lucide-layers-2" class="w-3 h-3 shrink-0" />
                 {{ Math.round(alsDisplayScore) }}%
               </p>
             </div>
-          </UTooltip>
+          </span>
         </template>
         <!-- Single Smart/ALS bar -->
         <template v-else-if="hasAnyScore">
-          <UTooltip
-            :text="
+          <span
+            :title="
               isAlsOnly
                 ? 'Synergy score: how relevant this card is to your decklist'
                 : semanticScoreTooltip
@@ -182,13 +179,13 @@
             <div
               class="flex flex-row items-center justify-center text-center w-full"
             >
-              <UProgress
-                v-model="normalizedScore"
+              <progress
+                :value="normalizedScore"
                 :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
                 class="my-0 mr-2"
-                size="md"
-                :color="scoreColor"
-              />
+                max="100"
+                :data-color="scoreColor"
+              ></progress>
               <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
                 <UIcon
                   :name="isAlsOnly ? 'i-lucide-layers-2' : 'i-lucide-brain'"
@@ -197,41 +194,43 @@
                 {{ Math.round(normalizedScore) }}%
               </p>
             </div>
-          </UTooltip>
+          </span>
         </template>
         <!-- Popularity bar -->
         <template v-if="hasPopularity">
-          <UTooltip
-            :text="`In ${popularityPercent.toFixed(2)}% of decks that match your filters`"
+          <span
+            :title="`In ${popularityPercent.toFixed(2)}% of decks that match your filters`"
           >
             <div
               class="flex flex-row items-center justify-center text-center w-full"
               :class="{ 'mt-0.5': hasAnyScore }"
             >
-              <UProgress
-                v-model="popularityPercent"
+              <progress
+                :value="popularityPercent"
+                aria-label="Deck popularity"
                 class="my-0 mr-2"
-                size="md"
-                :color="popularityColor"
-              />
+                max="100"
+                :data-color="popularityColor"
+              ></progress>
               <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
                 <UIcon name="i-lucide-flame" class="w-3 h-3 shrink-0" />
                 {{ popularityDisplay }}%
               </p>
             </div>
-          </UTooltip>
+          </span>
         </template>
         <!-- No score at all -->
         <template v-if="!hasAnyScore && !hasPopularity">
           <div
             class="flex flex-row items-center justify-center text-center w-full"
           >
-            <UProgress
-              :model-value="0"
+            <progress
+              :value="0"
+              aria-label="No score"
               class="my-0 mr-2"
-              size="md"
-              color="error"
-            />
+              max="100"
+              data-color="error"
+            ></progress>
             <p class="text-xs"></p>
           </div>
         </template>
@@ -245,54 +244,45 @@
       <!-- Left side buttons-->
       <div class="flex flex-row items-center gap-1">
         <!-- Buy on TCGPlayer button -->
-        <UTooltip
-          :text="hasPartner ? combinedPriceTooltip : singleBuyTooltip"
-          :popper="{ placement: 'top' }"
-        >
-          <template #default>
-            <!-- Partner: combined price button -->
-            <UButton
-              v-if="hasPartner && showCardInfo && partnerTcgplayerId"
-              :to="getAffiliateLink(partnerTcgplayerId)"
-              external
-              color="success"
-              variant="outline"
-              :size="isMobile ? 'xs' : 'sm'"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Buy on TCGPlayer"
-            >
-              {{ combinedPriceLabel }}
-            </UButton>
-            <!-- Single card: original price button -->
-            <UButton
-              v-else-if="
-                !hasPartner && showCardInfo && card.card_data.tcgplayer_id
-              "
-              :to="getAffiliateLink(card.card_data.tcgplayer_id)"
-              external
-              color="success"
-              variant="outline"
-              :size="isMobile ? 'xs' : 'sm'"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Buy on TCGPlayer"
-            >
-              {{
-                card.card_data.prices.usd
-                  ? `$${card.card_data.prices.usd}`
-                  : 'Buy'
-              }}
-            </UButton>
-          </template>
-        </UTooltip>
+        <span :title="hasPartner ? combinedPriceTooltip : singleBuyTooltip">
+          <!-- Partner: combined price button -->
+          <UButton
+            v-if="hasPartner && showCardInfo && partnerTcgplayerId"
+            :to="getAffiliateLink(partnerTcgplayerId)"
+            external
+            color="success"
+            variant="outline"
+            :size="isMobile ? 'xs' : 'sm'"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Buy on TCGPlayer"
+          >
+            {{ combinedPriceLabel }}
+          </UButton>
+          <!-- Single card: original price button -->
+          <UButton
+            v-else-if="
+              !hasPartner && showCardInfo && card.card_data.tcgplayer_id
+            "
+            :to="getAffiliateLink(card.card_data.tcgplayer_id)"
+            external
+            color="success"
+            variant="outline"
+            :size="isMobile ? 'xs' : 'sm'"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Buy on TCGPlayer"
+          >
+            {{
+              card.card_data.prices.usd
+                ? `$${card.card_data.prices.usd}`
+                : 'Buy'
+            }}
+          </UButton>
+        </span>
         <!-- Desktop buttons (hidden on mobile) -->
         <template v-if="showCardInfo">
-          <UTooltip
-            v-if="!isSearched"
-            text="Find similar cards"
-            :popper="{ placement: 'top' }"
-          >
+          <span v-if="!isSearched" title="Find similar cards">
             <UButton
               color="neutral"
               variant="outline"
@@ -302,11 +292,8 @@
               @click="findSimilarCards"
               aria-label="Find Similar Cards"
             />
-          </UTooltip>
-          <UTooltip
-            text="Popular Cards for this Commander"
-            :popper="{ placement: 'top' }"
-          >
+          </span>
+          <span v-if="isCommander" title="Popular Cards for this Commander">
             <UButton
               v-if="isCommander"
               color="error"
@@ -317,10 +304,10 @@
               @click="viewPopularCards"
               aria-label="Popular Cards for this Commander"
             />
-          </UTooltip>
-          <UTooltip
-            text="Get Deck Recommendations for this Commander"
-            :popper="{ placement: 'top' }"
+          </span>
+          <span
+            v-if="isCommander"
+            title="Get Deck Recommendations for this Commander"
           >
             <UButton
               v-if="isCommander"
@@ -332,7 +319,7 @@
               @click="getRecommendations"
               aria-label="Get Deck Recommendations for this Commander"
             />
-          </UTooltip>
+          </span>
         </template>
       </div>
 
@@ -342,42 +329,33 @@
         class="flex flex-row items-center gap-2 justify-center"
       >
         <!-- Thumbs down button -->
-        <UTooltip
-          v-if="!hideThumbsDownButton"
-          text="I disagree with this result!"
-          :popper="{ placement: 'top' }"
-        >
-          <template #default>
-            <UButton
-              class="cursor-pointer"
-              :color="isThumbsDownClicked ? 'error' : 'primary'"
-              variant="ghost"
-              icon="i-lucide-thumbs-down"
-              :size="isMobile ? 'xs' : 'sm'"
-              aria-label="Disagree with this result"
-              @click="handleDislike"
-            />
-          </template>
-        </UTooltip>
+        <span v-if="!hideThumbsDownButton" title="I disagree with this result!">
+          <UButton
+            class="cursor-pointer"
+            :color="isThumbsDownClicked ? 'error' : 'primary'"
+            variant="ghost"
+            icon="i-lucide-thumbs-down"
+            :size="isMobile ? 'xs' : 'sm'"
+            aria-label="Disagree with this result"
+            @click="handleDislike"
+          />
+        </span>
 
         <!-- Add to deckbuilding search button -->
-        <UTooltip
+        <span
           v-if="showAddToDeckbuilderButton"
-          text="Add to deckbuilding search"
-          :popper="{ placement: 'top' }"
+          title="Add to deckbuilding search"
         >
-          <template #default>
-            <UButton
-              class="cursor-pointer"
-              :color="isInDecklist ? 'success' : 'primary'"
-              variant="soft"
-              :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'"
-              :size="isMobile ? 'xs' : 'sm'"
-              aria-label="Add to deckbuilding search"
-              @click="deckbuilderStore?.addCard(card.card_data.name)"
-            />
-          </template>
-        </UTooltip>
+          <UButton
+            class="cursor-pointer"
+            :color="isInDecklist ? 'success' : 'primary'"
+            variant="soft"
+            :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'"
+            :size="isMobile ? 'xs' : 'sm'"
+            aria-label="Add to deckbuilding search"
+            @click="deckbuilderStore?.addCard(card.card_data.name)"
+          />
+        </span>
       </div>
     </div>
   </UCard>
@@ -446,6 +424,15 @@ const props = defineProps({
     default: undefined,
   },
 });
+
+const cardImageUrl = computed(() =>
+  getCardImageUrl(props.card.card_data, isFlipped.value, scryfallSize.value),
+);
+const partnerImageUrl = computed(() =>
+  props.card.partner_card_data
+    ? getCardImageUrl(props.card.partner_card_data, false, scryfallSize.value)
+    : undefined,
+);
 
 const emit = defineEmits<{
   (e: 'remove', cardId: string): void;
@@ -856,5 +843,40 @@ function toggleShowAllData() {
 .partner-card:hover img {
   transform: scale(1.05);
   z-index: 2;
+}
+</style>
+
+<style scoped>
+progress {
+  appearance: none;
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 0.5rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--ui-bg-accented);
+}
+progress::-webkit-progress-bar {
+  background: var(--ui-bg-accented);
+}
+progress::-webkit-progress-value {
+  background: var(--score-color);
+  border-radius: 9999px;
+}
+progress::-moz-progress-bar {
+  background: var(--score-color);
+  border-radius: 9999px;
+}
+progress[data-color='success'] {
+  --score-color: var(--ui-success);
+}
+progress[data-color='warning'] {
+  --score-color: var(--ui-warning);
+}
+progress[data-color='error'] {
+  --score-color: var(--ui-error);
 }
 </style>

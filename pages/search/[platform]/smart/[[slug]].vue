@@ -30,8 +30,6 @@
           :search-results="searchResults"
           preserve-result-order
           :reranking-enabled="route.query.useRerank !== 'false'"
-          :hidden-result-count="hiddenResultCount"
-          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -131,10 +129,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Smart Search' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : undefined;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -179,15 +174,8 @@ const wordSearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  hiddenResultCount,
-  loadMoreResults,
-  isLoading,
-  isFetching,
-  error,
-  refetch,
-} = useColbertSearch(wordSearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

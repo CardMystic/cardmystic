@@ -38,7 +38,7 @@ export function usePatreon() {
     queryFn: async () => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/patreon/status`,
+        `${config.public.backendPath}/patreon/status`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -57,7 +57,7 @@ export function usePatreon() {
     mutationFn: async () => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/patreon/connect/start`,
+        `${config.public.backendPath}/patreon/connect/start`,
         { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
       );
       if (!response.ok) {
@@ -77,7 +77,7 @@ export function usePatreon() {
     mutationFn: async () => {
       const token = await getAuthToken(supabase!);
       const response = await fetch(
-        `${config.public.backendUrl}/patreon/connect`,
+        `${config.public.backendPath}/patreon/connect`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },

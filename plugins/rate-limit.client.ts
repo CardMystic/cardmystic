@@ -3,7 +3,10 @@ export default defineNuxtPlugin({
   enforce: 'pre',
   setup() {
     const toast = useToast();
-    const backend = new URL(useRuntimeConfig().public.backendUrl);
+    const backend = new URL(
+      useRuntimeConfig().public.backendPath,
+      window.location.origin,
+    );
     const message = '429 Too Many Requests, Try again in 60 seconds';
     let lastNotification = -Infinity;
     const notify = () => {

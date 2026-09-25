@@ -723,8 +723,6 @@
                   :error="similarCardsError"
                   @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
-                  :hidden-result-count="hiddenSimilarResultCount"
-                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -849,8 +847,6 @@
                   :error="similarCardsError"
                   @retry="refetchSimilarCards()"
                   :search-results="filteredSimilarCards"
-                  :hidden-result-count="hiddenSimilarResultCount"
-                  @load-more="loadMoreSimilarResults"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Similar Cards Found Yet"
@@ -1389,8 +1385,6 @@ const lazyCardNameForSimilar = computed(() =>
 );
 const {
   similarCards,
-  hiddenResultCount: hiddenSimilarResultCount,
-  loadMoreResults: loadMoreSimilarResults,
   isSimilarCardsLoading,
   error: similarCardsError,
   isFetching: isSimilarCardsFetching,
@@ -1509,7 +1503,7 @@ const alsRecommendRequest = computed(() => {
   if (!isCommander.value || !card.value?.name) return undefined;
   return {
     commanders: [card.value.name],
-    limit: 99,
+    limit: 100,
     query: appliedRecommendQuery.value || undefined,
   };
 });

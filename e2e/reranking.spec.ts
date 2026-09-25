@@ -78,7 +78,7 @@ test('Smart Search toggles the active ranking and keeps URL state across history
   const onPayload = onResponse.request().postDataJSON();
   expect(onPayload).toMatchObject({
     query,
-    limit: 20,
+    limit: 100,
     useRerank: true,
     filters,
   });
@@ -152,9 +152,9 @@ test('turning reranking off before searching carries through subsequent Smart Se
       query,
       useRerank: false,
     });
-    expect(response.request().postDataJSON()).not.toHaveProperty('limit');
+    expect(response.request().postDataJSON()).toHaveProperty('limit', 100);
     const names = await cardNames(response);
-    expect(names).toHaveLength(200);
+    expect(names).toHaveLength(100);
     await expectRenderedRanking(page, names);
     await expect(toggle).toHaveAttribute('aria-pressed', 'false');
     expect(new URL(page.url()).searchParams.get('useRerank')).toBe('false');
@@ -174,7 +174,7 @@ test('Commander Search keeps commander and platform filters while toggling reran
   const onPayload = onResponse.request().postDataJSON();
   expect(onPayload).toMatchObject({
     query,
-    limit: 10,
+    limit: 100,
     useRerank: true,
     filters: { isCommander: true, isPaper: true },
   });
@@ -223,7 +223,7 @@ for (const mode of ['smart', 'commander'] as const) {
           '&limit=10&useRerank=false',
       );
       const offNames = await cardNames(await initialResponse);
-      expect(offNames).toHaveLength(10);
+      expect(offNames).toHaveLength(100);
       await expectRenderedRanking(page, offNames);
 
       const sort = page.getByRole('combobox').filter({
@@ -242,7 +242,7 @@ for (const mode of ['smart', 'commander'] as const) {
       const onResponsePromise = waitForRanking(page, true);
       await toggle.click();
       const onNames = await cardNames(await onResponsePromise);
-      expect(onNames).toHaveLength(10);
+      expect(onNames).toHaveLength(100);
       await expect(sort).toContainText('Select sort option');
       await expectRenderedRanking(page, onNames);
       await expect(page.getByTitle('Clear sort', { exact: true })).toHaveCount(

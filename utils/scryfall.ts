@@ -153,9 +153,10 @@ export function scryfallArtCropUrl(cardName: string): string {
 export async function fetchDirectArtCropUrl(
   cardName: string,
   backendUrl: string,
+  requestFetch: typeof $fetch = $fetch,
 ): Promise<string | null> {
   try {
-    const cards = await $fetch<
+    const cards = await requestFetch<
       Array<{
         image_uris?: { art_crop?: string };
         card_faces?: Array<{ image_uris?: { art_crop?: string } }>;

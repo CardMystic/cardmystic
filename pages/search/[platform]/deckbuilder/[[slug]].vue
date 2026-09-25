@@ -155,10 +155,7 @@ const hasSearchInput = computed(
   () => !!decklistParam.value || commanderNames.value.length > 0,
 );
 const firstCommanderName = computed(() => commanderParam.value || '');
-const limitParam = computed(() => {
-  const raw = Number(route.query.limit);
-  return raw > 0 ? raw : 99;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {

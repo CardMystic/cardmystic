@@ -40,8 +40,6 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
-          :hidden-result-count="hiddenResultCount"
-          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -143,10 +141,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Similarity Search' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : undefined;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -196,15 +191,8 @@ const similaritySearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  hiddenResultCount,
-  loadMoreResults,
-  isLoading,
-  isFetching,
-  error,
-  refetch,
-} = useSimilaritySearch(similaritySearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useSimilaritySearch(similaritySearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

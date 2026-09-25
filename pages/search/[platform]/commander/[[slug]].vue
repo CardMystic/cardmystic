@@ -30,8 +30,6 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
-          :hidden-result-count="hiddenResultCount"
-          @load-more="loadMoreResults"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -130,10 +128,7 @@ useSeoMeta({
 
 definePageMeta({ title: 'Commander Search' });
 
-const limitParam = computed(() => {
-  const n = Number(route.query?.limit);
-  return n > 0 ? n : undefined;
-});
+const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -180,15 +175,8 @@ const wordSearch = computed(() => {
   });
 });
 
-const {
-  searchResults,
-  hiddenResultCount,
-  loadMoreResults,
-  isLoading,
-  isFetching,
-  error,
-  refetch,
-} = useColbertSearch(wordSearch);
+const { searchResults, isLoading, isFetching, error, refetch } =
+  useColbertSearch(wordSearch);
 
 const { saveSearchQuery } = useSearchType();
 watch(

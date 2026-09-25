@@ -22,7 +22,7 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 - Similarity search: find cards similar to a given card
   - Example Query: [Lightning Bolt](https://cardmystic.com/search/all/similarity?card_name=Lightning+Bolt)
 - Commander search: Smart search specifically for legendary creatures
-- Reranking toggle in Smart and Commander search: on by default, with a second relevance pass that can improve matches but takes longer. Turn it off to compare the original search order. Switching refreshes the current results and preserves the choice in the URL (`useRerank=false` or `true`); each mode is cached separately. With no explicit sort selected, results preserve the server ranking, including within groups. Selecting a sort such as price or Smart Score overrides that order. Turning reranking on clears any selected sort and restores the server ranking. Smart Score and the displayed match percentage remain the original ColBERT score; ordinary searches omit the result limit and return the full candidate pool (up to 200 cards) in either mode. An explicit limit still caps the returned count.
+- Reranking toggle in Smart and Commander search: on by default, with a second relevance pass that can improve matches but takes longer. Turn it off to compare the original search order. Switching refreshes the current results and preserves the choice in the URL (`useRerank=false` or `true`); each mode is cached separately. With no explicit sort selected, results preserve the server ranking, including within groups. Selecting a sort such as price or Smart Score overrides that order. Turning reranking on clears any selected sort and restores the server ranking. Smart Score and the displayed match percentage remain the original ColBERT score; ordinary searches request up to 100 cards in either mode. Ungrouped results paginate 40 cards at a time; grouped results show complete groups without pagination.
 - Keyword search: traditional text-based card search
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get personalized card recommendations
 - Platform-specific search: search filtered to Arena, MTGO, Modern, or Paper cards
@@ -51,9 +51,9 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and coding
 
 ## 🖥️ Server
 
-The CardMystic server code is not contained in this repository. Instead, the frontend connects to the public API through the proxy defined in `server/api/proxy/[...path].ts`
+The CardMystic server code is not contained in this repository. Browser requests go through the private server gateway in `server/api/backend/[...path].ts`.
 
-[API Documentation](https://api.cardmystic.com/documentation)
+Backend API documentation requires the private service key.
 
 ## 🤖 Models
 
@@ -211,7 +211,8 @@ Copy [`.env.test.example`](.env.test.example) to `.env.test` (gitignored) and fi
 NUXT_PUBLIC_SUPABASE_URL=https://ddbgietanhxrozzmogur.supabase.co
 NUXT_PUBLIC_SUPABASE_KEY=<your-supabase-anon-key>
 NUXT_PUBLIC_RECAPTCHA_SITE_KEY=<your-recaptcha-site-key>
-NUXT_PUBLIC_BACKEND_URL=https://api.next.cardmystic.com
+NUXT_BACKEND_URL=https://api.next.cardmystic.com
+NUXT_BACKEND_API_KEY=<matching-backend-service-key>
 
 # Real Supabase test user used by login + logout tests.
 # Tests skip cleanly if these are unset.
@@ -240,7 +241,7 @@ The Playwright config (`playwright.config.ts`) auto-loads `.env.test` via `doten
 
 **Pointing at a different backend**
 
-Override `NUXT_PUBLIC_BACKEND_URL` in `.env.test` to hit prod (`https://api.cardmystic.com`) or a local backend (`http://localhost:3000`). For local backend runs you'll usually also override `NUXT_PUBLIC_SUPABASE_URL` to a local Supabase instance.
+Override `NUXT_BACKEND_URL` in `.env.test` to hit prod (`https://api.cardmystic.com`) or a local backend (`http://localhost:3000`). For local backend runs you'll usually also override `NUXT_PUBLIC_SUPABASE_URL` to a local Supabase instance.
 
 ### ⚠️ Cost: stop the `next` containers when not in use
 
@@ -305,11 +306,58 @@ npm run gen:types
 
 Deck display controls save automatically to `localStorage` under `cm.deck-preferences.v1:<deckId>`.
 
-### Search quality cutoffs
+### Private API gateway
 
-Set these public application settings in `.env` to adjust the initial shown search results (results that don't meet the cutoff will be hidden behind a "Show More" button):
+Browsers call /api/backend on the frontend. Nitro forwards permitted application
+routes with a private service credential; API keys are never sent to browsers.
+User Bearer tokens still authorize account and deck operations. CORS restricts
+other browser origins; the public frontend gateway can still be called by
+non-browser clients.
 
-```dotenv
-NUXT_PUBLIC_SMART_SEARCH_QUALITY_RATIO=0.8
-NUXT_PUBLIC_SIMILARITY_SEARCH_QUALITY_RATIO=0.8
+Configure **runtime application settings** on each Azure Static Web App:
+NUXT_BACKEND_URL, NUXT_BACKEND_API_KEY (matching that backend's
+BACKEND_API_KEY, at least 32 random printable ASCII characters without whitespace),
+and NUXT_FRONTEND_URL. Build workflow variables alone do not configure runtime
+secrets. Use distinct keys for production and staging. The backend separately
+needs RESEARCH_API_KEY, matching the research service.
+
+Client IP detection uses the same trusted-proxy allowlist as the backend:
+Azure App Service's socket ingress and Cloudflare's published IP ranges. It
+walks from the connection toward the visitor and stops at the first untrusted
+address; no hop-count setting is needed. On managed Azure Functions, where Nitro
+has no socket IP, it uses Azure's platform-overwritten client-ip header as the
+connection peer. That fallback is enabled only when Azure's WEBSITE_INSTANCE_ID
+runtime variable is present, and only the platform peer can be treated as private
+Azure ingress. Other private addresses inside the forwarded chain remain
+untrusted. The browser's claimed client-IP header is always replaced.
+
+The Azure header guarantee is documented in
+[Azure's header reference](https://github.com/Azure/app-service-linux-docs/blob/master/Things_You_Should_Know/headers.md).
+Keep the Cloudflare ranges in server/utils/clientIp.ts aligned with the backend.
+After deployment, verify independent rate limits for two visitors through both
+the custom domain and direct Azure ingress; local tests do not verify live Azure
+header availability.
+
+Configure matching keys on all services first. Deploy the frontend gateway,
+then the backend (which supplies the research key), then the research guard. Purge old API-host
+CDN caches when enabling authentication. Backend health and signed Patreon
+webhook/OAuth callback routes remain reachable for their dedicated integrations;
+the frontend gateway does not expose diagnostics or those callbacks.
+
+CI integration tests use BACKEND_API_KEY_PRODUCTION and BACKEND_API_KEY_NEXT
+repository secrets, selected with the target branch. The Jev provider key belongs
+only on the research service; see its README for the supported provider settings.
+
+### Protected search cache maintenance
+
+**Update the protected search/cache configuration whenever search result limits or SEO slugs change.** This includes adding, removing, or renaming slugs, changing their queries, filters, search types, or platform defaults, and changing the homepage example limit.
+
+Keep the frontend requests, backend/research limit validation and defaults, cache keys, protected entries, and warmup requests in sync. The current limits are 100 results for normal searches and 15 for homepage examples; semantic searches have separate entries for both reranking modes.
+
+Update the frontend export script and backend protected-search definitions as needed, then regenerate the SEO catalog from the frontend repository:
+
+```sh
+pnpm export:protected-searches
 ```
+
+The source is `utils/seoQueries.ts`; the exporter is `scripts/export-protected-searches.mjs`. The generated backend file is `src/common/utils/protectedSearchCatalog.ts`, and the shared allowlist/defaults are in `src/common/utils/protectedSearches.ts`. Commit the regenerated catalog with the related changes and update the cache tests to verify the new limits and slug requests match the protected entries.

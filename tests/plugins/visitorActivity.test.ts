@@ -15,7 +15,7 @@ it('counts a visible browser once per UTC day without cookies or authentication'
   vi.stubGlobal('fetch', send);
   vi.stubGlobal('defineNuxtPlugin', (plugin: unknown) => plugin);
   vi.stubGlobal('useRuntimeConfig', () => ({
-    public: { backendUrl: 'https://api.cardmystic.com' },
+    public: { backendPath: '/api/backend' },
   }));
   vi.stubGlobal('window', {
     location: { hostname: 'cardmystic.com' },
@@ -46,10 +46,10 @@ it('counts a visible browser once per UTC day without cookies or authentication'
   expect(send).not.toHaveBeenCalled();
   visible = 'visible';
   await events.visibilitychange();
-  expect(send).toHaveBeenCalledExactlyOnceWith(
-    'https://api.cardmystic.com/metrics/visit',
-    { method: 'POST', credentials: 'omit' },
-  );
+  expect(send).toHaveBeenCalledExactlyOnceWith('/api/backend/metrics/visit', {
+    method: 'POST',
+    credentials: 'omit',
+  });
   await events.focus();
   hooks['page:finish']();
   expect(send).toHaveBeenCalledTimes(1);
