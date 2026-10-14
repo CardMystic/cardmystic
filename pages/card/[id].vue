@@ -610,6 +610,7 @@
                   v-if="showRecommendedInput"
                   class="recommend-section flex gap-2 mt-2 mb-4"
                 >
+                  <RerankToggle />
                   <UInput
                     v-model="recommendQuery"
                     placeholder="e.g. ramp, removal, card draw..."
@@ -644,6 +645,7 @@
                   :error="recommendedError"
                   @retry="refetchRecommendedCards()"
                   :search-results="recommendedCards ?? undefined"
+                  :reranking-enabled="route.query.useRerank !== 'false'"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Recommendations Available Yet"
@@ -659,6 +661,7 @@
                   Popular Cards
                 </h3>
                 <div v-if="showPopularCardsInput" class="flex gap-2 mt-2 mb-4">
+                  <RerankToggle />
                   <UInput
                     v-model="popularCardsQuery"
                     placeholder="e.g. ramp, removal, card draw..."
@@ -693,6 +696,7 @@
                   :error="popularCardsError"
                   @retry="refetchPopularCards()"
                   :search-results="popularCards ?? undefined"
+                  :reranking-enabled="route.query.useRerank !== 'false'"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Popular Cards Data Yet"
@@ -743,6 +747,7 @@
                   v-if="showPopularCommandersInput"
                   class="flex gap-2 mt-2 mb-4"
                 >
+                  <RerankToggle />
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."
@@ -767,6 +772,7 @@
                   :error="popularCommandersError"
                   @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
+                  :reranking-enabled="route.query.useRerank !== 'false'"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Commander Data Yet"
@@ -793,6 +799,7 @@
                   v-if="showPopularCommandersInput"
                   class="flex gap-2 mt-2 mb-4"
                 >
+                  <RerankToggle />
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."
@@ -817,6 +824,7 @@
                   :error="popularCommandersError"
                   @retry="refetchPopularCommanders()"
                   :search-results="popularCommandersForCard ?? undefined"
+                  :reranking-enabled="route.query.useRerank !== 'false'"
                   :query-param="cardName ?? null"
                   :hide-thumbs-down-button="true"
                   empty-title="No Commander Data Yet"
@@ -1505,6 +1513,7 @@ const alsRecommendRequest = computed(() => {
     commanders: [card.value.name],
     limit: 100,
     query: appliedRecommendQuery.value || undefined,
+    useRerank: route.query.useRerank !== 'false',
   };
 });
 
@@ -1538,6 +1547,7 @@ const popularByCommanderRequest = computed(() => {
   return PopularByCommanderRequestSchema.parse({
     commanders: [card.value.name],
     query: appliedPopularCardsQuery.value || undefined,
+    useRerank: route.query.useRerank !== 'false',
   });
 });
 
@@ -1592,6 +1602,7 @@ const popularCommandersForCardRequest = computed(() => {
   return PopularCommandersForCardRequestSchema.parse({
     card_name: card.value.name,
     query: appliedPopularCommandersQuery.value || undefined,
+    useRerank: route.query.useRerank !== 'false',
   });
 });
 

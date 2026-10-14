@@ -4,6 +4,7 @@ const routeFamilies =
   /^(?:cards|search|als|deck-stats|articles|user|supabase\/card-lists)(?:\/|$)/;
 const publicEndpoints = new Set([
   '/cache/top',
+  '/cache/popular',
   '/metrics/query_count',
   '/metrics/visit',
   '/metrics/dislike',

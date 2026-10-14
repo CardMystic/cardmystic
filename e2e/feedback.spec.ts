@@ -10,7 +10,7 @@ import { BACKEND, gotoHydrated, reliableFill } from './utils/mocks';
  *   33. Card feedback (dislike) — POST `/metrics/dislike` is mocked
  *       (we don't have a way to remove a dislike yet, so don't pollute
  *       prod metrics).
- *   34. Trending queries clickthrough — homepage `/cache/top` Try
+ *   34. Trending queries clickthrough — homepage `/cache/popular` Try
  *       button → AI search.
  *   35. Mobile viewport — Pixel 5 subset of homepage + AI search to
  *       guard `useIsMobile` / Navbar regressions.
@@ -120,7 +120,7 @@ test.describe('Trending queries', () => {
   }) => {
     await gotoHydrated(page, '/');
 
-    // The TopQueries panel ("Top Searches This Week") and the
+    // The TopQueries panel ("Popular Searches") and the
     // ExampleQueries panel both render a Try button. The TopQueries
     // ones have `.try-btn`; ExampleQueries does not. Use that to
     // disambiguate. The panel is wrapped in ClientOnly + LazyTopQueries,

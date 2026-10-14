@@ -7,6 +7,7 @@ export interface AlsRecommendRequest {
   cards?: string[];
   limit: number;
   query?: string;
+  useRerank?: boolean;
   commanders?: string[];
   filters?: CardSearchFilters;
 }

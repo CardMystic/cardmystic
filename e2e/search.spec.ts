@@ -71,7 +71,7 @@ test.describe('Homepage', () => {
       { timeout: SEARCH_TIMEOUT },
     );
     const topPromise = page.waitForResponse(
-      (r) => r.url().startsWith(`${BACKEND}/cache/top`),
+      (r) => r.url().startsWith(`${BACKEND}/cache/popular`),
       { timeout: SEARCH_TIMEOUT },
     );
 
@@ -91,11 +91,7 @@ test.describe('Homepage', () => {
     expect(exampleResp.ok()).toBeTruthy();
     expect(topResp.ok()).toBeTruthy();
 
-    // The lazy-mounted sections render once data resolves. The
-    // "Top Searches This Week" section only renders when the cache
-    // has at least one entry; right after a backend restart the cache
-    // can be empty, so gate the visibility assertion on the response
-    // body rather than treating an empty cache as a test failure.
+    // Curated popular searches are available even when the result cache is cold.
     await expect(page.getByText('Try An Example Query:')).toBeVisible({
       timeout: SEARCH_TIMEOUT,
     });
@@ -106,7 +102,7 @@ test.describe('Homepage', () => {
         ? topBody.results.length
         : 0;
     if (topCount > 0) {
-      await expect(page.getByText('Top Searches This Week')).toBeVisible({
+      await expect(page.getByText('Popular Searches')).toBeVisible({
         timeout: SEARCH_TIMEOUT,
       });
     }

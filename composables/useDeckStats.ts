@@ -53,6 +53,7 @@ export function useTopCardsSearch(
         popularity: result.popularity,
         ai_raw_score: result.ai_raw_score,
         ai_normalized_score: result.ai_normalized_score,
+        ai_rerank_score: result.ai_rerank_score ?? undefined,
       }));
     },
     staleTime: 1000 * 60 * 15,
@@ -115,6 +116,7 @@ export function useTopCommandersSearch(
         popularity: result.popularity,
         ai_raw_score: result.ai_raw_score,
         ai_normalized_score: result.ai_normalized_score,
+        ai_rerank_score: result.ai_rerank_score ?? undefined,
       }));
     },
     staleTime: 1000 * 60 * 15,
@@ -175,6 +177,7 @@ export function usePopularByCommander(
         popularity: result.popularity,
         ai_raw_score: result.ai_raw_score,
         ai_normalized_score: result.ai_normalized_score,
+        ai_rerank_score: result.ai_rerank_score ?? undefined,
       }));
     },
     staleTime: 1000 * 60 * 15,
@@ -232,6 +235,7 @@ export function usePopularCommandersForCard(
         popularity: result.popularity,
         ai_raw_score: result.ai_raw_score,
         ai_normalized_score: result.ai_normalized_score,
+        ai_rerank_score: result.ai_rerank_score ?? undefined,
       }));
     },
     staleTime: 1000 * 60 * 15,

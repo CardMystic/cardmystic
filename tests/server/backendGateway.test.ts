@@ -6,6 +6,11 @@ import {
 } from '~/server/utils/backendGateway';
 
 describe('private backend gateway', () => {
+  it('allows the curated popular-query endpoint', () => {
+    expect(
+      backendTarget('https://api.example.com', '/api/backend/cache/popular'),
+    ).toBe('https://api.example.com/cache/popular');
+  });
   it('restores the user JWT when Azure replaces Authorization', () => {
     expect(
       backendHeaders(
