@@ -16,6 +16,8 @@ export function useTopCardsSearch(
   searchParams: ComputedRef<TopCardsRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const billing = useMeteredSearchRequest();
+  const fetch = billing.fetch;
 
   const queryEnabled = computed(() => !!searchParams.value);
 
@@ -26,7 +28,12 @@ export function useTopCardsSearch(
     error,
     refetch,
   } = useQuery({
-    queryKey: computed(() => ['deck-stats', 'top-cards', searchParams.value]),
+    queryKey: computed(() => [
+      'deck-stats',
+      'top-cards',
+      searchParams.value,
+      billing.userId.value,
+    ]),
     queryFn: async () => {
       const response = await fetch(
         `${config.public.backendPath}/deck-stats/top-cards`,
@@ -57,7 +64,11 @@ export function useTopCardsSearch(
       }));
     },
     staleTime: 1000 * 60 * 15,
-    enabled: queryEnabled,
+    enabled: computed(() => billing.ready.value && queryEnabled.value),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return {
@@ -73,6 +84,8 @@ export function useTopCommandersSearch(
   searchParams: ComputedRef<TopCommandersRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const billing = useMeteredSearchRequest();
+  const fetch = billing.fetch;
 
   const queryEnabled = computed(() => !!searchParams.value);
 
@@ -87,6 +100,7 @@ export function useTopCommandersSearch(
       'deck-stats',
       'top-commanders',
       searchParams.value,
+      billing.userId.value,
     ]),
     queryFn: async () => {
       const response = await fetch(
@@ -120,7 +134,11 @@ export function useTopCommandersSearch(
       }));
     },
     staleTime: 1000 * 60 * 15,
-    enabled: queryEnabled,
+    enabled: computed(() => billing.ready.value && queryEnabled.value),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return {
@@ -136,6 +154,8 @@ export function usePopularByCommander(
   searchParams: ComputedRef<PopularByCommanderRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const billing = useMeteredSearchRequest();
+  const fetch = billing.fetch;
 
   const queryEnabled = computed(() => !!searchParams.value);
 
@@ -150,6 +170,7 @@ export function usePopularByCommander(
       'deck-stats',
       'popular-by-commander',
       searchParams.value,
+      billing.userId.value,
     ]),
     queryFn: async () => {
       const response = await fetch(
@@ -181,7 +202,11 @@ export function usePopularByCommander(
       }));
     },
     staleTime: 1000 * 60 * 15,
-    enabled: queryEnabled,
+    enabled: computed(() => billing.ready.value && queryEnabled.value),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return {
@@ -197,6 +222,8 @@ export function usePopularCommandersForCard(
   searchParams: ComputedRef<PopularCommandersForCardRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const billing = useMeteredSearchRequest();
+  const fetch = billing.fetch;
 
   const queryEnabled = computed(() => !!searchParams.value);
 
@@ -211,6 +238,7 @@ export function usePopularCommandersForCard(
       'deck-stats',
       'popular-commanders-for-card',
       searchParams.value,
+      billing.userId.value,
     ]),
     queryFn: async () => {
       const response = await fetch(
@@ -239,7 +267,11 @@ export function usePopularCommandersForCard(
       }));
     },
     staleTime: 1000 * 60 * 15,
-    enabled: queryEnabled,
+    enabled: computed(() => billing.ready.value && queryEnabled.value),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return {

@@ -314,4 +314,6 @@ The backend `POPULAR_QUERIES` list in `src/common/utils/protectedSearches.ts` is
 
 Query-based deck recommendations and popularity searches also use `ai_rerank_score` for relevance ordering when research returns a successful Jev rerank. The original ALS, popularity, and ColBERT scores remain available; without Jev scores the existing ordering rules apply.
 
-The deck recommender and popularity search forms, including card-page recommendation tabs, expose the shared Reranking toggle. Its `useRerank` URL parameter survives form submissions, participates in query caching, and resets selected result sorting when switched on. With no search query it does not trigger a Jev call.
+Smart/Commander, Similarity, deck recommendation, and popularity forms (including card-page tabs) share the Normal/Enhanced search-mode selector. The `useRerank` URL parameter survives submissions; query-free recommendations do not spend Enhanced searches. Similarity reranks its matrix candidates using the selected card's rules/type/keyword text. Automatic related cards on card detail pages remain Normal. The backend enforces allowances before returning cached or fresh results.
+
+`/memberships` offers Enhanced ($7/month, 1,000 searches/month, one initial free calendar month) and optional $7 packs of 1,000 searches. Free access includes 10 Enhanced searches/day, with UTC resets. Stripe secrets belong only in the backend; hosted Checkout needs no browser Stripe key. Apply the backend billing migration and follow `cardmystic-backend/docs/stripe-setup.md` before enabling payments.

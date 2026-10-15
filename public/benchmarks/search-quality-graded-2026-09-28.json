@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-28",
+  "version": "graded-ndcg-v1",
+  "metric": "nDCG@10",
+  "displayMetric": "Ranking quality score",
+  "displayScale": 100,
+  "suiteWeights": {
+    "subjective": 0.5,
+    "technical": 0.5
+  },
+  "totalQueries": 345,
+  "scoredQueries": 333,
+  "gradedJudgments": 16617,
+  "suites": {
+    "subjective": {
+      "queries": 174,
+      "scoredQueries": 171,
+      "topics": 43,
+      "scoredTopics": 43
+    },
+    "technical": {
+      "queries": 171,
+      "scoredQueries": 162,
+      "topics": 57,
+      "scoredTopics": 54
+    }
+  },
+  "modes": [
+    {
+      "id": "normal",
+      "name": "Normal",
+      "subjectiveNdcgAt10": 0.3753899730346246,
+      "technicalNdcgAt10": 0.8215704027869682
+    },
+    {
+      "id": "enhanced",
+      "name": "Enhanced",
+      "subjectiveNdcgAt10": 0.677060839234353,
+      "technicalNdcgAt10": 0.934265455116355
+    },
+    {
+      "id": "pro",
+      "name": "Pro",
+      "subjectiveNdcgAt10": 0.8357708154101794,
+      "technicalNdcgAt10": 0.9533555372637392
+    }
+  ],
+  "sourceReport": "cardmystic-research/data/eval/2026-09-28_graded-review/README.md",
+  "sourceMetricsSha256": "ed9e6eb57130d843f966a4dc3e9581f4ff80f53b12386c331c1857f581ff7336",
+  "sourceJudgmentsSha256": "f8f1555393aa515b00b2f8be5126af2f6c9e51ab6c95b210f17545b5541bc83e",
+  "methodology": [
+    "Frozen delivered results from the restored enriched ColBERT, Jev and Pro comparison. No search queries or paid model calls were rerun for grading.",
+    "Cards graded 0 to 3 against query wording and frozen Oracle identity, with reasons and confidence. Labels were frozen before mode metric calculation.",
+    "nDCG@10 uses exponential relevance gain 2^grade-1 and log2(rank+1) discount, normalized against the ideal ranking of the same reviewed pool for every mode. The pool is the saved top 10 union across modes plus original positive seeds, not every card in the catalog.",
+    "Query variants average within topics; topics have equal weight within each suite. The displayed combined score gives technical and subjective suite means 50% weight each and multiplies by 100.",
+    "Relative lift equals (higher-mode unrounded combined score / baseline unrounded combined score -1)*100, rounded to the nearest whole percent. It is not a percentage-point increase or overall search accuracy.",
+    "Primary scores use the same fully judged 333 queries for all modes: 171 subjective and 162 technical. Twelve unresolved queries are excluded from all primary mode comparisons. Unjudged cards are not treated as incorrect.",
+    "Model-assisted, post-hoc relevance review, including an independent 100-topic sample check; not independent human consensus or a held-out test. Subjective power depends on interpretation and context.",
+    "Saved fallback results remain included for scored queries. Latency and costs were not remeasured.",
+    "These are natural-language card-search benchmarks; Commander Search, Similarity Search and deck recommendations were not separately benchmarked. Membership tiers change allowances, not the model quality within a search mode."
+  ]
+}

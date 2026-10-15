@@ -608,9 +608,9 @@
                 </h3>
                 <div
                   v-if="showRecommendedInput"
-                  class="recommend-section flex gap-2 mt-2 mb-4"
+                  class="recommend-section flex flex-wrap gap-2 mt-2 mb-4"
                 >
-                  <RerankToggle />
+                  <SearchModeSelect class="w-full" />
                   <UInput
                     v-model="recommendQuery"
                     placeholder="e.g. ramp, removal, card draw..."
@@ -660,8 +660,11 @@
                 >
                   Popular Cards
                 </h3>
-                <div v-if="showPopularCardsInput" class="flex gap-2 mt-2 mb-4">
-                  <RerankToggle />
+                <div
+                  v-if="showPopularCardsInput"
+                  class="flex flex-wrap gap-2 mt-2 mb-4"
+                >
+                  <SearchModeSelect class="w-full" />
                   <UInput
                     v-model="popularCardsQuery"
                     placeholder="e.g. ramp, removal, card draw..."
@@ -745,9 +748,9 @@
                 </h3>
                 <div
                   v-if="showPopularCommandersInput"
-                  class="flex gap-2 mt-2 mb-4"
+                  class="flex flex-wrap gap-2 mt-2 mb-4"
                 >
-                  <RerankToggle />
+                  <SearchModeSelect class="w-full" />
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."
@@ -797,9 +800,9 @@
                 </h3>
                 <div
                   v-if="showPopularCommandersInput"
-                  class="flex gap-2 mt-2 mb-4"
+                  class="flex flex-wrap gap-2 mt-2 mb-4"
                 >
-                  <RerankToggle />
+                  <SearchModeSelect class="w-full" />
                   <UInput
                     v-model="popularCommandersQuery"
                     placeholder="e.g. aggro, lifegain, tokens..."

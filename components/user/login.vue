@@ -2,6 +2,7 @@
 import type { LoginRequest } from '@/models/userModel';
 
 const router = useRouter();
+const route = useRoute();
 
 const { loginWithEmail, loginWithGoogle, resendVerificationEmail } =
   useUserProfile();
@@ -46,7 +47,7 @@ const signInWithEmail = async () => {
       password: password.value,
     };
     await loginWithEmail(credentials);
-    router.push('/');
+    router.push(route.query.redirect === '/memberships' ? '/memberships' : '/');
   } catch (e: any) {
     errorMessage.value = e.message || 'An unexpected error occurred.';
     if (/not confirmed|confirm your email/i.test(errorMessage.value ?? '')) {

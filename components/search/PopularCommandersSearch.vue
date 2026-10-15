@@ -48,7 +48,7 @@
         v-model="state.filters"
         :show="['arena', 'mtgo', 'paper']"
       />
-      <RerankToggle />
+      <SearchModeSelect />
     </div>
 
     <Filters

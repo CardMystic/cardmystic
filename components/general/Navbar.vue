@@ -224,6 +224,11 @@ const mainItemsMobile: NavigationMenuItem[] = [
 
 const externalItems: NavigationMenuItem[] = [
   {
+    label: 'Memberships',
+    icon: 'i-lucide-sparkles',
+    to: '/memberships',
+  },
+  {
     label: 'GitHub',
     icon: 'i-simple-icons-github',
     to: 'https://github.com/cardmystic/cardmystic',

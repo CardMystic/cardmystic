@@ -245,6 +245,12 @@ onBeforeUnmount(() => followingObserver?.disconnect());
         </UCard>
 
         <!-- Profile settings (avatar, Patreon, username, email, password, sign out) -->
+        <UButton
+          to="/memberships"
+          icon="i-lucide-sparkles"
+          class="lg:col-span-3 justify-center"
+          >Search membership and billing</UButton
+        >
         <Profile class="lg:col-span-3" />
       </div>
     </div>

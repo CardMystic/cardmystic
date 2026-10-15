@@ -100,7 +100,7 @@
 
     <div class="flex flex-wrap items-center justify-between gap-2">
       <QuickFilters v-model="state.filters" />
-      <RerankToggle />
+      <SearchModeSelect />
     </div>
 
     <SuggestedSearches v-if="showSuggestedSearches" />
