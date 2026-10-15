@@ -45,6 +45,34 @@
 <script setup lang="ts">
 const linkGroups = [
   {
+    label: 'Browse Cards',
+    description: 'Find cards by deck theme, gameplay role, or set.',
+    icon: 'i-mdi-cards-outline',
+    links: [
+      {
+        label: 'Themes',
+        description: 'Top cards for each deck theme.',
+        icon: 'i-lucide-tags',
+        to: '/themes',
+        tone: 'themes',
+      },
+      {
+        label: 'Roles',
+        description: 'Find cards for each gameplay role.',
+        icon: 'i-lucide-list-filter',
+        to: '/roles',
+        tone: 'roles',
+      },
+      {
+        label: 'Sets',
+        description: 'Browse the cards printed in each set.',
+        icon: 'i-mdi-cards-outline',
+        to: '/sets',
+        tone: 'sets',
+      },
+    ],
+  },
+  {
     label: 'Search',
     description: 'Powerful searches & deck recommendations.',
     icon: 'i-lucide-search',

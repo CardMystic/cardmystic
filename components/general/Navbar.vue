@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
+import { siteNavigation, utilityNavigation } from '~/utils/site-navigation';
+const route = useRoute();
 const ClipboardMenu = defineAsyncComponent(
   () => import('~/components/clipboard/ClipboardMenu.vue'),
 );
@@ -53,194 +55,19 @@ function closePopover() {
   isOpen.value = false;
 }
 
-const searchItems: NavigationMenuItem[] = [
-  {
-    label: 'Home',
-    icon: 'i-lucide-home',
-    to: '/',
-  },
-  {
-    label: 'Search',
-    icon: 'i-lucide-search',
-    children: [
-      {
-        label: 'Smart Search',
-        description: 'Find cards by describing them using natural language',
-        icon: 'i-lucide-brain',
-        to: '/search/all/smart',
-      },
-      {
-        label: 'Similarity Search',
-        description: 'Search for similar cards by name',
-        icon: 'i-mdi-cards-outline',
-        to: '/search/all/similarity',
-      },
-      {
-        label: 'Commander Search',
-        description:
-          'Find commanders by describing them using natural language',
-        icon: 'i-mdi-crown',
-        to: '/search/all/commander',
-      },
-      {
-        label: 'Keyword Search',
-        description: 'Search for cards by keywords and filters',
-        icon: 'i-lucide-whole-word',
-        to: '/search/all/keyword',
-      },
-      {
-        label: 'Deck Recommender',
-        description: 'Get decklist recommendations',
-        icon: 'i-lucide-box',
-        to: '/search/all/deckbuilder',
-      },
-    ],
-  },
-  {
-    label: 'Explore',
-    icon: 'i-lucide-compass',
-    children: [
-      {
-        label: 'Search Decklists',
-        description: 'Find public decklists by keyword',
-        icon: 'i-lucide-list-tree',
-        to: '/explore/decklists',
-      },
-      {
-        label: 'Search Users',
-        description: 'Find other CardMystic users',
-        icon: 'i-lucide-user-search',
-        to: '/explore/users',
-      },
-      {
-        label: 'Search Articles',
-        description: 'Read articles written by the community',
-        icon: 'i-lucide-newspaper',
-        to: '/explore/articles',
-      },
-      {
-        label: 'Popular Commander Cards',
-        description: 'Top cards across all commander decks',
-        icon: 'i-lucide-chart-no-axes-combined',
-        to: '/popular-cards/all',
-      },
-      {
-        label: 'Popular Commanders',
-        description: 'Top commanders across all decks',
-        icon: 'i-mdi-crown',
-        to: '/popular-commanders/all',
-      },
-      {
-        label: 'Popular Cards By Commander',
-        description: 'Most popular cards for each commander',
-        icon: 'i-lucide-flame',
-        to: '/popular-by-commander/all',
-      },
-    ],
-  },
-];
-
-const trailingItems: NavigationMenuItem[] = [
-  {
-    label: 'About',
-    icon: 'i-lucide-info',
-    to: '/about',
-  },
-];
-
-const mainItemsMobile: NavigationMenuItem[] = [
-  {
-    label: 'Smart Search',
-    description: 'Search for cards using natural language',
-    icon: 'i-lucide-brain',
-    to: '/search/all/smart',
-  },
-  {
-    label: 'Similarity Search',
-    description: 'Search for similar cards by name',
-    icon: 'i-mdi-cards-outline',
-    to: '/search/all/similarity',
-  },
-  {
-    label: 'Commander Search',
-    description: 'Search for commanders using natural language',
-    icon: 'i-mdi-crown',
-    to: '/search/all/commander',
-  },
-  {
-    label: 'Keyword Search',
-    description: 'Search for cards by keywords and filters',
-    icon: 'i-lucide-whole-word',
-    to: '/search/all/keyword',
-  },
-  {
-    label: 'Deck Recommender',
-    description: 'Get decklist recommendations',
-    icon: 'i-lucide-box',
-    to: '/search/all/deckbuilder',
-  },
-  {
-    label: 'Search Decklists',
-    description: 'Find public decklists by keyword',
-    icon: 'i-lucide-list-tree',
-    to: '/explore/decklists',
-  },
-  {
-    label: 'Search Users',
-    description: 'Find other CardMystic users',
-    icon: 'i-lucide-user-search',
-    to: '/explore/users',
-  },
-  {
-    label: 'Search Articles',
-    description: 'Read articles written by the community',
-    icon: 'i-lucide-newspaper',
-    to: '/explore/articles',
-  },
-  {
-    label: 'Popular Commander Cards',
-    description: 'Top cards across all commander decks',
-    icon: 'i-lucide-chart-no-axes-combined',
-    to: '/popular-cards/all',
-  },
-  {
-    label: 'Popular Commanders',
-    description: 'Top commanders across all decks',
-    icon: 'i-mdi-crown',
-    to: '/popular-commanders/all',
-  },
-  {
-    label: 'Cards by Commander',
-    description: 'Popular cards for a commander',
-    icon: 'i-lucide-flame',
-    to: '/popular-by-commander/all',
-  },
-  {
-    label: 'About',
-    icon: 'i-lucide-info',
-    to: '/about',
-  },
-];
-
-const externalItems: NavigationMenuItem[] = [
-  {
-    label: 'Memberships',
-    icon: 'i-lucide-sparkles',
-    to: '/memberships',
-  },
-  {
-    label: 'GitHub',
-    icon: 'i-simple-icons-github',
-    to: 'https://github.com/cardmystic/cardmystic',
-    target: '_blank',
-  },
-  {
-    label: 'Patreon',
-    icon: 'i-simple-icons-patreon',
-    to: 'https://www.patreon.com/thecardmystic',
-    target: '_blank',
-  },
-];
+const { data: collections, status: collectionStatus } = useCardCollections();
+const searchItems = computed(() =>
+  siteNavigation(collections.value, collectionStatus.value),
+);
+const desktopItems = computed(() => [
+  ...searchItems.value,
+  { label: 'More', icon: 'i-lucide-ellipsis', children: utilityNavigation },
+]);
+const mainItemsMobile = computed(() => [
+  ...searchItems.value,
+  ...utilityNavigation,
+]);
+watch(() => route.fullPath, closePopover);
 </script>
 
 <template>
@@ -251,7 +78,7 @@ const externalItems: NavigationMenuItem[] = [
     ]"
   >
     <!-- Mobile -->
-    <div class="md:hidden flex flex-row justify-between w-full">
+    <div class="xl:hidden flex flex-row justify-between w-full">
       <!-- Mobile Menu Button -->
       <UPopover v-model:open="isOpen" @close="closePopover">
         <UButton
@@ -273,20 +100,7 @@ const externalItems: NavigationMenuItem[] = [
               <UIcon name="i-lucide-layers" class="w-5 h-5" />
               <span>Your Decks</span>
             </NuxtLink>
-            <NuxtLink
-              v-for="item in mainItemsMobile"
-              :to="item.to"
-              class="flex items-center gap-2"
-              @click="closePopover"
-            >
-              <UIcon :name="item.icon!" class="w-5 h-5" />
-              <div class="flex flex-col">
-                <span>{{ item.label }}</span>
-                <!-- <span class="text-sm text-gray-500" v-if="item.description">{{
-                  item.description
-                }}</span> -->
-              </div>
-            </NuxtLink>
+            <SiteNavigation :items="mainItemsMobile" orientation="vertical" />
           </div>
         </template>
       </UPopover>
@@ -456,7 +270,7 @@ const externalItems: NavigationMenuItem[] = [
     </div>
 
     <!-- Desktop -->
-    <div class="flex-row hidden md:flex items-center">
+    <div class="flex-row hidden xl:flex items-center">
       <!-- Logo -->
       <NuxtLink to="/" class="hover:opacity-80 transition-opacity mr-6">
         <ClientOnly>
@@ -476,15 +290,7 @@ const externalItems: NavigationMenuItem[] = [
       </NuxtLink>
 
       <!-- Desktop Navigation -->
-      <UNavigationMenu
-        :items="searchItems"
-        :ui="{
-          viewport: 'w-auto min-w-65 max-w-md left-1/2 -translate-x-1/2',
-          childList: 'w-auto flex flex-col items-start p-2 gap-2',
-          content: 'w-auto',
-        }"
-      />
-      <UNavigationMenu :items="[...trailingItems, ...externalItems]" />
+      <SiteNavigation :items="desktopItems" />
       <div
         class="w-px h-6 self-center bg-gray-300 dark:bg-gray-700 mx-2"
         aria-hidden="true"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ compact?: boolean }>();
 const route = useRoute();
 const router = useRouter();
 const id = useId();
@@ -45,7 +46,10 @@ function select(value: unknown) {
       size="sm"
       @update:model-value="select"
     />
-    <span :id="`${id}-description`" class="text-sm text-muted"
+    <span
+      v-if="!compact || mode === 'normal'"
+      :id="`${id}-description`"
+      class="text-sm text-muted"
       >{{
         mode === 'normal'
           ? 'Original search matches.'
@@ -58,11 +62,16 @@ function select(value: unknown) {
         >Get better results with our memberships</NuxtLink
       ></span
     >
-    <p v-if="allowance" class="basis-full text-sm text-muted">
+    <p
+      v-if="allowance"
+      :id="compact ? `${id}-description` : undefined"
+      class="text-sm text-muted"
+      :class="compact ? 'min-w-0 flex-1 basis-64' : 'basis-full'"
+    >
       {{ allowance }}
-      <NuxtLink to="/memberships" class="underline underline-offset-2"
-        >Memberships</NuxtLink
-      >
+      <NuxtLink to="/memberships" class="underline underline-offset-2">{{
+        compact ? 'See Memberships' : 'Memberships'
+      }}</NuxtLink>
     </p>
     <p v-if="error" class="basis-full text-sm text-muted">
       Search allowance could not be checked.

@@ -206,10 +206,12 @@
 
     <UCollapsible
       v-if="!hideControls"
-      v-model:open="isOpen"
+      :open="embedded || isOpen"
+      @update:open="isOpen = $event"
       class="flex flex-col gap-2"
     >
       <UButton
+        v-if="!embedded"
         class="filters-toggle-btn cursor-pointer"
         label="Select Filters"
         color="primary"
@@ -466,12 +468,14 @@ const orientation: Ref<'vertical' | 'horizontal'> = computed(() =>
   screenWidth.value < 768 ? 'vertical' : 'horizontal',
 );
 
-const { modelValue, hideColors, hideFormats, hideControls } = defineProps<{
-  modelValue?: CardSearchFilters;
-  hideColors?: boolean;
-  hideFormats?: boolean;
-  hideControls?: boolean;
-}>();
+const { modelValue, hideColors, hideFormats, hideControls, embedded } =
+  defineProps<{
+    modelValue?: CardSearchFilters;
+    hideColors?: boolean;
+    hideFormats?: boolean;
+    hideControls?: boolean;
+    embedded?: boolean;
+  }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: CardSearchFilters];

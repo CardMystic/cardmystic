@@ -10,6 +10,12 @@ export const ExampleQueryResponseSchema = z.object({
 
 export type WordSearch = z.infer<typeof WordSearchSchema>;
 export const WordSearchSchema = z.object({
+  collection: z
+    .object({
+      kind: z.enum(['themes', 'roles', 'sets']),
+      slug: z.string().regex(/^[a-z0-9-]{1,100}$/),
+    })
+    .optional(),
   query: z.string(),
   limit: z
     .number()
