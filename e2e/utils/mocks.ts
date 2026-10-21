@@ -241,3 +241,33 @@ export const reliableFill = async (
   await locator.fill(value);
   await expect(locator).toHaveValue(value);
 };
+
+export async function mockSignedInUser(page: Page) {
+  await mockSupabaseAuth(page);
+  await page.route(`${SUPABASE}/rest/v1/profiles**`, (route) =>
+    route.fulfill({
+      json: {
+        id: FAKE_USER.id,
+        username: 'BillingTester',
+        avatar_card_name: null,
+      },
+    }),
+  );
+  await page.route(`${BACKEND}/user/ping`, (route) =>
+    route.fulfill({ json: {} }),
+  );
+  await page.addInitScript(
+    ({ key, session }) => localStorage.setItem(key, JSON.stringify(session)),
+    {
+      key: `sb-${new URL(SUPABASE).hostname.split('.')[0]}-auth-token`,
+      session: {
+        access_token: fakeJwt(),
+        refresh_token: 'fake-refresh',
+        token_type: 'bearer',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        expires_in: 3600,
+        user: FAKE_USER,
+      },
+    },
+  );
+}

@@ -65,30 +65,43 @@ export function useSearchAccess() {
   };
 }
 
+export function useSearchModeNotice() {
+  return useState('search-normal-mode-modal', () => ({
+    open: false,
+    description: '',
+  }));
+}
+
 export function useMeteredSearchRequest() {
   const access = useSearchAccess();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
+  const modal = useSearchModeNotice();
   const notice = useState('search-allowance-notice', () => '');
   const fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const subject = access.userId.value;
     const searchLocation = route.fullPath;
+    const headers = new Headers(init?.headers);
+    for (const [name, value] of Object.entries(await access.headers())) {
+      headers.set(name, value);
+    }
+    // Guests use Normal even when opening an old Enhanced search link.
+    const body =
+      !subject && typeof init?.body === 'string'
+        ? JSON.stringify({ ...JSON.parse(init.body), useRerank: false })
+        : init?.body;
     const response = await globalThis.fetch(input, {
       ...init,
-      headers: {
-        ...Object.fromEntries(new Headers(init?.headers)),
-        ...(await access.headers()),
-      },
+      body,
+      headers,
     });
     const header = response.headers.get('x-search-access');
     if (header && subject === access.userId.value) {
       const decision = JSON.parse(header);
       access.report(decision, subject);
       if (
-        ['allowance_exhausted', 'guest_identity_unavailable'].includes(
-          decision.reason,
-        ) &&
+        ['allowance_exhausted', 'sign_in_required'].includes(decision.reason) &&
         route.fullPath === searchLocation &&
         route.query.useRerank !== 'false'
       ) {
@@ -101,18 +114,15 @@ export function useMeteredSearchRequest() {
       if (
         decision.reason &&
         decision.reason !== 'enhancement_unavailable' &&
+        decision.reason !== 'sign_in_required' &&
         notice.value !== `${subject}:${decision.resetsAt}`
       ) {
         notice.value = `${subject}:${decision.resetsAt}`;
-        toast.add({
-          title: 'Search mode switched to Normal',
+        modal.value = {
+          open: true,
           description:
-            decision.reason === 'guest_identity_unavailable'
-              ? 'Your guest allowance could not be verified. Your results are shown in Normal mode. Sign in to use your account allowance.'
-              : 'You have used your available Enhanced searches. Your results are shown in Normal mode. Free allowances reset at midnight UTC.',
-          actions: [{ label: 'View memberships', to: '/memberships' }],
-          duration: 10000,
-        });
+            'You have used your available Enhanced searches. Your results are shown in Normal mode. Free allowances reset at midnight UTC.',
+        };
       } else if (decision.reason === 'enhancement_unavailable') {
         toast.add({
           title: 'Enhanced search is unavailable',

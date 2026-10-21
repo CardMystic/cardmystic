@@ -1,11 +1,66 @@
 import { expect, test, type Page, type Response } from '@playwright/test';
-import { BACKEND, gotoHydrated, reliableFill } from './utils/mocks';
+import {
+  BACKEND,
+  gotoHydrated,
+  reliableFill,
+  mockSignedInUser,
+} from './utils/mocks';
 
 test.describe.configure({ timeout: 120_000 });
 
 const hydrationErrors = new WeakMap<Page, string[]>();
 
 test.beforeEach(async ({ page }) => {
+  await mockSignedInUser(page);
+  await page.route(`${BACKEND}/search-access`, (route) =>
+    route.fulfill({
+      json: {
+        enabled: true,
+        authenticated: true,
+        tier: 'enhanced',
+        enhancedRemaining: null,
+        enhancedTopUpRemaining: 0,
+        resetsAt: null,
+      },
+    }),
+  );
+  // These tests cover browser ranking/sort state; provider and quota behavior
+  // are exercised separately by backend and research integration tests.
+  await page.route(`${BACKEND}/search/colbert`, (route) => {
+    const enhanced = route.request().postDataJSON().useRerank;
+    const results = Array.from({ length: 100 }, (_, i) => ({
+      card_name: `Fixture Card ${String(i).padStart(3, '0')}`,
+      rank: i + 1,
+      ai_normalized_score: 1 - i / 100,
+      ...(enhanced ? { ai_rerank_score: (i + 1) / 100 } : {}),
+      card_data: {
+        id: `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+        oracle_id: `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+        name: `Fixture Card ${String(i).padStart(3, '0')}`,
+        layout: 'normal',
+        type_line: 'Legendary Creature',
+        mana_cost: '{1}',
+        cmc: 1,
+        colors: [],
+        color_identity: [],
+        keywords: [],
+        legalities: {},
+        prices: {},
+        rarity: 'common',
+        set: 'tst',
+        games: ['paper'],
+        oracle_text: 'Draw a card.',
+        image_uris: { normal: 'https://cards.example.test/card.svg' },
+      },
+    }));
+    return route.fulfill({ json: enhanced ? results.reverse() : results });
+  });
+  await page.route('https://cards.example.test/**', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="140"/>',
+    }),
+  );
   const errors: string[] = [];
   hydrationErrors.set(page, errors);
   page.on('console', (message) => {
@@ -89,7 +144,7 @@ test('Smart Search toggles the active ranking and keeps URL state across history
     exact: true,
   });
   await expect(toggle).toContainText('Enhanced');
-  await expect(page.getByText('Reorders matches by relevance.')).toBeVisible();
+  await expect(page.getByText('Unlimited Enhanced searches.')).toBeVisible();
 
   const offResponsePromise = waitForRanking(page, false);
   await toggleSearchMode(page);

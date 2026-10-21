@@ -225,20 +225,8 @@ const mainItemsMobile: NavigationMenuItem[] = [
 const externalItems: NavigationMenuItem[] = [
   {
     label: 'Memberships',
-    icon: 'i-lucide-sparkles',
+    icon: 'i-lucide-credit-card',
     to: '/memberships',
-  },
-  {
-    label: 'GitHub',
-    icon: 'i-simple-icons-github',
-    to: 'https://github.com/cardmystic/cardmystic',
-    target: '_blank',
-  },
-  {
-    label: 'Patreon',
-    icon: 'i-simple-icons-patreon',
-    to: 'https://www.patreon.com/thecardmystic',
-    target: '_blank',
   },
 ];
 </script>

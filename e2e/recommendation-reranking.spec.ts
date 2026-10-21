@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { BACKEND, gotoHydrated } from './utils/mocks';
+import { BACKEND, gotoHydrated, mockSignedInUser } from './utils/mocks';
 
 for (const [path, endpoint] of [
   ['/search/all/similarity?card_name=Sol+Ring', '/search/similarity'],
@@ -17,6 +17,7 @@ for (const [path, endpoint] of [
   test(`search mode updates and survives submission: ${endpoint}`, async ({
     page,
   }) => {
+    await mockSignedInUser(page);
     const requests: {
       useRerank: boolean;
       query?: string;
@@ -26,7 +27,7 @@ for (const [path, endpoint] of [
       route.fulfill({
         json: {
           enabled: true,
-          authenticated: false,
+          authenticated: true,
           tier: 'normal',
           enhancedRemaining: 10,
           enhancedTopUpRemaining: 0,

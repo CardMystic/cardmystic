@@ -44,7 +44,7 @@ test.describe('Protected routes', () => {
 
     await expect(page).toHaveURL(new URL('/', page.url()).href);
     await expect(
-      page.getByRole('button', { name: 'Connect to Patreon' }),
+      page.getByRole('heading', { name: 'Update Username', exact: true }),
     ).toHaveCount(0);
   });
 });

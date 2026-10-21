@@ -465,16 +465,7 @@ test.describe('Card Text view', () => {
     // Wait for results to render as a grid first, then flip the view.
     await expectResultsRendered(page);
 
-    // The View selector renders inside the search sidebar/filters.
-    // We switch by focusing the trigger and using keyboard because
-    // reka-ui SelectTriggers occasionally swallow clicks under
-    // Playwright when nested in scrollable containers.
-    const viewTrigger = page.getByRole('combobox').first();
-    // Fall back to label lookup if the first combobox isn't the View.
-    const byLabel = page.getByRole('button', { name: /Card Grid/i }).first();
-    const target = (await byLabel.count()) > 0 ? byLabel : viewTrigger;
-    await target.focus();
-    await target.press('Enter');
+    await page.getByRole('combobox', { name: 'View', exact: true }).click();
     await page.getByRole('option', { name: 'Card Text' }).click();
 
     // The grid should now contain `.card-text-row` elements instead of
@@ -490,5 +481,8 @@ test.describe('Card Text view', () => {
     await expect(rows.first()).toHaveAttribute('aria-label', /.+, \d+ copies/);
     // The role="group" is on the same element (not a wrapper).
     await expect(rows.first()).toHaveAttribute('role', 'group');
+    await expect(rows.first().locator('.card-name').first()).toHaveText(/\S/);
+    // Some cards (such as lands) have no mana cost; check a row that does.
+    await expect(rows.locator('.mana-cost').first()).toBeVisible();
   });
 });

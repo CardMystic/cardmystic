@@ -5,6 +5,7 @@
     <USelect
       v-model="selectedView"
       :items="viewOptions"
+      aria-label="View"
       size="sm"
       class="cursor-pointer w-32"
     />
