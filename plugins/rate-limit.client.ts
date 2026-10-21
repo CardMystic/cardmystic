@@ -1,3 +1,6 @@
+import type { FetchContext, FetchResponse } from 'ofetch';
+import { getGatewayRequestHeaders } from '~/utils/backendRequestHeaders';
+
 export default defineNuxtPlugin({
   name: 'rate-limit-feedback',
   enforce: 'pre',
@@ -25,7 +28,17 @@ export default defineNuxtPlugin({
     // $fetch captures its own fetch reference. Throwing here stops its
     // automatic retry and gives callers the same message as native fetch.
     globalThis.$fetch = globalThis.$fetch.create({
-      onResponseError({ response }) {
+      onRequest({ request, options }: FetchContext) {
+        const headers = getGatewayRequestHeaders(
+          request,
+          options.headers,
+          backend,
+        );
+        if (headers) options.headers = headers;
+      },
+      onResponseError({
+        response,
+      }: FetchContext & { response: FetchResponse<unknown> }) {
         if (response.status === 429) {
           notify();
           throw new Error(message);
@@ -33,7 +46,11 @@ export default defineNuxtPlugin({
       },
     });
     globalThis.fetch = async (input, init) => {
-      const response = await originalFetch(input, init);
+      const headers = getGatewayRequestHeaders(input, init?.headers, backend);
+      const response = await originalFetch(
+        input,
+        headers ? { ...init, headers } : init,
+      );
       if (response.status === 429) {
         notify();
         const url = new URL(

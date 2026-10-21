@@ -43,6 +43,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run unit tests
         run: pnpm test
+      - name: Check Azure gateway responses
+        run: pnpm test:azure-gateway
 
   e2e:
     name: Playwright (${{ matrix.project }})

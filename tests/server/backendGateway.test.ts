@@ -6,6 +6,36 @@ import {
 } from '~/server/utils/backendGateway';
 
 describe('private backend gateway', () => {
+  it('restores the user JWT when Azure replaces Authorization', () => {
+    expect(
+      backendHeaders(
+        {
+          authorization: 'Bearer azure-platform-token',
+          'x-cardmystic-authorization': 'Bearer user-jwt',
+        },
+        'server-key',
+        undefined,
+        false,
+        true,
+      ),
+    ).toEqual({
+      'x-api-key': 'server-key',
+      authorization: 'Bearer user-jwt',
+    });
+  });
+
+  it('does not forward Azure platform authorization for anonymous requests', () => {
+    expect(
+      backendHeaders(
+        { authorization: 'Bearer azure-platform-token' },
+        'server-key',
+        undefined,
+        false,
+        true,
+      ),
+    ).toEqual({ 'x-api-key': 'server-key' });
+  });
+
   it('keeps the fixed upstream, encoded resource ids and query strings', () => {
     expect(
       backendTarget(
