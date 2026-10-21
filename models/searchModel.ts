@@ -28,6 +28,7 @@ export const WordSearchSchema = z.object({
 
 export type SimilaritySearch = z.infer<typeof SimilaritySearchSchema>;
 export const SimilaritySearchSchema = z.object({
+  useRerank: z.boolean().optional().default(true),
   card_name: z.string().meta({
     description: 'The name of the card to find similar cards for.',
     examples: ['Elspeth, Storm Slayer'],

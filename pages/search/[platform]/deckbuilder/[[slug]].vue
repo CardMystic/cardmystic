@@ -66,6 +66,7 @@
       <div v-else class="mb-10 w-full">
         <!-- Results -->
         <SearchResults
+          :reranking-enabled="route.query.useRerank !== 'false'"
           :show-add-to-deckbuilder-button="true"
           :is-loading="isLoading"
           :is-fetching="isFetching"
@@ -237,6 +238,7 @@ const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
     cards: cards.length > 0 ? cards : undefined,
     limit: limitParam.value,
     query: descriptionParam.value || undefined,
+    useRerank: route.query.useRerank !== 'false',
     commanders: hasCommanders ? commanderNames.value : undefined,
     filters: parsedFilters.value,
   };

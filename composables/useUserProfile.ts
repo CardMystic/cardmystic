@@ -399,6 +399,7 @@ export const useUserProfile = () => {
   };
 
   return {
+    userId: readonly(userId),
     userProfile: readonly(userProfile),
     profileData: readonly(profileData),
     loading: readonly(loading),

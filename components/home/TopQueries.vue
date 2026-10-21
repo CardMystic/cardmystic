@@ -3,29 +3,29 @@
     <TopQueriesSkeleton v-if="isLoading" />
 
     <div
-      v-else-if="topQueries && topQueries.length > 0"
+      v-else-if="popularQueries && popularQueries.length > 0"
       class="top-queries-content"
     >
       <div class="queries-header">
         <UIcon name="i-lucide-trending-up" class="mr-2 text-primary text-xl" />
-        <h3 class="queries-title">Top Searches This Week</h3>
+        <h3 class="queries-title">Popular Searches</h3>
       </div>
 
       <div class="queries-grid">
         <!-- Left column: queries 1-5 -->
         <div class="queries-column">
           <div
-            v-for="(queryData, index) in leftColumnQueries"
-            :key="queryData.query"
+            v-for="(query, index) in leftColumnQueries"
+            :key="query"
             class="query-item"
           >
             <div class="query-rank">#{{ index + 1 }}</div>
-            <div class="query-text">{{ queryData.query }}</div>
+            <div class="query-text">{{ query }}</div>
             <UButton
               color="primary"
               variant="outline"
               size="sm"
-              @click="tryQuery(queryData.query)"
+              @click="tryQuery(query)"
               icon="i-lucide-search"
               class="try-btn cursor-pointer"
             >
@@ -37,17 +37,17 @@
         <!-- Right column: queries 6-10 -->
         <div class="queries-column">
           <div
-            v-for="(queryData, index) in rightColumnQueries"
-            :key="queryData.query"
+            v-for="(query, index) in rightColumnQueries"
+            :key="query"
             class="query-item"
           >
             <div class="query-rank">#{{ index + 6 }}</div>
-            <div class="query-text">{{ queryData.query }}</div>
+            <div class="query-text">{{ query }}</div>
             <UButton
               color="primary"
               variant="outline"
               size="sm"
-              @click="tryQuery(queryData.query)"
+              @click="tryQuery(query)"
               icon="i-lucide-search"
               class="try-btn cursor-pointer"
             >
@@ -68,19 +68,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTopQueries } from '~/composables/useTopQueries';
+import { usePopularQueries } from '~/composables/usePopularQueries';
 
 const router = useRouter();
 
-const { topQueries, isLoading, error } = useTopQueries();
+const { popularQueries, isLoading, error } = usePopularQueries();
 
 // Split queries into left and right columns
 const leftColumnQueries = computed(() => {
-  return topQueries.value?.slice(0, 5) || [];
+  return popularQueries.value?.slice(0, 5) || [];
 });
 
 const rightColumnQueries = computed(() => {
-  return topQueries.value?.slice(5, 10) || [];
+  return popularQueries.value?.slice(5, 10) || [];
 });
 
 function tryQuery(query: string) {

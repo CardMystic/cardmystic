@@ -3,14 +3,16 @@ import { BACKEND_USER_AUTH_HEADER } from '../../utils/backendRequestHeaders';
 const routeFamilies =
   /^(?:cards|search|als|deck-stats|articles|user|supabase\/card-lists)(?:\/|$)/;
 const publicEndpoints = new Set([
+  '/search-access',
+  '/billing/status',
+  '/billing/checkout',
+  '/billing/portal',
   '/cache/top',
+  '/cache/popular',
   '/metrics/query_count',
   '/metrics/visit',
   '/metrics/dislike',
   '/recaptcha/verify',
-  '/patreon/status',
-  '/patreon/connect',
-  '/patreon/connect/start',
   '/bulkdata/card-names.min.json',
   '/bulkdata/commanders.min.json',
   '/bulkdata/card-name-to-oracle-id.min.json',

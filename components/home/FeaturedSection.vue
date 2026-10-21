@@ -1,17 +1,6 @@
 <template>
   <div>
-    <h2 class="section-title mb-0">Awesome Decklists & Users</h2>
-    <p class="text-sm opacity-70 mb-4 text-center">
-      Support us on
-      <a
-        :href="PATREON_MEMBERSHIP_URL"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-primary hover:underline"
-        >Patreon</a
-      >
-      to automatically get your profile & deck lists featured!
-    </p>
+    <h2 class="section-title mb-4">Awesome Decklists & Users</h2>
 
     <ClientOnly>
       <!-- Decklists row -->
@@ -114,18 +103,7 @@
       <template
         v-if="isLoadingPrimers || primersError || visiblePrimers.length > 0"
       >
-        <h2 class="section-title mt-14 mb-0">Suggested Primer Reads</h2>
-        <p class="text-sm opacity-70 mb-4 text-center">
-          Support us on
-          <a
-            :href="PATREON_MEMBERSHIP_URL"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-primary hover:underline"
-            >Patreon</a
-          >
-          to automatically get your primers featured!
-        </p>
+        <h2 class="section-title mt-14 mb-4">Suggested Primer Reads</h2>
 
         <SearchError
           v-if="primersError"
@@ -179,7 +157,6 @@ import {
 import CardListLink from '~/components/lists/CardListLink.vue';
 import PublicUserLink from '~/components/user/PublicUserLink.vue';
 import FeaturedPrimerLink from '~/components/home/FeaturedPrimerLink.vue';
-import { PATREON_MEMBERSHIP_URL } from '~/models/patreonModel';
 
 const {
   decklists,

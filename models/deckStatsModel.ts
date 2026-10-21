@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { ScryfallCardSchema } from './cardModel';
+import { RecommendationRankingFields } from './rerankingModel';
 
 // -----------------------------------
 // Requests
@@ -8,6 +9,7 @@ import { ScryfallCardSchema } from './cardModel';
 
 export const TopCardsRequestSchema = z.object({
   limit: z.number().int().min(1).max(100).default(100),
+  useRerank: z.boolean().optional().default(true),
   query: z
     .string()
     .min(1)
@@ -27,6 +29,7 @@ export type TopCardsRequest = z.infer<typeof TopCardsRequestSchema>;
 
 export const TopCommandersRequestSchema = z.object({
   limit: z.number().int().min(1).max(100).default(100),
+  useRerank: z.boolean().optional().default(true),
   query: z
     .string()
     .min(1)
@@ -51,6 +54,7 @@ export const PopularByCommanderRequestSchema = z.object({
     .max(2)
     .describe('1 or 2 commander names (case-insensitive)'),
   limit: z.number().int().min(1).max(100).default(100),
+  useRerank: z.boolean().optional().default(true),
   query: z
     .string()
     .min(1)
@@ -72,6 +76,7 @@ export const PopularCommandersForCardRequestSchema = z.object({
     .max(200)
     .describe('The card name to look up (case-insensitive)'),
   limit: z.number().int().min(1).max(100).default(100),
+  useRerank: z.boolean().optional().default(true),
   query: z
     .string()
     .min(1)
@@ -97,6 +102,7 @@ const CardPopularitySchema = z.object({
   card_data: ScryfallCardSchema,
   ai_raw_score: z.number().optional(),
   ai_normalized_score: z.number().optional(),
+  ai_rerank_score: z.number().min(0).max(1).nullable().optional(),
 });
 
 const CommanderPopularitySchema = z.object({
@@ -106,9 +112,11 @@ const CommanderPopularitySchema = z.object({
   card_data: z.array(ScryfallCardSchema).min(1).max(2),
   ai_raw_score: z.number().optional(),
   ai_normalized_score: z.number().optional(),
+  ai_rerank_score: z.number().min(0).max(1).nullable().optional(),
 });
 
 export const TopCardsResponseSchema = z.object({
+  ...RecommendationRankingFields,
   total_decks: z.number(),
   results: z.array(CardPopularitySchema),
 });
@@ -116,6 +124,7 @@ export const TopCardsResponseSchema = z.object({
 export type TopCardsResponse = z.infer<typeof TopCardsResponseSchema>;
 
 export const TopCommandersResponseSchema = z.object({
+  ...RecommendationRankingFields,
   total_decks: z.number(),
   results: z.array(CommanderPopularitySchema),
 });
@@ -123,6 +132,7 @@ export const TopCommandersResponseSchema = z.object({
 export type TopCommandersResponse = z.infer<typeof TopCommandersResponseSchema>;
 
 export const PopularByCommanderSchema = z.object({
+  ...RecommendationRankingFields,
   total_decks: z.number(),
   results: z.array(CardPopularitySchema),
 });
@@ -130,6 +140,7 @@ export const PopularByCommanderSchema = z.object({
 export type PopularByCommander = z.infer<typeof PopularByCommanderSchema>;
 
 export const PopularCommandersForCardResponseSchema = z.object({
+  ...RecommendationRankingFields,
   total_decks: z.number(),
   results: z.array(CommanderPopularitySchema),
 });
