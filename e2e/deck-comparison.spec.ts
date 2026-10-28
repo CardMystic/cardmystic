@@ -389,6 +389,9 @@ test('comparison actions update the diff and preserve collapsed groups', async (
     exact: true,
   });
   await dialog
+    .getByRole('button', { name: 'Paste Decklist or URL', exact: true })
+    .click();
+  await dialog
     .getByRole('textbox', { name: 'Decklist or CardMystic URL' })
     .fill('3 Sol Ring\n2 Counterspell\n1 Forest');
   await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
@@ -600,6 +603,9 @@ test('public URLs, validation, and board isolation work on mobile', async ({
     name: 'Compare decks',
     exact: true,
   });
+  await dialog
+    .getByRole('button', { name: 'Paste Decklist or URL', exact: true })
+    .click();
   const input = dialog.getByRole('textbox', {
     name: 'Decklist or CardMystic URL',
   });
@@ -690,6 +696,9 @@ test('comparison skips unknown names and filters all card categories', async ({
     name: 'Compare decks',
     exact: true,
   });
+  await dialog
+    .getByRole('button', { name: 'Paste Decklist or URL', exact: true })
+    .click();
   const input = dialog.getByRole('textbox', {
     name: 'Decklist or CardMystic URL',
   });
@@ -769,6 +778,9 @@ test('comparison accepts another action while saving without resizing', async ({
     exact: true,
   });
   await dialog
+    .getByRole('button', { name: 'Paste Decklist or URL', exact: true })
+    .click();
+  await dialog
     .getByRole('textbox', { name: 'Decklist or CardMystic URL' })
     .fill('3 Sol Ring\n2 Counterspell\n1 Forest');
   await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
@@ -830,6 +842,9 @@ test('Add All and Remove All each send one batch and preserve the other board', 
     exact: true,
   });
   await dialog
+    .getByRole('button', { name: 'Paste Decklist or URL', exact: true })
+    .click();
+  await dialog
     .getByRole('textbox', { name: 'Decklist or CardMystic URL' })
     .fill('2 Counterspell\n3 Forest');
   await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
@@ -847,4 +862,75 @@ test('Add All and Remove All each send one batch and preserve the other board', 
     item(3, 2),
     item(4, 3),
   ]);
+});
+
+test('selects a private saved deck and compares the selected board', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setup(page);
+  const savedDeck = { ...deck, id: otherId, name: 'My private reference' };
+  await page.route(BACKEND + '/supabase/card-lists/mine/search**', (route) =>
+    route.fulfill({ json: { decklists: [deck, savedDeck] } }),
+  );
+  await page.route(BACKEND + '/supabase/card-lists/mine/' + otherId, (route) =>
+    route.fulfill({ json: { decklist: savedDeck } }),
+  );
+  await page.route(SUPABASE + '/rest/v1/card_list_items**', (route) => {
+    if (
+      new URL(route.request().url()).searchParams.get('list_id') !==
+      'eq.' + otherId
+    )
+      return route.fallback();
+    return route.fulfill({
+      json: [
+        { ...item(0, 3), list_id: otherId },
+        { ...item(3, 2), list_id: otherId },
+        { ...item(4, 1), list_id: otherId, board: 'Sideboard' },
+      ],
+    });
+  });
+  await page
+    .getByRole('button', { name: 'Compare decks', exact: true })
+    .click();
+  const dialog = page.getByRole('dialog', {
+    name: 'Compare decks',
+    exact: true,
+  });
+  await expect(
+    dialog.getByRole('textbox', { name: 'Decklist or CardMystic URL' }),
+  ).toHaveCount(0);
+  await dialog
+    .getByRole('combobox', { name: 'Saved decklist' })
+    .fill('private');
+  await expect(
+    page.getByRole('option', { name: deck.name, exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole('option', { name: savedDeck.name, exact: true }).click();
+  await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
+  await expect(
+    dialog.getByText(/My private reference · Mainboard/),
+  ).toBeVisible();
+  const rows = dialog.getByRole('list', { name: 'Card differences' });
+  await expect(rows).toContainText('Counterspell');
+  await expect(rows).not.toContainText('Forest');
+  await dialog.getByRole('combobox', { name: 'Comparison board' }).click();
+  await page.getByRole('option', { name: 'Sideboard', exact: true }).click();
+  await expect(rows).toHaveCount(0);
+  await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
+  await expect(
+    dialog.getByText(/My private reference · Sideboard/),
+  ).toBeVisible();
+  await expect(
+    dialog.getByRole('list', { name: 'Card differences' }),
+  ).toContainText('Forest');
+  await dialog
+    .getByRole('button', { name: 'Paste Decklist or URL', exact: true })
+    .click();
+  await expect(
+    dialog.getByRole('list', { name: 'Card differences' }),
+  ).toHaveCount(0);
+  await expect(
+    dialog.getByRole('textbox', { name: 'Decklist or CardMystic URL' }),
+  ).toBeVisible();
 });
