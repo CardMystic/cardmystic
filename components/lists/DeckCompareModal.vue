@@ -18,7 +18,56 @@
             :disabled="busy"
           />
         </label>
+        <div
+          v-if="userProfile"
+          class="flex gap-2"
+          role="group"
+          aria-label="Comparison source"
+        >
+          <UButton
+            label="Select Decklist"
+            :variant="sourceMode === 'select' ? 'solid' : 'outline'"
+            :disabled="busy"
+            @click="
+              () => {
+                sourceMode = 'select';
+              }
+            "
+          />
+          <UButton
+            label="Paste Decklist or URL"
+            :variant="sourceMode === 'paste' ? 'solid' : 'outline'"
+            :disabled="busy"
+            @click="
+              () => {
+                sourceMode = 'paste';
+              }
+            "
+          />
+        </div>
+        <UInputMenu
+          v-if="sourceMode === 'select'"
+          v-model="selectedDeckId"
+          v-model:search-term="deckSearchTerm"
+          :items="deckOptions"
+          value-key="value"
+          label-key="label"
+          :ignore-filter="true"
+          :loading="decksLoading || ownedLoading"
+          :disabled="busy"
+          placeholder="Select a decklist..."
+          aria-label="Saved decklist"
+          class="w-full"
+        />
+        <p
+          v-if="sourceMode === 'select' && (decksError || ownedError)"
+          role="alert"
+          class="text-sm text-error"
+        >
+          Couldn't load your decks. Try again or paste a decklist.
+        </p>
         <UTextarea
+          v-if="sourceMode === 'paste'"
           v-model="input"
           aria-label="Decklist or CardMystic URL"
           class="w-full"
@@ -30,7 +79,13 @@
           label="Compare"
           icon="i-lucide-scale"
           :loading="comparing"
-          :disabled="busy || catalogLoading || !input.trim()"
+          :disabled="
+            busy ||
+            catalogLoading ||
+            (sourceMode === 'select'
+              ? !selectedDeckId || !ownedDeck || ownedLoading
+              : !input.trim())
+          "
           @click="compare"
         />
         <p v-if="catalogLoading" class="text-sm text-muted">
@@ -297,6 +352,11 @@
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import type { Card, ScryfallCard } from '~/models/cardModel';
 import { getCardImageUrl, type CardImageSize } from '~/utils/scryfall';
+import {
+  useMyDecklistsSearch,
+  useOwnedDecklist,
+} from '~/composables/useCardLists';
+import { refDebounced } from '~/utils/refDebounced';
 import { GetPublicDecklistResponseSchema } from '~/models/cardListModel';
 
 type Board = 'Mainboard' | 'Sideboard' | 'Considering';
@@ -324,6 +384,38 @@ const open = defineModel<boolean>('open', { default: false });
 const boards: Board[] = ['Mainboard', 'Sideboard', 'Considering'];
 const board = ref<Board>('Mainboard');
 const input = ref('');
+const { userProfile } = useUserProfile();
+const sourceMode = ref<'select' | 'paste'>(
+  userProfile.value ? 'select' : 'paste',
+);
+const selectedDeckId = ref('');
+const deckSearchTerm = ref('');
+const {
+  decklists: savedDecks,
+  isLoading: decksLoading,
+  error: decksError,
+} = useMyDecklistsSearch(refDebounced(deckSearchTerm, 250));
+const activeDeckId = computed(() =>
+  open.value && sourceMode.value === 'select' ? selectedDeckId.value : '',
+);
+const {
+  decklist: ownedDeck,
+  isLoading: ownedLoading,
+  error: ownedError,
+  refetch: refreshOwnedDeck,
+} = useOwnedDecklist(activeDeckId);
+const deckOptions = computed(() =>
+  savedDecks.value
+    .filter((deck) => deck.id !== props.listId)
+    .map((deck) => ({ label: deck.name || 'Untitled deck', value: deck.id })),
+);
+watch(
+  () => userProfile.value?.id,
+  (id) => {
+    selectedDeckId.value = '';
+    sourceMode.value = id ? 'select' : 'paste';
+  },
+);
 const reference = ref<Entry[] | null>(null);
 const previewCard = ref<Entry | null>(null);
 const sourceName = ref('Pasted deck');
@@ -343,7 +435,13 @@ const {
   addCardsByNameToListMutation,
   removeCardFromListMutation,
   updateNumCopiesMutation,
+  useListItems,
 } = useCardLists();
+const { refetch: refreshSavedItems } = useListItems(
+  computed(() =>
+    ownedDeck.value?.id === activeDeckId.value ? activeDeckId.value : '',
+  ),
+);
 const { data: names, isLoading: namesLoading } = useCardNames(open);
 const { data: ids, isLoading: idsLoading } = useCardNameToOracleId(open);
 const catalogLoading = computed(() => namesLoading.value || idsLoading.value);
@@ -532,7 +630,7 @@ function imageUrl(oracleId: string, size: CardImageSize = 'small') {
   const url = card ? getCardImageUrl(card, false, size) : '';
   return failedImages.value.has(url) ? '' : url;
 }
-watch([input, board], () => {
+watch([input, board, sourceMode, selectedDeckId], () => {
   previewCard.value = null;
   parseWarning.value = '';
   reference.value = null;
@@ -606,6 +704,34 @@ function parseDeck(text: string): Entry[] {
   return [...cards.values()];
 }
 
+function entriesFromItems(
+  items: {
+    oracle_id: string | null;
+    board: string;
+    num_copies: number | null;
+  }[],
+): Entry[] {
+  const unknown: string[] = [];
+  const recognized = items
+    .filter((item) => item.board === board.value)
+    .flatMap((item) => {
+      const card = item.oracle_id
+        ? catalog.value.byId.get(item.oracle_id)
+        : undefined;
+      if (!card) {
+        unknown.push(item.oracle_id || 'Unknown card');
+        return [];
+      }
+      return [{ ...card, quantity: item.num_copies ?? 1 }];
+    });
+  if (unknown.length)
+    parseWarning.value =
+      'Cards missing from the catalog (skipped): ' + unknown.join(', ');
+  if (!recognized.length)
+    throw new Error('No recognized cards found for ' + board.value + '.');
+  return recognized;
+}
+
 async function compare() {
   if (busy.value) return;
   busy.value = comparing.value = true;
@@ -626,7 +752,20 @@ async function compare() {
         'Card names could not be loaded. Reopen this dialog to retry.',
       );
     const text = input.value.trim();
-    if (/^(https?:\/\/|(?:www\.)?cardmystic\.com\/)/i.test(text)) {
+    if (sourceMode.value === 'select') {
+      if (!selectedDeckId.value || selectedDeckId.value === props.listId)
+        throw new Error('Select another decklist to compare.');
+      const owner = await refreshOwnedDeck();
+      if (owner.error || !owner.data?.decklist)
+        throw new Error(
+          'That deck is unavailable. Select another decklist or paste its cards.',
+        );
+      const loaded = await refreshSavedItems();
+      if (loaded.error || !loaded.data)
+        throw new Error('Could not load that deck. Try again.');
+      reference.value = entriesFromItems(loaded.data);
+      sourceName.value = owner.data.decklist.name || 'Compared deck';
+    } else if (/^(https?:\/\/|(?:www\.)?cardmystic\.com\/)/i.test(text)) {
       const url = new URL(
         /^https?:\/\//i.test(text) ? text : 'https://' + text,
       );
@@ -657,23 +796,7 @@ async function compare() {
             : 'Could not load that deck. Try again.',
         );
       const deck = GetPublicDecklistResponseSchema.parse(await response.json());
-      const unknown: string[] = [];
-      const recognized = deck.items
-        .filter((item) => item.board === board.value)
-        .flatMap((item) => {
-          const card = catalog.value.byId.get(item.oracle_id);
-          if (!card) {
-            unknown.push(item.oracle_id);
-            return [];
-          }
-          return [{ ...card, quantity: item.num_copies }];
-        });
-      if (unknown.length)
-        parseWarning.value =
-          'Cards missing from the catalog (skipped): ' + unknown.join(', ');
-      if (!recognized.length)
-        throw new Error('No recognized cards found for ' + board.value + '.');
-      reference.value = recognized;
+      reference.value = entriesFromItems(deck.items);
       sourceName.value = deck.decklist.name ?? 'Compared deck';
     } else {
       reference.value = parseDeck(text);

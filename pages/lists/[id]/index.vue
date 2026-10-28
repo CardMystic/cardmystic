@@ -849,6 +849,7 @@ function goToRecommend() {
     .slice(0, 200)
     .join('\n');
   const query: Record<string, any> = {
+    deckId: isOwner.value ? listId : undefined,
     decklist,
     searchType: 'recommend',
   };

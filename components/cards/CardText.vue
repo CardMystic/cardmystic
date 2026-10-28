@@ -474,11 +474,21 @@ const searchActions = computed(() => {
   const actions: Record<string, unknown>[] = [];
   if (props.showAddToDeckbuilderButton && deckbuilderStore) {
     actions.push({
-      label: isInDecklist.value
-        ? 'Added to Deckbuilding Search'
-        : 'Add to Deckbuilding Search',
+      label: deckbuilderStore.selectedDeckId.value
+        ? isInDecklist.value
+          ? 'Added to deck'
+          : 'Add to deck'
+        : isInDecklist.value
+          ? 'Added to search'
+          : 'Add to search',
       icon: isInDecklist.value ? 'i-lucide-check' : 'i-lucide-layers-plus',
-      disabled: isInDecklist.value,
+      disabled:
+        isInDecklist.value ||
+        deckbuilderStore.pendingCards.value.includes(
+          props.card.card_data.name,
+        ) ||
+        (!!deckbuilderStore.selectedDeckId.value &&
+          !deckbuilderStore.savedDeckReady.value),
       onSelect: () => deckbuilderStore.addCard(props.card.card_data.name),
     });
   }

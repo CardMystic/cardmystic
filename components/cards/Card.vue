@@ -344,7 +344,11 @@
         <!-- Add to deckbuilding search button -->
         <span
           v-if="showAddToDeckbuilderButton"
-          title="Add to deckbuilding search"
+          :title="
+            deckbuilderStore?.selectedDeckId.value
+              ? 'Add to deck'
+              : 'Add to search'
+          "
         >
           <UButton
             class="cursor-pointer"
@@ -352,7 +356,19 @@
             variant="soft"
             :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'"
             :size="isMobile ? 'xs' : 'sm'"
-            aria-label="Add to deckbuilding search"
+            :aria-label="
+              deckbuilderStore?.selectedDeckId.value
+                ? 'Add to deck'
+                : 'Add to search'
+            "
+            :disabled="
+              isInDecklist ||
+              deckbuilderStore?.pendingCards.value.includes(
+                card.card_data.name,
+              ) ||
+              (!!deckbuilderStore?.selectedDeckId.value &&
+                !deckbuilderStore.savedDeckReady.value)
+            "
             @click="deckbuilderStore?.addCard(card.card_data.name)"
           />
         </span>

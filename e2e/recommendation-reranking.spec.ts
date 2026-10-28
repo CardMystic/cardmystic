@@ -45,6 +45,21 @@ for (const [path, endpoint] of [
       });
     });
     await gotoHydrated(page, path);
+    if (endpoint === '/als/recommend') {
+      // A commander URL keeps its editable pasted input even when signed in.
+      await expect(
+        page.getByRole('button', { name: 'Select Decklist', exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByPlaceholder(/Paste your decklist here/i),
+      ).toBeVisible();
+      await expect(page.getByPlaceholder('Select a decklist...')).toHaveCount(
+        0,
+      );
+      await expect(
+        page.getByPlaceholder('Select a commander (optional)...'),
+      ).toHaveValue('Kaalia of the Vast');
+    }
     const toggle = page.getByRole('combobox', {
       name: 'Search mode',
       exact: true,
