@@ -75,21 +75,10 @@
     <div v-if="!hasSearched">
       <USeparator class="my-6" />
       <h2
-        class="text-xl md:text-2xl font-semibold mb-1 flex items-center gap-2"
+        class="text-xl md:text-2xl font-semibold mb-4 flex items-center gap-2"
       >
         Featured Decklists
       </h2>
-      <p class="text-sm opacity-70 mb-4">
-        Support us on
-        <a
-          :href="PATREON_MEMBERSHIP_URL"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-primary hover:underline"
-          >Patreon</a
-        >
-        to automatically get your decklist featured!
-      </p>
       <ClientOnly>
         <div
           v-if="isLoadingFeatured"
@@ -134,7 +123,6 @@ import {
 } from '~/composables/useDiscovery';
 import { refDebounced } from '~/utils/refDebounced';
 import CardListLink from '~/components/lists/CardListLink.vue';
-import { PATREON_MEMBERSHIP_URL } from '~/models/patreonModel';
 
 definePageMeta({ title: 'Search Decklists' });
 

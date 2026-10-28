@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import benchmark from '~~/public/benchmarks/search-quality-graded-2026-09-28.json';
 import type { BillingStatus } from '~/models/searchAccessModel';
 import {
+  enhancedTopUpPrice,
   membershipPlans as plans,
   membershipTierLabels as tierLabels,
 } from '~/utils/membershipPlans';
@@ -77,14 +79,6 @@ const subscriptionNotice = computed(() => {
       return '';
   }
 });
-const topups = [
-  {
-    tier: 'enhanced-topup' as const,
-    label: '1,000 Enhanced searches',
-    price: 7,
-    available: 'enhancedTopUpAvailable' as const,
-  },
-];
 async function load() {
   if (!session.value) {
     loading.value = false;
@@ -168,13 +162,13 @@ watch(
       Checkout canceled. No purchase was confirmed.
     </p>
 
-    <div v-if="session" class="membership-account">
+    <div class="membership-account">
       <div class="membership-account-heading">
         <div>
           <p v-if="loading || pending" role="status">
             Checking your membership...
           </p>
-          <p v-else-if="!verified" role="alert">
+          <p v-else-if="accessError || (session && !verified)" role="alert">
             Your membership could not be verified. Refresh to try again.
           </p>
           <p
@@ -182,8 +176,28 @@ watch(
             class="membership-current"
             :data-tier="access.tier"
           >
-            Current search membership:
+            Current Search Membership:
             <strong>{{ tierLabels[access.tier] }}</strong>
+            <span class="membership-separator" aria-hidden="true">|</span>
+            <span v-if="access.tier === 'enhanced'"
+              >Unlimited Enhanced searches</span
+            >
+            <NuxtLink v-else-if="!access.authenticated" :to="signInUrl">
+              Sign in for enhanced searches
+            </NuxtLink>
+            <span v-else
+              >{{ access.enhancedRemaining?.toLocaleString('en-US') }} left
+              today</span
+            >
+            <template v-if="access.enhancedTopUpRemaining > 0">
+              <span class="membership-separator" aria-hidden="true">|</span>
+              <span
+                >{{
+                  access.enhancedTopUpRemaining.toLocaleString('en-US')
+                }}
+                purchased</span
+              >
+            </template>
           </p>
           <p
             v-if="
@@ -222,34 +236,23 @@ watch(
             type="button"
             :disabled="busy || loading"
             aria-label="Refresh search membership"
-            @click="load"
+            title="Refresh search membership"
+            @click="session ? load() : refresh()"
           >
-            Refresh
+            <UIcon
+              name="i-lucide-refresh-cw"
+              class="size-5"
+              aria-hidden="true"
+            />
           </button>
         </div>
       </div>
-      <p
-        v-if="verified && access"
-        class="membership-muted membership-remaining"
-      >
-        <span
-          ><strong>{{
-            access.enhancedRemaining.toLocaleString('en-US')
-          }}</strong>
-          Enhanced left
-          {{ access.tier === 'normal' ? 'today' : 'this month' }}</span
-        >
-        <span v-if="access.enhancedTopUpRemaining > 0"
-          >{{ access.enhancedTopUpRemaining.toLocaleString('en-US') }} purchased
-          Enhanced</span
-        >
-      </p>
     </div>
 
     <div class="membership-offer">
       <h2>CardMystic Enhanced</h2>
       <p class="membership-muted">
-        Put better matches near the top with relevance reranking.
+        Get better search results with relevance reranking.
       </p>
     </div>
     <USkeleton
@@ -280,10 +283,7 @@ watch(
           ><span>/month</span>
         </p>
         <ul class="membership-features">
-          <li>
-            <strong>{{ plan.enhancedSearches.toLocaleString('en-US') }}</strong>
-            Enhanced searches
-          </li>
+          <li><strong>Unlimited</strong> Enhanced searches</li>
         </ul>
         <div class="membership-plan-action">
           <p v-if="billing?.trialEligible" class="membership-trial">
@@ -329,80 +329,137 @@ watch(
             {{ loading ? 'Checking availability...' : 'Checkout unavailable' }}
           </p>
         </div>
+        <MembershipSearchEvidence />
       </article>
     </div>
-    <div class="membership-plan-notes">
-      <p>
-        Includes Enhanced search access. Membership does not change featured
-        placement.
-      </p>
-      <p v-if="!session || billing?.trialEligible">
-        {{
-          session
-            ? 'One free calendar month per account.'
-            : 'First month free for eligible accounts.'
-        }}
-        Payment method required. Renews monthly at the prices above; cancel
-        anytime in Stripe.
-      </p>
-      <p v-else>
-        Plans renew monthly. Change plans, payment details or cancel anytime in
-        Stripe.
-      </p>
-    </div>
+    <p class="membership-muted">
+      Renews monthly at the prices above; cancel anytime in Stripe. Prices are
+      in USD. Applicable tax is calculated at checkout.
+    </p>
 
-    <details class="membership-disclosure">
-      <summary>Compare all features</summary>
-      <MembershipComparison />
-    </details>
-
-    <MembershipSearchEvidence />
-
-    <details class="membership-disclosure membership-topups">
-      <summary>Need extra searches? Buy a top-up</summary>
-      <p class="membership-muted">
-        One-time purchase. No subscription needed. Unused top-ups carry forward.
+    <section
+      class="membership-topups"
+      aria-labelledby="membership-topups-title"
+    >
+      <p id="membership-topups-title">Or one time purchase:</p>
+      <a v-if="!session" :href="signInUrl">
+        Buy 500 Enhanced searches for ${{ enhancedTopUpPrice }}
+      </a>
+      <button
+        v-else-if="billing?.enhancedTopUpAvailable"
+        type="button"
+        :disabled="busy || loading"
+        @click="openStripe('enhanced-topup')"
+      >
+        Buy 500 Enhanced searches for ${{ enhancedTopUpPrice }}
+      </button>
+      <p v-else class="membership-muted">
+        {{ loading ? 'Checking availability...' : 'Top-up unavailable' }}
       </p>
-      <div class="membership-topup-options">
-        <article
-          v-for="topup in topups"
-          :key="topup.tier"
-          class="membership-topup"
-        >
-          <div>
-            <h3>{{ topup.label }}</h3>
-            <p>${{ topup.price }} one time</p>
-          </div>
-          <a v-if="!session" :href="signInUrl">Sign in to buy searches</a>
-          <button
-            v-else-if="billing?.[topup.available]"
-            type="button"
-            :disabled="busy || loading"
-            @click="openStripe(topup.tier)"
+    </section>
+    <details class="membership-disclosure membership-faq">
+      <summary>
+        <UIcon name="i-lucide-chevron-right" aria-hidden="true" />
+        <span>Frequently Asked Questions</span>
+      </summary>
+      <details class="membership-disclosure">
+        <summary>
+          <UIcon name="i-lucide-chevron-right" aria-hidden="true" /><span
+            >What does Enhanced search do?</span
           >
-            Buy {{ topup.label }} for ${{ topup.price }}
-          </button>
-          <p v-else class="membership-muted">
-            {{ loading ? 'Checking availability...' : 'Top-up unavailable' }}
-          </p>
-        </article>
-      </div>
-      <p class="membership-muted">
-        For regular use, Enhanced is $7/month for 1,000 searches.
-      </p>
-    </details>
-    <details class="membership-disclosure membership-footer">
-      <summary>Free searches and resets</summary>
-      <p>
-        Free access includes 10 Enhanced searches per day. Normal search stays
-        available. Guest allowances are shared on the same network.
-      </p>
-      <p>
-        Enhanced membership replaces the free allowance with 1,000 searches per
-        month. Daily limits reset at midnight UTC; monthly limits reset on the
-        first, independently of your billing date. Included searches are used
-        before purchased top-ups.
-      </p>
+        </summary>
+        <p>
+          Enhanced takes the cards found by your search and puts the better
+          matches closer to the top. Normal uses the original order. You can
+          switch between them with the Search mode dropdown.
+        </p>
+      </details>
+      <details class="membership-disclosure">
+        <summary>
+          <UIcon name="i-lucide-chevron-right" aria-hidden="true" /><span
+            >Why does it cost money?</span
+          >
+        </summary>
+        <p>
+          We use a third-party API to improve the search results, and it isn't
+          free. Memberships and top-ups help us pay for it. Normal searches are
+          still free.
+        </p>
+      </details>
+      <details class="membership-disclosure">
+        <summary>
+          <UIcon name="i-lucide-chevron-right" aria-hidden="true" /><span
+            >How many searches do I get, and when do they reset?</span
+          >
+        </summary>
+        <p>
+          Sign in to get 10 free Enhanced searches a day. With an Enhanced
+          membership, you get unlimited Enhanced searches, including during your
+          free month.
+        </p>
+        <p>
+          The free daily searches reset at midnight UTC. Enhanced members don't
+          have a search limit or a monthly reset.
+        </p>
+        <p>
+          You can use Normal search without an account. Enhanced search requires
+          you to sign in.
+        </p>
+      </details>
+      <details class="membership-disclosure">
+        <summary>
+          <UIcon name="i-lucide-chevron-right" aria-hidden="true" /><span
+            >What happens if I run out?</span
+          >
+        </summary>
+        <p>
+          You can keep searching in Normal mode for free. If you want more
+          Enhanced searches, you can upgrade or buy a top-up.
+        </p>
+        <p>
+          Top-ups are a one-time purchase, and you don't need a subscription to
+          buy one. Unused top-up searches carry forward. We use your free daily
+          searches first, then your top-up searches. While your Enhanced
+          membership is active, your top-up credits aren't used.
+        </p>
+      </details>
+      <details class="membership-disclosure">
+        <summary>
+          <UIcon name="i-lucide-chevron-right" aria-hidden="true" /><span
+            >How do you measure the ranking score?</span
+          >
+        </summary>
+        <p>
+          We ran the same {{ benchmark.scoredQueries }} searches in Normal and
+          Enhanced mode and used AI to help grade the first 10 results. Better
+          matches closer to the top earn a higher score.
+        </p>
+        <p>
+          The chart shows that score out of 100. A score of 80 doesn't mean 80%
+          of searches are right. It measures how well the cards we reviewed were
+          ordered, and your results will vary.
+        </p>
+        <p>
+          These tests were run on September 28, 2026, for natural-language
+          searches.
+        </p>
+        <p>
+          <a href="/benchmarks/search-quality-graded-2026-09-28.json" download
+            >See the test data and how we scored it</a
+          >
+        </p>
+      </details>
+      <details class="membership-disclosure">
+        <summary>
+          <UIcon name="i-lucide-chevron-right" aria-hidden="true" /><span
+            >Can I cancel my membership?</span
+          >
+        </summary>
+        <p>
+          Yes. Use the billing button at the top of this page to open Stripe and
+          manage or cancel your subscription.
+        </p>
+      </details>
     </details>
     <p
       v-if="!loading && billing && !billing.enabled"
@@ -419,8 +476,7 @@ watch(
   gap: 1.25rem;
   padding: 1rem;
 }
-.membership-muted,
-.membership-plan-notes {
+.membership-muted {
   color: var(--ui-text-muted);
   font-size: 0.875rem;
   line-height: 1.6;
@@ -432,8 +488,10 @@ watch(
 .membership-account {
   display: grid;
   gap: 0.75rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--ui-border);
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ui-info) 30%, var(--ui-border));
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--ui-info) 8%, var(--ui-bg));
 }
 .membership-account-heading,
 .membership-account-actions {
@@ -446,7 +504,11 @@ watch(
   justify-content: space-between;
 }
 .membership-account-heading > div:first-child {
-  flex: 1 1 18rem;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.membership-account-actions {
+  margin-left: auto;
 }
 .membership-account-actions button {
   font-size: 0.875rem;
@@ -454,10 +516,22 @@ watch(
 .membership-current strong {
   font-size: 1.125rem;
 }
-.membership-remaining {
+.membership-current {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1.5rem;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+}
+.membership-separator {
+  color: var(--ui-text-muted);
+}
+.membership .membership-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+  flex-shrink: 0;
 }
 .membership-plans {
   display: grid;
@@ -477,13 +551,6 @@ watch(
   border: 1px solid var(--plan-border);
   border-radius: 0.5rem;
   background: var(--plan-bg);
-}
-.membership-plan:is([data-tier='pro'], [data-tier='pro-plus']) {
-  --plan-accent: #924e11;
-  --plan-bg: #fffbf4;
-  --plan-border: #f4dab3;
-  --plan-button: #ffc878;
-  --plan-button-text: #3f250b;
 }
 .membership-plan-heading {
   display: flex;
@@ -556,10 +623,6 @@ watch(
   background: var(--plan-button);
   filter: brightness(0.95);
 }
-.membership-plan-notes {
-  display: grid;
-  gap: 0.375rem;
-}
 .membership-notice {
   padding: 1rem;
   border: 1px solid var(--ui-border-accented);
@@ -572,52 +635,64 @@ watch(
   line-height: 1.6;
 }
 .membership-disclosure > summary {
-  padding-block: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0.875rem 0;
   min-height: 44px;
   cursor: pointer;
   font-weight: 600;
 }
+.membership-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.membership-disclosure > summary > .iconify {
+  flex-shrink: 0;
+}
+.membership-disclosure[open] > summary > .iconify {
+  transform: rotate(90deg);
+}
 .membership-disclosure > p {
   max-width: 80ch;
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.875rem;
 }
-.membership-topup-options {
-  display: grid;
-  gap: 0.75rem;
-  margin-block: 0.75rem;
+.membership-faq > summary {
+  font-size: 1.125rem;
 }
-.membership-topup {
+.membership-faq > .membership-disclosure {
+  margin-left: 1.5rem;
+}
+.membership-topups {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
-  padding-block: 0.75rem;
-  border-bottom: 1px solid var(--ui-border);
+}
+.membership .membership-topups :is(a, button) {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #c1a3ff;
+  border-radius: 6px;
+  background: #c1a3ff;
+  color: #24113f;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.membership .membership-topups :is(a, button):not(:disabled):hover {
+  background: #c1a3ff;
+  filter: brightness(0.95);
 }
 .membership-current[data-tier='enhanced'] strong {
   color: #6d28d9;
-}
-.membership-current:is([data-tier='pro'], [data-tier='pro-plus']) strong {
-  color: #924e11;
 }
 :global(.dark .membership-plan) {
   --plan-accent: #c1a3ff;
   --plan-bg: #20192f;
   --plan-border: #50406c;
 }
-:global(.dark .membership-plan:is([data-tier='pro'], [data-tier='pro-plus'])) {
-  --plan-accent: #ffc878;
-  --plan-bg: #2c2215;
-  --plan-border: #6b512e;
-}
 :global(.dark .membership-current[data-tier='enhanced'] strong) {
   color: #c1a3ff;
-}
-:global(
-  .dark .membership-current:is([data-tier='pro'], [data-tier='pro-plus']) strong
-) {
-  color: #ffc878;
 }
 @media (min-width: 640px) {
   .membership {

@@ -3,19 +3,28 @@ defineProps<{ compact?: boolean }>();
 const route = useRoute();
 const router = useRouter();
 const id = useId();
-const { access, error, refresh } = useSearchAccess();
+const { access, pending, error, refresh, userId, ready } = useSearchAccess();
+// Auth can resolve before this component hydrates on an SSR search page.
+const mounted = ref(false);
+onMounted(() => {
+  mounted.value = true;
+});
+const signedIn = computed(() => mounted.value && !!userId.value);
 const mode = computed(() =>
-  route.query.useRerank === 'false' ? 'normal' : 'enhanced',
+  !signedIn.value || route.query.useRerank === 'false' ? 'normal' : 'enhanced',
 );
 const allowance = computed(() => {
-  if (!access.value?.enabled || mode.value === 'normal') return '';
+  if (error.value) return 'Search allowance could not be checked.';
+  if (pending.value) return 'Checking remaining searches…';
+  if (!access.value?.enabled) return 'Search allowance is not enabled.';
+  if (access.value.tier === 'enhanced') return 'Unlimited Enhanced searches.';
   const remaining = access.value.enhancedRemaining;
   const credits = access.value.enhancedTopUpRemaining;
-  const period = access.value.tier === 'normal' ? 'today' : 'this month';
-  return `${remaining} Enhanced ${remaining === 1 ? 'search' : 'searches'} left ${period}${credits ? ` + ${credits} purchased` : ''}.${access.value.authenticated ? '' : ' Guest allowance is shared on this network.'}`;
+  return `${remaining} Enhanced ${remaining === 1 ? 'search' : 'searches'} left today${credits ? ` + ${credits} purchased` : ''}.`;
 });
 function select(value: unknown) {
   if (value !== 'normal' && value !== 'enhanced') return;
+  if (value === 'enhanced' && !userId.value) return;
   return router.push({
     path: route.path,
     query: {
@@ -36,7 +45,7 @@ function select(value: unknown) {
       :model-value="mode"
       :items="[
         { label: 'Normal', value: 'normal' },
-        { label: 'Enhanced', value: 'enhanced' },
+        { label: 'Enhanced', value: 'enhanced', disabled: !signedIn },
       ]"
       :aria-describedby="`${id}-description`"
       aria-label="Search mode"
@@ -47,38 +56,38 @@ function select(value: unknown) {
       @update:model-value="select"
     />
     <span
-      v-if="!compact || mode === 'normal'"
       :id="`${id}-description`"
       class="text-sm text-muted"
-      >{{
-        mode === 'normal'
-          ? 'Original search matches.'
-          : 'Reorders matches by relevance.'
-      }}
+      aria-live="polite"
+    >
       <NuxtLink
-        v-if="mode === 'normal'"
-        to="/memberships"
+        v-if="mounted && ready && !userId"
+        :to="{ path: '/user/login', query: { redirect: route.fullPath } }"
         class="underline underline-offset-2"
-        >Get better results with our memberships</NuxtLink
-      ></span
-    >
-    <p
-      v-if="allowance"
-      :id="compact ? `${id}-description` : undefined"
-      class="text-sm text-muted"
-      :class="compact ? 'min-w-0 flex-1 basis-64' : 'basis-full'"
-    >
-      {{ allowance }}
-      <NuxtLink to="/memberships" class="underline underline-offset-2">{{
-        compact ? 'See Memberships' : 'Memberships'
-      }}</NuxtLink>
-    </p>
-    <p v-if="error" class="basis-full text-sm text-muted">
-      Search allowance could not be checked.
-      <button type="button" class="underline min-h-11" @click="refresh()">
-        Retry allowance
-      </button>
-    </p>
+        >Sign in for enhanced searches</NuxtLink
+      >
+      <template v-else-if="mounted">
+        <template v-if="mode === 'normal'"
+          >Unlimited Normal searches.
+        </template>
+        {{ allowance }}
+        <button
+          v-if="error"
+          type="button"
+          class="underline min-h-11"
+          @click="refresh()"
+        >
+          Retry allowance
+        </button>
+        <NuxtLink
+          v-else-if="access?.enabled"
+          to="/memberships"
+          class="underline underline-offset-2"
+          >Memberships</NuxtLink
+        >
+      </template>
+      <template v-else>Checking remaining searches…</template>
+    </span>
   </div>
 </template>
 

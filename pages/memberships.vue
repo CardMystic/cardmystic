@@ -5,7 +5,7 @@ const { userId } = useUserProfile();
 useSeoMeta({
   title: 'Memberships | CardMystic',
   description:
-    'Get CardMystic Enhanced for $7/month with 1,000 searches, or manage your membership and search top-ups.',
+    'Get CardMystic Enhanced for $4.99/month with unlimited Enhanced searches, or manage your membership and search top-ups.',
 });
 </script>
 
@@ -14,7 +14,6 @@ useSeoMeta({
     <div
       class="w-full max-w-6xl mx-auto px-4 pt-24 pb-10 relative z-10 space-y-6"
     >
-      <h1 class="text-3xl font-bold text-white">Memberships</h1>
       <SearchMembership :key="userId ?? 'guest'" />
     </div>
   </SpaceBackground>

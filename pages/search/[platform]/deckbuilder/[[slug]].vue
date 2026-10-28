@@ -80,7 +80,7 @@
           :help-text="
             seoEntry
               ? `Loading recommendations for ${seoEntry.query}...`
-              : `Paste a decklist above to get ${platformName} card recommendations.`
+              : `Select or paste a decklist above to get ${platformName} card recommendations.`
           "
           empty-title="No Recommendations Available Yet"
           empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
@@ -94,6 +94,21 @@
     :onClick="handleFabClick"
   />
   <LazyBackToTop />
+  <div
+    v-if="selectedDeckChanged"
+    class="fixed inset-x-0 bottom-0 z-[60] flex justify-center border-t border-default bg-default/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+  >
+    <UButton
+      icon="i-lucide-refresh-cw"
+      :disabled="
+        isFetching ||
+        !deckbuilder.savedDeckReady.value ||
+        deckbuilder.pendingCards.value.length > 0
+      "
+      @click="deckbuilder.rerun.value++"
+      >Deck has changed: Rerun search</UButton
+    >
+  </div>
 
   <AddToDeckModal
     v-model:open="showSaveAllModal"
@@ -122,7 +137,8 @@ import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import { getSeoEntry } from '~/utils/seoQueries';
 import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 
-const { decklist: deckbuilderDecklist, showSaveAllModal } = useDeckbuilder();
+const deckbuilder = useDeckbuilder();
+const { decklist: deckbuilderDecklist, showSaveAllModal } = deckbuilder;
 
 const route = useRoute();
 const pagePath = route.path;
@@ -142,6 +158,17 @@ const platformName = getPlatformDisplayName(platform);
 const searchPlatformProp = getSearchPlatformProp(platform);
 
 const decklistParam = computed(() => String(route.query.decklist || ''));
+const selectedDeckChanged = computed(() => {
+  if (
+    !route.query.deckId ||
+    route.query.deckId !== deckbuilder.selectedDeckId.value ||
+    !deckbuilder.savedDeckReady.value
+  )
+    return false;
+  const names = (text: string) =>
+    JSON.stringify([...new Set(parseDecklist(text))].sort());
+  return names(deckbuilderDecklist.value) !== names(decklistParam.value);
+});
 const descriptionParam = computed(() => String(route.query.description || ''));
 const commanderParam = computed(
   () => seoEntry?.query || String(route.query.commander || ''),

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { BACKEND, gotoHydrated } from './utils/mocks';
+import { BACKEND, gotoHydrated, mockSignedInUser } from './utils/mocks';
 
 for (const [path, endpoint] of [
   ['/search/all/similarity?card_name=Sol+Ring', '/search/similarity'],
@@ -17,6 +17,7 @@ for (const [path, endpoint] of [
   test(`search mode updates and survives submission: ${endpoint}`, async ({
     page,
   }) => {
+    await mockSignedInUser(page);
     const requests: {
       useRerank: boolean;
       query?: string;
@@ -26,7 +27,7 @@ for (const [path, endpoint] of [
       route.fulfill({
         json: {
           enabled: true,
-          authenticated: false,
+          authenticated: true,
           tier: 'normal',
           enhancedRemaining: 10,
           enhancedTopUpRemaining: 0,
@@ -44,6 +45,21 @@ for (const [path, endpoint] of [
       });
     });
     await gotoHydrated(page, path);
+    if (endpoint === '/als/recommend') {
+      // A commander URL keeps its editable pasted input even when signed in.
+      await expect(
+        page.getByRole('button', { name: 'Select Decklist', exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByPlaceholder(/Paste your decklist here/i),
+      ).toBeVisible();
+      await expect(page.getByPlaceholder('Select a decklist...')).toHaveCount(
+        0,
+      );
+      await expect(
+        page.getByPlaceholder('Select a commander (optional)...'),
+      ).toHaveValue('Kaalia of the Vast');
+    }
     const toggle = page.getByRole('combobox', {
       name: 'Search mode',
       exact: true,

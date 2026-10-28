@@ -2,9 +2,9 @@ export interface SearchAccess {
   enabled: boolean;
   authenticated: boolean;
   tier: 'normal' | 'enhanced';
-  enhancedRemaining: number;
+  enhancedRemaining: number | null;
   enhancedTopUpRemaining: number;
-  resetsAt: string;
+  resetsAt: string | null;
 }
 export interface BillingStatus {
   enabled: boolean;

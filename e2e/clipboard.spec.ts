@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { BACKEND, gotoHydrated } from './utils/mocks';
 
@@ -23,6 +23,26 @@ const card2 = {
   imageUrl: '',
   price: '2.00',
 };
+
+// Dismiss the consent banner before using controls near the bottom of the viewport.
+async function addFirstSearchResult(page: Page) {
+  const rejectCookies = page.getByRole('button', {
+    name: 'Reject all',
+    exact: true,
+  });
+  if (await rejectCookies.isVisible()) await rejectCookies.click();
+  const card = page
+    .locator('.card-image-wrapper')
+    .filter({
+      has: page.getByRole('button', { name: /^(Add Card|Card Added)$/ }),
+    })
+    .first();
+  await card.hover();
+  await card.getByRole('button', { name: 'Add Card', exact: true }).click();
+  await expect(
+    card.getByRole('button', { name: 'Card Added', exact: true }),
+  ).toBeVisible();
+}
 
 test.describe('Clipboard', () => {
   // ─── Existing: hydration from localStorage ──────────────────────────
@@ -90,10 +110,8 @@ test.describe('Clipboard', () => {
   /**
    * Test 15: Add card via the overlay button on a search result.
    *
-   * CardOverlayButtons renders an "Add Card" button (aria-label) with
-   * opacity:0 by default; pointer-events:auto makes it interactable
-   * without a hover gesture — force:true bypasses Playwright's
-   * visibility check.
+   * Hover the card to reveal its overlay and click through the same
+   * unobstructed control a visitor uses.
    */
   test('adding a card via search UI increments the clipboard count', async ({
     page,
@@ -119,10 +137,7 @@ test.describe('Clipboard', () => {
       .toBeGreaterThan(0);
 
     // Click the first "Add Card" overlay button.
-    await page
-      .getByRole('button', { name: 'Add Card' })
-      .first()
-      .click({ force: true });
+    await addFirstSearchResult(page);
 
     // Desktop clipboard badge increments from 0 → 1.
     await expect(
@@ -289,10 +304,7 @@ test.describe('Clipboard', () => {
     ).toBeVisible({ timeout: 10_000 });
 
     // Adding a real card at capacity triggers eviction (not rejection).
-    await page
-      .getByRole('button', { name: 'Add Card' })
-      .first()
-      .click({ force: true });
+    await addFirstSearchResult(page);
 
     // Count stays at 500.
     await expect(
@@ -309,6 +321,9 @@ test.describe('Clipboard', () => {
     );
     expect(stored.order.length).toBe(500);
     expect(stored.order).not.toContain('fake-cap-0');
+    expect(stored.items).not.toHaveProperty('fake-cap-0');
+    expect(stored.order[0]).toBe('fake-cap-1');
+    expect(stored.order[499]).not.toMatch(/^fake-cap-/);
   });
 
   /**
