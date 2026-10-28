@@ -202,13 +202,13 @@ test.describe('Card lists CRUD', () => {
       })
       .toBeGreaterThan(0);
 
-    // Open the 3-dots menu on the first card and pick "Add to Deck".
+    // Open the card options modal on the first card and pick "Add to Deck".
     await page
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
     await page
-      .getByRole('menuitem', { name: /add to deck/i })
+      .getByRole('button', { name: /add to deck/i })
       .first()
       .click();
 
@@ -303,12 +303,12 @@ test.describe('Card lists CRUD', () => {
     await atraxaCard.scrollIntoViewIfNeeded();
     await atraxaCard.hover();
     await atraxaCard
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
 
     await page
-      .getByRole('menuitem', { name: /set as commander/i })
+      .getByRole('button', { name: /set as commander/i })
       .first()
       .click();
 
@@ -398,11 +398,11 @@ test.describe('Card lists CRUD', () => {
     await splitCard.scrollIntoViewIfNeeded();
     await splitCard.hover();
     await splitCard
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
     await page
-      .getByRole('menuitem', { name: /^remove$/i })
+      .getByRole('button', { name: /^remove$/i })
       .first()
       .click();
 
@@ -542,7 +542,7 @@ test.describe('Card lists CRUD', () => {
     await mainboardCard.scrollIntoViewIfNeeded();
     await mainboardCard.hover();
     await mainboardCard
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
 
@@ -555,7 +555,7 @@ test.describe('Card lists CRUD', () => {
       { timeout: API_TIMEOUT },
     );
     await page
-      .getByRole('menuitem', { name: /move to sideboard/i })
+      .getByRole('button', { name: /move to sideboard/i })
       .first()
       .click();
     const changeBoardResp = await changeBoardCall;
@@ -757,11 +757,11 @@ test.describe('Card lists CRUD', () => {
     await cardWrapper.scrollIntoViewIfNeeded();
     await cardWrapper.hover();
     await cardWrapper
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
     await page
-      .getByRole('menuitem', { name: /^add a copy$/i })
+      .getByRole('button', { name: /^add a copy$/i })
       .first()
       .click();
     await updateCall;
@@ -900,12 +900,12 @@ test.describe('Card lists CRUD', () => {
     await solRingCard.scrollIntoViewIfNeeded();
     await solRingCard.hover();
     await solRingCard
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
 
     await page
-      .getByRole('menuitem', { name: /^remove$/i })
+      .getByRole('button', { name: /^remove$/i })
       .first()
       .click();
 

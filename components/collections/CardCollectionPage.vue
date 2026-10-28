@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { CardSearchFiltersSchema } from '~/models/frontend-specific/filtersModel';
 import { WordSearchSchema } from '~/models/searchModel';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 import {
   collectionLabels,
   collectionPath,
@@ -85,17 +86,20 @@ useCollectionSeo(
       !!error.value ||
       !!searchError.value,
   ),
+  entry.imageUrl,
 );
 useHead({
   script: [
     {
       type: 'application/ld+json',
-      innerHTML: JSON.stringify({
+      key: 'collection-page',
+      innerHTML: safeJsonLd({
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
         name: title,
         description,
         url: new URL(path, 'https://cardmystic.com').href,
+        image: entry.imageUrl || undefined,
         breadcrumb: {
           '@type': 'BreadcrumbList',
           itemListElement: [
@@ -122,7 +126,7 @@ useHead({
             },
           ],
         },
-      }).replace(/</g, '\\u003c'),
+      }),
     },
   ],
 });
@@ -133,16 +137,6 @@ function retry() {
 
 <template>
   <UContainer class="mb-6 px-0 max-w-full text-default">
-    <UBreadcrumb
-      :items="[
-        { label: 'Home', to: '/' },
-        { label: `All ${collectionLabels[kind]}`, to: collectionPath(kind) },
-        { label: entry.name },
-      ]"
-      aria-label="Breadcrumb"
-      class="py-2"
-      :ui="{ list: 'flex-wrap', link: 'min-h-11 px-2' }"
-    />
     <div class="w-full flex flex-col items-center">
       <section
         aria-labelledby="collection-title"

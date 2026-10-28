@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef, watch } from 'vue';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 import {
   collectionLabels,
   collectionDescriptions,
@@ -12,6 +13,10 @@ const route = useRoute();
 const router = useRouter();
 const origin = 'https://cardmystic.com';
 const { data, status, error, refresh } = await useCardCollections();
+if (import.meta.server && error.value) {
+  const event = useRequestEvent();
+  if (event) setResponseStatus(event, 503);
+}
 const filter = shallowRef('');
 const pageSize = 40;
 const entries = computed(() =>
@@ -52,13 +57,26 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
+      key: 'collection-page',
       innerHTML: () =>
-        JSON.stringify({
+        safeJsonLd({
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
           name: `MTG ${collectionLabels[props.kind]}`,
           description: collectionDescriptions[props.kind],
           url: new URL(collectionPath(props.kind), origin).href,
+          breadcrumb: {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: origin },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: collectionLabels[props.kind],
+                item: new URL(collectionPath(props.kind), origin).href,
+              },
+            ],
+          },
         }),
     },
   ],
@@ -113,12 +131,26 @@ useHead({
     <div
       v-else-if="status === 'pending'"
       role="status"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 py-8"
+      :aria-label="`Loading ${collectionLabels[kind].toLowerCase()}`"
+      aria-busy="true"
     >
-      <span class="sr-only"
-        >Loading {{ collectionLabels[kind].toLowerCase() }}...</span
+      <USkeleton class="mx-auto mb-4 h-20 w-64" aria-hidden="true" />
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+        aria-hidden="true"
       >
-      <USkeleton v-for="index in 8" :key="index" class="h-64 rounded-lg" />
+        <div
+          v-for="i in 8"
+          :key="i"
+          class="overflow-hidden rounded-lg border border-default"
+        >
+          <USkeleton class="aspect-[16/10] w-full rounded-none" />
+          <div class="space-y-3 p-4">
+            <USkeleton class="h-6 w-2/3" />
+            <USkeleton class="h-5 w-1/3" />
+          </div>
+        </div>
+      </div>
     </div>
     <template v-else-if="entries.length">
       <CardCollectionPagination

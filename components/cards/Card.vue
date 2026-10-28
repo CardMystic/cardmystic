@@ -8,10 +8,18 @@
     ]"
     :ui="{ body: 'p-1 sm:p-1' }"
   >
+    <LazyListCardActionsModal
+      v-if="showActions"
+      v-model:open="showActions"
+      :card="actionCard"
+      :actions="cardOverlayMenuItems"
+      :is-owner="false"
+      board="Search result"
+    />
     <LazyAddToDeckModal
-      v-if="canShowDeckMenu && showAddToDeckModal"
+      v-if="showAddToDeckModal"
       v-model:open="showAddToDeckModal"
-      :oracle-ids="[card.card_data.oracle_id]"
+      :oracle-ids="[actionCard.card_data.oracle_id]"
     />
     <!-- Confirmation Modal -->
     <UModal
@@ -41,17 +49,18 @@
       <!-- Partner commanders: two overlapping cards -->
       <template v-if="hasPartner">
         <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
-          <NuxtLink
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            :aria-expanded="showActions"
             class="partner-card partner-back"
             :class="{ 'partner-front': partnerFrontIndex === 1 }"
-            :to="`/card/${card.partner_card_data!.oracle_id}`"
-            no-prefetch
             :aria-label="`View ${card.partner_card_data!.name}`"
             @mouseenter="
               partnerHoveredIndex = 1;
               emit('partner-hover', 1);
             "
-            @click="saveCurrentSearchQuery(route.query)"
+            @click="openActions(true)"
           >
             <img
               class="card-large cursor-pointer"
@@ -62,18 +71,19 @@
               loading="lazy"
               decoding="async"
             />
-          </NuxtLink>
-          <NuxtLink
+          </button>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            :aria-expanded="showActions"
             class="partner-card"
             :class="{ 'partner-front': partnerFrontIndex === 0 }"
-            :to="`/card/${card.card_data.oracle_id}`"
-            no-prefetch
             :aria-label="`View ${card.card_data.name}`"
             @mouseenter="
               partnerHoveredIndex = 0;
               emit('partner-hover', 0);
             "
-            @click="saveCurrentSearchQuery(route.query)"
+            @click="openActions()"
           >
             <img
               class="card-large cursor-pointer"
@@ -84,17 +94,19 @@
               loading="lazy"
               decoding="async"
             />
-          </NuxtLink>
+          </button>
         </div>
       </template>
 
       <!-- Single card (default) -->
-      <NuxtLink
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        :aria-expanded="showActions"
         v-else
-        :to="`/card/${card.card_data.oracle_id}`"
-        no-prefetch
-        class="block"
-        @click="saveCurrentSearchQuery(route.query)"
+        class="block w-full rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+        :aria-label="`Options for ${card.card_data.name}`"
+        @click="openActions()"
       >
         <img
           :class="sizeClass"
@@ -110,15 +122,13 @@
         <div v-else class="image-placeholder">
           <p class="placeholder-text">{{ card.card_data.name }}</p>
         </div>
-      </NuxtLink>
+      </button>
 
       <LazyCardOverlayButtons
         :card="card"
         :isDualFaced="isDualFaced"
         :show-clipboard-button="showCardInfo && !hasPartner"
         :show-flip-button="showCardInfo && !hasPartner"
-        :show-menu-button="canShowDeckMenu"
-        :menu-items="cardOverlayMenuItems"
         @flip="flipCard"
       />
 
@@ -533,11 +543,30 @@ const isFlipped = computed(() =>
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const moreActionsOpen = ref(false);
+const showActions = ref(false);
+const actionPartner = ref(false);
+const actionCard = computed(() =>
+  actionPartner.value && props.card.partner_card_data
+    ? {
+        card_name: props.card.partner_card_data.name,
+        card_data: props.card.partner_card_data,
+      }
+    : props.card,
+);
+function openActions(partner = false) {
+  actionPartner.value = partner;
+  saveCurrentSearchQuery(route.query);
+  showActions.value = true;
+}
 const showAddToDeckModal = ref(false);
-const hasMounted = ref(false);
 
 const cardOverlayMenuItems = computed(() => [
   [
+    {
+      label: 'View Card Details',
+      icon: 'i-lucide-info',
+      to: `/card/${actionCard.value.card_data.oracle_id}`,
+    },
     {
       label: 'Add to Deck',
       icon: 'i-lucide-library-big',
@@ -547,12 +576,6 @@ const cardOverlayMenuItems = computed(() => [
     },
   ],
 ]);
-
-const canShowDeckMenu = computed(() => hasMounted.value && props.showCardInfo);
-
-onMounted(() => {
-  hasMounted.value = true;
-});
 
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;

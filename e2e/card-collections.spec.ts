@@ -1,5 +1,78 @@
 import { expect, test } from '@playwright/test';
 import { BACKEND, gotoHydrated } from './utils/mocks';
+import type { CardCollectionCatalog } from '../models/collectionModel';
+
+test('all collection directories and detail pages expose SEO without JavaScript', async ({
+  browser,
+  baseURL,
+  request,
+}) => {
+  const response = await request.get('/api/backend/card-collections');
+  expect(response.ok()).toBe(true);
+  const catalog = (await response.json()) as CardCollectionCatalog;
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    baseURL,
+  });
+  const page = await context.newPage();
+  try {
+    for (const kind of ['sets', 'themes', 'roles'] as const) {
+      const entry = catalog[kind][0];
+      expect(entry).toBeDefined();
+      for (const path of [`/${kind}`, `/${kind}/${entry.slug}`]) {
+        expect((await page.goto(path))?.status()).toBe(200);
+        await expect(page.locator('h1')).toHaveCount(1);
+        await expect(page).toHaveTitle(/MTG .*\| CardMystic$/);
+        await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+          'content',
+          /Magic: The Gathering/,
+        );
+        await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+          'href',
+          `https://cardmystic.com${path}`,
+        );
+        await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+          'content',
+          'index, follow',
+        );
+        await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+          'content',
+          `https://cardmystic.com${path}`,
+        );
+        await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+          'content',
+          'summary_large_image',
+        );
+        const schema = (
+          await page
+            .locator('script[type="application/ld+json"]')
+            .allTextContents()
+        )
+          .map((text) => JSON.parse(text))
+          .find((value) => value['@type'] === 'CollectionPage');
+        expect(schema.url).toBe(`https://cardmystic.com${path}`);
+        expect(schema.breadcrumb.itemListElement.at(-1).item).toBe(schema.url);
+        await expect(
+          page.getByRole('navigation', { name: 'Breadcrumb', exact: true }),
+        ).toBeVisible();
+      }
+      await page.goto(`/${kind}/${entry.slug}?query=draw&useRerank=false`);
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+        'content',
+        'noindex, follow',
+      );
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+        'href',
+        `https://cardmystic.com/${kind}/${entry.slug}`,
+      );
+    }
+    expect((await request.get('/sets/not-a-real-collection')).status()).toBe(
+      404,
+    );
+  } finally {
+    await context.close();
+  }
+});
 
 // E2E_BACKEND_URL must serve the collection catalog (see backend docs/card-collections.md).
 test('collection directories, pagination, navigation, and mobile layout', async ({
@@ -47,7 +120,13 @@ test('collection directories, pagination, navigation, and mobile layout', async 
     fullPage: false,
   });
   await gotoHydrated(page, '/roles?page=2');
-  await expect(page.getByTestId('collection-tile')).toHaveCount(40);
+  const catalog = (await (
+    await page.request.get(BACKEND + '/card-collections')
+  ).json()) as CardCollectionCatalog;
+  const roleCount = catalog.roles.length;
+  await expect(page.getByTestId('collection-tile')).toHaveCount(
+    Math.min(40, roleCount > 40 ? roleCount - 40 : roleCount),
+  );
   await page.getByRole('searchbox', { name: 'Filter roles' }).fill('ramp');
   await expect(page).toHaveURL(/\/roles$/);
   await expect(page.getByTestId('collection-tile').first()).toContainText(
@@ -72,7 +151,7 @@ test('collection directories, pagination, navigation, and mobile layout', async 
   expect(errors).toEqual([]);
 });
 
-test('collection detail preserves scope through search, mode changes, filters, and load-more', async ({
+test('collection detail preserves scope through guest search, filters, and load-more', async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -113,15 +192,22 @@ test('collection detail preserves scope through search, mode changes, filters, a
   await page.locator('#a-i-search-form button[type="submit"]').click();
   await expect.poll(() => requests.length).toBe(1);
   expect(requests[0].collection).toEqual({ kind: 'sets', slug: 'lea' });
-  expect(requests[0].useRerank).toBe(true);
+  expect(requests[0].useRerank).toBe(false);
   expect(requests[0].filters).toMatchObject({ selectedRarities: ['Rare'] });
   await expect(page).toHaveURL(/\/sets\/lea\?/);
   await page
     .getByRole('combobox', { name: 'Search mode', exact: true })
     .click();
-  await page.getByRole('option', { name: 'Normal', exact: true }).click();
-  await expect.poll(() => requests.at(-1)?.useRerank).toBe(false);
-  expect(requests.at(-1)?.collection).toEqual({ kind: 'sets', slug: 'lea' });
+  await expect(
+    page.getByRole('option', { name: 'Enhanced', exact: true }),
+  ).toHaveAttribute('aria-disabled', 'true');
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('link', {
+      name: 'Sign in for enhanced searches',
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     'content',
     'noindex, follow',

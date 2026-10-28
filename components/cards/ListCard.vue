@@ -1,5 +1,12 @@
 <template>
   <div class="card-root list-card">
+    <LazyListCardActionsModal
+      v-if="showActions"
+      v-model:open="showActions"
+      :card="card"
+      :actions="cardOverlayMenuItems"
+      :board="currentBoard"
+    />
     <LazyAddToDeckModal
       v-if="showAddToDeckModal"
       v-model:open="showAddToDeckModal"
@@ -33,10 +40,14 @@
 
     <div class="card-image-wrapper">
       <!-- Card image -->
-      <NuxtLink
-        :to="`/card/${card.card_data.oracle_id}`"
-        no-prefetch
-        class="block"
+      <button
+        ref="actionTrigger"
+        type="button"
+        :aria-label="`Options for ${card.card_data.name}`"
+        aria-haspopup="dialog"
+        :aria-expanded="showActions"
+        class="block w-full rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+        @click="showActions = true"
       >
         <img
           :src="imageUrl"
@@ -50,18 +61,18 @@
           class="card-large cursor-pointer"
         />
         <div v-else class="image-placeholder">
-          <p class="placeholder-text">{{ card.card_data.name }}</p>
+          <p class="placeholder-text">
+            {{ card.card_data.name }}
+          </p>
         </div>
-      </NuxtLink>
+      </button>
 
       <LazyCardOverlayButtons
         :card="card"
         :isDualFaced="isDualFaced"
         :show-flip-button="true"
-        :show-menu-button="true"
         :show-copy-count="!isDeckCommander"
         :num-copies="numCopies ?? 1"
-        :menu-items="cardOverlayMenuItems"
         @flip="flipCard"
       />
 
@@ -84,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui';
+import type { ListCardAction } from '~/utils/list-card-actions';
 import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
@@ -98,6 +109,14 @@ import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
 
 const router = useRouter();
+const showActions = ref(false);
+const actionTrigger = useTemplateRef<HTMLButtonElement>('actionTrigger');
+watch(showActions, async (open) => {
+  if (!open) {
+    await nextTick();
+    actionTrigger.value?.focus();
+  }
+});
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 
@@ -178,8 +197,13 @@ const isCommanderCardComputed = computed(() => {
   return isEligibleCommander.value;
 });
 
-const cardOverlayMenuItems = computed<DropdownMenuItem[][]>(() => {
-  const generalActions: DropdownMenuItem[] = [
+const cardOverlayMenuItems = computed<ListCardAction[][]>(() => {
+  const generalActions: ListCardAction[] = [
+    {
+      label: 'View Card Details',
+      icon: 'i-lucide-info',
+      to: `/card/${props.card.card_data.oracle_id}`,
+    },
     {
       label: 'Add to Deck',
       icon: 'i-lucide-library-big',

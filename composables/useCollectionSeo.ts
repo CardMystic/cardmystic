@@ -6,6 +6,7 @@ export function useCollectionSeo(
   description: string,
   path: string,
   noindex: ComputedRef<boolean>,
+  image?: string | null,
 ) {
   const origin = 'https://cardmystic.com';
   const canonical = new URL(path, origin).href;
@@ -17,12 +18,12 @@ export function useCollectionSeo(
     ogTitle: `${title} | CardMystic`,
     ogDescription: description,
     ogUrl: canonical,
-    ogImage: FALLBACK_OG_IMAGE,
+    ogImage: image || FALLBACK_OG_IMAGE,
     ogImageAlt: title,
     twitterCard: 'summary_large_image',
     twitterTitle: `${title} | CardMystic`,
     twitterDescription: description,
-    twitterImage: FALLBACK_OG_IMAGE,
+    twitterImage: image || FALLBACK_OG_IMAGE,
   });
   useHead({ link: [{ rel: 'canonical', href: canonical }] });
 }

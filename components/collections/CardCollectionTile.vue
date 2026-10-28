@@ -12,8 +12,10 @@ const props = defineProps<{
   eager: boolean;
 }>();
 const imageFailed = shallowRef(false);
+const imageLoaded = shallowRef(false);
 const image = useTemplateRef<HTMLImageElement>('image');
 onMounted(() => {
+  imageLoaded.value = !!image.value?.complete && image.value.naturalWidth > 0;
   if (image.value?.complete && image.value.naturalWidth === 0)
     imageFailed.value = true;
 });
@@ -21,6 +23,7 @@ watch(
   () => props.entry.imageUrl,
   () => {
     imageFailed.value = false;
+    imageLoaded.value = false;
   },
 );
 const releaseDate = computed(() =>
@@ -44,8 +47,13 @@ const releaseDate = computed(() =>
     class="flex h-full flex-col rounded-lg border border-default bg-default hover:bg-elevated focus-visible:outline-primary"
   >
     <div
-      class="aspect-[16/10] w-full shrink-0 overflow-hidden rounded-t-lg bg-elevated"
+      class="relative aspect-[16/10] w-full shrink-0 overflow-hidden rounded-t-lg bg-elevated"
     >
+      <USkeleton
+        v-if="entry.imageUrl && !imageLoaded && !imageFailed"
+        class="absolute inset-0 size-full rounded-none"
+        aria-hidden="true"
+      />
       <img
         v-if="entry.imageUrl && !imageFailed"
         ref="image"
@@ -57,6 +65,7 @@ const releaseDate = computed(() =>
         height="457"
         class="h-full w-full object-cover"
         @error="imageFailed = true"
+        @load="imageLoaded = true"
       />
       <div
         v-else

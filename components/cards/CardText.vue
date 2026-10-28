@@ -67,16 +67,17 @@
     </span>
 
     <div class="min-w-0 flex-1 flex items-center gap-1.5">
-      <NuxtLink
-        :to="`/card/${card.card_data.oracle_id}`"
-        no-prefetch
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        :aria-expanded="showActions"
         class="card-name"
-        @click="rememberSearch"
+        @click="showActions = true"
         @mouseenter="emit('partner-hover', 0)"
         @focus="emit('partner-hover', 0)"
       >
         {{ displayName }}
-      </NuxtLink>
+      </button>
 
       <template v-if="card.partner_card_data">
         <span class="text-muted text-xs">+</span>
@@ -135,23 +136,20 @@
       </UTooltip>
     </div>
 
-    <UDropdownMenu :items="menuItems">
-      <UButton
-        class="card-options cursor-pointer shrink-0"
-        icon="i-lucide-circle-chevron-down"
-        color="neutral"
-        variant="ghost"
-        size="xs"
-        square
-        aria-label="Card options"
-        @click.stop
-      />
-    </UDropdownMenu>
+    <LazyListCardActionsModal
+      v-if="showActions"
+      v-model:open="showActions"
+      :card="card"
+      :actions="menuItems"
+      :board="currentBoard"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
+import type { ListCardAction } from '~/utils/list-card-actions';
+const showActions = ref(false);
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 import {
@@ -402,7 +400,7 @@ const buyPrice = computed(() => {
 });
 
 const genericActions = computed(() => {
-  const actions: Record<string, unknown>[] = [
+  const actions: ListCardAction[] = [
     {
       label: 'View Card',
       icon: 'i-lucide-external-link',
@@ -471,7 +469,7 @@ const genericActions = computed(() => {
 });
 
 const searchActions = computed(() => {
-  const actions: Record<string, unknown>[] = [];
+  const actions: ListCardAction[] = [];
   if (props.showAddToDeckbuilderButton && deckbuilderStore) {
     actions.push({
       label: deckbuilderStore.selectedDeckId.value
@@ -508,7 +506,7 @@ const searchActions = computed(() => {
 const ownerActions = computed(() => {
   if (!props.isOwner) return [];
   const copies = props.numCopies ?? 1;
-  const actions: Record<string, unknown>[] = [];
+  const actions: ListCardAction[] = [];
 
   if (!props.isDeckCommander) {
     actions.push(
