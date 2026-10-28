@@ -41,83 +41,128 @@
       </UInput>
     </UFormField>
 
-    <UFormField name="commander" class="mb-2">
-      <div class="flex gap-2 items-center">
-        <UInputMenu
-          v-model="state.commander"
-          v-model:search-term="commanderSearchTerm"
-          :items="filteredCommanders"
-          placeholder="Select a commander (optional)..."
-          icon="i-lucide-crown"
-          class="flex-1"
-          :ui="{ base: 'text-base h-10' }"
-        />
-        <UButton
-          v-if="state.commander"
-          class="cursor-pointer"
-          color="neutral"
-          variant="link"
-          size="sm"
-          icon="i-lucide-circle-x"
-          aria-label="Clear commander"
-          @click="
-            () => {
-              state.commander = '';
-            }
-          "
-        />
-      </div>
+    <div
+      v-if="userProfile"
+      class="flex gap-2 mb-2 items-center justify-center"
+      role="group"
+      aria-label="Decklist source"
+    >
+      <UButton
+        type="button"
+        :variant="sourceMode === 'select' ? 'solid' : 'outline'"
+        @click="
+          () => {
+            sourceMode = 'select';
+          }
+        "
+        >Select Decklist</UButton
+      >
+      <UButton
+        type="button"
+        :variant="sourceMode === 'paste' ? 'solid' : 'outline'"
+        @click="
+          () => {
+            sourceMode = 'paste';
+          }
+        "
+        >Paste Decklist</UButton
+      >
+    </div>
+    <UFormField v-if="sourceMode === 'select'">
+      <UInputMenu
+        v-model="selectedDeckId"
+        v-model:search-term="deckSearchTerm"
+        :items="deckOptions"
+        value-key="value"
+        label-key="label"
+        placeholder="Select a decklist..."
+        class="w-full"
+        :loading="decksLoading || deckLoading"
+        :ignore-filter="true"
+      />
+      <p v-if="deckLoadError" class="text-error mt-2">
+        Couldn't load this deck. Try selecting it again.
+      </p>
     </UFormField>
+    <template v-if="sourceMode === 'paste'">
+      <UFormField name="commander" class="mb-2">
+        <div class="flex gap-2 items-center">
+          <UInputMenu
+            v-model="state.commander"
+            v-model:search-term="commanderSearchTerm"
+            :items="filteredCommanders"
+            placeholder="Select a commander (optional)..."
+            icon="i-lucide-crown"
+            class="flex-1"
+            :ui="{ base: 'text-base h-10' }"
+          />
+          <UButton
+            v-if="state.commander"
+            class="cursor-pointer"
+            color="neutral"
+            variant="link"
+            size="sm"
+            icon="i-lucide-circle-x"
+            aria-label="Clear commander"
+            @click="
+              () => {
+                state.commander = '';
+              }
+            "
+          />
+        </div>
+      </UFormField>
 
-    <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
-      <div class="flex gap-2 items-center">
-        <UInputMenu
-          v-model="state.partnerCommander"
-          v-model:search-term="partnerSearchTerm"
-          :items="filteredPartners"
-          placeholder="Select a partner commander (optional)..."
-          icon="i-lucide-crown"
-          class="flex-1"
-          :ui="{ base: 'text-base h-10' }"
-        />
-        <UButton
-          v-if="state.partnerCommander"
-          color="neutral"
-          variant="link"
-          size="sm"
-          icon="i-lucide-circle-x"
-          aria-label="Clear partner commander"
-          @click="
-            () => {
-              state.partnerCommander = '';
-            }
-          "
-        />
-      </div>
-    </UFormField>
+      <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
+        <div class="flex gap-2 items-center">
+          <UInputMenu
+            v-model="state.partnerCommander"
+            v-model:search-term="partnerSearchTerm"
+            :items="filteredPartners"
+            placeholder="Select a partner commander (optional)..."
+            icon="i-lucide-crown"
+            class="flex-1"
+            :ui="{ base: 'text-base h-10' }"
+          />
+          <UButton
+            v-if="state.partnerCommander"
+            color="neutral"
+            variant="link"
+            size="sm"
+            icon="i-lucide-circle-x"
+            aria-label="Clear partner commander"
+            @click="
+              () => {
+                state.partnerCommander = '';
+              }
+            "
+          />
+        </div>
+      </UFormField>
 
-    <UFormField name="decklist">
-      <div class="relative">
-        <UTextarea
-          v-model="state.decklist"
-          placeholder="Paste your decklist here (one card per line)..."
-          :rows="6"
-          class="w-full"
-          :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }"
-          autocomplete="off"
-        />
-        <UButton
-          v-if="onSaveToDeck && hasCards"
-          icon="i-lucide-list-plus"
-          color="primary"
-          variant="soft"
-          size="xs"
-          :label="`Save ${numCardsInDecklist} cards to Deck`"
-          class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
-          @click="onSaveToDeck"
-        />
-      </div>
-    </UFormField>
+      <UFormField name="decklist">
+        <div class="relative">
+          <UTextarea
+            v-model="state.decklist"
+            placeholder="Paste your decklist here (one card per line)..."
+            :rows="6"
+            class="w-full"
+            :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }"
+            autocomplete="off"
+          />
+          <UButton
+            v-if="onSaveToDeck && hasCards"
+            icon="i-lucide-list-plus"
+            color="primary"
+            variant="soft"
+            size="xs"
+            :label="`Save ${numCardsInDecklist} cards to Deck`"
+            class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
+            @click="onSaveToDeck"
+          />
+        </div>
+      </UFormField>
+    </template>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
       <QuickFilters
@@ -177,7 +222,10 @@
     <div class="flex justify-center">
       <UButton
         icon="i-lucide-box"
-        :disabled="!state.decklist?.trim() && !state.commander?.trim()"
+        :disabled="
+          (sourceMode === 'select' && !deckbuilderStore.savedDeckReady.value) ||
+          (!state.decklist?.trim() && !state.commander?.trim())
+        "
         type="submit"
         class="cursor-pointer h-10"
       >
@@ -201,6 +249,13 @@ import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
 import Filters from './Filters.vue';
+import {
+  useMyDecklistsSearch,
+  useOwnedDecklist,
+  useCardLists,
+} from '~/composables/useCardLists';
+import { useCardsByOracleIds } from '~/composables/useCards';
+import type { ScryfallCard } from '~/models/cardModel';
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper';
@@ -301,6 +356,155 @@ const state = reactive<Partial<Schema>>({
   filters: parsedFilters.value || {
     selectedColorFilterOption: 'Color Identity',
   },
+});
+
+const { userProfile } = useUserProfile();
+const sourceMode = ref<'select' | 'paste'>(
+  route.query.deckId
+    ? 'select'
+    : route.query.decklist || route.query.commander || pageDefaults
+      ? 'paste'
+      : userProfile.value
+        ? 'select'
+        : 'paste',
+);
+const { selectedDeckId } = deckbuilderStore;
+selectedDeckId.value = String(route.query.deckId || '');
+const deckSearchTerm = ref('');
+const { decklists: savedDecks, isLoading: decksLoading } = useMyDecklistsSearch(
+  refDebounced(deckSearchTerm, 250),
+);
+const activeDeckId = computed(() =>
+  sourceMode.value === 'select' && userProfile.value
+    ? selectedDeckId.value
+    : '',
+);
+const {
+  decklist: ownedDeck,
+  isLoading: deckLoading,
+  error: deckError,
+} = useOwnedDecklist(activeDeckId);
+const { useListItems } = useCardLists();
+const {
+  data: deckItems,
+  isFetching: itemsLoading,
+  error: itemsError,
+} = useListItems(
+  computed(() =>
+    ownedDeck.value?.id === activeDeckId.value ? activeDeckId.value : '',
+  ),
+);
+const deckOracleIds = computed(() =>
+  (deckItems.value ?? [])
+    .filter((item) => (item.board ?? 'Mainboard') === 'Mainboard')
+    .map((item) => item.oracle_id)
+    .filter((id): id is string => !!id),
+);
+const {
+  cards: savedCards,
+  isLoading: cardsLoading,
+  error: cardsError,
+} = useCardsByOracleIds(deckOracleIds);
+const deckLoadError = computed(
+  () =>
+    deckError.value ||
+    itemsError.value ||
+    cardsError.value ||
+    (activeDeckId.value && !deckLoading.value && !ownedDeck.value),
+);
+const deckOptions = computed(() => {
+  const decks = [...savedDecks.value];
+  if (ownedDeck.value && !decks.some((deck) => deck.id === ownedDeck.value?.id))
+    decks.unshift(ownedDeck.value);
+  return decks.map((deck) => ({
+    label: deck.name || 'Untitled deck',
+    value: deck.id,
+  }));
+});
+watch(
+  [
+    sourceMode,
+    activeDeckId,
+    ownedDeck,
+    deckItems,
+    savedCards,
+    itemsLoading,
+    cardsLoading,
+  ],
+  () => {
+    deckbuilderStore.savedDeckReady.value = false;
+    if (sourceMode.value !== 'select') return;
+    state.decklist = '';
+    state.commander = '';
+    state.partnerCommander = '';
+    if (
+      !activeDeckId.value ||
+      !ownedDeck.value ||
+      itemsLoading.value ||
+      cardsLoading.value ||
+      !deckItems.value ||
+      deckLoadError.value
+    )
+      return;
+    const cards = (savedCards.value ?? []) as ScryfallCard[];
+    if (
+      deckOracleIds.value.some(
+        (id) => !cards.some((card) => card.oracle_id === id),
+      )
+    )
+      return;
+    state.decklist = cards.map((card) => card.name).join('\n');
+    const commanders = deckItems.value
+      .filter((item) => item.is_commander)
+      .map(
+        (item) => cards.find((card) => card.oracle_id === item.oracle_id)?.name,
+      )
+      .filter(Boolean);
+    state.commander = commanders[0] || '';
+    state.partnerCommander = commanders[1] || '';
+    deckbuilderStore.savedDeckReady.value = true;
+  },
+  { immediate: true },
+);
+watch(sourceMode, (mode) => {
+  if (mode === 'paste') selectedDeckId.value = '';
+});
+watch(
+  () => userProfile.value?.id,
+  (id, previous) => {
+    if (id === previous) return;
+    if (id && route.query.deckId) {
+      selectedDeckId.value = String(route.query.deckId);
+      sourceMode.value = 'select';
+      return;
+    }
+    selectedDeckId.value = '';
+    sourceMode.value =
+      id && !route.query.decklist && !route.query.commander && !pageDefaults
+        ? 'select'
+        : 'paste';
+  },
+);
+watch(
+  () => route.query.deckId,
+  (id) => {
+    selectedDeckId.value = String(id || '');
+    sourceMode.value = id ? 'select' : 'paste';
+  },
+);
+watch(deckbuilderStore.rerun, () => {
+  if (sourceMode.value !== 'select' || !deckbuilderStore.savedDeckReady.value)
+    return;
+  const parsed = schema.safeParse(state);
+  if (!parsed.success) {
+    toast.add({
+      title: 'Cannot run recommendations',
+      description: parsed.error.issues[0]?.message,
+      color: 'error',
+    });
+    return;
+  }
+  void onSubmit({ data: parsed.data } as FormSubmitEvent<Schema>);
 });
 
 const hasCards = computed(
@@ -405,7 +609,7 @@ const filteredPartners = computed(() => {
 watch(
   () => state.commander,
   () => {
-    state.partnerCommander = '';
+    if (sourceMode.value === 'paste') state.partnerCommander = '';
     partnerSearchTerm.value = '';
   },
 );
@@ -425,6 +629,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
     return;
   }
+
+  if (sourceMode.value === 'select' && !deckbuilderStore.savedDeckReady.value)
+    return;
 
   try {
     const requestFilters = { ...event.data.filters }; // shallow copy
@@ -452,6 +659,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     const query: Record<string, any> = {
       useRerank: String(route.query.useRerank !== 'false'),
+      deckId: sourceMode.value === 'select' ? selectedDeckId.value : undefined,
       decklist: event.data.decklist,
       description: event.data.description || undefined,
       commander: event.data.commander || undefined,

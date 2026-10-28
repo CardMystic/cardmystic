@@ -68,6 +68,13 @@ test.describe('Deck Recommender', () => {
         : [];
     expect(results.length).toBeGreaterThan(0);
     expect(results[0]).toHaveProperty('card_data');
+    await expect(
+      page.getByPlaceholder(/Paste your decklist here/i),
+    ).toBeVisible();
+    await expect(page.getByPlaceholder('Select a decklist...')).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Add to search', exact: true }).first(),
+    ).toBeVisible();
 
     // Recommended cards grid should populate.
     const grid = page
@@ -105,10 +112,18 @@ test.describe('Deck Recommender', () => {
     await expect(page.getByText('Enter a search query')).toHaveCount(0);
   });
 
-  test('commander autocomplete loads suggestions from backend and filters on input', async ({
+  test('guests default to paste mode and commander autocomplete filters suggestions', async ({
     page,
   }) => {
     await gotoHydrated(page, '/search/all/deckbuilder');
+
+    await expect(
+      page.getByPlaceholder(/Paste your decklist here/i),
+    ).toBeVisible();
+    await expect(page.getByPlaceholder('Select a decklist...')).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Select Decklist', exact: true }),
+    ).toHaveCount(0);
 
     // The UInputMenu for commander selection has this placeholder.
     const commanderInput = page.getByPlaceholder(
@@ -146,8 +161,10 @@ test.describe('Deck Recommender', () => {
 
     await page.getByRole('button', { name: /^Recommend$/i }).click();
 
-    // URL must be updated with the decklist query param.
+    // Pasted searches remain independent of any saved deck.
+
     await page.waitForURL(/[?&]decklist=/, { timeout: SEARCH_TIMEOUT });
+    expect(new URL(page.url()).searchParams.has('deckId')).toBe(false);
 
     // The backend call must succeed and return at least one result.
     const response = await alsCall;

@@ -2,6 +2,12 @@
 @import '@nuxt/ui';
 
 @layer base {
+  input,
+  textarea,
+  select {
+    @apply text-base;
+  }
+
   /* Use a pointer for enabled buttons throughout the app, including Nuxt UI. */
   :where(
       button,

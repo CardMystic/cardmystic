@@ -199,7 +199,21 @@
       variant="outline"
       :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'"
       size="md"
-      :label="isInDecklist ? 'Added To Deckbuilder' : 'Add To Deckbuilder'"
+      :label="
+        deckbuilder.selectedDeckId.value
+          ? isInDecklist
+            ? 'Added to deck'
+            : 'Add to deck'
+          : isInDecklist
+            ? 'Added to search'
+            : 'Add to search'
+      "
+      :disabled="
+        isInDecklist ||
+        deckbuilder.pendingCards.value.length > 0 ||
+        (!!deckbuilder.selectedDeckId.value &&
+          !deckbuilder.savedDeckReady.value)
+      "
       block
       @click="emit('addToDeckbuilder')"
     />
@@ -207,6 +221,7 @@
 </template>
 
 <script setup lang="ts">
+const deckbuilder = useDeckbuilder();
 import type { Card } from '~/models/cardModel';
 import {
   getAffiliateLink,
