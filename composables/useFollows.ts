@@ -98,6 +98,7 @@ export function useFollowingList(limit = 25) {
     isLoading: isLoadingFollowing,
     isFetchingNextPage,
     error: followingError,
+    refetch: refetchFollowing,
     fetchNextPage,
     hasNextPage,
   } = useInfiniteQuery(() => ({
@@ -131,6 +132,7 @@ export function useFollowingList(limit = 25) {
     isLoadingFollowing,
     isFetchingNextPage,
     followingError,
+    refetchFollowing,
     fetchNextPage,
     hasNextPage,
   };

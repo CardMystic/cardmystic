@@ -41,6 +41,7 @@
       </div>
     </UFormField>
 
+    <SearchModeSelect />
     <QuickFilters v-model="state.filters" />
 
     <Filters
@@ -243,6 +244,7 @@ async function performSearch(cardName: string, filters: Schema['filters']) {
     // Construct query parameters
     const query: Record<string, any> = {
       card_name: cardName,
+      useRerank: String(route.query.useRerank !== 'false'),
       filters:
         requestFilters && Object.keys(requestFilters).length > 0
           ? JSON.stringify(requestFilters)

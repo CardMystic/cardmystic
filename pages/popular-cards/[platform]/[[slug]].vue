@@ -16,6 +16,7 @@
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults
+          :reranking-enabled="route.query.useRerank !== 'false'"
           :is-loading="isLoading"
           :is-fetching="isFetching"
           :error="error"
@@ -145,6 +146,7 @@ function handleFabClick() {
 const topCardsSearch = computed(() => {
   return TopCardsRequestSchema.parse({
     query: queryParam.value || undefined,
+    useRerank: route.query.useRerank !== 'false',
     limit: limitParam.value,
     filters: parsedFilters.value,
   });

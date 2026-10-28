@@ -3,7 +3,7 @@
 <template>
   <!-- Skeleton Loading State -->
   <div class="rounded-xl p-6 shadow-xl">
-    <!-- Identity + Patreon header skeleton -->
+    <!-- Profile identity skeleton -->
     <div
       class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6 pb-6"
     >
@@ -13,10 +13,6 @@
           <USkeleton class="h-6 w-40" />
           <USkeleton class="h-4 w-60" />
         </div>
-      </div>
-      <div class="space-y-3 lg:max-w-sm">
-        <USkeleton class="h-6 w-44" />
-        <USkeleton class="h-10 w-40" />
       </div>
     </div>
 

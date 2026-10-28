@@ -4,7 +4,10 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <ClientOnly><CookieConsent /></ClientOnly>
+    <ClientOnly>
+      <CookieConsent />
+      <SearchModeNotice />
+    </ClientOnly>
     <VueQueryDevtools v-if="isDev" />
   </UApp>
 </template>
