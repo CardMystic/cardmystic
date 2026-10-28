@@ -7,6 +7,7 @@ export interface AlsRecommendRequest {
   cards?: string[];
   limit: number;
   query?: string;
+  useRerank?: boolean;
   commanders?: string[];
   filters?: CardSearchFilters;
 }
@@ -20,6 +21,8 @@ export function useAlsRecommend(
   searchParams: ComputedRef<AlsRecommendRequest | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const billing = useMeteredSearchRequest();
+  const fetch = billing.fetch;
   const notFound: Ref<string[]> = ref([]);
 
   const queryEnabled = computed(
@@ -37,7 +40,11 @@ export function useAlsRecommend(
     error,
     refetch,
   } = useQuery({
-    queryKey: computed(() => ['als-recommend', searchParams.value]),
+    queryKey: computed(() => [
+      'als-recommend',
+      searchParams.value,
+      billing.userId.value,
+    ]),
     queryFn: async () => {
       const response = await fetch(
         `${config.public.backendPath}/als/recommend`,
@@ -61,7 +68,11 @@ export function useAlsRecommend(
       return body.results ?? [];
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
-    enabled: queryEnabled,
+    enabled: computed(() => billing.ready.value && queryEnabled.value),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   return {

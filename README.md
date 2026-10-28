@@ -188,6 +188,10 @@ pnpm test:cov      # with coverage
 
 `vitest.config.ts` excludes `e2e/**` so Playwright specs aren't picked up by Vitest.
 
+### Production gateway routing
+
+The production Azure Static Web App uses the private runtime setting `NUXT_BACKEND_URL=https://cardmystic-backend-fbhtc0h2gzdfdhcs.eastus-01.azurewebsites.net`. Keep this value aligned with the production deployment workflow. The gateway calls the Azure backend origin directly with `NUXT_BACKEND_API_KEY`, avoiding a second Cloudflare hop. Browsers still call `/api/backend/...` through `cardmystic.com`; the public backend hostname and CI endpoint settings are separate. If the backend Azure app is replaced, update both this runtime setting and the workflow.
+
 ### End-to-end tests (Playwright)
 
 Live in [`e2e/`](e2e/). These are **integration tests** — they build the app and run the production Nitro server (`pnpm build && node .output/server/index.mjs` on port `3000`) and drive a real Chromium against the **real backend and the real Supabase project**.
@@ -303,3 +307,11 @@ To generate the Supabase database types (when the schema changes) run:
 ```bash
 npm run gen:types
 ```
+
+### Popular smart-search suggestions
+
+The backend `POPULAR_QUERIES` list in `src/common/utils/protectedSearches.ts` is the single source for the homepage Popular Searches panel and smart-search autocomplete (`GET /api/backend/cache/popular`). The frontend shares one fetched list for an hour and filters suggestions locally; typing does not call the search API. Users can still submit any text if suggestions are unavailable. Update that curated list when adding common queries, and keep protected cache limits and SEO slug requests aligned as described in the backend cache maintenance notes.
+
+Query-based deck recommendations and popularity searches also use `ai_rerank_score` for relevance ordering when research returns a successful Jev rerank. The original ALS, popularity, and ColBERT scores remain available; without Jev scores the existing ordering rules apply.
+
+Smart/Commander, Similarity, deck recommendation, and popularity forms (including card-page tabs) share the Normal/Enhanced search-mode selector. The `useRerank` URL parameter survives submissions; query-free recommendations do not spend Enhanced searches. Similarity reranks its matrix candidates using the selected card's rules/type/keyword text. Automatic related cards on card detail pages remain Normal. The backend enforces allowances before returning cached or fresh results.

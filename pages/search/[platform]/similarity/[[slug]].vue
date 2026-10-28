@@ -40,6 +40,7 @@
           :error="error"
           @retry="refetch()"
           :search-results="searchResults"
+          :reranking-enabled="route.query.useRerank !== 'false'"
           :query-param="displayQuery"
           :help-text="
             seoEntry
@@ -188,6 +189,7 @@ const similaritySearch = computed(() => {
     limit: limitParam.value,
     filters: parsedFilters.value,
     exclude_card_data: false,
+    useRerank: route.query.useRerank !== 'false',
   });
 });
 

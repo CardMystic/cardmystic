@@ -379,17 +379,8 @@ test(
         },
       }),
     );
-    await page.route(BACKEND + '/cache/top', (route) =>
-      route.fulfill({
-        json: [
-          {
-            query: topQuery,
-            hitCount: 42,
-            lastAccessed: '2026-01-01T00:00:00Z',
-            isCached: true,
-          },
-        ],
-      }),
+    await page.route(BACKEND + '/cache/popular', (route) =>
+      route.fulfill({ json: [topQuery] }),
     );
     await page.route(
       /https:\/\/(?:api|cards)\.scryfall\.(?:com|io)\//,
@@ -432,7 +423,7 @@ test(
           ).toBeVisible();
           const top = page.locator('.top-queries-container').first();
           await top.scrollIntoViewIfNeeded();
-          await expect(top).toContainText('Top Searches This Week');
+          await expect(top).toContainText('Popular Searches');
           await expect(top).toContainText(topQuery);
           await expect(
             page.getByRole('button', { name: 'Retry', exact: true }),

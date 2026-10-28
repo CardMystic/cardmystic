@@ -16,9 +16,16 @@ export function useColbertSearch(
   searchParams: ComputedRef<WordSearch | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const billing = useMeteredSearchRequest();
+  const fetch = billing.fetch;
 
   const queryEnabled = computed(() => !!searchParams.value?.query);
-  const queryKey = computed(() => ['search', 'colbert', searchParams.value]);
+  const queryKey = computed(() => [
+    'search',
+    'colbert',
+    searchParams.value,
+    billing.userId.value,
+  ]);
 
   const {
     data: searchResults,
@@ -50,7 +57,11 @@ export function useColbertSearch(
       return response.json() as Promise<Array<Card>>;
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
-    enabled: queryEnabled,
+    enabled: computed(() => billing.ready.value && queryEnabled.value),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   const isLoading = computed(
@@ -75,9 +86,16 @@ export function useSimilaritySearch(
   searchParams: ComputedRef<SimilaritySearch | undefined>,
 ) {
   const config = useRuntimeConfig();
+  const billing = useMeteredSearchRequest();
+  const fetch = billing.fetch;
 
   const queryEnabled = computed(() => !!searchParams.value?.card_name);
-  const queryKey = computed(() => ['search', 'similarity', searchParams.value]);
+  const queryKey = computed(() => [
+    'search',
+    'similarity',
+    searchParams.value,
+    billing.userId.value,
+  ]);
 
   const {
     data: searchResults,
@@ -109,7 +127,11 @@ export function useSimilaritySearch(
       return response.json() as Promise<Array<Card>>;
     },
     staleTime: 1000 * 60 * 15, // 15 minutes
-    enabled: queryEnabled,
+    enabled: computed(() => billing.ready.value && queryEnabled.value),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   const isLoading = computed(
@@ -214,6 +236,7 @@ export function useSimilarCards(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             card_name: cardName.value,
+            useRerank: false,
             limit: 100,
             filters: undefined,
             exclude_card_data: false,

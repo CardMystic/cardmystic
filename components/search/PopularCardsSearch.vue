@@ -43,7 +43,13 @@
 
     <CommanderFilters v-model="state.filters" />
 
-    <QuickFilters v-model="state.filters" :show="['arena', 'mtgo', 'paper']" />
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <QuickFilters
+        v-model="state.filters"
+        :show="['arena', 'mtgo', 'paper']"
+      />
+      <SearchModeSelect />
+    </div>
 
     <Filters
       v-if="!showFilters"
@@ -196,6 +202,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     });
 
     const query: Record<string, any> = {
+      useRerank: String(route.query.useRerank !== 'false'),
       query: event.data.query || undefined,
       filters:
         requestFilters && Object.keys(requestFilters).length > 0
