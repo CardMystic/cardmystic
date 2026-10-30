@@ -3,7 +3,7 @@
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
         <USkeleton class="preview-image" />
-        <USkeleton class="copy-count-pill" />
+        <USkeleton v-if="variant === 'deck'" class="copy-count-pill" />
       </div>
 
       <div class="space-y-2">
@@ -18,7 +18,7 @@
           <USkeleton class="h-5 w-16 rounded-full" />
         </div>
 
-        <USkeleton class="h-6 w-24" />
+        <USkeleton v-if="variant === 'search'" class="h-2 w-full" />
       </div>
 
       <div class="preview-actions">
@@ -27,7 +27,7 @@
         <USkeleton class="h-11 w-full rounded-lg" />
       </div>
 
-      <div class="preview-actions">
+      <div v-if="variant === 'deck'" class="preview-actions">
         <USkeleton class="h-4 w-28" />
         <div class="grid grid-cols-2 gap-2">
           <USkeleton class="h-10 w-full rounded-lg" />
@@ -41,6 +41,12 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+withDefaults(defineProps<{ variant?: 'search' | 'deck' }>(), {
+  variant: 'deck',
+});
+</script>
 
 <style scoped>
 .preview-root {

@@ -1,18 +1,20 @@
 <template>
-  <div style="height: 32px"></div>
-  <!-- Sort spacer to prevent layout shift -->
-  <div v-if="defaultGroupBy" style="height: 26px"></div>
-  <!-- Spacer for expand all/collapse all buttons -->
   <div class="results-layout xl:flex xl:items-start xl:gap-6">
     <aside
       class="preview-rail hidden xl:block xl:w-[20rem] xl:shrink-0 xl:self-start"
     >
       <div class="preview-sticky">
-        <HoveredPreviewSkeleton />
+        <HoveredPreviewSkeleton variant="search" />
       </div>
     </aside>
 
     <div class="min-w-0 flex-1">
+      <template v-if="defaultGroupBy">
+        <div class="mb-1 flex h-6 justify-end gap-2">
+          <USkeleton class="w-24" /><USkeleton class="w-24" />
+        </div>
+        <USkeleton class="h-10 w-full mb-1 rounded-lg" />
+      </template>
       <div
         v-if="view === 'grid'"
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2"
@@ -21,6 +23,7 @@
           v-for="i in skeletonCount"
           :key="`skeleton-${i}`"
           :showCardInfo="true"
+          :hide-progress-bar="hideProgressBar"
         />
       </div>
 
@@ -39,7 +42,6 @@
             :class="i % 3 === 0 ? 'w-2/3' : i % 2 === 0 ? 'w-1/2' : 'w-3/4'"
           />
           <USkeleton class="h-4 w-10 ml-auto shrink-0" />
-          <USkeleton class="size-5 shrink-0 rounded-full" />
         </div>
       </div>
     </div>
@@ -51,6 +53,7 @@ withDefaults(
   defineProps<{
     skeletonCount?: number;
     defaultGroupBy?: string;
+    hideProgressBar?: boolean;
     view?: 'grid' | 'text';
   }>(),
   {

@@ -111,8 +111,11 @@ onBeforeUnmount(() => followingObserver?.disconnect());
 
 <template>
   <SpaceBackground :full="true">
+    <div class="w-full max-w-6xl mx-auto px-4 pt-24 relative z-10">
+      <NavigationBreadcrumbs />
+    </div>
     <div
-      class="w-full max-w-6xl mx-auto px-4 pt-24 pb-10 relative z-10 grid gap-6 lg:grid-cols-5 items-start"
+      class="w-full max-w-6xl mx-auto px-4 pb-10 relative z-10 grid gap-6 lg:grid-cols-5 items-start"
     >
       <section
         aria-label="Account info"

@@ -1,5 +1,6 @@
 <template>
   <UForm
+    ref="formRef"
     :schema="schema"
     :state="state"
     class="grow space-y-4"
@@ -38,53 +39,12 @@
       </div>
     </UFormField>
 
-    <QuickFilters v-model="state.filters" />
-
-    <Filters
-      v-if="!showFilters"
+    <SearchFilterDrawer
       ref="filtersRef"
       v-model="state.filters"
-      hide-controls
+      :can-apply="!!state.query?.trim()"
+      @apply="formRef?.submit()"
     />
-
-    <div v-if="!showFilters" class="flex justify-center">
-      <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton
-          class="cursor-pointer"
-          @click="
-            () => {
-              showFilters = true;
-            }
-          "
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-sliders-horizontal"
-          aria-label="Show advanced search filters"
-        >
-          Show Advanced Filters
-        </UButton>
-      </UTooltip>
-    </div>
-
-    <UCard v-if="showFilters">
-      <UFormField name="filters">
-        <Filters ref="filtersRef" v-model="state.filters" />
-      </UFormField>
-      <template #footer>
-        <div class="flex items-center justify-center">
-          <UButton
-            class="cursor-pointer"
-            @click="hideFilters"
-            variant="ghost"
-            size="sm"
-            icon="i-lucide-eye-off"
-            color="neutral"
-          >
-            Hide Advanced Filters
-          </UButton>
-        </div>
-      </template>
-    </UCard>
   </UForm>
 </template>
 
@@ -97,12 +57,13 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
-import Filters from './Filters.vue';
+import SearchFilterDrawer from './SearchFilterDrawer.vue';
 
 const { getPath, getPlatformFromPath } = useSearchType();
 
 const input = ref();
-const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
+const formRef = useTemplateRef('formRef');
+const filtersRef = ref<InstanceType<typeof SearchFilterDrawer> | null>(null);
 
 defineShortcuts({
   '/': () => input.value?.inputRef?.focus(),
@@ -126,7 +87,6 @@ const currentPlatform = computed(() => {
 const queryParam = computed(() =>
   String(pageDefaults?.query ?? route.query.query ?? ''),
 );
-import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 const parsedFilters = computed(() => {
   if (pageDefaults) {
@@ -144,11 +104,6 @@ const parsedFilters = computed(() => {
     selectedColorFilterOption: 'Match Exactly',
   });
 });
-
-const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
-function hideFilters() {
-  showFilters.value = false;
-}
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value,

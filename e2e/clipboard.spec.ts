@@ -7,6 +7,9 @@ const LIGHTNING_BOLT_ID = '4457ed35-7c10-48c8-9776-456485fdf070';
 const CLIP_KEY = 'cm.clipboard.v1';
 const SEARCH_TIMEOUT = 45_000;
 
+const clipboardButton = (page: Page) =>
+  page.getByRole('button', { name: /^Clipboard: \d+ cards?$/ });
+
 const testCard = {
   id: LIGHTNING_BOLT_ID,
   name: 'Lightning Bolt',
@@ -71,18 +74,9 @@ test.describe('Clipboard', () => {
 
     await gotoHydrated(page, '/');
 
-    // Clipboard button in navbar should show count "1".
-    // ClipboardMenu renders a UButton with :label="clipboardLabel" where
-    // clipboardLabel = count > 0 ? String(count) : '0'.
-    // The navbar renders ClipboardMenu in both mobile (md:hidden) and desktop
-    // (hidden md:flex) slots. Target the desktop nav so we always get the visible
-    // button at the default 1280px Playwright viewport width.
-    const clipboardBtn = page
-      .locator('div.flex-row.hidden.md\\:flex button')
-      .filter({ hasText: /^1$/ })
-      .first();
-
-    await expect(clipboardBtn).toBeVisible({ timeout: 10_000 });
+    // Use the visible clipboard button in either responsive navbar layout.
+    const clipboardBtn = clipboardButton(page);
+    await expect(clipboardBtn).toHaveText('1');
 
     // Open the clipboard popover by clicking the button.
     await clipboardBtn.click();
@@ -139,13 +133,8 @@ test.describe('Clipboard', () => {
     // Click the first "Add Card" overlay button.
     await addFirstSearchResult(page);
 
-    // Desktop clipboard badge increments from 0 → 1.
-    await expect(
-      page
-        .locator('div.flex-row.hidden.md\\:flex button')
-        .filter({ hasText: /^1$/ })
-        .first(),
-    ).toBeVisible({ timeout: 10_000 });
+    // Clipboard badge increments from 0 → 1.
+    await expect(clipboardButton(page)).toHaveText('1');
   });
 
   /**
@@ -170,11 +159,8 @@ test.describe('Clipboard', () => {
 
     await gotoHydrated(page, '/');
 
-    const clipBtn = page
-      .locator('div.flex-row.hidden.md\\:flex button')
-      .filter({ hasText: /^1$/ })
-      .first();
-    await expect(clipBtn).toBeVisible({ timeout: 10_000 });
+    const clipBtn = clipboardButton(page);
+    await expect(clipBtn).toHaveText('1');
     await clipBtn.click();
 
     // Card name appears in the popover list.
@@ -202,12 +188,7 @@ test.describe('Clipboard', () => {
     await gotoHydrated(page, '/');
 
     // Confirm tab 1 starts with an empty clipboard.
-    await expect(
-      page
-        .locator('div.flex-row.hidden.md\\:flex button')
-        .filter({ hasText: /^0$/ })
-        .first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(clipboardButton(page)).toHaveText('0');
 
     // Open a second tab in the same browser context (shared localStorage origin).
     const page2 = await context.newPage();
@@ -228,12 +209,7 @@ test.describe('Clipboard', () => {
     );
 
     // page1's storage listener receives the event and updates the count to 1.
-    await expect(
-      page
-        .locator('div.flex-row.hidden.md\\:flex button')
-        .filter({ hasText: /^1$/ })
-        .first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(clipboardButton(page)).toHaveText('1');
   });
 
   /**
@@ -296,23 +272,13 @@ test.describe('Clipboard', () => {
       .toBeGreaterThan(0);
 
     // Clipboard badge must show "500" from the seeded data.
-    await expect(
-      page
-        .locator('div.flex-row.hidden.md\\:flex button')
-        .filter({ hasText: /^500$/ })
-        .first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(clipboardButton(page)).toHaveText('500');
 
     // Adding a real card at capacity triggers eviction (not rejection).
     await addFirstSearchResult(page);
 
     // Count stays at 500.
-    await expect(
-      page
-        .locator('div.flex-row.hidden.md\\:flex button')
-        .filter({ hasText: /^500$/ })
-        .first(),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(clipboardButton(page)).toHaveText('500');
 
     // Verify via localStorage: oldest entry (fake-cap-0) was evicted.
     const stored = await page.evaluate(
@@ -351,11 +317,8 @@ test.describe('Clipboard', () => {
 
     await gotoHydrated(page, '/');
 
-    const clipBtn = page
-      .locator('div.flex-row.hidden.md\\:flex button')
-      .filter({ hasText: /^2$/ })
-      .first();
-    await expect(clipBtn).toBeVisible({ timeout: 10_000 });
+    const clipBtn = clipboardButton(page);
+    await expect(clipBtn).toHaveText('2');
     await clipBtn.click();
 
     // Both cards visible in the popover list.

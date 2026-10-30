@@ -7,6 +7,7 @@
         color="primary"
         variant="solid"
         :label="clipboardLabel"
+        :aria-label="`Clipboard: ${clipboardLabel} ${clipboard.count.value === 1 ? 'card' : 'cards'}`"
       ></UButton>
       <template #content>
         <div class="p-3 w-72 max-w-xs">

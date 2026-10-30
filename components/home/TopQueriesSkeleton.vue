@@ -1,5 +1,5 @@
 <template>
-  <div class="top-queries-container mt-2 mb-2">
+  <div class="top-queries-container">
     <div class="top-queries-content">
       <div class="queries-header">
         <USkeleton class="h-6 w-6 mr-2" :ui="{ rounded: 'rounded-full' }" />

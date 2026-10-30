@@ -72,9 +72,18 @@ test.describe('Deck Recommender', () => {
       page.getByPlaceholder(/Paste your decklist here/i),
     ).toBeVisible();
     await expect(page.getByPlaceholder('Select a decklist...')).toHaveCount(0);
+    // Open a recommendation, not the separate commander card above the results.
+    await page
+      .locator('.results-layout .card-root')
+      .getByRole('button', { name: /^Options for/ })
+      .first()
+      .click();
     await expect(
-      page.getByRole('button', { name: 'Add to search', exact: true }).first(),
+      page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Add to search', exact: true }),
     ).toBeVisible();
+    await page.keyboard.press('Escape');
 
     // Recommended cards grid should populate.
     const grid = page

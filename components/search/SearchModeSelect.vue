@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ compact?: boolean }>();
 const route = useRoute();
 const router = useRouter();
 const id = useId();
@@ -13,13 +14,14 @@ const mode = computed(() =>
   !signedIn.value || route.query.useRerank === 'false' ? 'normal' : 'enhanced',
 );
 const allowance = computed(() => {
+  if (mode.value === 'normal') return 'Unlimited';
   if (error.value) return 'Search allowance could not be checked.';
   if (pending.value) return 'Checking remaining searches…';
   if (!access.value?.enabled) return 'Search allowance is not enabled.';
-  if (access.value.tier === 'enhanced') return 'Unlimited Enhanced searches.';
+  if (access.value.tier === 'enhanced') return 'Unlimited';
   const remaining = access.value.enhancedRemaining;
   const credits = access.value.enhancedTopUpRemaining;
-  return `${remaining} Enhanced ${remaining === 1 ? 'search' : 'searches'} left today${credits ? ` + ${credits} purchased` : ''}.`;
+  return `${(remaining ?? 0) + credits} Left`;
 });
 function select(value: unknown) {
   if (value !== 'normal' && value !== 'enhanced') return;
@@ -66,24 +68,21 @@ function select(value: unknown) {
         >Sign in for enhanced searches</NuxtLink
       >
       <template v-else-if="mounted">
-        <template v-if="mode === 'normal'"
-          >Unlimited Normal searches.
-        </template>
         {{ allowance }}
         <button
-          v-if="error"
+          v-if="error && mode === 'enhanced'"
           type="button"
           class="underline min-h-11"
           @click="refresh()"
         >
           Retry allowance
         </button>
-        <NuxtLink
-          v-else-if="access?.enabled"
-          to="/memberships"
-          class="underline underline-offset-2"
-          >Memberships</NuxtLink
-        >
+        <template v-else>
+          <span aria-hidden="true"> | </span>
+          <NuxtLink to="/memberships" class="underline underline-offset-2"
+            >Memberships</NuxtLink
+          >
+        </template>
       </template>
       <template v-else>Checking remaining searches…</template>
     </span>

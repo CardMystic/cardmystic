@@ -85,15 +85,29 @@
           >
             Version: {{ commitHash }}
           </NuxtLink>
+        </p>
+        <nav
+          aria-label="CardMystic policies"
+          class="flex flex-wrap items-center gap-x-4 text-sm"
+        >
           <NuxtLink
             to="/privacyPolicy"
-            rel="noopener"
-            class="ml-2 text-purple-300 hover:text-purple-200 underline text-[10px]"
-            >Privacy Policy
-          </NuxtLink>
+            class="inline-flex min-h-11 items-center text-purple-300 hover:text-purple-200 underline"
+            >Privacy Policy</NuxtLink
+          >
+          <NuxtLink
+            to="/terms"
+            class="inline-flex min-h-11 items-center text-purple-300 hover:text-purple-200 underline"
+            >Terms of Service</NuxtLink
+          >
+          <NuxtLink
+            to="/billing-policy"
+            class="inline-flex min-h-11 items-center text-purple-300 hover:text-purple-200 underline"
+            >Billing &amp; Refunds</NuxtLink
+          >
           <button
             type="button"
-            class="ml-2 min-h-11 px-2 text-purple-300 underline text-xs"
+            class="min-h-11 text-purple-300 hover:text-purple-200 underline"
             @click="
               () => {
                 settingsOpen = true;
@@ -102,7 +116,7 @@
           >
             Cookie settings
           </button>
-        </p>
+        </nav>
         <p class="mt-2">
           Experiencing issues? Contact us at
           <a
@@ -118,6 +132,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+defineOptions({ name: 'SiteFooter' });
 const { settingsOpen } = useCookieConsent();
 
 const {

@@ -961,6 +961,17 @@ function navigateToExplore(
 const { card, llm, printings, error, pending, ready } =
   useCardDetails(oracleIdParam);
 await ready;
+const { setCardLabel } = useNavigationTrail();
+onMounted(() => {
+  watch(
+    card,
+    (value) => {
+      if (value?.oracle_id && value.name)
+        setCardLabel(value.oracle_id, value.name);
+    },
+    { immediate: true },
+  );
+});
 
 if (import.meta.server && error.value) {
   const status = error.value.status ?? 502;
