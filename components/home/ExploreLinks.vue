@@ -5,12 +5,15 @@
         v-for="group in linkGroups"
         :key="group.label"
         class="destination-row"
+        :class="{ 'destination-row--compact': group.compact }"
       >
         <div class="row-heading">
           <UIcon :name="group.icon" class="row-icon" aria-hidden="true" />
           <div>
             <h3 class="row-title">{{ group.label }}</h3>
-            <p class="row-description">{{ group.description }}</p>
+            <p v-if="group.description" class="row-description">
+              {{ group.description }}
+            </p>
           </div>
         </div>
 
@@ -28,9 +31,12 @@
             </span>
             <span class="card-copy">
               <span class="card-title">{{ link.label }}</span>
-              <span class="card-description">{{ link.description }}</span>
+              <span v-if="link.description" class="card-description">{{
+                link.description
+              }}</span>
             </span>
             <UIcon
+              v-if="!group.compact"
               name="i-lucide-arrow-up-right"
               class="card-arrow"
               aria-hidden="true"
@@ -43,29 +49,40 @@
 </template>
 
 <script setup lang="ts">
-const linkGroups = [
+interface LinkGroup {
+  label: string;
+  description?: string;
+  icon: string;
+  compact?: boolean;
+  links: {
+    label: string;
+    description?: string;
+    icon: string;
+    to: string;
+    tone: string;
+  }[];
+}
+
+const linkGroups: LinkGroup[] = [
   {
     label: 'Browse Cards',
-    description: 'Find cards by deck theme, gameplay role, or set.',
     icon: 'i-mdi-cards-outline',
+    compact: true,
     links: [
       {
         label: 'Themes',
-        description: 'Top cards for each deck theme.',
         icon: 'i-lucide-tags',
         to: '/themes',
         tone: 'themes',
       },
       {
         label: 'Roles',
-        description: 'Find cards for each gameplay role.',
         icon: 'i-lucide-list-filter',
         to: '/roles',
         tone: 'roles',
       },
       {
         label: 'Sets',
-        description: 'Browse the cards printed in each set.',
         icon: 'i-mdi-cards-outline',
         to: '/sets',
         tone: 'sets',
@@ -157,7 +174,7 @@ const linkGroups = [
       },
     ],
   },
-] as const;
+];
 </script>
 
 <style scoped lang="sass">
@@ -365,6 +382,27 @@ const linkGroups = [
 @media (min-width: 768px) and (max-width: 1023px)
   .destination-grid
     grid-template-columns: repeat(3, minmax(0, 1fr))
+
+.destination-row--compact
+  .destination-grid
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    gap: 0.5rem
+
+  .destination-card
+    grid-template-columns: minmax(0, 1fr)
+    justify-items: center
+    align-content: center
+    gap: 0.4rem
+    min-height: 5.5rem
+    padding: 0.75rem 0.5rem
+    text-align: center
+
+  .card-icon-wrap
+    width: 2rem
+    height: 2rem
+
+  .card-title
+    font-size: 0.875rem
 </style>
 
 <style lang="sass">

@@ -39,8 +39,10 @@ function select(value: unknown) {
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-    <label :for="id" class="text-sm font-medium">Search mode</label>
+  <div
+    class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1 sm:flex sm:flex-wrap"
+  >
+    <label :for="id" class="col-span-2 text-sm font-medium">Search mode</label>
     <USelect
       :id="id"
       :model-value="mode"
@@ -50,7 +52,7 @@ function select(value: unknown) {
       ]"
       :aria-describedby="`${id}-description`"
       aria-label="Search mode"
-      class="search-mode w-36 min-h-11"
+      class="search-mode w-32 min-h-11 sm:w-36"
       :data-mode="mode"
       :ui="{ trailingIcon: 'text-current' }"
       size="sm"
@@ -58,14 +60,15 @@ function select(value: unknown) {
     />
     <span
       :id="`${id}-description`"
-      class="text-sm text-muted"
+      class="min-w-0 text-sm text-muted"
       aria-live="polite"
     >
       <NuxtLink
         v-if="mounted && ready && !userId"
         :to="{ path: '/user/login', query: { redirect: route.fullPath } }"
         class="underline underline-offset-2"
-        >Sign in for enhanced searches</NuxtLink
+        >Sign in for<br class="sm:hidden" />
+        enhanced searches</NuxtLink
       >
       <template v-else-if="mounted">
         {{ allowance }}
