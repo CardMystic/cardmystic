@@ -22,9 +22,6 @@ This project uses Vue & Nuxt as well as the Vuetify component library.
 - Similarity search: find cards similar to a given card
   - Example Query: [Lightning Bolt](https://cardmystic.com/search/all/similarity?card_name=Lightning+Bolt)
 - Commander search: Smart search specifically for legendary creatures
-- Sets, themes, and roles: browse `/sets`, `/themes`, and `/roles`, filter each directory, and search within a collection using Normal or Enhanced mode. Collection pages include filters, set-specific artwork, and load-more browsing. Deploy the matching backend and research branches first; see the backend's `docs/card-collections.md` for data refresh and rollout instructions.
-- Card actions open in a modal when a card is clicked. Changing a deck card's printing or finish is deferred; collection pages use the backend's daily set file and require no printing catalog in Supabase.
-- Breadcrumbs follow platform's page hierarchy and search-to-card browsing trail. Return links retain the search query, platform, and filters; browser history preserves the trail through back/forward navigation and reloads. Collection pages include server-rendered titles, descriptions, canonical URLs, social previews, and breadcrumb structured data. Filtered/search URLs are noindex; collection landing pages are included in the sitemap.
 - Reranking toggle in Smart and Commander search: on by default, with a second relevance pass that can improve matches but takes longer. Turn it off to compare the original search order. Switching refreshes the current results and preserves the choice in the URL (`useRerank=false` or `true`); each mode is cached separately. With no explicit sort selected, results preserve the server ranking, including within groups. Selecting a sort such as price or Smart Score overrides that order. Turning reranking on clears any selected sort and restores the server ranking. Smart Score and the displayed match percentage remain the original ColBERT score; ordinary searches request up to 100 cards in either mode. Ungrouped results paginate 40 cards at a time; grouped results show complete groups without pagination.
 - Keyword search: traditional text-based card search
 - Deck Recommender (ALS): Paste a decklist and/or select a commander to get personalized card recommendations
@@ -190,13 +187,6 @@ pnpm test:cov      # with coverage
 ```
 
 `vitest.config.ts` excludes `e2e/**` so Playwright specs aren't picked up by Vitest.
-
-Collection coverage stays focused on critical flows: `card-collections.spec.ts`
-checks all six directory/detail page types without JavaScript, sitemap inclusion,
-pagination, scoped guest search, and filters. `collections-mocked.spec.ts` checks
-navigation between collection types and mobile layout; `navigation-breadcrumbs.spec.ts`
-checks returning from a card to the same search on desktop and mobile. The small
-`navigation-trail.test.ts` suite covers history restoration and URL normalization.
 
 ### Production gateway routing
 
