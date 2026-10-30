@@ -39,31 +39,10 @@
   </div>
 
   <div
-    v-if="showMenuControl || showCopyCountBadge"
+    v-if="showCopyCountBadge"
     class="card-menu-overlay"
     :class="{ 'with-copy-count': showCopyCountBadge }"
   >
-    <div v-if="showMenuControl" class="menu-wrapper" @click.stop>
-      <UDropdownMenu :items="menuItems ?? []">
-        <UButton
-          class="card-menu-trigger cursor-pointer"
-          tabindex="0"
-          aria-label="Card options"
-          color="neutral"
-          variant="solid"
-          size="md"
-          square
-        >
-          <span
-            class="card-menu-surface rounded-md bg-inverted"
-            aria-hidden="true"
-          >
-            <UIcon name="i-lucide-ellipsis-vertical" class="size-5" />
-          </span>
-        </UButton>
-      </UDropdownMenu>
-    </div>
-
     <div
       v-if="showCopyCountBadge"
       class="copy-count-wrapper"
@@ -80,27 +59,21 @@ import type { Card, ScryfallCard } from '~/models/cardModel';
 import { useClipboard } from '~/composables/useClipboard';
 import { getCardImageUrl } from '~/utils/scryfall';
 
-type DropdownMenuItem = Record<string, unknown>;
-
 const props = withDefaults(
   defineProps<{
     card: Card | ScryfallCard | null;
     isDualFaced?: boolean;
     showClipboardButton?: boolean;
     showFlipButton?: boolean;
-    showMenuButton?: boolean;
     showCopyCount?: boolean;
     numCopies?: number;
-    menuItems?: DropdownMenuItem[][];
   }>(),
   {
     isDualFaced: false,
     showClipboardButton: true,
     showFlipButton: false,
-    showMenuButton: false,
     showCopyCount: false,
     numCopies: 1,
-    menuItems: () => [],
   },
 );
 
@@ -129,11 +102,6 @@ const showFlipControl = computed(
 const showCopyCountBadge = computed(
   () => props.showCopyCount && copyCount.value > 0,
 );
-const hasMenuItems = computed(() => (props.menuItems?.length ?? 0) > 0);
-const showMenuControl = computed(
-  () => props.showMenuButton && hasMenuItems.value,
-);
-
 const cardClipData = computed(() => {
   const cardData = resolvedCardData.value;
   if (!cardData) return null;
@@ -182,17 +150,8 @@ function handleClipboardClick() {
   transition: opacity 0.2s;
 }
 
-:global(
-  .card-image-container:has(
-      :focus-visible,
-      .card-menu-trigger[data-state='open']
-    )
-    .card-action-overlay
-),
-:global(
-  .card-image-wrapper:has(:focus-visible, .card-menu-trigger[data-state='open'])
-    .card-action-overlay
-),
+:global(.card-image-container:has(:focus-visible) .card-action-overlay),
+:global(.card-image-wrapper:has(:focus-visible) .card-action-overlay),
 :global(.card-image-container:hover .card-action-overlay:not(.clipboard-added)),
 :global(.card-image-wrapper:hover .card-action-overlay:not(.clipboard-added)) {
   opacity: 0.7;
@@ -227,60 +186,11 @@ function handleClipboardClick() {
   opacity: 1;
 }
 
-:global(
-  .card-image-container:has(
-      :focus-visible,
-      .card-menu-trigger[data-state='open']
-    )
-    .copy-count-wrapper
-),
-:global(
-  .card-image-wrapper:has(:focus-visible, .card-menu-trigger[data-state='open'])
-    .copy-count-wrapper
-),
+:global(.card-image-container:has(:focus-visible) .copy-count-wrapper),
+:global(.card-image-wrapper:has(:focus-visible) .copy-count-wrapper),
 :global(.card-image-container:hover .copy-count-wrapper),
 :global(.card-image-wrapper:hover .copy-count-wrapper) {
   opacity: 1;
-}
-
-.menu-wrapper {
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-:global(
-  .card-image-container:has(
-      :focus-visible,
-      .card-menu-trigger[data-state='open']
-    )
-    .menu-wrapper
-),
-:global(
-  .card-image-wrapper:has(:focus-visible, .card-menu-trigger[data-state='open'])
-    .menu-wrapper
-),
-:global(.card-image-container:hover .menu-wrapper),
-:global(.card-image-wrapper:hover .menu-wrapper) {
-  opacity: 1;
-}
-
-.menu-wrapper :deep(.card-menu-trigger) {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background: transparent;
-}
-
-.menu-wrapper :deep(.card-menu-surface) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-}
-
-.menu-wrapper :deep(.card-menu-trigger:hover .card-menu-surface) {
-  opacity: 0.9;
 }
 
 .copy-count-badge {
@@ -317,19 +227,7 @@ function handleClipboardClick() {
     top: 30px;
   }
 
-  .menu-wrapper :deep(.card-menu-trigger) {
-    /* Enlarge the touch target without covering more art or moving the visible button. */
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    margin: -6px;
-    padding: 6px;
-    touch-action: manipulation;
-  }
-
-  .copy-count-wrapper,
-  .menu-wrapper {
+  .copy-count-wrapper {
     opacity: 1 !important;
   }
 

@@ -357,6 +357,14 @@ watch(
         {{ loading ? 'Checking availability...' : 'Top-up unavailable' }}
       </p>
     </section>
+    <p class="membership-muted">
+      Before buying, review our
+      <NuxtLink to="/terms" class="underline">Terms of Service</NuxtLink>,
+      <NuxtLink to="/billing-policy" class="underline"
+        >Billing &amp; Refunds</NuxtLink
+      >, and
+      <NuxtLink to="/privacyPolicy" class="underline">Privacy Policy</NuxtLink>.
+    </p>
     <details class="membership-disclosure membership-faq">
       <summary>
         <UIcon name="i-lucide-chevron-right" aria-hidden="true" />

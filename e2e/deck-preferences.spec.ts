@@ -10,7 +10,17 @@ import {
 
 const listId = '10000000-0000-4000-8000-000000000001';
 const otherListId = '10000000-0000-4000-8000-000000000002';
+async function openDisplay(page: Page) {
+  if (
+    !(await page
+      .getByRole('combobox', { name: 'Deck view', exact: true })
+      .isVisible())
+  ) {
+    await page.getByRole('button', { name: 'Display', exact: true }).click();
+  }
+}
 async function navigate(page: Page, path: string) {
+  await page.keyboard.press('Escape');
   await page.evaluate((href) => {
     const root = document.getElementById('__nuxt') as unknown as {
       __vue_app__: {
@@ -23,6 +33,12 @@ async function navigate(page: Page, path: string) {
     };
     return root.__vue_app__.config.globalProperties.$router.push(href);
   }, path);
+  if (path.startsWith('/lists/')) {
+    await expect(
+      page.getByRole('link', { name: 'Primer', exact: true }),
+    ).toHaveAttribute('href', `${path}/primer`);
+    await openDisplay(page);
+  }
 }
 async function setup(page: Page) {
   await page.route(BACKEND + '/**', (route) => route.fulfill({ json: {} }));
@@ -134,6 +150,7 @@ test('saved deck display choices migrate and persist independently across reload
   }
 
   await page.reload();
+  await openDisplay(page);
   await expectDeckAChoices();
 
   async function expectDeckBDefaults() {
@@ -186,6 +203,7 @@ test('saved deck display choices migrate and persist independently across reload
   await expect.poll(savedDeckBPreferences).toBeNull();
 
   await page.reload();
+  await openDisplay(page);
   await expectDeckBDefaults();
   await expect.poll(savedDeckBPreferences).toBeNull();
   await navigate(page, '/lists/' + listId);

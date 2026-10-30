@@ -2,6 +2,9 @@
   <div class="layout-container">
     <navbar />
     <main class="main-content">
+      <UContainer class="px-1 max-w-[2000px]">
+        <NavigationBreadcrumbs />
+      </UContainer>
       <UContainer
         class="px-1 flex responsive-align max-w-[2000px]"
         style="padding-top: 0px"
@@ -14,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'DefaultLayout' });
 /* Default layout: constrained content width via UContainer, static navbar.
  * Use for standard pages like search results, card details, lists, etc. */
 </script>

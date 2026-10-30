@@ -1,7 +1,7 @@
 import { BACKEND_USER_AUTH_HEADER } from '../../utils/backendRequestHeaders';
 
 const routeFamilies =
-  /^(?:cards|search|als|deck-stats|articles|user|supabase\/card-lists)(?:\/|$)/;
+  /^(?:card-collections|cards|search|als|deck-stats|articles|user|supabase\/card-lists)(?:\/|$)/;
 const publicEndpoints = new Set([
   '/search-access',
   '/billing/status',

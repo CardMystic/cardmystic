@@ -52,6 +52,9 @@ test.describe('SEO infrastructure', () => {
     // Core + landing pages.
     expect(xml).toContain('<loc>https://cardmystic.com/</loc>');
     expect(xml).toContain('<loc>https://cardmystic.com/about</loc>');
+    for (const path of ['/privacyPolicy', '/terms', '/billing-policy']) {
+      expect(xml).toContain(`<loc>https://cardmystic.com${path}</loc>`);
+    }
     const landingTypes = [
       'search/{platform}/smart',
       'search/{platform}/similarity',

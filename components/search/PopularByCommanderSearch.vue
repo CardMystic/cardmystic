@@ -1,5 +1,6 @@
 <template>
   <UForm
+    ref="formRef"
     :schema="schema"
     :state="state"
     class="grow space-y-4"
@@ -98,65 +99,17 @@
     </UFormField>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <QuickFilters
+      <SearchFilterDrawer
+        ref="filtersRef"
         v-model="state.filters"
-        :show="['arena', 'mtgo', 'paper']"
+        hide-colors
+        hide-formats
+        :quick-filters="['arena', 'mtgo', 'paper']"
+        :can-apply="!!state.commander"
+        @apply="formRef?.submit()"
       />
       <SearchModeSelect />
     </div>
-
-    <Filters
-      v-if="!showFilters"
-      ref="filtersRef"
-      v-model="state.filters"
-      hide-colors
-      hide-formats
-      hide-controls
-    />
-
-    <div v-if="!showFilters" class="flex justify-center">
-      <UTooltip text="Filter results by types, rarities, and more">
-        <UButton
-          class="cursor-pointer"
-          @click="
-            () => {
-              showFilters = true;
-            }
-          "
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-sliders-horizontal"
-          aria-label="Show advanced search filters"
-        >
-          Show Advanced Filters
-        </UButton>
-      </UTooltip>
-    </div>
-
-    <UCard v-if="showFilters">
-      <UFormField name="filters">
-        <Filters
-          ref="filtersRef"
-          v-model="state.filters"
-          hide-colors
-          hide-formats
-        />
-      </UFormField>
-      <template #footer>
-        <div class="flex items-center justify-center">
-          <UButton
-            class="cursor-pointer"
-            @click="hideFilters"
-            variant="ghost"
-            size="sm"
-            icon="i-lucide-eye-off"
-            color="neutral"
-          >
-            Hide Advanced Filters
-          </UButton>
-        </div>
-      </template>
-    </UCard>
   </UForm>
 </template>
 
@@ -171,9 +124,8 @@ import {
   detectPlatformFromFilters,
   type Platform,
 } from '~/utils/platformConfig';
-import { hasAdvancedFilters } from '~/utils/quickFilters';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import Filters from '~/components/search/Filters.vue';
+import SearchFilterDrawer from './SearchFilterDrawer.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -185,7 +137,8 @@ const currentPlatform = computed(() => {
 });
 
 const input = ref();
-const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
+const formRef = useTemplateRef('formRef');
+const filtersRef = ref<InstanceType<typeof SearchFilterDrawer> | null>(null);
 
 const schema = z.object({
   commander: z.string().min(1, 'Please select a commander'),
@@ -213,11 +166,6 @@ const parsedFilters = computed(() => {
   }
   return CardSearchFiltersSchema.parse({});
 });
-
-const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
-function hideFilters() {
-  showFilters.value = false;
-}
 
 const state = reactive<Partial<Schema>>({
   commander: commanderParam.value || '',

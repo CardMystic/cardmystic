@@ -331,7 +331,14 @@ export async function setupDeckDisplay(
     };
     return root.__vue_app__.config.globalProperties.$router.push(path);
   }, '/lists/' + displayDeckId);
+  await page.getByRole('button', { name: 'Display', exact: true }).click();
   await expect(page.locator('[aria-label="Deck view"]')).toBeEnabled();
+  await page.keyboard.press('Escape');
+  // Wait for the closing menu to restore focus before a test scrolls the grid.
+  await expect(page.locator('[aria-label="Deck view"]')).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Display', exact: true }),
+  ).toBeFocused();
   await expect(page.locator('.list-card')).toHaveCount(cards.length);
 
   return {

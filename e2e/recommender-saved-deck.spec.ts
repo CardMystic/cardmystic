@@ -54,11 +54,26 @@ test('saved deck recommendations add cards without searching until rerun', async
   await expect(page.getByPlaceholder('Select a decklist...')).toBeVisible();
   await expect(page.getByPlaceholder(/Paste your decklist/)).toHaveCount(0);
   await expect.poll(() => searches.length).toBe(1);
-  const add = page
-    .getByRole('button', { name: 'Add to deck', exact: true })
-    .first();
+  await page
+    .getByRole('button', { name: `Options for ${added.name}`, exact: true })
+    .click();
+  const cardOptions = page.getByRole('dialog', {
+    name: added.name,
+    exact: true,
+  });
+  await expect(
+    cardOptions.getByRole('button', {
+      name: 'Add to Another Deck',
+      exact: true,
+    }),
+  ).toBeVisible();
+  const add = cardOptions.getByRole('button', {
+    name: 'Add to deck',
+    exact: true,
+  });
   await expect(add).toBeEnabled();
   await add.click();
+  await expect(cardOptions).toBeHidden();
   await expect.poll(() => writes.length).toBe(1);
   expect(writes[0]).toMatchObject({
     listId: displayDeckId,

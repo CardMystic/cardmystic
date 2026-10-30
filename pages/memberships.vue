@@ -14,6 +14,7 @@ useSeoMeta({
     <div
       class="w-full max-w-6xl mx-auto px-4 pt-24 pb-10 relative z-10 space-y-6"
     >
+      <NavigationBreadcrumbs />
       <SearchMembership :key="userId ?? 'guest'" />
     </div>
   </SpaceBackground>

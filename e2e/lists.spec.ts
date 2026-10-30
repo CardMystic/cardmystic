@@ -202,13 +202,13 @@ test.describe('Card lists CRUD', () => {
       })
       .toBeGreaterThan(0);
 
-    // Open the 3-dots menu on the first card and pick "Add to Deck".
+    // Open the card options modal on the first card and pick "Add to Deck".
     await page
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
     await page
-      .getByRole('menuitem', { name: /add to deck/i })
+      .getByRole('button', { name: /add to deck/i })
       .first()
       .click();
 
@@ -303,12 +303,12 @@ test.describe('Card lists CRUD', () => {
     await atraxaCard.scrollIntoViewIfNeeded();
     await atraxaCard.hover();
     await atraxaCard
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
 
     await page
-      .getByRole('menuitem', { name: /set as commander/i })
+      .getByRole('button', { name: /set as commander/i })
       .first()
       .click();
 
@@ -398,11 +398,11 @@ test.describe('Card lists CRUD', () => {
     await splitCard.scrollIntoViewIfNeeded();
     await splitCard.hover();
     await splitCard
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
     await page
-      .getByRole('menuitem', { name: /^remove$/i })
+      .getByRole('button', { name: /^remove$/i })
       .first()
       .click();
 
@@ -533,18 +533,24 @@ test.describe('Card lists CRUD', () => {
 
     const sideboardCountBeforeMove = await readBoardCount(sideboardHeader);
 
-    // ── Step 3: move the Mainboard Brainstorm → Sideboard via the menu ──
+    // ── Step 3: move the Mainboard Brainstorm → Sideboard via the modal ──
     // Mainboard renders first in the DOM, so `.first()` targets the
     // Mainboard wrapper (the Sideboard wrapper comes later).
     const mainboardCard = page
       .locator(`.card-image-wrapper:has(img[alt="${MERGE_TEST_CARD}"])`)
       .first();
     await mainboardCard.scrollIntoViewIfNeeded();
-    await mainboardCard.hover();
     await mainboardCard
-      .getByRole('button', { name: /card options/i })
-      .first()
-      .click({ force: true });
+      .getByRole('button', {
+        name: `Options for ${MERGE_TEST_CARD}`,
+        exact: true,
+      })
+      .click();
+    const cardDialog = page.getByRole('dialog', {
+      name: MERGE_TEST_CARD,
+      exact: true,
+    });
+    await expect(cardDialog).toBeVisible();
 
     // The frontend issues PUT to `/supabase/card-lists/change-board`
     // (see composables/useCardLists.ts).
@@ -554,12 +560,12 @@ test.describe('Card lists CRUD', () => {
         resp.request().method() === 'PUT',
       { timeout: API_TIMEOUT },
     );
-    await page
-      .getByRole('menuitem', { name: /move to sideboard/i })
-      .first()
+    await cardDialog
+      .getByRole('button', { name: 'Move to Sideboard', exact: true })
       .click();
     const changeBoardResp = await changeBoardCall;
     expect(changeBoardResp.ok()).toBeTruthy();
+    await expect(cardDialog).toBeHidden();
 
     // ── Step 4: verify Sideboard count grew by exactly 2 ────────────────
     // Mainboard's 2 copies merged into Sideboard's 1 → +2 sideboard cards.
@@ -757,11 +763,11 @@ test.describe('Card lists CRUD', () => {
     await cardWrapper.scrollIntoViewIfNeeded();
     await cardWrapper.hover();
     await cardWrapper
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
     await page
-      .getByRole('menuitem', { name: /^add a copy$/i })
+      .getByRole('button', { name: /^add a copy$/i })
       .first()
       .click();
     await updateCall;
@@ -843,7 +849,8 @@ test.describe('Card lists CRUD', () => {
       })
       .toBeGreaterThan(0);
 
-    // GroupBy + Sort controls visible.
+    // GroupBy + Sort controls are inside Display at every viewport size.
+    await page.getByRole('button', { name: 'Display', exact: true }).click();
     await expect(
       page.getByRole('combobox', { name: 'Deck grouping', exact: true }),
     ).toBeVisible();
@@ -851,19 +858,26 @@ test.describe('Card lists CRUD', () => {
       page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
     ).toBeVisible();
 
-    // Toggle the sort direction button — should not throw, page remains responsive.
+    // Choose a sort before toggling direction, even if saved preferences use None.
+    await page
+      .getByRole('combobox', { name: 'Deck sorting', exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Name', exact: true }).click();
     const sortToggle = page
       .getByRole('button', { name: /ascending|descending/i })
       .first();
-    if (await sortToggle.isVisible().catch(() => false)) {
-      await sortToggle.click();
-      // Cards still rendered after toggle.
-      await expect
-        .poll(() => page.locator('.card-image-wrapper').count(), {
-          timeout: API_TIMEOUT,
-        })
-        .toBeGreaterThan(0);
-    }
+    const initialDirection = await sortToggle.innerText();
+    await sortToggle.click();
+    await expect(sortToggle).toHaveText(
+      initialDirection === 'Ascending' ? 'Descending' : 'Ascending',
+    );
+    await page.keyboard.press('Escape');
+    // Cards still render after sorting.
+    await expect
+      .poll(() => page.locator('.card-image-wrapper').count(), {
+        timeout: API_TIMEOUT,
+      })
+      .toBeGreaterThan(0);
   });
 
   // ---------------------------------------------------------------------------
@@ -900,12 +914,12 @@ test.describe('Card lists CRUD', () => {
     await solRingCard.scrollIntoViewIfNeeded();
     await solRingCard.hover();
     await solRingCard
-      .getByRole('button', { name: /card options/i })
+      .getByRole('button', { name: /Options for/i })
       .first()
       .click({ force: true });
 
     await page
-      .getByRole('menuitem', { name: /^remove$/i })
+      .getByRole('button', { name: /^remove$/i })
       .first()
       .click();
 

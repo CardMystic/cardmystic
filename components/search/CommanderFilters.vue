@@ -38,8 +38,8 @@
   <!-- Colors selector -->
   <div class="accordion-item">
     <div class="color-checkboxes">
-      <!-- 2 cols (3 rows) on xs, 3 cols (2 rows) on sm, 6 cols on md+ -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 w-full">
+      <!-- Keep color choices within the filter drawer. -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full">
         <UCheckbox
           v-for="item in cardColors"
           :key="(item as { value: CardColorType }).value"

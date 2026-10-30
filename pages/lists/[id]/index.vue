@@ -153,8 +153,8 @@
       />
     </div>
 
-    <!-- Mobile add cards and display controls-->
-    <div class="lg:hidden flex flex-row justify-between">
+    <!-- Display controls use the same menu at every screen size. -->
+    <div class="flex items-center justify-between gap-3 min-h-11">
       <!-- Mobile add cards input (owner only) -->
       <UInputMenu
         v-if="isOwner"
@@ -165,11 +165,11 @@
         :items="filteredAddCards"
         placeholder="Add a card to the deck..."
         icon="i-heroicons-plus"
-        class="flex-1 min-w-57 max-w-57 cursor-pointer"
+        class="lg:hidden flex-1 min-w-0 max-w-57 cursor-pointer"
         @update:model-value="handleAddCard"
       />
-      <!-- Mobile: display controls in a popover & add cards input -->
-      <UPopover class="lg:hidden">
+      <div class="flex-1" aria-hidden="true"></div>
+      <UPopover>
         <UButton
           icon="i-lucide-settings-2"
           color="neutral"
@@ -187,15 +187,6 @@
           </div>
         </template>
       </UPopover>
-    </div>
-
-    <!-- Group By + Sort: inline on desktop -->
-    <div class="hidden lg:flex justify-end gap-2">
-      <DeckDisplayControls
-        :preferences="preferences"
-        :disabled="preferencesLoading"
-        @change="updatePreferences"
-      />
     </div>
 
     <p v-if="preferencesError" role="alert" class="text-sm text-error">

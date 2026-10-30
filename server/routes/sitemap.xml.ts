@@ -2,10 +2,12 @@
 import cardOracleIds from '~/public/card-oracle-ids.min.json';
 import { getAllSeoSlugs, getSeoPath } from '~/utils/seoQueries';
 import { validPlatforms } from '~/utils/platformConfig';
+import { loadSitemapCollectionPaths } from '../utils/sitemapCollections';
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const baseUrl = 'https://cardmystic.com';
   const now = new Date().toISOString();
+  const collectionPaths = await loadSitemapCollectionPaths(event);
 
   setResponseHeaders(event, {
     'content-type': 'application/xml; charset=utf-8',
@@ -29,6 +31,11 @@ export default defineEventHandler((event) => {
     <priority>0.5</priority>
   </url>
 `;
+
+  // Public service and purchase policies
+  for (const path of ['/privacyPolicy', '/terms', '/billing-policy']) {
+    xml += `<url><loc>${baseUrl}${path}</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>\n`;
+  }
 
   // Search landing pages (one per platform × search type)
   const searchTypes = [
@@ -81,6 +88,11 @@ export default defineEventHandler((event) => {
   </url>
 `;
     }
+  }
+
+  // Collection directories and landing pages
+  for (const path of ['/sets', '/themes', '/roles', ...collectionPaths]) {
+    xml += `<url><loc>${baseUrl}${path}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n`;
   }
 
   // Card pages

@@ -144,7 +144,9 @@ test('Smart Search toggles the active ranking and keeps URL state across history
     exact: true,
   });
   await expect(toggle).toContainText('Enhanced');
-  await expect(page.getByText('Unlimited Enhanced searches.')).toBeVisible();
+  await expect(
+    page.getByText('Unlimited | Memberships', { exact: true }),
+  ).toBeVisible();
 
   const offResponsePromise = waitForRanking(page, false);
   await toggleSearchMode(page);
@@ -295,10 +297,12 @@ for (const mode of ['smart', 'commander'] as const) {
       const sort = page.getByRole('combobox').filter({
         hasText: /Select sort option|Smart Score|Name \(A-Z\)/,
       });
+      await openDisplay(page);
       await sort.click();
       await page
         .getByRole('option', { name: 'Smart Score', exact: true })
         .click();
+      await openDisplay(page);
       await expect(sort).toContainText('Smart Score');
 
       const toggle = page.getByRole('combobox', {
@@ -309,6 +313,7 @@ for (const mode of ['smart', 'commander'] as const) {
       await toggleSearchMode(page);
       const onNames = await cardNames(await onResponsePromise);
       expect(onNames).toHaveLength(100);
+      await openDisplay(page);
       await expect(sort).toContainText('Select sort option');
       await expectRenderedRanking(page, onNames);
       await expect(page.getByTitle('Clear sort', { exact: true })).toHaveCount(
@@ -316,6 +321,7 @@ for (const mode of ['smart', 'commander'] as const) {
       );
       const fetchedRequests = searchRequests;
 
+      await openDisplay(page);
       await sort.click();
       await page
         .getByRole('option', { name: 'Name (A-Z)', exact: true })
@@ -328,11 +334,13 @@ for (const mode of ['smart', 'commander'] as const) {
 
       await toggleSearchMode(page);
       await expect(toggle).toContainText('Normal');
+      await openDisplay(page);
       await expect(sort).toContainText('Name (A-Z)');
       await expectRenderedRanking(page, byName(offNames));
 
       await toggleSearchMode(page);
       await expect(toggle).toContainText('Enhanced');
+      await openDisplay(page);
       await expect(sort).toContainText('Select sort option');
       await expectRenderedRanking(page, onNames);
       expect(searchRequests).toBe(fetchedRequests);
@@ -340,7 +348,18 @@ for (const mode of ['smart', 'commander'] as const) {
   );
 }
 
+async function openDisplay(page: Page) {
+  if (
+    !(await page
+      .getByRole('combobox', { name: 'Search sorting', exact: true })
+      .isVisible())
+  ) {
+    await page.getByRole('button', { name: 'Display', exact: true }).click();
+  }
+}
+
 async function toggleSearchMode(page: Page) {
+  await page.keyboard.press('Escape');
   const select = page.getByRole('combobox', {
     name: 'Search mode',
     exact: true,

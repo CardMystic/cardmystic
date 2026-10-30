@@ -166,6 +166,7 @@ test('grouping shows complete groups and switching back restores 40-card pages',
   await expectCards(page, state.names.slice(0, 40));
   await pages.getByRole('button', { name: 'Page 2', exact: true }).click();
 
+  await page.getByRole('button', { name: 'Display', exact: true }).click();
   await page
     .getByRole('combobox', { name: 'Search grouping', exact: true })
     .click();
@@ -178,13 +179,16 @@ test('grouping shows complete groups and switching back restores 40-card pages',
   await expect(pages).toHaveCount(0);
   await expect(group(/^Blue \(43\)/)).not.toContainText('shown');
   await expect(group(/^White \(42\)/)).not.toContainText('shown');
+  await page.keyboard.press('Escape');
 
   await group(/^Blue \(43\)/).click();
   await expect(group(/^Blue \(43\)/)).toHaveAttribute('aria-expanded', 'false');
   await group(/^Blue \(43\)/).click();
   await expectCards(page, [...blue, ...white]);
 
+  await page.getByRole('button', { name: 'Display', exact: true }).click();
   await page.getByTitle('Clear grouping', { exact: true }).click();
+  await page.keyboard.press('Escape');
   await expectCards(page, state.names.slice(0, 40));
   await expect(
     pages.getByRole('button', { name: 'Page 1', exact: true }),
@@ -217,6 +221,7 @@ test('similarity counts the searched card on the first page and cached navigatio
   await navigate(page, path);
   await expectCards(page, [state.seed.card_name, ...state.names.slice(0, 39)]);
 
+  await page.getByRole('button', { name: 'Display', exact: true }).click();
   await page
     .getByRole('combobox', { name: 'Search grouping', exact: true })
     .click();
@@ -257,7 +262,9 @@ test('card-page similar cards show full groups, then paginate when ungrouped', a
   const pages = pagination(related);
   await expectCards(related, state.names);
   await expect(pages).toHaveCount(0);
-  await related.getByTitle('Clear grouping', { exact: true }).click();
+  await related.getByRole('button', { name: 'Display', exact: true }).click();
+  await page.getByTitle('Clear grouping', { exact: true }).click();
+  await page.keyboard.press('Escape');
   await expectCards(related, state.names.slice(0, 40));
   await pages.getByRole('button', { name: 'Next Page', exact: true }).click();
   await expectCards(related, state.names.slice(40, 80));

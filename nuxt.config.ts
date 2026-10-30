@@ -106,6 +106,12 @@ export default defineNuxtConfig({
     '/privacyPolicy': {
       prerender: true,
     },
+    '/terms': {
+      prerender: true,
+    },
+    '/billing-policy': {
+      prerender: true,
+    },
     // Settings moved to the combined Account page
     '/user/profile': {
       redirect: '/user/account',

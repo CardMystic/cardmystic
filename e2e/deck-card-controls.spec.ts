@@ -34,7 +34,7 @@ for (const owner of [true, false]) {
       await expect(image).toHaveAttribute('src', /\/back\//);
     }
     const trigger = card.getByRole('button', {
-      name: 'Card options',
+      name: `Options for ${state.cards[0].name}`,
       exact: true,
     });
     await trigger.scrollIntoViewIfNeeded();
@@ -46,15 +46,15 @@ for (const owner of [true, false]) {
     await expect(page).toHaveURL(new RegExp('/lists/' + displayDeckId + '$'));
     if (owner) {
       await expect(
-        page.getByRole('menuitem', { name: 'Add a copy', exact: true }),
+        page.getByRole('button', { name: 'Add a copy', exact: true }),
       ).toBeVisible();
     } else {
       await expect(
-        page.getByRole('menuitem', { name: 'Add a copy', exact: true }),
+        page.getByRole('button', { name: 'Add a copy', exact: true }),
       ).toHaveCount(0);
     }
     await page
-      .getByRole('menuitem', { name: 'Add to Deck', exact: true })
+      .getByRole('button', { name: 'Add to Deck', exact: true })
       .click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
@@ -85,7 +85,16 @@ test('list-card clipboard controls preserve metadata after flipping and remove t
   await card.getByRole('button', { name: 'Flip Card', exact: true }).click();
   await expect(card.getByRole('img')).toHaveAttribute('src', /back/);
 
-  await card.getByRole('button', { name: 'Add Card', exact: true }).click();
+  await card
+    .getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Add to Clipboard', exact: true })
+    .click();
   const added = card.getByRole('button', { name: 'Card Added', exact: true });
   await expect(added).toHaveAttribute('title', 'Added to clipboard');
   const saved = await page.evaluate(() =>
@@ -101,7 +110,16 @@ test('list-card clipboard controls preserve metadata after flipping and remove t
     imageUrl: expect.stringContaining('/front/'),
   });
 
-  await added.click();
+  await card
+    .getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Remove from Clipboard', exact: true })
+    .click();
   await expect(
     card.getByRole('button', { name: 'Add Card', exact: true }),
   ).toHaveAttribute('title', 'Add to clipboard');
@@ -174,58 +192,50 @@ test('slow card images keep the card grid stable while scrolling on mobile', asy
   }
 });
 
-test.describe('desktop overlay dismissal', () => {
+test.describe('desktop card modal', () => {
   test.use({
     viewport: { width: 1280, height: 900 },
     isMobile: false,
     hasTouch: false,
   });
-
-  test('outside dismissal hides overlays while keyboard dismissal keeps the trigger accessible', async ({
+  test('click and keyboard open the modal; Escape restores focus', async ({
     page,
   }) => {
-    await setupDeckDisplay(page);
-    const card = page.locator('.list-card').first();
-    const menu = card.locator('.menu-wrapper');
-    const actions = card.locator('.card-action-overlay');
-    const trigger = card.getByRole('button', {
-      name: 'Card options',
+    const state = await setupDeckDisplay(page);
+    const trigger = page.getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
       exact: true,
     });
-    const outside = page.getByRole('heading', {
-      name: 'My display deck',
-      exact: true,
-      includeHidden: true,
-    });
-
-    await card.hover();
     await trigger.click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     await expect(
-      page.getByRole('menuitem', { name: 'Add to Deck', exact: true }),
-    ).toBeVisible();
-    await outside.hover({ force: true });
-    await expect(menu).toHaveCSS('opacity', '1');
-    await outside.click({ force: true });
-    await expect(page.getByRole('menu')).toHaveCount(0);
-    await expect(menu).toHaveCSS('opacity', '0', { timeout: 3000 });
-    await expect(actions).toHaveCSS('opacity', '0', { timeout: 3000 });
-
-    await card.hover();
-    await expect(menu).toHaveCSS('opacity', '1');
-    await outside.hover();
-    await expect(menu).toHaveCSS('opacity', '0');
-
-    await page.keyboard.press('Tab');
-    await trigger.focus();
-    await expect(trigger).toBeFocused();
-    await expect(menu).toHaveCSS('opacity', '1');
-    await page.keyboard.press('Enter');
-    await expect(
-      page.getByRole('menuitem', { name: 'Add to Deck', exact: true }),
+      page.getByRole('link', { name: 'View Card Details', exact: true }),
     ).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('menu')).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(trigger).toBeFocused();
-    await expect(menu).toHaveCSS('opacity', '1');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(trigger).toBeFocused();
+    await page.getByRole('button', { name: 'Display', exact: true }).click();
+    await page
+      .getByRole('combobox', { name: 'Deck view', exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Card Text', exact: true }).click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.card-text-row')).toHaveCount(
+      state.cards.length,
+    );
+    await page
+      .locator('.card-text-row')
+      .first()
+      .locator('button.card-name')
+      .click();
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Add to Clipboard', exact: true }),
+    ).toBeVisible();
   });
 });
