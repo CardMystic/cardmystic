@@ -5,16 +5,10 @@
         v-for="group in linkGroups"
         :key="group.label"
         class="destination-row"
-        :class="{ 'destination-row--compact': group.compact }"
       >
         <div class="row-heading">
           <UIcon :name="group.icon" class="row-icon" aria-hidden="true" />
-          <div>
-            <h3 class="row-title">{{ group.label }}</h3>
-            <p v-if="group.description" class="row-description">
-              {{ group.description }}
-            </p>
-          </div>
+          <h3 class="row-title">{{ group.label }}</h3>
         </div>
 
         <div class="destination-grid">
@@ -29,18 +23,7 @@
             <span class="card-icon-wrap">
               <UIcon :name="link.icon" class="card-icon" aria-hidden="true" />
             </span>
-            <span class="card-copy">
-              <span class="card-title">{{ link.label }}</span>
-              <span v-if="link.description" class="card-description">{{
-                link.description
-              }}</span>
-            </span>
-            <UIcon
-              v-if="!group.compact"
-              name="i-lucide-arrow-up-right"
-              class="card-arrow"
-              aria-hidden="true"
-            />
+            <span class="card-title">{{ link.label }}</span>
           </NuxtLink>
         </div>
       </div>
@@ -49,25 +32,10 @@
 </template>
 
 <script setup lang="ts">
-interface LinkGroup {
-  label: string;
-  description?: string;
-  icon: string;
-  compact?: boolean;
-  links: {
-    label: string;
-    description?: string;
-    icon: string;
-    to: string;
-    tone: string;
-  }[];
-}
-
-const linkGroups: LinkGroup[] = [
+const linkGroups = [
   {
     label: 'Browse Cards',
     icon: 'i-mdi-cards-outline',
-    compact: true,
     links: [
       {
         label: 'Themes',
@@ -91,26 +59,22 @@ const linkGroups: LinkGroup[] = [
   },
   {
     label: 'Search',
-    description: 'Powerful searches & deck recommendations.',
     icon: 'i-lucide-search',
     links: [
       {
         label: 'Smart Search',
-        description: 'Natural language semantic vector search.',
         icon: 'i-lucide-brain',
         to: '/search/all/smart',
         tone: 'smart-search',
       },
       {
         label: 'Similarity Search',
-        description: 'Find similar cards based on the input card.',
         icon: 'i-mdi-cards-outline',
         to: '/search/all/similarity',
         tone: 'similarity-search',
       },
       {
         label: 'Deck Recommender',
-        description: 'Get personalized recommendations based on your deck.',
         icon: 'i-lucide-box',
         to: '/search/all/deckbuilder',
         tone: 'deck-recommender',
@@ -119,27 +83,22 @@ const linkGroups: LinkGroup[] = [
   },
   {
     label: 'Community',
-    description: 'Discover what the CardMystic community is building.',
     icon: 'i-lucide-users',
     links: [
       {
         label: 'Decklists',
-        description:
-          'Browse public decks made with the CardMystic deck builder.',
         icon: 'i-lucide-list-tree',
         to: '/explore/decklists',
         tone: 'decklists',
       },
       {
         label: 'Users',
-        description: 'Find players and see the decks they share.',
         icon: 'i-lucide-user-search',
         to: '/explore/users',
         tone: 'users',
       },
       {
         label: 'Articles',
-        description: 'Read strategy, deck techs, and community guides.',
         icon: 'i-lucide-newspaper',
         to: '/explore/articles',
         tone: 'articles',
@@ -148,33 +107,29 @@ const linkGroups: LinkGroup[] = [
   },
   {
     label: 'Popular Cards',
-    description: 'Discover the most popular cards across all decks.',
     icon: 'i-lucide-trending-up',
     links: [
       {
         label: 'Commander Cards',
-        description: 'See the most-played cards across Commander decks.',
         icon: 'i-lucide-chart-no-axes-combined',
         to: '/popular-cards/all',
         tone: 'popular-cards',
       },
       {
         label: 'Commanders',
-        description: 'Explore the commanders players build most often.',
         icon: 'i-mdi-crown',
         to: '/popular-commanders/all',
         tone: 'commanders',
       },
       {
         label: 'Cards by Commander',
-        description: 'Find the most-played cards for any commander.',
         icon: 'i-lucide-flame',
         to: '/popular-by-commander/all',
         tone: 'by-commander',
       },
     ],
   },
-];
+] as const;
 </script>
 
 <style scoped lang="sass">
@@ -184,23 +139,6 @@ const linkGroups: LinkGroup[] = [
   border-radius: 1.25rem
   background: linear-gradient(125deg, rgba(147, 114, 255, 0.07), rgba(147, 114, 255, 0.015))
   box-shadow: 0 16px 40px rgba(15, 10, 35, 0.06)
-
-.section-heading
-  margin-bottom: 1.4rem
-
-.section-eyebrow
-  font-family: monospace
-  font-size: 0.72rem
-  font-weight: 700
-  letter-spacing: 0.16em
-  text-transform: uppercase
-  color: var(--ui-primary)
-
-.section-title
-  margin-top: 0.2rem
-  font-size: clamp(1.35rem, 2vw, 1.8rem)
-  font-weight: 750
-  line-height: 1.2
 
 .destination-rows
   display: flex
@@ -230,17 +168,10 @@ const linkGroups: LinkGroup[] = [
   font-weight: 750
   line-height: 1.2
 
-.row-description
-  max-width: 13rem
-  margin-top: 0.3rem
-  font-size: 0.78rem
-  line-height: 1.45
-  opacity: 0.62
-
 .destination-grid
   display: grid
   grid-template-columns: repeat(3, minmax(0, 1fr))
-  gap: 0.75rem
+  gap: 0.5rem
 
 .destination-card
   --card-color: #4338ca
@@ -248,16 +179,18 @@ const linkGroups: LinkGroup[] = [
   --card-rgb: 99, 102, 241
   position: relative
   display: grid
-  grid-template-columns: auto minmax(0, 1fr) auto
-  align-items: center
-  gap: 0.8rem
-  min-height: 5.6rem
-  padding: 0.9rem 1rem
+  grid-template-columns: minmax(0, 1fr)
+  justify-items: center
+  align-content: start
+  gap: 0.4rem
+  min-height: 5.5rem
+  padding: 0.75rem 0.5rem
   overflow: hidden
   border: 1px solid rgba(var(--card-rgb), 0.24)
   border-radius: 0.9rem
   color: var(--card-color)
   text-decoration: none
+  text-align: center
   transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease
   &::before
     content: ''
@@ -278,8 +211,8 @@ const linkGroups: LinkGroup[] = [
   display: inline-flex
   align-items: center
   justify-content: center
-  width: 2.35rem
-  height: 2.35rem
+  width: 2rem
+  height: 2rem
   border-radius: 0.7rem
   background: rgba(var(--card-rgb), 0.13)
 
@@ -287,32 +220,12 @@ const linkGroups: LinkGroup[] = [
   width: 1.2rem
   height: 1.2rem
 
-.card-copy
-  display: flex
-  flex-direction: column
-  gap: 0.25rem
-  min-width: 0
-
 .card-title
-  font-size: 0.93rem
+  max-width: 100%
+  overflow-wrap: anywhere
+  font-size: 0.875rem
   font-weight: 750
   line-height: 1.2
-
-.card-description
-  color: var(--ui-text-muted)
-  font-size: 0.75rem
-  line-height: 1.4
-
-.card-arrow
-  width: 1rem
-  height: 1rem
-  align-self: flex-start
-  opacity: 0.45
-  transition: transform 180ms ease, opacity 180ms ease
-
-.destination-card:hover .card-arrow
-  transform: translate(2px, -2px)
-  opacity: 0.9
 
 .destination-card--smart-search
   --card-color: #c2410c
@@ -366,43 +279,15 @@ const linkGroups: LinkGroup[] = [
   .row-heading
     padding-top: 0
 
-  .row-description
-    max-width: none
-
 @media (max-width: 767px)
   .destination-section
-    padding: 1.15rem
-
-  .destination-grid
-    grid-template-columns: 1fr
+    padding: 0.75rem
 
   .destination-card
-    min-height: 5rem
-
-@media (min-width: 768px) and (max-width: 1023px)
-  .destination-grid
-    grid-template-columns: repeat(3, minmax(0, 1fr))
-
-.destination-row--compact
-  .destination-grid
-    grid-template-columns: repeat(3, minmax(0, 1fr))
-    gap: 0.5rem
-
-  .destination-card
-    grid-template-columns: minmax(0, 1fr)
-    justify-items: center
-    align-content: center
-    gap: 0.4rem
-    min-height: 5.5rem
-    padding: 0.75rem 0.5rem
-    text-align: center
-
-  .card-icon-wrap
-    width: 2rem
-    height: 2rem
+    padding-inline: 0.25rem
 
   .card-title
-    font-size: 0.875rem
+    font-size: 0.75rem
 </style>
 
 <style lang="sass">
