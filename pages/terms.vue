@@ -38,6 +38,13 @@ defineOptions({ name: 'TermsOfService' });
     <section>
       <h2>Search memberships and top-ups</h2>
       <p>
+        Card information, card images, and Normal search are free to access
+        without an account. Paid memberships and top-ups provide Enhanced search
+        ranking. We pay a third-party API provider for ranking requests, and
+        these purchases help cover those costs and the cost of running
+        CardMystic.
+      </p>
+      <p>
         Enhanced membership provides unlimited Enhanced searches while your
         membership is active, including during an eligible free trial. It is for
         your use through CardMystic, and does not include a separate API, resale
