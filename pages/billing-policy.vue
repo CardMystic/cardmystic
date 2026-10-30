@@ -87,10 +87,10 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
       </p>
       <p>
         Without an active Enhanced membership, a successful Enhanced search uses
-        one search from your available allowance, including when it returns
-        previously cached results. Failed searches and searches that fall back
-        to Normal do not spend Enhanced credits. Limits on how quickly you can
-        send requests apply to every plan, including unlimited membership.
+        one search from your available allowance, unless the results are cached
+        in the browser. Failed searches and searches that fall back to Normal do
+        not spend Enhanced credits. Limits on how quickly you can send requests
+        apply to every plan, including unlimited membership.
       </p>
       <p>
         Credits belong to your account and are for searches on CardMystic. They
