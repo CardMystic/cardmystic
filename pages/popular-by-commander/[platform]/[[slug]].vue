@@ -23,7 +23,7 @@
             :key="name"
             class="w-full max-w-50 sm:max-w-70"
           >
-            <CardSkeleton :show-card-info="true" />
+            <CardSkeleton :show-card-info="true" hide-progress-bar />
           </div>
         </template>
         <template v-else-if="commanderCards && commanderCards.length">

@@ -92,7 +92,7 @@ async function submit(event: FormSubmitEvent<z.output<typeof schema>>) {
       </div>
     </UFormField>
     <SearchModeSelect compact />
-    <CollectionFilterDrawer
+    <SearchFilterDrawer
       ref="drawer"
       v-model="state.filters"
       @apply="form?.submit()"

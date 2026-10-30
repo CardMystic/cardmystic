@@ -20,9 +20,7 @@
           :key="`skeleton-${index}`"
           class="skeleton-card"
         >
-          <USkeleton class="h-32 w-full mb-2" :ui="{ rounded: 'rounded-lg' }" />
-          <USkeleton class="h-3 w-3/4 mb-1" />
-          <USkeleton class="h-3 w-1/2" />
+          <CardSkeleton size="small" />
         </div>
       </div>
     </div>
@@ -54,24 +52,15 @@
 
 .skeleton-carousel
   display: flex
-  gap: 12px
+  gap: 10px
   overflow-x: hidden
-  padding: 4px 0
+  padding-bottom: 8px
 
 .skeleton-card
-  flex: 0 0 155px
-  min-width: 155px
-  max-width: 180px
-  padding: 8px
-  border-radius: 8px
-
-  @media (prefers-color-scheme: light)
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.08), rgba(199, 170, 255, 0.04))
-    border: 1px solid rgba(147, 114, 255, 0.2)
-
-  @media (prefers-color-scheme: dark)
-    background: linear-gradient(135deg, rgba(147, 114, 255, 0.05), rgba(147, 114, 255, 0.02))
-    border: 1px solid rgba(147, 114, 255, 0.1)
+  flex: 0 0 auto
+  width: 160px
+  @media (min-width: 768px)
+    width: 180px
 
 .button-group
   display: flex

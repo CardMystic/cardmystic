@@ -1,6 +1,6 @@
 <template>
   <div class="card-root list-card">
-    <LazyListCardActionsModal
+    <LazyCardActionsModal
       v-if="showActions"
       v-model:open="showActions"
       :card="card"
@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ListCardAction } from '~/utils/list-card-actions';
+import type { CardAction } from '~/utils/card-actions';
 import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
@@ -197,8 +197,8 @@ const isCommanderCardComputed = computed(() => {
   return isEligibleCommander.value;
 });
 
-const cardOverlayMenuItems = computed<ListCardAction[][]>(() => {
-  const generalActions: ListCardAction[] = [
+const cardOverlayMenuItems = computed<CardAction[][]>(() => {
+  const generalActions: CardAction[] = [
     {
       label: 'View Card Details',
       icon: 'i-lucide-info',

@@ -1,5 +1,6 @@
 <template>
   <UForm
+    ref="formRef"
     :schema="schema"
     :state="state"
     class="grow space-y-4"
@@ -52,68 +53,19 @@
         </UButton>
       </div>
     </UFormField>
-    <CommanderFilters v-model="state.filters" />
 
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <QuickFilters
+      <SearchFilterDrawer
+        ref="filtersRef"
         v-model="state.filters"
-        :show="['arena', 'mtgo', 'paper']"
+        commander-colors
+        hide-formats
+        :quick-filters="['arena', 'mtgo', 'paper']"
+        :can-apply="!!state.query?.trim()"
+        @apply="formRef?.submit()"
       />
       <SearchModeSelect />
     </div>
-
-    <Filters
-      v-if="!showFilters"
-      ref="filtersRef"
-      v-model="state.filters"
-      hide-colors
-      hide-formats
-      hide-controls
-    />
-
-    <div v-if="!showFilters" class="flex justify-center">
-      <UTooltip text="Filter results by types, rarities, stats, and platform">
-        <UButton
-          class="cursor-pointer"
-          @click="
-            () => {
-              showFilters = true;
-            }
-          "
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-sliders-horizontal"
-          aria-label="Show advanced search filters"
-        >
-          Show Advanced Filters
-        </UButton>
-      </UTooltip>
-    </div>
-
-    <UCard v-if="showFilters">
-      <UFormField name="advancedFilters">
-        <Filters
-          ref="filtersRef"
-          v-model="state.filters"
-          hide-colors
-          hide-formats
-        />
-      </UFormField>
-      <template #footer>
-        <div class="flex items-center justify-center">
-          <UButton
-            class="cursor-pointer"
-            @click="hideFilters"
-            variant="ghost"
-            size="sm"
-            icon="i-lucide-eye-off"
-            color="neutral"
-          >
-            Hide Advanced Filters
-          </UButton>
-        </div>
-      </template>
-    </UCard>
   </UForm>
 </template>
 
@@ -126,8 +78,7 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
-import CommanderFilters from '~/components/search/CommanderFilters.vue';
-import Filters from './Filters.vue';
+import SearchFilterDrawer from './SearchFilterDrawer.vue';
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper';
@@ -142,7 +93,8 @@ const currentPlatform = computed(() => {
 });
 
 const input = ref();
-const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
+const formRef = useTemplateRef('formRef');
+const filtersRef = ref<InstanceType<typeof SearchFilterDrawer> | null>(null);
 defineShortcuts({
   '/': () => {
     input.value?.inputRef?.focus();
@@ -158,7 +110,6 @@ type Schema = z.output<typeof schema>;
 const queryParam = computed(() =>
   String(pageDefaults?.query ?? route.query.query ?? ''),
 );
-import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 const parsedFilters = computed(() => {
   const base: Record<string, any> = {
@@ -180,11 +131,6 @@ const parsedFilters = computed(() => {
   }
   return CardSearchFiltersSchema.parse(base);
 });
-
-const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
-function hideFilters() {
-  showFilters.value = false;
-}
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',

@@ -77,14 +77,13 @@ test.describe('Popular Cards', () => {
       { timeout: SEARCH_TIMEOUT },
     );
 
-    // Toggle the "Arena" quick-filter and submit the form.
+    // Choose the Arena filter in the drawer and apply it.
     // QuickFilters renders a button labelled "Arena" that sets isArena: true,
     // and detectPlatformFromFilters then routes to /popular-cards/arena.
-    await page.getByRole('button', { name: /^Arena$/ }).click();
-    await page
-      .locator('button[type="submit"]')
-      .filter({ hasText: 'Search' })
-      .click();
+    await page.getByRole('button', { name: /^Filters/ }).click();
+    const drawer = page.getByRole('dialog', { name: 'Search filters' });
+    await drawer.getByRole('button', { name: /^Arena$/ }).click();
+    await drawer.getByRole('button', { name: 'Search', exact: true }).click();
 
     // URL must change to the arena-specific route.
     await page.waitForURL('**/popular-cards/arena**', {

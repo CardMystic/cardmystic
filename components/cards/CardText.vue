@@ -136,7 +136,7 @@
       </UTooltip>
     </div>
 
-    <LazyListCardActionsModal
+    <LazyCardActionsModal
       v-if="showActions"
       v-model:open="showActions"
       :card="card"
@@ -148,10 +148,9 @@
 
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
-import type { ListCardAction } from '~/utils/list-card-actions';
+import type { CardAction } from '~/utils/card-actions';
 const showActions = ref(false);
 import { getAffiliateLink } from '~/utils/tcgPlayer';
-import { getCardImageUrl } from '~/utils/scryfall';
 import {
   isLegal,
   isColorIdentityLegal,
@@ -160,7 +159,6 @@ import {
 import { useCommandersSet } from '~/composables/useBulkData';
 import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
-import { useClipboard } from '~/composables/useClipboard';
 
 type Board = 'Mainboard' | 'Sideboard' | 'Considering';
 
@@ -215,7 +213,6 @@ const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const { data: commanders } = useCommandersSet();
-const clipboard = useClipboard();
 const cardFeedback = props.showCardInfo ? useCardFeedback() : null;
 
 const deckbuilderStore = props.showAddToDeckbuilderButton
@@ -311,16 +308,6 @@ const isInDecklist = computed(
   () => !!deckbuilderStore?.hasCard(props.card.card_data.name),
 );
 
-const clipboardCard = computed(() => ({
-  id: props.card.card_data.id,
-  oracleId: props.card.card_data.oracle_id,
-  name: props.card.card_data.name,
-  set: props.card.card_data.set,
-  imageUrl: getCardImageUrl(props.card.card_data),
-  price: props.card.card_data.prices?.usd || '0',
-}));
-const isInClipboard = computed(() => clipboard.has(clipboardCard.value.id));
-
 function toDisplayPercent(score: number | undefined): number {
   if (score === undefined) return 0;
   return Math.min(Math.max(score * 100, 0), 100);
@@ -400,7 +387,7 @@ const buyPrice = computed(() => {
 });
 
 const genericActions = computed(() => {
-  const actions: ListCardAction[] = [
+  const actions: CardAction[] = [
     {
       label: 'View Card',
       icon: 'i-lucide-external-link',
@@ -441,12 +428,6 @@ const genericActions = computed(() => {
     });
   }
 
-  actions.push({
-    label: isInClipboard.value ? 'Remove from Clipboard' : 'Add to Clipboard',
-    icon: isInClipboard.value ? 'i-lucide-check' : 'i-lucide-copy',
-    onSelect: toggleClipboard,
-  });
-
   if (isDualFaced.value) {
     actions.push({
       label: isFlipped.value ? 'Show Front Face' : 'Show Back Face',
@@ -469,7 +450,7 @@ const genericActions = computed(() => {
 });
 
 const searchActions = computed(() => {
-  const actions: ListCardAction[] = [];
+  const actions: CardAction[] = [];
   if (props.showAddToDeckbuilderButton && deckbuilderStore) {
     actions.push({
       label: deckbuilderStore.selectedDeckId.value
@@ -506,7 +487,7 @@ const searchActions = computed(() => {
 const ownerActions = computed(() => {
   if (!props.isOwner) return [];
   const copies = props.numCopies ?? 1;
-  const actions: ListCardAction[] = [];
+  const actions: CardAction[] = [];
 
   if (!props.isDeckCommander) {
     actions.push(
@@ -634,13 +615,6 @@ function findSimilarCards() {
       searchType: 'similarity',
     },
   });
-}
-function toggleClipboard() {
-  if (isInClipboard.value) {
-    clipboard.remove(clipboardCard.value.id);
-    return;
-  }
-  clipboard.add(clipboardCard.value);
 }
 function getRecommendations() {
   const commanderName = props.card.card_data.name;

@@ -1,4 +1,4 @@
-export interface ListCardAction {
+export interface CardAction {
   label: string;
   icon?: string;
   to?: string;

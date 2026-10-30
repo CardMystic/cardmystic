@@ -307,6 +307,7 @@
                 :items="cardRarities"
                 :orientation="orientation"
                 variant="card"
+                :ui="{ wrapper: 'ms-0 ps-2' }"
                 v-model="selectedRarities"
               />
             </div>
@@ -408,13 +409,18 @@
                 v-model="selectedPlatform"
                 :items="platformOptions"
                 orientation="horizontal"
+                :ui="{ wrapper: 'ms-0 ps-2' }"
               />
             </div>
           </template>
           <!-- Game Changer Filter -->
           <template #gameChanger>
             <div class="accordion-item flex flex-wrap gap-4">
-              <UCheckbox v-model="isGameChanger" label="Game Changer" />
+              <UCheckbox
+                v-model="isGameChanger"
+                label="Game Changer"
+                :ui="{ wrapper: 'ms-0 ps-2' }"
+              />
             </div>
           </template>
         </UAccordion>
@@ -435,18 +441,14 @@ import {
 import { cardColorToSymbol } from '~/utils/cardHelpers';
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 import ManaColorIcon from '../general/ManaColorIcon.vue';
-import type {
-  AccordionItem,
-  CheckboxGroupItem,
-  CheckboxGroupValue,
-} from '@nuxt/ui';
+import type { AccordionItem, CheckboxGroupItem } from '@nuxt/ui';
 import { getColorIdentityName } from '~/utils/colorPairings';
 import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
 
-const screenWidth = ref(0);
+const isMobile = useIsMobile();
 const isOpen = ref(false);
 
 function collapse() {
@@ -454,19 +456,6 @@ function collapse() {
 }
 
 defineExpose({ collapse });
-
-onMounted(() => {
-  screenWidth.value = window.innerWidth;
-  window.addEventListener('resize', () => {
-    if (window && window.innerWidth) {
-      screenWidth.value = window.innerWidth;
-    }
-  });
-});
-
-const orientation: Ref<'vertical' | 'horizontal'> = computed(() =>
-  screenWidth.value < 768 ? 'vertical' : 'horizontal',
-);
 
 const { modelValue, hideColors, hideFormats, hideControls, embedded } =
   defineProps<{
@@ -476,6 +465,10 @@ const { modelValue, hideColors, hideFormats, hideControls, embedded } =
     hideControls?: boolean;
     embedded?: boolean;
   }>();
+
+const orientation = computed(() =>
+  embedded || isMobile.value ? 'vertical' : 'horizontal',
+);
 
 const emit = defineEmits<{
   'update:modelValue': [value: CardSearchFilters];

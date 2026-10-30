@@ -1,5 +1,6 @@
 <template>
   <UForm
+    ref="formRef"
     :schema="schema"
     :state="state"
     class="grow space-y-4"
@@ -99,57 +100,16 @@
     </UFormField>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <QuickFilters v-model="state.filters" />
+      <SearchFilterDrawer
+        ref="filtersRef"
+        v-model="state.filters"
+        :can-apply="!!state.query?.trim()"
+        @apply="formRef?.submit()"
+      />
       <SearchModeSelect />
     </div>
 
     <SuggestedSearches v-if="showSuggestedSearches" />
-
-    <Filters
-      v-if="!showFilters"
-      ref="filtersRef"
-      v-model="state.filters"
-      hide-controls
-    />
-
-    <div v-if="!showFilters" class="flex justify-center">
-      <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton
-          class="cursor-pointer"
-          @click="
-            () => {
-              showFilters = true;
-            }
-          "
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-sliders-horizontal"
-          aria-label="Show advanced search filters"
-        >
-          Show Advanced Filters
-        </UButton>
-      </UTooltip>
-    </div>
-
-    <UCard v-if="showFilters">
-      <UFormField name="filters">
-        <Filters ref="filtersRef" v-model="state.filters" />
-      </UFormField>
-      <template #footer>
-        <div class="flex items-center justify-center">
-          <UButton
-            class="cursor-pointer"
-            @click="hideFilters"
-            variant="ghost"
-            size="sm"
-            icon="i-lucide-eye-off"
-            color="neutral"
-          >
-            Hide Advanced Filters
-          </UButton>
-        </div>
-      </template>
-    </UCard>
   </UForm>
 </template>
 
@@ -166,7 +126,7 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
-import Filters from './Filters.vue';
+import SearchFilterDrawer from './SearchFilterDrawer.vue';
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper';
@@ -181,7 +141,8 @@ const currentPlatform = computed(() => {
 });
 
 const input = ref();
-const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
+const formRef = useTemplateRef('formRef');
+const filtersRef = ref<InstanceType<typeof SearchFilterDrawer> | null>(null);
 defineShortcuts({
   '/': () => {
     input.value?.inputRef?.focus();
@@ -202,7 +163,6 @@ type Schema = z.output<typeof schema>;
 const queryParam = computed(() =>
   String(pageDefaults?.query ?? route.query.query ?? ''),
 );
-import { hasAdvancedFilters } from '~/utils/quickFilters';
 
 const parsedFilters = computed(() => {
   const base: Record<string, unknown> = {
@@ -224,11 +184,6 @@ const parsedFilters = computed(() => {
   }
   return CardSearchFiltersSchema.parse(base);
 });
-
-const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
-function hideFilters() {
-  showFilters.value = false;
-}
 
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',

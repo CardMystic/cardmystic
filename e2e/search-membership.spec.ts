@@ -50,6 +50,17 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
     page.getByRole('link', { name: 'Sign in to choose Enhanced' }),
   ).toHaveAttribute('href', '/user/login?redirect=/memberships');
   await expect(page.locator('.membership-price')).toContainText('$4.99');
+  for (const [name, href] of [
+    ['Terms of Service', '/terms'],
+    ['Billing & Refunds', '/billing-policy'],
+    ['Privacy Policy', '/privacyPolicy'],
+  ]) {
+    await expect(
+      page
+        .locator('.membership-muted')
+        .getByRole('link', { name, exact: true }),
+    ).toHaveAttribute('href', href);
+  }
   await expect(page.locator('.membership-features')).toContainText(
     'Unlimited Enhanced searches',
   );
@@ -190,7 +201,10 @@ test('search allowance can recover from a failed lookup beside the mode selector
   );
   available = true;
   await page.getByRole('button', { name: 'Retry allowance' }).click();
-  await expect(description).toContainText('Unlimited Enhanced searches.');
+  await expect(description).toHaveText('Unlimited | Memberships');
+  await mode.click();
+  await page.getByRole('option', { name: 'Normal', exact: true }).click();
+  await expect(description).toHaveText('Unlimited | Memberships');
   await expect(
     page.getByRole('button', { name: 'Retry allowance' }),
   ).toHaveCount(0);
@@ -270,4 +284,19 @@ test('signed-in checkout uses the gateway token, rejects unsafe redirects, and o
   await expect(page.locator('.membership-current')).not.toContainText(
     'left this month',
   );
+});
+
+test('free search status shows the available count without repeating the mode', async ({
+  page,
+}) => {
+  await mockSignedInUser(page);
+  await page.route(`${BACKEND}/search-access`, (route) =>
+    route.fulfill({ json: access }),
+  );
+  await gotoHydrated(page, '/search/all/smart');
+  const mode = page.getByRole('combobox', { name: 'Search mode', exact: true });
+  const description = page.locator(
+    `[id="${await mode.getAttribute('aria-describedby')}"]`,
+  );
+  await expect(description).toHaveText('10 Left | Memberships');
 });

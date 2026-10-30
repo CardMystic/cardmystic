@@ -1,6 +1,65 @@
 <template>
   <!-- Results -->
   <div ref="resultsTop" class="mt-3 w-full scroll-mt-24">
+    <div
+      v-if="
+        !error && (isLoading || deferringHeavyRender || searchResults?.length)
+      "
+      class="mb-3 flex min-h-11 items-center justify-between gap-3"
+      data-testid="results-toolbar"
+    >
+      <div class="flex min-h-11 min-w-0 items-center gap-3">
+        <USkeleton v-if="isLoading || deferringHeavyRender" class="h-5 w-32" />
+        <template v-else>
+          <p
+            class="text-sm text-muted"
+            :class="{
+              'sr-only sm:not-sr-only': !hasGroups && totalResults > PAGE_SIZE,
+            }"
+            role="status"
+          >
+            <template v-if="!hasGroups && totalResults > PAGE_SIZE"
+              >{{ pageStart + 1 }}–{{ pageEnd }} of </template
+            >{{ totalResults }} cards
+          </p>
+          <UPagination
+            v-if="!hasGroups && totalResults > PAGE_SIZE"
+            :page="currentPage"
+            :total="totalResults"
+            :items-per-page="PAGE_SIZE"
+            :sibling-count="1"
+            :ui="{ first: 'hidden', last: 'hidden' }"
+            size="xs"
+            aria-label="Search results pagination"
+            @update:page="changePage"
+          />
+        </template>
+      </div>
+      <UPopover>
+        <UButton
+          icon="i-lucide-settings-2"
+          color="neutral"
+          variant="outline"
+          label="Display"
+          class="cursor-pointer"
+        />
+        <template #content>
+          <div class="p-3 space-y-3 w-72 max-w-[calc(100vw-2rem)]">
+            <View :default-value="view" @update:view="handleView" />
+            <GroupBy :default-value="groupBy" @update:groupBy="handleGroupBy" />
+            <SortComponent
+              :key="rerankingEnabled ? 'reranked' : 'original'"
+              :default-sort-by="sortBy"
+              :default-direction="sortDirection"
+              :has-als-score="hasAlsScore"
+              :has-ai-score="hasAiScore"
+              :has-popularity="hasPopularity"
+              @sort="handleSort"
+            />
+          </div>
+        </template>
+      </UPopover>
+    </div>
     <SearchError
       :error="error"
       v-if="error"
@@ -10,77 +69,13 @@
     <template v-else-if="isLoading || deferringHeavyRender">
       <SearchResultsSkeleton
         :skeleton-count="skeletonCount"
-        :default-group-by="defaultGroupBy"
+        :default-group-by="groupBy"
+        :hide-progress-bar="hideProgressBar"
         :view="view"
       />
     </template>
 
     <template v-else-if="searchResults && searchResults.length">
-      <!-- Mobile display controls use the same compact popover as deck lists. -->
-      <div class="flex justify-end mb-3 lg:hidden">
-        <UPopover>
-          <UButton
-            icon="i-lucide-settings-2"
-            color="neutral"
-            variant="outline"
-            label="Display"
-            class="cursor-pointer"
-          />
-          <template #content>
-            <div class="p-3 space-y-3">
-              <View :default-value="view" @update:view="handleView" />
-              <GroupBy
-                :default-value="groupBy"
-                @update:groupBy="handleGroupBy"
-              />
-              <SortComponent
-                :key="rerankingEnabled ? 'reranked' : 'original'"
-                :default-sort-by="sortBy"
-                :default-direction="sortDirection"
-                :has-als-score="hasAlsScore"
-                :has-ai-score="hasAiScore"
-                :has-popularity="hasPopularity"
-                @sort="handleSort"
-              />
-            </div>
-          </template>
-        </UPopover>
-      </div>
-
-      <div
-        class="hidden lg:flex flex-wrap items-center justify-center gap-4 mb-3"
-      >
-        <View :default-value="view" @update:view="handleView" />
-        <GroupBy :default-value="groupBy" @update:groupBy="handleGroupBy" />
-        <SortComponent
-          :key="rerankingEnabled ? 'reranked' : 'original'"
-          :default-sort-by="sortBy"
-          :default-direction="sortDirection"
-          :has-als-score="hasAlsScore"
-          :has-ai-score="hasAiScore"
-          :has-popularity="hasPopularity"
-          @sort="handleSort"
-        />
-      </div>
-
-      <div
-        v-if="!hasGroups && totalResults > PAGE_SIZE"
-        class="flex flex-col items-center gap-2 py-4"
-      >
-        <p class="text-sm text-muted" role="status">
-          {{ pageStart + 1 }}–{{ pageEnd }} of {{ totalResults }} cards
-        </p>
-        <UPagination
-          :page="currentPage"
-          :total="totalResults"
-          :items-per-page="PAGE_SIZE"
-          :sibling-count="1"
-          :ui="{ first: 'hidden', last: 'hidden' }"
-          aria-label="Search results pagination"
-          @update:page="changePage"
-        />
-      </div>
-
       <div class="results-layout xl:flex xl:items-start xl:gap-6">
         <aside
           v-if="previewCard"
@@ -345,7 +340,9 @@
     </template>
   </div>
 
-  <LazyStickyActionFooter :show="!error && jumpToGroups.length > 0">
+  <LazyStickyActionFooter
+    :show="!error && !hideGroupNavigation && jumpToGroups.length > 0"
+  >
     <template #right>
       <LazyJumpTo :groups="jumpToGroups" />
     </template>
@@ -413,6 +410,7 @@ const props = withDefaults(
     showAddToDeckbuilderButton?: boolean;
     hideSearchedCard?: boolean;
     hideThumbsDownButton?: boolean;
+    hideGroupNavigation?: boolean;
     defaultGroupBy?: string;
     preserveResultOrder?: boolean;
     rerankingEnabled?: boolean;

@@ -1,221 +1,197 @@
 <template>
-  <div class="flex items-center flex-col py-8 w-full">
-    <UCard class="mb-6 p-2 max-w-[600px] shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">🔒 Privacy Policy</div>
-
-      <div class="mt-2 text-base">
-        <p>
-          This Privacy Policy explains how CardMystic (“we”, “us”, or “our”)
-          collects, uses, stores, and protects information when you use our
-          website. We are committed to transparency and the responsible handling
-          of user data.
-        </p>
-        <p class="mt-4">
-          CardMystic stores user account information, decklists, and search data
-          in our Supabase database.
-        </p>
-      </div>
-    </UCard>
-
-    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">📊 Information We Collect</div>
-
-      <div class="mt-2 text-base">
-        <p class="font-semibold">1. Analytics & Search Data</p>
-        <p class="mt-2">
-          We collect the following information to improve our service:
-        </p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>
-            <strong>Search queries:</strong> All search queries you submit are
-            tracked and stored for training purposes to improve our search
-            models
-          </li>
-          <li>
-            <strong>Card interaction feedback:</strong> Dislike clicks on card
-            search results to help refine search quality and relevance
-          </li>
-        </ul>
-
-        <p class="mt-6 font-semibold">2. User Account Data</p>
-        <p class="mt-2">
-          When you create an account, we collect and store the following:
-        </p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>Email address</li>
-          <li>Username</li>
-          <li>Name or display name</li>
-          <li>Password (securely hashed and never stored in plain text)</li>
-        </ul>
-
-        <p class="mt-6 font-semibold">3. Decklists & User Content</p>
-        <p class="mt-2">When you use our decklist feature, we store:</p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>Decklist names and descriptions</li>
-          <li>Cards saved to your lists (referenced by card ID)</li>
-          <li>Commander designations within your lists</li>
-          <li>Search and card view history</li>
-        </ul>
-
-        <p class="mt-4">
-          This information allows you to save preferences, manage collections,
-          and access personalized features on CardMystic.
-        </p>
-      </div>
-    </UCard>
-
-    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">🛡️ How We Use Your Information</div>
-
-      <div class="mt-2 text-base">
-        <p class="font-semibold">For search queries and feedback:</p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>Training and improving our search models</li>
-          <li>Refining search result relevance and quality</li>
-          <li>Understanding user preferences and search patterns</li>
-        </ul>
-
-        <p class="mt-6 font-semibold">For user accounts:</p>
-        <ul class="list-disc ml-6 mt-4">
-          <li>Creating and managing your user profile</li>
-          <li>Authenticating and securing your account</li>
-          <li>Storing and organizing your decklists and collections</li>
-          <li>Providing personalized site features and recommendations</li>
-          <li>Communicating with you about your account or service updates</li>
-        </ul>
-
-        <p class="mt-4">
-          We do not sell or rent your personal information. We use service
-          providers, including Supabase and PostHog, to operate the site and
-          understand how it is used.
-        </p>
-      </div>
-    </UCard>
-
-    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">🔐 Data Security</div>
-
-      <div class="mt-2 text-base">
-        <p>
-          We take security seriously. User passwords are securely hashed using
-          industry-standard best practices. Personal information is protected
-          through technical and administrative safeguards to prevent
-          unauthorized access, disclosure, or misuse.
-        </p>
-        <p class="mt-4">
-          User data including account information, decklists, and search history
-          is stored securely in our Supabase database with row-level security
-          policies ensuring users can only access their own data.
-        </p>
-      </div>
-    </UCard>
-
-    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">🧩 Third-Party Services</div>
-
-      <div class="mt-2 text-base">
-        <p class="mb-4">
-          With your Analytics consent, we use PostHog to understand page visits
-          and interactions, using cookies and browser storage. Analytics data is
-          sent to PostHog's US service to help us improve CardMystic. We do not
-          associate these events with your account ID, and session replay is
-          disabled.
-        </p>
-        <p>
-          Card data displayed on CardMystic is sourced from
-          <a
-            href="https://scryfall.com"
-            target="_blank"
-            class="text-primary underline"
-            >Scryfall</a
-          >. No personal data is shared with Scryfall.
-        </p>
-      </div>
-    </UCard>
-
-    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">Advertising & Cookie Choices</div>
-      <div class="mt-2 text-base space-y-4">
-        <p>
-          With your Advertising consent, Google Ads measures conversions such as
-          signups and searches. Google Ads and PostHog are not enabled until you
-          accept their respective categories. Session replay and advertising
-          personalization are disabled.
-        </p>
-        <p>
-          Choose Accept all, Reject optional, or Customize in the privacy
-          banner. You can change or withdraw your choices at any time using
-          Cookie settings in the footer. We remember your choice in this browser
-          for up to six months. Sign-in and requested display preferences work
-          independently of these optional choices.
-        </p>
-        <p>
-          Separately, we estimate daily visitors, including guests, without
-          cookies. For this metric, the backend uses a daily-changing salted
-          hash of IP address and browser information; it does not store raw IP
-          addresses or account IDs in the metric. Daily hashes and salts expire
-          within 48 hours, while aggregate daily totals are retained. This
-          estimate runs independently of optional PostHog and Google Ads
-          tracking and does not recognize visitors across days.
-        </p>
-        <p>
-          Learn how Google processes data in its
-          <a
-            href="https://policies.google.com/technologies/partner-sites"
-            target="_blank"
-            rel="noopener"
-            class="text-primary underline"
-            >partner sites policy</a
-          >.
-        </p>
-      </div>
-    </UCard>
-
-    <UCard class="mb-6 p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">�🔁 Changes to This Policy</div>
-
-      <div class="mt-2 text-base">
-        <p>
-          We may update this Privacy Policy as we launch new features. Any
-          changes will be reflected on this page with an updated "Last Updated"
-          date.
-        </p>
-      </div>
-    </UCard>
-
-    <UCard class="p-2 max-w-150 shadow-xl rounded-xl">
-      <div class="text-2xl font-bold">💬 Contact Us</div>
-
-      <div class="mt-2 text-base">
-        <p>
-          If you have any questions about this Privacy Policy or how your
-          information is handled, don't hesitate to reach out to us!
-        </p>
-        <p class="mt-4">
-          📧 Email:
-          <a
-            href="mailto:thecardmystic@gmail.com"
-            class="text-primary hover:underline"
-          >
-            thecardmystic@gmail.com
-          </a>
-        </p>
-      </div>
-    </UCard>
-  </div>
+  <PolicyPage
+    title="Privacy Policy"
+    description="How CardMystic handles account information, searches, payments, and privacy choices."
+    path="/privacyPolicy"
+  >
+    <section>
+      <h2>Who handles your information</h2>
+      <p>
+        CardMystic is operated by Fiasco Games LLC. This policy explains how we
+        use information when you visit CardMystic, create an account, or buy a
+        membership or search credits. For privacy questions, contact
+        <a href="mailto:thecardmystic@gmail.com">thecardmystic@gmail.com</a>.
+      </p>
+    </section>
+    <section>
+      <h2>Information we collect</h2>
+      <ul>
+        <li>
+          <strong>Account information:</strong> your email, username, profile
+          details, and authentication information. Supabase manages sign-in;
+          passwords are hashed rather than stored in plain text.
+        </li>
+        <li>
+          <strong>Content and activity:</strong> decks, descriptions, articles,
+          comments, follows, saved items, and account search and card-view
+          history when you use those features. Content you make public can be
+          viewed by others.
+        </li>
+        <li>
+          <strong>Search information:</strong> the queries, selected cards,
+          filters, and deck information needed to return results. We also
+          collect query counts and result feedback to understand usage and
+          improve our search models.
+        </li>
+        <li>
+          <strong>Billing records:</strong> references to your Stripe customer,
+          subscription, checkout, and payment events; membership and trial
+          status; access dates; purchased-credit balances; and daily free-search
+          counts. We link these records to your CardMystic account.
+        </li>
+        <li>
+          <strong>Technical and support information:</strong> browser and
+          connection information, including IP addresses used to serve requests
+          and enforce rate limits, error logs, and messages you send us.
+        </li>
+      </ul>
+      <p>
+        Some preferences and features, including the clipboard and cookie
+        choices, use storage in your browser. Account data, saved content,
+        history, and billing records use our service providers, including
+        Supabase. Search metrics and operational data also use services such as
+        Upstash and our hosting providers.
+      </p>
+    </section>
+    <section>
+      <h2>Payments through Stripe and Link</h2>
+      <p>
+        CardMystic uses Stripe Managed Payments, sold through Link. Stripe
+        handles checkout, recurring payments, receipts, and transaction support.
+        Stripe collects the payment and billing information you provide, which
+        can include your name, email, billing address, and payment method.
+      </p>
+      <p>
+        We send account and purchase references to Stripe to connect a purchase
+        to the right CardMystic account. Stripe provides payment, subscription,
+        refund, and dispute information so we can grant access, maintain credit
+        balances, prevent fraud, and help with support. Billing contact
+        information, receipts, and limited payment-method details may also be
+        available to us through Stripe.
+      </p>
+      <p>
+        We do not store full payment-card numbers or card security codes in
+        CardMystic's database. Stripe and Link handle personal data under their
+        own policies, including for payment security and legal obligations. See
+        the <a href="https://stripe.com/privacy">Stripe Privacy Policy</a> and
+        <a href="https://link.com/privacy">Link Privacy Policy</a>.
+      </p>
+    </section>
+    <section>
+      <h2>Enhanced search and other providers</h2>
+      <p>
+        Enhanced search uses a third-party ranking service. We send the search
+        description or selected card text and candidate card information to the
+        configured provider, OpenRouter or Typesafe, to rank results. These
+        requests do not include your account login or payment details.
+        Information you type into a search can be included, so please do not put
+        passwords, payment information, or other sensitive information into
+        search queries.
+      </p>
+      <p>
+        Card data and images come from Scryfall and other external sources. When
+        your browser loads external images or you follow an external link, the
+        destination can receive connection information such as your IP address
+        and browser information. Those providers have their own privacy
+        policies. Google reCAPTCHA also helps protect account actions from
+        abuse.
+      </p>
+    </section>
+    <section>
+      <h2>How we use and share information</h2>
+      <p>
+        We use information to run CardMystic, authenticate accounts, save your
+        content, return and improve search results, provide paid features,
+        respond to support requests, prevent abuse, and meet legal obligations.
+        Providers receive the information needed to perform these functions. We
+        may also disclose information when legally required or necessary to
+        protect users and the service.
+      </p>
+      <p>
+        We do not sell or rent account or billing records. Optional analytics
+        and advertising measurement are described below and depend on your
+        cookie choices.
+      </p>
+    </section>
+    <section>
+      <h2>Analytics, advertising, and cookie choices</h2>
+      <p>
+        With your Analytics consent, PostHog measures page visits and
+        interactions using cookies and browser storage. Data goes to PostHog's
+        US service. We do not attach your account ID to these events, and
+        session replay is disabled.
+      </p>
+      <p>
+        With your Advertising consent, Google Ads measures conversions such as
+        signups and searches. Advertising personalization is disabled. PostHog
+        and Google Ads are not enabled until you accept their respective
+        categories.
+      </p>
+      <p>
+        Use the privacy banner to accept, reject, or customize optional
+        tracking. You can change or withdraw consent using
+        <strong>Cookie settings</strong> in the footer. Your choice is kept in
+        this browser for up to six months. Sign-in, security, billing, and
+        requested preferences work independently of optional tracking.
+      </p>
+      <p>
+        Separately, we estimate daily visitors without cookies using a
+        daily-changing salted hash of IP address and browser information. This
+        metric does not store raw IP addresses or account IDs. Its daily hashes
+        and salts expire within 48 hours; aggregate daily totals are retained.
+        This estimate does not recognize visitors across days and runs
+        independently of optional analytics and advertising. Technical request
+        processing and security logs are separate from this metric.
+      </p>
+      <p>
+        See
+        <a href="https://policies.google.com/technologies/partner-sites"
+          >Google's partner sites policy</a
+        >
+        for its data-handling information.
+      </p>
+    </section>
+    <section>
+      <h2>Retention and security</h2>
+      <p>
+        We keep information as needed to provide the features you use,
+        administer purchases and refunds, resolve disputes, prevent abuse, and
+        meet legal obligations. Canceling a membership does not itself delete
+        your account or billing history. We do not promise immediate deletion of
+        records that must be retained for these purposes.
+      </p>
+      <p>
+        We use access controls and other safeguards to protect information.
+        Private account and billing data have restricted access; public content
+        is shared according to the feature's visibility settings. No online
+        service can guarantee absolute security. Our providers may process
+        information outside your country, including in the United States.
+      </p>
+    </section>
+    <section>
+      <h2>Your choices and requests</h2>
+      <p>
+        You can update account details and manage saved content and history
+        through the site. To request access to, correction of, or deletion of
+        personal information, email
+        <a href="mailto:thecardmystic@gmail.com">thecardmystic@gmail.com</a>. We
+        may need to verify your identity before acting on a request.
+      </p>
+      <p>
+        Depending on where you live, you may have additional rights to object to
+        or restrict processing, receive a copy of your information, or complain
+        to a data protection authority. Contact us to exercise applicable
+        rights. Stripe and Link handle requests about records they independently
+        maintain through their own privacy channels.
+      </p>
+    </section>
+    <section>
+      <h2>Changes to this policy</h2>
+      <p>
+        We update this page as our service and data practices change. The date
+        at the top identifies the latest update. We will provide notice of
+        material changes and request consent when required.
+      </p>
+    </section>
+  </PolicyPage>
 </template>
-
-<script setup lang="ts">
-useHead({ title: 'Privacy Policy - CardMystic' });
-
-const { setPageInfo } = usePageInfo();
-setPageInfo({
-  page_url: '/privacy',
-  page_name: 'Privacy Policy Page',
-  query: '',
-  card_name: '',
-  filters: undefined,
-});
-</script>
-
-<style scoped style="scss"></style>

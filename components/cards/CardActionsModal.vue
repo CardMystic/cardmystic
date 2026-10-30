@@ -2,12 +2,12 @@
 import { computed } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { getCardImageUrl } from '~/utils/scryfall';
-import type { ListCardAction } from '~/utils/list-card-actions';
+import type { CardAction } from '~/utils/card-actions';
 
 const props = defineProps<{
   open: boolean;
   card: Card;
-  actions: ListCardAction[][];
+  actions: CardAction[][];
   board: string;
 }>();
 const emit = defineEmits<{ 'update:open': [value: boolean] }>();
@@ -25,7 +25,30 @@ const selectedLabel = computed(() => {
     .filter(Boolean)
     .join(' ');
 });
-function act(action: ListCardAction) {
+const clipboard = useClipboard();
+const actionGroups = computed<CardAction[][]>(() => {
+  const data = props.card.card_data;
+  const inClipboard = clipboard.has(data.id);
+  const clipboardAction: CardAction = {
+    label: inClipboard ? 'Remove from Clipboard' : 'Add to Clipboard',
+    icon: inClipboard ? 'i-lucide-check' : 'i-lucide-copy',
+    onSelect() {
+      if (inClipboard) clipboard.remove(data.id);
+      else
+        clipboard.add({
+          id: data.id,
+          oracleId: data.oracle_id,
+          name: data.name,
+          set: data.set,
+          imageUrl: getCardImageUrl(data),
+          price: data.prices?.usd || '0',
+        });
+    },
+  };
+  const [first = [], ...rest] = props.actions;
+  return [[...first, clipboardAction], ...rest];
+});
+function act(action: CardAction) {
   if (action.disabled) return;
   modelOpen.value = false;
   action.onSelect?.();
@@ -59,7 +82,7 @@ function act(action: ListCardAction) {
         </div>
         <div class="min-w-0 space-y-4">
           <div
-            v-for="(group, index) in actions"
+            v-for="(group, index) in actionGroups"
             :key="index"
             :class="{ 'border-t border-default pt-3': index > 0 }"
             class="grid gap-1"

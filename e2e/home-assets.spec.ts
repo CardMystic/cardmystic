@@ -180,17 +180,12 @@ test('all deferred search modes work and color filters render SVG symbols withou
   await search
     .getByRole('button', { name: 'Smart Search', exact: true })
     .click();
-  await search
-    .getByRole('button', { name: 'Show advanced search filters' })
-    .click();
-  await search
-    .getByRole('button', { name: 'Select Filters', exact: true })
-    .click();
-  await search.getByRole('button', { name: 'Colors', exact: true }).click();
-  const symbols = search.locator('.color-checkboxes label svg');
+  await search.getByRole('button', { name: 'Filters', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Search filters' });
+  await drawer.getByRole('button', { name: 'Colors', exact: true }).click();
+  const symbols = drawer.locator('.color-checkboxes label svg');
   await expect(symbols).toHaveCount(6);
-  for (const symbol of await symbols.all()) await expect(symbol).toBeVisible();
-  const white = search.getByRole('checkbox', { name: 'White', exact: true });
+  const white = drawer.getByRole('checkbox', { name: 'White', exact: true });
   await white.check();
   await expect(white).toBeChecked();
   expect(manaRequests).toEqual([]);

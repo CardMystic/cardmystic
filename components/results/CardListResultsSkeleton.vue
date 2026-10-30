@@ -31,7 +31,6 @@
             :class="i % 3 === 0 ? 'w-2/3' : i % 2 === 0 ? 'w-1/2' : 'w-3/4'"
           />
           <USkeleton class="h-4 w-10 ml-auto shrink-0" />
-          <USkeleton class="size-5 shrink-0 rounded-full" />
         </div>
       </div>
     </div>

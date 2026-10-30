@@ -32,6 +32,11 @@ export default defineEventHandler(async (event) => {
   </url>
 `;
 
+  // Public service and purchase policies
+  for (const path of ['/privacyPolicy', '/terms', '/billing-policy']) {
+    xml += `<url><loc>${baseUrl}${path}</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>\n`;
+  }
+
   // Search landing pages (one per platform × search type)
   const searchTypes = [
     'smart',

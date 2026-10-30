@@ -1,5 +1,6 @@
 <template>
   <UForm
+    ref="formRef"
     :schema="schema"
     :state="state"
     class="grow space-y-4"
@@ -165,59 +166,19 @@
     </template>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <QuickFilters
+      <SearchFilterDrawer
+        ref="filtersRef"
         v-model="state.filters"
-        :show="['arena', 'mtgo', 'paper']"
+        hide-formats
+        :quick-filters="['arena', 'mtgo', 'paper']"
+        :can-apply="
+          (sourceMode !== 'select' || deckbuilderStore.savedDeckReady.value) &&
+          !!(state.decklist?.trim() || state.commander?.trim())
+        "
+        @apply="formRef?.submit()"
       />
       <SearchModeSelect />
     </div>
-
-    <Filters
-      v-if="!showFilters"
-      ref="filtersRef"
-      v-model="state.filters"
-      hide-controls
-      hide-formats
-    />
-
-    <div v-if="!showFilters" class="flex justify-center">
-      <UTooltip text="Filter results by colors, types, rarities, and more">
-        <UButton
-          class="cursor-pointer"
-          @click="
-            () => {
-              showFilters = true;
-            }
-          "
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-sliders-horizontal"
-          aria-label="Show advanced search filters"
-        >
-          Show Advanced Filters
-        </UButton>
-      </UTooltip>
-    </div>
-
-    <UCard v-if="showFilters">
-      <UFormField name="filters">
-        <Filters ref="filtersRef" v-model="state.filters" hide-formats />
-      </UFormField>
-      <template #footer>
-        <div class="flex items-center justify-center">
-          <UButton
-            class="cursor-pointer"
-            @click="hideFilters"
-            variant="ghost"
-            size="sm"
-            icon="i-lucide-eye-off"
-            color="neutral"
-          >
-            Hide Advanced Filters
-          </UButton>
-        </div>
-      </template>
-    </UCard>
 
     <div class="flex justify-center">
       <UButton
@@ -248,7 +209,7 @@ import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel
 import { useSearchPageDefaults } from '~/composables/useSearchPageDefaults';
 import type { Platform } from '~/utils/platformConfig';
 import { useDeckbuilder } from '~/composables/useDeckbuilder';
-import Filters from './Filters.vue';
+import SearchFilterDrawer from './SearchFilterDrawer.vue';
 import {
   useMyDecklistsSearch,
   useOwnedDecklist,
@@ -268,7 +229,8 @@ import type { FormSubmitEvent } from '@nuxt/ui';
 
 const { getPath, getPlatformFromPath } = useSearchType();
 
-const filtersRef = ref<InstanceType<typeof Filters> | null>(null);
+const formRef = useTemplateRef('formRef');
+const filtersRef = ref<InstanceType<typeof SearchFilterDrawer> | null>(null);
 
 const schema = z.object({
   description: z.string().optional(),
@@ -320,8 +282,6 @@ const partnerCommanderParam = computed(() =>
   String(route.query.partnerCommander || ''),
 );
 
-import { hasAdvancedFilters } from '~/utils/quickFilters';
-
 const parsedFilters = computed(() => {
   const base: Record<string, any> = {
     selectedColorFilterOption: 'Color Identity' as 'Color Identity',
@@ -342,11 +302,6 @@ const parsedFilters = computed(() => {
   }
   return CardSearchFiltersSchema.parse(base);
 });
-
-const showFilters = ref(hasAdvancedFilters(parsedFilters.value));
-function hideFilters() {
-  showFilters.value = false;
-}
 
 const state = reactive<Partial<Schema>>({
   description: descriptionParam.value || '',

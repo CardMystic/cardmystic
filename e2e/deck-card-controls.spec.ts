@@ -85,7 +85,16 @@ test('list-card clipboard controls preserve metadata after flipping and remove t
   await card.getByRole('button', { name: 'Flip Card', exact: true }).click();
   await expect(card.getByRole('img')).toHaveAttribute('src', /back/);
 
-  await card.getByRole('button', { name: 'Add Card', exact: true }).click();
+  await card
+    .getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Add to Clipboard', exact: true })
+    .click();
   const added = card.getByRole('button', { name: 'Card Added', exact: true });
   await expect(added).toHaveAttribute('title', 'Added to clipboard');
   const saved = await page.evaluate(() =>
@@ -101,7 +110,16 @@ test('list-card clipboard controls preserve metadata after flipping and remove t
     imageUrl: expect.stringContaining('/front/'),
   });
 
-  await added.click();
+  await card
+    .getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Remove from Clipboard', exact: true })
+    .click();
   await expect(
     card.getByRole('button', { name: 'Add Card', exact: true }),
   ).toHaveAttribute('title', 'Add to clipboard');
@@ -200,5 +218,24 @@ test.describe('desktop card modal', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(trigger).toBeFocused();
+    await page.getByRole('button', { name: 'Display', exact: true }).click();
+    await page
+      .getByRole('combobox', { name: 'Deck view', exact: true })
+      .click();
+    await page.getByRole('option', { name: 'Card Text', exact: true }).click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.card-text-row')).toHaveCount(
+      state.cards.length,
+    );
+    await page
+      .locator('.card-text-row')
+      .first()
+      .locator('button.card-name')
+      .click();
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Add to Clipboard', exact: true }),
+    ).toBeVisible();
   });
 });

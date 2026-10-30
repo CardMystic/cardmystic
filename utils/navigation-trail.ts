@@ -245,6 +245,8 @@ export function pageBreadcrumbs(path: string): PageBreadcrumb[] {
     '/memberships': 'Memberships',
     '/about': 'About',
     '/privacyPolicy': 'Privacy Policy',
+    '/terms': 'Terms of Service',
+    '/billing-policy': 'Billing & Refunds',
     '/lists': 'Your Decks',
     '/articles/mine': 'Your Articles',
     '/explore/articles': 'Articles',

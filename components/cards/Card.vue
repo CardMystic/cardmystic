@@ -8,12 +8,11 @@
     ]"
     :ui="{ body: 'p-1 sm:p-1' }"
   >
-    <LazyListCardActionsModal
+    <LazyCardActionsModal
       v-if="showActions"
       v-model:open="showActions"
       :card="actionCard"
       :actions="cardOverlayMenuItems"
-      :is-owner="false"
       board="Search result"
     />
     <LazyAddToDeckModal
@@ -132,129 +131,127 @@
         @flip="flipCard"
       />
 
-      <!-- Score Bars -->
       <div
-        v-if="!hideProgressBar"
-        class="mt-1 w-full"
-        :class="{ invisible: isSearched }"
+        v-if="!hideProgressBar || showCardInfo"
+        class="mt-1 flex min-h-8 items-center gap-2"
       >
-        <!-- Smart score bar (when search scores present) -->
-        <template v-if="hasDualScores">
-          <span :title="semanticScoreTooltip">
-            <div
-              class="flex flex-row items-center justify-center text-center w-full mt-0.5"
+        <!-- Score Bars -->
+        <div
+          v-if="!hideProgressBar"
+          class="min-w-0 flex-1"
+          :class="{ invisible: isSearched }"
+        >
+          <!-- Smart score bar (when search scores present) -->
+          <template v-if="hasDualScores">
+            <span :title="semanticScoreTooltip">
+              <div
+                class="flex flex-row items-center justify-center text-center w-full mt-0.5"
+              >
+                <progress
+                  :value="normalizedScore"
+                  :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
+                  class="my-0 mr-2"
+                  max="100"
+                  :data-color="scoreColor"
+                ></progress>
+                <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                  <UIcon name="i-lucide-brain" class="w-3 h-3 shrink-0" />
+                  {{ Math.round(normalizedScore) }}%
+                </p>
+              </div>
+            </span>
+            <span
+              title="Synergy score: how relevant this card is to your decklist"
             >
-              <progress
-                :value="normalizedScore"
-                :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
-                class="my-0 mr-2"
-                max="100"
-                :data-color="scoreColor"
-              ></progress>
-              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
-                <UIcon name="i-lucide-brain" class="w-3 h-3 shrink-0" />
-                {{ Math.round(normalizedScore) }}%
-              </p>
-            </div>
-          </span>
-          <span
-            title="Synergy score: how relevant this card is to your decklist"
-          >
+              <div
+                class="flex flex-row items-center justify-center text-center w-full"
+              >
+                <progress
+                  :value="alsDisplayScore"
+                  aria-label="Synergy score"
+                  class="my-0 mr-2"
+                  max="100"
+                  :data-color="alsScoreColor"
+                ></progress>
+                <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                  <UIcon name="i-lucide-layers-2" class="w-3 h-3 shrink-0" />
+                  {{ Math.round(alsDisplayScore) }}%
+                </p>
+              </div>
+            </span>
+          </template>
+          <!-- Single Smart/ALS bar -->
+          <template v-else-if="hasAnyScore">
+            <span
+              :title="
+                isAlsOnly
+                  ? 'Synergy score: how relevant this card is to your decklist'
+                  : semanticScoreTooltip
+              "
+            >
+              <div
+                class="flex flex-row items-center justify-center text-center w-full"
+              >
+                <progress
+                  :value="normalizedScore"
+                  :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
+                  class="my-0 mr-2"
+                  max="100"
+                  :data-color="scoreColor"
+                ></progress>
+                <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                  <UIcon
+                    :name="isAlsOnly ? 'i-lucide-layers-2' : 'i-lucide-brain'"
+                    class="w-3 h-3 shrink-0"
+                  />
+                  {{ Math.round(normalizedScore) }}%
+                </p>
+              </div>
+            </span>
+          </template>
+          <!-- Popularity bar -->
+          <template v-if="hasPopularity">
+            <span
+              :title="`In ${popularityPercent.toFixed(2)}% of decks that match your filters`"
+            >
+              <div
+                class="flex flex-row items-center justify-center text-center w-full"
+                :class="{ 'mt-0.5': hasAnyScore }"
+              >
+                <progress
+                  :value="popularityPercent"
+                  aria-label="Deck popularity"
+                  class="my-0 mr-2"
+                  max="100"
+                  :data-color="popularityColor"
+                ></progress>
+                <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
+                  <UIcon name="i-lucide-flame" class="w-3 h-3 shrink-0" />
+                  {{ popularityDisplay }}%
+                </p>
+              </div>
+            </span>
+          </template>
+          <!-- No score at all -->
+          <template v-if="!hasAnyScore && !hasPopularity">
             <div
               class="flex flex-row items-center justify-center text-center w-full"
             >
               <progress
-                :value="alsDisplayScore"
-                aria-label="Synergy score"
+                :value="0"
+                aria-label="No score"
                 class="my-0 mr-2"
                 max="100"
-                :data-color="alsScoreColor"
+                data-color="error"
               ></progress>
-              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
-                <UIcon name="i-lucide-layers-2" class="w-3 h-3 shrink-0" />
-                {{ Math.round(alsDisplayScore) }}%
-              </p>
+              <p class="text-xs"></p>
             </div>
-          </span>
-        </template>
-        <!-- Single Smart/ALS bar -->
-        <template v-else-if="hasAnyScore">
-          <span
-            :title="
-              isAlsOnly
-                ? 'Synergy score: how relevant this card is to your decklist'
-                : semanticScoreTooltip
-            "
-          >
-            <div
-              class="flex flex-row items-center justify-center text-center w-full"
-            >
-              <progress
-                :value="normalizedScore"
-                :aria-label="isAlsOnly ? 'Synergy score' : semanticScoreLabel"
-                class="my-0 mr-2"
-                max="100"
-                :data-color="scoreColor"
-              ></progress>
-              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
-                <UIcon
-                  :name="isAlsOnly ? 'i-lucide-layers-2' : 'i-lucide-brain'"
-                  class="w-3 h-3 shrink-0"
-                />
-                {{ Math.round(normalizedScore) }}%
-              </p>
-            </div>
-          </span>
-        </template>
-        <!-- Popularity bar -->
-        <template v-if="hasPopularity">
-          <span
-            :title="`In ${popularityPercent.toFixed(2)}% of decks that match your filters`"
-          >
-            <div
-              class="flex flex-row items-center justify-center text-center w-full"
-              :class="{ 'mt-0.5': hasAnyScore }"
-            >
-              <progress
-                :value="popularityPercent"
-                aria-label="Deck popularity"
-                class="my-0 mr-2"
-                max="100"
-                :data-color="popularityColor"
-              ></progress>
-              <p class="text-xs whitespace-nowrap flex items-center gap-0.5">
-                <UIcon name="i-lucide-flame" class="w-3 h-3 shrink-0" />
-                {{ popularityDisplay }}%
-              </p>
-            </div>
-          </span>
-        </template>
-        <!-- No score at all -->
-        <template v-if="!hasAnyScore && !hasPopularity">
-          <div
-            class="flex flex-row items-center justify-center text-center w-full"
-          >
-            <progress
-              :value="0"
-              aria-label="No score"
-              class="my-0 mr-2"
-              max="100"
-              data-color="error"
-            ></progress>
-            <p class="text-xs"></p>
-          </div>
-        </template>
-      </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div
-      class="flex flex-row items-center justify-between text-center w-full mt-1"
-    >
-      <!-- Left side buttons-->
-      <div class="flex flex-row items-center gap-1">
-        <!-- Buy on TCGPlayer button -->
-        <span :title="hasPartner ? combinedPriceTooltip : singleBuyTooltip">
+          </template>
+        </div>
+        <span
+          class="shrink-0"
+          :title="hasPartner ? combinedPriceTooltip : singleBuyTooltip"
+        >
           <!-- Partner: combined price button -->
           <UButton
             v-if="hasPartner && showCardInfo && partnerTcgplayerId"
@@ -290,98 +287,6 @@
             }}
           </UButton>
         </span>
-        <!-- Desktop buttons (hidden on mobile) -->
-        <template v-if="showCardInfo">
-          <span v-if="!isSearched" title="Find similar cards">
-            <UButton
-              color="neutral"
-              variant="outline"
-              class="inline-flex cursor-pointer"
-              icon="i-mdi-cards-outline"
-              :size="isMobile ? 'xs' : 'sm'"
-              @click="findSimilarCards"
-              aria-label="Find Similar Cards"
-            />
-          </span>
-          <span v-if="isCommander" title="Popular Cards for this Commander">
-            <UButton
-              v-if="isCommander"
-              color="error"
-              variant="outline"
-              class="inline-flex cursor-pointer"
-              icon="i-lucide-flame"
-              :size="isMobile ? 'xs' : 'sm'"
-              @click="viewPopularCards"
-              aria-label="Popular Cards for this Commander"
-            />
-          </span>
-          <span
-            v-if="isCommander"
-            title="Get Deck Recommendations for this Commander"
-          >
-            <UButton
-              v-if="isCommander"
-              color="primary"
-              variant="outline"
-              class="hidden sm:inline-flex cursor-pointer"
-              icon="i-lucide-box"
-              :size="isMobile ? 'xs' : 'sm'"
-              @click="getRecommendations"
-              aria-label="Get Deck Recommendations for this Commander"
-            />
-          </span>
-        </template>
-      </div>
-
-      <!-- Right side buttons -->
-      <div
-        v-if="!isSearched && showCardInfo"
-        class="flex flex-row items-center gap-2 justify-center"
-      >
-        <!-- Thumbs down button -->
-        <span v-if="!hideThumbsDownButton" title="I disagree with this result!">
-          <UButton
-            class="cursor-pointer"
-            :color="isThumbsDownClicked ? 'error' : 'primary'"
-            variant="ghost"
-            icon="i-lucide-thumbs-down"
-            :size="isMobile ? 'xs' : 'sm'"
-            aria-label="Disagree with this result"
-            @click="handleDislike"
-          />
-        </span>
-
-        <!-- Add to deckbuilding search button -->
-        <span
-          v-if="showAddToDeckbuilderButton"
-          :title="
-            deckbuilderStore?.selectedDeckId.value
-              ? 'Add to deck'
-              : 'Add to search'
-          "
-        >
-          <UButton
-            class="cursor-pointer"
-            :color="isInDecklist ? 'success' : 'primary'"
-            variant="soft"
-            :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'"
-            :size="isMobile ? 'xs' : 'sm'"
-            :aria-label="
-              deckbuilderStore?.selectedDeckId.value
-                ? 'Add to deck'
-                : 'Add to search'
-            "
-            :disabled="
-              isInDecklist ||
-              deckbuilderStore?.pendingCards.value.includes(
-                card.card_data.name,
-              ) ||
-              (!!deckbuilderStore?.selectedDeckId.value &&
-                !deckbuilderStore.savedDeckReady.value)
-            "
-            @click="deckbuilderStore?.addCard(card.card_data.name)"
-          />
-        </span>
       </div>
     </div>
   </UCard>
@@ -391,14 +296,19 @@
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
+import type { CardAction } from '~/utils/card-actions';
 import { useRouter } from 'vue-router';
-import { getAffiliateLink } from '~/utils/tcgPlayer';
+import {
+  getAffiliateLink,
+  generateTCGPlayerSearchUrl,
+} from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
 
+defineOptions({ name: 'SearchResultCard' });
 const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
-const { saveSearchMutation, userProfile } = useSearchHistory();
+const { saveSearchMutation } = useSearchHistory();
 
 // Shared singleton — one listener for all Card instances
 const isMobile = useIsMobile();
@@ -530,19 +440,12 @@ const deckbuilderStore = props.showAddToDeckbuilderButton
   ? useDeckbuilder()
   : null;
 
-const isInDecklist = computed(() => {
-  if (!deckbuilderStore || !props.card.card_data?.name) return false;
-  return deckbuilderStore.hasCard(props.card.card_data.name);
-});
-
 const isFlippedInternal = ref(false);
-// In controlled mode (parent passes :is-flipped), use the prop; otherwise fall back to internal state.
-const isFlipped = computed(() =>
-  props.isFlipped !== undefined ? props.isFlipped : isFlippedInternal.value,
-);
-const isThumbsDownClicked = ref(false);
+const isFlipped = computed(() => props.isFlipped ?? isFlippedInternal.value);
+
+const dislikedCards = ref(new Set<string>());
+const feedbackCardName = ref('');
 const showConfirmModal = ref(false);
-const moreActionsOpen = ref(false);
 const showActions = ref(false);
 const actionPartner = ref(false);
 const actionCard = computed(() =>
@@ -560,22 +463,102 @@ function openActions(partner = false) {
 }
 const showAddToDeckModal = ref(false);
 
-const cardOverlayMenuItems = computed(() => [
-  [
+const cardOverlayMenuItems = computed<CardAction[][]>(() => {
+  const data = actionCard.value.card_data;
+  const generalActions: CardAction[] = [
     {
       label: 'View Card Details',
       icon: 'i-lucide-info',
-      to: `/card/${actionCard.value.card_data.oracle_id}`,
+      to: `/card/${data.oracle_id}`,
     },
     {
-      label: 'Add to Deck',
+      label: deckbuilderStore?.selectedDeckId.value
+        ? 'Add to Another Deck'
+        : 'Add to Deck',
       icon: 'i-lucide-library-big',
       onSelect() {
         showAddToDeckModal.value = true;
       },
     },
-  ],
-]);
+  ];
+  if (!actionPartner.value && isDualFaced.value) {
+    generalActions.push({
+      label: isFlipped.value ? 'Show Front Face' : 'Show Back Face',
+      icon: 'i-lucide-refresh-cw',
+      onSelect: flipCard,
+    });
+  }
+  generalActions.push({
+    label: data.tcgplayer_id
+      ? data.prices?.usd
+        ? `Buy on TCGPlayer · $${data.prices.usd}`
+        : 'Buy on TCGPlayer'
+      : 'Search on TCGPlayer',
+    icon: 'i-lucide-shopping-cart',
+    to: data.tcgplayer_id
+      ? getAffiliateLink(data.tcgplayer_id)
+      : generateTCGPlayerSearchUrl(data.name),
+    target: '_blank',
+    rel: 'noopener noreferrer',
+  });
+  if (!props.isSearched) {
+    generalActions.push({
+      label: 'Find Similar Cards',
+      icon: 'i-mdi-cards-outline',
+      onSelect: () => findSimilarCards(data.name),
+    });
+  }
+  if (props.isCommander) {
+    generalActions.push(
+      {
+        label: 'Popular Cards for this Commander',
+        icon: 'i-lucide-flame',
+        onSelect: () => viewPopularCards(data.name),
+      },
+      {
+        label: 'Get Deck Recommendations',
+        icon: 'i-lucide-box',
+        onSelect: () => getRecommendations(data.name),
+      },
+    );
+  }
+  const searchActions: CardAction[] = [];
+  if (props.showCardInfo && !props.isSearched) {
+    if (!props.hideThumbsDownButton) {
+      const submitted = dislikedCards.value.has(data.name);
+      searchActions.push({
+        label: submitted ? 'Feedback Submitted' : 'Mark As Poor Result',
+        icon: 'i-lucide-thumbs-down',
+        disabled: submitted || !searchQuery.value,
+        onSelect: () => handleDislike(data.name),
+      });
+    }
+    if (props.showAddToDeckbuilderButton && deckbuilderStore) {
+      const inDeck = deckbuilderStore.hasCard(data.name);
+      const selectedDeck = !!deckbuilderStore.selectedDeckId.value;
+      searchActions.push({
+        label: selectedDeck
+          ? inDeck
+            ? 'Added to deck'
+            : 'Add to deck'
+          : inDeck
+            ? 'Added to search'
+            : 'Add to search',
+        icon: inDeck ? 'i-lucide-check' : 'i-lucide-layers-plus',
+        disabled:
+          inDeck ||
+          deckbuilderStore.pendingCards.value.includes(data.name) ||
+          (selectedDeck && !deckbuilderStore.savedDeckReady.value),
+        onSelect: () => {
+          void deckbuilderStore.addCard(data.name);
+        },
+      });
+    }
+  }
+  return searchActions.length
+    ? [generalActions, searchActions]
+    : [generalActions];
+});
 
 const isDualFaced = computed(() => {
   const cardData = props.card?.card_data;
@@ -614,16 +597,17 @@ const searchQuery = computed(() => {
 const { dislikeMutation } = useCardFeedback();
 
 // Handle dislike button click - show confirmation modal
-function handleDislike() {
+function handleDislike(cardName = props.card.card_data.name) {
   // Don't allow unclicking
-  if (isThumbsDownClicked.value) {
+  if (dislikedCards.value.has(cardName)) {
     return;
   }
-  if (!searchQuery.value || !props.card.card_data?.name) {
+  if (!searchQuery.value || !cardName) {
     console.warn('Cannot track dislike: missing query or card name');
     return;
   }
   // Show confirmation modal
+  feedbackCardName.value = cardName;
   showConfirmModal.value = true;
 }
 
@@ -631,12 +615,12 @@ function handleDislike() {
 function confirmDislike() {
   showConfirmModal.value = false;
   // Set the visual state (cannot be undone)
-  isThumbsDownClicked.value = true;
+  dislikedCards.value.add(feedbackCardName.value);
 
   // Track the dislike
   dislikeMutation.mutate({
     query: searchQuery.value,
-    cardName: props.card.card_data.name,
+    cardName: feedbackCardName.value,
   });
 }
 // Whether this card has both ALS and Smart scores (dual bar mode)
@@ -700,37 +684,37 @@ const popularityDisplay = computed(() => {
 });
 const popularityColor = computed(() => scoreToColor(popularityPercent.value));
 
-function findSimilarCards() {
-  if (!props.card) return;
+function findSimilarCards(cardName = props.card.card_name) {
+  if (!cardName) return;
 
   saveCurrentSearchQuery(route.query);
 
   // Navigate to search page with similarity search endpoint
   const queryParams = {
-    card_name: props.card.card_name,
+    card_name: cardName,
     filters: undefined, // No additional filters for similarity search
     searchType: 'similarity',
   };
   router.push({ path: '/search/all/similarity', query: queryParams });
 }
 
-function getRecommendations() {
-  if (!props.card?.card_data?.name) return;
-  const queryParams = { commander: props.card.card_data.name };
+function getRecommendations(cardName = props.card.card_data.name) {
+  if (!cardName) return;
+  const queryParams = { commander: cardName };
   saveSearchQuery('recommend', queryParams);
   router.push({ path: '/search/all/deckbuilder', query: queryParams });
   queueMicrotask(() => {
     saveSearchMutation.mutate({
-      query: props.card.card_data.name,
+      query: cardName,
       searchType: 'recommend',
-      filters: { commander: props.card.card_data.name },
+      filters: { commander: cardName },
     });
   });
 }
 
-function viewPopularCards() {
-  if (!props.card?.card_data?.name) return;
-  const queryParams = { commander: props.card.card_data.name };
+function viewPopularCards(cardName = props.card.card_data.name) {
+  if (!cardName) return;
+  const queryParams = { commander: cardName };
   saveSearchQuery('popular-by-commander', queryParams);
   router.push({ path: '/popular-by-commander/all', query: queryParams });
 }
@@ -738,32 +722,9 @@ function viewPopularCards() {
 function handleImageError(event: Event) {
   console.warn('Card image failed to load:', event);
 }
-
-const isDev = import.meta.env.VITE_IS_DEV === 'true';
-const showAllData = ref(false);
-function toggleShowAllData() {
-  showAllData.value = !showAllData.value;
-}
 </script>
 
 <style scoped>
-.card-data {
-  position: fixed;
-  z-index: 1;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
-  max-width: 100%;
-  text-overflow: wrap;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
 .card-image-wrapper {
   position: relative;
   width: 100%;
@@ -811,10 +772,6 @@ function toggleShowAllData() {
   text-align: center;
 }
 
-.manacost-text {
-  font-size: 14px;
-}
-
 .searched-card-bg {
   background: #353a75 !important;
 }
@@ -840,7 +797,7 @@ function toggleShowAllData() {
   box-sizing: border-box;
 }
 
-/* Partner commander stack — 24px shorter than a normal card to leave room for extra text */
+/* Reserve the same image height for a partner pair as a single card. */
 .partner-stack {
   position: relative;
   width: 100%;

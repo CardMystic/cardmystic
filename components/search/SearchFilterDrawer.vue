@@ -38,6 +38,14 @@
       <template #body>
         <div v-if="open" class="space-y-5">
           <QuickFilters v-model="filters" :show="quickFilters" />
+          <section
+            v-if="commanderColors"
+            aria-label="Commander color identity"
+            class="space-y-2"
+          >
+            <h3 class="text-sm font-semibold">Color identity</h3>
+            <CommanderFilters v-model="filters" />
+          </section>
           <LazyFilters
             embedded
             v-model="filters"

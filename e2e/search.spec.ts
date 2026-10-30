@@ -465,6 +465,7 @@ test.describe('Card Text view', () => {
     // Wait for results to render as a grid first, then flip the view.
     await expectResultsRendered(page);
 
+    await page.getByRole('button', { name: 'Display', exact: true }).click();
     await page.getByRole('combobox', { name: 'View', exact: true }).click();
     await page.getByRole('option', { name: 'Card Text' }).click();
 
