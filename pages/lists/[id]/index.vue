@@ -385,7 +385,10 @@
         @click="openMassEntry"
       />
       <template v-if="!isCollection && analysisCards.length">
-        <div class="hidden md:flex items-center gap-1">
+        <div
+          class="items-center gap-1"
+          :class="sectionLinks.length > 1 ? 'hidden md:flex' : 'flex'"
+        >
           <UButton
             v-for="section in sectionLinks"
             :key="section.label"
@@ -397,7 +400,9 @@
           />
         </div>
         <UDropdownMenu
+          v-if="sectionLinks.length > 1"
           :items="sectionLinks"
+          :modal="false"
           :content="{ side: 'top', align: 'end' }"
           class="md:hidden"
         >

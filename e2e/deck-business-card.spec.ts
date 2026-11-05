@@ -63,7 +63,7 @@ test('free owners create, edit, reload and remove a business card without changi
   await expect(
     dialog.getByText('My favorite value deck.', { exact: true }),
   ).toBeVisible();
-  await expect(dialog.getByText('Bracket 3 · Owner selected')).toBeVisible();
+  await expect(dialog.getByText('Bracket 3', { exact: true })).toBeVisible();
   await expect(dialog.getByText(/This deck is private/)).toBeVisible();
   await expect(
     dialog.getByRole('img', { name: 'QR code linking to this deck' }),

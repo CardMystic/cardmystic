@@ -27,11 +27,6 @@ const coreCards = computed(() =>
     return entry ? [entry.card] : [];
   }),
 );
-const commanders = computed(() =>
-  props.entries
-    .filter((entry) => entry.commander)
-    .map((entry) => entry.card.name),
-);
 const colors = computed(() => {
   const identities = new Set(
     props.entries.flatMap((entry) => entry.card.color_identity ?? []),
@@ -91,7 +86,7 @@ const combos = computed(() =>
     aria-label="Deck business card"
   >
     <header class="business-brand">
-      <div class="flex items-center gap-2">
+      <div class="business-logo">
         <img
           src="/android-chrome-192x192.png"
           alt=""
@@ -99,6 +94,14 @@ const combos = computed(() =>
           height="28"
         /><span>CardMystic</span>
       </div>
+      <img
+        v-if="qrImage"
+        :src="qrImage"
+        alt="QR code linking to this deck"
+        width="64"
+        height="64"
+        class="business-qr"
+      />
       <div class="text-right">
         <strong class="text-lg tabular-nums"
           >{{ price.missing ? 'From ' : '' }}${{ price.amount }}</strong
@@ -129,52 +132,35 @@ const combos = computed(() =>
             height="160"
           />
         </div>
-        <div class="business-scan">
-          <img
-            v-if="qrImage"
-            :src="qrImage"
-            alt="QR code linking to this deck"
-            width="180"
-            height="180"
-            class="business-qr"
-          />
-          <div>
-            <strong>View the deck</strong
-            ><span>Scan to open on CardMystic</span>
-          </div>
-        </div>
       </div>
       <div class="business-details">
-        <div
-          v-if="colors.length"
-          class="business-colors"
-          :aria-label="`Deck colors: ${colors.join(', ')}`"
-        >
-          <ManaColorIcon v-for="color in colors" :key="color" :type="color" />
+        <div class="business-meta">
+          <div
+            v-if="colors.length"
+            class="business-colors"
+            :aria-label="`Deck colors: ${colors.join(', ')}`"
+          >
+            <ManaColorIcon v-for="color in colors" :key="color" :type="color" />
+          </div>
+          <p class="business-format">{{ format }} · {{ cardCount }} cards</p>
         </div>
         <h2>{{ name || 'Untitled deck' }}</h2>
-        <p class="business-format mt-2 !text-left">
-          {{ format }} · {{ cardCount }} cards
-        </p>
-        <p v-if="commanders.length" class="business-commanders">
-          {{ commanders.join(' + ') }}
-        </p>
         <div
           v-if="details.playstyles?.length || bracket"
           class="business-labels"
         >
           <span v-for="tag in details.playstyles" :key="tag">{{ tag }}</span
-          ><span v-if="bracket">Bracket {{ bracket }} · Owner selected</span>
+          ><span v-if="bracket">Bracket {{ bracket }}</span>
         </div>
         <p v-if="details.summary" class="business-summary">
           {{ details.summary }}
         </p>
         <section v-if="details.win_plan">
-          <h3>How it wins</h3>
+          <h3 class="business-section-title">How it wins</h3>
           <p>{{ details.win_plan }}</p>
         </section>
         <section v-if="coreCards.length" class="business-core">
-          <h3>Core cards</h3>
+          <h3 class="business-section-title">Core cards</h3>
           <div class="business-core-grid">
             <figure v-for="card in coreCards" :key="card.oracle_id">
               <img
@@ -195,7 +181,7 @@ const combos = computed(() =>
       <DeckCharts :curve="stats.curve" :colors="stats.colors" compact />
     </section>
     <section v-if="openingHand.length" class="px-4 sm:px-6 pb-6">
-      <h3 class="font-semibold mb-3">Example opening hand</h3>
+      <h3 class="business-section-title">Example opening hand</h3>
       <div class="business-hand-grid">
         <img
           v-for="(card, index) in openingHand"
@@ -209,7 +195,7 @@ const combos = computed(() =>
       </div>
     </section>
     <section v-if="combos.length" class="px-4 sm:px-6 pb-6 space-y-4">
-      <h3 class="font-semibold">Combos</h3>
+      <h3 class="business-section-title">Combos</h3>
       <article
         v-for="(combo, index) in combos"
         :key="index"
@@ -247,19 +233,34 @@ const combos = computed(() =>
   font-family: Arial, sans-serif;
 }
 .business-brand {
-  padding: 16px 24px;
-  display: flex;
+  padding: 8px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   background: #1e203a;
   border-bottom: 2px solid #ac89f3;
   font-weight: 700;
 }
+.business-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.business-brand > .text-right {
+  grid-column: 3;
+}
+.business-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
 .business-format {
   color: #d5c5f5;
   font-size: 13px;
-  text-align: right;
+  white-space: nowrap;
   font-weight: 400;
 }
 .business-content {
@@ -284,47 +285,23 @@ const combos = computed(() =>
   display: grid;
   place-items: center;
 }
-.business-scan {
-  margin-top: 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
 .business-qr {
-  width: 140px;
-  max-width: 55%;
+  grid-column: 2;
+  width: 64px;
   height: auto;
-  flex-shrink: 0;
   background: white;
   border-radius: 6px;
-}
-.business-scan strong {
-  display: block;
-  font-size: 15px;
-}
-.business-scan span {
-  display: block;
-  font-size: 12px;
-  color: #b6c4db;
-  margin-top: 6px;
 }
 .business-colors {
   display: flex;
   gap: 4px;
-  font-size: 32px;
-  margin-bottom: 12px;
+  font-size: 26px;
 }
 .business-details h2 {
   font-size: clamp(22px, 3vw, 36px);
   line-height: 1.15;
   font-weight: 700;
   overflow-wrap: anywhere;
-}
-.business-commanders {
-  margin-top: 8px;
-  color: #b6c4db;
-  font-size: 13px;
 }
 .business-labels {
   display: flex;
@@ -351,10 +328,12 @@ const combos = computed(() =>
 .business-details section {
   margin-top: 20px;
 }
-.business-details h3 {
+.business-section-title {
   font-size: 17px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 15%);
 }
 .business-details section p {
   font-size: 14px;
@@ -397,7 +376,13 @@ footer {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .business-brand {
-    padding: 12px;
+    padding: 8px 12px;
+  }
+  .business-logo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 13px;
   }
   .business-content {
     padding: 16px;
@@ -409,22 +394,11 @@ footer {
   }
   .business-art {
     display: flex;
-    align-items: center;
-    gap: 16px;
+    justify-content: center;
   }
   .business-hero {
     width: 45%;
     flex-shrink: 0;
-  }
-  .business-scan {
-    flex: 1;
-    flex-direction: column;
-    align-items: start;
-    margin: 0;
-  }
-  .business-qr {
-    max-width: 100%;
-    width: 180px;
   }
   footer {
     padding: 12px 16px;
