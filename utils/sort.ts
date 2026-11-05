@@ -1,3 +1,4 @@
+import { getUsdPrice } from '~/utils/cardPrice';
 import type { Ref } from 'vue';
 import type { Card } from '~/models/cardModel';
 import type { CardLabels } from '~/composables/useLibrary';
@@ -164,8 +165,8 @@ export function sortSearchResults(
       }
 
       case 'price': {
-        const aValue = parseFloat(a.card_data.prices?.usd ?? '0') || 0;
-        const bValue = parseFloat(b.card_data.prices?.usd ?? '0') || 0;
+        const aValue = parseFloat(getUsdPrice(a.card_data.prices) ?? '0') || 0;
+        const bValue = parseFloat(getUsdPrice(b.card_data.prices) ?? '0') || 0;
         primary = direction * (aValue - bValue);
         return compareWithTiebreaker(primary, a, b);
       }

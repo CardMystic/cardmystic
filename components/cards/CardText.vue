@@ -159,6 +159,7 @@
 </template>
 
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 const highlight = useDeckHighlight(() => props.card.card_data);
 import type { Card } from '~/models/cardModel';
 import type { CardAction } from '~/utils/card-actions';
@@ -386,12 +387,12 @@ const buyTcgplayerId = computed(
 );
 const buyPrice = computed(() => {
   if (!props.card.partner_card_data)
-    return props.card.card_data.prices?.usd || null;
+    return getUsdPrice(props.card.card_data.prices) || null;
 
   let total = 0;
   let hasPrice = false;
   for (const card of [props.card.card_data, props.card.partner_card_data]) {
-    const price = Number.parseFloat(card.prices?.usd ?? '');
+    const price = Number.parseFloat(getUsdPrice(card.prices) ?? '');
     if (Number.isNaN(price)) continue;
     total += price;
     hasPrice = true;

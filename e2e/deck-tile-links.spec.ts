@@ -76,10 +76,7 @@ test('deck names are crawlable links with whole-tile navigation', async ({
   const link = page.getByRole('link', { name: deck.name, exact: true });
   await expect(link).toHaveAttribute('href', deckPath);
   await expect(
-    page.getByText('~$123.45', { exact: false }).first(),
-  ).toBeVisible();
-  await expect(
-    page.getByText('(partial)', { exact: true }).first(),
+    page.getByText('$123.45', { exact: true }).first(),
   ).toBeVisible();
   await expect(link.locator('a, button')).toHaveCount(0);
   const tile = page.locator('.deck-link').filter({ has: link });

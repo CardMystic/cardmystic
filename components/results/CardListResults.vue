@@ -583,6 +583,7 @@
 </template>
 
 <script lang="ts" setup>
+import { getUsdPrice } from '~/utils/cardPrice';
 import type { Card } from '~/models/cardModel';
 import type { DeckPreferences } from '~/models/preferencesModel';
 import type { CardGroup } from '~/utils/sort';
@@ -866,7 +867,7 @@ function sumPrice(
   return uniqueGroupCards(groups).reduce(
     (total, card) =>
       total +
-      (parseFloat(card.card_data.prices?.usd ?? '0') || 0) *
+      (parseFloat(getUsdPrice(card.card_data.prices) ?? '0') || 0) *
         (props.listItemsMap?.[board]?.[card.card_data.oracle_id]?.num_copies ??
           1),
     0,
