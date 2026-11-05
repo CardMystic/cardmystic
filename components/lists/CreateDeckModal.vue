@@ -1,5 +1,8 @@
 <template>
-  <UModal v-model:open="isOpen" title="Create New Decklist">
+  <UModal
+    v-model:open="isOpen"
+    :title="kind === 'collection' ? 'Create Collection' : 'Create New Decklist'"
+  >
     <template #content>
       <div class="p-4 space-y-4">
         <UFormField label="List Name">
@@ -16,7 +19,7 @@
             class="w-full"
           />
         </UFormField>
-        <UFormField label="Format">
+        <UFormField v-if="kind !== 'collection'" label="Format">
           <USelect
             v-model="newListFormat"
             :items="formatOptions"
@@ -90,6 +93,8 @@ import { useToast } from '#imports';
 
 const props = defineProps<{
   open: boolean;
+  kind?: 'deck' | 'collection';
+  folderId?: string;
   oracleIds?: string[];
   cardNames?: string[];
 }>();
@@ -129,7 +134,9 @@ const visibilityOptions = [
   { label: 'Private', value: 'private' as const },
   { label: 'Public', value: 'public' as const },
 ];
-const isCommanderFormat = computed(() => newListFormat.value === 'Commander');
+const isCommanderFormat = computed(
+  () => props.kind !== 'collection' && newListFormat.value === 'Commander',
+);
 
 // Determine which partner category the selected commander belongs to
 const selectedCommanderPartnerType = computed(() => {
@@ -215,8 +222,10 @@ const handleCreate = async () => {
 
     const result = await createListMutation.mutateAsync({
       name: newListName.value.trim(),
+      kind: props.kind,
+      folderId: props.folderId,
       description: newListDescription.value.trim() || undefined,
-      format: newListFormat.value,
+      format: props.kind === 'collection' ? 'Any' : newListFormat.value,
       commanders: commandersList.length > 0 ? commandersList : undefined,
       visibility: newListVisibility.value,
     });

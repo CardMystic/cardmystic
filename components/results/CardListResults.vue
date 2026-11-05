@@ -632,7 +632,7 @@ const cardComponent = computed(() =>
 const cardGridClasses = computed(() =>
   props.view === 'text'
     ? 'grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-x-6 gap-y-0'
-    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2',
+    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2',
 );
 
 const { data: commandersSet } = provideCommandersSet();
@@ -838,37 +838,37 @@ const emit = defineEmits<{
 
 type Board = 'Mainboard' | 'Sideboard' | 'Considering';
 
+function uniqueGroupCards(groups: CardGroup[] | null | undefined): Card[] {
+  return [
+    ...new Map(
+      (groups ?? [])
+        .flatMap((group) => group.cards)
+        .map((card) => [card.card_data.oracle_id, card]),
+    ).values(),
+  ];
+}
 function countCards(
   groups: CardGroup[] | null | undefined,
   board: Board,
 ): number {
-  if (!groups) return 0;
-  return groups.reduce(
-    (total, g) =>
+  return uniqueGroupCards(groups).reduce(
+    (total, card) =>
       total +
-      g.cards.reduce((sum, c) => {
-        const copies =
-          props.listItemsMap?.[board]?.[c.card_data.oracle_id]?.num_copies ?? 1;
-        return sum + copies;
-      }, 0),
+      (props.listItemsMap?.[board]?.[card.card_data.oracle_id]?.num_copies ??
+        1),
     0,
   );
 }
-
 function sumPrice(
   groups: CardGroup[] | null | undefined,
   board: Board,
 ): number {
-  if (!groups) return 0;
-  return groups.reduce(
-    (total, g) =>
+  return uniqueGroupCards(groups).reduce(
+    (total, card) =>
       total +
-      g.cards.reduce((sum, c) => {
-        const price = c.card_data?.prices?.usd;
-        const copies =
-          props.listItemsMap?.[board]?.[c.card_data.oracle_id]?.num_copies ?? 1;
-        return sum + (price ? parseFloat(price) * copies : 0);
-      }, 0),
+      (parseFloat(card.card_data.prices?.usd ?? '0') || 0) *
+        (props.listItemsMap?.[board]?.[card.card_data.oracle_id]?.num_copies ??
+          1),
     0,
   );
 }

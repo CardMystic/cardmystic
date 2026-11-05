@@ -282,13 +282,11 @@ onBeforeUnmount(() => followingObserver?.disconnect());
           </p>
           <div v-else class="space-y-1 mb-4" aria-live="polite">
             <p class="font-semibold">
-              {{ access.tier === 'enhanced' ? 'Enhanced' : 'Normal' }}
+              {{ access.tier === 'enhanced' ? 'CardMystic Pro' : 'Normal' }}
             </p>
-            <p v-if="access.tier === 'enhanced'">
-              Unlimited Enhanced searches.
-            </p>
+            <p v-if="access.tier === 'enhanced'">Unlimited Pro searches.</p>
             <p v-else>
-              {{ access.enhancedRemaining }} free Enhanced searches left today.
+              {{ access.enhancedRemaining }} free Pro searches left today.
             </p>
             <p v-if="access.enhancedTopUpRemaining > 0" class="text-muted">
               {{ access.enhancedTopUpRemaining }} purchased search credits

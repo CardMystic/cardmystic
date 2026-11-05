@@ -17,6 +17,9 @@ test('popular searches power the homepage and keyboard/mouse autocomplete withou
     loads++;
     return route.fulfill({ json: popular });
   });
+  await page.route(`${BACKEND}/search/colbert`, (route) =>
+    route.fulfill({ json: [] }),
+  );
   await gotoHydrated(page, '/');
   const input = page.getByRole('combobox', { name: 'Smart search' });
   await input.fill('treas');
@@ -29,10 +32,13 @@ test('popular searches power the homepage and keyboard/mouse autocomplete withou
   await expect(
     page.getByRole('listbox', { name: 'Popular search suggestions' }),
   ).toBeHidden();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/query=treasure(?:%20|\+)generators/);
+  await input.focus();
   await input.fill('mono white');
   await page.getByRole('option', { name: 'mono white removal' }).click();
   await expect(input).toHaveValue('mono white removal');
+  await expect(page).toHaveURL(/query=mono(?:%20|\+)white(?:%20|\+)removal/);
+  await input.focus();
   await input.fill('artif');
   await input.press('Escape');
   await expect(
@@ -43,14 +49,6 @@ test('popular searches power the homepage and keyboard/mouse autocomplete withou
   await expect(
     page.getByRole('listbox', { name: 'Popular search suggestions' }),
   ).toBeHidden();
-  await page
-    .getByRole('heading', { name: 'Popular Searches', exact: true })
-    .scrollIntoViewIfNeeded();
-  await expect(
-    page
-      .locator('.top-queries-content')
-      .getByText('treasure synergy', { exact: true }),
-  ).toBeVisible();
   expect(loads).toBe(1);
 });
 

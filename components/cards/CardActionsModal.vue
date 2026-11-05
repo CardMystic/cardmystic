@@ -26,6 +26,7 @@ const selectedLabel = computed(() => {
     .join(' ');
 });
 const clipboard = useClipboard();
+const inSearchResults = inject('searchCardDeckMatches', false);
 const actionGroups = computed<CardAction[][]>(() => {
   const data = props.card.card_data;
   const inClipboard = clipboard.has(data.id);
@@ -79,6 +80,7 @@ function act(action: CardAction) {
           <p v-if="selectedLabel" class="mt-2 text-sm text-center">
             {{ selectedLabel }}
           </p>
+          <CardTagEditor :oracle-id="card.card_data.oracle_id" />
         </div>
         <div class="min-w-0 space-y-4">
           <div
@@ -102,6 +104,10 @@ function act(action: CardAction) {
               @click="act(action)"
             />
           </div>
+          <CardDeckMatches
+            v-if="modelOpen && inSearchResults"
+            :oracle-id="card.card_data.oracle_id"
+          />
         </div>
       </div>
     </template>

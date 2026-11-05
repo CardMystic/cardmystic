@@ -213,7 +213,7 @@ export function pageBreadcrumbs(path: string): PageBreadcrumb[] {
       },
       ...(path === '/staff/articles' ? [] : [{ label: 'Edit article' }]),
     ];
-  const deck = /^\/lists\/([^/]+)(?:\/(primer))?$/.exec(path);
+  const deck = /^\/lists\/([^/]+)(?:\/(primer|history))?$/.exec(path);
   if (deck && isResourceId(deck[1]!))
     return [
       { label: 'Decklists', to: '/explore/decklists' },
@@ -221,7 +221,9 @@ export function pageBreadcrumbs(path: string): PageBreadcrumb[] {
         label: 'Deck details',
         ...(deck[2] ? { to: `/lists/${deck[1]}` } : {}),
       },
-      ...(deck[2] ? [{ label: 'Primer' }] : []),
+      ...(deck[2]
+        ? [{ label: deck[2] === 'history' ? 'History' : 'Primer' }]
+        : []),
     ];
   const article = /^\/articles\/([^/]+)(?:\/(edit))?$/.exec(path);
   if (article && isResourceId(article[1]!))

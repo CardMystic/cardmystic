@@ -86,7 +86,7 @@ export function useMeteredSearchRequest() {
     for (const [name, value] of Object.entries(await access.headers())) {
       headers.set(name, value);
     }
-    // Guests use Normal even when opening an old Enhanced search link.
+    // Guests use Normal even when opening an old Pro search link.
     const body =
       !subject && typeof init?.body === 'string'
         ? JSON.stringify({ ...JSON.parse(init.body), useRerank: false })
@@ -121,11 +121,11 @@ export function useMeteredSearchRequest() {
         modal.value = {
           open: true,
           description:
-            'You have used your available Enhanced searches. Your results are shown in Normal mode. Free allowances reset at midnight UTC.',
+            'You have used your available Pro searches. Your results are shown in Normal mode. Free allowances reset at midnight UTC.',
         };
       } else if (decision.reason === 'enhancement_unavailable') {
         toast.add({
-          title: 'Enhanced search is unavailable',
+          title: 'Pro search is unavailable',
           description:
             'Your results use Normal mode. This search did not use your allowance.',
         });

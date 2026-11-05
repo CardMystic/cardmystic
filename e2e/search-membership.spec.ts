@@ -43,11 +43,12 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
     });
   });
   await gotoHydrated(page, '/memberships');
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await expect(
-    page.getByRole('heading', { name: 'CardMystic Enhanced', exact: true }),
+    page.getByRole('heading', { name: 'CardMystic Pro', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('link', { name: 'Sign in to choose Enhanced' }),
+    page.getByRole('link', { name: 'Sign in to choose CardMystic Pro' }),
   ).toHaveAttribute('href', '/user/login?redirect=/memberships');
   await expect(page.locator('.membership-price')).toContainText('$4.99');
   for (const [name, href] of [
@@ -61,9 +62,46 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
         .getByRole('link', { name, exact: true }),
     ).toHaveAttribute('href', href);
   }
-  await expect(page.locator('.membership-features')).toContainText(
-    'Unlimited Enhanced searches',
+  await expect(page.locator('.membership-features')).toHaveText(
+    'Unlimited Pro Searches & Access to All Pro Features (See Below)',
   );
+  const artwork = page.getByRole('img', {
+    name: 'CardMystic Pro',
+    exact: true,
+  });
+  await expect(artwork).toHaveJSProperty('naturalWidth', 448);
+  await expect(artwork).toHaveAttribute('src', '/images/cardmystic-pro.svg');
+  const features = page.getByRole('table', {
+    name: 'Free and CardMystic Pro features',
+  });
+  await expect(
+    features.getByRole('row', { name: /^Pro search / }),
+  ).toContainText('10 per day, plus purchased credits');
+  for (const name of [
+    'Normal searches',
+    'Similar card search',
+    'Deck recommendations',
+    'Highlight cards owned in a collection',
+  ]) {
+    await expect(
+      features
+        .getByRole('row', { name: new RegExp(`^${name} `) })
+        .locator('.text-green-500'),
+    ).toHaveCount(2);
+  }
+  await expect(features).not.toContainText('Unlimited');
+  const rows = features.locator('tbody tr');
+  const firstProRow = (await rows.allTextContents()).findIndex((text) =>
+    text.includes('Not included'),
+  );
+  expect(firstProRow).toBeGreaterThan(1);
+  for (let index = firstProRow; index < (await rows.count()); index++) {
+    await expect(rows.nth(index).getByRole('cell').first()).toHaveText(
+      'Not included',
+    );
+    await expect(rows.nth(index).locator('.text-red-500')).toHaveCount(1);
+    await expect(rows.nth(index).locator('.text-green-500')).toHaveCount(1);
+  }
   await expect(page.locator('.membership-plan')).not.toContainText(
     '30% cheaper',
   );
@@ -74,7 +112,7 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
     page.getByText('Compare all features', { exact: true }),
   ).toHaveCount(0);
   await expect(page.locator('.membership-current')).toContainText(
-    /Current Search Membership: Free\s*\|\s*Sign in for enhanced searches/,
+    /Current Search Membership: Free\s*\|\s*Sign in for Pro searches/,
   );
   await expect(
     page.getByRole('button', { name: 'Refresh search membership' }),
@@ -83,7 +121,7 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
     page.locator('.membership-plan-action + .search-evidence'),
   ).toBeVisible();
   await expect(
-    page.getByRole('link', { name: 'Buy 500 Enhanced searches for $4.99' }),
+    page.getByRole('link', { name: 'Buy 500 Pro searches for $4.99' }),
   ).toHaveAttribute('href', '/user/login?redirect=/memberships');
   await page.screenshot({
     path: '.cache/membership-desktop.png',
@@ -95,11 +133,18 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
     path: '.cache/membership-mobile.png',
     fullPage: true,
   });
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await page.screenshot({
+    path: '.cache/membership-mobile-dark.png',
+    fullPage: true,
+  });
   await gotoHydrated(page, '/search/all/smart?query=draw+cards&useRerank=true');
   const mode = page.getByRole('combobox', { name: 'Search mode', exact: true });
   await expect(mode).toContainText('Normal');
+  await expect(page.getByText('Search mode', { exact: true })).toHaveCount(0);
   const link = page.getByRole('link', {
-    name: 'Sign in for enhanced searches',
+    name: 'Sign in for Pro searches',
     exact: true,
   });
   await expect(link).toBeVisible();
@@ -109,7 +154,7 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
   ).not.toBeVisible();
   await mode.click();
   await expect(
-    page.getByRole('option', { name: 'Enhanced', exact: true }),
+    page.getByRole('option', { name: 'Pro', exact: true }),
   ).toHaveAttribute('aria-disabled', 'true');
   await page.keyboard.press('Escape');
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
@@ -153,7 +198,7 @@ for (const action of ['close', 'upgrade'] as const) {
       await modal.getByRole('link', { name: 'Upgrade', exact: true }).click();
       await expect(page).toHaveURL(/\/memberships$/);
       await expect(
-        page.getByRole('heading', { name: 'CardMystic Enhanced', exact: true }),
+        page.getByRole('heading', { name: 'CardMystic Pro', exact: true }),
       ).toBeVisible();
     } else {
       await modal
@@ -267,7 +312,7 @@ test('signed-in checkout uses the gateway token, rejects unsafe redirects, and o
     /Current Search Membership: Free\s*\|\s*10 left today/,
   );
   const checkout = page.getByRole('button', {
-    name: 'Start Enhanced free month',
+    name: 'Start CardMystic Pro free month',
   });
   await checkout.click();
   await expect(page.getByRole('alert')).toContainText(
@@ -278,11 +323,8 @@ test('signed-in checkout uses the gateway token, rejects unsafe redirects, and o
   await expect(page).toHaveURL('https://checkout.stripe.com/c/pay/test');
   subscribed = true;
   await gotoHydrated(page, '/memberships?billing=success');
-  await expect(page.locator('.membership-current')).toContainText(
-    /Current Search Membership: Enhanced\s*\|\s*Unlimited Enhanced searches\s*\|\s*42 purchased/,
-  );
-  await expect(page.locator('.membership-current')).not.toContainText(
-    'left this month',
+  await expect(page.locator('.membership-current')).toHaveText(
+    'Current Search Membership: CardMystic Pro',
   );
 });
 
@@ -299,4 +341,49 @@ test('free search status shows the available count without repeating the mode', 
     `[id="${await mode.getAttribute('aria-describedby')}"]`,
   );
   await expect(description).toHaveText('10 Left | Memberships');
+});
+
+test('complimentary Pro shows unlimited access without offering another subscription', async ({
+  page,
+}) => {
+  await mockSignedInUser(page);
+  await page.route(`${BACKEND}/search-access`, (route) =>
+    route.fulfill({
+      json: {
+        ...access,
+        tier: 'enhanced',
+        enhancedRemaining: null,
+        resetsAt: null,
+      },
+    }),
+  );
+  await page.route(`${BACKEND}/billing/status`, (route) =>
+    route.fulfill({
+      json: {
+        enabled: true,
+        status: 'complimentary',
+        tier: 'enhanced',
+        canManage: false,
+        hasSubscription: false,
+        trialEligible: false,
+        enhancedAvailable: true,
+        enhancedTopUpAvailable: true,
+      },
+    }),
+  );
+  await gotoHydrated(page, '/memberships');
+  await expect(page.locator('.membership-current')).toHaveText(
+    'Current Search Membership: CardMystic Pro',
+  );
+  await expect(
+    page.getByText(
+      'Your account has permanent complimentary CardMystic Pro access.',
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator('.membership-features + p')).toHaveText(
+    'Your current plan · Complimentary access',
+  );
+  await expect(page.getByText('Current plan', { exact: true })).toHaveCount(0);
+  await expect(page.locator('.membership-plan-action')).toHaveCount(0);
 });

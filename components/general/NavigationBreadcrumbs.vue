@@ -13,6 +13,11 @@ import {
 
 const route = useRoute();
 const router = useRouter();
+const deckId = computed(
+  () =>
+    /^\/lists\/([^/]+)(?:\/(?:primer|history))?$/.exec(route.path)?.[1] ?? null,
+);
+const { decklist: ownedDeck } = useOwnedDecklist(deckId);
 const { entries, labels } = useNavigationTrail();
 const { data: catalog } =
   useNuxtData<CardCollectionCatalog>('card-collections');
@@ -28,6 +33,17 @@ const items = computed<BreadcrumbItem[]>(() => {
   const home = { label: 'Home', to: '/', active: false };
   if (!destination) {
     const pages = pageBreadcrumbs(route.path);
+    if (ownedDeck.value && deckId.value && pages.length >= 2) {
+      const collection = ownedDeck.value.kind === 'collection';
+      pages[0] = {
+        label: collection ? 'My Collections' : 'My Decklists',
+        to: collection ? '/lists?view=collections' : '/lists',
+      };
+      pages[1] = {
+        ...pages[1],
+        label: ownedDeck.value.name || (collection ? 'Collection' : 'Deck'),
+      };
+    }
     return pages.length
       ? [
           home,

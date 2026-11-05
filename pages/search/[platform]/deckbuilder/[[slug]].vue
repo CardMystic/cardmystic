@@ -13,6 +13,15 @@
         class="mt-6 max-w-5xl"
       />
 
+      <UButton
+        v-if="deckbuilder.selectedDeckId.value"
+        :to="`/lists/${deckbuilder.selectedDeckId.value}`"
+        label="Go to deck"
+        icon="i-lucide-arrow-up-right"
+        variant="outline"
+        class="mt-3"
+      />
+
       <!-- Not Found Warning -->
       <UAlert
         v-if="notFound && notFound.length"

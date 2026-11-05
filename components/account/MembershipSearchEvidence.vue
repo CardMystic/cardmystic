@@ -6,6 +6,7 @@ const modes = benchmark.modes
   .filter((mode) => mode.id !== 'pro')
   .map((mode) => ({
     ...mode,
+    name: mode.id === 'enhanced' ? 'Pro' : mode.name,
     score:
       mode.subjectiveNdcgAt10 * benchmark.suiteWeights.subjective +
       mode.technicalNdcgAt10 * benchmark.suiteWeights.technical,
@@ -23,7 +24,7 @@ const displayScore = (score: number) =>
     <div class="evidence-intro">
       <h3 :id="headingId">Better matches near the top</h3>
       <p class="evidence-lift" data-mode="enhanced">
-        Enhanced:
+        Pro:
         <strong
           >{{ relativeLift(enhanced.score, normal.score) }}% higher ranking
           score</strong
@@ -87,7 +88,7 @@ const displayScore = (score: number) =>
   max-width: 44ch;
 }
 .evidence-lift strong {
-  color: #6d28d9;
+  color: var(--pro-accent);
 }
 .evidence-scope {
   color: var(--ui-text-muted);
@@ -115,7 +116,7 @@ const displayScore = (score: number) =>
   position: relative;
 }
 .evidence-row[data-mode='enhanced'] {
-  --bar-color: #6d28d9;
+  --bar-color: var(--pro-accent);
 }
 .evidence-row dt {
   font-weight: 600;
@@ -149,14 +150,11 @@ const displayScore = (score: number) =>
   font-size: 0.75rem;
   color: var(--ui-text-muted);
 }
-:global(.dark .evidence-lift strong) {
-  color: #c1a3ff;
-}
 :global(.dark .evidence-row) {
   --bar-color: #94a3b8;
 }
 :global(.dark .evidence-row[data-mode='enhanced']) {
-  --bar-color: #c1a3ff;
+  --bar-color: var(--pro-accent);
 }
 @media (min-width: 768px) {
   .search-evidence {

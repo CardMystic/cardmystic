@@ -1,5 +1,5 @@
 <template>
-  <div v-if="card" class="preview-root p-4">
+  <div v-if="card" class="preview-root px-4 pb-4">
     <LazyAddToDeckModal
       v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"

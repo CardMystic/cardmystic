@@ -1,13 +1,13 @@
 <template>
-  <div class="flex items-center gap-1 justify-start h-8">
+  <div class="flex items-center gap-2 justify-start min-h-10">
     <UIcon name="i-lucide-layout-dashboard" class="size-4 shrink-0" />
-    <span class="text-sm w-11">View</span>
+    <span class="text-sm w-11 shrink-0">View</span>
     <USelect
       v-model="selectedView"
       :items="viewOptions"
       aria-label="View"
       size="sm"
-      class="cursor-pointer w-32"
+      class="cursor-pointer min-w-0 flex-1"
     />
   </div>
 </template>

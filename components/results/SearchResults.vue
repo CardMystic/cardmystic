@@ -350,6 +350,7 @@
 </template>
 
 <script lang="ts" setup>
+provide('searchCardDeckMatches', true);
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import {
@@ -477,7 +478,7 @@ const view = ref<'grid' | 'text'>('grid');
 const resultsGridClass = computed(() =>
   view.value === 'text'
     ? 'grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-x-4 gap-y-1'
-    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2',
+    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2',
 );
 
 // Grouping state

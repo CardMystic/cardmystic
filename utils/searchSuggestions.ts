@@ -2,7 +2,7 @@
 export function searchSuggestions(
   queries: readonly string[],
   input: string,
-  limit = 8,
+  limit = 20,
 ): string[] {
   const query = input.trim().toLowerCase();
   if (query.length < 2) return [];

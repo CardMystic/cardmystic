@@ -26,6 +26,16 @@
       </UButton>
     </div>
 
+    <UPagination
+      v-if="!error && totalPages > 1"
+      v-model:page="page"
+      :total="totalCount"
+      :items-per-page="pageSize"
+      :sibling-count="1"
+      :ui="{ first: 'hidden', last: 'hidden' }"
+      class="mb-4 justify-start"
+    />
+
     <SearchError
       :error="error"
       v-if="error"

@@ -14,21 +14,23 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
       <h2>What you are buying</h2>
       <p>
         Card information, card images, and Normal search are free to access
-        without an account. Memberships and top-ups pay for Enhanced search,
-        which uses a third-party API to put better matches closer to the top.
-        Our provider charges us for the ranking requests we send to it. Payments
+        without an account. Memberships and top-ups pay for Pro search, which
+        uses a third-party API to put better matches closer to the top. Our
+        provider charges us for the ranking requests we send to it. Payments
         help cover those API costs and the cost of running CardMystic.
       </p>
       <ul>
         <li>
-          <strong>Enhanced membership:</strong> ${{ monthlyPrice }} USD per
-          month for unlimited Enhanced searches while your membership is active.
-          It renews automatically each month until you cancel.
+          <strong>CardMystic Pro membership:</strong> ${{ monthlyPrice }} USD
+          per month for unlimited Pro searches, deck suggestions, and Smart or
+          keyword search within your decks and collections while your membership
+          is active. It renews automatically each month until you cancel.
         </li>
         <li>
-          <strong>Search top-up:</strong> ${{ topUpPrice }} USD for 500 Enhanced
+          <strong>Search top-up:</strong> ${{ topUpPrice }} USD for 500 Pro
           searches. This is a one-time purchase with no subscription required
-          and no automatic top-up purchases.
+          and no automatic top-up purchases. Top-ups do not unlock subscriber
+          tools such as deck suggestions or search within lists.
         </li>
       </ul>
       <p>
@@ -40,7 +42,7 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
     <section>
       <h2>Free month and renewals</h2>
       <p>
-        Eligible accounts receive one free calendar month of Enhanced
+        Eligible accounts receive one free calendar month of CardMystic Pro
         membership. A payment method is required. Checkout shows the exact trial
         end and the recurring price. Unless you cancel before the trial ends,
         your payment method will be charged for the first paid month, then each
@@ -61,10 +63,10 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
         browser to use them.
       </p>
       <p>
-        Enhanced access or top-up credits are normally available within a few
-        minutes after Stripe confirms a successful payment or eligible trial.
-        Returning to CardMystic by itself does not confirm payment. You can
-        check the status and refresh it on the
+        Pro access or top-up credits are normally available within a few minutes
+        after Stripe confirms a successful payment or eligible trial. Returning
+        to CardMystic by itself does not confirm payment. You can check the
+        status and refresh it on the
         <NuxtLink to="/memberships">Membership page</NuxtLink>.
       </p>
       <p>
@@ -78,19 +80,19 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
     <section>
       <h2>How search credits work</h2>
       <p>
-        Signed-in accounts receive 10 free Enhanced searches per day, resetting
-        at midnight UTC. Guests can use Normal search. When you do not have an
-        active Enhanced membership, free daily searches are used before
+        Signed-in accounts receive 10 free Pro searches per day, resetting at
+        midnight UTC. Guests can use Normal search. When you do not have an
+        active CardMystic Pro membership, free daily searches are used before
         purchased credits. Unused top-up credits carry forward; they do not
-        reset each day or month. Active Enhanced members do not spend their
-        top-up credits.
+        reset each day or month. Active Pro members do not spend their top-up
+        credits.
       </p>
       <p>
-        Without an active Enhanced membership, a successful Enhanced search uses
-        one search from your available allowance, unless the results are cached
-        in the browser. Failed searches and searches that fall back to Normal do
-        not spend Enhanced credits. Limits on how quickly you can send requests
-        apply to every plan, including unlimited membership.
+        Without an active CardMystic Pro membership, a successful Pro search
+        uses one search from your available allowance, unless the results are
+        cached in the browser. Failed searches and searches that fall back to
+        Normal do not spend Pro credits. Limits on how quickly you can send
+        requests apply to every plan, including unlimited membership.
       </p>
       <p>
         Credits belong to your account and are for searches on CardMystic. They
@@ -117,7 +119,7 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
       <p>
         Cancel before the next charge to stop the next renewal. A normal
         cancellation takes effect at the end of your current paid period or
-        trial, and Enhanced remains available until that date. There is no
+        trial, and Pro remains available until that date. There is no
         cancellation fee. Afterward, you can still use Normal search, your
         signed-in daily allowance, and any remaining purchased credits.
       </p>
@@ -169,7 +171,7 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
     <section>
       <h2>Access after a refund or payment problem</h2>
       <p>
-        A refunded or disputed membership payment can remove the Enhanced access
+        A refunded or disputed membership payment can remove the Pro access
         provided by that payment. Refunding a membership payment and canceling
         future renewals are separate actions; check your cancellation
         confirmation if you also want to stop future charges.
@@ -182,7 +184,7 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
         them. Contact us if an adjustment looks wrong.
       </p>
       <p>
-        If a renewal payment fails, Enhanced access may stop. You can update the
+        If a renewal payment fails, Pro access may stop. You can update the
         subscription's payment method through the billing portal. Normal search
         remains available.
       </p>

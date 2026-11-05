@@ -62,7 +62,7 @@
             :id="suggestionListId"
             role="listbox"
             aria-label="Popular search suggestions"
-            class="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-default bg-default p-1 shadow-lg"
+            class="absolute z-50 mt-1 w-full max-h-80 overflow-y-auto rounded-md border border-default bg-default p-1 shadow-lg"
           >
             <li
               v-for="(suggestion, index) in suggestions"
@@ -222,6 +222,7 @@ function selectSuggestion(query: string) {
   state.query = query;
   suggestionsDismissed.value = true;
   activeSuggestion.value = -1;
+  void nextTick(() => formRef.value?.submit());
 }
 function onSuggestionKeydown(event: KeyboardEvent) {
   if (event.isComposing) return;

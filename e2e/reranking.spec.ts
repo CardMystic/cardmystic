@@ -143,7 +143,7 @@ test('Smart Search toggles the active ranking and keeps URL state across history
     name: 'Search mode',
     exact: true,
   });
-  await expect(toggle).toContainText('Enhanced');
+  await expect(toggle).toContainText('Pro');
   await expect(
     page.getByText('Unlimited | Memberships', { exact: true }),
   ).toBeVisible();
@@ -166,7 +166,7 @@ test('Smart Search toggles the active ranking and keeps URL state across history
   expect(offUrl.searchParams.get('useRerank')).toBe('false');
 
   await page.goBack();
-  await expect(toggle).toContainText('Enhanced');
+  await expect(toggle).toContainText('Pro');
   await expectRenderedRanking(page, onNames);
   await page.goForward();
   await expect(toggle).toContainText('Normal');
@@ -188,7 +188,7 @@ test('Smart Search toggles the active ranking and keeps URL state across history
   const freshOnResponse = await freshOnResponsePromise;
   expect(freshOnResponse.request().postDataJSON()).toEqual(onPayload);
   await expect(page).toHaveURL(/useRerank=true/);
-  await expect(toggle).toContainText('Enhanced');
+  await expect(toggle).toContainText('Pro');
   await expectRenderedRanking(page, await cardNames(freshOnResponse));
 });
 
@@ -200,7 +200,7 @@ test('turning reranking off before searching carries through subsequent Smart Se
     name: 'Search mode',
     exact: true,
   });
-  await expect(toggle).toContainText('Enhanced');
+  await expect(toggle).toContainText('Pro');
   await toggleSearchMode(page);
   await expect(toggle).toContainText('Normal');
 
@@ -339,7 +339,7 @@ for (const mode of ['smart', 'commander'] as const) {
       await expectRenderedRanking(page, byName(offNames));
 
       await toggleSearchMode(page);
-      await expect(toggle).toContainText('Enhanced');
+      await expect(toggle).toContainText('Pro');
       await openDisplay(page);
       await expect(sort).toContainText('Select sort option');
       await expectRenderedRanking(page, onNames);
@@ -364,9 +364,7 @@ async function toggleSearchMode(page: Page) {
     name: 'Search mode',
     exact: true,
   });
-  const next = (await select.textContent())?.includes('Enhanced')
-    ? 'Normal'
-    : 'Enhanced';
+  const next = (await select.textContent())?.includes('Pro') ? 'Normal' : 'Pro';
   await select.click();
   await page.getByRole('option', { name: next, exact: true }).click();
 }

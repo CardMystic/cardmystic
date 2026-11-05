@@ -3,7 +3,8 @@
     v-if="totalPercent > 0"
     role="img"
     :aria-label="ariaLabel"
-    class="relative flex w-full h-1.5 rounded-full overflow-visible bg-black/10 dark:bg-white/10"
+    class="relative flex w-full h-1.5 overflow-visible bg-black/10 dark:bg-white/10"
+    :class="{ 'rounded-full': !edge }"
   >
     <div
       v-for="segment in visibleSegments"
@@ -11,7 +12,8 @@
       tabindex="0"
       role="group"
       :aria-label="`${CHANNEL_LABELS[segment.key]} ${segment.percent}%`"
-      class="relative h-full first:rounded-l-full last:rounded-r-full group/segment focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      class="relative h-full group/segment focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      :class="{ 'first:rounded-l-full last:rounded-r-full': !edge }"
       :style="{ width: `${segment.percent}%`, backgroundColor: segment.color }"
     >
       <!-- Tooltip: mana icon + percentage. Shown on hover AND keyboard focus. -->
@@ -31,7 +33,7 @@ import { computed } from 'vue';
 import ManaColorIcon from '~/components/general/ManaColorIcon.vue';
 import type { ColorRatios } from '~/models/cardListModel';
 
-const props = defineProps<{ ratios: ColorRatios }>();
+const props = defineProps<{ ratios: ColorRatios; edge?: boolean }>();
 
 // MTG-canonical channel order + swatch color. Swatches roughly match the mana
 // symbol palette so the bar reads at a glance.

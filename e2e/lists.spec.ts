@@ -1,3 +1,4 @@
+import { openDeckAction } from './utils/deckActions';
 import {
   BACKEND,
   reliableFill,
@@ -429,8 +430,8 @@ test.describe('Card lists CRUD', () => {
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
     // Open the Bulk Edit modal.
-    await page.getByRole('button', { name: /bulk edit/i }).click();
-    const modal = page.getByRole('dialog', { name: /bulk edit cards/i });
+    await openDeckAction(page, 'Bulk Edit');
+    const modal = page.getByRole('dialog', { name: /update deck/i });
     await expect(modal).toBeVisible({ timeout: API_TIMEOUT });
 
     // Switch to the Sideboard tab and enter Sol Ring there.
@@ -445,7 +446,7 @@ test.describe('Card lists CRUD', () => {
         resp.request().method() === 'POST',
       { timeout: API_TIMEOUT },
     );
-    await modal.getByRole('button', { name: /update list/i }).click();
+    await modal.getByRole('button', { name: /update deck/i }).click();
     const bulkResp = await bulkCall;
     expect(bulkResp.ok()).toBeTruthy();
 
@@ -480,8 +481,8 @@ test.describe('Card lists CRUD', () => {
     // Textareas pre-populate from current list state and only boards with
     // non-empty textareas are touched; we append our seed lines so existing
     // cards on those boards are preserved.
-    await page.getByRole('button', { name: /bulk edit/i }).click();
-    const modal = page.getByRole('dialog', { name: /bulk edit cards/i });
+    await openDeckAction(page, 'Bulk Edit');
+    const modal = page.getByRole('dialog', { name: /update deck/i });
     await expect(modal).toBeVisible({ timeout: API_TIMEOUT });
 
     const mainboardTextarea = modal.locator('textarea').first();
@@ -503,7 +504,7 @@ test.describe('Card lists CRUD', () => {
         resp.request().method() === 'POST',
       { timeout: API_TIMEOUT },
     );
-    await modal.getByRole('button', { name: /update list/i }).click();
+    await modal.getByRole('button', { name: /update deck/i }).click();
     const bulkResp = await bulkCall;
     expect(bulkResp.ok()).toBeTruthy();
     await expect(modal).toBeHidden({ timeout: API_TIMEOUT });
@@ -795,8 +796,8 @@ test.describe('Card lists CRUD', () => {
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
     // Open the Bulk Edit modal.
-    await page.getByRole('button', { name: /bulk edit/i }).click();
-    const modal = page.getByRole('dialog', { name: /bulk edit cards/i });
+    await openDeckAction(page, 'Bulk Edit');
+    const modal = page.getByRole('dialog', { name: /update deck/i });
     await expect(modal).toBeVisible({ timeout: API_TIMEOUT });
 
     // Mainboard tab is active by default; fill its textarea with a minimal
@@ -811,7 +812,7 @@ test.describe('Card lists CRUD', () => {
       { timeout: API_TIMEOUT },
     );
 
-    await modal.getByRole('button', { name: /update list/i }).click();
+    await modal.getByRole('button', { name: /update deck/i }).click();
     const bulkResp = await bulkEditCall;
     expect(bulkResp.ok()).toBeTruthy();
     const bulkBody = (await bulkResp.json()) as {
