@@ -1,6 +1,22 @@
 <template>
   <div>
     <h2 class="section-title mb-4">Awesome Decklists & Users</h2>
+    <div class="mb-6 flex flex-wrap justify-center gap-3">
+      <UButton
+        to="/explore/decklists"
+        variant="outline"
+        icon="i-lucide-search"
+        class="min-h-11"
+        >Search Decklists</UButton
+      >
+      <UButton
+        to="/explore/users"
+        variant="outline"
+        icon="i-lucide-user-search"
+        class="min-h-11"
+        >Search Users</UButton
+      >
+    </div>
 
     <ClientOnly>
       <!-- Decklists row -->
@@ -16,32 +32,22 @@
       />
       <div
         v-if="isLoadingDecklists"
-        class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 mb-4"
+        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
       >
-        <USkeleton v-for="i in 4" :key="i" class="list-skeleton" />
+        <CardListLinkSkeleton v-for="i in 3" :key="i" />
       </div>
 
       <div
         v-else-if="visibleDecklists.length > 0"
-        class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 mb-4"
+        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
       >
         <CardListLink
           v-for="list in visibleDecklists"
           :key="list.id"
           :list="list"
-          :showDeleteButton="false"
+          :show-settings-button="false"
           :showAuthor="true"
         />
-        <NuxtLink to="/explore/decklists">
-          <UButton
-            color="primary"
-            variant="outline"
-            class="h-full w-full justify-center"
-            icon="i-lucide-search"
-          >
-            Search Decklists
-          </UButton>
-        </NuxtLink>
       </div>
 
       <div v-else-if="!decklistsError" class="empty-state mb-4">
@@ -65,30 +71,20 @@
       />
       <div
         v-if="isLoadingUsers"
-        class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
+        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
       >
-        <USkeleton v-for="i in 4" :key="i" class="user-skeleton" />
+        <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
       </div>
 
       <div
         v-else-if="visibleUsers.length > 0"
-        class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
+        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
       >
         <PublicUserLink
           v-for="profile in visibleUsers"
           :key="profile.id"
           :profile="profile"
         />
-        <NuxtLink to="/explore/users">
-          <UButton
-            color="primary"
-            variant="outline"
-            class="h-full w-full justify-center"
-            icon="i-lucide-user-search"
-          >
-            Search Users
-          </UButton>
-        </NuxtLink>
       </div>
 
       <div v-else-if="!usersError" class="empty-state">
@@ -120,7 +116,7 @@
           v-if="isLoadingPrimers"
           class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4"
         >
-          <USkeleton v-for="i in 2" :key="i" class="primer-skeleton" />
+          <CardListLinkSkeleton v-for="i in 2" :key="i" primer />
         </div>
 
         <div
@@ -136,11 +132,15 @@
       </template>
 
       <template #fallback>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 mb-4">
-          <USkeleton v-for="i in 4" :key="i" class="list-skeleton" />
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
+        >
+          <CardListLinkSkeleton v-for="i in 3" :key="i" />
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
-          <USkeleton v-for="i in 4" :key="i" class="user-skeleton" />
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
+        >
+          <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
         </div>
       </template>
     </ClientOnly>
@@ -195,17 +195,11 @@ const visiblePrimers = computed(() => primers.value.slice(0, 2));
     font-size: 1.5rem
     margin-bottom: 0.75rem
 
-.list-skeleton
-  height: 150px
-  border-radius: 1rem
 
 .user-skeleton
   height: 62px
   border-radius: 0.5rem
 
-.primer-skeleton
-  height: 160px
-  border-radius: 0.5rem
 
 .empty-state
   text-align: center

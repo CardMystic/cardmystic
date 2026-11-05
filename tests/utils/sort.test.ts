@@ -89,6 +89,24 @@ function makeCard(overrides: {
 // sortSearchResults
 // ---------------------------------------------------------------------------
 describe('sortSearchResults', () => {
+  it('sorts card types from planeswalkers and creatures through lands', () => {
+    const cards = [
+      'Basic Land — Island',
+      'Instant',
+      'Artifact Creature — Golem',
+      'Legendary Planeswalker — Jace',
+    ].map((type_line) => makeCard({ type_line }));
+    expect(
+      sortSearchResults(cards, 'type', 'asc')!.map(
+        (card) => card.card_data.type_line,
+      ),
+    ).toEqual([
+      'Legendary Planeswalker — Jace',
+      'Artifact Creature — Golem',
+      'Instant',
+      'Basic Land — Island',
+    ]);
+  });
   it('returns null/undefined as-is', () => {
     expect(sortSearchResults(null, 'name', 'asc')).toBeNull();
     expect(sortSearchResults(undefined, 'name', 'asc')).toBeUndefined();
@@ -575,4 +593,35 @@ it('Smart Score uses Jev scores when present and ColBERT otherwise', () => {
       'desc',
     )?.map((card) => card.card_name),
   ).toEqual(['ColBERT best', 'Jev best']);
+});
+
+describe('personal tag groups', () => {
+  it('includes multi-tag cards in each group and keeps untagged cards visible', () => {
+    const a = makeCard({ name: 'One' }),
+      b = makeCard({ name: 'Two' });
+    const labels = {
+      [a.card_data.oracle_id]: {
+        tags: ['Removal', 'Finisher', 'Removal'],
+        roles: ['Removal'],
+        themes: [],
+        sets: ['Alpha', 'Beta'],
+      },
+    };
+    const groups = groupAndSortCards(
+      [a, b],
+      'tags',
+      'name',
+      'asc',
+      { [a.card_data.oracle_id]: 2 },
+      undefined,
+      false,
+      labels,
+    )!;
+    expect(groups.map((group) => group.label)).toEqual([
+      'Finisher (2)',
+      'Removal (2)',
+      'Untagged (1)',
+    ]);
+    expect(groups[0].cards).toEqual([a]);
+  });
 });

@@ -56,13 +56,13 @@
 
       <div
         v-if="decklists.length > 0"
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
       >
         <CardListLink
           v-for="list in decklists"
           :key="list.id"
           :list="list"
-          :showDeleteButton="false"
+          :show-settings-button="false"
           :showAuthor="true"
         />
       </div>

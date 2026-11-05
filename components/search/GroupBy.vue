@@ -1,14 +1,14 @@
 <template>
-  <div class="flex items-center gap-1 justify-start h-8">
+  <div class="flex items-center gap-2 justify-start min-h-10">
     <UIcon name="i-lucide-group" class="size-4 shrink-0" />
-    <span class="text-sm w-11">Group</span>
+    <span class="text-sm w-11 shrink-0">Group</span>
     <USelect
       v-model="selectedGroupBy"
       :items="groupByOptions"
       aria-label="Search grouping"
       placeholder="None"
       size="sm"
-      class="cursor-pointer w-32"
+      class="cursor-pointer min-w-0 flex-1"
     />
     <UButton
       v-if="selectedGroupBy"

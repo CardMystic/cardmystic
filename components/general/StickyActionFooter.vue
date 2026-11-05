@@ -2,7 +2,11 @@
   <Teleport to="body">
     <div v-if="show && !nearPageBottom" class="sticky-footer-wrap">
       <div class="sticky-footer-shell" :class="shellLayoutClass">
-        <div class="max-w-[1900px] flex justify-center items-center gap-8">
+        <slot v-if="slots.default" />
+        <div
+          v-else
+          class="max-w-[1900px] flex justify-center items-center gap-8"
+        >
           <div v-if="hasLeftSlot" class="flex grow justify-end">
             <slot name="left" />
           </div>
@@ -74,6 +78,12 @@ onUnmounted(() => {
   z-index: 90;
   pointer-events: none;
   padding: 0;
+}
+
+/* Dialogs mark background portals inert; do not cover them with purchase controls. */
+.sticky-footer-wrap[aria-hidden='true'] {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .sticky-footer-shell {

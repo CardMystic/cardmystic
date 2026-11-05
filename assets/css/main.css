@@ -37,11 +37,19 @@
 :root {
   --ui-primary: #8f6edf;
   --ui-secondary: #383d7a;
+  --pro-accent: #946111;
+  --pro-bg: #fffaf0;
+  --pro-border: #e7cd8d;
+  --pro-button: #edc364;
+  --pro-button-text: #2b210d;
 }
 
 .dark {
   --ui-primary: #8f6edf;
   --ui-secondary: #383d7a;
+  --pro-accent: #f2cc72;
+  --pro-bg: #292418;
+  --pro-border: #69572e;
 }
 
 /* Ensure proper layout for sticky footer */

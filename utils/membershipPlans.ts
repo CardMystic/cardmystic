@@ -1,12 +1,12 @@
 export const membershipTierLabels = {
   normal: 'Free',
-  enhanced: 'Enhanced',
+  enhanced: 'CardMystic Pro',
 } as const;
 
 export const membershipPlans = [
   {
     tier: 'enhanced' as const,
-    name: 'Enhanced',
+    name: 'CardMystic Pro',
     price: 4.99,
     available: 'enhancedAvailable' as const,
   },

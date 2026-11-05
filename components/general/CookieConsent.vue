@@ -2,7 +2,7 @@
   <section
     v-if="ready && (!consent || settingsOpen)"
     aria-label="Cookie preferences"
-    class="fixed bottom-3 inset-x-3 z-[100] mx-auto max-w-xl rounded-xl border border-default bg-elevated p-3 shadow-xl max-h-[85vh] overflow-y-auto"
+    class="fixed bottom-3 inset-x-3 z-[100] mx-auto max-w-xl rounded-xl border border-default bg-elevated p-3 shadow-xl max-h-[85vh] overflow-y-auto aria-hidden:invisible aria-hidden:pointer-events-none"
   >
     <h2 class="text-lg font-semibold">Your privacy choices</h2>
     <p class="mt-2 text-sm text-muted">
@@ -60,7 +60,7 @@
   <p
     v-if="storageError"
     role="alert"
-    class="fixed bottom-3 inset-x-3 z-[101] mx-auto max-w-xl rounded-lg bg-elevated p-3 shadow"
+    class="fixed bottom-3 inset-x-3 z-[101] mx-auto max-w-xl rounded-lg bg-elevated p-3 shadow aria-hidden:invisible aria-hidden:pointer-events-none"
   >
     Your choice applies to this visit, but could not be saved in this browser.
   </p>

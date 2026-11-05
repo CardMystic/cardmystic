@@ -26,6 +26,16 @@
       </UButton>
     </div>
 
+    <UPagination
+      v-if="!error && totalPages > 1"
+      v-model:page="page"
+      :total="totalCount"
+      :items-per-page="pageSize"
+      :sibling-count="1"
+      :ui="{ first: 'hidden', last: 'hidden' }"
+      class="mb-4 justify-start"
+    />
+
     <SearchError
       :error="error"
       v-if="error"
@@ -36,20 +46,20 @@
 
     <div
       v-else-if="isLoading"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
     >
-      <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
+      <CardListLinkSkeleton v-for="i in 6" :key="i" />
     </div>
 
     <div
       v-else-if="decklists.length > 0"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
     >
       <CardListLink
         v-for="list in decklists"
         :key="list.id"
         :list="list"
-        :showDeleteButton="false"
+        :show-settings-button="false"
         :showAuthor="true"
       />
     </div>
@@ -82,19 +92,19 @@
       <ClientOnly>
         <div
           v-if="isLoadingFeatured"
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
         >
-          <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
+          <CardListLinkSkeleton v-for="i in 6" :key="i" />
         </div>
         <div
           v-else-if="featuredDecklists.length > 0"
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
         >
           <CardListLink
             v-for="list in featuredDecklists"
             :key="list.id"
             :list="list"
-            :showDeleteButton="false"
+            :show-settings-button="false"
             :showAuthor="true"
           />
         </div>
@@ -103,10 +113,8 @@
           <p>Enter a keyword above to search public decklists.</p>
         </div>
         <template #fallback>
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
-          >
-            <USkeleton v-for="i in 6" :key="i" class="list-skeleton" />
+          <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
+            <CardListLinkSkeleton v-for="i in 6" :key="i" />
           </div>
         </template>
       </ClientOnly>
@@ -115,6 +123,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ExploreDecklistsPage' });
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
@@ -182,9 +191,6 @@ watch(debouncedQuery, (value) => {
 </script>
 
 <style scoped lang="sass">
-.list-skeleton
-  height: 130px
-  border-radius: 0.5rem
 
 .empty-state
   text-align: center

@@ -16,7 +16,7 @@ const mode = computed(() =>
 const allowance = computed(() => {
   if (mode.value === 'normal') return 'Unlimited';
   if (error.value) return 'Search allowance could not be checked.';
-  if (pending.value) return 'Checking remaining searches…';
+  if (pending.value || !ready.value) return 'Checking...';
   if (!access.value?.enabled) return 'Search allowance is not enabled.';
   if (access.value.tier === 'enhanced') return 'Unlimited';
   const remaining = access.value.enhancedRemaining;
@@ -42,13 +42,12 @@ function select(value: unknown) {
   <div
     class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1 sm:flex sm:flex-wrap"
   >
-    <label :for="id" class="col-span-2 text-sm font-medium">Search mode</label>
     <USelect
       :id="id"
       :model-value="mode"
       :items="[
         { label: 'Normal', value: 'normal' },
-        { label: 'Enhanced', value: 'enhanced', disabled: !signedIn },
+        { label: 'Pro', value: 'enhanced', disabled: !signedIn },
       ]"
       :aria-describedby="`${id}-description`"
       aria-label="Search mode"
@@ -68,9 +67,10 @@ function select(value: unknown) {
         :to="{ path: '/user/login', query: { redirect: route.fullPath } }"
         class="underline underline-offset-2"
         >Sign in for<br class="sm:hidden" />
-        enhanced searches</NuxtLink
+        Pro searches</NuxtLink
       >
-      <template v-else-if="mounted">
+      <template v-else-if="!mounted || pending || !ready">Checking...</template>
+      <template v-else>
         {{ allowance }}
         <button
           v-if="error && mode === 'enhanced'"
@@ -87,21 +87,15 @@ function select(value: unknown) {
           >
         </template>
       </template>
-      <template v-else>Checking remaining searches…</template>
     </span>
   </div>
 </template>
 
 <style scoped>
 :deep(.search-mode[data-mode='enhanced']) {
-  color: #65419b;
+  color: var(--pro-accent);
   font-weight: 600;
-  background-color: color-mix(in srgb, #c1a3ff 10%, var(--ui-bg));
-  box-shadow:
-    inset 0 0 0 1px #c1a3ff,
-    0 0 16px #c1a3ff3d;
-}
-:global(.dark .search-mode[data-mode='enhanced']) {
-  color: #c1a3ff;
+  background-color: var(--pro-bg);
+  box-shadow: inset 0 0 0 1px var(--pro-border);
 }
 </style>

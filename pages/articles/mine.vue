@@ -36,6 +36,14 @@
     <ClientOnly>
       <!-- My Articles view -->
       <template v-if="view === 'mine'">
+        <UPagination
+          v-if="mineTotalPages > 1"
+          v-model:page="minePage"
+          :total="mineTotalCount"
+          :items-per-page="pageSize"
+          class="mb-4 justify-start"
+          aria-label="Article pages top"
+        />
         <div
           v-if="isLoadingMine"
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
@@ -79,6 +87,14 @@
 
       <!-- Liked Articles view -->
       <template v-else>
+        <UPagination
+          v-if="likedTotalPages > 1"
+          v-model:page="likedPage"
+          :total="likedTotalCount"
+          :items-per-page="pageSize"
+          class="mb-4 justify-start"
+          aria-label="Article pages top"
+        />
         <div
           v-if="isLoadingLiked"
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"

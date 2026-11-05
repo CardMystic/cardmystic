@@ -5,7 +5,7 @@ const { userId } = useUserProfile();
 useSeoMeta({
   title: 'Memberships | CardMystic',
   description:
-    'Get CardMystic Enhanced for $4.99/month with unlimited Enhanced searches, or manage your membership and search top-ups.',
+    'Get CardMystic Pro for $4.99/month with unlimited Pro searches, deck suggestions and search within your decks and collections.',
 });
 </script>
 

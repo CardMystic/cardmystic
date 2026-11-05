@@ -14,14 +14,23 @@ import {
 
 export const DECK_PREFERENCES_STORAGE_PREFIX = 'cm.deck-preferences.v1:';
 
-export function useDeckPreferences(deckId: MaybeRefOrGetter<string>) {
+export function useDeckPreferences(
+  deckId: MaybeRefOrGetter<string>,
+  collection: MaybeRefOrGetter<boolean> = false,
+) {
+  const defaults = computed<DeckPreferences>(() => ({
+    ...defaultDeckPreferences,
+    ...(toValue(collection)
+      ? ({ deck_view: 'grid', deck_group_by: null } as const)
+      : {}),
+  }));
   const id = computed(() => toValue(deckId));
-  const preferences = ref<DeckPreferences>({ ...defaultDeckPreferences });
+  const preferences = ref<DeckPreferences>({ ...defaults.value });
   const isLoading = ref(true);
   const error = ref<string | null>(null);
 
   function restorePreferences() {
-    preferences.value = { ...defaultDeckPreferences };
+    preferences.value = { ...defaults.value };
     error.value = null;
     if (isLoading.value || !id.value) return;
 
@@ -57,7 +66,7 @@ export function useDeckPreferences(deckId: MaybeRefOrGetter<string>) {
     isLoading.value = false;
     restorePreferences();
   });
-  watch(id, restorePreferences, { flush: 'sync' });
+  watch([id, () => toValue(collection)], restorePreferences, { flush: 'sync' });
 
   function updatePreferences(patch: Partial<DeckPreferences>) {
     if (isLoading.value || !id.value) return;
@@ -67,7 +76,7 @@ export function useDeckPreferences(deckId: MaybeRefOrGetter<string>) {
     };
     try {
       const key = DECK_PREFERENCES_STORAGE_PREFIX + id.value;
-      const isDefault = Object.entries(defaultDeckPreferences).every(
+      const isDefault = Object.entries(defaults.value).every(
         ([setting, value]) =>
           preferences.value[setting as keyof DeckPreferences] === value,
       );

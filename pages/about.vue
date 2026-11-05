@@ -1,66 +1,60 @@
 <template>
-  <UContainer class="flex items-center flex-col py-8 w-full max-w-200">
-    <!-- What is CardMystic -->
-    <div
-      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent"
-    >
-      <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
-        🔮 What is <span class="text-primary">CardMystic</span>?
-      </h2>
-      <p class="text-base md:text-lg leading-relaxed">
+  <article class="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    <header class="mb-10">
+      <img
+        src="/wizard_black.svg"
+        alt="CardMystic logo"
+        width="96"
+        height="96"
+        class="mb-6 size-24 dark:hidden"
+      />
+      <img
+        src="/wizard.svg"
+        alt="CardMystic logo"
+        width="96"
+        height="96"
+        class="mb-6 hidden size-24 dark:block"
+      />
+      <h1 class="mb-4 text-3xl font-bold sm:text-4xl">What is CardMystic?</h1>
+      <p class="text-base leading-8 sm:text-lg">
         CardMystic is a powerful Open Source Smart Search engine for Magic: The
         Gathering cards. We trained custom models on MTG data to provide the
         best possible search results. We are dedicated to providing only the
         best tools for the amazing MTG community!
       </p>
-    </div>
+    </header>
 
-    <!-- Why CardMystic -->
-    <div
-      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent"
-    >
-      <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
-        🤔 Why <span class="text-primary">CardMystic</span>?
-      </h2>
-      <p class="text-base md:text-lg leading-relaxed">
+    <section class="mb-10">
+      <h2 class="mb-4 text-2xl font-semibold">Why CardMystic?</h2>
+      <p class="mb-4 text-base leading-8 sm:text-lg">
         Magic: The Gathering is complex and intricate, but finding cards
         shouldn't be! Our developers decided that traditional keyword search
         engines fall short.
       </p>
-      <p class="text-base md:text-lg leading-relaxed">
+      <p class="text-base leading-8 sm:text-lg">
         CardMystic makes card discovery effortless with semantic search. Just
         describe what you're looking for and let CardMystic handle the rest!
       </p>
-    </div>
+    </section>
 
-    <!-- What Sets Us Apart -->
-    <div
-      class="mb-6 w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent"
-    >
-      <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
-        ⭐ What Sets Us Apart
-      </h2>
-      <p class="text-base md:text-lg leading-relaxed">
+    <section class="mb-10">
+      <h2 class="mb-4 text-2xl font-semibold">What Sets Us Apart</h2>
+      <p class="text-base leading-8 sm:text-lg">
         Unlike similar tools, we are NOT a generic AI wrapper. Our team has
         meticulously trained custom semantic search models specifically on
         Magic: The Gathering data to ensure the most accurate and relevant
         search results possible.
       </p>
-    </div>
+    </section>
 
-    <!-- Contact Us -->
-    <div
-      class="w-full p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent"
-    >
-      <h2 class="text-2xl md:text-3xl font-bold mb-4 text-primary">
-        💬 Contact Us
-      </h2>
-      <p class="text-base md:text-lg leading-relaxed">
+    <section>
+      <h2 class="mb-4 text-2xl font-semibold">Contact Us</h2>
+      <p class="mb-4 text-base leading-8 sm:text-lg">
         Have questions, feedback, or ideas for CardMystic? We'd love to hear
         from you!
       </p>
-      <p class="mt-4 text-base md:text-lg leading-relaxed">
-        👾 Discord:
+      <p class="text-base leading-8 sm:text-lg">
+        Discord:
         <NuxtLink
           to="https://discord.gg/Qhcg87q88r"
           target="_blank"
@@ -69,16 +63,16 @@
           Join our server</NuxtLink
         >
       </p>
-      <p class="text-base md:text-lg leading-relaxed">
-        📧 Email:
+      <p class="text-base leading-8 sm:text-lg">
+        Email:
         <a
           href="mailto:thecardmystic@gmail.com"
           class="text-primary hover:underline font-semibold"
           >thecardmystic@gmail.com</a
         >
       </p>
-    </div>
-  </UContainer>
+    </section>
+  </article>
 </template>
 
 <script setup lang="ts">

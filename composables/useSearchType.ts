@@ -9,7 +9,8 @@ type SearchType =
   | 'recommend'
   | 'popular-cards'
   | 'popular-commanders'
-  | 'popular-by-commander';
+  | 'popular-by-commander'
+  | 'popular-by-card';
 
 const searchType = ref<SearchType>('smart');
 
@@ -22,6 +23,7 @@ const storageKeys: Record<SearchType, string> = {
   'popular-cards': 'popular_cards_search_query',
   'popular-commanders': 'popular_commanders_search_query',
   'popular-by-commander': 'popular_by_commander_search_query',
+  'popular-by-card': 'popular_by_card_search_query',
 };
 
 /** Map search type to its sub-path segment under /search/[platform]/... */
@@ -34,6 +36,7 @@ const searchTypeSegments: Record<SearchType, string> = {
   'popular-cards': 'popular-cards',
   'popular-commanders': 'popular-commanders',
   'popular-by-commander': 'popular-by-commander',
+  'popular-by-card': 'popular-by-card',
 };
 
 const requiredFields: Record<SearchType, string[]> = {
@@ -45,6 +48,7 @@ const requiredFields: Record<SearchType, string[]> = {
   'popular-cards': ['query', 'filters'],
   'popular-commanders': ['query', 'filters'],
   'popular-by-commander': ['commander'],
+  'popular-by-card': ['card_name'],
 };
 
 /** Build the path for a given search type and platform. */

@@ -111,6 +111,8 @@ export function useCardNameToOracleId(enabled?: MaybeRefOrGetter<boolean>) {
 }
 
 export interface PartnerCommanders {
+  friendsForever?: string[];
+  partnerWith?: Record<string, string>;
   partner: string[];
   chooseABackground: string[];
   background: string[];

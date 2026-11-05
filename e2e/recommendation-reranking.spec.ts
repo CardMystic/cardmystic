@@ -10,6 +10,10 @@ for (const [path, endpoint] of [
   ['/popular-cards/all?query=card+draw', '/deck-stats/top-cards'],
   ['/popular-commanders/all?query=card+draw', '/deck-stats/top-commanders'],
   [
+    '/popular-by-card/all?card_name=Sol+Ring&query=card+draw',
+    '/deck-stats/popular-commanders-for-card',
+  ],
+  [
     '/popular-by-commander/all?commander=Kaalia+of+the+Vast&query=card+draw',
     '/deck-stats/popular-by-commander',
   ],
@@ -64,7 +68,7 @@ for (const [path, endpoint] of [
       name: 'Search mode',
       exact: true,
     });
-    await expect(toggle).toContainText('Enhanced');
+    await expect(toggle).toContainText('Pro');
     await expect.poll(() => requests.at(-1)?.useRerank).toBe(true);
     await toggle.click();
     await page.getByRole('option', { name: 'Normal', exact: true }).click();
@@ -75,8 +79,8 @@ for (const [path, endpoint] of [
     await expect(toggle).toContainText('Normal');
     await expect(page).toHaveURL(/useRerank=false/);
     await toggle.click();
-    await page.getByRole('option', { name: 'Enhanced', exact: true }).click();
-    await expect(toggle).toContainText('Enhanced');
+    await page.getByRole('option', { name: 'Pro', exact: true }).click();
+    await expect(toggle).toContainText('Pro');
     // A cached on-mode response can be reused without another request.
     await expect(page).toHaveURL(/useRerank=true/);
     expect(

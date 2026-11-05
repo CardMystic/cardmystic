@@ -1,3 +1,4 @@
+import { openDeckAction } from './utils/deckActions';
 import {
   BACKEND,
   reliableFill,
@@ -204,12 +205,17 @@ test.describe('Card lists CRUD', () => {
 
     // Open the card options modal on the first card and pick "Add to Deck".
     await page
-      .getByRole('button', { name: /Options for/i })
+      .getByTestId('search-results-grid')
+      .getByRole('button', { name: /^Options for/i })
       .first()
-      .click({ force: true });
-    await page
-      .getByRole('button', { name: /add to deck/i })
-      .first()
+      .click();
+    const cardActions = page.getByRole('dialog', {
+      name: FILLER_CARD_NAME,
+      exact: true,
+    });
+    await expect(cardActions).toBeVisible();
+    await cardActions
+      .getByRole('button', { name: 'Add to Deck', exact: true })
       .click();
 
     // The AddToDeckModal opens. Our newly-created list should appear as a
@@ -429,8 +435,8 @@ test.describe('Card lists CRUD', () => {
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
     // Open the Bulk Edit modal.
-    await page.getByRole('button', { name: /bulk edit/i }).click();
-    const modal = page.getByRole('dialog', { name: /bulk edit cards/i });
+    await openDeckAction(page, 'Bulk Edit');
+    const modal = page.getByRole('dialog', { name: 'Bulk Edit', exact: true });
     await expect(modal).toBeVisible({ timeout: API_TIMEOUT });
 
     // Switch to the Sideboard tab and enter Sol Ring there.
@@ -445,7 +451,7 @@ test.describe('Card lists CRUD', () => {
         resp.request().method() === 'POST',
       { timeout: API_TIMEOUT },
     );
-    await modal.getByRole('button', { name: /update list/i }).click();
+    await modal.getByRole('button', { name: 'Bulk Edit', exact: true }).click();
     const bulkResp = await bulkCall;
     expect(bulkResp.ok()).toBeTruthy();
 
@@ -480,8 +486,8 @@ test.describe('Card lists CRUD', () => {
     // Textareas pre-populate from current list state and only boards with
     // non-empty textareas are touched; we append our seed lines so existing
     // cards on those boards are preserved.
-    await page.getByRole('button', { name: /bulk edit/i }).click();
-    const modal = page.getByRole('dialog', { name: /bulk edit cards/i });
+    await openDeckAction(page, 'Bulk Edit');
+    const modal = page.getByRole('dialog', { name: 'Bulk Edit', exact: true });
     await expect(modal).toBeVisible({ timeout: API_TIMEOUT });
 
     const mainboardTextarea = modal.locator('textarea').first();
@@ -503,7 +509,7 @@ test.describe('Card lists CRUD', () => {
         resp.request().method() === 'POST',
       { timeout: API_TIMEOUT },
     );
-    await modal.getByRole('button', { name: /update list/i }).click();
+    await modal.getByRole('button', { name: 'Bulk Edit', exact: true }).click();
     const bulkResp = await bulkCall;
     expect(bulkResp.ok()).toBeTruthy();
     await expect(modal).toBeHidden({ timeout: API_TIMEOUT });
@@ -795,8 +801,8 @@ test.describe('Card lists CRUD', () => {
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
     // Open the Bulk Edit modal.
-    await page.getByRole('button', { name: /bulk edit/i }).click();
-    const modal = page.getByRole('dialog', { name: /bulk edit cards/i });
+    await openDeckAction(page, 'Bulk Edit');
+    const modal = page.getByRole('dialog', { name: 'Bulk Edit', exact: true });
     await expect(modal).toBeVisible({ timeout: API_TIMEOUT });
 
     // Mainboard tab is active by default; fill its textarea with a minimal
@@ -811,7 +817,7 @@ test.describe('Card lists CRUD', () => {
       { timeout: API_TIMEOUT },
     );
 
-    await modal.getByRole('button', { name: /update list/i }).click();
+    await modal.getByRole('button', { name: 'Bulk Edit', exact: true }).click();
     const bulkResp = await bulkEditCall;
     expect(bulkResp.ok()).toBeTruthy();
     const bulkBody = (await bulkResp.json()) as {
@@ -943,19 +949,27 @@ test.describe('Card lists CRUD', () => {
 
     await gotoHydrated(page, '/lists');
 
-    const card = page
-      .locator('div.group:has(h3)')
-      .filter({ hasText: LIST_NAME })
-      .first();
-    await expect(card).toBeVisible({ timeout: API_TIMEOUT });
-
-    await card.getByRole('button', { name: /delete list/i }).click({
-      force: true,
+    const settings = page.getByRole('button', {
+      name: `Settings for ${LIST_NAME}`,
+      exact: true,
     });
-
-    const dialog = page.getByRole('dialog', { name: /delete list/i });
+    await expect(settings).toBeVisible({ timeout: API_TIMEOUT });
+    await settings.click();
+    const settingsDialog = page.getByRole('dialog', {
+      name: 'Deck settings',
+      exact: true,
+    });
+    await settingsDialog
+      .getByRole('button', { name: 'Delete deck', exact: true })
+      .click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Delete deck',
+      exact: true,
+    });
     await expect(dialog).toBeVisible({ timeout: API_TIMEOUT });
-    await dialog.getByRole('button', { name: /^delete$/i }).click();
+    await dialog
+      .getByRole('button', { name: 'Delete deck', exact: true })
+      .click();
 
     // The list disappears from the grid.
     await expect(page.locator('h3').filter({ hasText: LIST_NAME })).toHaveCount(

@@ -5,66 +5,44 @@
       Built with CardMystic's powerful deck building tools!
     </p>
 
-    <!-- Fake real-looking list cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4">
       <div
         v-for="item in fakeItems"
         :key="item.id"
-        class="relative border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden select-none"
+        class="dark relative flex flex-col min-h-55 border border-default rounded-lg overflow-hidden select-none bg-[#090d19] text-white"
       >
-        <!-- Background placeholder while loading -->
-        <USkeleton
-          v-if="!loadedImages[item.id]"
-          class="absolute inset-0 rounded-none"
-        />
-        <!-- Native lazy loading keeps decorative art out of eager page loads. -->
-        <img
-          :src="item.image"
-          alt=""
-          loading="lazy"
-          decoding="async"
-          fetchpriority="low"
-          class="absolute inset-0 w-full h-full object-cover object-[center_10%] transition-opacity duration-500"
-          :class="
-            loadedImages[item.id] ? 'opacity-70 dark:opacity-50' : 'opacity-0'
-          "
-          @load="loadedImages[item.id] = true"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-white/60 via-white/25 dark:from-black/80 dark:via-black/40 to-transparent"
-        />
-
-        <!-- Content -->
-        <div class="relative p-2 md:p-4">
-          <h3 class="text-base md:text-xl font-semibold mb-1 md:mb-2">
-            {{ item.name }}
-          </h3>
-          <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
-            {{ item.description }}
-          </p>
-          <p class="text-xs md:text-sm mb-2 md:mb-3 line-clamp-1">
-            <UIcon
-              name="i-lucide-crown"
-              class="w-3 h-3 md:w-4 md:h-4 shrink-0"
-            />
-            {{ item.commander }}
-          </p>
-          <div class="flex items-center justify-between text-xs md:text-sm">
-            <span>{{ item.date }}</span>
-            <UIcon name="i-lucide-chevron-right" class="w-4 h-4" />
+        <div class="relative min-h-40 flex-1 p-4">
+          <PreviewImage
+            :src="item.image"
+            alt=""
+            class="absolute inset-0 size-full object-cover object-[center_25%]"
+          />
+          <div
+            class="absolute inset-0 bg-linear-to-b from-black/60 to-[#181818]"
+          />
+          <div class="relative">
+            <div class="flex items-start justify-between gap-3">
+              <h3
+                class="min-w-0 text-lg font-extrabold leading-snug break-words"
+              >
+                {{ item.name }}
+              </h3>
+              <span class="shrink-0 text-xs">Commander</span>
+            </div>
+            <p class="mt-1 text-sm line-clamp-1">{{ item.commander }}</p>
+            <p class="mt-3 text-sm leading-relaxed line-clamp-3">
+              {{ item.description }}
+            </p>
           </div>
         </div>
+        <div
+          class="relative mx-4 flex min-h-13 items-center justify-between border-t border-white/30 py-1 text-xs text-gray-300"
+        >
+          <span>{{ item.date }}</span
+          ><UIcon name="i-lucide-chevron-right" class="size-4" />
+        </div>
+        <div class="h-1.5 bg-primary/70" />
       </div>
-
-      <!-- See More button -->
-      <UButton
-        color="primary"
-        variant="outline"
-        class="h-full w-full justify-center"
-        icon="i-lucide-arrow-right"
-      >
-        See More
-      </UButton>
     </div>
 
     <div class="relative z-20 flex justify-center mt-4">
@@ -105,8 +83,6 @@
 </template>
 
 <script setup lang="ts">
-const loadedImages = reactive<Record<number, boolean>>({});
-
 const fakeItems = [
   {
     id: 1,

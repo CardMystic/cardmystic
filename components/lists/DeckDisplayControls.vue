@@ -1,35 +1,41 @@
 <template>
-  <div class="flex flex-wrap items-center gap-3">
-    <label class="flex items-center gap-2 text-sm">
+  <div class="grid gap-3">
+    <label
+      class="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-2 text-sm"
+    >
       View
       <USelect
         v-model="view"
         :items="deckViewOptions"
         :disabled="disabled"
         aria-label="Deck view"
-        class="w-40"
+        class="w-full min-w-0"
         size="sm"
       />
     </label>
-    <label class="flex items-center gap-2 text-sm">
+    <label
+      class="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-2 text-sm"
+    >
       Group
       <USelect
         v-model="group"
         :items="deckGroupOptions"
         :disabled="disabled"
         aria-label="Deck grouping"
-        class="w-36"
+        class="w-full min-w-0"
         size="sm"
       />
     </label>
-    <label class="flex items-center gap-2 text-sm">
+    <label
+      class="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-2 text-sm"
+    >
       Sort
       <USelect
         v-model="sort"
-        :items="deckSortOptions"
+        :items="sortOptions"
         :disabled="disabled"
         aria-label="Deck sorting"
-        class="w-36"
+        class="w-full min-w-0"
         size="sm"
       />
     </label>
@@ -60,26 +66,37 @@ import {
   deckViewOptions,
   deckGroupOptions,
   deckSortOptions,
-  type DeckPreferences,
+  type DeckDisplayPreferences,
 } from '~/models/preferencesModel';
 const props = defineProps<{
-  preferences: DeckPreferences;
+  preferences: DeckDisplayPreferences;
   disabled?: boolean;
+  hasSearchScores?: boolean;
 }>();
-const emit = defineEmits<{ change: [patch: Partial<DeckPreferences>] }>();
+const emit = defineEmits<{
+  change: [patch: Partial<DeckDisplayPreferences>];
+}>();
+const sortOptions = computed(() =>
+  props.hasSearchScores
+    ? [{ value: 'ai_score', label: 'Smart Search %' }, ...deckSortOptions]
+    : deckSortOptions,
+);
 const view = computed({
   get: () => props.preferences.deck_view,
-  set: (value: DeckPreferences['deck_view']) =>
+  set: (value: DeckDisplayPreferences['deck_view']) =>
     emit('change', { deck_view: value }),
 });
 const group = computed({
   get: () => props.preferences.deck_group_by ?? 'none',
-  set: (value: NonNullable<DeckPreferences['deck_group_by']> | 'none') =>
+  set: (value: NonNullable<DeckDisplayPreferences['deck_group_by']> | 'none') =>
     emit('change', { deck_group_by: value === 'none' ? null : value }),
 });
 const sort = computed({
   get: () => props.preferences.deck_sort_by ?? 'none',
-  set: (value: NonNullable<DeckPreferences['deck_sort_by']> | 'none') =>
-    emit('change', { deck_sort_by: value === 'none' ? null : value }),
+  set: (value: NonNullable<DeckDisplayPreferences['deck_sort_by']> | 'none') =>
+    emit('change', {
+      deck_sort_by: value === 'none' ? null : value,
+      ...(value === 'ai_score' ? { deck_sort_direction: 'desc' } : {}),
+    }),
 });
 </script>

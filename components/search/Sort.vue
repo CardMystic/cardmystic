@@ -1,7 +1,7 @@
 <template>
-  <div class="flex items-center gap-1 justify-start h-8">
+  <div class="flex items-center gap-2 justify-start min-h-10">
     <UIcon name="i-lucide-arrow-up-down" class="size-4 shrink-0" />
-    <span class="text-sm w-11">Sort</span>
+    <span class="text-sm w-11 shrink-0">Sort</span>
     <USelect
       :model-value="selectedSortValue"
       @update:model-value="selectSort"
@@ -9,7 +9,7 @@
       :items="sortOptions"
       placeholder="Select sort option"
       size="sm"
-      class="cursor-pointer w-32"
+      class="cursor-pointer min-w-0 flex-1"
     />
     <UButton
       v-if="selectedSortValue"
@@ -50,6 +50,7 @@ const props = defineProps<{
 const sortOptions = computed(() => {
   const options = [
     { value: 'name', label: 'Name (A-Z)' },
+    { value: 'type', label: 'Card Type' },
     { value: 'cmc', label: 'Mana Cost' },
     { value: 'price', label: 'Price' },
     { value: 'rarity', label: 'Rarity' },

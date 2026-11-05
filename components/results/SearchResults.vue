@@ -60,6 +60,19 @@
         </template>
       </UPopover>
     </div>
+    <UAlert
+      v-if="
+        !error &&
+        searchResults?.length &&
+        enhancementNotice.path === currentRoute.fullPath &&
+        enhancementNotice.unavailable
+      "
+      class="mb-3"
+      color="warning"
+      variant="soft"
+      title="Pro ranking is temporarily unavailable"
+      description="These results use Normal ranking. This search did not use your allowance."
+    />
     <SearchError
       :error="error"
       v-if="error"
@@ -190,6 +203,7 @@
                 <div
                   :id="groupToId(group.label)"
                   class="grid pb-4"
+                  data-testid="search-results-grid"
                   :class="resultsGridClass"
                 >
                   <div
@@ -239,7 +253,11 @@
 
           <!-- Flat results (no grouping) -->
           <template v-else>
-            <div class="grid" :class="resultsGridClass">
+            <div
+              class="grid"
+              data-testid="search-results-grid"
+              :class="resultsGridClass"
+            >
               <div
                 v-for="result in paginatedResults"
                 :key="result.card_data.id"
@@ -350,6 +368,9 @@
 </template>
 
 <script lang="ts" setup>
+const enhancementNotice = useSearchEnhancementNotice();
+const currentRoute = useRoute();
+provide('searchCardDeckMatches', true);
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import {
@@ -477,7 +498,7 @@ const view = ref<'grid' | 'text'>('grid');
 const resultsGridClass = computed(() =>
   view.value === 'text'
     ? 'grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-x-4 gap-y-1'
-    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2',
+    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2',
 );
 
 // Grouping state

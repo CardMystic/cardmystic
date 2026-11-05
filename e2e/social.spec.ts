@@ -584,10 +584,12 @@ test.describe('Decklist social & discovery', () => {
     try {
       await gotoHydrated(page, `/lists/${LIST_ID}`);
 
-      // The visitor is not the owner, so the deck author link renders.
-      await expect(page.getByText('Deck author')).toBeVisible({
-        timeout: API_TIMEOUT,
-      });
+      // The compact banner shows the author's name and profile link.
+      const auth = await supabaseAuth(request);
+      expect(auth, 'Supabase password grant must succeed').toBeTruthy();
+      const author = page.locator(`main a[href="/user/${auth!.userId}"]`);
+      await expect(author).toBeVisible({ timeout: API_TIMEOUT });
+      await expect(author).toHaveText(/\S/);
 
       // Like/save render but are disabled for logged-out visitors.
       const likeButton = page.getByTestId('decklist-like-button');
@@ -607,8 +609,11 @@ test.describe('Decklist social & discovery', () => {
       await expect(page.getByLabel('Card options')).toHaveCount(0);
 
       // The deck has no saved primer, so non-owners get a disabled
-      // "No Primer" button instead of the Primer link.
-      const noPrimerButton = page.getByRole('button', { name: 'No Primer' });
+      // Primer button instead of an active link.
+      const noPrimerButton = page.getByRole('button', {
+        name: 'Primer',
+        exact: true,
+      });
       await expect(noPrimerButton).toBeVisible({ timeout: API_TIMEOUT });
       await expect(noPrimerButton).toBeDisabled();
 
@@ -616,8 +621,6 @@ test.describe('Decklist social & discovery', () => {
       await expect(page.getByTestId('visibility-select')).toHaveCount(0);
 
       // Public profile shows a disabled Follow button when logged out.
-      const auth = await supabaseAuth(request);
-      expect(auth, 'Supabase password grant must succeed').toBeTruthy();
       await gotoHydrated(page, `/user/${auth!.userId}`);
       const followButton = page.getByRole('button', { name: /^follow$/i });
       await expect(followButton).toBeVisible({ timeout: API_TIMEOUT });

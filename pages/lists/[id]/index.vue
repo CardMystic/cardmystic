@@ -1,130 +1,94 @@
 <template>
   <div
-    class="mx-auto py-8 relative z-10 w-full"
+    class="mx-auto pb-8 relative z-10 w-full"
     :class="{ 'pb-24': showStickyFooter }"
   >
     <CardListBanner
       :list="list"
       :is-loading="isLoadingLists"
       :is-owner="isOwner"
-    />
+    >
+      <template #social>
+        <DecklistSocialBar
+          v-if="list && list.visibility === 'public'"
+          :list="list"
+          :owner="!isOwner ? decklistOwner : null"
+          embedded
+        />
+      </template>
+      <template #actions>
+        <DeckBusinessCard
+          v-if="list && !isCollection"
+          :list="list"
+          :is-owner="isOwner"
+          :entries="analysisCards"
+          :cards-loading="loading"
+        />
+      </template>
+    </CardListBanner>
 
-    <!-- Social bar with author link (public lists only) -->
-    <DecklistSocialBar
-      v-if="list && list.visibility === 'public'"
-      :list="list"
-      :owner="!isOwner ? decklistOwner : null"
-    />
-
-    <!-- Primer (non-owners): disabled "No Primer" when the deck has none -->
-    <div v-if="list && !isOwner" class="mb-2">
-      <UTooltip
-        :text="
-          hasPrimer
-            ? 'View the primer for this deck'
-            : 'This deck has no primer yet'
-        "
-      >
+    <div
+      v-if="list"
+      class="my-3 flex flex-wrap items-center justify-between gap-3"
+    >
+      <nav aria-label="Deck actions" class="flex flex-wrap items-center gap-2">
         <UButton
-          :to="hasPrimer ? `/lists/${listId}/primer` : undefined"
-          :disabled="!hasPrimer"
+          :to="isOwner || hasPrimer ? `/lists/${listId}/primer` : undefined"
+          :disabled="!isOwner && !hasPrimer"
           icon="i-lucide-notebook-text"
           color="info"
-          variant="solid"
-          class="cursor-pointer"
-          :label="hasPrimer ? 'Primer' : 'No Primer'"
+          variant="ghost"
+          label="Primer"
         />
-      </UTooltip>
-    </div>
-
-    <!-- Actions + Add Card (owner only) -->
-    <div v-if="list && isOwner" class="mb-2">
-      <div class="flex flex-wrap items-center justify-between">
-        <div class="flex flex-wrap gap-2 mb-2">
-          <UTooltip text="View the primer for this deck">
-            <UButton
-              :to="`/lists/${listId}/primer`"
-              icon="i-lucide-notebook-text"
-              color="info"
-              variant="solid"
-              class="cursor-pointer"
-              label="Primer"
-            />
-          </UTooltip>
-          <UTooltip text="Get personalized recommendations based on this deck">
-            <UButton
-              icon="i-lucide-box"
-              color="primary"
-              variant="solid"
-              aria-label="Recommend"
-              @click="goToRecommend"
-              class="cursor-pointer h-8"
-              size="sm"
-            >
-              <span class="hidden md:inline">Recommend</span>
-            </UButton>
-          </UTooltip>
-          <UTooltip text="Copy card names">
-            <UButton
-              icon="i-lucide-copy"
-              color="primary"
-              variant="outline"
-              @click="copyCardNames"
-              :disabled="!cards || cards.length === 0"
-              class="cursor-pointer"
-            >
-              <span class="hidden md:inline">Copy</span>
-            </UButton>
-          </UTooltip>
-          <UTooltip text="Compare with another deck">
-            <UButton
-              icon="i-lucide-scale"
-              aria-label="Compare decks"
-              color="primary"
-              variant="outline"
-              :disabled="loading"
-              @click="
-                () => {
-                  isCompareModalOpen = true;
-                }
-              "
-              class="cursor-pointer"
-            >
-              <span class="hidden md:inline">Compare Deck</span>
-            </UButton>
-          </UTooltip>
-          <UTooltip text="Bulk edit cards">
-            <UButton
-              icon="i-lucide-list-plus"
-              color="primary"
-              variant="outline"
-              @click="
-                () => {
-                  isBulkEditModalOpen = true;
-                }
-              "
-              class="cursor-pointer"
-              label="Bulk Edit"
-              ><span class="hidden md:inline">Bulk Edit</span>
-            </UButton>
-          </UTooltip>
-          <UTooltip text="Buy cards in bulk from TCGPlayer">
-            <UButton
-              icon="i-heroicons-shopping-cart"
-              color="success"
-              variant="solid"
-              @click="openMassEntry"
-              :disabled="!cards || cards.length === 0"
-              class="cursor-pointer"
-            >
-              <span class="hidden md:inline"
-                >Buy (${{ totalPrice.toFixed(2) }})</span
-              ></UButton
-            >
-          </UTooltip>
-        </div>
-        <!-- Desktop add cards input -->
+        <UButton
+          v-if="!isCollection"
+          label="Recommend"
+          icon="i-lucide-box"
+          variant="ghost"
+          :disabled="loading || !cards?.length"
+          @click="goToRecommend"
+        />
+        <DeckPlaytest
+          v-if="!isCollection"
+          :entries="analysisCards"
+          :format="list.format"
+          :name="list.name || 'Deck'"
+          :loading="loading"
+        />
+        <UButton
+          icon="i-heroicons-shopping-cart"
+          color="success"
+          variant="ghost"
+          :label="`Buy ($${totalPrice.toFixed(2)})`"
+          :disabled="loading || !cards?.length"
+          @click="openMassEntry"
+        />
+        <UButton
+          :label="
+            isCollection ? 'Search Within Collection' : 'Search Within Deck'
+          "
+          icon="i-lucide-search"
+          variant="ghost"
+          :aria-expanded="searchOpen"
+          @click="
+            proAction(() => {
+              searchOpen = !searchOpen;
+            })
+          "
+        />
+        <UDropdownMenu :items="moreActions" :content="{ align: 'end' }">
+          <UButton
+            label="More"
+            aria-label="More deck actions"
+            icon="i-lucide-ellipsis"
+            color="neutral"
+            variant="ghost"
+          />
+        </UDropdownMenu>
+      </nav>
+      <div class="flex w-full items-center gap-1 lg:w-auto lg:ml-auto">
         <UInputMenu
+          v-if="isOwner"
           v-model="selectedCardToAdd"
           v-model:search-term="addCardSearchTerm"
           :aria-busy="isAddCardBusy"
@@ -132,12 +96,53 @@
           :items="filteredAddCards"
           placeholder="Add a card to the deck..."
           icon="i-heroicons-plus"
-          class="hidden lg:flex flex-1 min-w-70 max-w-70 cursor-pointer"
+          class="flex-1 min-w-0 lg:w-64 cursor-pointer"
           @update:model-value="handleAddCard"
         />
+        <DeckHighlight
+          v-if="list"
+          v-model:mode="highlightMode"
+          v-model:target="highlightTarget"
+          :cards="highlightCards"
+          @ownership="ownershipQuantities = $event"
+        />
+        <UButton
+          v-if="isOwner"
+          icon="i-lucide-tags"
+          aria-label="Multi-tagger"
+          title="Tag multiple cards"
+          variant="ghost"
+          :color="multiTag.active.value ? 'primary' : 'neutral'"
+          :aria-pressed="multiTag.active.value"
+          :disabled="multiTag.saving.value"
+          @click="
+            multiTag.active.value
+              ? multiTag.close()
+              : (multiTag.active.value = true)
+          "
+        />
+        <UPopover>
+          <UButton
+            icon="i-lucide-settings-2"
+            color="neutral"
+            variant="ghost"
+            aria-label="Display"
+            title="Display"
+            class="cursor-pointer"
+          />
+          <template #content>
+            <div class="p-3 space-y-3 w-72 max-w-[calc(100vw-2rem)]">
+              <DeckDisplayControls
+                :preferences="displayPreferences"
+                :has-search-scores="searchResult?.mode === 'smart'"
+                :disabled="preferencesLoading"
+                @change="updateDisplayPreferences"
+              />
+            </div>
+          </template>
+        </UPopover>
       </div>
     </div>
-
     <div
       v-if="isOwner && addCardCatalogError"
       role="alert"
@@ -153,49 +158,79 @@
       />
     </div>
 
-    <!-- Display controls use the same menu at every screen size. -->
-    <div class="flex items-center justify-between gap-3 min-h-11">
-      <!-- Mobile add cards input (owner only) -->
-      <UInputMenu
-        v-if="isOwner"
-        v-model="selectedCardToAdd"
-        v-model:search-term="addCardSearchTerm"
-        :aria-busy="isAddCardBusy"
-        :disabled="loading || !addCardCatalogReady || addCardLoading"
-        :items="filteredAddCards"
-        placeholder="Add a card to the deck..."
-        icon="i-heroicons-plus"
-        class="lg:hidden flex-1 min-w-0 max-w-57 cursor-pointer"
-        @update:model-value="handleAddCard"
-      />
-      <div class="flex-1" aria-hidden="true"></div>
-      <UPopover>
-        <UButton
-          icon="i-lucide-settings-2"
-          color="neutral"
-          variant="outline"
-          label="Display"
-          class="cursor-pointer"
-        />
-        <template #content>
-          <div class="p-3 space-y-3 w-72 max-w-[calc(100vw-2rem)]">
-            <DeckDisplayControls
-              :preferences="preferences"
-              :disabled="preferencesLoading"
-              @change="updatePreferences"
-            />
-          </div>
-        </template>
-      </UPopover>
-    </div>
+    <DeckMultiTagger
+      v-if="multiTag.active.value"
+      :oracle-ids="listItems.map((item) => item.oracle_id)"
+    />
+
+    <DeckSettingsModal
+      v-if="isOwner && list && settingsOpen"
+      v-model:open="settingsOpen"
+      :list="list"
+    />
+    <DeckTransfer
+      v-if="list"
+      v-model:open="transferOpen"
+      :list-id="listId"
+      :name="list.name || 'Untitled list'"
+      :deck-format="list.format"
+      :cards="transferCards"
+      :owner="isOwner"
+    />
+
+    <DeckCuts
+      v-if="isOwner && !isCollection"
+      v-model:open="cutsOpen"
+      :oracle-ids="oracleIds"
+      :list-id="listId"
+      :revision="listRevision"
+    />
+    <DeckSearch
+      v-if="list"
+      v-model:open="searchOpen"
+      :list-id="listId"
+      :collection="isCollection"
+      :revision="listRevision"
+      @results="receiveSearchResults($event)"
+    />
+    <p v-if="isCollection" class="text-sm text-muted mb-3">
+      Collection · {{ totalCardCount.toLocaleString() }} copies. Grouping
+      applies to the cards on this page.
+    </p>
 
     <p v-if="preferencesError" role="alert" class="text-sm text-error">
       {{ preferencesError }}
     </p>
 
+    <p
+      v-if="labelsError && groupBy === 'tags'"
+      role="alert"
+      class="text-sm text-error"
+    >
+      Could not load card groups.
+      <UButton label="Retry groups" variant="link" @click="retryLabels" />
+    </p>
+    <UPagination
+      v-if="isCollection && filteredOracleIds.length > 100"
+      v-model:page="collectionPage"
+      :total="filteredOracleIds.length"
+      :items-per-page="100"
+      class="my-3 justify-start"
+      :sibling-count="1"
+      :ui="{ first: 'hidden', last: 'hidden' }"
+      aria-label="Collection pages top"
+    />
+    <p
+      v-if="searchMatches?.length === 0"
+      role="status"
+      class="py-6 text-center text-muted"
+    >
+      No matching cards. Try another search or show all cards.
+    </p>
     <!-- Cards Results -->
     <ClientOnly>
       <CardListResults
+        v-if="searchMatches?.length !== 0"
         ref="cardListResultsRef"
         class="mb-8"
         :view="view"
@@ -220,6 +255,65 @@
       </template>
     </ClientOnly>
 
+    <UPagination
+      v-if="isCollection && filteredOracleIds.length > 100"
+      v-model:page="collectionPage"
+      :total="filteredOracleIds.length"
+      :items-per-page="100"
+      :sibling-count="1"
+      :ui="{ first: 'hidden', last: 'hidden' }"
+      class="my-4 justify-center"
+      aria-label="Collection pages bottom"
+    />
+
+    <DeckStatsPanel
+      ref="statsPanel"
+      v-if="list && !isCollection && analysisCards.length"
+      :list-id="listId"
+      :revision="listRevision"
+      :format="list.format"
+      :entries="analysisCards"
+      :loading="loading"
+      :is-owner="isOwner"
+    />
+
+    <p
+      v-if="isOwner && pro.isPro.value && deckBudget.error.value"
+      role="alert"
+      class="text-error text-sm my-3"
+    >
+      Could not load the saved card budget.
+      <UButton
+        label="Retry budget"
+        variant="link"
+        @click="deckBudget.retry()"
+      />
+    </p>
+    <DeckSuggestions
+      id="deck-suggestions"
+      v-if="isOwner && !isCollection && analysisCards.length"
+      :list-id="listId"
+      :oracle-ids="oracleIds"
+      :ready="!loading"
+      :saved-budget="deckBudget.budget.value"
+      :budget-ready="deckBudget.ready.value"
+      :budget-saving="deckBudget.saving.value"
+      :save-budget="deckBudget.save"
+      @visible="suggestionsSeen = true"
+    />
+    <DeckSuggestions
+      id="deck-new-cards"
+      v-if="isOwner && !isCollection && analysisCards.length"
+      :list-id="listId"
+      :oracle-ids="oracleIds"
+      :ready="!loading"
+      :saved-budget="deckBudget.budget.value"
+      :budget-ready="deckBudget.ready.value"
+      :budget-saving="deckBudget.saving.value"
+      :save-budget="deckBudget.save"
+      @visible="suggestionsSeen = true"
+      newest-set
+    />
     <!-- Comments (public lists only) -->
     <DecklistComments
       v-if="list && list.visibility === 'public'"
@@ -233,6 +327,7 @@
     v-if="isOwner"
     v-model:open="isBulkEditModalOpen"
     :list-id="listId"
+    :collection="isCollection"
     :mainboard-names="mainboardNames"
     :sideboard-names="sideboardNames"
     :considering-names="consideringNames"
@@ -275,20 +370,53 @@
   <BackToTop />
 
   <StickyActionFooter :show="showStickyFooter && !isCompareModalOpen">
-    <template #left>
-      <DeckStats
-        :card-count="mainDeckCardCount"
-        :total-price="totalPrice"
-        @buy="openMassEntry"
+    <div
+      class="flex max-w-full flex-wrap items-center justify-center gap-1 sm:gap-3"
+    >
+      <span class="text-xs sm:text-sm whitespace-nowrap"
+        >{{ totalCardCount }} cards</span
+      >
+      <UButton
+        icon="i-lucide-shopping-cart"
+        color="success"
+        variant="ghost"
+        size="sm"
+        :label="`Buy ($${totalPrice.toFixed(2)})`"
+        @click="openMassEntry"
       />
-    </template>
-    <template #right>
+      <template v-if="!isCollection && analysisCards.length">
+        <div class="hidden md:flex items-center gap-1">
+          <UButton
+            v-for="section in sectionLinks"
+            :key="section.label"
+            :label="section.label"
+            variant="ghost"
+            color="neutral"
+            size="sm"
+            @click="section.onSelect"
+          />
+        </div>
+        <UDropdownMenu
+          :items="sectionLinks"
+          :content="{ side: 'top', align: 'end' }"
+          class="md:hidden"
+        >
+          <UButton
+            label="Deck"
+            aria-label="Deck sections"
+            icon="i-lucide-chart-column"
+            variant="ghost"
+            color="neutral"
+            size="sm"
+          />
+        </UDropdownMenu>
+      </template>
       <JumpTo
         :groups="jumpToGroups"
         :board-sections="jumpToBoardSections"
         @jump-board="handleJumpBoard"
       />
-    </template>
+    </div>
   </StickyActionFooter>
 </template>
 
@@ -302,11 +430,18 @@ import { GetPublicDecklistResponseSchema } from '~/models/cardListModel';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';
 import { refDebounced } from '~/utils/refDebounced';
-import { groupAndSortCards } from '~/utils/sort';
+import { groupAndSortCards, sortSearchResults } from '~/utils/sort';
 import { safeJsonLd } from '~/utils/safeJsonLd';
 import { buildDecklistSeo } from '~/utils/seoMeta';
 import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 import type { Card } from '~/models/cardModel';
+import type {
+  DeckDisplayPreferences,
+  DeckPreferences,
+} from '~/models/preferencesModel';
+import type { ListSearchResults } from '~/composables/useLibrary';
+import type { DropdownMenuItem } from '@nuxt/ui';
+import type { DeckHighlightMode } from '~/utils/deckHighlight';
 const route = useRoute();
 const requestFetch = useRequestFetch();
 const listId = route.params.id as string;
@@ -372,7 +507,21 @@ const {
 // Unified list: prefer owned, fall back to public
 const list = computed(() => ownedList.value ?? publicDecklist.value);
 const isOwner = computed(() => !!ownedList.value);
-
+const isCollection = computed(() => list.value?.kind === 'collection');
+const pro = useLibraryApi();
+const searchResult = ref<ListSearchResults | null>(null);
+const searchMatches = computed(() => searchResult.value?.oracleIds ?? null);
+const searchPreferences = ref<DeckDisplayPreferences | null>(null);
+const collectionPage = ref(1);
+const listRevision = computed(() =>
+  JSON.stringify(
+    listItems.value.map((item) => [
+      item.oracle_id,
+      item.board,
+      item.num_copies,
+    ]),
+  ),
+);
 // Record a view once per visit when the deck resolves as public
 useDecklistViewTracker(
   listIdRef,
@@ -534,10 +683,98 @@ const cardsByOracleId = computed(() => {
   return m;
 });
 
-function boardCards(board: Board): any[] {
+const transferCards = computed(() =>
+  listItems.value.flatMap((item) => {
+    const card = cardsByOracleId.value[item.oracle_id]?.card_data;
+    return card
+      ? [
+          {
+            name: card.name,
+            quantity: item.num_copies,
+            board: item.board as Board,
+            commander: !!item.is_commander,
+            arena: card.games?.includes('arena'),
+            mtgo: card.games?.includes('mtgo'),
+          },
+        ]
+      : [];
+  }),
+);
+const analysisCards = computed(() =>
+  listItems.value
+    .filter((item) => item.board === 'Mainboard')
+    .flatMap((item) => {
+      const card = cardsByOracleId.value[item.oracle_id]?.card_data;
+      return card
+        ? [{ card, quantity: item.num_copies, commander: !!item.is_commander }]
+        : [];
+    }),
+);
+const multiTag = provideMultiTag();
+const statsPanel = useTemplateRef<{ open: () => void }>('statsPanel');
+async function jumpToSection(id: string) {
+  if (id === 'deck-stats') statsPanel.value?.open();
+  await nextTick();
+  const element = document.getElementById(id);
+  if (element)
+    window.scrollTo({
+      top: element.getBoundingClientRect().top + window.scrollY - 100,
+      behavior: 'smooth',
+    });
+}
+const sectionLinks = computed(() => [
+  { label: 'Deck Stats', onSelect: () => jumpToSection('deck-stats') },
+  ...(isOwner.value
+    ? [
+        {
+          label: 'Suggested Cards',
+          onSelect: () => jumpToSection('deck-suggestions'),
+        },
+        {
+          label: 'New Cards for Deck',
+          onSelect: () => jumpToSection('deck-new-cards'),
+        },
+      ]
+    : []),
+]);
+const suggestionsSeen = ref(false);
+const deckBudget = useDeckBudget(
+  listId,
+  () =>
+    suggestionsSeen.value &&
+    analysisCards.value.length > 0 &&
+    isOwner.value &&
+    !isCollection.value &&
+    pro.isPro.value,
+);
+const ownershipQuantities = ref<Record<string, number> | null>(null);
+const highlightMode = ref<DeckHighlightMode>('none');
+const highlightTarget = ref('');
+const highlightCards = computed(() =>
+  cards.value.map((card) => card.card_data),
+);
+provide('deckHighlight', {
+  mode: highlightMode,
+  target: highlightTarget,
+  quantities: ownershipQuantities,
+  required: computed(() => {
+    const totals: Record<string, number> = {};
+    for (const item of listItems.value) {
+      totals[item.oracle_id] = (totals[item.oracle_id] ?? 0) + item.num_copies;
+    }
+    return totals;
+  }),
+});
+
+function boardCards(board: Board, onlyVisible = true): Card[] {
   return Object.keys(listItemsMap.value[board])
     .map((oid) => cardsByOracleId.value[oid])
-    .filter(Boolean);
+    .filter(
+      (card) =>
+        card &&
+        (!onlyVisible || visibleOracleIds.value.has(card.card_data.oracle_id)),
+    )
+    .map((card) => (onlyVisible ? withSearchScore(card) : card));
 }
 
 function boardCopiesMap(board: Board): Record<string, number> {
@@ -576,11 +813,87 @@ const {
   isLoading: preferencesLoading,
   error: preferencesError,
   updatePreferences,
-} = useDeckPreferences(listId);
-const sortBy = computed(() => preferences.value.deck_sort_by ?? undefined);
-const sortDirection = computed(() => preferences.value.deck_sort_direction);
-const groupBy = computed(() => preferences.value.deck_group_by ?? undefined);
-const view = computed(() => preferences.value.deck_view);
+} = useDeckPreferences(listId, isCollection);
+const displayPreferences = computed(
+  () => searchPreferences.value ?? preferences.value,
+);
+function receiveSearchResults(result: ListSearchResults | null) {
+  searchResult.value = result;
+  searchPreferences.value = result
+    ? {
+        ...preferences.value,
+        deck_group_by: null,
+        deck_sort_by: result.mode === 'smart' ? 'ai_score' : null,
+        deck_sort_direction: 'desc',
+      }
+    : null;
+  collectionPage.value = 1;
+}
+function updateDisplayPreferences(patch: Partial<DeckDisplayPreferences>) {
+  if (searchPreferences.value)
+    searchPreferences.value = { ...searchPreferences.value, ...patch };
+  else if (patch.deck_sort_by !== 'ai_score')
+    updatePreferences(patch as Partial<DeckPreferences>);
+  collectionPage.value = 1;
+}
+const sortBy = computed(
+  () => displayPreferences.value.deck_sort_by ?? undefined,
+);
+const sortDirection = computed(
+  () => displayPreferences.value.deck_sort_direction,
+);
+const groupBy = computed(
+  () => displayPreferences.value.deck_group_by ?? undefined,
+);
+const view = computed(() => displayPreferences.value.deck_view);
+function withSearchScore(card: Card): Card {
+  const score =
+    searchResult.value?.mode === 'smart'
+      ? searchResult.value.scores?.[card.card_data.oracle_id]
+      : undefined;
+  return score === undefined ? card : { ...card, ai_rerank_score: score };
+}
+const filteredOracleIds = computed(() => {
+  const ids = searchMatches.value ?? [...new Set(oracleIds.value)];
+  if (!isCollection.value || !cards.value.length) return ids;
+  const scope = new Set(ids);
+  return (
+    sortSearchResults(
+      cards.value
+        .filter((card) => scope.has(card.card_data.oracle_id))
+        .map(withSearchScore),
+      sortBy.value,
+      sortDirection.value,
+      true,
+    ) ?? []
+  ).map((card) => card.card_data.oracle_id);
+});
+const visibleOracleIds = computed(
+  () =>
+    new Set(
+      isCollection.value
+        ? filteredOracleIds.value.slice(
+            (collectionPage.value - 1) * 100,
+            collectionPage.value * 100,
+          )
+        : filteredOracleIds.value,
+    ),
+);
+watch(
+  () => filteredOracleIds.value.length,
+  (length) => {
+    collectionPage.value = Math.min(
+      collectionPage.value,
+      Math.max(1, Math.ceil(length / 100)),
+    );
+  },
+);
+
+const {
+  labels: cardLabels,
+  error: labelsError,
+  retry: retryLabels,
+} = useCardLabels(() => [...visibleOracleIds.value]);
 
 // Handle removing a card from the list
 async function handleRemoveCard(
@@ -615,7 +928,7 @@ const cardGroups = computed(() => {
     return null;
   }
 
-  const ids = commanderOracleIds.value;
+  const ids = searchResult.value ? [] : commanderOracleIds.value;
   const allMainboard = boardCards('Mainboard');
   const mainboardCards =
     ids.length > 0
@@ -628,6 +941,9 @@ const cardGroups = computed(() => {
     sortBy.value,
     sortDirection.value,
     boardCopiesMap('Mainboard'),
+    undefined,
+    false,
+    cardLabels.value,
   );
 
   // Prepend commanders as their own group if present
@@ -652,6 +968,9 @@ const sideboardGroups = computed(() => {
     sortBy.value,
     sortDirection.value,
     boardCopiesMap('Sideboard'),
+    undefined,
+    false,
+    cardLabels.value,
   );
 });
 
@@ -665,6 +984,9 @@ const consideringGroups = computed(() => {
     sortBy.value,
     sortDirection.value,
     boardCopiesMap('Considering'),
+    undefined,
+    false,
+    cardLabels.value,
   );
 });
 
@@ -813,6 +1135,73 @@ async function confirmAddDuplicate() {
 // Bulk edit state
 const isBulkEditModalOpen = ref(false);
 const isCompareModalOpen = ref(false);
+const settingsOpen = ref(false);
+const transferOpen = ref(false);
+const cutsOpen = ref(false);
+const searchOpen = ref(false);
+function proAction(action: () => void) {
+  if (pro.isPro.value) action();
+  else void navigateTo('/memberships');
+}
+const moreActions = computed<DropdownMenuItem[][]>(() => [
+  [
+    {
+      label: 'Import / Export',
+      icon: 'i-lucide-arrow-left-right',
+      disabled: loading.value,
+      onSelect: () => {
+        transferOpen.value = true;
+      },
+    },
+  ],
+  ...(isOwner.value
+    ? [
+        [
+          {
+            label: 'Settings',
+            icon: 'i-lucide-settings',
+            onSelect: () => {
+              settingsOpen.value = true;
+            },
+          },
+          {
+            label: 'Compare decks',
+            icon: 'i-lucide-scale',
+            disabled: loading.value,
+            onSelect: () => {
+              isCompareModalOpen.value = true;
+            },
+          },
+          {
+            label: 'Bulk Edit',
+            icon: 'i-lucide-list-plus',
+            onSelect: () => {
+              isBulkEditModalOpen.value = true;
+            },
+          },
+          {
+            label: 'History',
+            icon: 'i-lucide-history',
+            onSelect: () => {
+              void navigateTo(`/lists/${listId}/history`);
+            },
+          },
+          ...(!isCollection.value
+            ? [
+                {
+                  label: 'Suggest cuts · Pro',
+                  icon: 'i-lucide-scissors',
+                  onSelect: () =>
+                    proAction(() => {
+                      cutsOpen.value = true;
+                    }),
+                },
+              ]
+            : []),
+        ],
+      ]
+    : []),
+]);
 
 function boardLines(board: 'Mainboard' | 'Sideboard' | 'Considering') {
   if (!listItems.value || listItems.value.length === 0) return [];
@@ -835,7 +1224,7 @@ const consideringNames = computed(() => boardLines('Considering'));
 
 function goToRecommend() {
   if (!cards.value || cards.value.length === 0) return;
-  const decklist = boardCards('Mainboard')
+  const decklist = boardCards('Mainboard', false)
     .map((card: Card) => card.card_data.name)
     .slice(0, 200)
     .join('\n');
@@ -1068,40 +1457,6 @@ const totalCardCount = computed(() => {
   );
 });
 
-const mainDeckCardCount = computed(() => {
-  if (!listItems.value || listItems.value.length === 0) return 0;
-  return listItems.value.reduce((sum: number, item: any) => {
-    const board = item.board ?? 'Mainboard';
-    return board === 'Mainboard' ? sum + (item.num_copies ?? 1) : sum;
-  }, 0);
-});
-
-async function copyCardNames() {
-  if (!listItems.value || listItems.value.length === 0) return;
-  const lines: string[] = [];
-  for (const item of listItems.value) {
-    if (!item.oracle_id) continue;
-    const card = cardsByOracleId.value[item.oracle_id];
-    if (!card) continue;
-    const copies = item.num_copies ?? 1;
-    lines.push(
-      copies > 1 ? `${copies} ${card.card_data.name}` : card.card_data.name,
-    );
-  }
-  try {
-    await navigator.clipboard.writeText(lines.join('\n'));
-    toast.add({
-      title: 'Card names copied!',
-      icon: 'i-lucide-clipboard-check',
-    });
-  } catch {
-    toast.add({
-      title: 'Failed to copy card names',
-      description: 'Clipboard access is unavailable in this context.',
-      color: 'error',
-    });
-  }
-}
 function openMassEntry() {
   if (!listItems.value || listItems.value.length === 0) return;
   const names: string[] = [];

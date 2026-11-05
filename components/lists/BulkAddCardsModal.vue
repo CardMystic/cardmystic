@@ -1,7 +1,7 @@
 <template>
   <UModal
     v-model:open="isOpen"
-    title="Bulk Edit Cards"
+    title="Bulk Edit"
     description="Edit each board below. Cards not in the list will be added, removed cards will be deleted. Commanders are preserved. Boards not submitted are left untouched."
   >
     <template #content>
@@ -105,7 +105,7 @@
             class="cursor-pointer"
             color="primary"
             variant="solid"
-            label="Update List"
+            label="Bulk Edit"
             :loading="bulkEditLoading"
             :disabled="totalCardCount === 0"
             @click="handleBulkEdit"
@@ -123,6 +123,7 @@ import type { BulkEditResponse } from '~/models/cardListModel';
 
 const props = defineProps<{
   listId: string;
+  collection?: boolean;
   mainboardNames?: string[];
   sideboardNames?: string[];
   consideringNames?: string[];
@@ -214,7 +215,8 @@ async function handleBulkEdit() {
     const changes = (result.addedCount || 0) + (result.removedCount || 0);
     if (changes > 0) {
       toast.add({
-        title: `List updated: ${result.addedCount} added, ${result.removedCount} removed`,
+        title: props.collection ? 'Collection updated' : 'Deck updated',
+        description: `${result.addedCount} added, ${result.removedCount} removed`,
         icon: 'i-lucide-check',
       });
     } else {
@@ -229,8 +231,8 @@ async function handleBulkEdit() {
     }
   } catch (error: any) {
     toast.add({
-      title: 'Error updating list',
-      description: error.message,
+      title: `Could not update ${props.collection ? 'collection' : 'deck'}`,
+      description: error.data?.message ?? error.message,
       color: 'error',
     });
   } finally {

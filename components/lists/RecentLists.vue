@@ -18,31 +18,21 @@
 
     <div
       v-if="isLoadingLists"
-      class="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4"
     >
-      <USkeleton v-for="i in 3" :key="i" class="list-skeleton" />
+      <CardListLinkSkeleton v-for="i in 3" :key="i" />
     </div>
 
     <div
       v-else-if="recentLists.length > 0"
-      class="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4"
     >
       <CardListLink
         v-for="list in recentLists"
         :key="list.id"
         :list="list"
-        :show-delete-button="false"
+        :show-settings-button="false"
       />
-      <NuxtLink to="/lists">
-        <UButton
-          color="primary"
-          variant="outline"
-          class="h-full w-full justify-center"
-          icon="i-lucide-arrow-right"
-        >
-          See More
-        </UButton>
-      </NuxtLink>
     </div>
 
     <div v-else-if="!error" class="empty-state">
@@ -50,7 +40,20 @@
       <p>You haven't created any decklists yet</p>
     </div>
 
-    <div v-if="!isLoadingLists" class="flex justify-center mt-4">
+    <div
+      v-if="!isLoadingLists"
+      class="flex flex-wrap gap-3 justify-center mt-4"
+    >
+      <NuxtLink to="/lists">
+        <UButton
+          color="primary"
+          variant="outline"
+          class="min-h-11"
+          icon="i-lucide-arrow-right"
+        >
+          See More
+        </UButton>
+      </NuxtLink>
       <UButton
         color="primary"
         variant="solid"
@@ -131,9 +134,6 @@ const recentLists = computed(() => {
   @media (max-width: 768px)
     font-size: 1.5rem
 
-.list-skeleton
-  height: 150px
-  border-radius: 1rem
 
 .empty-state
   text-align: center

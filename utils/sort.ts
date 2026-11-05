@@ -1,5 +1,6 @@
 import type { Ref } from 'vue';
 import type { Card } from '~/models/cardModel';
+import type { CardLabels } from '~/composables/useLibrary';
 import { pairings } from '~/utils/colorPairings';
 
 export type CardGroup = {
@@ -24,7 +25,8 @@ const typeOrder: Record<string, number> = {
   artifact: 5,
   enchantment: 6,
   planeswalker: 1,
-  land: 7,
+  battle: 7,
+  land: 8,
 };
 
 const colorOrder: Record<string, number> = {
@@ -134,6 +136,19 @@ export function sortSearchResults(
   return results.sort((a, b) => {
     let primary: number;
     switch (sortBy) {
+      case 'type': {
+        const type = (card: Card) =>
+          getCardTypePrimary(
+            card.card_data.card_faces?.[0]?.type_line ??
+              card.card_data.type_line ??
+              '',
+          );
+        return (
+          direction *
+            ((typeOrder[type(a)] ?? 99) - (typeOrder[type(b)] ?? 99)) ||
+          a.card_data.name.localeCompare(b.card_data.name)
+        );
+      }
       case 'name': {
         const aValue = a.card_data.name.toLowerCase();
         const bValue = b.card_data.name.toLowerCase();
@@ -281,7 +296,25 @@ export function groupCards(
   groupBy: string,
   copiesMap?: Record<string, number>,
   allCards?: Card[],
+  labels?: Record<string, CardLabels>,
 ): CardGroup[] {
+  if (groupBy === 'tags') {
+    const grouped = new Map<string, Card[]>();
+    for (const card of cards) {
+      const names = labels?.[card.card_data.oracle_id]?.tags ?? [];
+      for (const name of new Set(names.length ? names : ['Untagged'])) {
+        if (!grouped.has(name)) grouped.set(name, []);
+        grouped.get(name)!.push(card);
+      }
+    }
+    return [...grouped]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, cards]) => ({
+        key: `${groupBy}:${name}`,
+        label: `${name} (${cards.reduce((count, card) => count + (copiesMap?.[card.card_data.oracle_id] ?? 1), 0)})`,
+        cards,
+      }));
+  }
   const groupMap = new Map<string, Card[]>();
 
   for (const card of cards) {
@@ -418,6 +451,7 @@ export function groupAndSortCards(
   copiesMap?: Record<string, number>,
   allCards?: Card[],
   preserveResultOrder = false,
+  labels?: Record<string, CardLabels>,
 ): CardGroup[] | null {
   if (!cards || cards.length === 0) return null;
 
@@ -429,7 +463,13 @@ export function groupAndSortCards(
     return [{ label: '', cards: sorted }];
   }
 
-  const groups = groupCards(cards, groupBy, copiesMap, allCards ?? cards);
+  const groups = groupCards(
+    cards,
+    groupBy,
+    copiesMap,
+    allCards ?? cards,
+    labels,
+  );
 
   return groups.map((group) => ({
     ...group,

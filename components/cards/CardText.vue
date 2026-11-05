@@ -1,6 +1,6 @@
 <template>
   <div
-    class="card-text-row"
+    class="card-text-row relative"
     :class="{
       'commander-row': isDeckCommander,
       'illegal-row': legalityWarning,
@@ -8,9 +8,16 @@
     }"
     role="group"
     :aria-label="`${displayName}, ${numCopies ?? 1} copies`"
+    :aria-description="highlight.status.value ?? undefined"
     @mouseenter="emit('partner-hover', 0)"
     @mouseleave="emit('partner-hover', 0)"
   >
+    <span
+      v-if="highlight.status.value"
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0 z-10 rounded-md"
+      :class="highlight.classes.value"
+    />
     <LazyAddToDeckModal
       v-if="canShowDeckMenu && showAddToDeckModal"
       v-model:open="showAddToDeckModal"
@@ -62,6 +69,11 @@
       </template>
     </UModal>
 
+    <CardTagCheckbox
+      :oracle-id="card.card_data.oracle_id"
+      :name="card.card_data.name"
+      class="relative z-20 mr-1"
+    />
     <span class="copy-count" :title="`${numCopies ?? 1} copies`">
       {{ numCopies ?? 1 }}
     </span>
@@ -147,6 +159,7 @@
 </template>
 
 <script setup lang="ts">
+const highlight = useDeckHighlight(() => props.card.card_data);
 import type { Card } from '~/models/cardModel';
 import type { CardAction } from '~/utils/card-actions';
 const showActions = ref(false);

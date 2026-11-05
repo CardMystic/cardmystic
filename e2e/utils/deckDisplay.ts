@@ -110,6 +110,8 @@ export async function setupDeckDisplay(
   page: Page,
   options: {
     owner?: boolean;
+    pro?: boolean;
+    kind?: 'deck' | 'collection';
     cardCount?: number;
     holdImages?: boolean;
     groupBy?: 'color' | 'colorIdentity' | 'type' | null;
@@ -147,6 +149,33 @@ export async function setupDeckDisplay(
     });
   });
   await page.route(BACKEND + '/**', (route) => route.fulfill({ json: {} }));
+  await page.route(BACKEND + '/search-access', (route) =>
+    route.fulfill({
+      json: {
+        enabled: true,
+        authenticated: true,
+        tier: options.pro ? 'enhanced' : 'normal',
+        enhancedRemaining: options.pro ? null : 10,
+        enhancedTopUpRemaining: 0,
+        resetsAt: null,
+      },
+    }),
+  );
+  let savedBudget: number | null = null;
+  await page.route(BACKEND + '/library/lists/*/budget', (route) => {
+    if (route.request().method() === 'PUT')
+      savedBudget = route.request().postDataJSON().targetBudget;
+    return route.fulfill({ json: { targetBudget: savedBudget } });
+  });
+  await page.route(BACKEND + '/library/lists/*/suggestions', (route) =>
+    route.fulfill({ json: { results: [] } }),
+  );
+  await page.route(BACKEND + '/library/tags', (route) =>
+    route.fulfill({ json: { tags: [] } }),
+  );
+  await page.route(BACKEND + '/library/tags/assignments', (route) =>
+    route.fulfill({ json: { assignments: [] } }),
+  );
   await page.route(SUPABASE + '/rest/v1/**', (route) =>
     route.fulfill({ json: [] }),
   );
@@ -191,6 +220,8 @@ export async function setupDeckDisplay(
   );
 
   const deck = {
+    kind: options.kind ?? 'deck',
+    folder_id: null,
     id: displayDeckId,
     name: owner ? 'My display deck' : 'Public display deck',
     description: '',
@@ -339,7 +370,9 @@ export async function setupDeckDisplay(
   await expect(
     page.getByRole('button', { name: 'Display', exact: true }),
   ).toBeFocused();
-  await expect(page.locator('.list-card')).toHaveCount(cards.length);
+  await expect(page.locator('.list-card')).toHaveCount(
+    options.kind === 'collection' ? Math.min(100, cards.length) : cards.length,
+  );
 
   return {
     cards,
