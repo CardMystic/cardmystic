@@ -3,10 +3,11 @@ import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { BACKEND, SUPABASE } from './utils/mocks';
 import type { DeckAnalytics } from '../utils/deckAnalytics';
 
-test('free users get charts and analytics only after opening Deck Stats', async ({
+test('visitors open free analytics directly from the mobile Deck Stats button', async ({
   page,
 }) => {
-  await setupDeckDisplay(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setupDeckDisplay(page, { owner: false });
   let requests = 0;
   await page.route(
     BACKEND + `/library/lists/${displayDeckId}/analytics`,
@@ -28,6 +29,9 @@ test('free users get charts and analytics only after opening Deck Stats', async 
   );
   expect(requests).toBe(0);
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Deck sections', exact: true }),
+  ).toHaveCount(0);
   await page
     .locator('.sticky-footer-wrap')
     .getByRole('button', { name: 'Deck Stats', exact: true })
@@ -40,6 +44,35 @@ test('free users get charts and analytics only after opening Deck Stats', async 
   ).toHaveCount(0);
   expect(requests).toBe(1);
 });
+
+for (const width of [390, 1280]) {
+  test(`Jump To keeps the footer visible while choosing a group at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await setupDeckDisplay(page, { cardCount: 30, groupBy: 'type' });
+    await page.getByRole('button', { name: 'Reject all', exact: true }).click();
+    const footer = page.locator('.sticky-footer-wrap');
+    const jump = footer.getByRole('button', {
+      name: 'Jump to group',
+      exact: true,
+    });
+    await expect(footer).toBeVisible();
+    await jump.click();
+    await expect(page.getByRole('menu')).toBeVisible();
+    await expect(footer).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu')).toHaveCount(0);
+    await expect(footer).toBeVisible();
+    await jump.click();
+    await page.getByRole('menuitem').first().click();
+    await expect(page.getByRole('menu')).toHaveCount(0);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(100);
+    await expect(footer).toBeVisible();
+  });
+}
 
 test('Deck analytics show useful draw odds and incomplete prices on mobile, with retry after a failed load', async ({
   page,
@@ -91,6 +124,7 @@ test('Deck analytics show useful draw odds and incomplete prices on mobile, with
   await page
     .getByRole('button', { name: 'Deck sections', exact: true })
     .click();
+  await expect(page.locator('.sticky-footer-wrap')).toBeVisible();
   await page.getByRole('menuitem', { name: 'Deck Stats', exact: true }).click();
   const modal = page.getByTestId('deck-stats');
   await expect(modal.getByRole('alert')).toContainText(
