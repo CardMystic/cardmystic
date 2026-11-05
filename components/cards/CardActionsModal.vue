@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import { computed } from 'vue';
 import type { Card } from '~/models/cardModel';
 import { getCardImageUrl } from '~/utils/scryfall';
@@ -42,7 +43,7 @@ const actionGroups = computed<CardAction[][]>(() => {
           name: data.name,
           set: data.set,
           imageUrl: getCardImageUrl(data),
-          price: data.prices?.usd || '0',
+          price: getUsdPrice(data.prices) || '0',
         });
     },
   };

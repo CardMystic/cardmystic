@@ -157,14 +157,18 @@ describe('sortSearchResults', () => {
   });
 
   it('sorts by price ascending', () => {
+    const foilOnly = makeCard({ name: 'Foil only' });
+    foilOnly.card_data.prices = { usd: null, usd_foil: '3.00' };
     const cards = [
       makeCard({ price: '10.00' }),
       makeCard({ price: '1.50' }),
       makeCard({ price: '5.00' }),
+      foilOnly,
     ];
     const result = sortSearchResults(cards, 'price', 'asc')!;
     expect(result.map((c) => c.card_data.prices.usd)).toEqual([
       '1.50',
+      null,
       '5.00',
       '10.00',
     ]);

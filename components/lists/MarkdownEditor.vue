@@ -262,6 +262,7 @@
 </template>
 
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import { refDebounced } from '~/utils/refDebounced';
 import type {
   MarkdownSourceEditorHandle,
@@ -548,7 +549,7 @@ const cardImageMap = computed(() => {
       imageUrl,
       oracleId: card.card_data.oracle_id,
       isCommander: commanderNames.value?.has(card.card_data.name) ?? false,
-      price: card.card_data.prices?.usd ?? null,
+      price: getUsdPrice(card.card_data.prices) ?? null,
       tcgplayerId: card.card_data.tcgplayer_id,
       backImageUrl: hasDistinctBack ? flippedImageUrl : null,
     });

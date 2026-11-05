@@ -19,7 +19,7 @@ const artwork = computed(() => {
 const priceLabel = computed(() =>
   props.list.estimated_price_usd == null
     ? 'Price unavailable'
-    : `~$${props.list.estimated_price_usd.toFixed(2)}`,
+    : `$${props.list.estimated_price_usd.toFixed(2)}`,
 );
 const priceDescription = computed(() =>
   props.list.price_estimate_incomplete
@@ -101,15 +101,7 @@ const socialCounts = computed(() => [
               :title="priceDescription"
               :aria-label="`${priceLabel}. ${priceDescription}`"
             >
-              {{ priceLabel
-              }}<span
-                v-if="
-                  list.estimated_price_usd != null &&
-                  list.price_estimate_incomplete
-                "
-                class="ml-1 text-amber-300"
-                >(partial)</span
-              >
+              {{ priceLabel }}
             </span>
             <div v-if="showSettingsButton" class="mt-1 flex justify-end">
               <UButton

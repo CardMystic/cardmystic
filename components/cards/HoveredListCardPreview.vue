@@ -63,8 +63,8 @@
       <HoveredCardActions
         :card="card"
         :buy-label="
-          card.card_data.prices.usd
-            ? `Buy on TCGPlayer ($${card.card_data.prices.usd})`
+          getUsdPrice(card.card_data.prices)
+            ? `Buy on TCGPlayer ($${getUsdPrice(card.card_data.prices)})`
             : 'Buy on TCGPlayer'
         "
         :can-show-deck-menu="canShowDeckMenu"
@@ -112,6 +112,7 @@
 </template>
 
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import type { Card } from '~/models/cardModel';
 import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
@@ -206,7 +207,7 @@ const clipboardCard = computed(() => {
     name: cardData.name || '',
     set: cardData.set || '',
     imageUrl: getCardImageUrl(cardData),
-    price: cardData.prices?.usd || '0',
+    price: getUsdPrice(cardData.prices) || '0',
   };
 });
 

@@ -131,6 +131,7 @@
 </template>
 
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 const highlight = useDeckHighlight(() => props.card.card_data);
 import type { CardAction } from '~/utils/card-actions';
 import type { Card } from '~/models/cardModel';
@@ -252,8 +253,8 @@ const cardOverlayMenuItems = computed<CardAction[][]>(() => {
 
   if (props.card.card_data.tcgplayer_id) {
     generalActions.push({
-      label: props.card.card_data.prices.usd
-        ? `Buy on TCGPlayer · $${props.card.card_data.prices.usd}`
+      label: getUsdPrice(props.card.card_data.prices)
+        ? `Buy on TCGPlayer · $${getUsdPrice(props.card.card_data.prices)}`
         : 'Buy on TCGPlayer',
       icon: 'i-heroicons-shopping-cart',
       to: getAffiliateLink(props.card.card_data.tcgplayer_id),

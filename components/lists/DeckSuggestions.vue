@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import { useElementSize, useIntersectionObserver } from '@vueuse/core';
 import type { Card } from '~/models/cardModel';
 import type { CardAction } from '~/utils/card-actions';
@@ -94,14 +95,16 @@ const loading = ref(false),
 let sequence = 0;
 const remaining = computed(() => {
   const used = new Set([...props.oracleIds, ...added.value]);
-  return queue.value.filter(
-    (card) =>
+  return queue.value.filter((card) => {
+    const price = getUsdPrice(card.card_data.prices);
+    return (
       !used.has(card.card_data.oracle_id) &&
       (targetBudget.value === undefined ||
-        (card.card_data.prices?.usd != null &&
-          Math.round(Number(card.card_data.prices.usd) * 100) <=
-            Math.round(targetBudget.value * 100))),
-  );
+        (price != null &&
+          Math.round(Number(price) * 100) <=
+            Math.round(targetBudget.value * 100)))
+    );
+  });
 });
 const grid = ref<HTMLElement | null>(null);
 const { width } = useElementSize(grid);

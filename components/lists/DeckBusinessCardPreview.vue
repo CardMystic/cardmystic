@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import { analyzeDeck } from '~/utils/deckAnalysis';
 import type { AnalysisCard } from '~/utils/deckAnalysis';
 import type { DeckBusinessCardDetails } from '~/utils/deckBusinessCard';
@@ -45,7 +46,8 @@ const price = computed(() => {
   let cents = 0,
     missing = 0;
   for (const { card, quantity } of props.entries) {
-    const value = card.prices?.usd == null ? NaN : Number(card.prices.usd);
+    const raw = getUsdPrice(card.prices);
+    const value = raw == null ? NaN : Number(raw);
     if (Number.isFinite(value) && value >= 0)
       cents += Math.round(value * 100) * quantity;
     else missing += quantity;

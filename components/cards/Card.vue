@@ -281,8 +281,8 @@
             aria-label="Buy on TCGPlayer"
           >
             {{
-              card.card_data.prices.usd
-                ? `$${card.card_data.prices.usd}`
+              getUsdPrice(card.card_data.prices)
+                ? `$${getUsdPrice(card.card_data.prices)}`
                 : 'Buy'
             }}
           </UButton>
@@ -293,6 +293,7 @@
 </template>
 
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
@@ -395,7 +396,7 @@ const combinedUsdPrice = computed(() => {
   let total = 0;
   let hasPrice = false;
   for (const card of [props.card.card_data, props.card.partner_card_data!]) {
-    const usd = parseFloat(card.prices?.usd ?? '');
+    const usd = parseFloat(getUsdPrice(card.prices) ?? '');
     if (!isNaN(usd)) {
       total += usd;
       hasPrice = true;
@@ -415,7 +416,7 @@ const combinedPriceTooltip = computed(() => {
   const cards = [props.card.card_data, props.card.partner_card_data!];
   const parts = cards
     .map((c) => {
-      const price = c.prices?.usd ? `$${c.prices.usd}` : '?';
+      const price = getUsdPrice(c.prices) ? `$${getUsdPrice(c.prices)}` : '?';
       return `${c.name?.split(' // ')[0]}: ${price}`;
     })
     .join(' + ');
@@ -431,7 +432,7 @@ const partnerTcgplayerId = computed(() => {
 });
 
 const singleBuyTooltip = computed(() => {
-  const price = props.card.card_data.prices?.usd;
+  const price = getUsdPrice(props.card.card_data.prices);
   return price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer';
 });
 
@@ -490,8 +491,8 @@ const cardOverlayMenuItems = computed<CardAction[][]>(() => {
   }
   generalActions.push({
     label: data.tcgplayer_id
-      ? data.prices?.usd
-        ? `Buy on TCGPlayer · $${data.prices.usd}`
+      ? getUsdPrice(data.prices)
+        ? `Buy on TCGPlayer · $${getUsdPrice(data.prices)}`
         : 'Buy on TCGPlayer'
       : 'Search on TCGPlayer',
     icon: 'i-lucide-shopping-cart',
