@@ -41,11 +41,7 @@ const waitForSearchCall = (
 
 /** Locator for the rendered search-result card grid. */
 const resultsGrid = (page: import('@playwright/test').Page) =>
-  page
-    .locator(
-      'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
-    )
-    .first();
+  page.getByTestId('search-results-grid').first();
 
 /** Count rendered card images inside the results grid. */
 const expectResultsRendered = async (page: import('@playwright/test').Page) => {

@@ -219,26 +219,6 @@ test('anonymous deck artwork uses native lazy images and appears after scrolling
       )
       .toBe(true);
   }
-  const pro = page.getByRole('region', { name: 'Pro Features', exact: true });
-  await pro.scrollIntoViewIfNeeded();
-  await expect(pro.getByText('Get More out of CardMystic')).toBeVisible();
-  await expect(
-    pro.getByRole('img', { name: 'CardMystic Pro' }),
-  ).toHaveJSProperty('naturalWidth', 448);
-  expect(
-    await pro.evaluate((element) => {
-      const recent = [...document.querySelectorAll('h2')].find(
-        (heading) => heading.textContent === 'Recent Decklists',
-      );
-      return (
-        !!recent &&
-        !!(
-          recent.compareDocumentPosition(element) &
-          Node.DOCUMENT_POSITION_FOLLOWING
-        )
-      );
-    }),
-  ).toBe(true);
   const explore = page.getByRole('navigation', { name: 'Explore CardMystic' });
   await explore.scrollIntoViewIfNeeded();
   // The navigation groups belong at the end of the home content, before the footer.
@@ -249,16 +229,7 @@ test('anonymous deck artwork uses native lazy images and appears after scrolling
     }),
   ).toBe(true);
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
-  await pro.scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '.cache/home-pro-mobile.png' });
   await page.setViewportSize({ width: 1920, height: 1080 });
   await expect(page.locator('.home-content')).toHaveCSS('max-width', '2000px');
   expect((await recentDecks.boundingBox())!.width).toBeCloseTo(1440, 0);
-  await pro.scrollIntoViewIfNeeded();
-  await page.screenshot({ path: '.cache/home-wide-desktop.png' });
-  await pro.getByRole('link', { name: 'View Pro features' }).click();
-  await expect(page).toHaveURL(/\/memberships$/);
-  await expect(
-    page.getByRole('heading', { name: 'CardMystic Pro', exact: true }),
-  ).toBeVisible();
 });

@@ -72,7 +72,15 @@ export function useSearchModeNotice() {
   }));
 }
 
+export function useSearchEnhancementNotice() {
+  return useState('search-enhancement-notice', () => ({
+    path: '',
+    unavailable: false,
+  }));
+}
+
 export function useMeteredSearchRequest() {
+  const enhancementNotice = useSearchEnhancementNotice();
   const access = useSearchAccess();
   const route = useRoute();
   const router = useRouter();
@@ -97,6 +105,18 @@ export function useMeteredSearchRequest() {
       headers,
     });
     const header = response.headers.get('x-search-access');
+    if (
+      response.ok &&
+      subject === access.userId.value &&
+      route.fullPath === searchLocation
+    ) {
+      enhancementNotice.value = {
+        path: searchLocation,
+        unavailable: header
+          ? JSON.parse(header).reason === 'enhancement_unavailable'
+          : false,
+      };
+    }
     if (header && subject === access.userId.value) {
       const decision = JSON.parse(header);
       access.report(decision, subject);

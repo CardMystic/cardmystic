@@ -52,7 +52,7 @@ export function navigationTrailEntry(
     return { kind: 'search', path: route.path, to, label: `${label}: ${name}` };
   }
   const popular =
-    /^\/(popular-cards|popular-commanders|popular-by-commander)\/(?:all|paper|arena|mtgo|modern|commander)(?:\/[^/]+)?$/.exec(
+    /^\/(popular-cards|popular-commanders|popular-by-commander|popular-by-card)\/(?:all|paper|arena|mtgo|modern|commander)(?:\/[^/]+)?$/.exec(
       route.path,
     );
   const mode = search?.[1] ?? popular?.[1];
@@ -63,6 +63,7 @@ export function navigationTrailEntry(
         'popular-cards': 'Popular Cards',
         'popular-commanders': 'Popular Commanders',
         'popular-by-commander': 'Commander Popularity',
+        'popular-by-card': 'Commanders by Card',
       } as Record<string, string>
     )[mode ?? ''];
   if (!label) return undefined;
@@ -166,7 +167,7 @@ export function restoredNavigationTrail(
       typeof entry === 'object' &&
       (entry.kind === 'search' || entry.kind === 'card') &&
       typeof entry.path === 'string' &&
-      /^\/(?:search|card|themes|roles|sets|popular-cards|popular-commanders|popular-by-commander)\/[^/]/.test(
+      /^\/(?:search|card|themes|roles|sets|popular-cards|popular-commanders|popular-by-commander|popular-by-card)\/[^/]/.test(
         entry.path,
       ) &&
       typeof entry.to === 'string' &&

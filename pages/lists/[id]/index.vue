@@ -158,7 +158,10 @@
       />
     </div>
 
-    <DeckMultiTagger v-if="multiTag.active.value" />
+    <DeckMultiTagger
+      v-if="multiTag.active.value"
+      :oracle-ids="listItems.map((item) => item.oracle_id)"
+    />
 
     <DeckSettingsModal
       v-if="isOwner && list && settingsOpen"

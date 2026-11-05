@@ -33,6 +33,16 @@ test('popular searches power the homepage and keyboard/mouse autocomplete withou
     page.getByRole('listbox', { name: 'Popular search suggestions' }),
   ).toBeHidden();
   await expect(page).toHaveURL(/query=treasure(?:%20|\+)generators/);
+  // The URL changes before Nuxt replaces the homepage form. Wait for the
+  // destination page so the next fill cannot land in the outgoing input.
+  await expect(
+    page.getByRole('heading', {
+      name: 'MTG Smart Search',
+      level: 1,
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(input).toHaveValue('treasure generators');
   await input.focus();
   await input.fill('mono white');
   await page.getByRole('option', { name: 'mono white removal' }).click();

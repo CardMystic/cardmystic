@@ -71,7 +71,7 @@ const displayScore = (score: number) =>
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--ui-border);
+  border-top: 1px solid white;
 }
 .evidence-intro {
   display: grid;

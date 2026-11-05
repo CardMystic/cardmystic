@@ -300,6 +300,9 @@ export const ColorRatiosSchema = z.object({
 export type ColorRatios = z.infer<typeof ColorRatiosSchema>;
 
 export const DecklistSummarySchema = z.object({
+  estimated_price_usd: z.number().nonnegative().nullable().optional(),
+  price_estimate_incomplete: z.boolean().optional(),
+  author_avatar_card_name: z.string().nullable().optional(),
   bracket: z.number().int().min(1).max(5).nullable().optional(),
   kind: z.enum(['deck', 'collection']).default('deck'),
   folder_id: z.uuid().nullable().default(null),

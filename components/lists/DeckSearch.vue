@@ -39,16 +39,17 @@ async function search() {
   }
   const current = ++sequence;
   const revision = props.revision;
+  const submittedMode = mode.value;
   busy.value = true;
   error.value = '';
   try {
     const result = await request<ListSearchResults>(
       `/lists/${props.listId}/search`,
       'POST',
-      { query: query.value, mode: mode.value },
+      { query: query.value, mode: submittedMode },
     );
     if (current !== sequence) return;
-    emit('results', { ...result, mode: mode.value });
+    emit('results', { ...result, mode: submittedMode });
     count.value = result.oracleIds.length;
     searchedRevision.value = revision;
   } catch (cause) {

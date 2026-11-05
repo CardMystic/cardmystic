@@ -15,6 +15,7 @@
       <PopularByCommanderSearch
         v-else-if="statsType === 'popular-by-commander'"
       />
+      <PopularByCardSearch v-else-if="statsType === 'popular-by-card'" />
     </div>
   </div>
 </template>
@@ -25,7 +26,10 @@ import PopularCommandersSearch from './PopularCommandersSearch.vue';
 import PopularByCommanderSearch from './PopularByCommanderSearch.vue';
 
 export type StatsType =
-  'popular-cards' | 'popular-commanders' | 'popular-by-commander';
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander'
+  | 'popular-by-card';
 
 const props = defineProps<{
   defaultStatsType?: StatsType;
@@ -57,6 +61,7 @@ onMounted(() => {
   if (route.params.slug) return;
   const type = statsType.value;
   const hasQuery =
+    (type === 'popular-by-card' && route.query.card_name) ||
     (type === 'popular-by-commander' && route.query.commander) ||
     (type !== 'popular-by-commander' &&
       (route.query.query || route.query.filters));

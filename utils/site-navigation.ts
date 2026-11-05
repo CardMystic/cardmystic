@@ -140,6 +140,11 @@ export function siteNavigation(
           icon: 'i-lucide-flame',
           to: '/popular-by-commander/all',
         },
+        {
+          label: 'Commanders by Card',
+          icon: 'i-lucide-crown',
+          to: '/popular-by-card/all',
+        },
       ],
     },
     collectionNavigation('sets', catalog, status),

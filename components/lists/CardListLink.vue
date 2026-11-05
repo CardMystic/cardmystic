@@ -16,6 +16,16 @@ const artwork = computed(() => {
   const name = props.list.avatar_card_name || props.list.commanders?.[0];
   return name ? scryfallArtCropUrl(name) : undefined;
 });
+const priceLabel = computed(() =>
+  props.list.estimated_price_usd == null
+    ? 'Price unavailable'
+    : `~$${props.list.estimated_price_usd.toFixed(2)}`,
+);
+const priceDescription = computed(() =>
+  props.list.price_estimate_incomplete
+    ? 'Incomplete estimate: some cards or prices are missing. USD, all boards.'
+    : 'Estimated USD price from Scryfall, including all boards. Actual prices may vary.',
+);
 const updated = computed(() => props.list.updated_at || props.list.created_at);
 const socialCounts = computed(() => [
   { label: 'views', icon: 'i-lucide-eye', count: props.list.view_count },
@@ -85,6 +95,22 @@ const socialCounts = computed(() => [
               :ratios="list.color_ratios"
               class="mt-1"
             />
+            <span
+              v-if="list.kind !== 'collection'"
+              class="mt-1 block text-xs"
+              :title="priceDescription"
+              :aria-label="`${priceLabel}. ${priceDescription}`"
+            >
+              {{ priceLabel
+              }}<span
+                v-if="
+                  list.estimated_price_usd != null &&
+                  list.price_estimate_incomplete
+                "
+                class="ml-1 text-amber-300"
+                >(partial)</span
+              >
+            </span>
             <div v-if="showSettingsButton" class="mt-1 flex justify-end">
               <UButton
                 @click.stop="$emit('settings')"
@@ -154,10 +180,15 @@ const socialCounts = computed(() => [
         class="relative z-20 ml-auto inline-flex min-h-11 min-w-0 items-center gap-1 rounded text-xs hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
         :title="list.username"
       >
-        <UIcon
-          name="i-lucide-circle-user-round"
-          class="hidden size-5 shrink-0 sm:block"
-          aria-hidden="true"
+        <UAvatar
+          :src="
+            list.author_avatar_card_name
+              ? scryfallArtCropUrl(list.author_avatar_card_name)
+              : undefined
+          "
+          alt=""
+          icon="i-lucide-circle-user-round"
+          class="size-6 shrink-0"
         />
         <span class="truncate">{{ list.username }}</span>
       </NuxtLink>

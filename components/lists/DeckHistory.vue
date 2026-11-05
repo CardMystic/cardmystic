@@ -12,6 +12,7 @@ type Version = {
   count: number;
   added: number;
   removed: number;
+  changeCount: number;
   comparisonAvailable: boolean;
   changes: { oracleId: string; name: string; board: string; delta: number }[];
   details: string[];
@@ -221,7 +222,7 @@ async function restore() {
           class="mt-3 text-sm"
         >
           <summary class="cursor-pointer py-1">
-            {{ version.changes.length }} card changes
+            {{ version.changeCount }} card changes
           </summary>
           <ul class="mt-2 grid gap-2 sm:grid-cols-2">
             <li
@@ -242,6 +243,13 @@ async function restore() {
               <span class="text-muted">{{ change.board }}</span>
             </li>
           </ul>
+          <p
+            v-if="version.changeCount > version.changes.length"
+            class="mt-2 text-muted"
+          >
+            …and {{ version.changeCount - version.changes.length }} more card
+            changes.
+          </p>
         </details>
         <p
           v-else-if="!version.comparisonAvailable"

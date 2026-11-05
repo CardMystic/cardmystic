@@ -43,11 +43,7 @@ test.describe('Popular Cards', () => {
     // page ends up populated correctly.
     await gotoHydrated(page, '/popular-cards/all');
 
-    const grid = page
-      .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
-      )
-      .first();
+    const grid = page.getByTestId('search-results-grid').first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });
     await expect
       .poll(async () => grid.locator('img[alt]').count(), {
@@ -131,11 +127,7 @@ test.describe('Popular Commanders', () => {
     // invisible to the browser network layer, which flaked this test.
     await gotoHydrated(page, '/popular-commanders/all');
 
-    const grid = page
-      .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
-      )
-      .first();
+    const grid = page.getByTestId('search-results-grid').first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });
     await expect
       .poll(async () => grid.locator('img[alt]').count(), {
@@ -212,11 +204,7 @@ test.describe('Popular by Commander', () => {
     });
 
     // Popular cards grid should populate.
-    const grid = page
-      .locator(
-        'div.grid.grid-cols-2.sm\\:grid-cols-3.md\\:grid-cols-3.lg\\:grid-cols-4.xl\\:grid-cols-4',
-      )
-      .first();
+    const grid = page.getByTestId('search-results-grid').first();
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });
     await expect
       .poll(async () => grid.locator('img[alt]').count(), {

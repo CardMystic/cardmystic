@@ -60,6 +60,19 @@
         </template>
       </UPopover>
     </div>
+    <UAlert
+      v-if="
+        !error &&
+        searchResults?.length &&
+        enhancementNotice.path === currentRoute.fullPath &&
+        enhancementNotice.unavailable
+      "
+      class="mb-3"
+      color="warning"
+      variant="soft"
+      title="Pro ranking is temporarily unavailable"
+      description="These results use Normal ranking. This search did not use your allowance."
+    />
     <SearchError
       :error="error"
       v-if="error"
@@ -190,6 +203,7 @@
                 <div
                   :id="groupToId(group.label)"
                   class="grid pb-4"
+                  data-testid="search-results-grid"
                   :class="resultsGridClass"
                 >
                   <div
@@ -239,7 +253,11 @@
 
           <!-- Flat results (no grouping) -->
           <template v-else>
-            <div class="grid" :class="resultsGridClass">
+            <div
+              class="grid"
+              data-testid="search-results-grid"
+              :class="resultsGridClass"
+            >
               <div
                 v-for="result in paginatedResults"
                 :key="result.card_data.id"
@@ -350,6 +368,8 @@
 </template>
 
 <script lang="ts" setup>
+const enhancementNotice = useSearchEnhancementNotice();
+const currentRoute = useRoute();
 provide('searchCardDeckMatches', true);
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';

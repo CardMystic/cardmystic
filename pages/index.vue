@@ -72,25 +72,15 @@
 
   <!-- Everything below the fold -->
   <UContainer class="home-content max-w-[2000px] my-8 lg:my-12">
-    <div class="home-gallery mb-14">
-      <UButton
-        to="/install"
-        icon="i-lucide-download"
-        label="Install CardMystic"
-        variant="outline"
-      />
-    </div>
-
-    <!-- User-specific sections when logged in -->
+    <!-- Keep recent decks synchronous so an empty async placeholder does not
+         briefly pull the deferred sections below into the viewport. -->
     <ClientOnly>
-      <LazyRecentLists v-if="isLoggedIn" class="home-gallery mb-14" />
-      <LazyRecentListsNotLoggedIn v-else class="home-gallery mb-14" />
+      <RecentLists v-if="isLoggedIn" class="home-gallery mb-14" />
+      <RecentListsNotLoggedIn v-else class="home-gallery mb-14" />
       <template #fallback>
         <RecentListsSkeleton class="home-gallery mb-14" />
       </template>
     </ClientOnly>
-
-    <ProFeatures class="home-gallery mb-14" />
 
     <LazyFeaturedSection
       :hydrate-on-visible="sectionVisibility"

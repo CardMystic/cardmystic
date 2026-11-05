@@ -23,6 +23,9 @@ const deck = {
   visibility: 'public',
   user_id: FAKE_USER.id,
   username: 'deck-author',
+  estimated_price_usd: 123.45,
+  price_estimate_incomplete: true,
+  author_avatar_card_name: 'Black Lotus',
   like_count: 0,
   save_count: 0,
   comment_count: 0,
@@ -72,11 +75,23 @@ test('deck names are crawlable links with whole-tile navigation', async ({
   await gotoHydrated(page, '/explore/decklists');
   const link = page.getByRole('link', { name: deck.name, exact: true });
   await expect(link).toHaveAttribute('href', deckPath);
+  await expect(
+    page.getByText('~$123.45', { exact: false }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByText('(partial)', { exact: true }).first(),
+  ).toBeVisible();
   await expect(link.locator('a, button')).toHaveCount(0);
   const tile = page.locator('.deck-link').filter({ has: link });
   await expect(tile.getByText('Selesnya', { exact: true })).toBeVisible();
-  await expect(tile.locator('img')).toHaveAttribute('loading', 'lazy');
-  await expect(tile.locator('img')).toHaveAttribute('draggable', 'false');
+  await expect(tile.locator('.deck-link-header img')).toHaveAttribute(
+    'loading',
+    'lazy',
+  );
+  await expect(tile.locator('.deck-link-header img')).toHaveAttribute(
+    'draggable',
+    'false',
+  );
   await page.screenshot({ path: '.cache/platform-deck-tile-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
@@ -99,6 +114,10 @@ test('author links and color tooltips stay independently accessible', async ({
   await gotoHydrated(page, '/explore/decklists');
   const author = page.getByRole('link', { name: deck.username, exact: true });
   await expect(author).toHaveAttribute('href', authorPath);
+  await expect(author.locator('img')).toHaveAttribute(
+    'src',
+    /Black%20Lotus|Black\+Lotus/,
+  );
 
   const white = page.getByRole('group', { name: 'White 50%', exact: true });
   await white.hover();

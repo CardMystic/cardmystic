@@ -10,6 +10,10 @@ for (const [path, endpoint] of [
   ['/popular-cards/all?query=card+draw', '/deck-stats/top-cards'],
   ['/popular-commanders/all?query=card+draw', '/deck-stats/top-commanders'],
   [
+    '/popular-by-card/all?card_name=Sol+Ring&query=card+draw',
+    '/deck-stats/popular-commanders-for-card',
+  ],
+  [
     '/popular-by-commander/all?commander=Kaalia+of+the+Vast&query=card+draw',
     '/deck-stats/popular-by-commander',
   ],

@@ -93,8 +93,8 @@ const heading = computed(
   () =>
     ({
       all: 'Decks & Collections',
-      mine: 'My Decklists',
-      collections: 'My Collections',
+      mine: 'Decks',
+      collections: 'Collections',
       liked: 'Liked Decklists',
       saved: 'Saved Decklists',
     })[view.value],
@@ -339,8 +339,6 @@ watch([display, sort, direction], () => {
           v-if="view === 'all'"
           icon="i-lucide-plus"
           label="New Collection"
-          color="neutral"
-          variant="outline"
           :disabled="missingFolder"
           @click="createList('collection')"
         />
@@ -354,10 +352,10 @@ watch([display, sort, direction], () => {
             label: 'Decks & Collections',
             icon: 'i-lucide-folder-open',
           },
-          { key: 'mine', label: 'My Decks', icon: 'i-lucide-layers' },
+          { key: 'mine', label: 'Decks', icon: 'i-lucide-layers' },
           {
             key: 'collections',
-            label: 'My Collections',
+            label: 'Collections',
             icon: 'i-lucide-library',
           },
           { key: 'liked', label: 'Liked Decks', icon: 'i-lucide-heart' },

@@ -298,6 +298,8 @@ export type Database = {
           transaction_id: number | null;
           action: string;
           snapshot: Json;
+          summary: Json;
+          undo: Json;
         };
         Insert: {
           id?: never;
@@ -306,9 +308,11 @@ export type Database = {
           created_at?: string;
           transaction_id?: number | null;
           action: string;
-          snapshot: Json;
+          snapshot?: Json;
+          summary?: Json;
+          undo?: Json;
         };
-        Update: { action?: string; snapshot?: Json };
+        Update: { action?: string; snapshot?: Json; summary?: Json; undo?: Json };
         Relationships: [];
       };
       card_lists: {

@@ -36,10 +36,15 @@ test('Pro searches filter cards on the collection page, keyword works, and clear
   const state = await setupDeckDisplay(page, { pro: true, kind: 'collection' });
   const modes: string[] = [];
   let empty = false;
+  let finishSmart = () => {};
+  const smartResponse = new Promise<void>((resolve) => {
+    finishSmart = resolve;
+  });
   await page.route(
     BACKEND + `/library/lists/${displayDeckId}/search`,
-    (route) => {
+    async (route) => {
       modes.push(route.request().postDataJSON().mode);
+      if (route.request().postDataJSON().mode === 'smart') await smartResponse;
       return route.fulfill({
         json: {
           oracleIds: empty
@@ -66,6 +71,12 @@ test('Pro searches filter cards on the collection page, keyword works, and clear
     .getByRole('main')
     .getByRole('button', { name: 'Search', exact: true })
     .click();
+  await expect.poll(() => modes).toEqual(['smart']);
+  await page.getByRole('combobox', { name: 'Search within list type' }).click();
+  await page
+    .getByRole('option', { name: 'Keyword search', exact: true })
+    .click();
+  finishSmart();
   await expect(page.locator('.list-card')).toHaveCount(2);
   await expect(
     page.locator('.list-card').first().getByRole('img'),
@@ -82,10 +93,6 @@ test('Pro searches filter cards on the collection page, keyword works, and clear
     page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
   ).toContainText('Smart Search %');
   await page.keyboard.press('Escape');
-  await page.getByRole('combobox', { name: 'Search within list type' }).click();
-  await page
-    .getByRole('option', { name: 'Keyword search', exact: true })
-    .click();
   await page
     .getByRole('main')
     .getByRole('button', { name: 'Search', exact: true })
@@ -455,9 +462,7 @@ test('my lists support folder management, typed deletion, sorting, list view and
   await confirm.click();
   await expect.poll(() => deleted).toBe(true);
   await expect(page).toHaveURL(/\/lists$/);
-  await page
-    .getByRole('button', { name: 'My Collections', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Collections', exact: true }).click();
   await page
     .getByRole('button', { name: 'New Collection', exact: true })
     .click();
@@ -618,13 +623,19 @@ test('free deck tools export CSV, preview an import, draw a hand and restore a v
               createdAt: '2026-11-01T12:00:00Z',
               action: 'Added cards',
               kind: 'add',
-              added: 1,
+              added: 25,
               removed: 0,
-              changes: [],
+              changeCount: 25,
+              changes: Array.from({ length: 20 }, (_, i) => ({
+                oracleId: `20000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`,
+                name: `Added card ${i + 1}`,
+                board: 'Mainboard',
+                delta: 1,
+              })),
               details: [],
               comparisonAvailable: true,
               name: 'Test',
-              count: 3,
+              count: 27,
             },
             {
               id: 1,
@@ -633,6 +644,7 @@ test('free deck tools export CSV, preview an import, draw a hand and restore a v
               kind: 'baseline',
               added: 0,
               removed: 0,
+              changeCount: 0,
               changes: [],
               details: [],
               comparisonAvailable: false,
@@ -687,6 +699,13 @@ test('free deck tools export CSV, preview an import, draw a hand and restore a v
   ).toBeVisible();
   await page.keyboard.press('Escape');
   await openDeckAction(page, 'History');
+  await page.getByText('25 card changes', { exact: true }).click();
+  await expect(
+    page.getByText('…and 5 more card changes.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Added card / })).toHaveCount(
+    20,
+  );
   await page.getByRole('button', { name: 'Restore', exact: true }).click();
   await page
     .getByRole('button', { name: 'Confirm restore', exact: true })
@@ -1317,9 +1336,19 @@ test('multi-tagger saves several cards together and keeps selection out of card 
   await page.route(BACKEND + '/library/tags', (route) =>
     route.fulfill({ json: { tags: [{ id: tagId, name: 'Removal' }] } }),
   );
-  const saves: { oracleIds: string[] }[] = [];
+  await page.route(BACKEND + '/library/tags/assignments', (route) =>
+    route.fulfill({
+      json: {
+        assignments: [{ oracle_id: state.cards[0].oracle_id, tag_id: tagId }],
+      },
+    }),
+  );
+  const saves: { oracleIds: string[]; method: string }[] = [];
   await page.route(BACKEND + `/library/tags/${tagId}/cards`, (route) => {
-    saves.push(route.request().postDataJSON());
+    saves.push({
+      ...route.request().postDataJSON(),
+      method: route.request().method(),
+    });
     return route.fulfill({ json: { saved: 2 } });
   });
   await page.reload();
@@ -1327,17 +1356,21 @@ test('multi-tagger saves several cards together and keeps selection out of card 
   await page.getByRole('button', { name: 'Multi-tagger', exact: true }).click();
   await page.getByRole('button', { name: 'Tag to apply' }).click();
   await page.getByRole('option', { name: 'Removal', exact: true }).click();
-  for (const card of state.cards.slice(0, 2))
-    await page
-      .getByRole('checkbox', { name: `Tag ${card.name}`, exact: true })
-      .check();
+  const first = page.getByRole('checkbox', {
+    name: `Tag ${state.cards[0].name}`,
+    exact: true,
+  });
+  await expect(first).toBeChecked();
+  await first.uncheck();
+  await page
+    .getByRole('checkbox', { name: `Tag ${state.cards[1].name}`, exact: true })
+    .check();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'Save tags', exact: true }).click();
-  await expect(
-    page.getByText('Tag added to 2 cards', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('Tags updated', { exact: true })).toBeVisible();
   expect(saves).toEqual([
-    { oracleIds: state.cards.slice(0, 2).map((card) => card.oracle_id) },
+    { oracleIds: [state.cards[1].oracle_id], method: 'PUT' },
+    { oracleIds: [state.cards[0].oracle_id], method: 'DELETE' },
   ]);
   await expect(page.getByRole('checkbox', { name: /^Tag / })).toHaveCount(0);
 });
@@ -1557,13 +1590,11 @@ test('library defaults to decks and collections with shared pagination and separ
   await expect(
     page.getByRole('navigation', { name: 'Library pages bottom' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'My Decks', exact: true }).click();
+  await page.getByRole('button', { name: 'Decks', exact: true }).click();
   await expect(page).toHaveURL(/view=mine/);
   await expect(page.locator('[data-testid^="library-list-"]')).toHaveCount(26);
   await expect(collection).toHaveCount(0);
-  await page
-    .getByRole('button', { name: 'My Collections', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Collections', exact: true }).click();
   await expect(page).toHaveURL(/view=collections/);
   await expect(page.locator('[data-testid^="library-list-"]')).toHaveCount(26);
   await expect(collection).toBeVisible();

@@ -153,6 +153,7 @@ const validPartnerList = computed(() => {
   return getValidPartners(
     selectedCommanderPartnerType.value,
     partnerCommanders.value,
+    newListCommander.value,
   );
 });
 
