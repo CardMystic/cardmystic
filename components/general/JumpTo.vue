@@ -2,6 +2,7 @@
   <UDropdownMenu
     v-if="isMounted && hasJumpTargets"
     :items="items"
+    :modal="false"
     :content="{ side: 'top', align: 'end' }"
     :ui="{ content: 'max-h-72 overflow-y-auto' }"
   >

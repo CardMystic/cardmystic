@@ -28,7 +28,12 @@ const pie = computed(() => {
 <template>
   <div class="grid gap-8 sm:grid-cols-2">
     <figure aria-label="Mana curve">
-      <figcaption class="font-medium mb-4">Mana curve (nonlands)</figcaption>
+      <figcaption
+        class="font-medium mb-4"
+        :class="{ 'border-b border-white/15 pb-2': compact }"
+      >
+        Mana curve<span v-if="!compact"> (nonlands)</span>
+      </figcaption>
       <div
         class="flex items-end gap-2 border-b border-default"
         :class="compact ? 'h-32' : 'h-48'"
@@ -50,10 +55,17 @@ const pie = computed(() => {
           row.label
         }}</span>
       </div>
-      <p class="text-xs text-muted text-center mt-2">Mana value</p>
+      <p v-if="!compact" class="text-xs text-muted text-center mt-2">
+        Mana value
+      </p>
     </figure>
     <figure aria-label="Color identity">
-      <figcaption class="font-medium mb-4">Color identity</figcaption>
+      <figcaption
+        class="font-medium mb-4"
+        :class="{ 'border-b border-white/15 pb-2': compact }"
+      >
+        Color identity
+      </figcaption>
       <div
         v-if="total"
         class="flex flex-wrap items-center justify-center gap-5"
@@ -92,7 +104,7 @@ const pie = computed(() => {
         </ul>
       </div>
       <p v-else class="text-sm text-muted">Add cards to see their colors.</p>
-      <p class="text-xs text-muted mt-3">
+      <p v-if="!compact" class="text-xs text-muted mt-3">
         Multicolor cards count in each of their colors. Percentages show each
         slice’s share of the chart.
       </p>
