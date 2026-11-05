@@ -3,6 +3,7 @@ import { CardFormat } from './cardModel';
 import { PaginationInfoSchema, PaginationQuerySchema } from './paginationModel';
 
 export const MAX_DECKLIST_CARDS = 1000;
+export const MAX_COLLECTION_CARDS = 50000;
 
 export const BoardSchema = z
   .enum(['Mainboard', 'Sideboard', 'Considering'])
@@ -151,6 +152,8 @@ export const CardListFormatSchema = z
   .describe('The format for the card list');
 
 export const CreateListSchema = z.object({
+  kind: z.enum(['deck', 'collection']).optional(),
+  folderId: z.uuid().nullable().optional(),
   name: z.string().min(1).max(200).describe('The name of the card list'),
   description: z
     .string()
@@ -297,6 +300,12 @@ export const ColorRatiosSchema = z.object({
 export type ColorRatios = z.infer<typeof ColorRatiosSchema>;
 
 export const DecklistSummarySchema = z.object({
+  estimated_price_usd: z.number().nonnegative().nullable().optional(),
+  price_estimate_incomplete: z.boolean().optional(),
+  author_avatar_card_name: z.string().nullable().optional(),
+  bracket: z.number().int().min(1).max(5).nullable().optional(),
+  kind: z.enum(['deck', 'collection']).default('deck'),
+  folder_id: z.uuid().nullable().default(null),
   id: z.string().describe('The card list ID'),
   name: z.string().nullable().describe('The list name'),
   description: z.string().nullable().describe('The list description'),
@@ -386,7 +395,14 @@ export type GetFeaturedPrimersResponse = z.infer<
   typeof GetFeaturedPrimersResponseSchema
 >;
 
-export const GetActiveUserDecklistsQuerySchema = PaginationQuerySchema;
+export const GetActiveUserDecklistsQuerySchema = PaginationQuerySchema.extend({
+  kind: z.enum(['deck', 'collection']).default('deck'),
+  folder: z.union([z.uuid(), z.literal('unfiled')]).optional(),
+  sort: z
+    .enum(['updated_at', 'created_at', 'name', 'format'])
+    .default('updated_at'),
+  direction: z.enum(['asc', 'desc']).default('desc'),
+});
 
 export type GetActiveUserDecklistsQuery = z.infer<
   typeof GetActiveUserDecklistsQuerySchema

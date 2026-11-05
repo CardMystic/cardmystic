@@ -1,5 +1,5 @@
 <template>
-  <div class="card-root list-card">
+  <div class="card-root list-card rounded-xl">
     <LazyCardActionsModal
       v-if="showActions"
       v-model:open="showActions"
@@ -39,14 +39,20 @@
     />
 
     <div class="card-image-wrapper">
+      <CardTagCheckbox
+        :oracle-id="card.card_data.oracle_id"
+        :name="card.card_data.name"
+        class="absolute left-2 top-2 z-20 rounded bg-default/90 p-2"
+      />
       <!-- Card image -->
       <button
         ref="actionTrigger"
         type="button"
         :aria-label="`Options for ${card.card_data.name}`"
+        :aria-description="highlight.status.value ?? undefined"
         aria-haspopup="dialog"
         :aria-expanded="showActions"
-        class="block w-full rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+        class="relative block w-full rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
         @click="showActions = true"
       >
         <img
@@ -65,6 +71,12 @@
             {{ card.card_data.name }}
           </p>
         </div>
+        <span
+          v-if="highlight.status.value"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 rounded-xl"
+          :class="highlight.classes.value"
+        />
       </button>
 
       <LazyCardOverlayButtons
@@ -91,10 +103,35 @@
         </div>
       </div>
     </div>
+    <div
+      v-if="card.ai_rerank_score !== undefined"
+      class="mt-1 flex min-h-8 items-center gap-2"
+      title="Smart search match"
+    >
+      <progress
+        :value="Math.round(card.ai_rerank_score * 100)"
+        max="100"
+        aria-label="Smart search match"
+        :data-color="
+          card.ai_rerank_score >= 0.7
+            ? 'success'
+            : card.ai_rerank_score >= 0.4
+              ? 'warning'
+              : 'error'
+        "
+        class="my-0 flex-1 min-w-0"
+      />
+      <span class="flex items-center gap-0.5 text-xs whitespace-nowrap"
+        ><UIcon name="i-lucide-brain" class="size-3" />{{
+          Math.round(card.ai_rerank_score * 100)
+        }}%</span
+      >
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+const highlight = useDeckHighlight(() => props.card.card_data);
 import type { CardAction } from '~/utils/card-actions';
 import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
@@ -522,5 +559,40 @@ function handleImageError(event: Event) {
   .card-root .card-image-wrapper:hover img {
     transform: scale(1.03);
   }
+}
+</style>
+
+<style scoped>
+progress {
+  appearance: none;
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 0.5rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--ui-bg-accented);
+}
+progress::-webkit-progress-bar {
+  background: var(--ui-bg-accented);
+}
+progress::-webkit-progress-value {
+  background: var(--score-color);
+  border-radius: 9999px;
+}
+progress::-moz-progress-bar {
+  background: var(--score-color);
+  border-radius: 9999px;
+}
+progress[data-color='success'] {
+  --score-color: var(--ui-success);
+}
+progress[data-color='warning'] {
+  --score-color: var(--ui-warning);
+}
+progress[data-color='error'] {
+  --score-color: var(--ui-error);
 }
 </style>

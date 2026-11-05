@@ -6,6 +6,11 @@ import {
 } from '~/server/utils/backendGateway';
 
 describe('private backend gateway', () => {
+  it('allows library requests through the same private gateway', () => {
+    expect(
+      backendTarget('https://api.example.com', '/api/backend/library/folders'),
+    ).toBe('https://api.example.com/library/folders');
+  });
   it('allows the curated popular-query endpoint', () => {
     expect(
       backendTarget('https://api.example.com', '/api/backend/cache/popular'),

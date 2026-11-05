@@ -18,7 +18,7 @@ const colorMode = useColorMode();
 const isMounted = ref(false);
 
 const wizardImage = computed(() => {
-  return colorMode.value === 'dark' ? '/wizard.webp' : '/wizard_black.webp';
+  return colorMode.value === 'dark' ? '/wizard.svg' : '/wizard_black.svg';
 });
 const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
   useUserProfile();
@@ -66,6 +66,7 @@ const desktopItems = computed(() => [
 const mainItemsMobile = computed(() => [
   ...searchItems.value,
   ...utilityNavigation,
+  { label: 'Install CardMystic', icon: 'i-lucide-download', to: '/install' },
 ]);
 watch(() => route.fullPath, closePopover);
 </script>
@@ -259,7 +260,7 @@ watch(() => route.fullPath, closePopover);
             />
             <template #fallback>
               <img
-                src="/wizard.webp"
+                src="/wizard.svg"
                 alt="CardMystic Logo"
                 class="w-10 h-10 object-contain"
               />
@@ -281,7 +282,7 @@ watch(() => route.fullPath, closePopover);
           />
           <template #fallback>
             <img
-              src="/wizard.webp"
+              src="/wizard.svg"
               alt="CardMystic Logo"
               class="w-12 h-12 object-contain"
             />
@@ -294,6 +295,14 @@ watch(() => route.fullPath, closePopover);
       <div
         class="w-px h-6 self-center bg-gray-300 dark:bg-gray-700 mx-2"
         aria-hidden="true"
+      />
+      <UButton
+        to="/install"
+        icon="i-lucide-download"
+        aria-label="Install CardMystic"
+        variant="ghost"
+        color="neutral"
+        class="text-muted"
       />
       <UNavigationMenu :items="yourDecksItems" />
       <ClipboardMenu class="ml-2 h-12.5" />

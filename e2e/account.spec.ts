@@ -101,8 +101,8 @@ for (const scenario of [
     await expect(
       membership.getByText(
         scenario.tier === 'enhanced'
-          ? 'Unlimited Enhanced searches.'
-          : '7 free Enhanced searches left today.',
+          ? 'Unlimited Pro searches.'
+          : '7 free Pro searches left today.',
         { exact: true },
       ),
     ).toBeVisible();
@@ -188,7 +188,5 @@ test('account retries a failed membership lookup without showing a false tier', 
   await expect(membership.getByText('Normal', { exact: true })).toHaveCount(0);
   failed = false;
   await membership.getByRole('button', { name: 'Retry membership' }).click();
-  await expect(
-    membership.getByText('Unlimited Enhanced searches.'),
-  ).toBeVisible();
+  await expect(membership.getByText('Unlimited Pro searches.')).toBeVisible();
 });

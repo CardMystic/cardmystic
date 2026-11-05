@@ -19,7 +19,8 @@ defineProps<{
 <template>
   <nav
     :aria-label="`${collectionLabels[kind]} pages ${position}`"
-    class="flex flex-col items-center gap-2"
+    class="flex flex-col gap-2"
+    :class="position === 'top' ? 'items-start' : 'items-center'"
   >
     <p role="status" class="text-sm text-toned">
       {{ (page - 1) * pageSize + 1 }}–{{ Math.min(page * pageSize, total) }} of
@@ -35,7 +36,7 @@ defineProps<{
       :show-controls="false"
       :to="to"
       :ui="{
-        list: 'flex-wrap justify-center gap-2',
+        list: `flex-wrap gap-2 ${position === 'top' ? 'justify-start' : 'justify-center'}`,
         item: 'min-h-11 min-w-11 justify-center',
         prev: 'min-h-11 min-w-11 justify-center',
         next: 'min-h-11 min-w-11 justify-center',

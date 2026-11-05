@@ -1,93 +1,19 @@
 <template>
-  <div v-if="isMounted && hasJumpTargets" class="jump-to-content xl:ml-2">
-    <!-- Desktop: show all group buttons inline -->
-    <div class="hidden xl:flex items-center gap-1 flex-wrap">
-      <UIcon name="i-lucide-map-pin" size="20" class="text-primary mr-0" />
-      <template v-if="boardSections.length > 1">
-        <UButton
-          v-for="section in boardSections"
-          :key="'board-' + section"
-          :label="section"
-          size="sm"
-          color="primary"
-          variant="soft"
-          class="cursor-pointer"
-          @click="scrollToBoard(section)"
-        />
-        <div
-          v-if="groups.length > 0"
-          class="w-px h-4 bg-gray-500/30 mx-0.5"
-        ></div>
-      </template>
-      <UButton
-        v-for="group in groups"
-        :key="group"
-        :label="group"
-        size="sm"
-        color="neutral"
-        variant="soft"
-        class="cursor-pointer"
-        @click="scrollToGroup(group)"
-      />
-    </div>
-
-    <!-- Mobile: collapsed dropdown -->
-    <div class="xl:hidden relative" ref="mobileContainer">
-      <UButton
-        icon="i-lucide-map-pin"
-        color="neutral"
-        variant="soft"
-        size="xl"
-        class="cursor-pointer border-2 border-secondary"
-        aria-label="Jump to group"
-        @click="
-          () => {
-            mobileOpen = !mobileOpen;
-          }
-        "
-      />
-      <Transition name="fade">
-        <div
-          v-if="mobileOpen"
-          class="absolute right-0 bottom-full mb-2 bg-elevated rounded-lg shadow-lg p-2 flex flex-col gap-1 min-w-40 z-999"
-        >
-          <span class="text-xs font-medium text-muted px-2 pb-1">Jump to:</span>
-          <template v-if="boardSections.length > 1">
-            <UButton
-              v-for="section in boardSections"
-              :key="'board-' + section"
-              :label="section"
-              size="xs"
-              color="primary"
-              variant="soft"
-              class="cursor-pointer w-full justify-start"
-              @click="
-                scrollToBoard(section);
-                mobileOpen = false;
-              "
-            />
-            <div
-              v-if="groups.length > 0"
-              class="border-t border-gray-500/30 my-1"
-            ></div>
-          </template>
-          <UButton
-            v-for="group in groups"
-            :key="group"
-            :label="group"
-            size="xs"
-            color="neutral"
-            variant="soft"
-            class="cursor-pointer w-full justify-start"
-            @click="
-              scrollToGroup(group);
-              mobileOpen = false;
-            "
-          />
-        </div>
-      </Transition>
-    </div>
-  </div>
+  <UDropdownMenu
+    v-if="isMounted && hasJumpTargets"
+    :items="items"
+    :content="{ side: 'top', align: 'end' }"
+    :ui="{ content: 'max-h-72 overflow-y-auto' }"
+  >
+    <UButton
+      label="Jump To"
+      aria-label="Jump to group"
+      icon="i-lucide-map-pin"
+      color="neutral"
+      variant="ghost"
+      size="sm"
+    />
+  </UDropdownMenu>
 </template>
 
 <script setup lang="ts">
@@ -105,8 +31,6 @@ const emit = defineEmits<{
   (e: 'jumpBoard', board: string): void;
 }>();
 
-const mobileOpen = ref(false);
-const mobileContainer = ref<HTMLElement | null>(null);
 const isMounted = ref(false);
 const hasJumpTargets = computed(
   () => props.groups.length > 0 || props.boardSections.length > 1,
@@ -160,8 +84,9 @@ function scrollToGroup(label: string) {
   }
 }
 
-function scrollToBoard(board: string) {
+async function scrollToBoard(board: string) {
   emit('jumpBoard', board);
+  await nextTick();
   if (board === 'Mainboard') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
@@ -178,32 +103,19 @@ function scrollToElement(el: Element) {
   window.scrollTo({ top, behavior: 'smooth' });
 }
 
-function handleClickOutside(e: MouseEvent) {
-  if (
-    mobileContainer.value &&
-    !mobileContainer.value.contains(e.target as Node)
-  ) {
-    mobileOpen.value = false;
-  }
-}
-
 onMounted(() => {
   isMounted.value = true;
-  if (import.meta.client) {
-    document.addEventListener('click', handleClickOutside);
-  }
 });
-
-onUnmounted(() => {
-  if (import.meta.client) {
-    document.removeEventListener('click', handleClickOutside);
-  }
-});
+const items = computed(() => [
+  ...(props.boardSections.length > 1
+    ? props.boardSections.map((section) => ({
+        label: section,
+        onSelect: () => scrollToBoard(section),
+      }))
+    : []),
+  ...props.groups.map((group) => ({
+    label: group,
+    onSelect: () => scrollToGroup(group),
+  })),
+]);
 </script>
-
-<style scoped>
-.jump-to-content {
-  width: max-content;
-  max-width: 100%;
-}
-</style>

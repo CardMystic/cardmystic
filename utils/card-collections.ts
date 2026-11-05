@@ -37,6 +37,6 @@ export function collectionDescription(
   entry: CardCollectionEntry,
 ) {
   return kind === 'sets'
-    ? `Browse all Magic: The Gathering cards printed in ${entry.name} (${entry.slug.toUpperCase()}). Search within the set with Smart Search and Enhanced ranking.`
+    ? `Browse all Magic: The Gathering cards printed in ${entry.name} (${entry.slug.toUpperCase()}). Search within the set with Smart Search and Pro ranking.`
     : `Find Magic: The Gathering cards with the ${entry.name} ${kind === 'themes' ? 'theme' : 'role'}. Browse top cards or refine with Smart Search.`;
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="preview-root p-4">
+  <div class="preview-root px-4 pb-4">
     <div class="preview-card-stack">
       <div class="preview-image-wrapper">
         <USkeleton class="preview-image" />

@@ -78,9 +78,9 @@
       </p>
     </section>
     <section>
-      <h2>Enhanced search and other providers</h2>
+      <h2>Pro search and other providers</h2>
       <p>
-        Enhanced search uses a third-party ranking service. We send the search
+        Pro search uses a third-party ranking service. We send the search
         description or selected card text and candidate card information to the
         configured provider, OpenRouter or Typesafe, to rank results. These
         requests do not include your account login or payment details.

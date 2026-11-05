@@ -1,27 +1,38 @@
 <template>
   <div
-    class="flex flex-wrap items-center gap-2 mb-4 p-3 border border-black-300 dark:border-gray-400 rounded-lg bg-white/60 dark:bg-black/40"
+    class="flex flex-wrap items-center gap-2"
+    :class="
+      embedded
+        ? 'mt-3 text-white'
+        : 'mb-4 p-3 border border-black-300 dark:border-gray-400 rounded-lg bg-white/60 dark:bg-black/40'
+    "
   >
     <!-- Deck author link (shown when viewing someone else's public list) -->
     <NuxtLink
       v-if="owner"
       :to="`/user/${owner.id}`"
-      class="flex items-center gap-3 mr-auto rounded-lg cursor-pointer group min-w-0"
+      class="flex items-center gap-2 mr-3 rounded-lg cursor-pointer group min-w-0"
     >
       <img
         v-if="owner.avatar_card_name"
         :src="scryfallArtCropUrl(owner.avatar_card_name)"
         :alt="owner.username ?? 'User'"
-        class="w-10 h-10 rounded-full object-cover"
+        class="rounded-full object-cover"
+        :class="embedded ? 'size-6' : 'size-10'"
       />
-      <UIcon v-else name="i-lucide-user" class="w-10 h-10 opacity-50" />
+      <UIcon
+        v-else
+        name="i-lucide-user"
+        class="opacity-50"
+        :class="embedded ? 'size-6' : 'size-10'"
+      />
       <div class="min-w-0">
         <p
           class="font-semibold truncate group-hover:text-primary transition-colors"
         >
           {{ owner.username || 'Anonymous' }}
         </p>
-        <p class="text-xs opacity-60">Deck author</p>
+        <p v-if="!embedded" class="text-xs opacity-60">Deck author</p>
       </div>
     </NuxtLink>
 
@@ -39,11 +50,17 @@
         >
           <UButton
             data-testid="decklist-like-button"
+            :aria-label="liked ? 'Unlike deck' : 'Like deck'"
             icon="i-lucide-heart"
             :color="liked ? 'error' : 'neutral'"
             :variant="liked ? 'solid' : 'outline'"
             size="sm"
             class="cursor-pointer"
+            :class="
+              embedded && !liked
+                ? 'text-white ring-white/40 bg-black/30 hover:bg-black/40'
+                : ''
+            "
             :disabled="!isLoggedIn || isTogglingLike"
             :label="String(list.like_count)"
             @click="handleToggleLike"
@@ -56,11 +73,17 @@
         >
           <UButton
             data-testid="decklist-save-button"
+            :aria-label="saved ? 'Unsave deck' : 'Save deck'"
             icon="i-lucide-bookmark"
             :color="saved ? 'primary' : 'neutral'"
             :variant="saved ? 'solid' : 'outline'"
             size="sm"
             class="cursor-pointer"
+            :class="
+              embedded && !saved
+                ? 'text-white ring-white/40 bg-black/30 hover:bg-black/40'
+                : ''
+            "
             :disabled="!isLoggedIn || isTogglingSave"
             :label="String(list.save_count)"
             @click="handleToggleSave"
@@ -98,6 +121,7 @@ interface DecklistOwner {
 }
 
 const props = defineProps({
+  embedded: { type: Boolean, default: false },
   list: {
     type: Object as () => DecklistSummary,
     required: true,

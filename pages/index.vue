@@ -71,29 +71,34 @@
   </SpaceBackground>
 
   <!-- Everything below the fold -->
-  <UContainer class="mt-10 mb-10">
-    <LazyExploreLinks :hydrate-on-visible="sectionVisibility" class="mb-14" />
-
-    <!-- User-specific sections when logged in -->
+  <UContainer class="home-content max-w-[2000px] my-8 lg:my-12">
+    <!-- Keep recent decks synchronous so an empty async placeholder does not
+         briefly pull the deferred sections below into the viewport. -->
     <ClientOnly>
-      <LazyRecentLists v-if="isLoggedIn" class="mb-14" />
-      <LazyRecentListsNotLoggedIn v-else class="mb-14" />
+      <RecentLists v-if="isLoggedIn" class="home-gallery mb-14" />
+      <RecentListsNotLoggedIn v-else class="home-gallery mb-14" />
       <template #fallback>
-        <LazyRecentListsNotLoggedIn class="mb-14" />
+        <RecentListsSkeleton class="home-gallery mb-14" />
       </template>
     </ClientOnly>
 
     <LazyFeaturedSection
       :hydrate-on-visible="sectionVisibility"
-      class="mb-14"
+      class="home-gallery mb-14"
     />
 
-    <LazyRecentArticles :hydrate-on-visible="sectionVisibility" class="mb-14" />
+    <LazyRecentArticles
+      :hydrate-on-visible="sectionVisibility"
+      class="home-gallery mb-14"
+    />
 
-    <LazyQueryCount :hydrate-on-visible="sectionVisibility" class="mb-14" />
+    <LazyQueryCount
+      :hydrate-on-visible="sectionVisibility"
+      class="home-reading mb-14"
+    />
 
     <!-- How To Use & How It Works Section -->
-    <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="home-reading mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- How To Use -->
       <div
         class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent"
@@ -138,22 +143,38 @@
         </div>
       </div>
     </div>
-    <LazyEfficiency :hydrate-on-visible="sectionVisibility" class="mb-20" />
+    <LazyEfficiency
+      :hydrate-on-visible="sectionVisibility"
+      class="home-reading mb-20"
+    />
     <ClientOnly>
-      <LazyExampleQueries class="mb-10" />
+      <LazyExampleQueries class="home-reading mb-10" />
       <template #fallback>
-        <ExampleQueriesSkeleton class="mb-10" />
+        <ExampleQueriesSkeleton class="home-reading mb-10" />
       </template>
     </ClientOnly>
     <ClientOnly>
-      <LazyTopQueries class="mb-10" />
+      <LazyTopQueries class="home-reading mb-10" />
       <template #fallback>
-        <TopQueriesSkeleton class="mb-10" />
+        <TopQueriesSkeleton class="home-reading mb-10" />
       </template>
     </ClientOnly>
-    <LazyMeetTheDevs :hydrate-on-visible="sectionVisibility" class="mb-10" />
-    <LazySponsorships :hydrate-on-visible="sectionVisibility" class="mb-10" />
-    <LazyJoinUs :hydrate-on-visible="sectionVisibility" class="mb-10" />
+    <LazyMeetTheDevs
+      :hydrate-on-visible="sectionVisibility"
+      class="home-reading mb-10"
+    />
+    <LazySponsorships
+      :hydrate-on-visible="sectionVisibility"
+      class="home-reading mb-10"
+    />
+    <LazyJoinUs
+      :hydrate-on-visible="sectionVisibility"
+      class="home-reading mb-10"
+    />
+    <LazyExploreLinks
+      :hydrate-on-visible="sectionVisibility"
+      class="home-reading"
+    />
   </UContainer>
 </template>
 
@@ -252,6 +273,16 @@ setPageInfo({
 </script>
 
 <style lang="sass" scoped>
+.home-gallery
+  width: 100%
+  max-width: 1440px
+  margin-inline: auto
+
+.home-reading
+  width: 100%
+  max-width: 1120px
+  margin-inline: auto
+
 .hero
   position: relative
   min-height: 100vh

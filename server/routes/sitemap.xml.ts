@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
     'popular-cards',
     'popular-commanders',
     'popular-by-commander',
+    'popular-by-card',
   ];
   for (const platform of validPlatforms) {
     for (const popularityType of popularityTypes) {

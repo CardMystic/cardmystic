@@ -782,6 +782,19 @@
                   empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="colorIdentity"
                 />
+                <UButton
+                  :to="{
+                    path: '/popular-by-card/all',
+                    query: {
+                      card_name: cardName,
+                      query: appliedPopularCommandersQuery || undefined,
+                      useRerank: String(route.query.useRerank !== 'false'),
+                    },
+                  }"
+                  variant="link"
+                  icon="i-lucide-arrow-up-right"
+                  >Browse popular commanders for {{ cardName }}</UButton
+                >
               </template>
             </UTabs>
           </UCard>
@@ -834,6 +847,19 @@
                   empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
                   default-group-by="colorIdentity"
                 />
+                <UButton
+                  :to="{
+                    path: '/popular-by-card/all',
+                    query: {
+                      card_name: cardName,
+                      query: appliedPopularCommandersQuery || undefined,
+                      useRerank: String(route.query.useRerank !== 'false'),
+                    },
+                  }"
+                  variant="link"
+                  icon="i-lucide-arrow-up-right"
+                  >Browse popular commanders for {{ cardName }}</UButton
+                >
               </template>
 
               <template #similar>
@@ -926,7 +952,10 @@ const { searchType, getPath, restoreSearchQuery } = useSearchType();
 // Determine origin: was the user on a search or explore page before?
 const cardOrigin = computed(() => lastCard.value?.origin ?? 'search');
 const lastExploreType = ref<
-  'popular-cards' | 'popular-commanders' | 'popular-by-commander'
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander'
+  | 'popular-by-card'
 >('popular-cards');
 
 // Detect origin from referring route on mount
@@ -939,6 +968,8 @@ onMounted(() => {
       lastExploreType.value = 'popular-commanders';
     else if (referrer.startsWith('/popular-by-commander'))
       lastExploreType.value = 'popular-by-commander';
+    else if (referrer.startsWith('/popular-by-card'))
+      lastExploreType.value = 'popular-by-card';
   }
 });
 
@@ -952,7 +983,11 @@ function navigateToSearch(
 }
 
 function navigateToExplore(
-  type: 'popular-cards' | 'popular-commanders' | 'popular-by-commander',
+  type:
+    | 'popular-cards'
+    | 'popular-commanders'
+    | 'popular-by-commander'
+    | 'popular-by-card',
 ) {
   const saved = restoreSearchQuery(type);
   router.push({ path: `/${type}/all`, query: saved ?? undefined });
@@ -1152,7 +1187,8 @@ onMounted(() => {
           referrer &&
           (referrer.startsWith('/popular-cards') ||
             referrer.startsWith('/popular-commanders') ||
-            referrer.startsWith('/popular-by-commander'))
+            referrer.startsWith('/popular-by-commander') ||
+            referrer.startsWith('/popular-by-card'))
             ? ('explore' as const)
             : ('search' as const);
         setLastOpenedCard(newCard.oracle_id, newCard.name, origin);

@@ -1,6 +1,6 @@
 <template>
   <!-- Desktop tabs -->
-  <div class="flex gap-3 max-md:hidden mb-4 justify-center flex-nowrap">
+  <div class="flex gap-3 max-md:hidden mb-4 justify-center flex-wrap">
     <button
       type="button"
       :class="[
@@ -34,6 +34,16 @@
       <UIcon name="i-lucide-flame" class="icon" size="18" />
       Cards by Commander
     </button>
+    <button
+      type="button"
+      :class="[
+        'search-tab-button-new',
+        { active: statsType === 'popular-by-card' },
+      ]"
+      @click="onTabClick('popular-by-card')"
+    >
+      <UIcon name="i-lucide-crown" class="icon" size="18" />Commanders by Card
+    </button>
     <NuxtLink
       v-if="lastCard"
       :to="cardRoute!"
@@ -64,7 +74,10 @@
 import type { SelectItem } from '@nuxt/ui';
 
 export type ExploreTabType =
-  'popular-cards' | 'popular-commanders' | 'popular-by-commander';
+  | 'popular-cards'
+  | 'popular-commanders'
+  | 'popular-by-commander'
+  | 'popular-by-card';
 
 const props = defineProps<{
   statsType: ExploreTabType;
@@ -90,6 +103,11 @@ const statsIcon = computed(() => {
 });
 
 const items = ref<SelectItem[]>([
+  {
+    label: 'Commanders by Card',
+    value: 'popular-by-card',
+    icon: 'i-lucide-crown',
+  },
   {
     label: 'Popular Commander Cards',
     value: 'popular-cards',

@@ -5,7 +5,9 @@
       <NuxtPage />
     </NuxtLayout>
     <ClientOnly>
-      <CookieConsent />
+      <Teleport to="body">
+        <CookieConsent />
+      </Teleport>
       <SearchModeNotice />
     </ClientOnly>
     <VueQueryDevtools v-if="isDev" />

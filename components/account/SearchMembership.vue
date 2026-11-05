@@ -6,6 +6,36 @@ import {
   membershipPlans as plans,
   membershipTierLabels as tierLabels,
 } from '~/utils/membershipPlans';
+const planFeatures: {
+  name: string;
+  free: string | boolean;
+  pro: string | boolean;
+}[] = [
+  { name: 'Normal searches', free: true, pro: true },
+  {
+    name: 'Pro search',
+    free: '10 per day, plus purchased credits',
+    pro: true,
+  },
+  { name: 'Similar card search', free: true, pro: true },
+  { name: 'Deck recommendations', free: true, pro: true },
+  { name: 'Decks, collections, folders and card tags', free: true, pro: true },
+  { name: 'Deck history and restore', free: true, pro: true },
+  { name: 'Deck business cards and QR codes', free: true, pro: true },
+  { name: 'Full playtester', free: true, pro: true },
+  { name: 'Compare decks', free: true, pro: true },
+  { name: 'Deck Analytics', free: true, pro: true },
+  { name: 'Highlight cards owned in a collection', free: true, pro: true },
+  { name: 'Search within decks and collections', free: false, pro: true },
+  {
+    name: 'Inline deck suggestions and target budgets',
+    free: false,
+    pro: true,
+  },
+  { name: 'New-card alerts on your decks', free: false, pro: true },
+  { name: 'Suggested decks for search results', free: false, pro: true },
+  { name: 'Suggested cuts', free: false, pro: true },
+];
 const emit = defineEmits<{ changed: [] }>();
 const { userProfile: session, userId } = useUserProfile();
 const {
@@ -67,6 +97,8 @@ const trialPlan = computed(() =>
 );
 const subscriptionNotice = computed(() => {
   switch (billing.value?.status) {
+    case 'complimentary':
+      return 'Your account has permanent complimentary CardMystic Pro access.';
     case 'past_due':
       return 'Your payment is overdue. Update your payment method in Stripe.';
     case 'unpaid':
@@ -178,25 +210,24 @@ watch(
           >
             Current Search Membership:
             <strong>{{ tierLabels[access.tier] }}</strong>
-            <span class="membership-separator" aria-hidden="true">|</span>
-            <span v-if="access.tier === 'enhanced'"
-              >Unlimited Enhanced searches</span
-            >
-            <NuxtLink v-else-if="!access.authenticated" :to="signInUrl">
-              Sign in for enhanced searches
-            </NuxtLink>
-            <span v-else
-              >{{ access.enhancedRemaining?.toLocaleString('en-US') }} left
-              today</span
-            >
-            <template v-if="access.enhancedTopUpRemaining > 0">
+            <template v-if="access.tier !== 'enhanced'">
               <span class="membership-separator" aria-hidden="true">|</span>
-              <span
-                >{{
-                  access.enhancedTopUpRemaining.toLocaleString('en-US')
-                }}
-                purchased</span
+              <NuxtLink v-if="!access.authenticated" :to="signInUrl">
+                Sign in for Pro searches
+              </NuxtLink>
+              <span v-else
+                >{{ access.enhancedRemaining?.toLocaleString('en-US') }} left
+                today</span
               >
+              <template v-if="access.enhancedTopUpRemaining > 0">
+                <span class="membership-separator" aria-hidden="true">|</span>
+                <span
+                  >{{
+                    access.enhancedTopUpRemaining.toLocaleString('en-US')
+                  }}
+                  purchased</span
+                >
+              </template>
             </template>
           </p>
           <p
@@ -250,9 +281,8 @@ watch(
     </div>
 
     <div class="membership-offer">
-      <h2>CardMystic Enhanced</h2>
       <p class="membership-muted">
-        Get better search results with relevance reranking.
+        Unlimited Pro searches and tools for your decks and collections.
       </p>
     </div>
     <USkeleton
@@ -268,24 +298,46 @@ watch(
         :data-tier="plan.tier"
         :aria-labelledby="`membership-${plan.tier}-title`"
       >
-        <div class="membership-plan-heading">
-          <h3 :id="`membership-${plan.tier}-title`">{{ plan.name }}</h3>
-          <span
-            v-if="
-              verified && billing?.hasSubscription && billing.tier === plan.tier
-            "
-            class="membership-current-label"
-            >Current plan</span
-          >
+        <div class="membership-plan-summary">
+          <div class="membership-plan-details">
+            <h2
+              :id="`membership-${plan.tier}-title`"
+              class="membership-plan-heading"
+            >
+              {{ plan.name }}
+            </h2>
+            <p class="membership-price">
+              <strong>${{ plan.price }}</strong
+              ><span>/month</span>
+            </p>
+            <p class="membership-features">
+              <strong
+                >Unlimited Pro Searches &amp; Access to All Pro Features</strong
+              >
+              (See Below)
+            </p>
+            <p
+              v-if="billing?.status === 'complimentary'"
+              class="membership-muted"
+            >
+              Your current plan · Complimentary access
+            </p>
+          </div>
+          <img
+            src="/images/cardmystic-pro.svg"
+            alt="CardMystic Pro"
+            width="448"
+            height="448"
+            class="membership-plan-image"
+          />
         </div>
-        <p class="membership-price">
-          <strong>${{ plan.price }}</strong
-          ><span>/month</span>
-        </p>
-        <ul class="membership-features">
-          <li><strong>Unlimited</strong> Enhanced searches</li>
-        </ul>
-        <div class="membership-plan-action">
+        <div
+          v-if="
+            billing?.status !== 'complimentary' &&
+            !(billing?.hasSubscription && billing.tier === plan.tier)
+          "
+          class="membership-plan-action"
+        >
           <p v-if="billing?.trialEligible" class="membership-trial">
             1 month free, then ${{ plan.price }}/month
           </p>
@@ -320,9 +372,6 @@ watch(
             >
               Change plan in Stripe
             </button>
-            <p v-else-if="billing.tier === plan.tier" class="membership-muted">
-              Your current plan
-            </p>
             <p v-else class="membership-muted">Plan changes are unavailable.</p>
           </template>
           <p v-else class="membership-muted">
@@ -337,13 +386,70 @@ watch(
       in USD. Applicable tax is calculated at checkout.
     </p>
 
+    <section class="my-6" aria-labelledby="plan-features-title">
+      <h2 id="plan-features-title" class="text-xl font-semibold mb-3">
+        What you get
+      </h2>
+      <div class="overflow-x-auto">
+        <table
+          class="w-full text-sm text-left border-collapse [overflow-wrap:normal]"
+        >
+          <caption class="sr-only">
+            Free and CardMystic Pro features
+          </caption>
+          <thead>
+            <tr class="border-b border-default">
+              <th scope="col" class="py-3 pr-3">Feature</th>
+              <th scope="col" class="p-3">Free account</th>
+              <th scope="col" class="p-3 text-(--pro-accent)">
+                CardMystic Pro
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="feature in planFeatures"
+              :key="feature.name"
+              class="border-b border-default"
+            >
+              <th scope="row" class="font-normal py-3 pr-3">
+                {{ feature.name }}
+              </th>
+              <td
+                v-for="(value, column) in [feature.free, feature.pro]"
+                :key="column"
+                class="p-3"
+              >
+                <template v-if="typeof value === 'boolean'">
+                  <UIcon
+                    :name="value ? 'i-lucide-check' : 'i-lucide-x'"
+                    :class="value ? 'text-green-500' : 'text-red-500'"
+                    class="size-5 align-middle"
+                    aria-hidden="true"
+                  />
+                  <span class="sr-only">{{
+                    value ? 'Included' : 'Not included'
+                  }}</span>
+                </template>
+                <template v-else>{{ value }}</template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-sm text-muted mt-3">
+        Search credits cover Pro search. The other Pro tools require an active
+        membership. New-card alerts appear on the site; we don't send email
+        alerts.
+      </p>
+    </section>
     <section
       class="membership-topups"
       aria-labelledby="membership-topups-title"
     >
       <p id="membership-topups-title">Or one time purchase:</p>
       <a v-if="!session" :href="signInUrl">
-        Buy 500 Enhanced searches for ${{ enhancedTopUpPrice }}
+        Buy 500 Pro searches for ${{ enhancedTopUpPrice }}
       </a>
       <button
         v-else-if="billing?.enhancedTopUpAvailable"
@@ -351,7 +457,7 @@ watch(
         :disabled="busy || loading"
         @click="openStripe('enhanced-topup')"
       >
-        Buy 500 Enhanced searches for ${{ enhancedTopUpPrice }}
+        Buy 500 Pro searches for ${{ enhancedTopUpPrice }}
       </button>
       <p v-else class="membership-muted">
         {{ loading ? 'Checking availability...' : 'Top-up unavailable' }}
@@ -373,13 +479,13 @@ watch(
       <details class="membership-disclosure">
         <summary>
           <UIcon name="i-lucide-chevron-right" aria-hidden="true" /><span
-            >What does Enhanced search do?</span
+            >What does Pro search do?</span
           >
         </summary>
         <p>
-          Enhanced takes the cards found by your search and puts the better
-          matches closer to the top. Normal uses the original order. You can
-          switch between them with the Search mode dropdown.
+          Pro takes the cards found by your search and puts the better matches
+          closer to the top. Normal uses the original order. You can switch
+          between them with the Search mode dropdown.
         </p>
       </details>
       <details class="membership-disclosure">
@@ -401,17 +507,17 @@ watch(
           >
         </summary>
         <p>
-          Sign in to get 10 free Enhanced searches a day. With an Enhanced
-          membership, you get unlimited Enhanced searches, including during your
-          free month.
+          Sign in to get 10 free Pro searches a day. With a CardMystic Pro
+          membership, you get unlimited Pro searches, including during your free
+          month.
         </p>
         <p>
-          The free daily searches reset at midnight UTC. Enhanced members don't
-          have a search limit or a monthly reset.
+          The free daily searches reset at midnight UTC. Pro members don't have
+          a search limit or a monthly reset.
         </p>
         <p>
-          You can use Normal search without an account. Enhanced search requires
-          you to sign in.
+          You can use Normal search without an account. Pro search requires you
+          to sign in.
         </p>
       </details>
       <details class="membership-disclosure">
@@ -421,14 +527,16 @@ watch(
           >
         </summary>
         <p>
-          You can keep searching in Normal mode for free. If you want more
-          Enhanced searches, you can upgrade or buy a top-up.
+          You can keep searching in Normal mode for free. If you want more Pro
+          searches, you can upgrade or buy a top-up.
         </p>
         <p>
           Top-ups are a one-time purchase, and you don't need a subscription to
           buy one. Unused top-up searches carry forward. We use your free daily
-          searches first, then your top-up searches. While your Enhanced
-          membership is active, your top-up credits aren't used.
+          searches first, then your top-up searches. While your CardMystic Pro
+          membership is active, your top-up credits aren't used. Top-ups cover
+          Pro searches only; deck suggestions and search within lists require
+          Pro.
         </p>
       </details>
       <details class="membership-disclosure">
@@ -439,7 +547,7 @@ watch(
         </summary>
         <p>
           We ran the same {{ benchmark.scoredQueries }} searches in Normal and
-          Enhanced mode and used AI to help grade the first 10 results. Better
+          Pro mode and used AI to help grade the first 10 results. Better
           matches closer to the top earn a higher score.
         </p>
         <p>
@@ -547,34 +655,36 @@ watch(
   gap: 0.75rem;
 }
 .membership-plan {
-  --plan-accent: #6d28d9;
-  --plan-bg: #faf7ff;
-  --plan-border: #ddd0f5;
-  --plan-button: #c1a3ff;
-  --plan-button-text: #24113f;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   padding: 1.25rem;
-  border: 1px solid var(--plan-border);
+  border: 1px solid var(--pro-border);
   border-radius: 0.5rem;
-  background: var(--plan-bg);
+  background: var(--pro-bg);
 }
 .membership-plan-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  color: var(--plan-accent);
+  color: var(--pro-accent);
 }
-.membership-plan h3 {
+.membership-plan-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(5rem, 22vw, 14rem);
+  align-items: center;
+  gap: 1rem;
+}
+.membership-plan-details {
+  display: grid;
+  gap: 0.75rem;
+}
+.membership-plan-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+}
+.membership-plan h2 {
   font-size: 1.25rem;
   font-weight: 700;
-}
-.membership-current-label {
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 .membership-price {
   display: flex;
@@ -591,14 +701,7 @@ watch(
   font-size: 0.875rem;
 }
 .membership .membership-features {
-  display: grid;
-  gap: 0.375rem;
-  list-style: none;
-  padding: 0;
   font-size: 0.9375rem;
-}
-.membership .membership-features li {
-  margin: 0;
 }
 .membership-plan-action {
   display: grid;
@@ -609,7 +712,7 @@ watch(
 .membership-trial {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--plan-accent);
+  color: var(--pro-accent);
 }
 .membership .membership-checkout {
   display: flex;
@@ -619,16 +722,16 @@ watch(
   padding: 0.625rem;
   border-radius: 0.375rem;
   min-height: 44px;
-  background: var(--plan-button);
-  color: var(--plan-button-text);
-  border-color: var(--plan-button);
+  background: var(--pro-button);
+  color: var(--pro-button-text);
+  border-color: var(--pro-button);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   text-align: center;
 }
 .membership .membership-checkout:not(:disabled):hover {
-  background: var(--plan-button);
+  background: var(--pro-button);
   filter: brightness(0.95);
 }
 .membership-notice {
@@ -679,28 +782,20 @@ watch(
 }
 .membership .membership-topups :is(a, button) {
   padding: 0.625rem 0.875rem;
-  border: 1px solid #c1a3ff;
+  border: 1px solid var(--pro-button);
   border-radius: 6px;
-  background: #c1a3ff;
-  color: #24113f;
+  background: var(--pro-button);
+  color: var(--pro-button-text);
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
 }
 .membership .membership-topups :is(a, button):not(:disabled):hover {
-  background: #c1a3ff;
+  background: var(--pro-button);
   filter: brightness(0.95);
 }
 .membership-current[data-tier='enhanced'] strong {
-  color: #6d28d9;
-}
-:global(.dark .membership-plan) {
-  --plan-accent: #c1a3ff;
-  --plan-bg: #20192f;
-  --plan-border: #50406c;
-}
-:global(.dark .membership-current[data-tier='enhanced'] strong) {
-  color: #c1a3ff;
+  color: var(--pro-accent);
 }
 @media (min-width: 640px) {
   .membership {

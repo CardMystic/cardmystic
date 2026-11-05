@@ -199,12 +199,12 @@ test('collection detail preserves scope through guest search, filters, and load-
     .getByRole('combobox', { name: 'Search mode', exact: true })
     .click();
   await expect(
-    page.getByRole('option', { name: 'Enhanced', exact: true }),
+    page.getByRole('option', { name: 'Pro', exact: true }),
   ).toHaveAttribute('aria-disabled', 'true');
   await page.keyboard.press('Escape');
   await expect(
     page.getByRole('link', {
-      name: 'Sign in for enhanced searches',
+      name: 'Sign in for Pro searches',
       exact: true,
     }),
   ).toBeVisible();

@@ -7,7 +7,8 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/vue-query';
-import { computed, ref, type Ref } from 'vue';
+import { computed, ref, toValue, type Ref, type MaybeRefOrGetter } from 'vue';
+import type { ScryfallCard } from '~/models/cardModel';
 import type { CardListFormatType } from '~/models/cardListModel';
 import {
   GetActiveUserDecklistsResponseSchema,
@@ -22,7 +23,17 @@ import {
  * The authenticated user's own decklists, 1-indexed offset paginated.
  * Powers the My Decklists page.
  */
-export function useMyDecklists(page: Ref<number>, pageSize = 50) {
+export function useMyDecklists(
+  page: Ref<number>,
+  pageSize = 50,
+  options?: Ref<{
+    kind: 'deck' | 'collection' | 'all';
+    folder: string;
+    sort: string;
+    direction: string;
+  }>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const config = useRuntimeConfig();
@@ -30,7 +41,13 @@ export function useMyDecklists(page: Ref<number>, pageSize = 50) {
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: computed(
       () =>
-        ['user-lists', userProfile.value?.id, page.value, pageSize] as const,
+        [
+          'user-lists',
+          userProfile.value?.id,
+          page.value,
+          pageSize,
+          options?.value,
+        ] as const,
     ),
     queryFn: async () => {
       const { data: sessionData } = await supabase!.auth.getSession();
@@ -39,7 +56,9 @@ export function useMyDecklists(page: Ref<number>, pageSize = 50) {
       const params = new URLSearchParams({
         page: String(page.value),
         pageSize: String(pageSize),
+        ...(options?.value ? { ...options.value } : {}),
       });
+      if (!params.get('folder')) params.delete('folder');
       const response = await fetch(
         `${config.public.backendPath}/supabase/card-lists?${params}`,
         { headers: { Authorization: `Bearer ${token}` } },
@@ -51,10 +70,20 @@ export function useMyDecklists(page: Ref<number>, pageSize = 50) {
       }
       return GetActiveUserDecklistsResponseSchema.parse(await response.json());
     },
-    enabled: computed(() => !process.server && !!userProfile.value?.id),
+    enabled: computed(
+      () => !process.server && !!userProfile.value?.id && toValue(enabled),
+    ),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-    placeholderData: keepPreviousData,
+    // Keep pagination smooth, but never show cards from another folder or account.
+    placeholderData: (previous, query) => {
+      const before = query?.queryKey;
+      return before?.[1] === userProfile.value?.id &&
+        before?.[4]?.kind === options?.value?.kind &&
+        before?.[4]?.folder === options?.value?.folder
+        ? previous
+        : undefined;
+    },
   });
 
   return {
@@ -169,7 +198,10 @@ export function useOwnedDecklist(listId: Ref<string | null | undefined>) {
 // exceed the per-decklist cap. Only 400 the add-cards endpoints ever emit.
 function throwIfDeckCapExceeded(err: unknown): void {
   if ((err as { status?: number })?.status === 400) {
-    throw new Error(`Cannot exceed ${MAX_DECKLIST_CARDS} cards per deck list`);
+    throw new Error(
+      (err as { data?: { message?: string } }).data?.message ??
+        `Cannot exceed ${MAX_DECKLIST_CARDS} cards per deck list`,
+    );
   }
 }
 
@@ -185,6 +217,8 @@ export const useCardLists = () => {
     commanders?: string[],
     format?: CardListFormatType,
     visibility?: 'private' | 'public',
+    kind?: 'deck' | 'collection',
+    folderId?: string,
   ) => {
     if (!supabase) return;
     if (!userProfile.value?.id) {
@@ -212,6 +246,8 @@ export const useCardLists = () => {
         },
         body: {
           name: name.trim(),
+          kind,
+          folderId,
           description: description?.trim() || undefined,
           format: format || 'Commander',
           commanders: commanders?.filter((c) => c.trim()) || [],
@@ -230,18 +266,56 @@ export const useCardLists = () => {
       commanders,
       format,
       visibility,
+      kind,
+      folderId,
     }: {
       name: string;
       description?: string;
+      bracket?: number | null;
       commanders?: string[];
       format?: CardListFormatType;
       visibility?: 'private' | 'public';
+      kind?: 'deck' | 'collection';
+      folderId?: string;
     }) => {
       if (!supabase) return;
-      return createList(name, description, commanders, format, visibility);
+      return createList(
+        name,
+        description,
+        commanders,
+        format,
+        visibility,
+        kind,
+        folderId,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
+      queryClient.invalidateQueries({ queryKey: ['deck-folders'] });
+    },
+  });
+
+  const duplicateDeckMutation = useMutation({
+    mutationFn: async (listId: string) => {
+      if (!supabase || !userProfile.value?.id)
+        throw new Error('User not authenticated');
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error('No authentication token available');
+      return $fetch<{ id: string; name: string }>(
+        `${config.public.backendPath}/supabase/card-lists/${encodeURIComponent(listId)}/duplicate`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          retry: 0,
+        },
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['deck-folders'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -311,6 +385,7 @@ export const useCardLists = () => {
       // because its queryKey includes oracleIds derived from list-items
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -379,6 +454,7 @@ export const useCardLists = () => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -431,6 +507,7 @@ export const useCardLists = () => {
         queryKey: ['list-cards', request.listId],
       });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -469,15 +546,20 @@ export const useCardLists = () => {
       queryFn: async () => {
         if (oracleIds.value.length === 0) return [];
 
-        const cardsData: any[] = await $fetch(
-          `${config.public.backendPath}/cards/cards-by-oracle-ids`,
-          {
-            method: 'POST',
-            body: { oracleIds: oracleIds.value },
-          },
-        );
+        const cardsData: ScryfallCard[] = [];
+        const uniqueIds = [...new Set(oracleIds.value)];
+        for (let i = 0; i < uniqueIds.length; i += 500) {
+          const batch = await $fetch<ScryfallCard[]>(
+            `${config.public.backendPath}/cards/cards-by-oracle-ids`,
+            {
+              method: 'POST',
+              body: { oracleIds: uniqueIds.slice(i, i + 500) },
+            },
+          );
+          cardsData.push(...batch);
+        }
 
-        return (cardsData || []).map((cardData: any) => ({
+        return cardsData.map((cardData) => ({
           card_name: cardData.name,
           card_data: cardData,
         }));
@@ -579,6 +661,7 @@ export const useCardLists = () => {
       // since its queryKey depends on cardIds derived from list-items
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
     onError: (_, { listId }) => {
       // Refetch on error to restore correct state
@@ -608,6 +691,8 @@ export const useCardLists = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
+      queryClient.invalidateQueries({ queryKey: ['deck-folders'] });
     },
   });
 
@@ -616,6 +701,7 @@ export const useCardLists = () => {
     updates: {
       name?: string;
       description?: string;
+      bracket?: number | null;
     },
   ) => {
     if (!supabase) return;
@@ -640,13 +726,17 @@ export const useCardLists = () => {
       updates,
     }: {
       listId: string;
-      updates: { name?: string; description?: string };
+      updates: { name?: string; description?: string; bracket?: number | null };
     }) => {
       if (!supabase) return;
       return updateList(listId, updates);
     },
-    onSuccess: () => {
+    onSuccess: (_data, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
+      queryClient.invalidateQueries({
+        queryKey: ['discovery', 'public-decklist', listId],
+      });
     },
   });
 
@@ -680,6 +770,7 @@ export const useCardLists = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -729,6 +820,7 @@ export const useCardLists = () => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -766,6 +858,7 @@ export const useCardLists = () => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -815,6 +908,7 @@ export const useCardLists = () => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -865,6 +959,7 @@ export const useCardLists = () => {
     },
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
       queryClient.invalidateQueries({
         queryKey: ['discovery', 'public-decklist', listId],
       });
@@ -927,6 +1022,7 @@ export const useCardLists = () => {
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
@@ -987,12 +1083,14 @@ export const useCardLists = () => {
     onSuccess: (_, { listId }) => {
       queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
     },
   });
 
   return {
     // Mutations
     createListMutation,
+    duplicateDeckMutation,
     addCardsToListMutation,
     addCardsByNameToListMutation,
     bulkEditListMutation,

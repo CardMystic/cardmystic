@@ -1,3 +1,4 @@
+import { openDeckAction } from './utils/deckActions';
 import { createRequire } from 'node:module';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import {
@@ -141,6 +142,24 @@ async function setup(page: Page, failCatalog = false) {
     }),
   );
   await page.route(BACKEND + '/**', (route) => route.fulfill({ json: {} }));
+  await page.route(BACKEND + '/search-access', (route) =>
+    route.fulfill({
+      json: {
+        enabled: true,
+        authenticated: true,
+        tier: 'enhanced',
+        enhancedRemaining: null,
+        enhancedTopUpRemaining: 0,
+        resetsAt: null,
+      },
+    }),
+  );
+  await page.route(BACKEND + '/library/pro-access', (route) =>
+    route.fulfill({ json: { pro: true } }),
+  );
+  await page.route(BACKEND + '/library/lists/*/suggestions', (route) =>
+    route.fulfill({ json: { results: [] } }),
+  );
   await page.route(SUPABASE + '/rest/v1/**', (route) =>
     route.fulfill({ json: [] }),
   );
@@ -344,7 +363,7 @@ async function setup(page: Page, failCatalog = false) {
     return root.__vue_app__.config.globalProperties.$router.push(path);
   }, '/lists/' + listId);
   await expect(
-    page.getByRole('button', { name: 'Compare decks', exact: true }),
+    page.getByRole('button', { name: 'More deck actions', exact: true }),
   ).toBeEnabled();
   return {
     holdNextWrite: () => {
@@ -381,9 +400,7 @@ test('comparison actions update the diff and preserve collapsed groups', async (
   await artifacts.click();
   await lands.click();
   await expect(artifacts).toHaveAttribute('aria-expanded', 'false');
-  await page
-    .getByRole('button', { name: 'Compare decks', exact: true })
-    .click();
+  await openDeckAction(page, 'Compare decks');
   const dialog = page.getByRole('dialog', {
     name: 'Compare decks',
     exact: true,
@@ -596,9 +613,7 @@ test('public URLs, validation, and board isolation work on mobile', async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const state = await setup(page);
-  await page
-    .getByRole('button', { name: 'Compare decks', exact: true })
-    .click();
+  await openDeckAction(page, 'Compare decks');
   const dialog = page.getByRole('dialog', {
     name: 'Compare decks',
     exact: true,
@@ -664,7 +679,10 @@ for (const width of [1280, 390]) {
       await expectPlus(
         input.locator('..').locator('[class~="i-heroicons:plus"]'),
       );
-      await expect(page.getByRole('alert')).toContainText(
+      const catalogError = page
+        .getByRole('alert')
+        .filter({ hasText: 'Could not load the card catalog.' });
+      await expect(catalogError).toContainText(
         'Could not load the card catalog.',
         { timeout: 15000 },
       );
@@ -675,7 +693,7 @@ for (const width of [1280, 390]) {
       await expectPlus(
         input.locator('..').locator('[class~="i-heroicons:plus"]'),
       );
-      await expect(page.getByRole('alert')).toHaveCount(0);
+      await expect(catalogError).toHaveCount(0);
       await expect(input.locator('..').locator('.animate-spin')).toHaveCount(0);
       await input.fill('Fore');
       await expect(
@@ -689,9 +707,7 @@ test('comparison skips unknown names and filters all card categories', async ({
   page,
 }) => {
   await setup(page);
-  await page
-    .getByRole('button', { name: 'Compare decks', exact: true })
-    .click();
+  await openDeckAction(page, 'Compare decks');
   const dialog = page.getByRole('dialog', {
     name: 'Compare decks',
     exact: true,
@@ -770,9 +786,7 @@ test('comparison accepts another action while saving without resizing', async ({
 }) => {
   await page.setViewportSize({ width: 1280, height: 1400 });
   const state = await setup(page);
-  await page
-    .getByRole('button', { name: 'Compare decks', exact: true })
-    .click();
+  await openDeckAction(page, 'Compare decks');
   const dialog = page.getByRole('dialog', {
     name: 'Compare decks',
     exact: true,
@@ -834,9 +848,7 @@ test('Add All and Remove All each send one batch and preserve the other board', 
   page,
 }) => {
   const state = await setup(page);
-  await page
-    .getByRole('button', { name: 'Compare decks', exact: true })
-    .click();
+  await openDeckAction(page, 'Compare decks');
   const dialog = page.getByRole('dialog', {
     name: 'Compare decks',
     exact: true,
@@ -890,9 +902,7 @@ test('selects a private saved deck and compares the selected board', async ({
       ],
     });
   });
-  await page
-    .getByRole('button', { name: 'Compare decks', exact: true })
-    .click();
+  await openDeckAction(page, 'Compare decks');
   const dialog = page.getByRole('dialog', {
     name: 'Compare decks',
     exact: true,

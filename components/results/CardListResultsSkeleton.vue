@@ -11,7 +11,7 @@
     <div class="min-w-0 flex-1">
       <div
         v-if="view !== 'text'"
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-2"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2"
       >
         <ListCardSkeleton v-for="i in skeletonCount" :key="`skeleton-${i}`" />
       </div>

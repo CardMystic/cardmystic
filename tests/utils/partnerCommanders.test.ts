@@ -63,3 +63,25 @@ describe('getValidPartners', () => {
     );
   });
 });
+
+const data = {
+  partner: ['Generic'],
+  friendsForever: ['Friend A', 'Friend B'],
+  partnerWith: { A: 'B', B: 'A' },
+  chooseABackground: [],
+  background: [],
+  doctorsCompanion: [],
+  timeLordDoctor: [],
+};
+describe('partner selection', () => {
+  it('offers only the named partner and separates Friends forever from generic partners', () => {
+    expect(getPartnerType('A', data)).toBe('partnerWith');
+    expect(getValidPartners('partnerWith', data, 'A')).toEqual(['B']);
+    expect(getPartnerType('Friend A', data)).toBe('friendsForever');
+    expect(getValidPartners('friendsForever', data)).toEqual([
+      'Friend A',
+      'Friend B',
+    ]);
+    expect(getValidPartners('partner', data)).toEqual(['Generic']);
+  });
+});

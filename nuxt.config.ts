@@ -29,13 +29,19 @@ export default defineNuxtConfig({
         },
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'theme-color', content: '#0f172a' },
+        { name: 'apple-mobile-web-app-title', content: 'CardMystic' },
         // Verify AdSense ownership without loading ads while awaiting approval.
         {
           name: 'google-adsense-account',
           content: 'ca-pub-8668014466736799',
         },
       ],
-      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2' }],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'manifest', href: '/site.webmanifest' },
+        { rel: 'apple-touch-icon', href: '/android-chrome-192x192.png' },
+      ],
     },
   },
   components: [
