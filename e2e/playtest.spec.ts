@@ -8,7 +8,10 @@ async function openPlaytest(page: Page, cardCount = 15) {
   const cookie = page.getByRole('button', { name: 'Reject all', exact: true });
   if (await cookie.isVisible()) await cookie.click();
   await page.getByRole('button', { name: 'Playtest', exact: true }).click();
-  const board = page.getByRole('dialog', { name: 'Playtest', exact: true });
+  const board = page.getByRole('dialog', {
+    name: 'Playtest Beta',
+    exact: true,
+  });
   await expect(
     board.getByRole('region', { name: 'Hand', exact: true }),
   ).toBeVisible();
@@ -21,7 +24,7 @@ async function openPlaytest(page: Page, cardCount = 15) {
   return { ...fixture, board };
 }
 
-test('card clicks open actions, library actions are grouped, and practice never saves deck edits', async ({
+test('card clicks tap, right-click opens actions, and practice never saves deck edits', async ({
   page,
 }) => {
   const { board, writes } = await openPlaytest(page);
@@ -29,6 +32,22 @@ test('card clicks open actions, library actions are grouped, and practice never 
   page.on('pageerror', (error) => errors.push(error.message));
   const hand = board.getByRole('region', { name: 'Hand', exact: true });
   await expect(hand.locator('.playtest-card')).toHaveCount(7);
+  const handCards = hand.locator('.playtest-card');
+  const initialOrder = await handCards.evaluateAll((cards) =>
+    cards.map((card) => card.getAttribute('data-instance')),
+  );
+  const nextBox = (await handCards.nth(1).boundingBox())!;
+  await handCards
+    .first()
+    .locator('button')
+    .dragTo(handCards.nth(1), {
+      targetPosition: { x: nextBox.width - 2, y: nextBox.height / 2 },
+    });
+  await expect(handCards.nth(1)).toHaveAttribute(
+    'data-instance',
+    initialOrder[0]!,
+  );
+
   await expect(page.locator('.sticky-footer-wrap')).not.toBeVisible();
   await board.getByRole('button', { name: 'Draw', exact: true }).click();
   await expect(hand.locator('.playtest-card')).toHaveCount(8);
@@ -54,23 +73,31 @@ test('card clicks open actions, library actions are grouped, and practice never 
     0,
   );
   const field = board.getByRole('region', { name: 'Battlefield', exact: true });
-  await field
-    .getByRole('button', { name: `Options for ${name}`, exact: true })
-    .click();
-  await options.getByRole('button', { name: 'Tap', exact: true }).click();
-  await options.getByRole('button', { name: 'Close', exact: true }).click();
+  const permanent = field.locator('.card-face');
+  await permanent.click();
+  await expect(options).toHaveCount(0);
   await expect(field.locator('.playtest-card')).toHaveAttribute(
     'data-tapped',
     'true',
   );
+  await permanent.click();
+  await expect(permanent).toHaveAttribute('aria-pressed', 'false');
+  await permanent.press('Enter');
+  await expect(permanent).toHaveAttribute('aria-pressed', 'true');
   await board.getByRole('button', { name: 'Next turn', exact: true }).click();
   await expect(field.locator('.playtest-card')).toHaveAttribute(
     'data-tapped',
     'false',
   );
-  await field
-    .getByRole('button', { name: `Options for ${name}`, exact: true })
-    .click();
+  await permanent.click({ button: 'right' });
+  await expect(options).toBeVisible();
+  await options.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(permanent).toHaveAttribute('aria-pressed', 'false');
+  await permanent.press('Shift+Enter');
+  await expect(options).toBeVisible();
+  await expect(
+    options.getByRole('button', { name: 'Tap', exact: true }),
+  ).toBeVisible();
   await options
     .getByRole('button', { name: 'Add counter', exact: true })
     .click();
@@ -115,7 +142,9 @@ test('card clicks open actions, library actions are grouped, and practice never 
   await board
     .getByRole('button', { name: 'Library actions', exact: true })
     .click();
-  await page.getByRole('menuitem', { name: 'Scry', exact: true }).click();
+  await page
+    .getByRole('menuitem', { name: 'Scry / Surveil', exact: true })
+    .click();
   const scry = page.getByRole('dialog', {
     name: 'Scry / surveil',
     exact: true,
@@ -123,6 +152,10 @@ test('card clicks open actions, library actions are grouped, and practice never 
   await expect(
     scry.getByRole('textbox', { name: 'Find card in zone' }),
   ).toHaveCount(0);
+  await expect(
+    scry.getByRole('spinbutton', { name: 'Cards to scry', exact: true }),
+  ).toHaveValue('1');
+  await expect(scry.locator('.playtest-card')).toHaveCount(1);
   await scry
     .getByRole('spinbutton', { name: 'Cards to scry', exact: true })
     .fill('3');
@@ -135,9 +168,54 @@ test('card clicks open actions, library actions are grouped, and practice never 
     .first()
     .click();
   await expect(scry.locator('.playtest-card')).toHaveCount(2);
+  await scry
+    .getByRole('button', { name: 'Graveyard', exact: true })
+    .first()
+    .click();
+  await expect(scry.locator('.playtest-card')).toHaveCount(1);
   await scry.getByRole('button', { name: 'Done', exact: true }).click();
+  const graveyard = board.getByRole('region', {
+    name: 'Graveyard',
+    exact: true,
+  });
+  const graveyardCount = graveyard.getByRole('button', {
+    name: /^Browse Graveyard/,
+  });
+  await expect(graveyardCount).toContainText('1');
+  await board
+    .getByRole('button', { name: 'Library actions', exact: true })
+    .click();
+  await page.getByRole('menuitem', { name: 'Mill X', exact: true }).click();
+  const mill = page.getByRole('dialog', { name: 'Mill cards', exact: true });
+  await mill
+    .getByRole('spinbutton', { name: 'Cards to mill', exact: true })
+    .fill('2');
+  await mill.getByRole('button', { name: 'Mill', exact: true }).click();
+  await expect(mill).toHaveCount(0);
+  await expect(graveyardCount).toContainText('3');
+  await expect(hand.locator('.playtest-card')).toHaveCount(8);
+  await board.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(graveyardCount).toContainText('1');
+  await board
+    .getByRole('button', { name: 'Action history', exact: true })
+    .click();
+  const history = page.getByRole('region', {
+    name: 'Action history',
+    exact: true,
+  });
+  await expect(history).toContainText('Tapped');
+  await expect(history).not.toContainText('Repositioned');
+  await page.keyboard.press('Escape');
+  await expect(history).toBeHidden();
   await board.getByRole('button', { name: 'Close', exact: true }).click();
-  await page.getByRole('button', { name: 'Playtest' }).click();
+  await expect(board).toBeHidden();
+  await page.getByRole('button', { name: 'Playtest', exact: true }).click();
+  await expect(board).toBeVisible();
+  await board.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished),
+    );
+  });
   await expect(field.locator('.playtest-card')).toHaveCount(4);
   await board
     .getByRole('button', { name: 'Playtest settings', exact: true })
@@ -174,7 +252,7 @@ test('free placement and dragging into and out of piles moves only the top card'
     .getByRole('button', { name: 'Options for Island', exact: true })
     .dragTo(field, { targetPosition: { x: 160, y: 110 } });
   const island = field.getByRole('button', {
-    name: 'Options for Island',
+    name: 'Tap Island',
     exact: true,
   });
   await expect(island).toBeVisible();
@@ -213,7 +291,7 @@ test('free placement and dragging into and out of piles moves only the top card'
     .getByRole('button', { name: `Options for ${name}`, exact: true })
     .dragTo(field, { targetPosition: { x: 250, y: 140 } });
   await expect(
-    field.getByRole('button', { name: `Options for ${name}`, exact: true }),
+    field.getByRole('button', { name: `Tap ${name}`, exact: true }),
   ).toBeVisible();
   await expect(exile.getByRole('img', { name: 'Empty exile' })).toBeVisible();
   await board.getByRole('button', { name: 'Undo', exact: true }).click();
@@ -242,7 +320,7 @@ test.describe('mobile playtest', () => {
     hasTouch: true,
     isMobile: true,
   });
-  test('fits the hand, swaps zone panels, and opens actions on tap or hold while preserving touch dragging', async ({
+  test('fits the hand, taps battlefield cards, and opens actions on hold while preserving touch dragging', async ({
     page,
   }) => {
     const { board, writes } = await openPlaytest(page, 6);
@@ -313,11 +391,9 @@ test.describe('mobile playtest', () => {
     }
     const bounds = (await field.boundingBox())!;
     await drag(point, { x: bounds.x + 65, y: bounds.y + 70 });
-    const island = field.getByRole('button', {
-      name: 'Options for Island',
-      exact: true,
-    });
+    const island = field.locator('.card-face');
     await expect(island).toBeVisible();
+    await expect(island).toHaveAccessibleName('Tap Island');
     await expect(options).toHaveCount(0);
     await expect(
       board.getByRole('img', { name: 'Land played this turn', exact: true }),
@@ -334,6 +410,48 @@ test.describe('mobile playtest', () => {
       'data-tapped',
       'false',
     );
+    const tapIsland = async () => {
+      await island.scrollIntoViewIfNeeded();
+      await island.evaluate(async (element) => {
+        await Promise.all(
+          element.getAnimations().map((animation) => animation.finished),
+        );
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        );
+      });
+      const rect = (await island.boundingBox())!;
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [
+          { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
+        ],
+      });
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchEnd',
+        touchPoints: [],
+      });
+    };
+    await tapIsland();
+    await expect(island).toHaveAttribute('aria-pressed', 'true');
+    await expect(options).toHaveCount(0);
+    await tapIsland();
+    await expect(island).toHaveAttribute('aria-pressed', 'false');
+    const held = (await island.boundingBox())!;
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [
+        { x: held.x + held.width / 2, y: held.y + held.height / 2 },
+      ],
+    });
+    await page.waitForTimeout(550);
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: [],
+    });
+    await expect(options).toBeVisible();
+    await options.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(island).toHaveAttribute('aria-pressed', 'false');
     await board.screenshot({ path: '/tmp/cardmystic-playtest-mobile.png' });
     // Zone tabs remain drop targets, and selecting a zone replaces the hand.
     const source = (await island.boundingBox())!;
@@ -387,7 +505,7 @@ test.describe('mobile playtest', () => {
       .getByRole('button', { name: 'Library actions', exact: true })
       .click();
     await expect(
-      page.getByRole('menuitem', { name: 'Scry', exact: true }),
+      page.getByRole('menuitem', { name: 'Scry / Surveil', exact: true }),
     ).toBeVisible();
     await page.keyboard.press('Escape');
     for (const viewport of [

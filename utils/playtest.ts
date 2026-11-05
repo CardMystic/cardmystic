@@ -68,7 +68,13 @@ export type PlaytestAction = (
       type: 'shuffle' | 'mulligan' | 'untap' | 'clear-mana';
     }
   | { type: 'next-turn'; draw?: boolean }
-  | { type: 'move'; id: string; to: Destination; position?: FieldPosition }
+  | {
+      type: 'move';
+      id: string;
+      to: Destination;
+      position?: FieldPosition;
+      index?: number;
+    }
   | { type: 'play'; id: string; position?: FieldPosition }
   | { type: 'tap' | 'flip' | 'face-down' | 'copy'; id: string }
   | { type: 'counter'; id: string; name: string; delta: number }
@@ -238,11 +244,25 @@ export function playtestAction(
     if (!card) return undefined;
     return (state.cards[id] = { ...card, counters: { ...card.counters } });
   };
-  function move(id: string, target: Destination, position?: FieldPosition) {
+  function move(
+    id: string,
+    target: Destination,
+    position?: FieldPosition,
+    index?: number,
+    record = true,
+  ) {
     const from = zoneOf(state, id);
     const to = target === 'library-bottom' ? 'library' : target;
     const card = edit(id);
     if (!from || !card || !playtestZones.includes(to)) return false;
+    if (from === 'hand' && to === 'hand' && index !== undefined) {
+      const cards = state.zones.hand.filter((value) => value !== id);
+      cards.splice(bounded(index, 0, cards.length), 0, id);
+      if (cards.every((value, i) => value === state.zones.hand[i]))
+        return false;
+      state.zones.hand = cards;
+      return true;
+    }
     if (from === to && to !== 'library') {
       if (to !== 'battlefield' || !position) return false;
       card.position = clampPosition(position);
@@ -250,7 +270,6 @@ export function playtestAction(
         ...state.zones.battlefield.filter((value) => value !== id),
         id,
       ];
-      log(`Repositioned ${cardName(card, definitions)}.`);
       return true;
     }
     if (to === 'command' && !card.commander) return false;
@@ -281,15 +300,24 @@ export function playtestAction(
         position ?? nextPosition(state, action.layout),
       );
     if (target === 'library') state.zones.library.unshift(id);
+    else if (to === 'hand' && index !== undefined)
+      state.zones.hand.splice(
+        bounded(index, 0, state.zones.hand.length),
+        0,
+        id,
+      );
     else state.zones[to].push(id);
-    log(
-      `Moved ${cardName(card, definitions)} to ${target === 'library' ? 'the top of the library' : target === 'library-bottom' ? 'the bottom of the library' : to}.`,
-    );
+    if (record)
+      log(
+        to === 'battlefield'
+          ? `Played ${cardName(card, definitions)}.`
+          : `Moved ${cardName(card, definitions)} to ${target === 'library' ? 'the top of the library' : target === 'library-bottom' ? 'the bottom of the library' : to}.`,
+      );
     return true;
   }
   const draw = (count: number, destination: 'hand' | 'graveyard') => {
     const ids = state.zones.library.slice(0, bounded(count, 0, 1000));
-    for (const id of ids) move(id, destination);
+    for (const id of ids) move(id, destination, undefined, undefined, false);
     return ids.length;
   };
   switch (action.type) {
@@ -324,7 +352,8 @@ export function playtestAction(
       );
       break;
     case 'move':
-      if (!move(action.id, action.to, action.position)) return previous;
+      if (!move(action.id, action.to, action.position, action.index))
+        return previous;
       break;
     case 'play': {
       const card = state.cards[action.id],
@@ -352,7 +381,7 @@ export function playtestAction(
         state.mana = emptyMana();
         const count = action.draw === false ? 0 : draw(1, 'hand');
         log(
-          `Turn ${state.turn}: untapped all, cleared mana, ${count ? 'drew a card' : action.draw === false ? 'draw skipped' : 'library empty'}.`,
+          `Turn ${state.turn} started: untapped all, cleared mana, ${count ? 'drew a card' : action.draw === false ? 'draw skipped' : 'library empty'}.`,
         );
       } else log('Untapped all permanents.');
       break;
@@ -390,7 +419,9 @@ export function playtestAction(
         action.field === 'life' ? -9999 : 0,
         9999,
       );
-      log(`${action.field}: ${state[action.field]}.`);
+      log(
+        `Set ${action.field === 'life' ? 'life total' : action.field} to ${state[action.field]}.`,
+      );
       break;
     case 'mana':
       state.mana[action.color] = bounded(

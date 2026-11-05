@@ -694,7 +694,7 @@ test('free deck tools export CSV, preview an import, draw a hand and restore a v
   await page.getByRole('button', { name: 'Playtest', exact: true }).click();
   await expect(
     page
-      .getByRole('dialog', { name: 'Playtest', exact: true })
+      .getByRole('dialog', { name: 'Playtest Beta', exact: true })
       .getByRole('region', { name: 'Hand', exact: true }),
   ).toBeVisible();
   await page.keyboard.press('Escape');

@@ -7,8 +7,10 @@ const props = defineProps<{
   instance: PlaytestCard;
   card?: ScryfallCard;
   name: string;
+  tappable?: boolean;
 }>();
 const emit = defineEmits<{
+  tap: [];
   options: [];
   hover: [id: string | null];
 }>();
@@ -77,6 +79,18 @@ function pointerMove(event: PointerEvent) {
 }
 function pointerEnd(event: PointerEvent, cancelled = false) {
   cancelHold();
+  if (
+    pointerActive &&
+    !dragging &&
+    !suppressClick &&
+    !cancelled &&
+    props.tappable
+  ) {
+    // Handle a short touch directly; browsers can omit the synthetic click
+    // immediately after a drag. Suppress it so a tap cannot fire twice.
+    suppressClick = true;
+    emit('tap');
+  }
   if (dragging)
     touchDrag?.({
       id: props.instance.id,
@@ -95,7 +109,9 @@ function touchEnd(event: TouchEvent) {
   cancelHold();
 }
 function activate(event: MouseEvent) {
-  if (!suppressClick || event.detail === 0) emit('options');
+  if (suppressClick && event.detail !== 0) return;
+  if (props.tappable) emit('tap');
+  else emit('options');
 }
 function context(event: MouseEvent) {
   event.preventDefault();
@@ -140,7 +156,12 @@ onBeforeUnmount(cancelHold);
       type="button"
       class="card-face relative block w-full rounded-lg border border-default bg-elevated focus-visible:outline-2 focus-visible:outline-primary"
       :class="{ 'is-tapped': instance.tapped }"
-      :aria-label="`Options for ${name}`"
+      :aria-label="
+        tappable
+          ? `${instance.tapped ? 'Untap' : 'Tap'} ${name}`
+          : `Options for ${name}`
+      "
+      :aria-pressed="tappable ? instance.tapped : undefined"
       :draggable="!touch"
       @pointerdown="pointerDown"
       @pointermove="pointerMove"
@@ -218,7 +239,7 @@ onBeforeUnmount(cancelHold);
   -webkit-touch-callout: none;
 }
 .is-tapped {
-  transform: rotate(90deg) scale(0.78);
+  transform: rotate(90deg);
 }
 @media (prefers-reduced-motion: reduce) {
   .card-face {

@@ -42,6 +42,31 @@ function invariant(state: PlaytestState) {
 }
 
 describe('solo playtest state', () => {
+  it('reorders the hand without logging layout changes and keeps game actions concise', () => {
+    const g = game();
+    const original = [...g.state.zones.hand];
+    const log = [...g.state.log];
+    g.act({ type: 'move', id: original[0], to: 'hand', index: 6 });
+    expect(g.state.zones.hand).toEqual([...original.slice(1), original[0]]);
+    expect(g.state.log).toEqual(log);
+    g.act({ type: 'move', id: original[0], to: 'hand', index: 0 });
+    expect(g.state.zones.hand).toEqual(original);
+    g.act({ type: 'play', id: original[0] });
+    const playedLog = [...g.state.log];
+    expect(playedLog.at(-1)).toMatch(/^Played /);
+    g.act({
+      type: 'move',
+      id: original[0],
+      to: 'battlefield',
+      position: { x: 0.8, y: 0.5 },
+    });
+    expect(g.state.log).toEqual(playedLog);
+    g.act({ type: 'mill', count: 3 });
+    expect(g.state.log).toEqual([...playedLog, 'Milled 3 cards.']);
+    g.act({ type: 'player', field: 'life', delta: -1 });
+    expect(g.state.log.at(-1)).toBe('Set life total to 39.');
+    invariant(g.state);
+  });
   it('creates separate copies, keeps commanders outside the library and never edits the deck', () => {
     const before = JSON.stringify(entries);
     const g = game();
