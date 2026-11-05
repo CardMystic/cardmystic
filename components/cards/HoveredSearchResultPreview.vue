@@ -170,6 +170,7 @@
 </template>
 
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import type { Card } from '~/models/cardModel';
 import { getCardImageUrl } from '~/utils/scryfall';
 import { useClipboard } from '~/composables/useClipboard';
@@ -253,7 +254,7 @@ const clipboardCard = computed(() => {
     name: cardData.name || '',
     set: cardData.set || '',
     imageUrl: getCardImageUrl(cardData),
-    price: cardData.prices?.usd || '0',
+    price: getUsdPrice(cardData.prices) || '0',
   };
 });
 

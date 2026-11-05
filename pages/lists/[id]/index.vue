@@ -421,6 +421,7 @@
 </template>
 
 <script setup lang="ts">
+import { getUsdPrice } from '~/utils/cardPrice';
 import { useCardLists, useOwnedDecklist } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
 import { useDecklistViewTracker } from '~/composables/useDecklistSocial';
@@ -1443,7 +1444,7 @@ const totalPrice = computed(() => {
   for (const item of listItems.value) {
     if (!item.oracle_id) continue;
     const card = cardsByOracleId.value[item.oracle_id];
-    const price = card?.card_data?.prices?.usd;
+    const price = getUsdPrice(card?.card_data?.prices);
     if (price) sum += parseFloat(price) * (item.num_copies ?? 1);
   }
   return sum;
