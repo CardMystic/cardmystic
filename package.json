@@ -37,6 +37,7 @@
     "@supabase/supabase-js": "^2.112.1",
     "@tanstack/vue-query": "^5.101.4",
     "@tanstack/vue-query-devtools": "^5.91.0",
+    "@vueuse/core": "13.9.0",
     "dotenv": "^16.6.1",
     "mana-font": "^1.18.0",
     "marked": "^18.0.9",

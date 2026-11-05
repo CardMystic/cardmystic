@@ -31,11 +31,14 @@ const tokenOpen = ref(false),
   resetOpen = ref(false),
   helpOpen = ref(false),
   settingsOpen = ref(false),
-  countersOpen = ref(false);
+  historyOpen = ref(false),
+  countersOpen = ref(false),
+  millOpen = ref(false);
 const amount = ref(1),
   cardSize = ref('180'),
   counterName = ref('+1/+1');
-const scryAmount = ref(2),
+const scryAmount = ref(1),
+  millAmount = ref(1),
   drawNextTurn = ref(true),
   showPreviews = ref(true),
   shortcuts = ref(true);
@@ -121,8 +124,10 @@ watch(
       tokenOpen.value =
         resetOpen.value =
         helpOpen.value =
+        historyOpen.value =
         settingsOpen.value =
         countersOpen.value =
+        millOpen.value =
           false;
       dragging.value = null;
       hoveredId.value = null;
@@ -130,10 +135,10 @@ watch(
   },
   { immediate: true },
 );
-const label = (id: string) =>
-  state.value?.cards[id]
-    ? cardName(state.value.cards[id], definitions.value)
-    : 'Card';
+const label = (id: string) => {
+  const card = state.value?.cards[id];
+  return card ? cardName(card, definitions.value) : 'Card';
+};
 const selected = computed(() =>
   selectedId.value ? state.value?.cards[selectedId.value] : undefined,
 );
@@ -180,19 +185,21 @@ const zoneLabels: Record<PlaytestZone, string> = {
 };
 const scryIds = ref<string[]>([]);
 const browseIds = computed(() => {
-  if (!state.value || !browser.value) return [];
+  const game = state.value;
+  const zone = browser.value;
+  if (!game || !zone) return [];
   const ids =
-    browser.value === 'scry'
-      ? scryIds.value.filter((id) => state.value?.zones.library.includes(id))
-      : state.value.zones[browser.value];
-  if (browser.value === 'scry') return ids;
+    zone === 'scry'
+      ? scryIds.value.filter((id) => game.zones.library.includes(id))
+      : game.zones[zone];
+  if (zone === 'scry') return ids;
   const filtered = ids.filter((id) =>
     label(id).toLowerCase().includes(libraryQuery.value.toLowerCase()),
   );
   // Library search should not reveal the shuffled order. Scry explicitly does.
-  return browser.value === 'library'
+  return zone === 'library'
     ? [...filtered].sort((a, b) => label(a).localeCompare(label(b)))
-    : ['graveyard', 'exile'].includes(browser.value)
+    : ['graveyard', 'exile'].includes(zone)
       ? [...filtered].reverse()
       : filtered;
 });
@@ -247,6 +254,17 @@ function positionAt(
       Math.max(1, rect.height - (fieldCardWidth.value * 680) / 488 - 14),
   };
 }
+function handInsertIndex(id: string, x: number, y: number) {
+  if (panelZone.value !== 'hand' || !handRow.value) return undefined;
+  const cards = [
+    ...handRow.value.querySelectorAll<HTMLElement>('.playtest-card'),
+  ].filter((card) => card.dataset.instance !== id);
+  const index = cards.findIndex((card) => {
+    const rect = card.getBoundingClientRect();
+    return y < rect.top || (y <= rect.bottom && x < rect.left + rect.width / 2);
+  });
+  return index < 0 ? cards.length : index;
+}
 function drop(event: DragEvent, to: Destination) {
   const id = event.dataTransfer?.getData('application/x-cardmystic-playtest');
   if (!id || !state.value?.cards[id]) return;
@@ -270,6 +288,10 @@ function drop(event: DragEvent, to: Destination) {
     type: 'move',
     id,
     to,
+    index:
+      to === 'hand'
+        ? handInsertIndex(id, event.clientX, event.clientY)
+        : undefined,
     position:
       to === 'battlefield'
         ? positionAt(event.clientX, event.clientY, offset.x, offset.y)
@@ -297,6 +319,10 @@ provide('playtestDrag', (event: PlaytestDrag) => {
     type: 'move',
     id: event.id,
     to: destination,
+    index:
+      destination === 'hand'
+        ? handInsertIndex(event.id, event.x, event.y)
+        : undefined,
     position:
       destination === 'battlefield'
         ? positionAt(
@@ -337,19 +363,36 @@ const pileCards = (zone: 'graveyard' | 'exile' | 'command') =>
 watch(scryAmount, () => {
   if (browser.value === 'scry') browse('scry');
 });
+function millCards() {
+  const count = Math.min(
+    Math.floor(Number(millAmount.value)),
+    state.value?.zones.library.length ?? 0,
+  );
+  if (!Number.isFinite(count) || count < 1) return;
+  dispatch({ type: 'mill', count });
+  millOpen.value = false;
+}
 const libraryActions = computed(() => [
   {
-    label: 'Scry',
+    label: 'Scry / Surveil',
     icon: 'i-lucide-eye',
     disabled: !state.value?.zones.library.length,
     onSelect: () => browse('scry'),
   },
   {
-    label: `Mill ${Number(amount.value) || 1}`,
+    label: 'Mill 1',
     icon: 'i-lucide-arrow-down',
     disabled: !state.value?.zones.library.length,
-    onSelect: () =>
-      dispatch({ type: 'mill', count: Number(amount.value) || 1 }),
+    onSelect: () => dispatch({ type: 'mill', count: 1 }),
+  },
+  {
+    label: 'Mill X',
+    icon: 'i-lucide-arrow-down',
+    disabled: !state.value?.zones.library.length,
+    onSelect: () => {
+      millAmount.value = 1;
+      millOpen.value = true;
+    },
   },
   {
     label: 'Shuffle',
@@ -472,8 +515,10 @@ function keydown(event: KeyboardEvent) {
     tokenOpen.value ||
     helpOpen.value ||
     resetOpen.value ||
+    historyOpen.value ||
     settingsOpen.value ||
-    countersOpen.value
+    countersOpen.value ||
+    millOpen.value
   )
     return;
   const key = event.key.toLowerCase();
@@ -513,16 +558,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
     title="Playtest"
     :description="name"
     :ui="{
-      body: 'p-0 sm:p-0 min-h-0',
+      body: 'p-0 sm:p-0 min-h-0 flex flex-col',
       header: 'py-2 min-h-14',
       content: 'playtest-modal',
+      title: 'flex items-center gap-2',
     }"
   >
+    <template #title>
+      Playtest
+      <UBadge label="Beta" color="warning" variant="subtle" size="sm" />
+    </template>
     <template #body>
       <p v-if="error" role="alert" class="p-4 text-error">{{ error }}</p>
       <div
         v-if="state"
-        class="playtest-board flex min-h-full min-w-0 flex-col"
+        class="playtest-board flex min-h-full min-w-0 flex-1 flex-col"
         :style="{
           '--playtest-card-width': `${fieldCardWidth}px`,
           '--playtest-card-height': `${(fieldCardWidth * 680) / 488}px`,
@@ -531,7 +581,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
       >
         <div
           ref="toolbar"
-          class="playtest-toolbar sticky top-0 z-20 grid grid-cols-[1fr_auto] gap-2 border-b border-default bg-default/95 p-2 backdrop-blur min-[375px]:grid-cols-[1fr_auto_1fr]"
+          class="playtest-toolbar sticky top-0 z-20 grid shrink-0 grid-cols-[1fr_auto] gap-2 border-b border-default bg-default/95 p-2 backdrop-blur min-[375px]:grid-cols-[1fr_auto_1fr]"
         >
           <div
             class="flex items-center gap-1"
@@ -615,6 +665,34 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
               :disabled="!canRedo"
               @click="redo"
             />
+            <UPopover v-model:open="historyOpen" :content="{ align: 'end' }">
+              <UButton
+                aria-label="Action history"
+                icon="i-lucide-history"
+                color="neutral"
+                variant="ghost"
+              />
+              <template #content>
+                <section
+                  aria-label="Action history"
+                  class="w-72 max-w-[calc(100vw-2rem)] p-3"
+                >
+                  <h3 class="mb-2 font-semibold">Action history</h3>
+                  <ol
+                    class="max-h-[min(24rem,60dvh)] overflow-y-auto space-y-2 text-sm"
+                  >
+                    <li
+                      v-for="(entry, index) in [
+                        ...(state?.log ?? []),
+                      ].reverse()"
+                      :key="index"
+                    >
+                      {{ entry }}
+                    </li>
+                  </ol>
+                </section>
+              </template>
+            </UPopover>
             <UPopover v-model:open="settingsOpen" :content="{ align: 'end' }">
               <UButton
                 aria-label="Playtest settings"
@@ -730,7 +808,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
         </p>
         <section
           aria-label="Battlefield"
-          class="relative min-w-0 border-b border-default bg-primary/[0.03]"
+          class="relative flex min-w-0 flex-1 flex-col border-b border-default bg-primary/[0.03]"
         >
           <div
             class="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
@@ -754,14 +832,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
                 variant="ghost"
                 color="neutral"
                 size="sm"
-                @click="tokenOpen = true"
+                @click="
+                  () => {
+                    tokenOpen = true;
+                  }
+                "
               />
               <UButton
                 label="Counters"
                 variant="ghost"
                 color="neutral"
                 size="sm"
-                @click="countersOpen = true"
+                @click="
+                  () => {
+                    countersOpen = true;
+                  }
+                "
               />
             </div>
           </div>
@@ -769,7 +855,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
             ref="canvas"
             data-testid="playtest-battlefield"
             data-playtest-zone="battlefield"
-            class="playtest-field relative"
+            class="playtest-field relative flex-1"
             @dragover.prevent
             @drop.prevent="drop($event, 'battlefield')"
           >
@@ -777,7 +863,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
               v-if="!state.zones.battlefield.length"
               class="pointer-events-none absolute inset-0 flex items-center justify-center p-4 text-center text-sm text-muted"
             >
-              Drag cards onto the battlefield. Tap a card for actions.
+              Drag cards onto the battlefield.
             </p>
             <div
               v-for="id in state.zones.battlefield"
@@ -789,6 +875,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
                 :instance="state.cards[id]"
                 :card="definitions[state.cards[id].definition]"
                 :name="label(id)"
+                tappable
+                @tap="dispatch({ type: 'tap', id })"
                 @options="selectedId = id"
                 @hover="hoveredId = $event"
               />
@@ -809,7 +897,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
             class="pointer-events-none absolute right-3 top-12 z-10 hidden w-44 rounded-lg shadow-xl xl:block"
           />
         </section>
-        <div class="min-w-0 overflow-x-auto p-3">
+        <div class="min-w-0 shrink-0 overflow-x-auto p-3">
           <div ref="zonesRow" class="playtest-zones">
             <section
               v-show="!isMobile || mobileZone !== 'library'"
@@ -985,26 +1073,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
             </section>
           </div>
         </div>
-        <div class="px-3 pb-3 text-sm">
+        <div class="shrink-0 px-3 pb-3 text-sm">
           <p role="status" class="min-h-5">
             {{ state.log[state.log.length - 1] }}
           </p>
-          <details class="mt-2">
-            <summary class="cursor-pointer text-muted">Action history</summary>
-            <ol class="mt-2 space-y-1 text-xs">
-              <li
-                v-for="(entry, index) in [...state.log].reverse()"
-                :key="index"
-              >
-                {{ entry }}
-              </li>
-            </ol>
-          </details>
         </div>
-        <p class="mt-auto border-t border-default p-3 text-xs text-muted">
-          Solo practice. You handle mana costs, abilities, combat and triggers.
-          This game does not edit your saved deck.
-        </p>
       </div>
     </template>
   </UModal>
@@ -1033,7 +1106,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
     </div></Teleport
   >
   <UModal v-model:open="countersOpen" title="Mana and player counters"
-    ><template #body>
+    ><template v-if="state" #body>
       <div class="mt-2 space-y-1">
         <div
           v-for="color in manaColors"
@@ -1093,6 +1166,38 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
         /></div></template
   ></UModal>
 
+  <UModal v-model:open="millOpen" title="Mill cards">
+    <template #body>
+      <UFormField label="Cards to mill">
+        <UInputNumber
+          v-model="millAmount"
+          :min="1"
+          :max="state?.zones.library.length || 1"
+          aria-label="Cards to mill"
+          class="w-36"
+          @keydown.enter.prevent="millCards"
+        />
+      </UFormField>
+    </template>
+    <template #footer>
+      <UButton
+        label="Mill"
+        :disabled="!state?.zones.library.length || !millAmount"
+        @click="millCards"
+      />
+      <UButton
+        label="Cancel"
+        color="neutral"
+        variant="outline"
+        @click="
+          () => {
+            millOpen = false;
+          }
+        "
+      />
+    </template>
+  </UModal>
+
   <UModal
     :open="!!browser"
     :title="
@@ -1147,7 +1252,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
           />
           <div
             v-if="browser === 'scry'"
-            class="mx-1 flex max-w-28 flex-wrap gap-1"
+            class="mx-auto flex w-[var(--playtest-card-width)] flex-wrap justify-center gap-1"
           >
             <UButton
               label="Top"
@@ -1170,7 +1275,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
             <UButton
               label="Graveyard"
               size="xs"
-              variant="ghost"
+              variant="soft"
               @click="
                 dispatch({ type: 'move', id, to: 'graveyard' });
                 scryIds = scryIds.filter((card) => card !== id);
@@ -1192,7 +1297,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
         label="Done"
         color="neutral"
         variant="outline"
-        @click="browser = null"
+        @click="
+          () => {
+            browser = null;
+          }
+        "
     /></template>
   </UModal>
 
@@ -1360,7 +1469,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
             :label="preset.name"
             size="sm"
             variant="soft"
-            @click="token = { ...preset }"
+            @click="
+              () => {
+                token = { ...preset };
+              }
+            "
           />
         </div>
         <label class="block text-sm"
@@ -1426,7 +1539,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
         label="Cancel"
         color="neutral"
         variant="outline"
-        @click="resetOpen = false" /></template
+        @click="
+          () => {
+            resetOpen = false;
+          }
+        " /></template
   ></UModal>
   <UModal
     v-model:open="helpOpen"
@@ -1435,13 +1552,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
     ><template #body
       ><ul class="space-y-3 text-sm">
         <li>
-          Tap or click a card to open its actions, including tap and untap. All
-          cards play directly onto the battlefield; move spells to the graveyard
-          when finished.
+          Click or tap a battlefield card to tap or untap it. Cards play
+          directly onto the battlefield; move spells to the graveyard when
+          finished.
         </li>
         <li>
-          Hold a card on mobile or right-click on desktop to move it, change
-          faces, add counters, or copy it.
+          Hold a card on mobile, right-click on desktop, or press Shift+Enter to
+          open its actions, including moving it, changing faces, adding
+          counters, and copying it.
         </li>
         <li>
           Drag cards anywhere on the battlefield and between zones, on desktop
@@ -1453,9 +1571,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
           Card size, hover previews and automatic draws are under Settings.
         </li>
         <li>
-          Set the number next to Draw to draw or mill that many cards. Scry has
-          its own count selector, and also supports putting cards in the
-          graveyard for surveil.
+          Set the number next to Draw to draw that many cards. Use Mill X in the
+          Library menu to choose how many cards to mill. Scry / Surveil has its
+          own count selector.
         </li>
         <li>
           Your opening hand is ready to play. Redraw hand shuffles it back and
@@ -1478,7 +1596,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
 
 <style scoped>
 .playtest-field {
-  height: clamp(calc(var(--playtest-card-height) + 7rem), 48dvh, 42rem);
+  min-height: clamp(calc(var(--playtest-card-height) + 7rem), 48dvh, 42rem);
   scroll-margin-top: calc(var(--playtest-toolbar-height) + 0.75rem);
 }
 .playtest-zones {
@@ -1511,7 +1629,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
     min-width: 2.75rem;
   }
   .playtest-field {
-    height: clamp(13rem, 32dvh, 24rem);
+    min-height: clamp(13rem, 32dvh, 24rem);
   }
   .playtest-zones {
     display: block;
