@@ -1,7 +1,7 @@
 <template>
-  <SpaceBackground>
+  <PageBackground>
     <Register />
-  </SpaceBackground>
+  </PageBackground>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <SpaceBackground>
+  <PageBackground>
     <ClientOnly>
       <div
         class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl w-full max-w-sm"
@@ -67,7 +67,7 @@
         </UButton>
       </div>
     </ClientOnly>
-  </SpaceBackground>
+  </PageBackground>
 </template>
 
 <script setup lang="ts">

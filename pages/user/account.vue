@@ -110,7 +110,7 @@ onBeforeUnmount(() => followingObserver?.disconnect());
 </script>
 
 <template>
-  <SpaceBackground :full="true">
+  <PageBackground :full="true">
     <div class="w-full max-w-6xl mx-auto px-4 pt-24 relative z-10">
       <NavigationBreadcrumbs />
     </div>
@@ -300,5 +300,5 @@ onBeforeUnmount(() => followingObserver?.disconnect());
         <UButton to="/memberships" label="Search membership and billing" />
       </UCard>
     </div>
-  </SpaceBackground>
+  </PageBackground>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <SpaceBackground :full="true">
+  <PageBackground :full="true">
     <div class="hero px-0 w-full flex flex-col items-center justify-center">
       <UContainer
         class="hero-grid grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-8 items-center w-full max-w-350 relative z-10"
@@ -74,7 +74,7 @@
         </div>
       </UContainer>
     </div>
-  </SpaceBackground>
+  </PageBackground>
 
   <!-- Everything below the fold -->
   <UContainer class="home-content max-w-[2000px] my-8 lg:my-12">

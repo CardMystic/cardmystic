@@ -1,5 +1,5 @@
 <template>
-  <SpaceBackground>
+  <PageBackground>
     <ClientOnly>
       <!-- Step 1: Request reset email -->
       <div
@@ -180,7 +180,7 @@
         </div>
       </template>
     </ClientOnly>
-  </SpaceBackground>
+  </PageBackground>
 </template>
 
 <script setup lang="ts">
