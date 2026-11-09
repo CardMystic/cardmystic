@@ -252,10 +252,32 @@ export function usePublicUserProfile(userId: Ref<string | null | undefined>) {
 }
 
 /**
- * Fetches a single public decklist by ID, including its summary and items.
- * Used as a fallback on the list detail page when the list doesn't belong
- * to the authenticated user.
+ * Fetches public list previews without downloading their card contents.
  */
+export function usePublicDecklistSummaries(listIds: Ref<string[]>) {
+  const config = useRuntimeConfig();
+  const { data, isLoading } = useQuery({
+    queryKey: computed(() => [
+      'discovery',
+      'public-list-summaries',
+      listIds.value,
+    ]),
+    queryFn: async () => {
+      const params = new URLSearchParams({ ids: listIds.value.join(',') });
+      const response = await fetch(
+        `${config.public.backendPath}/supabase/card-lists/summaries?${params}`,
+      );
+      if (!response.ok)
+        throw new Error(`Failed to load list summaries (${response.status})`);
+      return GetFeaturedDecklistsResponseSchema.parse(await response.json());
+    },
+    enabled: computed(() => listIds.value.length > 0),
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+  return { decklists: computed(() => data.value?.decklists ?? []), isLoading };
+}
+
 export function usePublicDecklist(listId: Ref<string | null | undefined>) {
   const config = useRuntimeConfig();
 

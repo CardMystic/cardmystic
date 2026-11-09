@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { takeGuestDeckReturn } from '~/utils/guestDeck';
 import { useCardNames } from '~/composables/useBulkData';
 import { refDebounced } from '~/utils/refDebounced';
 
@@ -79,6 +80,11 @@ definePageMeta({
 });
 
 const router = useRouter();
+let setupDestination: string | null = null;
+function finishSetup() {
+  setupDestination ??= takeGuestDeckReturn() ?? '/user/account';
+  router.push(setupDestination);
+}
 const {
   userProfile,
   profileData,
@@ -152,7 +158,7 @@ watchEffect(() => {
 watchEffect(() => {
   if (import.meta.server) return;
   if (profileData.value?.username) {
-    router.push('/user/account');
+    finishSetup();
   }
 });
 
@@ -165,7 +171,7 @@ const submit = async () => {
   loading.value = true;
   try {
     await updateUsernameMutation.mutateAsync(username.value.trim());
-    router.push('/user/account');
+    finishSetup();
   } catch (e: any) {
     errorMessage.value = e.message || 'Failed to save username.';
   }

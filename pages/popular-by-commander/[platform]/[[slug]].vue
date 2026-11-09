@@ -126,6 +126,8 @@ const helpText = computed(() => {
   return `Showing the most popular cards in ${commanderDisplay.value} decks.`;
 });
 
+useCanonicalUrl(() => (seoEntry || !commanderParam.value ? route.path : null));
+
 useSeoMeta({
   robots: () =>
     seoEntry

@@ -110,9 +110,11 @@ const sections = [
 ];
 
 async function revealHomeSections(page: Page) {
-  await page
-    .getByRole('heading', { name: 'Recent Decklists', exact: true })
-    .scrollIntoViewIfNeeded();
+  const recent = page.getByRole('heading', {
+    name: 'Recent Decklists',
+    exact: true,
+  });
+  if (await recent.count()) await recent.scrollIntoViewIfNeeded();
   await page
     .getByRole('heading', { name: 'Awesome Decklists & Users', exact: true })
     .scrollIntoViewIfNeeded();
@@ -123,7 +125,7 @@ async function revealHomeSections(page: Page) {
   if (await articlesHeading.count())
     await articlesHeading.scrollIntoViewIfNeeded();
   await page
-    .getByText('Total Searches Resolved', { exact: true })
+    .getByLabel('CardMystic community statistics')
     .scrollIntoViewIfNeeded();
 }
 
@@ -169,8 +171,10 @@ test.beforeEach(async ({ page }, testInfo) => {
       },
     );
   }
-  await page.route(BACKEND + '/metrics/query_count', (route) =>
-    route.fulfill({ json: { totalQueries: 346242 } }),
+  await page.route(BACKEND + '/metrics/site_stats', (route) =>
+    route.fulfill({
+      json: { totalQueries: 346242, totalUsers: 1200, totalDecks: 2300 },
+    }),
   );
 });
 
@@ -217,10 +221,7 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
           page.getByText(section.emptyText, { exact: true }),
         ).toHaveCount(0);
     }
-    const metrics = page
-      .getByText('Total Searches Resolved', { exact: true })
-      .locator('..')
-      .locator('..');
+    const metrics = page.getByLabel('CardMystic community statistics');
     await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
     if (failure === '429') {
       await expect(retryAlerts.first()).toContainText(
@@ -300,6 +301,13 @@ test('initial mobile home loads recent decks and defers featured content until v
   await expect(
     page.getByRole('button', { name: 'Search', exact: true }),
   ).toBeEnabled();
+  const recentBounds = await page
+    .getByRole('heading', { name: 'Recent Decklists', exact: true })
+    .boundingBox();
+  const showcaseBounds = await page
+    .getByRole('heading', { name: 'Your next deck starts here', exact: true })
+    .boundingBox();
+  expect(recentBounds!.y).toBeLessThan(showcaseBounds!.y);
   // Allow delayed hydration and auth work to settle while staying at the hero.
   await page.waitForTimeout(1000);
   expect(
@@ -342,43 +350,7 @@ test(
         (route) => route.fulfill({ json: section.data }),
       );
     }
-    const exampleQuery = 'Artifacts that produce mana';
     const topQuery = 'Creatures that draw cards';
-    await page.route(BACKEND + '/search/example', (route) =>
-      route.fulfill({
-        json: {
-          query: exampleQuery,
-          cards: [
-            {
-              card_name: 'Sol Ring',
-              rank: 1,
-              card_data: {
-                id: '20000000-0000-4000-8000-000000000001',
-                oracle_id: '20000000-0000-4000-8000-000000000002',
-                name: 'Sol Ring',
-                mana_cost: '{1}',
-                cmc: 1,
-                type_line: 'Artifact',
-                oracle_text: '{T}: Add {C}{C}.',
-                colors: [],
-                color_identity: [],
-                keywords: [],
-                games: ['paper'],
-                legalities: { commander: 'legal' },
-                prices: { usd: '1.00' },
-                image_uris: {
-                  normal: 'https://cards.scryfall.io/normal/sol-ring.jpg',
-                },
-                layout: 'normal',
-                rarity: 'uncommon',
-                set: 'cmm',
-                collector_number: '396',
-              },
-            },
-          ],
-        },
-      }),
-    );
     await page.route(BACKEND + '/cache/popular', (route) =>
       route.fulfill({ json: [topQuery] }),
     );
@@ -402,24 +374,26 @@ test(
             await waitForHydration(page);
           }
           await expect(
-            page.getByText('Login To Create Decklists!', { exact: true }),
+            page
+              .getByRole('link', {
+                name: 'Build a deck',
+                exact: true,
+              })
+              .first(),
           ).toBeVisible();
           await revealHomeSections(page);
+          await expect(
+            page.getByRole('link', { name: deck.name, exact: true }),
+          ).toHaveAttribute('href', `/lists/${deck.id}`);
           for (const section of publicSections) {
             await expect(
               page.getByText(section.result, { exact: true }),
             ).toBeVisible();
           }
-          const metrics = page
-            .getByText('Total Searches Resolved', { exact: true })
-            .locator('..')
-            .locator('..');
+          const metrics = page.getByLabel('CardMystic community statistics');
           await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
-          const example = page.locator('.example-content');
-          await example.scrollIntoViewIfNeeded();
-          await expect(example).toContainText(exampleQuery);
           await expect(
-            example.getByAltText('Sol Ring', { exact: true }),
+            page.getByRole('heading', { name: 'Your next deck starts here' }),
           ).toBeVisible();
           const top = page.locator('.top-queries-container').first();
           await top.scrollIntoViewIfNeeded();
@@ -428,6 +402,35 @@ test(
           await expect(
             page.getByRole('button', { name: 'Retry', exact: true }),
           ).toHaveCount(0);
+          if (visit === 'direct visit') {
+            for (const width of [1280, 390, 320]) {
+              await page.setViewportSize({ width, height: 844 });
+              await page.evaluate(() => window.scrollTo(0, 0));
+              if (width < 1280) {
+                await page
+                  .getByRole('button', { name: 'Open navigation menu' })
+                  .click();
+              }
+              const navigation =
+                width < 1280
+                  ? page.getByRole('dialog', { name: 'Open navigation menu' })
+                  : page.getByRole('navigation', {
+                      name: 'Main navigation',
+                      exact: true,
+                    });
+              const pricing = navigation.getByRole('link', {
+                name: 'Pro Features',
+                exact: true,
+              });
+              await expect(pricing).toBeVisible();
+              await expect(pricing).toHaveAttribute('href', '/memberships');
+              if (width < 1280) await page.keyboard.press('Escape');
+              expect(
+                await page.evaluate(() => document.documentElement.scrollWidth),
+              ).toBeLessThanOrEqual(width);
+            }
+            await page.setViewportSize({ width: 1440, height: 1000 });
+          }
         });
       }
     } finally {

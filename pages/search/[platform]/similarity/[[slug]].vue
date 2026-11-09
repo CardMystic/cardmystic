@@ -98,6 +98,8 @@ const searchPlatformProp = getSearchPlatformProp(platform);
 const cardNameParam = computed(() => String(route.query?.card_name || ''));
 const displayQuery = computed(() => seoEntry?.query || cardNameParam.value);
 
+useCanonicalUrl(() => (seoEntry || !cardNameParam.value ? route.path : null));
+
 useSeoMeta({
   robots: () =>
     seoEntry

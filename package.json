@@ -6,10 +6,10 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "build": "nuxt build",
-    "build:azure": "nuxi build --preset=azure",
+    "build": "pnpm update:sitemap && nuxt build",
+    "build:azure": "pnpm update:sitemap && nuxi build --preset=azure",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "generate": "pnpm update:sitemap && nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint . --ext .ts,.js,.vue",
@@ -17,12 +17,12 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
-    "test:azure-gateway": "nuxt build --preset=azure-swa && node scripts/check-azure-gateway.mjs",
+    "test:azure-gateway": "pnpm update:sitemap && nuxt build --preset=azure-swa && node scripts/check-azure-gateway.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install --with-deps chromium",
     "export:protected-searches": "node --experimental-strip-types scripts/export-protected-searches.mjs",
-    "update:card-oracle-ids": "node scripts/update-card-oracle-ids.mjs",
+    "update:sitemap": "node --experimental-strip-types scripts/update-sitemap-data.mjs",
     "gen:types": "npx supabase gen types typescript --project-id ddbgietanhxrozzmogur > database.types.ts"
   },
   "dependencies": {

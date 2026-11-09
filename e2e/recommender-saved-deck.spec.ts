@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
-import { BACKEND } from './utils/mocks';
+import { BACKEND, gotoHydrated } from './utils/mocks';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -90,7 +90,7 @@ test('saved deck recommendations add cards without searching until rerun', async
   expect(searches[1].cards).toContain(added.name);
   await expect(rerun).toHaveCount(0);
   await page
-    .getByRole('button', { name: 'Paste Decklist', exact: true })
+    .getByRole('button', { name: 'Paste a decklist instead', exact: true })
     .click();
   await expect(page.getByPlaceholder(/Paste your decklist/)).toBeVisible();
 });
@@ -100,6 +100,8 @@ test('signed-in users default to selecting a saved deck', async ({ page }) => {
   await page.route(BACKEND + '/supabase/card-lists/mine/search**', (route) =>
     route.fulfill({ json: { decklists: [state.deck] } }),
   );
+  // Start with a fresh query cache after replacing the setup's deck-picker data.
+  await gotoHydrated(page, '/about');
   await page.evaluate(() => {
     const root = document.getElementById('__nuxt') as unknown as {
       __vue_app__: {
@@ -117,7 +119,11 @@ test('signed-in users default to selecting a saved deck', async ({ page }) => {
   const selector = page.getByPlaceholder('Select a decklist...');
   await expect(selector).toBeVisible();
   await expect(page.getByPlaceholder(/Paste your decklist/)).toHaveCount(0);
-  await selector.fill('My');
+  await selector.click();
+  await expect(selector).toHaveValue('');
+  await expect(
+    page.getByRole('option', { name: 'My display deck', exact: true }),
+  ).toBeVisible();
   await page
     .getByRole('option', { name: 'My display deck', exact: true })
     .click();
@@ -125,9 +131,13 @@ test('signed-in users default to selecting a saved deck', async ({ page }) => {
     page.getByRole('button', { name: 'Recommend', exact: true }),
   ).toBeEnabled();
   await page
-    .getByRole('button', { name: 'Paste Decklist', exact: true })
+    .getByRole('button', { name: 'Paste a decklist instead', exact: true })
     .click();
   await expect(page.getByPlaceholder(/Paste your decklist/)).toHaveValue(
     /Island/,
   );
+  await page
+    .getByRole('button', { name: 'Select a decklist instead', exact: true })
+    .click();
+  await expect(selector).toBeVisible();
 });

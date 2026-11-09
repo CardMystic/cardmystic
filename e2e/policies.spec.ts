@@ -56,7 +56,9 @@ test('mobile footer links reach every policy and billing help is available to gu
     .getByRole('region', { name: 'Cookie preferences' })
     .getByRole('button', { name: 'Reject all', exact: true })
     .click();
-  const footer = page.getByRole('navigation', { name: 'CardMystic policies' });
+  const footer = page.getByRole('navigation', {
+    name: 'CardMystic information',
+  });
   for (const { path, title } of policies) {
     const link = footer.locator(`a[href="${path}"]`);
     await expect(link).toHaveCount(1);

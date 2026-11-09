@@ -31,8 +31,13 @@ test.describe('SEO infrastructure', () => {
     }
 
     await expect(
-      page.getByRole('button', { name: 'Build a New Deck' }),
-    ).toBeDisabled();
+      page.getByRole('link', { name: 'Build a deck' }),
+    ).toHaveAttribute('href', '/build');
+    await expect(
+      page
+        .locator('footer')
+        .getByRole('link', { name: 'Pricing', exact: true }),
+    ).toHaveAttribute('href', '/memberships');
   });
 
   test('sitemap.xml serves valid XML with core, landing, and slug URLs', async ({
@@ -195,6 +200,9 @@ test.describe('SSR meta tags for crawlers', () => {
       const html = await resp.text();
 
       // Title must reflect the slug, not the generic fallback.
+      expect(html).toContain(
+        `<link rel="canonical" href="https://cardmystic.com${path}">`,
+      );
       const title = titleTag(html);
       expect(title.toLowerCase()).toContain(titleContains.toLowerCase());
       expect(title).toContain('CardMystic');
@@ -232,6 +240,7 @@ test.describe('SSR meta tags for crawlers', () => {
     expect(resp.ok()).toBeTruthy();
     const html = await resp.text();
     expect(metaContent(html, 'name', 'robots')).toBe('noindex, follow');
+    expect(html).not.toContain('rel="canonical"');
   });
 
   test('bare landing pages are indexable with generic (but valid) meta', async ({
@@ -252,10 +261,24 @@ test.describe('SSR meta tags for crawlers', () => {
     expect(resp.ok()).toBeTruthy();
     const html = await resp.text();
 
-    // The homepage attaches an external JSON-LD document via <script src>.
-    // Its presence in SSR HTML is what crawlers pick up.
-    expect(html).toMatch(
-      /<script[^>]+type=["']application\/ld\+json["'][^>]+src=["'][^"']*home\.json["']/,
+    const script = html.match(
+      /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/,
+    );
+    expect(script).not.toBeNull();
+    const schema = JSON.parse(script![1]);
+    const organization = schema.find(
+      (entry: Record<string, unknown>) => entry['@type'] === 'Organization',
+    );
+    const website = schema.find(
+      (entry: Record<string, unknown>) => entry['@type'] === 'WebSite',
+    );
+    expect(organization.name).toBe('CardMystic');
+    expect(website.publisher['@id']).toBe(organization['@id']);
+    expect(website.potentialAction.target).toBe(
+      'https://cardmystic.com/search/all/smart?query={search_term_string}',
+    );
+    expect((await request.get(new URL(organization.logo).pathname)).ok()).toBe(
+      true,
     );
 
     // Homepage title stays branded. The absence of a `<meta robots>`
@@ -263,5 +286,19 @@ test.describe('SSR meta tags for crawlers', () => {
     expect(titleTag(html)).toContain('CardMystic');
     const robots = metaContent(html, 'name', 'robots');
     if (robots) expect(robots).toBe('index, follow');
+  });
+
+  test('public pages declare their own canonical without tracking parameters', async ({
+    request,
+  }) => {
+    for (const path of ['/', '/about', '/memberships', '/search/all/smart']) {
+      const response = await request.get(`${path}?utm_source=audit`);
+      expect(response.ok()).toBeTruthy();
+      const html = await response.text();
+      expect(html.match(/rel="canonical"/g)).toHaveLength(1);
+      expect(html).toContain(
+        `<link rel="canonical" href="https://cardmystic.com${path}">`,
+      );
+    }
   });
 });

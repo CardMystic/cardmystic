@@ -52,7 +52,10 @@ for (const [path, endpoint] of [
     if (endpoint === '/als/recommend') {
       // A commander URL keeps its editable pasted input even when signed in.
       await expect(
-        page.getByRole('button', { name: 'Select Decklist', exact: true }),
+        page.getByRole('button', {
+          name: 'Select a decklist instead',
+          exact: true,
+        }),
       ).toBeVisible();
       await expect(
         page.getByPlaceholder(/Paste your decklist here/i),

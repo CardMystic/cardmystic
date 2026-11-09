@@ -1,6 +1,8 @@
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'node:url';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import staticWebAppConfig from './public/staticwebapp.config.json';
+import { DEFAULT_SITEMAP_DATA_URL } from './utils/sitemapData';
 
 // Get the current git commit hash
 function getCommitHash() {
@@ -60,6 +62,12 @@ export default defineNuxtConfig({
   },
   build: {},
   nitro: {
+    serverAssets: [
+      {
+        baseName: 'sitemap',
+        dir: fileURLToPath(new URL('./.cache/sitemap', import.meta.url)),
+      },
+    ],
     azure: {
       // The Azure preset otherwise falls back to Node 18 for engines ranges.
       // Share the runtime and routing settings with the generated SWA config.
@@ -67,6 +75,7 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    sitemapDataUrl: DEFAULT_SITEMAP_DATA_URL,
     // The private keys which are only available server-side
     backendUrl: process.env.NUXT_BACKEND_URL || 'http://localhost:3000',
     backendApiKey: '',

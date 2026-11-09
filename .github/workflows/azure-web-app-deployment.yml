@@ -29,6 +29,12 @@ jobs:
         with:
           submodules: true
           lfs: false
+      - name: Restore last validated sitemap build data
+        uses: actions/cache@v4
+        with:
+          path: .cache/sitemap
+          key: sitemap-data-${{ runner.os }}-deploy-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: sitemap-data-${{ runner.os }}-
       - name: Build And Deploy (Production)
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

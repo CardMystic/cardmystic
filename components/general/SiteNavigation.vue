@@ -38,55 +38,66 @@ function updateOpen(label: string | undefined, value: boolean) {
     aria-label="Main navigation"
     class="flex items-center gap-0.5"
   >
-    <UPopover
-      v-for="item in items"
-      :key="item.label"
-      :open="openMenu === item.label"
-      :portal="false"
-      :content="{ side: 'bottom', align: 'start', sideOffset: 6 }"
-      @update:open="updateOpen(item.label, $event)"
-    >
+    <template v-for="item in items" :key="item.label">
       <UButton
+        v-if="item.to"
+        :to="item.to"
+        :target="item.target"
         :label="item.label"
         :icon="item.icon"
-        trailing-icon="i-lucide-chevron-down"
         color="neutral"
         variant="ghost"
-        class="min-h-11 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-primary"
-        :class="
-          openMenu === item.label
-            ? 'bg-elevated text-highlighted'
-            : 'text-muted'
-        "
+        class="min-h-11 text-muted"
       />
-      <template #content>
-        <UNavigationMenu
-          :items="item.children"
-          orientation="vertical"
+      <UPopover
+        v-else
+        :open="openMenu === item.label"
+        :portal="false"
+        :content="{ side: 'bottom', align: 'start', sideOffset: 6 }"
+        @update:open="updateOpen(item.label, $event)"
+      >
+        <UButton
+          :label="item.label"
+          :icon="item.icon"
+          trailing-icon="i-lucide-chevron-down"
           color="neutral"
-          :aria-label="item.label === 'Sets' ? 'Recent sets' : item.label"
-          class="w-72 max-w-[calc(100vw-2rem)] p-2"
-          :ui="{
-            link: 'min-h-11 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-primary',
-            linkLabel: 'whitespace-normal',
-          }"
-          @click="closeOnNavigation"
-        >
-          <template #item-leading="{ item: child }">
-            <SetSymbol
-              v-if="child.setCode"
-              :code="child.setCode"
-              class="size-5 shrink-0"
-            />
-            <UIcon
-              v-else-if="child.icon"
-              :name="child.icon"
-              class="size-5 shrink-0"
-            />
-          </template>
-        </UNavigationMenu>
-      </template>
-    </UPopover>
+          variant="ghost"
+          class="min-h-11 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-primary"
+          :class="
+            openMenu === item.label
+              ? 'bg-elevated text-highlighted'
+              : 'text-muted'
+          "
+        />
+        <template #content>
+          <UNavigationMenu
+            :items="item.children"
+            orientation="vertical"
+            color="neutral"
+            :aria-label="item.label === 'Sets' ? 'Recent sets' : item.label"
+            class="w-72 max-w-[calc(100vw-2rem)] p-2"
+            :ui="{
+              link: 'min-h-11 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-primary',
+              linkLabel: 'whitespace-normal',
+            }"
+            @click="closeOnNavigation"
+          >
+            <template #item-leading="{ item: child }">
+              <SetSymbol
+                v-if="child.setCode"
+                :code="child.setCode"
+                class="size-5 shrink-0"
+              />
+              <UIcon
+                v-else-if="child.icon"
+                :name="child.icon"
+                class="size-5 shrink-0"
+              />
+            </template>
+          </UNavigationMenu>
+        </template>
+      </UPopover>
+    </template>
   </nav>
   <UNavigationMenu
     v-else

@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+useCanonicalUrl('/about');
 useSeoMeta({
   title: 'About CardMystic - Smart Magic: The Gathering Search Engine',
   description:

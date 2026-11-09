@@ -8,20 +8,20 @@
         <div
           class="flex flex-col gap-5 items-center lg:items-start text-center lg:text-left"
         >
-          <p class="hero-eyebrow">YOUR ALL-IN-ONE MTG TOOLKIT</p>
+          <p class="hero-eyebrow">MTG SMART CARD SEARCH</p>
           <h1 class="hero-title text-white">
-            Build
-            <span class="hero-title-highlight">Smarter</span>
-            Decks.
+            Describe It.
+            <span class="hero-title-highlight">Find It.</span>
           </h1>
           <p class="hero-subtitle">
-            MTG Smart Search Engine, Similar Card Search, Popular Card Search,
-            Deck Builder & Deck Recommender for Magic: The Gathering
+            Just describe the effect you're looking for and we'll handle the
+            rest! Free to use, no account needed!
           </p>
 
           <!-- Search (suggested searches + advanced filters render directly
                below the search bar on all breakpoints) -->
           <Search :show-suggested-searches="true" />
+          <HeroStats />
         </div>
 
         <!-- Desktop artwork stays server-rendered. Mobile selects an inline
@@ -60,10 +60,16 @@
             class="ready-card"
           >
             <div class="flex items-start justify-between gap-2">
-              <p class="ready-label">Ready to search</p>
+              <p class="ready-label flex items-center gap-2">
+                <UIcon
+                  name="i-lucide-search"
+                  class="size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                Ready to search
+              </p>
             </div>
-            <p class="ready-query">{{ readyToSearch.query }}</p>
-            <p class="ready-desc">{{ readyToSearch.description }}</p>
+            <p class="ready-query">“{{ readyToSearch.query }}”</p>
           </NuxtLink>
         </div>
       </UContainer>
@@ -72,87 +78,23 @@
 
   <!-- Everything below the fold -->
   <UContainer class="home-content max-w-[2000px] my-8 lg:my-12">
-    <!-- Keep recent decks synchronous so an empty async placeholder does not
-         briefly pull the deferred sections below into the viewport. -->
     <ClientOnly>
-      <RecentLists v-if="isLoggedIn" class="home-gallery mb-14" />
-      <RecentListsNotLoggedIn v-else class="home-gallery mb-14" />
-      <template #fallback>
-        <RecentListsSkeleton class="home-gallery mb-14" />
-      </template>
+      <RecentLists v-if="isLoggedIn" class="home-gallery mb-20 lg:mb-24" />
     </ClientOnly>
 
+    <SearchShowcase class="home-gallery mb-20 lg:mb-24" />
+
     <LazyFeaturedSection
+      :show-sign-in="!isLoggedIn"
       :hydrate-on-visible="sectionVisibility"
-      class="home-gallery mb-14"
+      class="home-gallery mb-20 lg:mb-24"
     />
 
     <LazyRecentArticles
       :hydrate-on-visible="sectionVisibility"
-      class="home-gallery mb-14"
+      class="home-gallery mb-20 lg:mb-24"
     />
 
-    <LazyQueryCount
-      :hydrate-on-visible="sectionVisibility"
-      class="home-reading mb-14"
-    />
-
-    <!-- How To Use & How It Works Section -->
-    <div class="home-reading mb-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- How To Use -->
-      <div
-        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent"
-      >
-        <div class="flex items-start gap-4">
-          <UIcon
-            name="i-lucide-book-open"
-            class="text-3xl text-primary shrink-0 mt-1"
-          />
-          <div>
-            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">
-              How To Use
-            </h2>
-            <p class="text-base md:text-lg leading-relaxed">
-              Simply describe the cards you want in plain English, and let our
-              semantic search engine do the rest. Still not sure? Try an example
-              query below!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- How It Works -->
-      <div
-        class="p-6 md:p-8 rounded-lg border-2 border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent"
-      >
-        <div class="flex items-start gap-4">
-          <UIcon
-            name="i-lucide-sparkles"
-            class="text-3xl text-primary shrink-0 mt-1"
-          />
-          <div>
-            <h2 class="text-2xl md:text-3xl font-bold mb-3 text-primary">
-              How It Works
-            </h2>
-            <p class="text-base md:text-lg leading-relaxed">
-              Our custom models use advanced machine learning techniques to
-              understand the nuances of Magic including slang, synergies, and
-              game mechanics.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <LazyEfficiency
-      :hydrate-on-visible="sectionVisibility"
-      class="home-reading mb-20"
-    />
-    <ClientOnly>
-      <LazyExampleQueries class="home-reading mb-10" />
-      <template #fallback>
-        <ExampleQueriesSkeleton class="home-reading mb-10" />
-      </template>
-    </ClientOnly>
     <ClientOnly>
       <LazyTopQueries class="home-reading mb-10" />
       <template #fallback>
@@ -179,6 +121,11 @@
 </template>
 
 <script setup lang="ts">
+import homeSchema from '~~/public/home.json';
+
+import { safeJsonLd } from '~/utils/safeJsonLd';
+
+useCanonicalUrl('/');
 defineOptions({ name: 'HomePage' });
 definePageMeta({
   layout: 'fullscreen',
@@ -205,24 +152,24 @@ useHead({
     {
       rel: 'preload',
       as: 'image',
-      href: '/ugin.webp',
+      href: '/adrix-and-nev.jpg',
       media: '(min-width: 1024px)',
-      type: 'image/webp',
+      type: 'image/jpeg',
       fetchpriority: 'high',
     },
     {
       rel: 'preload',
       as: 'image',
-      href: '/kaalia.webp',
+      href: '/mondrak.jpg',
       media: '(min-width: 1024px)',
-      type: 'image/webp',
+      type: 'image/jpeg',
       fetchpriority: 'high',
     },
   ],
   script: [
     {
       type: 'application/ld+json',
-      src: '/ld/home.json',
+      innerHTML: safeJsonLd(homeSchema),
     },
   ],
 });
@@ -241,25 +188,23 @@ const sectionVisibility = { rootMargin: '200px' };
 // these cards, so the hero reads as a live search result.
 const heroCards = [
   {
-    id: 'eecb3047-a563-441a-9175-200421981ac3',
-    name: 'Ugin, the Spirit Dragon',
-    image: '/ugin.webp',
+    id: '12a6cad9-eb42-43bd-9e68-aaf862cd83db',
+    name: 'Adrix and Nev, Twincasters',
+    image: '/adrix-and-nev.jpg',
     position: 'hero-card-back',
   },
   {
-    id: 'cb8d80c9-ed58-4f2d-aa8c-c383370c7f1a',
-    name: 'Kaalia of the Vast',
-    image: '/kaalia.webp',
+    id: 'fe83087d-c6c1-40be-9295-baaa1c6b2db1',
+    name: 'Mondrak, Glory Dominus',
+    image: '/mondrak.jpg',
     position: 'hero-card-front',
   },
 ];
 
 // Example query shown in the "Ready To Search" card — kept in sync
-// with the hero cards above (both are giant flying threats Kaalia
-// can cheat into play).
+// with the token-doubling creatures above.
 const readyToSearch = {
-  query: 'Angels, demons, and dragons',
-  description: 'Results ranked by how closely card text matches the idea.',
+  query: 'Creatures that double your tokens',
 };
 
 const { setPageInfo } = usePageInfo();
@@ -305,7 +250,7 @@ setPageInfo({
   color: var(--ui-text-highlighted)
 
 .hero-title
-  font-size: clamp(3rem, 6vw, 5.5rem)
+  font-size: clamp(2.5rem, 5vw, 4.5rem)
   font-weight: 900
   line-height: 0.95
   letter-spacing: -0.02em
@@ -356,7 +301,7 @@ setPageInfo({
 .hero-card:hover .hero-card-img
   transform: scale(1.05)
 
-// Ugin — behind, tilted right, purple glow
+// Back card — behind, tilted right, purple glow
 .hero-card-back
   top: 0
   right: 0
@@ -366,7 +311,7 @@ setPageInfo({
   .hero-card-img
     border: 3px solid rgba(143, 110, 223, 0.9)
 
-// Kaalia — in front, tilted left, orange glow
+// Front card — in front, tilted left, orange glow
 .hero-card-front
   top: 18%
   left: 0
@@ -409,10 +354,4 @@ setPageInfo({
   font-size: 1rem
   font-weight: 700
   color: #111827
-
-.ready-desc
-  margin-top: 2px
-  font-size: 0.85rem
-  line-height: 1.4
-  color: #6b7280
 </style>

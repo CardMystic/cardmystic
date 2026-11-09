@@ -10,6 +10,7 @@ export function useExampleQueries() {
   const {
     data: results,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -33,6 +34,7 @@ export function useExampleQueries() {
   return {
     results,
     isLoading,
+    isFetching,
     error,
     refetch,
   };

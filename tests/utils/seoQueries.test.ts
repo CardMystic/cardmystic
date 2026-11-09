@@ -16,7 +16,7 @@ import {
   getAllSeoSlugs,
 } from '~/utils/seoQueries';
 import type { SeoQuery } from '~/utils/seoQueries';
-import cardOracleIds from '~/public/card-oracle-ids.min.json';
+import cardOracleIds from '../fixtures/similarity-oracle-ids.json';
 
 const allGroups: [string, SeoQuery[]][] = [
   ['similarQueries', similarQueries],

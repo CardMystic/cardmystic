@@ -127,7 +127,10 @@ test.describe('Deck Recommender', () => {
     ).toBeVisible();
     await expect(page.getByPlaceholder('Select a decklist...')).toHaveCount(0);
     await expect(
-      page.getByRole('button', { name: 'Select Decklist', exact: true }),
+      page.getByRole('button', {
+        name: 'Select a decklist instead',
+        exact: true,
+      }),
     ).toHaveCount(0);
 
     // The UInputMenu for commander selection has this placeholder.

@@ -75,9 +75,9 @@ test.describe('Homepage', () => {
 
     // Hero
     await expect(
-      page.getByRole('heading', { name: /Build Smarter Decks/i }),
+      page.getByRole('heading', { name: /Find Any Card By Describing It/i }),
     ).toBeVisible();
-    await expect(page.getByAltText('Kaalia of the Vast')).toBeVisible();
+    await expect(page.getByAltText('Mondrak, Glory Dominus')).toBeVisible();
 
     // Both calls should succeed against the live backend.
     const [exampleResp, topResp] = await Promise.all([
@@ -88,7 +88,7 @@ test.describe('Homepage', () => {
     expect(topResp.ok()).toBeTruthy();
 
     // Curated popular searches are available even when the result cache is cold.
-    await expect(page.getByText('Try An Example Query:')).toBeVisible({
+    await expect(page.getByText('Example search results')).toBeVisible({
       timeout: SEARCH_TIMEOUT,
     });
     const topBody = await topResp.json().catch(() => null);

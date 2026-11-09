@@ -12,7 +12,6 @@ export interface SiteNavigationItem extends NavigationMenuItem {
 
 export const utilityNavigation: SiteNavigationItem[] = [
   { label: 'About', icon: 'i-lucide-info', to: '/about' },
-  { label: 'Memberships', icon: 'i-lucide-credit-card', to: '/memberships' },
   {
     label: 'GitHub',
     icon: 'i-simple-icons-github',
@@ -150,5 +149,6 @@ export function siteNavigation(
     collectionNavigation('sets', catalog, status),
     collectionNavigation('roles', catalog, status),
     collectionNavigation('themes', catalog, status),
+    { label: 'Pro Features', icon: 'i-lucide-crown', to: '/memberships' },
   ];
 }

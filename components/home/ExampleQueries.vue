@@ -1,10 +1,18 @@
 <template>
   <div class="mb-2">
     <h2 class="text-2xl md:text-3xl font-bold mb-4 text-center">
-      Try An Example Query:
+      Example search results
     </h2>
     <ExampleQueriesSkeleton v-if="isLoading" />
 
+    <SearchError
+      v-else-if="error"
+      :error="error"
+      title="Could not load example results"
+      description="You can still try your own search above."
+      :is-retrying="isFetching"
+      @retry="refetch()"
+    />
     <div
       v-else-if="results && results.cards.length > 0"
       class="example-content"
@@ -48,6 +56,9 @@
         </div>
       </div>
     </div>
+    <p v-else class="text-center text-muted">
+      No example results are available right now. Try your own search above.
+    </p>
   </div>
 </template>
 
@@ -56,7 +67,7 @@ import { useExampleQueries } from '~/composables/useExampleQueries';
 
 const router = useRouter();
 
-const { results, isLoading, refetch } = useExampleQueries();
+const { results, isLoading, isFetching, error, refetch } = useExampleQueries();
 
 // Call refetch() to manually trigger the query again
 function loadRandomExample() {

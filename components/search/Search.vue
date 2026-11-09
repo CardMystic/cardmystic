@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <!-- Search type tabs -->
-    <SearchTabs @select="selectSearchType" />
+    <SearchTabs :compact="showSuggestedSearches" @select="selectSearchType" />
 
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
@@ -30,6 +30,14 @@
       <!-- Deck Recommender -->
       <ALSSearch v-else-if="searchType === 'recommend'" :platform="platform" />
     </div>
+    <SuggestedSearches
+      v-if="
+        showSuggestedSearches &&
+        ['similarity', 'recommend'].includes(searchType)
+      "
+      :mode="searchType === 'similarity' ? 'similarity' : 'recommend'"
+      class="mt-4"
+    />
   </div>
 </template>
 

@@ -117,8 +117,8 @@ test.describe('Trending queries', () => {
     await gotoHydrated(page, '/');
 
     // The TopQueries panel ("Popular Searches") and the
-    // ExampleQueries panel both render a Try button. The TopQueries
-    // ones have `.try-btn`; ExampleQueries does not. Use that to
+    // Search showcase also links to searches. The TopQueries
+    // buttons have `.try-btn`. Use that to
     // disambiguate. The panel is wrapped in ClientOnly + LazyTopQueries,
     // so it lives below the fold and renders after hydration — scroll
     // it into view to ensure the lazy chunk loads.
@@ -148,24 +148,14 @@ test.describe('Trending queries', () => {
     await expect(resultsGrid(page)).toBeVisible({ timeout: SEARCH_TIMEOUT });
   });
 
-  test('clicking the ExampleQueries TRY button navigates to Smart search', async ({
+  test('clicking a showcase example navigates to Smart search', async ({
     page,
   }) => {
     await gotoHydrated(page, '/');
-
-    // ExampleQueries is the "Try An Example Query" panel. Its TRY
-    // button does NOT have the `.try-btn` class. Scope by the panel's
-    // heading text. Regression guard: previously called
-    // `router.push({ name: 'search' })` against a route name that
-    // doesn't exist, throwing an unhandled rejection and silently
-    // doing nothing on click.
-    const panel = page
-      .locator('div', { hasText: /try an example query/i })
-      .first();
-    const tryBtn = panel.getByRole('button', { name: /^try$/i }).first();
-    await tryBtn.scrollIntoViewIfNeeded({ timeout: 20_000 });
-    await expect(tryBtn).toBeVisible({ timeout: 15_000 });
-
+    const tryBtn = page
+      .getByRole('navigation', { name: 'Smart Search examples' })
+      .getByRole('link', { name: 'X spell board wipe', exact: true });
+    await tryBtn.scrollIntoViewIfNeeded();
     const colbertCall = waitForSearchCall(page, '/search/colbert');
     await tryBtn.click();
 

@@ -6,10 +6,34 @@
   >
     <template #content>
       <div v-if="!isLoggedIn" class="p-4 space-y-3 text-center">
-        <p class="text-lg">Login To Create Decklists!</p>
-        <UButton to="/user/login" color="primary" variant="solid"
-          >Log In</UButton
-        >
+        <p class="text-lg">Add to your browser draft</p>
+        <p class="text-sm text-muted">
+          Build a deck without an account. Sign in when you're ready to save it.
+        </p>
+        <USelect
+          v-model="guestActiveIndex"
+          :items="guestDraftOptions"
+          :disabled="!guestReady || addingToDraft"
+          aria-label="Browser draft"
+          class="w-full"
+        />
+        <p v-if="errorMessage" role="alert" class="text-error">
+          {{ errorMessage }}
+        </p>
+        <p v-if="guestStorageError" role="alert" class="text-warning">
+          {{ guestStorageError }}
+        </p>
+        <div class="flex flex-wrap justify-center gap-2">
+          <UButton
+            :loading="addingToDraft"
+            :disabled="!guestReady"
+            @click="addToDraft"
+            >Add to browser draft</UButton
+          >
+          <UButton to="/build" variant="outline" @click="isOpen = false"
+            >Open draft</UButton
+          >
+        </div>
       </div>
 
       <div v-else class="p-4 space-y-4">
@@ -174,6 +198,44 @@ const debouncedDeckSearch = refDebounced(deckSearchTerm, 300);
 const { decklists: searchedDecklists } =
   useMyDecklistsSearch(debouncedDeckSearch);
 const toast = useToast();
+const {
+  addNames: addGuestNames,
+  ready: guestReady,
+  storageError: guestStorageError,
+  activeIndex: guestActiveIndex,
+  draftOptions: guestDraftOptions,
+} = useGuestDeck();
+const addingToDraft = ref(false);
+const guestConfig = useRuntimeConfig();
+async function addToDraft() {
+  addingToDraft.value = true;
+  errorMessage.value = '';
+  try {
+    let names = cardNames.value;
+    if (oracleIds.value.length) {
+      const resolved = await $fetch<{ name: string; oracle_id: string }[]>(
+        `${guestConfig.public.backendPath}/cards/cards-by-oracle-ids`,
+        { method: 'POST', body: { oracleIds: oracleIds.value } },
+      );
+      if (
+        new Set(resolved.map((card) => card.oracle_id)).size !==
+        new Set(oracleIds.value).size
+      )
+        throw new Error('Some cards could not be loaded. Please try again.');
+      names = resolved.map((card) => card.name);
+    }
+    if (!names.length) throw new Error('No cards selected.');
+    addGuestNames(names);
+    toast.add({ title: 'Added to browser draft', color: 'success' });
+    if (!guestStorageError.value) isOpen.value = false;
+    emit('success');
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Could not add cards to draft.';
+  } finally {
+    addingToDraft.value = false;
+  }
+}
 
 const oracleIds = computed(() => props.oracleIds ?? []);
 const cardNames = computed(() => props.cardNames ?? []);

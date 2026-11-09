@@ -3,7 +3,12 @@ import type { Database } from '~/database.types';
 
 export const useSupabase = () => {
   const nuxtApp = useNuxtApp();
-  const PROTECTED_PREFIXES = ['sb-', '__cm_', 'cm.clipboard.v1']; // don't purge Supabase auth or our own namespaced state
+  const PROTECTED_PREFIXES = [
+    'sb-',
+    '__cm_',
+    'cm.clipboard.v1',
+    'cardmystic-guest-deck-',
+  ]; // don't purge Supabase auth or our own namespaced state
 
   // Use a key on nuxtApp to store the client instance
   // This ensures proper scoping per request on server and single instance on client

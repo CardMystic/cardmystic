@@ -43,7 +43,17 @@ export function useSearchAccess() {
   const query = useQuery({
     queryKey: key,
     enabled: ready,
-    queryFn: () => request<SearchAccess>('/search-access'),
+    queryFn: (): Promise<SearchAccess> =>
+      userId.value
+        ? request<SearchAccess>('/search-access')
+        : Promise.resolve({
+            enabled: true,
+            authenticated: false,
+            tier: 'normal',
+            enhancedRemaining: 0,
+            enhancedTopUpRemaining: 0,
+            resetsAt: null,
+          }),
     staleTime: 30_000,
     retry: false,
   });

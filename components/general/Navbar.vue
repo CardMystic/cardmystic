@@ -23,13 +23,14 @@ const wizardImage = computed(() => {
 const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
   useUserProfile();
 const yourDecksTarget = computed(() =>
-  isMounted.value && userProfile.value ? '/lists' : '/user/login',
+  isMounted.value && userProfile.value ? '/lists' : '/build',
 );
 const yourDecksItems = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Your Decks',
     icon: 'i-lucide-layers',
     to: yourDecksTarget.value,
+    prefetch: false,
   },
 ]);
 const isAuthor = computed(() => !!profileData.value?.is_author);
@@ -95,6 +96,7 @@ watch(() => route.fullPath, closePopover);
           >
             <NuxtLink
               :to="yourDecksTarget"
+              no-prefetch
               class="flex items-center gap-2"
               @click="closePopover"
             >
@@ -116,7 +118,7 @@ watch(() => route.fullPath, closePopover);
             v-if="!userProfile && !loading"
             class="relative flex items-center"
           >
-            <!-- Login/Register Button with Tooltip -->
+            <!-- Login/Register Button -->
             <UButton
               class="cursor-pointer ml-2"
               color="primary"
@@ -129,8 +131,6 @@ watch(() => route.fullPath, closePopover);
                 }
               "
             />
-
-            <LoginTooltip class="ml-2" />
           </span>
           <div
             v-else-if="loading"
@@ -309,7 +309,7 @@ watch(() => route.fullPath, closePopover);
 
       <ClientOnly>
         <span v-if="!userProfile && !loading" class="relative">
-          <!-- Login/Register Button with Tooltip -->
+          <!-- Login/Register Button -->
           <UButton
             class="cursor-pointer ml-2"
             color="primary"
@@ -322,8 +322,6 @@ watch(() => route.fullPath, closePopover);
               }
             "
           />
-
-          <LoginTooltip class="ml-2" />
         </span>
 
         <div

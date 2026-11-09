@@ -1,9 +1,6 @@
 <template>
   <div>
     <h2 class="section-title">Recent Decklists</h2>
-    <p class="text-sm opacity-70 mb-4 text-center">
-      Built with CardMystic's powerful deck building tools!
-    </p>
 
     <SearchError
       v-if="error"

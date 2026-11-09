@@ -183,18 +183,18 @@ Example URLs:
 - `selectedCardFormats` contains Modern → `modern`
 - No platform flags → `all`
 
-## Using card-oracle-ids.min.json
+## Sitemap data
 
 ### What it is
 
-- A list of all canonical card IDs (oracle IDs)
+- A single HF JSON file containing canonical card IDs and set/theme/role URL paths.
 
 ### Why it matters
 
 - Allows the sitemap to be generated:
   - Fast
   - Deterministically
-  - Without external APIs
+  - With a validated build copy as fallback when HF is unavailable
 
 ### How it’s used
 
@@ -203,10 +203,10 @@ Example URLs:
 
 ### How to keep it updated
 
-- Run `pnpm update:card-oracle-ids` when:
-  - New sets release
-  - Cards are added or removed
-- Commit the refreshed file and rebuild to update the sitemap.
+- The production backend publishes only when the lists change.
+- The frontend checks HF on the first sitemap request after 24 hours per server instance; no deployment is required for updates.
+- Builds run `pnpm update:sitemap` to download a fallback into `.cache/sitemap/data.json`, which is excluded from Git. CI caches that file between builds.
+- See [setup and deployment order](docs/sitemap-data.md).
 - Legacy printing URLs redirect permanently to `/card/{oracle_id}`; canonical, Open Graph and JSON-LD URLs use that same oracle URL.
 - Missing or invalid cards return HTTP errors and `noindex`, while preserving the error screen.
 - `e2e/card-seo.spec.ts` checks server-rendered card metadata, redirects, HTTP errors and crawlable card links against a fixture backend.

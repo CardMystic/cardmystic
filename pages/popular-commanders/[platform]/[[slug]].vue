@@ -74,6 +74,8 @@ const queryParam = computed(
   () => seoEntry?.query || String(route.query?.query || ''),
 );
 
+useCanonicalUrl(() => (seoEntry || !queryParam.value ? route.path : null));
+
 useSeoMeta({
   robots: () =>
     seoEntry

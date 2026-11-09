@@ -42,13 +42,15 @@
       </div>
     </UFormField>
 
-    <SearchModeSelect />
-    <SearchFilterDrawer
-      ref="filtersRef"
-      v-model="state.filters"
-      :can-apply="!!state.card_name"
-      @apply="formRef?.submit()"
-    />
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <SearchFilterDrawer
+        ref="filtersRef"
+        v-model="state.filters"
+        :can-apply="!!state.card_name"
+        @apply="formRef?.submit()"
+      />
+      <SearchModeSelect />
+    </div>
   </UForm>
 </template>
 
@@ -99,8 +101,8 @@ const cardNameParam = computed(() =>
 );
 
 const parsedFilters = computed(() => {
-  const base: Record<string, any> = {
-    selectedColorFilterOption: 'Match Exactly' as 'Match Exactly',
+  const base: Record<string, unknown> = {
+    selectedColorFilterOption: 'Match Exactly',
   };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
@@ -131,10 +133,7 @@ const searchTerm = ref('');
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
 // Raw card data from backend bulk data API
-const { data: rawCards, status: cardNamesStatus } = useCardNames();
-const status = computed(() =>
-  cardNamesStatus.value === 'pending' ? 'pending' : 'success',
-);
+const { data: rawCards } = useCardNames();
 
 // Pre-filter cards before passing to UInputMenu
 const filteredCards = computed(() => {
@@ -197,7 +196,7 @@ async function performSearch(cardName: string, filters: Schema['filters']) {
     });
 
     // Construct query parameters
-    const query: Record<string, any> = {
+    const query: Record<string, string | number | undefined> = {
       card_name: cardName,
       useRerank: String(route.query.useRerank !== 'false'),
       filters:

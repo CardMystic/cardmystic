@@ -87,9 +87,14 @@
           </NuxtLink>
         </p>
         <nav
-          aria-label="CardMystic policies"
+          aria-label="CardMystic information"
           class="flex flex-wrap items-center gap-x-4 text-sm"
         >
+          <NuxtLink
+            to="/memberships"
+            class="inline-flex min-h-11 items-center text-purple-300 hover:text-purple-200 underline"
+            >Pricing</NuxtLink
+          >
           <NuxtLink
             to="/privacyPolicy"
             class="inline-flex min-h-11 items-center text-purple-300 hover:text-purple-200 underline"

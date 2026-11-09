@@ -1,3 +1,4 @@
+import { takeGuestDeckReturn } from '~/utils/guestDeck';
 import { useSupabase } from '~/composables/useSupabase';
 import { useUserProfile } from '~/composables/useUserProfile';
 
@@ -83,9 +84,15 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     [userProfile, profileData],
     ([profile, pData]) => {
       if (!profile || pData === undefined) return;
+      if (pData?.username && window.location.pathname !== '/user/setup') {
+        const draftReturn = takeGuestDeckReturn();
+        if (draftReturn) navigateTo(draftReturn);
+        queueMicrotask(() => stopUsernameWatch());
+        return;
+      }
       if (!pData?.username && window.location.pathname !== '/user/setup') {
         navigateTo('/user/setup');
-        stopUsernameWatch();
+        queueMicrotask(() => stopUsernameWatch());
       }
     },
     { immediate: true },

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+useCanonicalUrl('/memberships');
 defineOptions({ name: 'MembershipsPage' });
 definePageMeta({ layout: 'fullscreen' });
 const { userId } = useUserProfile();

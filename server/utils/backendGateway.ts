@@ -10,6 +10,7 @@ const publicEndpoints = new Set([
   '/cache/top',
   '/cache/popular',
   '/metrics/query_count',
+  '/metrics/site_stats',
   '/metrics/visit',
   '/metrics/dislike',
   '/recaptcha/verify',

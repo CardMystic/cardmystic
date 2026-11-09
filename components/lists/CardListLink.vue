@@ -123,10 +123,13 @@ const socialCounts = computed(() => [
           {{ list.commanders.join(', ') }}
         </p>
         <p
-          v-if="list.description && primerPreview === undefined"
+          v-if="primerPreview === undefined"
           class="relative z-[1] mt-3 text-sm leading-relaxed line-clamp-3 break-words"
         >
-          {{ list.description }}
+          <template v-if="list.description?.trim()">{{
+            list.description
+          }}</template>
+          <em v-else>No description</em>
         </p>
         <p
           v-if="primerPreview"

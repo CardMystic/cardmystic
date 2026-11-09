@@ -284,9 +284,7 @@ Card data files (`card-names.min.json`, `commanders.min.json`, `card-oracle-ids.
 - **commanders.min.json**: Autocomplete suggestions for legal commanders
 - **card-oracle-ids.min.json**: Used by components for oracle-id lookups
 
-A static copy of `card-oracle-ids.min.json` is kept in `public/` **only** for sitemap generation (`server/routes/sitemap.xml.ts`), which imports it at build time for SEO purposes.
-
-When new Magic sets release or card data updates, the backend data files are updated automatically. Run `pnpm update:card-oracle-ids` to refresh the static sitemap data from the production oracle-ID feed, then commit the file and rebuild. The command validates the feed before replacing it, including checking that it contains oracle IDs rather than printing IDs.
+The backend publishes changed oracle IDs and set/theme/role URL paths to the public Hugging Face sitemap dataset. The frontend checks it daily and keeps the last valid copy when a download fails. Builds run `pnpm update:sitemap` to bundle a fallback; generated data stays out of Git. See [sitemap setup and deployment order](docs/sitemap-data.md).
 
 # Database
 

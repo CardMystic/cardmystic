@@ -213,6 +213,12 @@ provideSearchPageDefaults(
   seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
 );
 
+useCanonicalUrl(() =>
+  seoEntry || !(decklistParam.value || commanderParam.value)
+    ? route.path
+    : null,
+);
+
 useSeoMeta({
   robots: () =>
     seoEntry

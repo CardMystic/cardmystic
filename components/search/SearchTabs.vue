@@ -1,16 +1,20 @@
 <template>
-  <!-- Desktop tabs (wrap when the container is narrow, e.g. the home hero) -->
-  <div class="flex gap-3 max-lg:hidden mb-4 justify-center flex-wrap">
+  <!-- Search chips: mobile expands only the selected mode. -->
+  <div
+    class="desktop-search-tabs flex gap-3 mb-4 justify-center flex-wrap"
+    :class="{ compact }"
+  >
     <button
       type="button"
       :class="[
         'search-tab-button-new',
         { active: !cardActive && searchType === 'smart' },
       ]"
+      :aria-label="'Smart Search'"
       @click="onTabClick('smart')"
     >
       <UIcon name="i-lucide-brain" class="icon" size="18" />
-      Smart Search
+      <span class="tab-label">Smart Search</span>
     </button>
     <button
       type="button"
@@ -18,10 +22,11 @@
         'search-tab-button-new',
         { active: !cardActive && searchType === 'similarity' },
       ]"
+      :aria-label="'Similarity Search'"
       @click="onTabClick('similarity')"
     >
       <UIcon name="i-mdi-cards-outline" class="icon" size="18" />
-      Similarity Search
+      <span class="tab-label">Similarity Search</span>
     </button>
     <button
       type="button"
@@ -29,10 +34,11 @@
         'search-tab-button-new',
         { active: !cardActive && searchType === 'commander' },
       ]"
+      :aria-label="'Commander Search'"
       @click="onTabClick('commander')"
     >
       <UIcon name="i-mdi-crown" class="icon" size="18" />
-      Commander Search
+      <span class="tab-label">Commander Search</span>
     </button>
     <button
       type="button"
@@ -40,10 +46,11 @@
         'search-tab-button-new',
         { active: !cardActive && searchType === 'keyword' },
       ]"
+      :aria-label="'Keyword Search'"
       @click="onTabClick('keyword')"
     >
       <UIcon name="i-lucide-whole-word" class="icon" size="18" />
-      Keyword Search
+      <span class="tab-label">Keyword Search</span>
     </button>
     <button
       type="button"
@@ -51,11 +58,12 @@
         'search-tab-button-new',
         { active: !cardActive && searchType === 'recommend' },
       ]"
+      :aria-label="'Deck Recommender'"
       @click="onTabClick('recommend')"
       class="relative"
     >
       <UIcon name="i-lucide-box" class="icon" size="18" />
-      Deck Recommender
+      <span class="tab-label">Deck Recommender</span>
     </button>
     <NuxtLink
       v-if="lastCard"
@@ -63,38 +71,22 @@
       :class="['search-tab-button-new card-tab', { active: cardActive }]"
     >
       <UIcon name="i-heroicons-rectangle-stack" class="icon" size="18" />
-      <span class="max-w-32 truncate">{{ lastCard.name }}</span>
+      <span class="tab-label max-w-32 truncate">{{ lastCard.name }}</span>
     </NuxtLink>
-  </div>
-
-  <!-- Mobile dropdown -->
-  <div class="mb-2 lg:hidden flex flex-col justify-center items-center">
-    <USelect
-      aria-label="Select search type"
-      class="w-50"
-      :modelValue="mobileValue"
-      placeholder="Select status"
-      :icon="mobileIcon"
-      variant="outline"
-      @update:modelValue="onMobileSelect"
-      :items="mobileItems"
-    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import type { SelectItem } from '@nuxt/ui';
-
 export type SearchTabType =
   'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend';
 
-const props = defineProps<{
+defineProps<{
   cardActive?: boolean;
+  compact?: boolean;
 }>();
 
 const { searchType } = useSearchType();
 const { lastCard, cardRoute } = useLastOpenedCard();
-const router = useRouter();
 
 const emit = defineEmits<{
   (e: 'select', type: SearchTabType): void;
@@ -103,63 +95,50 @@ const emit = defineEmits<{
 function onTabClick(type: SearchTabType) {
   emit('select', type);
 }
-
-const searchIcon = computed(() => {
-  const iconMap: Record<string, string> = {
-    smart: 'i-lucide-brain',
-    similarity: 'i-mdi-cards-outline',
-    commander: 'i-mdi-crown',
-    keyword: 'i-lucide-whole-word',
-    recommend: 'i-lucide-box',
-  };
-  return iconMap[searchType.value] || 'i-lucide-search';
-});
-
-const items = ref<SelectItem[]>([
-  { label: 'Smart Search', value: 'smart', icon: 'i-lucide-brain' },
-  {
-    label: 'Similarity Search',
-    value: 'similarity',
-    icon: 'i-mdi-cards-outline',
-  },
-  { label: 'Commander Search', value: 'commander', icon: 'i-mdi-crown' },
-  { label: 'Keyword Search', value: 'keyword', icon: 'i-lucide-whole-word' },
-  { label: 'Deck Recommender', value: 'recommend', icon: 'i-lucide-box' },
-]);
-
-const mobileItems = computed(() => {
-  const base = [...items.value] as SelectItem[];
-  if (lastCard.value) {
-    base.push({ type: 'separator' } as SelectItem);
-    base.push({
-      label: lastCard.value.name,
-      value: '_card',
-      icon: 'i-heroicons-rectangle-stack',
-    } as SelectItem);
-  }
-  return base;
-});
-
-const mobileValue = computed(() =>
-  props.cardActive ? '_card' : searchType.value,
-);
-
-const mobileIcon = computed(() => {
-  if (props.cardActive) return 'i-heroicons-rectangle-stack';
-  return searchIcon.value;
-});
-
-function onMobileSelect(val: unknown) {
-  if (typeof val !== 'string') return;
-  if (val === '_card' && cardRoute.value) {
-    router.push(cardRoute.value);
-  } else {
-    onTabClick(val as SearchTabType);
-  }
-}
 </script>
 
 <style scoped>
+@media (min-width: 1024px) {
+  .compact {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .desktop-search-tabs.compact .search-tab-button-new {
+    min-height: 44px;
+    padding: 7px 10px;
+    gap: 0;
+    flex: 0 1 auto;
+    min-width: 44px;
+  }
+  .compact .icon {
+    flex-shrink: 0;
+  }
+  .compact .tab-label {
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-width 0.3s ease,
+      opacity 0.3s ease,
+      margin 0.3s ease;
+  }
+  .compact .active .tab-label,
+  .compact .search-tab-button-new:hover .tab-label,
+  .compact .search-tab-button-new:focus-visible .tab-label {
+    max-width: 12rem;
+    opacity: 1;
+    margin-left: 7px;
+  }
+  .compact .search-tab-button-new:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+  }
+  .compact .tab-label {
+    text-overflow: ellipsis;
+  }
+}
+
 .search-tab-button-new {
   display: inline-flex;
   align-items: center;
@@ -183,8 +162,7 @@ function onMobileSelect(val: unknown) {
     background 0.18s,
     color 0.18s,
     box-shadow 0.18s,
-    border 0.18s,
-    transform 0.18s;
+    border 0.18s;
   position: relative;
   z-index: 1;
   outline: none;
@@ -199,7 +177,6 @@ function onMobileSelect(val: unknown) {
   box-shadow:
     0 6px 24px 0 rgba(147, 114, 255, 0.22),
     0 2px 8px rgba(0, 0, 0, 0.18);
-  transform: translateY(-2px) scale(1.07);
 }
 
 .search-tab-button-new:hover:not(.active),
@@ -210,7 +187,6 @@ function onMobileSelect(val: unknown) {
   box-shadow:
     0 6px 20px rgba(147, 114, 255, 0.13),
     0 2px 8px rgba(0, 0, 0, 0.13);
-  transform: translateY(-1px) scale(1.03);
 }
 
 .search-tab-button-new.card-tab {
@@ -224,7 +200,6 @@ function onMobileSelect(val: unknown) {
   background: #1e3a5f;
   border-color: #38bdf8;
   color: #fff;
-  transform: translateY(-1px) scale(1.03);
 }
 
 .search-tab-button-new.card-tab.active {
@@ -234,37 +209,48 @@ function onMobileSelect(val: unknown) {
   box-shadow:
     0 6px 24px 0 rgba(56, 189, 248, 0.22),
     0 2px 8px rgba(0, 0, 0, 0.18);
-  transform: translateY(-2px) scale(1.07);
 }
 
-@media (max-width: 768px) {
-  .search-tab-button-new {
-    padding: 6px 10px;
-    font-size: 0.92rem;
-    min-width: unset;
+@media (max-width: 1023px) {
+  .desktop-search-tabs {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 4px 2px;
+  }
+  .desktop-search-tabs .search-tab-button-new {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 7px 8px;
+    gap: 0;
+    font-size: 0.75rem;
     flex: 0 0 auto;
   }
-}
-
-@keyframes rainbow {
-  0% {
-    color: #dc2626;
+  .desktop-search-tabs .active {
+    flex: 0 1 auto;
+    min-width: 44px;
   }
-
-  25% {
-    color: #ea580c;
+  .desktop-search-tabs .icon {
+    flex-shrink: 0;
   }
-
-  50% {
-    color: #16a34a;
+  .desktop-search-tabs .tab-label {
+    min-width: 0;
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transition:
+      max-width 0.3s ease,
+      opacity 0.3s ease,
+      margin 0.3s ease;
   }
-
-  75% {
-    color: #2563eb;
-  }
-
-  100% {
-    color: #dc2626;
+  .desktop-search-tabs .active .tab-label {
+    max-width: 12rem;
+    margin-left: 6px;
+    opacity: 1;
   }
 }
 </style>

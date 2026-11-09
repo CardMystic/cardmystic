@@ -1,13 +1,13 @@
 // server/routes/sitemap.xml.ts
-import cardOracleIds from '~/public/card-oracle-ids.min.json';
 import { getAllSeoSlugs, getSeoPath } from '~/utils/seoQueries';
 import { validPlatforms } from '~/utils/platformConfig';
-import { loadSitemapCollectionPaths } from '../utils/sitemapCollections';
+import { loadSitemapData } from '../utils/sitemapData';
 
 export default defineEventHandler(async (event) => {
   const baseUrl = 'https://cardmystic.com';
   const now = new Date().toISOString();
-  const collectionPaths = await loadSitemapCollectionPaths(event);
+  const { oracleIds: cardOracleIds, collectionPaths } =
+    await loadSitemapData(event);
 
   setResponseHeaders(event, {
     'content-type': 'application/xml; charset=utf-8',

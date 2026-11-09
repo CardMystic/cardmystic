@@ -19,6 +19,7 @@ useSeoMeta({
   title: 'My decks and collections | CardMystic',
   robots: 'noindex, nofollow',
 });
+const { hasDrafts: hasBrowserDrafts } = useGuestDeck();
 const route = useRoute();
 const router = useRouter();
 type LibraryView = 'all' | 'mine' | 'collections' | 'liked' | 'saved';
@@ -370,6 +371,18 @@ watch([display, sort, direction], () => {
         @click="router.push(location('', tab.key))"
       />
     </div>
+    <UAlert
+      v-if="hasBrowserDrafts"
+      class="mb-4"
+      color="info"
+      title="You have an unsaved browser draft"
+    >
+      <template #description
+        ><NuxtLink to="/build" class="underline"
+          >Continue editing or save it to your account</NuxtLink
+        ></template
+      >
+    </UAlert>
     <p v-if="view === 'collections'" class="mb-4 text-muted">
       Keep track of cards you own. Collections support up to 50,000 card
       entries. Search within them with CardMystic Pro.

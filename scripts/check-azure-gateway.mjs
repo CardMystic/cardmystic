@@ -8,7 +8,9 @@ import { gzipSync } from 'node:zlib';
 // headers by re-encoding the response, while Azure returns a buffered body.
 const apiKey = 'azure-gateway-test-key-01234567890123456789';
 const payload = { queries: [{ query: 'card draw', count: 100 }] };
+let upstreamRequests = 0;
 const upstream = createServer((request, response) => {
+  upstreamRequests++;
   if (request.headers['x-api-key'] !== apiKey) {
     response.writeHead(403).end();
     return;
@@ -128,6 +130,42 @@ try {
     const response = await request('/user/rate-limited');
     assert.equal(response.status, 429);
     assert.equal(response.headers['retry-after'], '60');
+  });
+
+  await test('Azure serves the bundled sitemap during an HF outage without calling the backend', async () => {
+    const originalFetch = globalThis.fetch;
+    const before = upstreamRequests;
+    let hfRequests = 0;
+    globalThis.fetch = async () => {
+      hfRequests++;
+      return new Response(null, { status: 503 });
+    };
+    try {
+      const context = {};
+      await handle(context, {
+        method: 'GET',
+        headers: {
+          host: 'localhost',
+          'x-ms-original-url': 'http://localhost/sitemap.xml',
+        },
+      });
+      assert.equal(context.res.status, 200);
+      const xml = Buffer.from(context.res.body).toString();
+      assert.match(
+        xml,
+        /<loc>https:\/\/cardmystic\.com\/card\/1de1b591-a73f-4974-b507-8c63e07a0868<\/loc>/,
+      );
+      for (const kind of ['sets', 'themes', 'roles']) {
+        assert.match(
+          xml,
+          new RegExp(`<loc>https://cardmystic.com/${kind}/[a-z0-9-]+</loc>`),
+        );
+      }
+      assert.equal(hfRequests, 1);
+      assert.equal(upstreamRequests, before);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 } finally {
   upstream.closeAllConnections();

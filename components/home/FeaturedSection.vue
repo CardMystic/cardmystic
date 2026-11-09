@@ -1,6 +1,9 @@
 <template>
   <div>
     <h2 class="section-title mb-4">Awesome Decklists & Users</h2>
+    <p v-if="showSignIn" class="mb-4 text-center text-muted">
+      Browse public decks or try building your own without an account.
+    </p>
     <div class="mb-6 flex flex-wrap justify-center gap-3">
       <UButton
         to="/explore/decklists"
@@ -9,6 +12,9 @@
         class="min-h-11"
         >Search Decklists</UButton
       >
+      <UButton v-if="showSignIn" to="/build" no-prefetch class="min-h-11">
+        Build a deck
+      </UButton>
       <UButton
         to="/explore/users"
         variant="outline"
@@ -99,7 +105,9 @@
       <template
         v-if="isLoadingPrimers || primersError || visiblePrimers.length > 0"
       >
-        <h2 class="section-title mt-14 mb-4">Suggested Primer Reads</h2>
+        <h2 class="section-title mt-20 mb-4 lg:mt-24">
+          Suggested Primer Reads
+        </h2>
 
         <SearchError
           v-if="primersError"
@@ -149,6 +157,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+
+withDefaults(defineProps<{ showSignIn?: boolean }>(), { showSignIn: false });
 import {
   useFeaturedDecklists,
   useFeaturedUsers,
