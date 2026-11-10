@@ -7,7 +7,6 @@ const publicEndpoints = new Set([
   '/billing/status',
   '/billing/checkout',
   '/billing/portal',
-  '/cache/top',
   '/cache/popular',
   '/metrics/query_count',
   '/metrics/site_stats',

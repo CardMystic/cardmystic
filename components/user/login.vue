@@ -5,7 +5,7 @@ const router = useRouter();
 const route = useRoute();
 
 const { loginWithEmail, loginWithGoogle, resendVerificationEmail } =
-  useUserProfile();
+  useAccountActions();
 
 const email = ref('');
 const password = ref('');

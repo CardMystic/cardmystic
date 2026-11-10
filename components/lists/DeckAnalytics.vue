@@ -12,6 +12,8 @@ const props = defineProps<{
   isOwner: boolean;
 }>();
 const api = useLibraryApi();
+const browser = useBrowserDeckSource();
+const config = useRuntimeConfig();
 const pending = ref(false);
 const error = ref('');
 const data = ref<DeckAnalytics>();
@@ -31,9 +33,22 @@ async function load() {
   pending.value = true;
   error.value = '';
   try {
-    const result = await api.request<DeckAnalytics>(
-      `/lists/${props.listId}/analytics`,
-    );
+    const result = browser
+      ? await $fetch<DeckAnalytics>(
+          `${config.public.backendPath}/cards/deck-analytics`,
+          {
+            method: 'POST',
+            body: {
+              items: browser.items.value.map((item) => ({
+                oracle_id: item.oracle_id,
+                board: item.board,
+                num_copies: item.num_copies,
+                is_commander: item.is_commander,
+              })),
+            },
+          },
+        )
+      : await api.request<DeckAnalytics>(`/lists/${props.listId}/analytics`);
     if (current === sequence) {
       data.value = result;
       if (!targets.value.some((row) => row.value === target.value))
@@ -53,7 +68,7 @@ watch(
     sequence++;
     data.value = undefined;
     pending.value = false;
-    if (api.ready.value) void load();
+    if (browser || api.ready.value) void load();
   },
   { immediate: true },
 );

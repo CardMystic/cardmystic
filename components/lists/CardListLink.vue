@@ -23,8 +23,8 @@ const priceLabel = computed(() =>
 );
 const priceDescription = computed(() =>
   props.list.price_estimate_incomplete
-    ? 'Incomplete estimate: some cards or prices are missing. USD, all boards.'
-    : 'Estimated USD price from Scryfall, including all boards. Actual prices may vary.',
+    ? 'Incomplete estimate: some cards or prices are missing. USD, all boards, excluding basic lands.'
+    : 'Estimated USD price from Scryfall, all boards, excluding basic lands.',
 );
 const updated = computed(() => props.list.updated_at || props.list.created_at);
 const socialCounts = computed(() => [
@@ -41,7 +41,7 @@ const socialCounts = computed(() => [
 
 <template>
   <article
-    class="dark deck-link relative flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-default text-white transition-colors hover:border-primary group"
+    class="dark deck-link relative flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-default text-white shadow-lg shadow-black/30 transition-colors hover:border-primary group"
   >
     <NuxtLink
       :to="`/lists/${list.id}${primerPreview !== undefined ? '/primer' : ''}`"

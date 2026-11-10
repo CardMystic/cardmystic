@@ -103,10 +103,19 @@ test('mobile home does not download hidden hero artwork or mana font assets', as
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const heroRequests: string[] = [];
+  const unnecessaryRequests: string[] = [];
   const manaRequests = trackManaAssets(page);
   page.on('request', (request) => {
     const path = new URL(request.url()).pathname;
-    if (path === '/adrix-and-nev.jpg' || path === '/mondrak.jpg')
+    if (
+      path === '/api/backend/card-collections' ||
+      path === '/api/backend/cache/popular'
+    )
+      unnecessaryRequests.push(path);
+    if (
+      /\/(adrix-and-nev|mondrak)[./].*\.(?:jpg|webp)$/.test(path) ||
+      /\/(adrix-and-nev|mondrak)\.(?:jpg|webp)$/.test(path)
+    )
       heroRequests.push(path);
   });
 
@@ -120,6 +129,7 @@ test('mobile home does not download hidden hero artwork or mana font assets', as
     page.getByText('“Creatures that double your tokens”', { exact: true }),
   ).toBeHidden();
   expect(heroRequests).toEqual([]);
+  expect(unnecessaryRequests).toEqual([]);
   expect(manaRequests).toEqual([]);
   const tabs = page.locator('.desktop-search-tabs');
   for (const mode of [
@@ -149,6 +159,13 @@ test('mobile home does not download hidden hero artwork or mana font assets', as
         ),
     ).toBe(1);
   }
+  await page.getByRole('link', { name: 'Learn more', exact: true }).click();
+  await expect(
+    page.getByRole('heading', {
+      name: 'Your next deck starts here',
+      exact: true,
+    }),
+  ).toBeInViewport();
 });
 
 test.describe('desktop without JavaScript', () => {
@@ -162,7 +179,7 @@ test.describe('desktop without JavaScript', () => {
   }) => {
     await page.goto('/');
     // Server HTML must not expose finished cards before hydration starts the animation.
-    const demos = page.locator('.search-demo');
+    const demos = page.locator('.showcase-row > .search-demo');
     await expect(demos).toHaveCount(3);
     await expect(demos.locator('img')).toHaveCount(0);
     await expect(demos.locator('.results-ready')).toHaveCount(0);
@@ -171,8 +188,8 @@ test.describe('desktop without JavaScript', () => {
       page.getByPlaceholder('Describe the cards you want...'),
     ).toBeVisible();
     for (const [name, path] of [
-      ['Adrix and Nev, Twincasters', '/adrix-and-nev.jpg'],
-      ['Mondrak, Glory Dominus', '/mondrak.jpg'],
+      ['Adrix and Nev, Twincasters', 'adrix-and-nev'],
+      ['Mondrak, Glory Dominus', 'mondrak'],
     ]) {
       const image = page.getByAltText(name);
       await expect(image).toBeVisible();
@@ -185,7 +202,7 @@ test.describe('desktop without JavaScript', () => {
               new URL(element.currentSrc).pathname,
           ),
         )
-        .toBe(path);
+        .toMatch(new RegExp(`/_nuxt/${path}\\.[^/]+\\.webp$`));
     }
     await expect(
       page.getByText('“Creatures that double your tokens”', { exact: true }),
@@ -266,7 +283,7 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   const previewRequests: URL[] = [];
   page.on('request', (request) => {
     const url = new URL(request.url());
-    if (/\/card-lists\/(summaries|view\/)/.test(url.pathname))
+    if (/\/card-lists\/(summaries|view\/)|\/business-card$/.test(url.pathname))
       previewRequests.push(url);
   });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -310,7 +327,7 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await expect(showcase).not.toContainText('**');
   await expect(
     showcase.getByText('Free · No account required', { exact: true }),
-  ).toHaveCount(4);
+  ).toHaveCount(5);
   await expect(
     showcase
       .getByRole('list', { name: 'CardMystic workflow' })
@@ -321,7 +338,7 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
     showcase
       .getByText('Free', { exact: false })
       .filter({ hasText: 'No account required' }),
-  ).toHaveCount(4);
+  ).toHaveCount(5);
   await expect(
     showcase.locator('strong').filter({ hasText: 'Describe what you want' }),
   ).toBeVisible();
@@ -339,7 +356,7 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await expect(source).toHaveAttribute('aria-label', "Teferi's Protection");
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const artwork = showcase.locator('.search-demo img');
-  await expect(artwork).toHaveCount(9);
+  await expect(artwork).toHaveCount(12);
   await expect(
     showcase.getByText('Searched Card', { exact: true }),
   ).toBeVisible();
@@ -347,8 +364,9 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await expect(
     showcase.getByRole('progressbar', { name: 'Toxic Deluge: Match score' }),
   ).toHaveAttribute('value', '86');
-  for (const figure of await showcase.locator('.search-demo').all()) {
-    const input = figure.locator('.demo-input');
+  const linkedInputs = showcase.locator('.search-demo .demo-input[href]');
+  await expect(linkedInputs).toHaveCount(3);
+  for (const input of await linkedInputs.all()) {
     await expect(input).toHaveAttribute('href', /\/search\/all\//);
   }
   const examples = showcase.getByRole('navigation', {
@@ -356,22 +374,107 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   });
   await examples.scrollIntoViewIfNeeded();
   await expect(examples.locator('.deck-link')).toHaveCount(2);
-  expect(previewRequests).toHaveLength(1);
-  expect(previewRequests[0].pathname).toMatch(/\/card-lists\/summaries$/);
-  expect(previewRequests[0].searchParams.get('ids')?.split(',')).toEqual([
-    'e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a',
-    '058da0b2-95f8-4527-b9a1-6eaf3a6da05e',
-  ]);
-  await expect(
-    examples.locator('em').filter({ hasText: 'No description' }),
-  ).toHaveCount(2);
+  expect(previewRequests).toEqual([]);
+  await expect(examples).toContainText('Tutoring toolbox with a pinch of stax');
   await expect(
     examples.getByRole('link', { name: /Iron Man/ }),
   ).toHaveAttribute('href', '/lists/e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a');
   await expect(
     examples.getByRole('link', { name: /Vintage Collection/ }),
   ).toHaveAttribute('href', '/lists/058da0b2-95f8-4527-b9a1-6eaf3a6da05e');
+  const businessSection = showcase.getByRole('region', {
+    name: "Create Your Deck's Business Card",
+  });
+  const businessCard = businessSection.getByRole('article', {
+    name: 'Deck business card preview',
+  });
+  await businessCard.scrollIntoViewIfNeeded();
+  await expect(businessCard).toContainText('Commander · 100 cards');
+  await expect(businessCard.getByRole('link')).toHaveAttribute(
+    'href',
+    '/lists/e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a',
+  );
+  await expect
+    .poll(() =>
+      businessCard
+        .locator('img')
+        .evaluateAll((images) =>
+          images.every(
+            (image) =>
+              (image as HTMLImageElement).complete &&
+              (image as HTMLImageElement).naturalWidth > 0,
+          ),
+        ),
+    )
+    .toBe(true);
+  expect(
+    await businessSection.evaluate(
+      (section) =>
+        !!section.previousElementSibling?.querySelector(
+          '[aria-label="Deck comparison preview"]',
+        ),
+    ),
+  ).toBe(true);
+  await businessSection.screenshot({
+    path: '/tmp/cardmystic-business-mobile.png',
+  });
   const pro = showcase.getByLabel('Pro tools preview');
+  await expect(pro.getByText('Example deck', { exact: true })).toHaveCount(0);
+  const deckSearch = pro.getByRole('figure', {
+    name: 'Search within your deck example',
+  });
+  await deckSearch.scrollIntoViewIfNeeded();
+  await expect(deckSearch.locator('.demo-typed')).toHaveText(
+    'Non artifact board wipe',
+  );
+  await expect(deckSearch.locator('.results-ready')).toHaveCount(3);
+  await expect(deckSearch.locator('.demo-input')).not.toHaveAttribute('href');
+  for (const name of ['Whipflare', 'All Is Dust', 'Ugin, the Spirit Dragon']) {
+    await expect(
+      deckSearch.getByRole('link', { name, exact: true }),
+    ).toBeVisible();
+  }
+  const compare = showcase.getByRole('figure', {
+    name: 'Deck comparison preview',
+  });
+  await compare.scrollIntoViewIfNeeded();
+  await expect(compare.locator('.comparison-ready')).toBeVisible();
+  await expect(compare.getByRole('listitem')).toHaveCount(4);
+  await compare
+    .getByRole('combobox', { name: 'Comparison preview cards' })
+    .click();
+  await page
+    .getByRole('option', { name: 'Missing from your deck (2)', exact: true })
+    .click();
+  await expect(compare.getByRole('listitem')).toHaveCount(2);
+  await compare
+    .getByRole('button', {
+      name: 'Add Foundry Inspector in comparison preview',
+      exact: true,
+    })
+    .click();
+  await expect(compare.getByRole('status')).toContainText(
+    'updated the comparison preview',
+  );
+  await expect(pro.getByRole('heading', { level: 3 })).toHaveText([
+    'Pro Search',
+    'Search within your deck',
+    'Suggested adds',
+    'Suggested cuts',
+    'Recommended decks for each card',
+  ]);
+  expect(
+    await showcase.evaluate((section) => {
+      const community = section.previousElementSibling;
+      return community?.querySelector('h2')?.textContent?.trim();
+    }),
+  ).toBe('Awesome Decklists & Users');
+  await expect(
+    showcase.getByRole('heading', {
+      name: 'What Sets CardMystic Apart?',
+      exact: true,
+    }),
+  ).toBeVisible();
   const comparison = showcase.getByRole('region', {
     name: 'Pro and Normal search comparison',
   });
@@ -393,8 +496,17 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
     .getByRole('button', { name: 'Cut Manalith in preview', exact: true })
     .click();
   await expect(pro.getByRole('status')).toContainText('Manalith cut');
-  await expect(pro.getByRole('textbox')).not.toBeEditable();
-  await expect(pro.getByRole('link')).toHaveCount(6);
+  await expect(pro.getByRole('textbox')).toHaveCount(0);
+  for (const title of ['Suggested adds preview', 'Suggested cuts preview']) {
+    await expect(
+      pro.getByRole('figure', { name: title, exact: true }).getByRole('link'),
+    ).toHaveCount(3);
+  }
+  await expect(
+    pro
+      .getByRole('figure', { name: 'Recommended decks for Foundry Inspector' })
+      .getByRole('listitem'),
+  ).toHaveCount(3);
   await expect(
     pro.getByText('Try this preview by card name.', { exact: false }),
   ).toHaveCount(0);
@@ -436,13 +548,22 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   }
   const explore = page.getByRole('navigation', { name: 'Explore CardMystic' });
   await explore.scrollIntoViewIfNeeded();
-  // The navigation groups belong at the end of the home content, before the footer.
+  // The closing call to action follows the navigation groups.
   expect(
     await explore.evaluate((element) => {
       const section = element.closest('section');
-      return !!section && section.nextElementSibling === null;
+      return section?.nextElementSibling?.id === 'home-call-to-action';
     }),
   ).toBe(true);
+  const callToAction = page.getByRole('region', {
+    name: 'Ready to Give it a Try?',
+    exact: true,
+  });
+  await expect(
+    callToAction.getByRole('link', { name: 'Create an account', exact: true }),
+  ).toHaveAttribute('href', '/user/register');
+  await callToAction.getByRole('link', { name: 'Search', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeInViewport();
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
   for (const width of [320, 375]) {
     await page.setViewportSize({ width, height: 844 });
@@ -464,6 +585,11 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await page.setViewportSize({ width: 1920, height: 1080 });
   await expect(page.locator('.home-content')).toHaveCSS('max-width', '2000px');
   expect((await showcase.boundingBox())!.width).toBeCloseTo(1440, 0);
+  await businessCard.scrollIntoViewIfNeeded();
+  await businessSection.screenshot({
+    path: '/tmp/cardmystic-business-desktop.png',
+  });
+  expect(previewRequests).toEqual([]);
   await showcase
     .getByRole('link', { name: 'Search: X spell board wipes', exact: true })
     .click();
@@ -554,7 +680,7 @@ test('hero tabs stay on one row and examples populate each search mode', async (
 });
 
 for (const reducedMotion of ['no-preference', 'reduce'] as const) {
-  test(`showcase types once and fades in cards sequentially with motion preference ${reducedMotion}`, async ({
+  test(`showcase plays once with motion preference ${reducedMotion}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -573,7 +699,6 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
       'opacity',
       '0',
     );
-    await demo.scrollIntoViewIfNeeded();
     expect(
       await demo
         .locator('.demo-skeleton')
@@ -584,7 +709,7 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
         .locator('.demo-stage')
         .evaluate((el) => getComputedStyle(el).backgroundColor),
     );
-
+    await demo.scrollIntoViewIfNeeded();
     await expect
       .poll(
         async () => (await typed.innerText()).replace('|', '').trim().length,
@@ -598,7 +723,9 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     await expect(demo.locator('img')).toHaveCount(3);
     for (const count of [1, 2, 3]) {
       await expect
-        .poll(() => demo.locator('.results-ready').count(), { intervals: [50] })
+        .poll(() => demo.locator('.results-ready').count(), {
+          intervals: [50],
+        })
         .toBe(count);
       expect(await demo.locator('.demo-skeleton').count()).toBe(3 - count);
     }

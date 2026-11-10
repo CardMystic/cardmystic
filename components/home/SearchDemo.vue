@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import type { SearchDemo } from '~/utils/search-showcase';
+import { NuxtLink } from '#components';
 
-const props = defineProps<{ demo: SearchDemo }>();
+const props = defineProps<{
+  demo: SearchDemo;
+  embedded?: boolean;
+  previewOnly?: boolean;
+}>();
 const stage = useTemplateRef<HTMLElement>('stage');
 const typedLength = ref(0);
 const typedQueryLength = ref(0);
@@ -75,13 +80,20 @@ onBeforeUnmount(() => {
   <figure class="search-demo min-w-0" :aria-label="`${demo.title} example`">
     <div
       ref="stage"
-      class="demo-stage rounded-xl border border-accented bg-elevated p-4 sm:p-5"
+      class="demo-stage"
+      :class="{
+        'rounded-xl border border-accented bg-elevated p-4 shadow-xl shadow-black/35 sm:p-5':
+          !embedded,
+      }"
     >
-      <p class="mb-2 text-sm text-toned">{{ demo.inputLabel }}</p>
-      <NuxtLink
-        :to="demo.to"
+      <p v-if="demo.inputLabel" class="mb-2 text-sm text-toned">
+        {{ demo.inputLabel }}
+      </p>
+      <component
+        :is="previewOnly ? 'div' : NuxtLink"
+        :to="previewOnly ? undefined : demo.to"
         no-prefetch
-        :aria-label="`Search: ${demo.input}`"
+        :aria-label="previewOnly ? undefined : `Search: ${demo.input}`"
         class="demo-input flex min-h-12 min-w-0 items-center gap-2 rounded-lg border border-accented bg-default px-3 py-2 hover:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       >
         <UIcon
@@ -97,11 +109,12 @@ onBeforeUnmount(() => {
           >
         </span>
         <UIcon
+          v-if="!previewOnly"
           name="i-lucide-arrow-up-right"
           class="ml-auto size-4 shrink-0 text-primary"
           aria-hidden="true"
         />
-      </NuxtLink>
+      </component>
       <template v-if="demo.query">
         <p class="mt-3 mb-2 text-sm text-toned">Describe what you need</p>
         <NuxtLink
@@ -176,6 +189,7 @@ onBeforeUnmount(() => {
             </NuxtLink>
           </div>
           <div
+            v-if="card.searched || card.score !== undefined"
             class="mt-2 min-h-9 demo-score"
             :class="{ 'invisible opacity-0': index >= revealedCount }"
           >

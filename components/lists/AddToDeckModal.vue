@@ -11,6 +11,7 @@
           Build a deck without an account. Sign in when you're ready to save it.
         </p>
         <USelect
+          v-if="guestDraftOptions.length > 1"
           v-model="guestActiveIndex"
           :items="guestDraftOptions"
           :disabled="!guestReady || addingToDraft"

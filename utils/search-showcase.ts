@@ -260,13 +260,8 @@ export const searchDemos: SearchDemo[] = [
   },
 ];
 
-export const builderExamples = [
-  {
-    id: 'e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a',
-    label: 'Iron Man Living Forge',
-  },
-  { id: '058da0b2-95f8-4527-b9a1-6eaf3a6da05e', label: 'Vintage Collection' },
-];
+// Fixed public-list snapshots; homepage previews never fetch list data.
+export { builder as builderExamples } from './home-examples.json';
 
 // Hand-picked cards illustrate the Pro controls; no account or live recommendations are loaded.
 export const proExamples = [
@@ -323,3 +318,25 @@ export const proExamples = [
     ],
   },
 ] as const;
+
+// Fixed homepage results; no searches are run to render these cards.
+export const deckSearchCards: DemoCard[] = [
+  {
+    name: 'Whipflare',
+    id: 'a6b599db-8d45-4a11-9765-ae7eb235b4b2',
+    image:
+      'https://cards.scryfall.io/normal/front/8/1/81a3f7f3-da33-48d6-89c0-faf42998a08b.jpg?1783934732',
+  },
+  {
+    name: 'All Is Dust',
+    id: '14693689-d087-43b6-9c3f-63ab0648fc20',
+    image:
+      'https://cards.scryfall.io/normal/front/4/2/4210c54e-89fd-4971-ab6a-ca8f4e7fe97a.jpg?1783915459',
+  },
+  {
+    name: 'Ugin, the Spirit Dragon',
+    id: 'eecb3047-a563-441a-9175-200421981ac3',
+    image:
+      'https://cards.scryfall.io/normal/front/9/c/9c017fa9-7021-417a-9c2e-3df409644fcf.jpg?1783930748',
+  },
+];

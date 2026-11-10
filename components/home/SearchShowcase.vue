@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import SearchDemo from './SearchDemo.vue';
 import { searchDemos } from '~/utils/search-showcase';
 </script>
 
@@ -54,7 +53,9 @@ import { searchDemos } from '~/utils/search-showcase';
       </ol>
     </header>
 
+    <CustomModels />
     <Testimonials />
+    <slot name="community" />
 
     <section
       v-for="demo in searchDemos"
@@ -97,8 +98,14 @@ import { searchDemos } from '~/utils/search-showcase';
           </ul>
         </nav>
       </div>
-      <SearchDemo :demo="demo" />
+      <LazySearchDemo
+        :demo="demo"
+        :hydrate-on-visible="{ rootMargin: '200px' }"
+      />
     </section>
-    <BuilderShowcase />
+    <LazyBuilderShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
+    <LazyCompareShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
+    <LazyBusinessCardShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
+    <LazyProShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
   </section>
 </template>

@@ -228,6 +228,7 @@ function onTabClick(type: SearchTabType) {
     gap: 0;
     font-size: 0.75rem;
     flex: 0 0 auto;
+    transition: none;
   }
   .desktop-search-tabs .active {
     flex: 0 1 auto;
@@ -242,10 +243,7 @@ function onTabClick(type: SearchTabType) {
     overflow: hidden;
     text-overflow: ellipsis;
     opacity: 0;
-    transition:
-      max-width 0.3s ease,
-      opacity 0.3s ease,
-      margin 0.3s ease;
+    transition: none;
   }
   .desktop-search-tabs .active .tab-label {
     max-width: 12rem;

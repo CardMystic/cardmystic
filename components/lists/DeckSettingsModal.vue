@@ -6,6 +6,7 @@ import {
   type DecklistSummary,
 } from '~/models/cardListModel';
 const props = defineProps<{ list: DecklistSummary }>();
+const browser = useBrowserDeckSource();
 const open = defineModel<boolean>('open', { default: false });
 const {
   updateListMutation,
@@ -205,7 +206,7 @@ async function move() {
                   class="w-full"
                 />
               </UFormField>
-              <UFormField label="Visibility"
+              <UFormField v-if="!browser" label="Visibility"
                 ><USelect
                   v-model="visibility"
                   :items="[
@@ -222,7 +223,7 @@ async function move() {
             </p>
           </fieldset>
         </form>
-        <div class="border-t border-default pt-4 space-y-2">
+        <div v-if="!browser" class="border-t border-default pt-4 space-y-2">
           <UFormField label="Move to a folder">
             <div class="flex items-center gap-2">
               <USelect
@@ -255,7 +256,7 @@ async function move() {
           </p>
         </div>
         <UButton
-          v-if="noun === 'deck'"
+          v-if="!browser && noun === 'deck'"
           label="Duplicate Deck"
           class="mr-2"
           icon="i-lucide-copy"

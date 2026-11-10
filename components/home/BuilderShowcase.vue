@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { builderExamples } from '~/utils/search-showcase';
-import { useElementVisibility } from '@vueuse/core';
 const { userId } = useUserProfile();
-const examples = useTemplateRef<HTMLElement>('examples');
-const visible = useElementVisibility(examples);
-const requestedIds = ref<string[]>([]);
-watch(visible, (value) => {
-  if (value && !requestedIds.value.length)
-    requestedIds.value = builderExamples.map((example) => example.id);
-});
-const { decklists, isLoading } = usePublicDecklistSummaries(requestedIds);
 </script>
 
 <template>
@@ -29,8 +20,8 @@ const { decklists, isLoading } = usePublicDecklistSummaries(requestedIds);
       </div>
       <p class="mt-4 text-base leading-relaxed text-toned">
         <strong>Build decks and keep track of the cards you own.</strong>
-        Organize your cards, compare options, and share your lists. Build up to
-        three decks without an account, then sign in to
+        Organize your cards, compare options, and share your lists. Build one
+        deck without an account, then sign in to
         <strong>save unlimited decks and collections for free</strong>.
       </p>
       <UButton
@@ -42,19 +33,14 @@ const { decklists, isLoading } = usePublicDecklistSummaries(requestedIds);
       >
     </div>
     <nav
-      ref="examples"
       aria-label="Example deck and collection"
       class="grid gap-4 sm:grid-cols-2"
     >
       <BuilderExampleList
         v-for="example in builderExamples"
         :key="example.id"
-        :id="example.id"
-        :label="example.label"
-        :decklist="decklists.find((list) => list.id === example.id)"
-        :loading="!requestedIds.length || isLoading"
+        :example="example"
       />
     </nav>
   </section>
-  <ProShowcase />
 </template>

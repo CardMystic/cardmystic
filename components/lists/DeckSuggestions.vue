@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getUsdPrice } from '~/utils/cardPrice';
-import { useElementSize, useIntersectionObserver } from '@vueuse/core';
+import { useElementSize } from '@vueuse/core';
 import type { Card } from '~/models/cardModel';
 import type { CardAction } from '~/utils/card-actions';
 import { getCardImageUrl } from '~/utils/scryfall';
@@ -13,6 +13,8 @@ const props = defineProps<{
   oracleIds: string[];
   ready: boolean;
   newestSet?: boolean;
+  automatic?: boolean;
+  acknowledge?: () => Promise<void>;
   savedBudget: number | null;
   budgetReady: boolean;
   budgetSaving: boolean;
@@ -74,24 +76,28 @@ const cardActions = computed<CardAction[][]>(() => {
   ];
 });
 const section = ref<HTMLElement | null>(null);
-const inView = ref(false);
-const emit = defineEmits<{ visible: [] }>();
-useIntersectionObserver(
-  section,
-  ([entry]) => {
-    inView.value = !!entry?.isIntersecting;
-    if (inView.value) emit('visible');
-  },
-  { rootMargin: '0px' },
-);
+const emit = defineEmits<{ close: [] }>();
+const acknowledging = ref(false);
+async function allSet() {
+  if (!props.acknowledge || acknowledging.value) return;
+  acknowledging.value = true;
+  error.value = '';
+  try {
+    await props.acknowledge();
+    emit('close');
+  } catch (cause) {
+    error.value = (cause as Error).message;
+  } finally {
+    acknowledging.value = false;
+  }
+}
 const { addCardsToListMutation } = useCardLists();
 const toast = useToast();
 const queue = ref<Card[]>([]),
   added = ref(new Set<string>());
 const loading = ref(false),
   error = ref(''),
-  adding = ref<string | null>(null),
-  loaded = ref(false);
+  adding = ref<string | null>(null);
 let sequence = 0;
 const remaining = computed(() => {
   const used = new Set([...props.oracleIds, ...added.value]);
@@ -148,13 +154,7 @@ async function applyBudget() {
   }
 }
 async function load() {
-  if (
-    !inView.value ||
-    !api.isPro.value ||
-    !props.ready ||
-    !props.budgetReady ||
-    loading.value
-  )
+  if (!api.isPro.value || !props.ready || !props.budgetReady || loading.value)
     return;
   const current = ++sequence;
   loading.value = true;
@@ -170,7 +170,6 @@ async function load() {
     if (current === sequence) {
       queue.value = result.results;
       setName.value = result.set?.name ?? '';
-      loaded.value = true;
     }
   } catch (cause) {
     if (current === sequence) error.value = (cause as Error).message;
@@ -184,6 +183,7 @@ watch(
     api.userId,
     () => props.listId,
     () => props.budgetReady,
+    () => props.ready,
     targetBudget,
   ],
   () => {
@@ -193,16 +193,12 @@ watch(
     queue.value = [];
     added.value = new Set();
     expanded.value = false;
-    loaded.value = false;
     loading.value = false;
     error.value = '';
     if (api.isPro.value && props.ready && props.budgetReady) void load();
   },
   { immediate: true },
 );
-watch([inView, () => props.ready], () => {
-  if (inView.value && props.ready && !loaded.value) void load();
-});
 onBeforeUnmount(() => sequence++);
 async function add(card: Card) {
   if (adding.value || !api.isPro.value) return;
@@ -230,6 +226,7 @@ async function add(card: Card) {
 </script>
 <template>
   <section
+    v-show="!automatic || remaining.length > 0"
     ref="section"
     class="my-6 rounded-lg border border-primary/25 bg-primary/5 p-4"
     :aria-label="title"
@@ -245,21 +242,40 @@ async function add(card: Card) {
       <h2 class="font-semibold">
         {{ title }} <span class="text-xs text-(--pro-accent)">Pro</span>
       </h2>
-      <UButton
-        v-if="api.isPro.value"
-        label="Refresh suggestions"
-        icon="i-lucide-refresh-cw"
-        size="xs"
-        color="neutral"
-        variant="ghost"
-        :disabled="!ready || !budgetReady || budgetSaving || !!adding"
-        :loading="loading"
-        @click="load"
-      />
+      <div class="flex flex-wrap items-center gap-1">
+        <UButton
+          v-if="newestSet && acknowledge"
+          label="All Set"
+          variant="outline"
+          size="xs"
+          :loading="acknowledging"
+          :disabled="!!adding"
+          @click="allSet"
+        />
+        <UButton
+          v-if="api.isPro.value"
+          label="Refresh suggestions"
+          icon="i-lucide-refresh-cw"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+          :disabled="!ready || !budgetReady || budgetSaving || !!adding"
+          :loading="loading"
+          @click="load"
+        />
+        <UButton
+          icon="i-lucide-x"
+          :aria-label="
+            newestSet ? 'Close new-card suggestions' : 'Close suggested adds'
+          "
+          variant="ghost"
+          size="xs"
+          @click="emit('close')"
+        />
+      </div>
     </div>
     <p v-if="newestSet" class="text-sm text-muted mb-3">
-      Suggestions from {{ setName || 'the newest released expansion' }}. Refresh
-      to check for new cards.
+      Suggestions from {{ setName || 'the newest released expansion' }}.
     </p>
     <form
       v-if="api.isPro.value"

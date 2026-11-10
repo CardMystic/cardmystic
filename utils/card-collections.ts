@@ -25,6 +25,8 @@ export function collectionTitle(
   kind: CardCollectionKind,
   entry: CardCollectionEntry,
 ) {
+  if (kind === 'roles' && entry.slug === 'game-changers')
+    return 'MTG Commander Game Changers List';
   const name = entry.name.charAt(0).toUpperCase() + entry.name.slice(1);
   return kind === 'sets'
     ? `${name} MTG Cards`
@@ -36,6 +38,8 @@ export function collectionDescription(
   kind: CardCollectionKind,
   entry: CardCollectionEntry,
 ) {
+  if (kind === 'roles' && entry.slug === 'game-changers')
+    return 'Browse the current Magic: The Gathering Commander Game Changers list. Compare cards, filter by color and type, and find cards for your Commander deck.';
   return kind === 'sets'
     ? `Browse all Magic: The Gathering cards printed in ${entry.name} (${entry.slug.toUpperCase()}). Search within the set with Smart Search and Pro ranking.`
     : `Find Magic: The Gathering cards with the ${entry.name} ${kind === 'themes' ? 'theme' : 'role'}. Browse top cards or refine with Smart Search.`;

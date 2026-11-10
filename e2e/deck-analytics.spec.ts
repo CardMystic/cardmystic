@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { BACKEND, SUPABASE } from './utils/mocks';
 import type { DeckAnalytics } from '../utils/deckAnalytics';
+import { openDeckAction } from './utils/deckActions';
 
 test('visitors open free analytics directly from the mobile Deck Stats button', async ({
   page,
@@ -121,11 +122,8 @@ test('Deck analytics show useful draw odds and incomplete prices on mobile, with
   page.on('pageerror', (error) => errors.push(error.message));
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await page.screenshot({ path: '/tmp/cardmystic-new-footer-mobile.png' });
-  await page
-    .getByRole('button', { name: 'Deck sections', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Deck Stats', exact: true }).click();
   await expect(page.locator('.sticky-footer-wrap')).toBeVisible();
-  await page.getByRole('menuitem', { name: 'Deck Stats', exact: true }).click();
   const modal = page.getByTestId('deck-stats');
   await expect(modal.getByRole('alert')).toContainText(
     'Analytics temporarily unavailable.',
@@ -205,7 +203,7 @@ test('Deck analytics show useful draw odds and incomplete prices on mobile, with
   });
 });
 
-test('suggestions wait for scrolling and stats wait for opening; cuts fill the price list', async ({
+test('suggestions wait for their menu actions and stats wait for opening; cuts fill the price list', async ({
   page,
 }) => {
   const state = await setupDeckDisplay(page, { pro: true, cardCount: 21 });
@@ -267,16 +265,14 @@ test('suggestions wait for scrolling and stats wait for opening; cuts fill the p
       });
     },
   );
-  await page.waitForTimeout(400); // IntersectionObserver has settled; no offscreen API work.
+  await expect(
+    page.getByRole('button', { name: 'More deck actions' }),
+  ).toBeVisible();
   expect(requested).toEqual([]);
   expect(analyticsRequests).toBe(0);
-  await page
-    .getByRole('region', { name: 'Suggested cards', exact: true })
-    .scrollIntoViewIfNeeded();
+  await openDeckAction(page, 'Suggest Adds · Pro');
   await expect.poll(() => requested.includes(false)).toBe(true);
-  await page
-    .getByRole('region', { name: 'New Cards for Deck', exact: true })
-    .scrollIntoViewIfNeeded();
+  await openDeckAction(page, 'Suggest New Cards · Pro');
   await expect.poll(() => requested.includes(true)).toBe(true);
   expect(analyticsRequests).toBe(0);
   await page.getByTestId('deck-stats').locator('summary').click();

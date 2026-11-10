@@ -122,7 +122,10 @@ const newListName = ref('');
 const newListDescription = ref('');
 const newListFormat =
   ref<(typeof CardListFormatSchema.options)[number]>('Commander');
-const newListVisibility = ref<'private' | 'public'>('private');
+const defaultVisibility = computed(() =>
+  props.kind === 'collection' ? 'private' : 'public',
+);
+const newListVisibility = ref<'private' | 'public'>(defaultVisibility.value);
 const newListCommander = ref('');
 const newListPartnerCommander = ref('');
 const commanderSearchTerm = ref('');
@@ -131,8 +134,8 @@ const createLoading = computed(() => createListMutation.isPending.value);
 
 const formatOptions = CardListFormatSchema.options;
 const visibilityOptions = [
-  { label: 'Private', value: 'private' as const },
   { label: 'Public', value: 'public' as const },
+  { label: 'Private', value: 'private' as const },
 ];
 const isCommanderFormat = computed(
   () => props.kind !== 'collection' && newListFormat.value === 'Commander',
@@ -200,11 +203,11 @@ watch(newListCommander, () => {
 
 // Reset form when modal closes
 watch(isOpen, (opened) => {
+  newListVisibility.value = defaultVisibility.value;
   if (!opened) {
     newListName.value = '';
     newListDescription.value = '';
     newListFormat.value = 'Commander';
-    newListVisibility.value = 'private';
     newListCommander.value = '';
     newListPartnerCommander.value = '';
     commanderSearchTerm.value = '';

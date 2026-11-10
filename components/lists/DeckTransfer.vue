@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {
   exportDeck,
+  applyDeckImport,
   parseDeckImport,
+  summarizeImportBoards,
   type TransferCard,
   type DeckExportFormat,
 } from '~/utils/deckTransfer';
@@ -24,6 +26,7 @@ const preview = ref<TransferCard[]>([]),
   applied = ref(false);
 const { addCardsByNameToListMutation, setCommanderMutation } = useCardLists();
 const output = computed(() => exportDeck(props.cards, format.value));
+const importSummary = computed(() => summarizeImportBoards(preview.value));
 const unsupported = computed(() =>
   format.value === 'arena' || format.value === 'mtgo'
     ? props.cards.filter(
@@ -73,34 +76,47 @@ async function apply() {
   busy.value = true;
   applied.value = true;
   error.value = '';
-  let added = 0;
+  message.value = '';
   try {
-    for (const board of ['Mainboard', 'Sideboard', 'Considering'] as const) {
-      const cards = preview.value.filter((card) => card.board === board);
-      if (!cards.length) continue;
-      for (let offset = 0; offset < cards.length; offset += 500) {
-        const result = await addCardsByNameToListMutation.mutateAsync({
+    const result = await applyDeckImport(
+      preview.value,
+      (board, cardNames) =>
+        addCardsByNameToListMutation.mutateAsync({
           listId: props.listId,
           board,
-          cardNames: cards
-            .slice(offset, offset + 500)
-            .map((card) => `${card.quantity} ${card.name}`),
-        });
-        added += result.addedCount + result.updatedCount;
-        if (result.invalidCardNames.length)
-          throw new Error(
-            `Not found: ${result.invalidCardNames.slice(0, 20).join(', ')}. Other valid cards may already have been added.`,
-          );
-      }
+          cardNames,
+        }),
+      (commanderName) =>
+        setCommanderMutation.mutateAsync({
+          listId: props.listId,
+          commanderName,
+        }),
+    );
+    const missing = result.invalidCardNames.length
+      ? `Not found: ${result.invalidCardNames.join(', ')}.`
+      : '';
+    if (result.failure) {
+      message.value = result.confirmedEntries
+        ? result.failure.stage === 'cards'
+          ? 'Cards from completed batches were added.'
+          : 'Cards were added.'
+        : '';
+      error.value = [
+        missing,
+        result.failure.stage === 'cards'
+          ? `Import stopped: ${result.failure.message} Check your list before retrying the last batch.`
+          : `Could not set the commander: ${result.failure.message}`,
+      ]
+        .filter(Boolean)
+        .join(' ');
+    } else {
+      error.value = missing;
+      message.value = result.confirmedEntries
+        ? missing
+          ? 'The other cards were added.'
+          : 'Cards added.'
+        : 'No cards were added.';
     }
-    for (const commander of preview.value.filter((card) => card.commander))
-      await setCommanderMutation.mutateAsync({
-        listId: props.listId,
-        commanderName: commander.name,
-      });
-    message.value = `Imported ${added} card entries. Existing cards were kept.`;
-  } catch (cause) {
-    error.value = `${(cause as Error).message} Check your list before importing again.`;
   } finally {
     busy.value = false;
   }
@@ -227,9 +243,7 @@ async function copy() {
           />
           <template v-if="preview.length">
             <p>
-              {{ preview.length }} card entries ·
-              {{ preview.reduce((sum, card) => sum + card.quantity, 0) }}
-              copies. Adds to your list; nothing is removed.
+              {{ importSummary }}
             </p>
             <ul class="max-h-40 overflow-auto text-sm">
               <li

@@ -11,40 +11,66 @@ import {
 } from '~/utils/guestDeck';
 
 describe('browser deck draft', () => {
-  it('migrates the existing draft and keeps three independent slots', () => {
+  it('creates one draft and preserves populated drafts from older storage', () => {
     const legacy = emptyGuestDeck();
     legacy.name = 'Existing deck';
     setGuestCopies(legacy, 'Island', 'Mainboard', 20);
     const drafts = loadGuestDecks(null, JSON.stringify(legacy));
-    expect(drafts.decks[0]).toEqual(legacy);
-    drafts.decks[1].name = 'Second deck';
-    drafts.decks[1].cards.push({
-      name: 'Mountain',
-      board: 'Mainboard',
-      quantity: 10,
-    });
-    drafts.activeIndex = 1;
-    const restored = loadGuestDecks(
-      JSON.stringify(drafts),
-      JSON.stringify(legacy),
-    );
-    expect(restored).toEqual(drafts);
-    expect(restored.decks[0].cards[0].name).toBe('Island');
-    expect(restored.decks[2].cards).toEqual([]);
+    expect(drafts.decks).toEqual([legacy]);
+    expect(loadGuestDecks(null, null)).toEqual(emptyGuestDecks());
+    expect(emptyGuestDecks().decks).toHaveLength(1);
+
+    const old = {
+      version: 2,
+      activeIndex: 1,
+      decks: [
+        legacy,
+        {
+          ...emptyGuestDeck(),
+          name: 'Second deck',
+          cards: [{ name: 'Mountain', board: 'Mainboard', quantity: 10 }],
+        },
+        { ...emptyGuestDeck(), name: 'My third deck' },
+      ],
+    };
+    const restored = loadGuestDecks(JSON.stringify(old), null);
+    expect(restored.decks).toEqual(old.decks.slice(0, 2));
+    expect(restored.activeIndex).toBe(1);
+    expect(loadGuestDecks(JSON.stringify(restored), null)).toEqual(restored);
     expect(
-      guestDecksSchema.safeParse({ ...drafts, activeIndex: 3 }).success,
+      guestDecksSchema.safeParse({ ...restored, activeIndex: 2 }).success,
     ).toBe(false);
     expect(
       guestDecksSchema.safeParse({
-        ...drafts,
-        decks: [...drafts.decks, emptyGuestDeck()],
+        ...old,
+        decks: [...old.decks, emptyGuestDeck()],
       }).success,
     ).toBe(false);
-    expect(loadGuestDecks(null, null)).toEqual(emptyGuestDecks());
+    const unused = {
+      version: 2,
+      activeIndex: 2,
+      decks: [
+        emptyGuestDeck(),
+        { ...emptyGuestDeck(), name: 'My second deck' },
+        { ...emptyGuestDeck(), name: 'My third deck' },
+      ],
+    };
+    expect(loadGuestDecks(JSON.stringify(unused), null)).toEqual(
+      emptyGuestDecks(),
+    );
+    unused.decks[2] = legacy;
+    expect(loadGuestDecks(JSON.stringify(unused), null)).toEqual({
+      version: 2,
+      activeIndex: 0,
+      decks: [legacy],
+    });
   });
   it('preserves quantities, boards, and commanders through storage and account save', () => {
     const draft = editGuestDeck(emptyGuestDeck(), (next) => {
       next.name = 'Token deck';
+      next.description = 'Tokens and counters';
+      next.bracket = 3;
+      next.avatarCardName = 'Mondrak, Glory Dominus';
       next.commanders = ['Mondrak, Glory Dominus'];
       setGuestCopies(next, 'Mondrak, Glory Dominus', 'Mainboard', 1);
       setGuestCopies(next, 'Plains', 'Mainboard', 30);

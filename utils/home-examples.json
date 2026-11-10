@@ -1,0 +1,126 @@
+{
+  "builder": [
+    {
+      "id": "e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a",
+      "label": "Iron Man Living Forge",
+      "description": "Bracket 3: Tutoring toolbox with a pinch of stax",
+      "format": "Commander",
+      "bracket": 3,
+      "image": "https://cards.scryfall.io/art_crop/front/2/0/20d54b22-62e8-48ac-ba65-0bdbf42d6cad.jpg?1783903309",
+      "color_ratios": {
+        "W": 0,
+        "U": 0.41,
+        "B": 0,
+        "R": 0.2,
+        "G": 0,
+        "C": 0.4
+      }
+    },
+    {
+      "id": "058da0b2-95f8-4527-b9a1-6eaf3a6da05e",
+      "label": "Vintage Collection",
+      "description": "My collection of vintage cards I use for vintage cube drafts",
+      "format": "Collection",
+      "bracket": null,
+      "image": "https://cards.scryfall.io/art_crop/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg?1783939332",
+      "color_ratios": {
+        "W": 0.18,
+        "U": 0.2,
+        "B": 0.17,
+        "R": 0.17,
+        "G": 0.17,
+        "C": 0.11
+      }
+    }
+  ],
+  "business": {
+    "name": "Iron Man Living Forge",
+    "url": "https://cardmystic.com/lists/e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a",
+    "format": "Commander",
+    "bracket": 3,
+    "count": 100,
+    "playstyles": ["Combo"],
+    "summary": "Bracket 3: Tutoring toolbox with a pinch of stax",
+    "winPlan": "Win with an army of Constructs or repeated artifact entry triggers.",
+    "hero": {
+      "name": "Iron Man, Titan of Innovation",
+      "image": "https://cards.scryfall.io/normal/front/2/0/20d54b22-62e8-48ac-ba65-0bdbf42d6cad.jpg?1783903309"
+    },
+    "core": [
+      {
+        "name": "Repurposing Bay",
+        "image": "https://cards.scryfall.io/normal/front/0/c/0cf1ace1-b7f5-4bd9-a494-ee7cb6c1f854.jpg?1783907906"
+      },
+      {
+        "name": "Simulacrum Synthesizer",
+        "image": "https://cards.scryfall.io/normal/front/a/a/aaa05ad1-5cda-4edd-b6bf-562ae3e5011a.jpg?1783912002"
+      },
+      {
+        "name": "The One Ring",
+        "image": "https://cards.scryfall.io/normal/front/d/5/d5806e68-1054-458e-866d-1f2470f682b2.jpg?1790212038"
+      }
+    ],
+    "curve": [
+      {
+        "label": "0",
+        "count": 2
+      },
+      {
+        "label": "1",
+        "count": 9
+      },
+      {
+        "label": "2",
+        "count": 20
+      },
+      {
+        "label": "3",
+        "count": 19
+      },
+      {
+        "label": "4",
+        "count": 7
+      },
+      {
+        "label": "5",
+        "count": 3
+      },
+      {
+        "label": "6",
+        "count": 4
+      },
+      {
+        "label": "7+",
+        "count": 3
+      }
+    ],
+    "colors": [
+      {
+        "label": "W",
+        "count": 0
+      },
+      {
+        "label": "U",
+        "count": 44
+      },
+      {
+        "label": "B",
+        "count": 0
+      },
+      {
+        "label": "R",
+        "count": 21
+      },
+      {
+        "label": "G",
+        "count": 0
+      },
+      {
+        "label": "C",
+        "count": 44
+      }
+    ],
+    "price": "$2,811.97",
+    "priceDate": "Nov 9, 2026"
+  }
+}

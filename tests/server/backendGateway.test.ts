@@ -71,6 +71,7 @@ describe('private backend gateway', () => {
   it.each([
     '/documentation',
     '/cache/stats',
+    '/cache/top',
     '/metrics/dislikes',
     '/metrics/query_counts',
     '/patreon/status',

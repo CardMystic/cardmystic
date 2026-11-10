@@ -318,6 +318,7 @@ export type Database = {
       card_lists: {
         Row: {
           bracket: number | null;
+          new_cards_acknowledged_at: string | null;
           target_budget: number | null;
           kind: string;
           folder_id: string | null;
@@ -339,6 +340,7 @@ export type Database = {
         };
         Insert: {
           bracket?: number | null;
+          new_cards_acknowledged_at?: string | null;
           target_budget?: number | null;
           kind?: string;
           folder_id?: string | null;
@@ -360,6 +362,7 @@ export type Database = {
         };
         Update: {
           bracket?: number | null;
+          new_cards_acknowledged_at?: string | null;
           target_budget?: number | null;
           kind?: string;
           folder_id?: string | null;

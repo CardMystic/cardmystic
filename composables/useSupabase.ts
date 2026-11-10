@@ -8,6 +8,7 @@ export const useSupabase = () => {
     '__cm_',
     'cm.clipboard.v1',
     'cardmystic-guest-deck-',
+    'cardmystic-guest-decks-',
   ]; // don't purge Supabase auth or our own namespaced state
 
   // Use a key on nuxtApp to store the client instance

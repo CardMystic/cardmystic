@@ -9,8 +9,7 @@ const matches = ref<{ id: string; name: string }[]>([]),
   error = ref('');
 const loading = ref(false),
   adding = ref(''),
-  added = ref(new Set<string>()),
-  supported = ref(true);
+  added = ref(new Set<string>());
 const shown = ref(5);
 let sequence = 0;
 onBeforeUnmount(() => sequence++);
@@ -23,8 +22,16 @@ async function load() {
     const oracleId = props.oracleId;
     const offset = next.value;
     const result = await client.fetchQuery({
-      queryKey: ['card-deck-matches', api.userId.value, oracleId, offset],
-      staleTime: 60_000,
+      queryKey: [
+        'card-deck-matches',
+        'jev',
+        api.userId.value,
+        oracleId,
+        offset,
+      ],
+      // The server caches individual judgments against current deck/catalog inputs.
+      staleTime: 0,
+      retry: false,
       queryFn: () =>
         api.request<{
           results: { id: string; name: string }[];
@@ -38,7 +45,6 @@ async function load() {
         ...result.results.filter((deck) => !known.has(deck.id)),
       );
       next.value = result.nextOffset;
-      supported.value = result.supported;
     }
   } catch (cause) {
     if (current === sequence) error.value = (cause as Error).message;
@@ -53,7 +59,6 @@ watch(
     matches.value = [];
     shown.value = 5;
     error.value = '';
-    supported.value = true;
     next.value = 0;
     added.value = new Set();
     loading.value = false;
@@ -91,9 +96,6 @@ async function add(id: string) {
       >Subscribe for deck suggestions</NuxtLink
     >
     <template v-else>
-      <p v-if="!supported" class="text-sm">
-        This card is too new for deck-fit recommendations.
-      </p>
       <div
         v-for="deck in matches.slice(0, shown)"
         :key="deck.id"
@@ -112,7 +114,7 @@ async function add(id: string) {
         />
       </div>
       <p
-        v-if="!loading && !matches.length && supported"
+        v-if="!loading && !matches.length && !error"
         class="text-sm text-muted"
       >
         No matching decks in this batch.

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getUsdPrice } from '~/utils/cardPrice';
+import { getUsdPrice, isBasicLand } from '~/utils/cardPrice';
 import { analyzeDeck } from '~/utils/deckAnalysis';
 import type { AnalysisCard } from '~/utils/deckAnalysis';
 import type { DeckBusinessCardDetails } from '~/utils/deckBusinessCard';
@@ -41,6 +41,7 @@ const price = computed(() => {
   let cents = 0,
     missing = 0;
   for (const { card, quantity } of props.entries) {
+    if (isBasicLand(card)) continue;
     const raw = getUsdPrice(card.prices);
     const value = raw == null ? NaN : Number(raw);
     if (Number.isFinite(value) && value >= 0)

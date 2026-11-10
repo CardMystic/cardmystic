@@ -126,6 +126,7 @@ const cardFaceSchema = z.object({
   loyalty: z.string().optional(),
   watermark: z.string().optional(),
   printed_name: z.string().optional(),
+  flavor_name: z.string().optional(),
   printed_type_line: z.string().optional(),
   printed_text: z.string().optional(),
 });
@@ -143,6 +144,8 @@ export const ScryfallCardSchema = z.object({
   cardmarket_id: z.number().optional(),
   name: z.string(),
   lang: z.string(),
+  flavor_name: z.string().optional(),
+  name_aliases: z.array(z.string()).optional(),
   released_at: z.string(),
   uri: z.url(),
   scryfall_uri: z.url(),

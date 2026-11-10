@@ -10,7 +10,7 @@ const {
   signupWithGoogle,
   resendVerificationEmail,
   validatePasswordPolicy,
-} = useUserProfile();
+} = useAccountActions();
 
 const username = ref('');
 const email = ref('');

@@ -193,12 +193,9 @@ useSeoMeta({
   robots: 'noindex, nofollow',
 });
 
-const {
-  sendResetEmail,
-  updatePasswordWithToken,
-  signOut,
-  validatePasswordPolicy,
-} = useUserProfile();
+const { signOut } = useUserProfile();
+const { validatePasswordPolicy, sendResetEmail, updatePasswordWithToken } =
+  useAccountActions();
 
 const email = ref('');
 const newPassword = ref('');

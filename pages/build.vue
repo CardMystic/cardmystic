@@ -1,215 +1,40 @@
 <script setup lang="ts">
-import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
-import { CardListFormatSchema } from '~/models/cardListModel';
-import { groupAndSortCards } from '~/utils/sort';
-import { exportDeck } from '~/utils/deckTransfer';
+defineOptions({ name: 'BrowserDeckPage' });
 import {
   emptyGuestDeck,
-  guestBoards,
   guestDeckEntries,
   GUEST_RETURN_KEY,
-  setGuestCopies,
-  type GuestBoard,
-  type GuestDeck,
 } from '~/utils/guestDeck';
-
-defineOptions({ name: 'GuestDeckBuilder' });
+import { BROWSER_DECK_ID } from '~/composables/useBrowserDeckSource';
+const source = provideBrowserDeckSource();
+const { draft, activeIndex, draftOptions, ready, storageError, persist } =
+  source;
+const { userProfile } = useUserProfile();
+const {
+  createListMutation,
+  bulkEditListMutation,
+  updateListMutation,
+  updateListAvatarMutation,
+} = useCardLists();
+const saving = ref(false);
+const message = ref('');
+const visibility = ref<'public' | 'private'>('public');
+const visibilityOptions = [
+  { label: 'Public', value: 'public' as const },
+  { label: 'Private', value: 'private' as const },
+];
+watch(activeIndex, () => {
+  visibility.value = 'public';
+});
+const total = computed(() =>
+  draft.value.cards.reduce((total, card) => total + card.quantity, 0),
+);
 useSeoMeta({
   title: 'Build a deck - CardMystic',
   description:
-    'Try the Magic: The Gathering deck builder without an account. Add cards, choose a commander, and save your deck after signing in.',
+    'Build a Magic: The Gathering deck in your browser. Sign in to save your deck.',
 });
 useCanonicalUrl('/build');
-const {
-  draft,
-  activeIndex,
-  draftOptions,
-  ready,
-  storageError,
-  edit,
-  addNames,
-  persist,
-} = useGuestDeck();
-const { userProfile } = useUserProfile();
-const { createListMutation, bulkEditListMutation } = useCardLists();
-const { data: cardNames } = useCardNames();
-const { data: partners } = usePartnerCommanders();
-const names = computed(() => [
-  ...new Set(draft.value.cards.map((card) => card.name)),
-]);
-const { cards, isLoading, error: cardsError, refetch } = useCardsByName(names);
-const search = ref('');
-const selected = ref<string>();
-const message = ref('');
-const saving = ref(false);
-const view = ref<'grid' | 'text'>('grid');
-const group = ref('type');
-const sort = ref('name');
-const formats = CardListFormatSchema.options;
-const locked = computed(() => saving.value || !!draft.value.pendingSave);
-const total = computed(() =>
-  draft.value.cards.reduce((sum, card) => sum + card.quantity, 0),
-);
-const options = computed(() =>
-  search.value.length < 2
-    ? []
-    : (cardNames.value ?? [])
-        .filter((name) =>
-          name.toLowerCase().includes(search.value.toLowerCase()),
-        )
-        .slice(0, 50),
-);
-const name = computed({
-  get: () => draft.value.name,
-  set: (value) =>
-    change((next) => {
-      next.name = value;
-    }),
-});
-const format = computed({
-  get: () => draft.value.format,
-  set: (value) =>
-    change((next) => {
-      next.format = value;
-      if (value !== 'Commander') next.commanders = [];
-    }),
-});
-const groups = computed(() =>
-  Object.fromEntries(
-    guestBoards.map((board) => [
-      board,
-      groupAndSortCards(
-        (cards.value ?? []).filter((card) =>
-          draft.value.cards.some(
-            (entry) =>
-              entry.board === board && entry.name === card.card_data.name,
-          ),
-        ),
-        group.value === 'none' ? null : group.value,
-        sort.value,
-        'asc',
-      ),
-    ]),
-  ),
-);
-const copies = computed(() =>
-  Object.fromEntries(
-    guestBoards.map((board) => [
-      board,
-      Object.fromEntries(
-        (cards.value ?? []).flatMap((card) => {
-          const entry = draft.value.cards.find(
-            (entry) =>
-              entry.board === board && entry.name === card.card_data.name,
-          );
-          return entry
-            ? [[card.card_data.oracle_id, { num_copies: entry.quantity }]]
-            : [];
-        }),
-      ),
-    ]),
-  ),
-);
-const commanderIds = computed(() =>
-  (cards.value ?? [])
-    .filter((card) => draft.value.commanders.includes(card.card_data.name))
-    .map((card) => card.card_data.oracle_id),
-);
-
-function change(action: (next: GuestDeck) => void) {
-  message.value = '';
-  try {
-    edit(action);
-  } catch (error) {
-    message.value =
-      error instanceof Error ? error.message : 'Could not update your draft.';
-  }
-}
-function addCard(value: string) {
-  if (!value) return;
-  message.value = '';
-  try {
-    addNames([value]);
-    selected.value = undefined;
-    search.value = '';
-  } catch (error) {
-    message.value =
-      error instanceof Error ? error.message : 'Could not add card.';
-  }
-}
-function removeCard(id: string, board: GuestBoard) {
-  const card = cards.value?.find((card) => card.card_data.oracle_id === id);
-  if (card)
-    change((next) => setGuestCopies(next, card.card_data.name, board, 0));
-}
-function moveCard(cardName: string, board: GuestBoard, from: GuestBoard) {
-  change((next) => {
-    const source = next.cards.find(
-      (card) => card.name === cardName && card.board === from,
-    );
-    if (!source) return;
-    const count =
-      source.quantity +
-      (next.cards.find((card) => card.name === cardName && card.board === board)
-        ?.quantity ?? 0);
-    setGuestCopies(next, cardName, from, 0);
-    setGuestCopies(next, cardName, board, count);
-  });
-}
-function setCommander(cardName: string) {
-  change((next) => {
-    if (!next.commanders.includes(cardName)) {
-      if (next.commanders.length === 1) {
-        const first = next.commanders[0];
-        const partnerType =
-          partners.value && getPartnerType(first, partners.value);
-        if (
-          !partners.value ||
-          !partnerType ||
-          !getValidPartners(partnerType, partners.value, first).includes(
-            cardName,
-          )
-        ) {
-          throw new Error(
-            'These commanders cannot be paired. Remove the current commander first.',
-          );
-        }
-      }
-      if (next.commanders.length === 2)
-        throw new Error('Remove a commander before choosing another.');
-      next.commanders.push(cardName);
-    }
-    setGuestCopies(next, cardName, 'Mainboard', 1);
-  });
-}
-function clearCommander(id: string) {
-  const card = cards.value?.find((card) => card.card_data.oracle_id === id);
-  if (card)
-    change((next) => {
-      next.commanders = next.commanders.filter(
-        (name) => name !== card.card_data.name,
-      );
-    });
-}
-function download() {
-  const text = exportDeck(
-    draft.value.cards.map((card) => ({
-      ...card,
-      commander:
-        draft.value.commanders.includes(card.name) &&
-        card.board === 'Mainboard',
-    })),
-    'csv',
-  );
-  const url = URL.createObjectURL(
-    new Blob([text], { type: 'text/csv;charset=utf-8' }),
-  );
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${draft.value.name || 'deck'}.csv`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 function signIn() {
   try {
     sessionStorage.setItem(GUEST_RETURN_KEY, 'true');
@@ -233,7 +58,8 @@ async function save() {
       const result = await createListMutation.mutateAsync({
         name: draft.value.name.trim() || 'My first deck',
         format: draft.value.format,
-        visibility: 'private',
+        description: draft.value.description,
+        visibility: visibility.value,
         commanders: draft.value.commanders,
       });
       if (!result?.id)
@@ -251,6 +77,18 @@ async function save() {
       throw new Error(
         `Could not save: ${result.invalidCardNames.join(', ')}. Your browser draft has been kept.`,
       );
+    await updateListMutation.mutateAsync({
+      listId: pending.listId,
+      updates: {
+        description: draft.value.description,
+        bracket: draft.value.bracket,
+      },
+    });
+    if (draft.value.avatarCardName)
+      await updateListAvatarMutation.mutateAsync({
+        listId: pending.listId,
+        cardName: draft.value.avatarCardName,
+      });
     const listId = pending.listId;
     persist(emptyGuestDeck());
     await navigateTo(`/lists/${listId}`);
@@ -264,129 +102,81 @@ async function save() {
   }
 }
 </script>
-
 <template>
-  <UContainer class="py-6 space-y-5 max-w-[2000px]">
-    <h1 class="text-2xl font-bold">Build a deck</h1>
-    <p class="text-muted">
-      Build up to three decks without an account. Your drafts are saved only in
-      this browser; clearing browser data removes them. Sign in to save
-      unlimited decks and collections to your account.
-    </p>
+  <div class="w-full">
+    <div
+      class="my-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-info/30 bg-info/10 p-4"
+      role="note"
+    >
+      <p class="text-sm">
+        This deck is saved in your browser, We cannot control if it gets
+        deleted. Sign in to save your deck.
+      </p>
+      <UButton
+        v-if="!userProfile"
+        label="Sign in"
+        icon="i-lucide-log-in"
+        class="shrink-0"
+        @click="signIn"
+      />
+      <div v-else class="flex shrink-0 flex-wrap items-center gap-2">
+        <USelect
+          v-if="!draft.pendingSave"
+          v-model="visibility"
+          :items="visibilityOptions"
+          :disabled="saving"
+          aria-label="Deck visibility"
+        />
+        <UButton
+          :label="
+            draft.pendingSave ? 'Retry saving deck' : 'Save deck to account'
+          "
+          :loading="saving"
+          :disabled="!ready || !total"
+          @click="save"
+        />
+      </div>
+    </div>
+    <UAlert
+      v-if="storageError"
+      color="warning"
+      :description="storageError"
+      class="mb-4"
+    />
+    <UAlert v-if="message" color="error" :description="message" class="mb-4" />
     <ClientOnly>
       <template v-if="ready">
-        <UAlert
-          v-if="storageError"
-          color="warning"
-          :description="storageError"
-        />
-        <UAlert v-if="message" color="error" :description="message" />
-        <UFormField label="Browser draft">
+        <UFormField
+          v-if="draftOptions.length > 1"
+          label="Browser draft"
+          class="mb-4"
+        >
           <USelect
             v-model="activeIndex"
             :items="draftOptions"
             :disabled="saving"
             class="w-full sm:max-w-sm"
-            @update:model-value="
-              message = '';
-              search = '';
-              selected = undefined;
-            "
+            @update:model-value="message = ''"
           />
         </UFormField>
         <UAlert
           v-if="draft.pendingSave"
-          color="info"
-          description="Saving started. Retry saving to finish; your draft is kept here until every card is saved."
+          color="warning"
+          description="Saving started but did not finish. Retry saving to finish moving this draft to your account."
+          class="mb-4"
         />
-        <div class="flex flex-wrap items-end gap-3">
-          <UFormField label="Deck name" class="grow"
-            ><UInput
-              v-model="name"
-              :disabled="locked"
-              maxlength="200"
-              class="w-full"
-          /></UFormField>
-          <UFormField label="Format"
-            ><USelect v-model="format" :items="formats" :disabled="locked"
-          /></UFormField>
-          <UButton v-if="!userProfile" @click="signIn"
-            >Sign in to save deck</UButton
-          >
-          <UButton v-else :disabled="!total" :loading="saving" @click="save">{{
-            draft.pendingSave ? 'Retry saving deck' : 'Save deck to account'
-          }}</UButton>
-          <UButton variant="outline" :disabled="!total" @click="download"
-            >Export deck</UButton
-          >
-        </div>
-        <div class="flex flex-wrap items-end gap-3">
-          <UFormField label="Add card" class="grow min-w-48"
-            ><UInputMenu
-              v-model="selected"
-              v-model:search-term="search"
-              :items="options"
-              :disabled="locked"
-              placeholder="Search card names..."
-              class="w-full"
-              @update:model-value="addCard"
-          /></UFormField>
-          <UButton to="/search/all/smart" variant="outline"
-            >Find cards with Smart search</UButton
-          >
-          <UFormField label="View"
-            ><USelect
-              v-model="view"
-              :items="[
-                { label: 'Card grid', value: 'grid' },
-                { label: 'Text', value: 'text' },
-              ]"
-          /></UFormField>
-          <UFormField label="Group"
-            ><USelect
-              v-model="group"
-              :items="[
-                { label: 'Card type', value: 'type' },
-                { label: 'None', value: 'none' },
-              ]"
-          /></UFormField>
-          <UFormField label="Sort"
-            ><USelect
-              v-model="sort"
-              :items="[
-                { label: 'Name', value: 'name' },
-                { label: 'Mana value', value: 'cmc' },
-              ]"
-          /></UFormField>
-        </div>
-        <p role="status">
-          {{ total }} {{ total === 1 ? 'card' : 'cards' }} in browser draft
-        </p>
-        <SearchError v-if="cardsError" :error="cardsError" @retry="refetch()" />
-        <CardListResults
-          v-else
-          :is-loading="isLoading"
-          :is-owner="!locked"
-          :groups="groups.Mainboard ?? null"
-          :sideboard-groups="groups.Sideboard ?? null"
-          :considering-groups="groups.Considering ?? null"
-          :view="view"
-          :format="draft.format"
-          :list-items-map="copies"
-          :commander-oracle-ids="commanderIds"
-          @remove-card="removeCard"
-          @set-commander="setCommander"
-          @clear-commander="clearCommander"
-          @change-board="moveCard"
-          @update-num-copies="
-            (name, count, board) =>
-              change((next) => setGuestCopies(next, name, board, count))
-          "
+        <UAlert
+          v-if="source.error.value"
+          color="error"
+          title="Could not load your draft’s cards"
+          class="mb-4"
+          :actions="[{ label: 'Retry', onClick: () => source.retry() }]"
         />
+        <div :inert="saving">
+          <DeckEditor :key="activeIndex" :list-id="BROWSER_DECK_ID" />
+        </div>
       </template>
-      <template #fallback
-        ><p class="min-h-48">Loading your browser draft…</p></template
-      >
+      <template #fallback><CardListResultsSkeleton view="grid" /></template>
     </ClientOnly>
-  </UContainer>
+  </div>
 </template>

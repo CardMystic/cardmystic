@@ -1,6 +1,9 @@
 <template>
   <SpaceBackground :full="true">
-    <div class="hero px-0 w-full flex flex-col items-center justify-center">
+    <div
+      id="home-search"
+      class="hero px-0 w-full flex flex-col items-center justify-center"
+    >
       <UContainer
         class="hero-grid grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-8 items-center w-full max-w-350 relative z-10"
       >
@@ -73,6 +76,13 @@
           </NuxtLink>
         </div>
       </UContainer>
+      <NuxtLink
+        to="#learn-more"
+        class="absolute bottom-5 left-1/2 z-10 flex min-h-11 -translate-x-1/2 flex-col items-center gap-1 rounded px-4 text-sm text-white/80 hover:text-white focus-visible:outline-2 focus-visible:outline-primary"
+      >
+        Learn more
+        <UIcon name="i-lucide-arrow-down" class="size-5" aria-hidden="true" />
+      </NuxtLink>
     </div>
   </SpaceBackground>
 
@@ -82,10 +92,18 @@
       <RecentLists v-if="isLoggedIn" class="home-gallery mb-20 lg:mb-24" />
     </ClientOnly>
 
-    <SearchShowcase class="home-gallery mb-20 lg:mb-24" />
-
     <LazyFeaturedSection
-      :show-sign-in="!isLoggedIn"
+      hydrate-on-visible
+      class="home-gallery mb-20 lg:mb-24"
+    />
+
+    <LazySearchShowcase
+      :hydrate-on-visible="sectionVisibility"
+      id="learn-more"
+      class="home-gallery mb-20 scroll-mt-24 lg:mb-24"
+    />
+
+    <LazyFeaturedPrimers
       :hydrate-on-visible="sectionVisibility"
       class="home-gallery mb-20 lg:mb-24"
     />
@@ -95,12 +113,10 @@
       class="home-gallery mb-20 lg:mb-24"
     />
 
-    <ClientOnly>
-      <LazyTopQueries class="home-reading mb-10" />
-      <template #fallback>
-        <TopQueriesSkeleton class="home-reading mb-10" />
-      </template>
-    </ClientOnly>
+    <LazyTopQueries
+      :hydrate-on-visible="sectionVisibility"
+      class="home-reading mb-10"
+    />
     <LazyMeetTheDevs
       :hydrate-on-visible="sectionVisibility"
       class="home-reading mb-10"
@@ -117,11 +133,38 @@
       :hydrate-on-visible="sectionVisibility"
       class="home-reading"
     />
+    <section
+      id="home-call-to-action"
+      aria-labelledby="home-call-to-action-title"
+      class="home-reading mt-12 rounded-2xl border border-primary/25 bg-primary/5 px-6 py-10 text-center sm:mt-16"
+    >
+      <h2 id="home-call-to-action-title" class="text-2xl font-bold sm:text-3xl">
+        Ready to Give it a Try?
+      </h2>
+      <div class="mt-6 flex flex-wrap justify-center gap-3">
+        <UButton
+          to="/user/register"
+          no-prefetch
+          icon="i-lucide-user-plus"
+          size="lg"
+          >Create an account</UButton
+        >
+        <UButton
+          to="#home-search"
+          icon="i-lucide-search"
+          variant="outline"
+          size="lg"
+          >Search</UButton
+        >
+      </div>
+    </section>
   </UContainer>
 </template>
 
 <script setup lang="ts">
 import homeSchema from '~~/public/home.json';
+import adrixImage from '~/assets/images/adrix-and-nev.webp';
+import mondrakImage from '~/assets/images/mondrak.webp';
 
 import { safeJsonLd } from '~/utils/safeJsonLd';
 
@@ -152,17 +195,17 @@ useHead({
     {
       rel: 'preload',
       as: 'image',
-      href: '/adrix-and-nev.jpg',
+      href: adrixImage,
       media: '(min-width: 1024px)',
-      type: 'image/jpeg',
+      type: 'image/webp',
       fetchpriority: 'high',
     },
     {
       rel: 'preload',
       as: 'image',
-      href: '/mondrak.jpg',
+      href: mondrakImage,
       media: '(min-width: 1024px)',
-      type: 'image/jpeg',
+      type: 'image/webp',
       fetchpriority: 'high',
     },
   ],
@@ -190,13 +233,13 @@ const heroCards = [
   {
     id: '12a6cad9-eb42-43bd-9e68-aaf862cd83db',
     name: 'Adrix and Nev, Twincasters',
-    image: '/adrix-and-nev.jpg',
+    image: adrixImage,
     position: 'hero-card-back',
   },
   {
     id: 'fe83087d-c6c1-40be-9295-baaa1c6b2db1',
     name: 'Mondrak, Glory Dominus',
-    image: '/mondrak.jpg',
+    image: mondrakImage,
     position: 'hero-card-front',
   },
 ];
@@ -231,7 +274,7 @@ setPageInfo({
 .hero
   position: relative
   min-height: 100vh
-  padding: 110px 0 60px
+  padding: 110px 0 96px
   display: flex
   flex-direction: column
   align-items: center
@@ -239,7 +282,7 @@ setPageInfo({
   border-bottom: 3px solid white
   overflow: hidden
   @media (max-width: 1023px)
-    padding: 90px 0 40px
+    padding: 90px 0 96px
 
 .hero-eyebrow
   font-family: monospace

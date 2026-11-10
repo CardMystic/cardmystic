@@ -16,7 +16,8 @@ const CLIENT_ONLY_WHITELIST = new Set<string>([
   'plugins/auth.client.ts', // .client.ts plugin, never runs on server
 ]);
 
-const GUARD_PATTERN = /process\.server\s*\?\s*null\s*:\s*useSupabase\(\)/;
+const GUARD_PATTERN =
+  /(?:process\.server|import\.meta\.server)\s*\?\s*null\s*:\s*useSupabase\(\)/;
 const CALL_PATTERN = /\buseSupabase\(\)/;
 
 const repoRoot = resolve(fileURLToPath(import.meta.url), '../../..');

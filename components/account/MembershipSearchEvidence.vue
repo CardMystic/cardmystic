@@ -3,6 +3,30 @@ import benchmark from '~~/public/benchmarks/search-quality-graded-2026-09-28.jso
 defineProps<{ stacked?: boolean; compact?: boolean }>();
 const headingId = useId();
 const captionId = useId();
+const chart = useTemplateRef<HTMLElement>('chart');
+const barsReady = ref(false);
+let observer: IntersectionObserver | undefined;
+onMounted(() => {
+  if (!('IntersectionObserver' in window)) {
+    barsReady.value = true;
+    return;
+  }
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries.some(
+          (entry) => entry.isIntersecting && entry.intersectionRatio >= 0.35,
+        )
+      ) {
+        barsReady.value = true;
+        observer?.disconnect();
+      }
+    },
+    { threshold: [0, 0.35] },
+  );
+  if (chart.value) observer.observe(chart.value);
+});
+onBeforeUnmount(() => observer?.disconnect());
 const modes = benchmark.modes
   .filter((mode) => mode.id !== 'pro')
   .map((mode) => ({
@@ -42,7 +66,12 @@ const displayScore = (score: number) =>
         vary.
       </p>
     </div>
-    <figure class="evidence-chart" :aria-labelledby="captionId">
+    <figure
+      ref="chart"
+      class="evidence-chart"
+      :class="{ 'bars-ready': barsReady }"
+      :aria-labelledby="captionId"
+    >
       <figcaption :id="captionId" :class="{ 'sr-only': compact }">
         Ranking quality score <span>(out of 100)</span>
       </figcaption>
@@ -152,6 +181,15 @@ const displayScore = (score: number) =>
   display: block;
   height: 100%;
   background: var(--bar-color);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bars-ready .evidence-fill {
+  transform: scaleX(1);
+}
+.evidence-row[data-mode='enhanced'] .evidence-fill {
+  transition-delay: 160ms;
 }
 .evidence-axis {
   display: flex;

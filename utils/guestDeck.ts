@@ -15,6 +15,9 @@ export const guestDeckSchema = z.object({
   version: z.literal(1),
   name: z.string().max(200),
   format: CardListFormatSchema,
+  description: z.string().max(1000).default(''),
+  bracket: z.number().int().min(1).max(5).nullable().default(null),
+  avatarCardName: z.string().max(200).nullable().default(null),
   cards: z.array(entrySchema).max(1000),
   commanders: z.array(z.string().min(1).max(200)).max(2),
   pendingSave: z.object({ userId: z.guid(), listId: z.guid() }).nullable(),
@@ -25,34 +28,60 @@ export function emptyGuestDeck(): GuestDeck {
     version: 1,
     name: 'My first deck',
     format: 'Commander',
+    description: '',
+    bracket: null,
+    avatarCardName: null,
     cards: [],
     commanders: [],
     pendingSave: null,
   };
 }
 
-export const guestDecksSchema = z.object({
-  version: z.literal(2),
-  activeIndex: z.number().int().min(0).max(2),
-  decks: z.tuple([guestDeckSchema, guestDeckSchema, guestDeckSchema]),
-});
+export const guestDecksSchema = z
+  .object({
+    version: z.literal(2),
+    activeIndex: z.number().int().min(0).max(2),
+    // Accept older three-draft saves so existing work stays recoverable.
+    decks: z.array(guestDeckSchema).min(1).max(3),
+  })
+  .refine((value) => value.activeIndex < value.decks.length);
 export type GuestDecks = z.infer<typeof guestDecksSchema>;
 export function emptyGuestDecks(): GuestDecks {
   return {
     version: 2,
     activeIndex: 0,
-    decks: [
-      emptyGuestDeck(),
-      { ...emptyGuestDeck(), name: 'My second deck' },
-      { ...emptyGuestDeck(), name: 'My third deck' },
-    ],
+    decks: [emptyGuestDeck()],
   };
 }
 export function loadGuestDecks(
   saved: string | null,
   legacy: string | null,
 ): GuestDecks {
-  if (saved) return guestDecksSchema.parse(JSON.parse(saved));
+  if (saved) {
+    const previous = guestDecksSchema.parse(JSON.parse(saved));
+    const defaults = ['My first deck', 'My second deck', 'My third deck'];
+    const kept = previous.decks.flatMap((deck, index) =>
+      deck.cards.length ||
+      deck.commanders.length ||
+      deck.pendingSave ||
+      deck.name !== defaults[index] ||
+      deck.description ||
+      deck.bracket ||
+      deck.avatarCardName ||
+      deck.format !== 'Commander'
+        ? [{ deck, index }]
+        : [],
+    );
+    if (!kept.length) return emptyGuestDecks();
+    return {
+      version: 2,
+      activeIndex: Math.max(
+        0,
+        kept.findIndex(({ index }) => index === previous.activeIndex),
+      ),
+      decks: kept.map(({ deck }) => deck),
+    };
+  }
   const drafts = emptyGuestDecks();
   if (legacy) drafts.decks[0] = guestDeckSchema.parse(JSON.parse(legacy));
   return drafts;

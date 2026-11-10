@@ -56,7 +56,8 @@ function closePopover() {
   isOpen.value = false;
 }
 
-const { data: collections, status: collectionStatus } = useCardCollections();
+const { data: collections, status: collectionStatus } =
+  useNavigationCollections();
 const searchItems = computed(() =>
   siteNavigation(collections.value, collectionStatus.value),
 );

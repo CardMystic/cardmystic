@@ -8,7 +8,7 @@ import {
   type GuestDeck,
 } from '~/utils/guestDeck';
 
-/** Three compact browser drafts. Full card records are fetched, not persisted. */
+/** One browser draft, retaining any older saved drafts for recovery. */
 export function useGuestDeck() {
   const drafts = useState('guest-decks', emptyGuestDecks);
   const draft = computed(() => drafts.value.decks[drafts.value.activeIndex]!);
@@ -42,7 +42,12 @@ export function useGuestDeck() {
   const activeIndex = computed({
     get: () => drafts.value.activeIndex,
     set: (index: number) => {
-      if (!ready.value || !Number.isInteger(index) || index < 0 || index > 2)
+      if (
+        !ready.value ||
+        !Number.isInteger(index) ||
+        index < 0 ||
+        index >= drafts.value.decks.length
+      )
         return;
       drafts.value.activeIndex = index;
       storeDrafts();

@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { BACKEND, SUPABASE, gotoHydrated } from './utils/mocks';
 
-test('free users see locked deck tools and suggestions without fetching recommendations', async ({
+test('free users get Pro actions without fetching recommendations', async ({
   page,
 }) => {
   let requests = 0;
@@ -17,15 +17,13 @@ test('free users see locked deck tools and suggestions without fetching recommen
     return route.fulfill({ json: { results: [] } });
   });
   await expect(
-    page.getByRole('link', { name: 'Subscribe for suggestions' }),
-  ).toBeVisible();
+    page.getByRole('region', { name: 'Suggested cards' }),
+  ).toHaveCount(0);
   expect(state.writes).toHaveLength(0);
   await openDeckAction(page, 'Compare decks');
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
-  await page
-    .getByRole('button', { name: 'Search Within Deck', exact: true })
-    .click();
+  await openDeckAction(page, 'Suggest Adds · Pro');
   await expect(page).toHaveURL(/\/memberships/);
   expect(requests).toBe(0);
 });
@@ -62,7 +60,10 @@ test('Pro searches filter cards on the collection page, keyword works, and clear
     },
   );
   await page
-    .getByRole('button', { name: 'Search Within Collection', exact: true })
+    .getByRole('button', {
+      name: 'Search Within Collection · Pro',
+      exact: true,
+    })
     .click();
   await page
     .getByRole('textbox', { name: 'Search within list', exact: true })
@@ -155,6 +156,7 @@ test('suggestion queue advances without searching again and refills only when ex
     },
   );
   const section = page.getByRole('region', { name: 'Suggested cards' });
+  await openDeckAction(page, 'Suggest Adds · Pro');
   await section.scrollIntoViewIfNeeded();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -565,6 +567,7 @@ test('Show more reveals queued cards without another recommendation request', as
     name: 'Suggested cards',
     exact: true,
   });
+  await openDeckAction(page, 'Suggest Adds · Pro');
   await section.scrollIntoViewIfNeeded();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -763,6 +766,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
     name: 'Suggested cards',
     exact: true,
   });
+  await openDeckAction(page, 'Suggest Adds · Pro');
   await suggestions.scrollIntoViewIfNeeded();
   await expect(
     suggestions.getByText('Target card budget (USD)', { exact: true }),
@@ -776,8 +780,11 @@ test('Pro budget and ownership controls use the selected budget and collection',
     name: 'New Cards for Deck',
     exact: true,
   });
+  await openDeckAction(page, 'Suggest New Cards · Pro');
   await expect(alerts.getByRole('spinbutton')).toHaveValue('25');
   await page.reload();
+  await openDeckAction(page, 'Suggest Adds · Pro');
+  await openDeckAction(page, 'Suggest New Cards · Pro');
   await suggestions.scrollIntoViewIfNeeded();
   await expect(suggestions.getByRole('spinbutton')).toHaveValue('25');
   await expect(alerts.getByRole('spinbutton')).toHaveValue('25');
@@ -785,6 +792,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
   await alerts.getByRole('button', { name: 'Apply budget' }).click();
   await expect(suggestions.getByRole('spinbutton')).toHaveValue('');
   await page.reload();
+  await openDeckAction(page, 'Suggest Adds · Pro');
   await suggestions.scrollIntoViewIfNeeded();
   await expect(suggestions.getByRole('spinbutton')).toHaveValue('');
   await page.getByRole('button', { name: 'Highlight', exact: true }).click();
@@ -869,6 +877,66 @@ test('search card modal automatically fetches deck matches for Pro and adds dire
     page.getByRole('link', { name: 'Another matching deck', exact: true }),
   ).toBeVisible();
   expect(offsets).toEqual([0, 25]);
+});
+
+test('Suggested Decks distinguishes a Jev outage from an empty judgment and permits retry', async ({
+  page,
+}) => {
+  const state = await setupDeckDisplay(page, { pro: true });
+  await page.route(BACKEND + '/search/colbert', (route) =>
+    route.fulfill({
+      json: state.cards.map((card, index) => ({
+        card_name: card.name,
+        card_data: card,
+        rank: index + 1,
+        ai_normalized_score: 0.9,
+      })),
+    }),
+  );
+  let requests = 0;
+  await page.route(BACKEND + '/library/cards/deck-fit', (route) => {
+    requests++;
+    return requests === 1
+      ? route.fulfill({
+          status: 503,
+          json: {
+            message: 'Deck recommendations are temporarily unavailable.',
+          },
+        })
+      : route.fulfill({
+          json: {
+            results: [],
+            supported: true,
+            evaluator: 'jev',
+            nextOffset: null,
+          },
+        });
+  });
+  await gotoHydrated(page, '/search/all/smart?query=draw+cards');
+  await page
+    .getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
+      exact: true,
+    })
+    .first()
+    .click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'temporarily unavailable' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('No matching decks in this batch.', { exact: true }),
+  ).not.toBeVisible();
+  expect(requests).toBe(1);
+  await page
+    .getByRole('button', { name: 'Check more decks', exact: true })
+    .click();
+  await expect(
+    page.getByText('No matching decks in this batch.', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'temporarily unavailable' }),
+  ).not.toBeVisible();
+  expect(requests).toBe(2);
 });
 
 test('decks move into folders by dragging and move back through settings on mobile', async ({

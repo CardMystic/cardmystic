@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :to="`/user/${profile.id}`"
-    class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
+    class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden shadow-lg shadow-black/30 hover:border-primary transition-colors cursor-pointer group"
   >
     <img
       v-if="bannerImageUrl"

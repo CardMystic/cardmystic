@@ -100,10 +100,19 @@ export default defineNuxtConfig({
   plugins: ['~/plugins/vue-query.ts'],
   modules: ['@nuxt/ui', 'nuxt-vitalizer'],
   icon: {
-    // Keep plus icons immediately available. A delayed loading icon can otherwise
-    // race a name change and register its CSS under the plus icon's selector.
+    // Include icons that otherwise trigger late requests during homepage startup
+    // or the first search interaction. SSR already supplies the static icons.
     clientBundle: {
-      icons: ['heroicons:plus', 'lucide:plus'],
+      icons: [
+        'heroicons:plus',
+        'lucide:plus',
+        'lucide:check',
+        'lucide:circle-x',
+        'lucide:trending-up',
+        'lucide:bookmark',
+        'lucide:chevron-right',
+        'lucide:eye',
+      ],
     },
   },
   vitalizer: {

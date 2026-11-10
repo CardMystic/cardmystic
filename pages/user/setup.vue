@@ -85,13 +85,8 @@ function finishSetup() {
   setupDestination ??= takeGuestDeckReturn() ?? '/user/account';
   router.push(setupDestination);
 }
-const {
-  userProfile,
-  profileData,
-  profileIconUrl,
-  updateUsernameMutation,
-  updateAvatarMutation,
-} = useUserProfile();
+const { userProfile, profileData, profileIconUrl } = useUserProfile();
+const { updateAvatarMutation, updateUsernameMutation } = useAccountActions();
 
 const username = ref('');
 const errorMessage = ref<string | null>(null);

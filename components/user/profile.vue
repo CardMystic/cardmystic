@@ -14,12 +14,14 @@ const {
   username: computedUsername,
   profileIconUrl,
   signOut,
+} = useUserProfile();
+const {
+  validatePasswordPolicy,
   updateAvatarMutation,
   updateUsernameMutation,
   updateEmailMutation,
   updatePasswordMutation,
-  validatePasswordPolicy,
-} = useUserProfile();
+} = useAccountActions();
 
 const username = ref(computedUsername.value);
 const newEmail = ref(userProfile.value?.email || '');

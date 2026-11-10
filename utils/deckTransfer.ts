@@ -8,6 +8,75 @@ export interface TransferCard {
   mtgo?: boolean;
 }
 export type DeckExportFormat = 'text' | 'arena' | 'mtgo' | 'csv';
+const transferBoards = ['Mainboard', 'Sideboard', 'Considering'] as const;
+
+export function summarizeImportBoards(cards: TransferCard[]): string {
+  return transferBoards
+    .map((board) => ({
+      board,
+      count: cards
+        .filter((card) => card.board === board)
+        .reduce((sum, card) => sum + card.quantity, 0),
+    }))
+    .filter(({ count }) => count > 0)
+    .map(({ board, count }) => `${count} ${board}`)
+    .join(' · ');
+}
+
+interface ImportBatchResult {
+  addedCount: number;
+  updatedCount: number;
+  invalidCardNames: string[];
+}
+
+export async function applyDeckImport(
+  cards: TransferCard[],
+  add: (
+    board: TransferBoard,
+    cardNames: string[],
+  ) => Promise<ImportBatchResult>,
+  setCommander: (name: string) => Promise<unknown>,
+) {
+  let confirmedEntries = 0;
+  const missing = new Map<string, string>();
+  let stage: 'cards' | 'commanders' = 'cards';
+  try {
+    for (const board of transferBoards) {
+      const entries = cards.filter((card) => card.board === board);
+      for (let offset = 0; offset < entries.length; offset += 500) {
+        const result = await add(
+          board,
+          entries
+            .slice(offset, offset + 500)
+            .map((card) => `${card.quantity} ${card.name}`),
+        );
+        confirmedEntries += result.addedCount + result.updatedCount;
+        for (const name of result.invalidCardNames)
+          missing.set(name.trim().toLowerCase(), name);
+      }
+    }
+    stage = 'commanders';
+    for (const card of cards.filter((card) => card.commander)) {
+      if (!missing.has(card.name.trim().toLowerCase()))
+        await setCommander(card.name);
+    }
+    return {
+      confirmedEntries,
+      invalidCardNames: [...missing.values()],
+      failure: null,
+    };
+  } catch (cause) {
+    return {
+      confirmedEntries,
+      invalidCardNames: [...missing.values()],
+      failure: {
+        stage,
+        message: cause instanceof Error ? cause.message : String(cause),
+      },
+    };
+  }
+}
+
 const header = (s: string) => s.trim().toLowerCase().replace(/[ _-]/g, '');
 const boardFor = (s: string): TransferBoard =>
   /sideboard|companion|^sb$/i.test(s)

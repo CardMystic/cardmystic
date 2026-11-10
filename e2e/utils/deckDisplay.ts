@@ -162,6 +162,11 @@ export async function setupDeckDisplay(
     }),
   );
   let savedBudget: number | null = null;
+  await page.route(BACKEND + '/library/lists/*/new-cards', (route) =>
+    route.fulfill({
+      json: { set: null, acknowledgedAt: null, shouldSuggest: false },
+    }),
+  );
   await page.route(BACKEND + '/library/lists/*/budget', (route) => {
     if (route.request().method() === 'PUT')
       savedBudget = route.request().postDataJSON().targetBudget;

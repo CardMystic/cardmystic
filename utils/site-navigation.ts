@@ -1,9 +1,9 @@
 import type { NavigationMenuItem } from '@nuxt/ui';
+import { collectionPath, type CardCollectionKind } from './card-collections';
 import {
-  collectionPath,
-  type CardCollectionCatalog,
-  type CardCollectionKind,
-} from './card-collections';
+  navigationEntries,
+  type NavigationCatalog,
+} from './navigationCollections';
 
 export interface SiteNavigationItem extends NavigationMenuItem {
   setCode?: string;
@@ -22,16 +22,11 @@ export const utilityNavigation: SiteNavigationItem[] = [
 
 function collectionNavigation(
   kind: CardCollectionKind,
-  catalog: CardCollectionCatalog | null | undefined,
+  catalog: NavigationCatalog | null | undefined,
   status: string,
 ): SiteNavigationItem {
   const label = kind.charAt(0).toUpperCase() + kind.slice(1);
-  const entries = [...(catalog?.[kind] ?? [])].sort((a, b) =>
-    kind === 'sets'
-      ? (b.releasedAt ?? '').localeCompare(a.releasedAt ?? '') ||
-        a.name.localeCompare(b.name)
-      : b.cardCount - a.cardCount || a.name.localeCompare(b.name),
-  );
+  const entries = navigationEntries(kind, catalog?.[kind] ?? []);
   return {
     label,
     icon: {
@@ -68,7 +63,7 @@ function collectionNavigation(
 }
 
 export function siteNavigation(
-  catalog: CardCollectionCatalog | null | undefined,
+  catalog: NavigationCatalog | null | undefined,
   status = 'success',
 ): SiteNavigationItem[] {
   return [

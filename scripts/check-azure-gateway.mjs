@@ -70,7 +70,7 @@ try {
   }
 
   await test('Azure returns decoded JSON without upstream transport or private headers', async () => {
-    const response = await request('/cache/top');
+    const response = await request('/cache/popular');
     assert.equal(response.status, 200);
     assert.deepEqual(
       JSON.parse(Buffer.from(response.body).toString()),

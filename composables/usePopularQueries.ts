@@ -1,24 +1,6 @@
-import { useQuery } from '@tanstack/vue-query';
+import { POPULAR_QUERIES } from '~/utils/popularQueries';
 
-/** The backend's curated cache list also powers homepage and input suggestions. */
+/** Curated suggestions are bundled so they are available during server rendering. */
 export function usePopularQueries() {
-  const config = useRuntimeConfig();
-  const {
-    data: popularQueries,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['cache', 'popularQueries'],
-    queryFn: async (): Promise<string[]> => {
-      const response = await fetch(
-        `${config.public.backendPath}/cache/popular`,
-      );
-      if (!response.ok) throw new Error('Failed to load popular searches');
-      return response.json();
-    },
-    staleTime: 1000 * 60 * 60,
-    refetchOnWindowFocus: false,
-    retry: false,
-  });
-  return { popularQueries, isLoading, error };
+  return { popularQueries: computed(() => POPULAR_QUERIES) };
 }

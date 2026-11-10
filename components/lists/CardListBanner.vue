@@ -104,7 +104,7 @@
           </div>
           <!-- Visibility selector (owner only) -->
           <USelect
-            v-if="isOwner"
+            v-if="isOwner && !browser"
             :model-value="list.visibility || 'private'"
             :items="visibilityOptions"
             :loading="updateVisibilityMutation.isPending.value"
@@ -274,6 +274,7 @@ const props = defineProps<{
 }>();
 
 const toast = useToast();
+const browser = useBrowserDeckSource();
 
 const {
   updateListAvatarMutation,

@@ -122,6 +122,12 @@ async function revealHomeSections(page: Page) {
     name: 'Recent Articles',
     exact: true,
   });
+  const primersHeading = page.getByRole('heading', {
+    name: 'Suggested Primer Reads',
+    exact: true,
+  });
+  if (await primersHeading.count())
+    await primersHeading.scrollIntoViewIfNeeded();
   if (await articlesHeading.count())
     await articlesHeading.scrollIntoViewIfNeeded();
   await page
@@ -350,10 +356,7 @@ test(
         (route) => route.fulfill({ json: section.data }),
       );
     }
-    const topQuery = 'Creatures that draw cards';
-    await page.route(BACKEND + '/cache/popular', (route) =>
-      route.fulfill({ json: [topQuery] }),
-    );
+    const topQuery = 'card draw';
     await page.route(
       /https:\/\/(?:api|cards)\.scryfall\.(?:com|io)\//,
       (route) =>
