@@ -5,17 +5,12 @@ const props = defineProps<{
   path: string;
 }>();
 
-useSeoMeta({
+usePublicPageSeo({
   title: () => `${props.title} | CardMystic`,
   description: () => props.description,
-  ogTitle: () => `${props.title} | CardMystic`,
-  ogDescription: () => props.description,
-  ogUrl: () => `https://cardmystic.com${props.path}`,
-  twitterCard: 'summary',
+  path: () => props.path,
+  schemaType: 'WebPage',
 });
-useHead(() => ({
-  link: [{ rel: 'canonical', href: `https://cardmystic.com${props.path}` }],
-}));
 </script>
 
 <template>

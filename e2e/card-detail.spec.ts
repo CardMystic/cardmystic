@@ -65,15 +65,23 @@ test.describe('Card detail page', () => {
     // The related-cards section is wrapped in <ClientOnly> so it only renders
     // after hydration.  gotoHydrated already waits for networkidle, so the
     // tab buttons should be present by the time we assert.
-    const section = page.locator('.similar-cards-section');
+    const section = page.locator('.card-results');
     await expect(section).toBeVisible({ timeout: SEARCH_TIMEOUT });
 
     // Non-commander cards show "Similar Cards" and "Commanders" tabs.
     // Labels are full text at ≥lg viewport (Playwright default: 1280px).
     await expect(
-      section.getByRole('tab', { name: 'Similar Cards' }),
+      section.getByRole('button', {
+        name: 'Similar To This Card',
+        exact: true,
+      }),
     ).toBeVisible({ timeout: SEARCH_TIMEOUT });
-    await expect(section.getByRole('tab', { name: 'Commanders' })).toBeVisible({
+    await expect(
+      section.getByRole('button', {
+        name: 'Popular Commanders As 99',
+        exact: true,
+      }),
+    ).toBeVisible({
       timeout: SEARCH_TIMEOUT,
     });
   });

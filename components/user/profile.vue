@@ -14,12 +14,14 @@ const {
   username: computedUsername,
   profileIconUrl,
   signOut,
+} = useUserProfile();
+const {
+  validatePasswordPolicy,
   updateAvatarMutation,
   updateUsernameMutation,
   updateEmailMutation,
   updatePasswordMutation,
-  validatePasswordPolicy,
-} = useUserProfile();
+} = useAccountActions();
 
 const username = ref(computedUsername.value);
 const newEmail = ref(userProfile.value?.email || '');
@@ -32,6 +34,15 @@ const showPasswords = ref(false);
 
 // Profile icon card selection
 const selectedProfileCard = ref(profileData.value?.avatar_card_name || '');
+const selectedProfilePrinting = ref<string | null>(
+  profileData.value?.avatar_printing_id ?? null,
+);
+watch(
+  () => profileData.value?.avatar_printing_id,
+  (value) => {
+    selectedProfilePrinting.value = value ?? null;
+  },
+);
 const searchTerm = ref('');
 const debouncedSearchTerm = refDebounced(searchTerm, 150);
 
@@ -78,13 +89,17 @@ const filteredCards = computed(() => {
   return filtered;
 });
 
-const updateProfileCard = async (cardName: string) => {
+const updateProfileCard = async (
+  cardName: string,
+  printingId: string | null = null,
+) => {
   if (!cardName) return;
   errorMessage.value = null;
   successMessage.value = null;
   try {
-    await updateAvatarMutation.mutateAsync(cardName);
+    await updateAvatarMutation.mutateAsync({ cardName, printingId });
     selectedProfileCard.value = cardName;
+    selectedProfilePrinting.value = printingId;
     successMessage.value = 'Profile icon updated successfully!';
   } catch (e: any) {
     errorMessage.value = e.message;
@@ -215,11 +230,13 @@ const handleSignOut = async () => {
               </div>
 
               <UPopover>
-                <div
+                <button
+                  type="button"
+                  aria-label="Change profile image"
                   class="absolute inset-0 rounded-full flex items-center justify-center cursor-pointer"
                 >
                   <UIcon name="i-lucide-pencil" class="w-6 h-6" />
-                </div>
+                </button>
                 <template #content>
                   <div class="p-4 w-80">
                     <h3 class="text-sm font-semibold mb-2">
@@ -233,7 +250,15 @@ const handleSignOut = async () => {
                       placeholder="Search for a card..."
                       icon="i-lucide-search"
                       class="w-full"
-                      @update:model-value="updateProfileCard"
+                      @update:model-value="(name) => updateProfileCard(name)"
+                    />
+                    <CardArtPrintingSelect
+                      :model-value="selectedProfilePrinting"
+                      :card-name="selectedProfileCard"
+                      :busy="updateAvatarMutation.isPending.value"
+                      @update:model-value="
+                        (id) => updateProfileCard(selectedProfileCard, id)
+                      "
                     />
                     <p class="text-xs text-gray-600 dark:text-zinc-400 mt-2">
                       Search for an MTG card to use as your profile icon

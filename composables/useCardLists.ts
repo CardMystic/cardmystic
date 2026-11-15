@@ -1,3 +1,4 @@
+import { useBrowserDeckSource, BROWSER_DECK_ID } from './useBrowserDeckSource';
 import { fetchAllRows } from '~/utils/fetchAllRows';
 import { useSupabase } from './useSupabase';
 import { useUserProfile } from './useUserProfile';
@@ -206,6 +207,7 @@ function throwIfDeckCapExceeded(err: unknown): void {
 }
 
 export const useCardLists = () => {
+  const browser = useBrowserDeckSource();
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
@@ -251,7 +253,8 @@ export const useCardLists = () => {
           description: description?.trim() || undefined,
           format: format || 'Commander',
           commanders: commanders?.filter((c) => c.trim()) || [],
-          visibility: visibility || 'private',
+          visibility:
+            visibility ?? (kind === 'collection' ? 'private' : 'public'),
         },
       },
     );
@@ -324,6 +327,8 @@ export const useCardLists = () => {
     oracleIds: string[],
     board?: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.addIds(oracleIds, board);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -394,6 +399,8 @@ export const useCardLists = () => {
     cardNames: string[],
     board: 'Mainboard' | 'Sideboard' | 'Considering' = 'Mainboard',
   ) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.addNames(cardNames, board);
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -458,9 +465,14 @@ export const useCardLists = () => {
     },
   });
 
-  const bulkEditList = async (
-    request: BulkEditRequest,
-  ): Promise<BulkEditResponse> => {
+  const bulkEditList = async ({
+    originalGuestCards,
+    ...request
+  }: BulkEditRequest & {
+    originalGuestCards?: string;
+  }): Promise<BulkEditResponse> => {
+    if (browser && request.listId === BROWSER_DECK_ID)
+      return browser.bulkEdit(request, originalGuestCards);
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -496,9 +508,7 @@ export const useCardLists = () => {
   };
 
   const bulkEditListMutation = useMutation({
-    mutationFn: async (request: BulkEditRequest) => {
-      return bulkEditList(request);
-    },
+    mutationFn: bulkEditList,
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({
         queryKey: ['list-items', request.listId],
@@ -515,7 +525,7 @@ export const useCardLists = () => {
   const useListItems = (listId: Ref<string> | string) => {
     const listIdRef = typeof listId === 'string' ? ref(listId) : listId;
 
-    return useQuery({
+    const query = useQuery({
       queryKey: computed(() => ['list-items', listIdRef.value]),
       queryFn: async () => {
         if (!supabase) return [];
@@ -532,15 +542,33 @@ export const useCardLists = () => {
         if (error) throw error;
         return data;
       },
-      enabled: computed(() => !!supabase && !!listIdRef.value),
+      enabled: computed(
+        () =>
+          !!supabase &&
+          !!listIdRef.value &&
+          listIdRef.value !== BROWSER_DECK_ID,
+      ),
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
+    return {
+      ...query,
+      data: computed(() =>
+        browser && listIdRef.value === BROWSER_DECK_ID
+          ? browser.items.value
+          : query.data.value,
+      ),
+      isLoading: computed(() =>
+        browser && listIdRef.value === BROWSER_DECK_ID
+          ? browser.loading.value
+          : query.isLoading.value,
+      ),
+    };
   };
 
   // Get card details for list items with TanStack Query
   const useListCards = (listId: string, oracleIds: Ref<string[]>) => {
     const config = useRuntimeConfig();
-    return useQuery({
+    const query = useQuery({
       // Include oracleIds in the queryKey so it refetches when the list items change
       queryKey: computed(() => ['list-cards', listId, oracleIds.value]),
       queryFn: async () => {
@@ -564,10 +592,30 @@ export const useCardLists = () => {
           card_data: cardData,
         }));
       },
-      enabled: computed(() => oracleIds.value.length > 0),
+      enabled: computed(
+        () => oracleIds.value.length > 0 && listId !== BROWSER_DECK_ID,
+      ),
       staleTime: 1000 * 60 * 10, // 10 minutes
       placeholderData: keepPreviousData,
     });
+    return {
+      ...query,
+      data: computed(() =>
+        browser && listId === BROWSER_DECK_ID
+          ? browser.cards.value
+          : query.data.value,
+      ),
+      isLoading: computed(() =>
+        browser && listId === BROWSER_DECK_ID
+          ? browser.loading.value
+          : query.isLoading.value,
+      ),
+      isFetching: computed(() =>
+        browser && listId === BROWSER_DECK_ID
+          ? browser.loading.value
+          : query.isFetching.value,
+      ),
+    };
   };
 
   const removeCardFromList = async (
@@ -575,6 +623,8 @@ export const useCardLists = () => {
     oracleId: string | string[],
     board?: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.remove(oracleId, board);
     if (!supabase) return;
 
     const oracleIds = Array.isArray(oracleId) ? oracleId : [oracleId];
@@ -671,6 +721,7 @@ export const useCardLists = () => {
   });
 
   const deleteList = async (listId: string) => {
+    if (browser && listId === BROWSER_DECK_ID) return browser.reset();
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -704,6 +755,7 @@ export const useCardLists = () => {
       bracket?: number | null;
     },
   ) => {
+    if (browser && listId === BROWSER_DECK_ID) return browser.update(updates);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -740,7 +792,13 @@ export const useCardLists = () => {
     },
   });
 
-  const updateListAvatar = async (listId: string, cardName: string) => {
+  const updateListAvatar = async (
+    listId: string,
+    cardName: string,
+    printingId: string | null = null,
+  ) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.avatar(cardName, printingId);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -750,6 +808,7 @@ export const useCardLists = () => {
       .from('card_lists')
       .update({
         avatar_card_name: cardName,
+        avatar_printing_id: printingId,
         updated_at: new Date().toISOString(),
       })
       .eq('id', listId);
@@ -761,12 +820,14 @@ export const useCardLists = () => {
     mutationFn: async ({
       listId,
       cardName,
+      printingId = null,
     }: {
       listId: string;
       cardName: string;
+      printingId?: string | null;
     }) => {
       if (!supabase) return;
-      return updateListAvatar(listId, cardName);
+      return updateListAvatar(listId, cardName, printingId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });
@@ -775,6 +836,8 @@ export const useCardLists = () => {
   });
 
   const setCommander = async (listId: string, commanderName: string) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.setCommander(commanderName);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -825,6 +888,8 @@ export const useCardLists = () => {
   });
 
   const clearCommander = async (listId: string, oracleId?: string) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.clearCommander(oracleId);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -863,6 +928,8 @@ export const useCardLists = () => {
   });
 
   const updateFormat = async (listId: string, format: CardListFormatType) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.updateFormat(format);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -972,6 +1039,8 @@ export const useCardLists = () => {
     numCopies: number,
     fromBoard?: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.copies(cardName, numCopies, fromBoard);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -1032,6 +1101,8 @@ export const useCardLists = () => {
     board: 'Mainboard' | 'Sideboard' | 'Considering',
     fromBoard?: 'Mainboard' | 'Sideboard' | 'Considering',
   ) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.move(cardName, board, fromBoard);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');

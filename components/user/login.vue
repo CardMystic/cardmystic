@@ -5,7 +5,7 @@ const router = useRouter();
 const route = useRoute();
 
 const { loginWithEmail, loginWithGoogle, resendVerificationEmail } =
-  useUserProfile();
+  useAccountActions();
 
 const email = ref('');
 const password = ref('');
@@ -47,7 +47,13 @@ const signInWithEmail = async () => {
       password: password.value,
     };
     await loginWithEmail(credentials);
-    router.push(route.query.redirect === '/memberships' ? '/memberships' : '/');
+    router.push(
+      route.query.redirect === '/build'
+        ? '/build'
+        : route.query.redirect === '/memberships'
+          ? '/memberships'
+          : '/',
+    );
   } catch (e: any) {
     errorMessage.value = e.message || 'An unexpected error occurred.';
     if (/not confirmed|confirm your email/i.test(errorMessage.value ?? '')) {

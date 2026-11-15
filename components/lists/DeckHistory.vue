@@ -286,6 +286,7 @@ async function restore() {
       <template #footer
         ><UButton
           label="Cancel"
+          color="neutral"
           variant="outline"
           :disabled="busy"
           @click="selected = null" /><UButton

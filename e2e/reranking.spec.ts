@@ -146,7 +146,7 @@ test('Smart Search toggles the active ranking and keeps URL state across history
   await expect(toggle).toContainText('Pro');
   await expect(
     page.getByText('Unlimited | Memberships', { exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
 
   const offResponsePromise = waitForRanking(page, false);
   await toggleSearchMode(page);

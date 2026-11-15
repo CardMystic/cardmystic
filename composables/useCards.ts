@@ -4,8 +4,8 @@ import type { Card, ScryfallCard } from '~/models/cardModel';
 import type { CardLlmResponse } from '~/models/llmModel';
 
 /**
- * Composable for fetching a single card + its printings (lazy).
- * The card fetch blocks rendering (SSR); printings load in the background.
+ * Composable for fetching a single card. The card fetch blocks rendering (SSR).
+ * Printing selectors load the shared catalog separately in the browser.
  * The parameter is the card's Scryfall `oracle_id`; the backend returns the
  * canonical printing for that oracle.
  */
@@ -53,30 +53,11 @@ export function useCardDetails(oracleId: ComputedRef<string>) {
 
   const pending = computed(() => asyncStatus.value === 'pending');
 
-  const { data: printings } = useQuery<ScryfallCard[]>({
-    queryKey: computed(() => ['card-printings', card.value?.prints_search_uri]),
-    queryFn: async () => {
-      if (!card.value?.prints_search_uri) return [];
-      try {
-        const result = await $fetch<{ data: ScryfallCard[] }>(
-          card.value.prints_search_uri,
-        );
-        return result.data || [];
-      } catch (err) {
-        console.error('Printings fetch failed', err);
-        return [];
-      }
-    },
-    enabled: computed(() => !!card.value?.prints_search_uri),
-    staleTime: 1000 * 60 * 15,
-  });
-
   return {
     // The page awaits this before setting HTTP status, redirects and metadata.
     ready: request,
     card,
     llm,
-    printings,
     error,
     pending,
   };

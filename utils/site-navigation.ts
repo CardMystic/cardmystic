@@ -1,18 +1,23 @@
 import type { NavigationMenuItem } from '@nuxt/ui';
 import {
+  collectionIcons,
+  collectionLabels,
   collectionPath,
-  type CardCollectionCatalog,
   type CardCollectionKind,
 } from './card-collections';
+import {
+  navigationEntries,
+  type NavigationCatalog,
+} from './navigationCollections';
 
 export interface SiteNavigationItem extends NavigationMenuItem {
   setCode?: string;
+  collectionKind?: CardCollectionKind;
   children?: SiteNavigationItem[];
 }
 
 export const utilityNavigation: SiteNavigationItem[] = [
   { label: 'About', icon: 'i-lucide-info', to: '/about' },
-  { label: 'Memberships', icon: 'i-lucide-credit-card', to: '/memberships' },
   {
     label: 'GitHub',
     icon: 'i-simple-icons-github',
@@ -21,25 +26,38 @@ export const utilityNavigation: SiteNavigationItem[] = [
   },
 ];
 
+export const cardDirectoryLinks = (
+  Object.keys(collectionLabels) as CardCollectionKind[]
+).map((kind) => ({
+  label: collectionLabels[kind],
+  icon: collectionIcons[kind],
+  to: collectionPath(kind),
+}));
+
+export const communityDirectoryLinks = [
+  {
+    label: 'Decklists',
+    icon: 'i-lucide-list-tree',
+    to: '/explore/decklists',
+  },
+  { label: 'Users', icon: 'i-lucide-user-search', to: '/explore/users' },
+  {
+    label: 'Articles',
+    icon: 'i-lucide-newspaper',
+    to: '/explore/articles',
+  },
+];
+
 function collectionNavigation(
   kind: CardCollectionKind,
-  catalog: CardCollectionCatalog | null | undefined,
+  catalog: NavigationCatalog | null | undefined,
   status: string,
 ): SiteNavigationItem {
-  const label = kind.charAt(0).toUpperCase() + kind.slice(1);
-  const entries = [...(catalog?.[kind] ?? [])].sort((a, b) =>
-    kind === 'sets'
-      ? (b.releasedAt ?? '').localeCompare(a.releasedAt ?? '') ||
-        a.name.localeCompare(b.name)
-      : b.cardCount - a.cardCount || a.name.localeCompare(b.name),
-  );
+  const label = collectionLabels[kind];
+  const entries = navigationEntries(kind, catalog?.[kind] ?? []);
   return {
     label,
-    icon: {
-      sets: 'i-mdi-cards-outline',
-      roles: 'i-lucide-list-filter',
-      themes: 'i-lucide-tags',
-    }[kind],
+    icon: collectionIcons[kind],
     children: [
       ...(entries.length
         ? []
@@ -59,6 +77,7 @@ function collectionNavigation(
         to: collectionPath(kind, entry.slug),
         ...(kind === 'sets' ? { setCode: entry.slug } : {}),
       })),
+      { type: 'label', slot: 'collection-picker', collectionKind: kind },
       {
         label: `All ${kind}`,
         to: collectionPath(kind),
@@ -69,7 +88,7 @@ function collectionNavigation(
 }
 
 export function siteNavigation(
-  catalog: CardCollectionCatalog | null | undefined,
+  catalog: NavigationCatalog | null | undefined,
   status = 'success',
 ): SiteNavigationItem[] {
   return [
@@ -107,19 +126,7 @@ export function siteNavigation(
     {
       label: 'Community',
       icon: 'i-lucide-users',
-      children: [
-        {
-          label: 'Decklists',
-          icon: 'i-lucide-list-tree',
-          to: '/explore/decklists',
-        },
-        { label: 'Users', icon: 'i-lucide-user-search', to: '/explore/users' },
-        {
-          label: 'Articles',
-          icon: 'i-lucide-newspaper',
-          to: '/explore/articles',
-        },
-      ],
+      children: communityDirectoryLinks,
     },
     {
       label: 'Popular Cards',
@@ -150,5 +157,6 @@ export function siteNavigation(
     collectionNavigation('sets', catalog, status),
     collectionNavigation('roles', catalog, status),
     collectionNavigation('themes', catalog, status),
+    { label: 'Pro Features', icon: 'i-lucide-crown', to: '/memberships' },
   ];
 }

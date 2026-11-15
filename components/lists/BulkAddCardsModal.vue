@@ -10,8 +10,8 @@
           <template #mainboard>
             <div class="pt-3 space-y-1">
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ boardCardCount(mainboardText) }} card{{
-                  boardCardCount(mainboardText) === 1 ? '' : 's'
+                {{ boardCardCount(mainboardText, 'Mainboard') }} card{{
+                  boardCardCount(mainboardText, 'Mainboard') === 1 ? '' : 's'
                 }}
               </p>
               <UTextarea
@@ -25,8 +25,8 @@
           <template #sideboard>
             <div class="pt-3 space-y-1">
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ boardCardCount(sideboardText) }} card{{
-                  boardCardCount(sideboardText) === 1 ? '' : 's'
+                {{ boardCardCount(sideboardText, 'Sideboard') }} card{{
+                  boardCardCount(sideboardText, 'Sideboard') === 1 ? '' : 's'
                 }}
               </p>
               <UTextarea
@@ -40,8 +40,10 @@
           <template #considering>
             <div class="pt-3 space-y-1">
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ boardCardCount(consideringText) }} card{{
-                  boardCardCount(consideringText) === 1 ? '' : 's'
+                {{ boardCardCount(consideringText, 'Considering') }} card{{
+                  boardCardCount(consideringText, 'Considering') === 1
+                    ? ''
+                    : 's'
                 }}
               </p>
               <UTextarea
@@ -120,6 +122,8 @@
 import { useCardLists } from '~/composables/useCardLists';
 import { useToast } from '#imports';
 import type { BulkEditResponse } from '~/models/cardListModel';
+import { parseBulkEditBoard } from '~/utils/bulkEditBoard';
+import type { TransferBoard } from '~/utils/deckTransfer';
 
 const props = defineProps<{
   listId: string;
@@ -133,6 +137,8 @@ const isOpen = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
 const { bulkEditListMutation } = useCardLists();
+const browser = useBrowserDeckSource();
+let originalGuestCards: string | undefined;
 
 const mainboardText = ref('');
 const sideboardText = ref('');
@@ -149,43 +155,27 @@ const tabs = [
 // Pre-populate each board textarea when modal opens
 watch(isOpen, (open) => {
   if (open) {
+    originalGuestCards = browser
+      ? JSON.stringify(browser.draft.value.cards)
+      : undefined;
     mainboardText.value = props.mainboardNames?.join('\n') ?? '';
     sideboardText.value = props.sideboardNames?.join('\n') ?? '';
     consideringText.value = props.consideringNames?.join('\n') ?? '';
   }
 });
 
-/** Parse a textarea value into { name, num_copies } entries, ignoring blank lines. */
-function parseBoard(text: string) {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map((line) => {
-      const match = line.match(/^(\d+)x?\s+(.+)$/i);
-      return match
-        ? { name: match[2].trim(), num_copies: parseInt(match[1]) }
-        : { name: line, num_copies: 1 };
-    });
-}
-
-function boardCardCount(text: string): number {
-  if (!text.trim()) return 0;
-  return text
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0)
-    .reduce((sum, line) => {
-      const match = line.match(/^(\d+)x?\s+/i);
-      return sum + (match ? parseInt(match[1]) : 1);
-    }, 0);
+function boardCardCount(text: string, board: TransferBoard): number {
+  return parseBulkEditBoard(text, board).reduce(
+    (sum, card) => sum + card.num_copies,
+    0,
+  );
 }
 
 const totalCardCount = computed(
   () =>
-    boardCardCount(mainboardText.value) +
-    boardCardCount(sideboardText.value) +
-    boardCardCount(consideringText.value),
+    boardCardCount(mainboardText.value, 'Mainboard') +
+    boardCardCount(sideboardText.value, 'Sideboard') +
+    boardCardCount(consideringText.value, 'Considering'),
 );
 
 async function handleBulkEdit() {
@@ -198,7 +188,10 @@ async function handleBulkEdit() {
       { board: 'Considering', text: consideringText.value },
     ] as const
   )
-    .map(({ board, text }) => ({ board, cards: parseBoard(text) }))
+    .map(({ board, text }) => ({
+      board,
+      cards: parseBulkEditBoard(text, board),
+    }))
     .filter((entry) => entry.cards.length > 0);
 
   bulkEditLoading.value = true;
@@ -208,6 +201,7 @@ async function handleBulkEdit() {
     const result = await bulkEditListMutation.mutateAsync({
       listId: props.listId,
       entries,
+      originalGuestCards,
     });
 
     bulkEditResult.value = result;

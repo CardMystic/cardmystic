@@ -1181,11 +1181,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
     </template>
     <template #footer>
       <UButton
-        label="Mill"
-        :disabled="!state?.zones.library.length || !millAmount"
-        @click="millCards"
-      />
-      <UButton
         label="Cancel"
         color="neutral"
         variant="outline"
@@ -1194,6 +1189,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
             millOpen = false;
           }
         "
+      />
+      <UButton
+        label="Mill"
+        :disabled="!state?.zones.library.length || !millAmount"
+        @click="millCards"
       />
     </template>
   </UModal>
@@ -1534,17 +1534,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', keydown));
     v-model:open="resetOpen"
     title="Restart playtest?"
     description="This clears the practice game and draws a new hand from the latest saved deck."
-    ><template #footer
-      ><UButton label="Restart game" @click="newGame" /><UButton
-        label="Cancel"
-        color="neutral"
-        variant="outline"
-        @click="
-          () => {
-            resetOpen = false;
-          }
-        " /></template
-  ></UModal>
+  >
+    <template #footer>
+      <UButton label="Cancel" color="neutral" variant="outline" @click="resetOpen = false" />
+      <UButton label="Restart game" @click="newGame" />
+    </template>
+  </UModal>
   <UModal
     v-model:open="helpOpen"
     title="Playtest controls"

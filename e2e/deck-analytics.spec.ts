@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { BACKEND, SUPABASE } from './utils/mocks';
 import type { DeckAnalytics } from '../utils/deckAnalytics';
+import { openDeckAction } from './utils/deckActions';
 
 test('visitors open free analytics directly from the mobile Deck Stats button', async ({
   page,
@@ -9,10 +10,15 @@ test('visitors open free analytics directly from the mobile Deck Stats button', 
   await page.setViewportSize({ width: 390, height: 844 });
   await setupDeckDisplay(page, { owner: false });
   let requests = 0;
+  let releaseStats!: () => void;
+  const statsGate = new Promise<void>((resolve) => {
+    releaseStats = resolve;
+  });
   await page.route(
     BACKEND + `/library/lists/${displayDeckId}/analytics`,
-    (route) => {
+    async (route) => {
       requests++;
+      await statsGate;
       return route.fulfill({
         json: {
           librarySize: 3,
@@ -27,22 +33,97 @@ test('visitors open free analytics directly from the mobile Deck Stats button', 
       });
     },
   );
-  expect(requests).toBe(0);
+  await page.reload();
+  const stats = page.getByTestId('deck-stats');
+  try {
+    await expect(stats.getByRole('status')).toHaveText('Loading deck stats…');
+    await expect(
+      stats.getByRole('figure', { name: 'Mana curve' }),
+    ).toBeVisible();
+    expect(await stats.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+      true,
+    );
+  } finally {
+    releaseStats();
+  }
+  await expect(stats).toHaveAttribute('open', '');
+  await expect(
+    stats.getByRole('heading', { name: 'Opening hand' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Deck sections', exact: true }),
   ).toHaveCount(0);
+  await stats.locator('summary').click();
+  await expect(stats).not.toHaveAttribute('open', '');
   await page
     .locator('.sticky-footer-wrap')
     .getByRole('button', { name: 'Deck Stats', exact: true })
     .click();
   await expect(
-    page.getByRole('heading', { name: 'Draw odds', exact: true }),
+    page.getByRole('heading', { name: 'Opening hand', exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('link', { name: 'Subscribe for more analytics' }),
   ).toHaveCount(0);
   expect(requests).toBe(1);
+});
+
+test('Top Tags ranks mainboard copies and expands beyond the first four', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { cards, items } = await setupDeckDisplay(page);
+  items[2].board = 'Sideboard';
+  const names = [
+    'Utility',
+    'Staple',
+    'Draw',
+    'Favorite',
+    'Testing',
+    'Side only',
+  ];
+  const tags = names.map((name) => ({ id: name, name }));
+  await page.route(BACKEND + '/library/tags', (route) =>
+    route.fulfill({ json: { tags } }),
+  );
+  await page.route(BACKEND + '/library/tags/assignments', (route) =>
+    route.fulfill({
+      json: {
+        assignments: [
+          ...['Utility', 'Staple', 'Draw'].map((tag_id) => ({
+            oracle_id: cards[0].oracle_id,
+            tag_id,
+          })),
+          ...['Staple', 'Favorite', 'Testing'].map((tag_id) => ({
+            oracle_id: cards[1].oracle_id,
+            tag_id,
+          })),
+          { oracle_id: cards[2].oracle_id, tag_id: 'Side only' },
+        ],
+      },
+    }),
+  );
+  await page.reload();
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
+  const section = page.getByRole('region', { name: 'Top Tags' });
+  await expect(section.locator('dt')).toHaveText([
+    'Staple',
+    'Draw',
+    'Utility',
+    'Favorite',
+  ]);
+  await expect(section.locator('dd')).toHaveText(['3', '2', '2', '1']);
+  await section.getByRole('button', { name: 'Show all' }).click();
+  await expect(section.locator('dt')).toHaveText([
+    'Staple',
+    'Draw',
+    'Utility',
+    'Favorite',
+    'Testing',
+  ]);
+  await section.getByRole('button', { name: 'Show less' }).click();
+  await expect(section.locator('dt')).toHaveCount(4);
 });
 
 for (const width of [390, 1280]) {
@@ -74,7 +155,7 @@ for (const width of [390, 1280]) {
   });
 }
 
-test('Deck analytics show useful draw odds and incomplete prices on mobile, with retry after a failed load', async ({
+test('Deck analytics show opening-hand odds and incomplete prices on mobile, with retry after a failed load', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -88,8 +169,20 @@ test('Deck analytics show useful draw odds and incomplete prices on mobile, with
     types: [
       { name: 'Creature', count: 20 },
       { name: 'Instant', count: 12 },
+      { name: 'Land', count: 42 },
     ],
     roles: [{ name: 'Removal', count: 10 }],
+    themes: [
+      { name: 'Artifacts', count: 15 },
+      { name: 'Reanimator', count: 2 },
+    ],
+    mainboardRoles: { Removal: 11, 'Board wipe': 2, Tutor: 0 },
+    topThemes: [
+      { name: 'Artifacts', count: 16 },
+      { name: 'Card advantage', count: 12 },
+      { name: 'Tokens', count: 10 },
+      { name: 'Blink', count: 8 },
+    ],
     prices: {
       knownPriceCents: 8234,
       missingPrices: 3,
@@ -119,64 +212,86 @@ test('Deck analytics show useful draw odds and incomplete prices on mobile, with
   );
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  await page.reload();
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await page.screenshot({ path: '/tmp/cardmystic-new-footer-mobile.png' });
-  await page
-    .getByRole('button', { name: 'Deck sections', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Deck Stats', exact: true }).click();
   await expect(page.locator('.sticky-footer-wrap')).toBeVisible();
-  await page.getByRole('menuitem', { name: 'Deck Stats', exact: true }).click();
   const modal = page.getByTestId('deck-stats');
   await expect(modal.getByRole('alert')).toContainText(
     'Analytics temporarily unavailable.',
   );
   await modal.getByRole('button', { name: 'Retry analytics' }).click();
-  await expect(modal.getByText('99', { exact: true })).toBeVisible();
+  const roles = modal.getByRole('region', { name: 'Cards by Role' });
+  await expect(roles.locator('dt')).toHaveText([
+    'Removal',
+    'Ramp',
+    'Board Wipe',
+    'Card Draw',
+    'Game Changers',
+  ]);
+  await expect(roles.locator('dd')).toHaveText(['11', '0', '2', '0', '0']);
   await expect(
-    modal.getByText(
-      /Chance to see at least 4 lands by turn 4 \(10 cards seen\)/,
-    ),
-  ).toBeVisible();
-  const before = await modal.getByTestId('land-draw-chance').innerText();
-  await expect(modal.getByTestId('average-opening-lands')).toHaveText('2.62');
-  await modal
-    .getByRole('switch', { name: 'Draw on turn one', exact: true })
-    .check();
-  await expect(
-    modal.getByText(
-      /Chance to see at least 4 lands by turn 4 \(11 cards seen\)/,
-    ),
-  ).toBeVisible();
-  await expect(modal.getByTestId('land-draw-chance')).not.toHaveText(before);
-  const withoutModalLands = await modal
-    .getByTestId('land-draw-chance')
-    .innerText();
-  await modal.getByRole('checkbox', { name: 'Count MDFCs as lands' }).check();
-  await expect(modal.getByTestId('land-draw-chance')).not.toHaveText(
-    withoutModalLands,
+    roles.getByRole('link', { name: 'Game Changers' }),
+  ).toHaveAttribute('href', '/roles/game-changers');
+  await expect(roles.getByRole('link', { name: 'Board Wipe' })).toHaveAttribute(
+    'href',
+    '/roles/board-wipe',
   );
-  await expect(modal.getByTestId('average-opening-lands')).toHaveText('2.90');
-  await modal.getByRole('button', { name: 'What are MDFCs?' }).hover();
+  const themes = modal.getByRole('region', { name: 'Top Themes' });
   await expect(
-    page
-      .getByText(
-        'Modal double-faced cards let you play either side. This count includes spells with a land on the back.',
-        { exact: true },
-      )
-      .first(),
-  ).toBeVisible();
-  await modal.getByRole('heading', { name: 'Draw odds', exact: true }).hover();
-  await modal.getByRole('combobox', { name: 'Analytics draw target' }).click();
-  await page
-    .getByRole('option', { name: 'Role: Removal', exact: true })
-    .click();
+    themes.getByRole('link', { name: 'Top Themes' }),
+  ).toHaveAttribute('href', '/themes');
   await expect(
-    modal.getByText(/10 matching copies in your library/),
-  ).toBeVisible();
-  await expect(modal.getByText('$82.34', { exact: true })).toBeVisible();
+    roles.getByRole('link', { name: 'Cards by Role' }),
+  ).toHaveAttribute('href', '/roles');
+  const sets = modal.getByRole('region', { name: 'Top Sets' });
+  await expect(sets.getByRole('link', { name: 'Top Sets' })).toHaveAttribute(
+    'href',
+    '/sets',
+  );
   await expect(
-    modal.getByText(/3 card copies have no USD price and are excluded/),
-  ).toBeVisible();
+    sets.getByRole('link', { name: 'Test', exact: true }),
+  ).toHaveAttribute('href', '/sets/test');
+  await expect(themes.locator('dt a')).toHaveText([
+    'Artifacts',
+    'Card advantage',
+    'Tokens',
+    'Blink',
+  ]);
+  await expect(themes.locator('dd')).toHaveText(['16', '12', '10', '8']);
+  await expect(
+    themes.getByRole('link', { name: 'Card advantage' }),
+  ).toHaveAttribute('href', '/themes/card-advantage');
+  await expect(themes.getByRole('button')).toHaveCount(0);
+  await expect(themes.getByRole('combobox')).toHaveCount(0);
+  await expect(roles.getByRole('button', { name: /^Remove / })).toHaveCount(0);
+  const rolePicker = roles.getByRole('combobox', { name: 'Add a role' });
+  await rolePicker.fill('tut');
+  await page.getByRole('option', { name: 'Tutor', exact: true }).click();
+  await expect(roles.locator('dt').last()).toHaveText('Tutor');
+  await expect(roles.locator('dd').last()).toHaveText('0');
+  await expect(modal.getByText('99', { exact: true })).toBeVisible();
+  await expect(modal.getByTestId('average-opening-lands')).toHaveText('2.97');
+  const chance = modal.getByTestId('target-draw-chance');
+  await expect(chance).toHaveText('80.5%');
+  const picker = modal.getByRole('combobox', {
+    name: 'Role, theme, or card type',
+  });
+  for (const [query, option, probability] of [
+    ['remov', 'Role: Removal', '53.7%'],
+    ['reanim', 'Theme: Reanimator', '13.7%'],
+    ['land', 'Land', '98.2%'],
+  ]) {
+    await picker.fill(query);
+    await page.getByRole('option', { name: option, exact: true }).click();
+    await expect(chance).toHaveText(probability);
+  }
+  const costs = modal.getByRole('region', { name: 'Deck cost' });
+  await expect(costs.getByText('$82.34 known-price subtotal')).toBeVisible();
+  await expect(costs.getByText('3 copies have no USD price.')).toBeVisible();
+  await expect(costs.getByRole('listitem')).toContainText('$20.00');
+  await expect(costs.getByRole('listitem')).toContainText('24.3%');
   expect(requests).toBe(2); // Changing analysis controls is local and spends no searches.
   expect(state.writes).toHaveLength(0);
   expect(errors).toEqual([]);
@@ -198,14 +313,27 @@ test('Deck analytics show useful draw odds and incomplete prices on mobile, with
   await modal.screenshot({ path: '/tmp/cardmystic-deck-analytics-mobile.png' });
   await page.setViewportSize({ width: 1280, height: 1000 });
   await modal
-    .getByRole('heading', { name: 'Draw odds', exact: true })
+    .getByRole('heading', { name: 'Opening hand', exact: true })
     .scrollIntoViewIfNeeded();
   await modal.screenshot({
     path: '/tmp/cardmystic-deck-analytics-desktop.png',
   });
+  await page.reload();
+  await expect(page.getByTestId('deck-stats')).toHaveAttribute('open', '');
+  await expect(roles.locator('dt')).toHaveText([
+    'Removal',
+    'Ramp',
+    'Board Wipe',
+    'Card Draw',
+    'Game Changers',
+    'Tutor',
+  ]);
+  await roles.getByRole('button', { name: 'Remove Tutor' }).click();
+  await expect(roles.locator('dt')).toHaveCount(5);
+  await expect(roles.getByRole('button', { name: /^Remove / })).toHaveCount(0);
 });
 
-test('suggestions wait for scrolling and stats wait for opening; cuts fill the price list', async ({
+test('stats open automatically, suggestions wait for their menu actions, and cuts fill the price list', async ({
   page,
 }) => {
   const state = await setupDeckDisplay(page, { pro: true, cardCount: 21 });
@@ -267,19 +395,17 @@ test('suggestions wait for scrolling and stats wait for opening; cuts fill the p
       });
     },
   );
-  await page.waitForTimeout(400); // IntersectionObserver has settled; no offscreen API work.
+  await page.reload();
+  await expect(
+    page.getByRole('button', { name: 'More deck actions' }),
+  ).toBeVisible();
   expect(requested).toEqual([]);
-  expect(analyticsRequests).toBe(0);
-  await page
-    .getByRole('region', { name: 'Suggested cards', exact: true })
-    .scrollIntoViewIfNeeded();
+  await expect.poll(() => analyticsRequests).toBe(1);
+  await openDeckAction(page, 'Suggest Adds · Pro');
   await expect.poll(() => requested.includes(false)).toBe(true);
-  await page
-    .getByRole('region', { name: 'New Cards for Deck', exact: true })
-    .scrollIntoViewIfNeeded();
+  await openDeckAction(page, 'Suggest New Cards · Pro');
   await expect.poll(() => requested.includes(true)).toBe(true);
-  expect(analyticsRequests).toBe(0);
-  await page.getByTestId('deck-stats').locator('summary').click();
+  expect(analyticsRequests).toBe(1);
   const stats = page.getByTestId('deck-stats');
   await expect(
     stats.getByRole('button', { name: /^Cut .* from deck$/ }),

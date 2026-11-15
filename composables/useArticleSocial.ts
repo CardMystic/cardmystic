@@ -112,6 +112,7 @@ export function useArticleComments(
   const {
     data,
     isLoading,
+    refetch,
     isFetchingNextPage,
     error,
     fetchNextPage,
@@ -190,6 +191,7 @@ export function useArticleComments(
       () => data.value?.pages.flatMap((p) => p.comments) ?? [],
     ),
     isLoading,
+    refetch,
     isFetchingNextPage,
     error,
     fetchNextPage,

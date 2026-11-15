@@ -31,15 +31,14 @@ export const commanderBrackets = [
     description:
       'Fast, consistent, powerful decks with efficient threats and interaction, without focusing on the competitive Commander metagame.',
     classes:
-      'bg-orange-100 text-orange-900 ring-orange-400 dark:bg-orange-950 dark:text-orange-200 dark:ring-orange-600',
+      'bg-red-100 text-red-900 ring-red-400 dark:bg-red-950 dark:text-red-200 dark:ring-red-600',
   },
   {
     value: 5,
     name: 'cEDH',
     description:
       'Built for competitive Commander and winning as efficiently as possible. Games can end on any turn.',
-    classes:
-      'bg-red-100 text-red-900 ring-red-400 dark:bg-red-950 dark:text-red-200 dark:ring-red-600',
+    classes: 'bg-black text-red-400 ring-red-500',
   },
 ] as const;
 

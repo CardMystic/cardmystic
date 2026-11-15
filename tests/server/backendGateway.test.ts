@@ -6,6 +6,14 @@ import {
 } from '~/server/utils/backendGateway';
 
 describe('private backend gateway', () => {
+  it('allows public homepage aggregate counts', () => {
+    expect(
+      backendTarget(
+        'https://api.example.com',
+        '/api/backend/metrics/site_stats',
+      ),
+    ).toBe('https://api.example.com/metrics/site_stats');
+  });
   it('allows library requests through the same private gateway', () => {
     expect(
       backendTarget('https://api.example.com', '/api/backend/library/folders'),
@@ -63,6 +71,7 @@ describe('private backend gateway', () => {
   it.each([
     '/documentation',
     '/cache/stats',
+    '/cache/top',
     '/metrics/dislikes',
     '/metrics/query_counts',
     '/patreon/status',

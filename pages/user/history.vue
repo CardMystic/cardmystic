@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({ title: 'Your history | CardMystic', robots: 'noindex, nofollow' });
 definePageMeta({
   middleware: 'auth',
 });

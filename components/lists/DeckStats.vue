@@ -4,8 +4,7 @@
       >{{ cardCount }} cards in Mainboard</span
     >
     <UButton
-      icon="i-heroicons-shopping-cart"
-      color="success"
+      v-bind="cardActionStyles.buy"
       variant="solid"
       size="xs"
       :label="`Buy ($${totalPrice.toFixed(2)})`"
@@ -16,6 +15,7 @@
 </template>
 
 <script setup lang="ts">
+import { cardActionStyles } from '~/utils/card-actions';
 defineProps<{
   cardCount: number;
   totalPrice: number;

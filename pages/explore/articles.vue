@@ -1,29 +1,34 @@
 <template>
   <UContainer class="mb-10 max-w-full">
-    <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        fallback-title="Search Articles"
-        fallback-description="Find CardMystic articles by keyword in their title or description."
-      />
-    </div>
+    <div class="relative isolate">
+      <SearchBackground type="articles" placement="header" />
+      <NavigationBreadcrumbs />
+      <div class="w-full flex flex-col items-center">
+        <SearchSEOTitleAndDescription
+          fallback-title="Search Articles"
+          fallback-description="Find CardMystic articles by keyword in their title or description."
+        />
+        <DirectoryNavigation group="community" />
+      </div>
 
-    <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
-      <UInput
-        v-model="searchInput"
-        placeholder="Search articles by title or description…"
-        icon="i-lucide-search"
-        class="flex-1"
-        :ui="{ base: 'text-base h-10' }"
-        @keydown.enter="syncQueryToUrl"
-      />
-      <UButton
-        icon="i-lucide-search"
-        class="h-10 cursor-pointer"
-        :disabled="!searchInput.trim()"
-        @click="syncQueryToUrl"
-      >
-        <span class="hidden sm:inline">Search</span>
-      </UButton>
+      <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
+        <UInput
+          v-model="searchInput"
+          placeholder="Search articles by title or description…"
+          icon="i-lucide-search"
+          class="flex-1"
+          :ui="{ base: 'text-base h-10' }"
+          @keydown.enter="syncQueryToUrl"
+        />
+        <UButton
+          icon="i-lucide-search"
+          class="h-10 cursor-pointer"
+          :disabled="!searchInput.trim()"
+          @click="syncQueryToUrl"
+        >
+          <span class="hidden sm:inline">Search</span>
+        </UButton>
+      </div>
     </div>
 
     <UPagination
@@ -112,20 +117,22 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ExploreArticlesPage' });
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useArticleSearch, useRecentArticles } from '~/composables/useArticles';
 import { refDebounced } from '~/utils/refDebounced';
 import ArticleCard from '~/components/articles/ArticleCard.vue';
 
-definePageMeta({ title: 'Search Articles' });
+definePageMeta({ title: 'Search Articles', breadcrumbsInPage: true });
 
-useSeoMeta({
+usePublicPageSeo({
+  path: '/explore/articles',
   title: 'Search Articles | CardMystic',
   description:
     'Search Magic: The Gathering articles written by the CardMystic community.',
-  robots: 'noindex, follow',
 });
+useSeoMeta({ robots: 'noindex, follow' });
 
 const route = useRoute();
 const router = useRouter();

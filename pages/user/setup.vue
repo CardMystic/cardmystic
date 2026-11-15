@@ -71,21 +71,23 @@
 </template>
 
 <script setup lang="ts">
+import { takeGuestDeckReturn } from '~/utils/guestDeck';
 import { useCardNames } from '~/composables/useBulkData';
 import { refDebounced } from '~/utils/refDebounced';
 
+useSeoMeta({ title: 'Set up your profile | CardMystic', robots: 'noindex, nofollow' });
 definePageMeta({
   layout: 'fullscreen',
 });
 
 const router = useRouter();
-const {
-  userProfile,
-  profileData,
-  profileIconUrl,
-  updateUsernameMutation,
-  updateAvatarMutation,
-} = useUserProfile();
+let setupDestination: string | null = null;
+function finishSetup() {
+  setupDestination ??= takeGuestDeckReturn() ?? '/user/account';
+  router.push(setupDestination);
+}
+const { userProfile, profileData, profileIconUrl } = useUserProfile();
+const { updateAvatarMutation, updateUsernameMutation } = useAccountActions();
 
 const username = ref('');
 const errorMessage = ref<string | null>(null);
@@ -152,7 +154,7 @@ watchEffect(() => {
 watchEffect(() => {
   if (import.meta.server) return;
   if (profileData.value?.username) {
-    router.push('/user/account');
+    finishSetup();
   }
 });
 
@@ -165,7 +167,7 @@ const submit = async () => {
   loading.value = true;
   try {
     await updateUsernameMutation.mutateAsync(username.value.trim());
-    router.push('/user/account');
+    finishSetup();
   } catch (e: any) {
     errorMessage.value = e.message || 'Failed to save username.';
   }

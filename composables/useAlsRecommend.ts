@@ -27,15 +27,13 @@ export function useAlsRecommend(
 
   const queryEnabled = computed(
     () =>
-      !!searchParams.value &&
-      ((searchParams.value.cards && searchParams.value.cards.length > 0) ||
-        (searchParams.value.commanders &&
-          searchParams.value.commanders.length > 0)),
+      !!searchParams.value?.cards?.length ||
+      !!searchParams.value?.commanders?.length,
   );
 
   const {
     data: searchResults,
-    isLoading,
+    isPending,
     isFetching,
     error,
     refetch,
@@ -77,7 +75,13 @@ export function useAlsRecommend(
 
   return {
     searchResults,
-    isLoading,
+    // A valid query is pending during SSR and session initialization, before
+    // Vue Query starts fetching. An empty response is final once the fetch ends.
+    isLoading: computed(
+      () =>
+        queryEnabled.value &&
+        (isPending.value || (isFetching.value && !searchResults.value?.length)),
+    ),
     isFetching,
     error,
     notFound,

@@ -1,4 +1,4 @@
-import { expect, test, type Request } from '@playwright/test';
+import { expect, test, type Request, type Response } from '@playwright/test';
 
 import { BACKEND, gotoHydrated, reliableFill } from './utils/mocks';
 
@@ -18,6 +18,17 @@ import { BACKEND, gotoHydrated, reliableFill } from './utils/mocks';
  */
 
 const SEARCH_TIMEOUT = 45_000;
+
+async function expectSuccessfulSearch(response: Response | null) {
+  expect(response, 'Search request did not receive a response').not.toBeNull();
+  if (!response) return;
+  expect(
+    response.ok(),
+    response.ok()
+      ? undefined
+      : `Search returned HTTP ${response.status()}: ${(await response.text()).slice(0, 500)}`,
+  ).toBe(true);
+}
 
 /**
  * Wait for a specific backend search call to fire and return its body.
@@ -59,49 +70,45 @@ const expectResultsRendered = async (page: import('@playwright/test').Page) => {
 // ─── 1. Homepage smoke ────────────────────────────────────────────────
 
 test.describe('Homepage', () => {
-  test('hero renders and example + trending queries fetch from backend', async ({
+  test('hero and bundled popular search links render without example searches', async ({
     page,
   }) => {
-    const examplePromise = page.waitForResponse(
-      (r) => r.url() === `${BACKEND}/search/example`,
-      { timeout: SEARCH_TIMEOUT },
-    );
-    const topPromise = page.waitForResponse(
-      (r) => r.url().startsWith(`${BACKEND}/cache/popular`),
-      { timeout: SEARCH_TIMEOUT },
-    );
+    const unnecessaryRequests: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.url() === `${BACKEND}/search/example` ||
+        request.url().startsWith(`${BACKEND}/cache/popular`)
+      ) {
+        unnecessaryRequests.push(request.url());
+      }
+    });
 
     await gotoHydrated(page, '/');
 
     // Hero
     await expect(
-      page.getByRole('heading', { name: /Build Smarter Decks/i }),
+      page.getByRole('heading', { name: 'Describe It. Find It.', level: 1 }),
     ).toBeVisible();
-    await expect(page.getByAltText('Kaalia of the Vast')).toBeVisible();
+    await expect(page.getByAltText('Mondrak, Glory Dominus')).toBeVisible();
 
-    // Both calls should succeed against the live backend.
-    const [exampleResp, topResp] = await Promise.all([
-      examplePromise,
-      topPromise,
-    ]);
-    expect(exampleResp.ok()).toBeTruthy();
-    expect(topResp.ok()).toBeTruthy();
-
-    // Curated popular searches are available even when the result cache is cold.
-    await expect(page.getByText('Try An Example Query:')).toBeVisible({
-      timeout: SEARCH_TIMEOUT,
-    });
-    const topBody = await topResp.json().catch(() => null);
-    const topCount = Array.isArray(topBody)
-      ? topBody.length
-      : Array.isArray(topBody?.results)
-        ? topBody.results.length
-        : 0;
-    if (topCount > 0) {
-      await expect(page.getByText('Popular Searches')).toBeVisible({
-        timeout: SEARCH_TIMEOUT,
-      });
-    }
+    const popular = page.locator('.top-queries-container');
+    await popular.scrollIntoViewIfNeeded();
+    await expect(
+      popular.getByRole('heading', { name: 'Popular Searches', exact: true }),
+    ).toBeVisible();
+    await expect(
+      popular.getByRole('link', { name: 'Try', exact: true }),
+    ).toHaveCount(10);
+    const target = new URL(
+      (await popular
+        .getByRole('link', { name: 'Try', exact: true })
+        .first()
+        .getAttribute('href'))!,
+      page.url(),
+    );
+    expect(target.pathname).toBe('/search/all/smart');
+    expect(target.searchParams.get('query')).toBe('card draw');
+    expect(unnecessaryRequests).toEqual([]);
   });
 });
 
@@ -190,7 +197,7 @@ test.describe('AI search', () => {
     await input.press('Enter');
 
     const response = await colbertCall;
-    expect(response.ok()).toBeTruthy();
+    await expectSuccessfulSearch(response);
 
     const body = await response.json();
     // Backend returns { results: [...] }. We don't pin the field name
@@ -308,7 +315,7 @@ test.describe('Commander search', () => {
     expect(payload.filters?.isCommander).toBe(true);
 
     const response = await request.response();
-    expect(response?.ok()).toBeTruthy();
+    await expectSuccessfulSearch(response);
 
     await expectResultsRendered(page);
   });

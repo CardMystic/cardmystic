@@ -1,8 +1,14 @@
 <template>
   <div class="layout-container">
     <navbar />
-    <main class="main-content">
-      <UContainer class="px-1 max-w-[2000px]">
+    <main
+      class="main-content"
+      :class="{ 'overflow-x-clip': route.meta.breadcrumbsInPage }"
+    >
+      <UContainer
+        v-if="!route.meta.breadcrumbsInPage"
+        class="px-1 max-w-[2000px]"
+      >
         <NavigationBreadcrumbs />
       </UContainer>
       <UContainer
@@ -18,6 +24,7 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'DefaultLayout' });
+const route = useRoute();
 /* Default layout: constrained content width via UContainer, static navbar.
  * Use for standard pages like search results, card details, lists, etc. */
 </script>

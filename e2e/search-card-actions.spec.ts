@@ -91,7 +91,7 @@ test('search card modal exposes card actions and confirms feedback before submit
   const modal = page.getByRole('dialog', { name: commander.name, exact: true });
   await open();
   await expect(
-    modal.getByRole('link', { name: 'View Card Details' }),
+    modal.getByRole('link', { name: "Go To Card's Page" }),
   ).toHaveAttribute('href', `/card/${commander.oracle_id}`);
   for (const name of [
     'Add to Deck',
@@ -104,26 +104,26 @@ test('search card modal exposes card actions and confirms feedback before submit
       modal.getByRole('button', { name, exact: true }),
     ).toBeEnabled();
   }
+  const buy = modal.getByRole('link', { name: /Buy on TCGPlayer/ });
+  await expect(buy).toHaveAttribute('href', /^https:\/\/partner\.tcgplayer\.com\//);
+  await expect(buy).toHaveClass(/\btext-success\b/);
+  await expect(buy).not.toHaveClass(/\bring-inset\b/);
+  const controls = modal.getByRole('group', { name: 'Card actions' }).locator('a[href], button');
+  for (const [index, name] of [
+    "Go To Card's Page", /Buy on TCGPlayer/, 'Add to Deck', 'Get Deck Recommendations',
+    'Popular Cards for this Commander', 'Find Similar Cards',
+  ].entries()) {
+    await expect(controls.nth(index)).toHaveAccessibleName(name);
+  }
+  await expect(buy.locator('[class*="heroicons:shopping-cart"]')).toBeVisible();
+  await modal.getByRole('button', { name: 'Add Card', exact: true }).click();
+  await expect(modal).toBeVisible();
   await expect(
-    modal.getByRole('link', { name: /Buy on TCGPlayer/ }),
-  ).toHaveAttribute('href', /^https:\/\/partner\.tcgplayer\.com\//);
-  await modal
-    .getByRole('button', { name: 'Add to Clipboard', exact: true })
-    .click();
-  await expect(modal).toBeHidden();
-  await expect(
-    card.getByRole('button', { name: 'Card Added', exact: true }),
+    modal.getByRole('button', { name: 'Card Added', exact: true }),
   ).toBeVisible();
-  await open();
-  await expect(
-    modal.getByRole('button', { name: 'Remove from Clipboard', exact: true }),
-  ).toBeVisible();
-  await modal
-    .getByRole('button', { name: 'Show Back Face', exact: true })
-    .click();
-  await expect(card.getByRole('img')).toHaveAttribute('src', /\/back\//);
+  await modal.getByRole('button', { name: 'Flip Card', exact: true }).click();
+  await expect(modal.getByRole('img')).toHaveAttribute('src', /\/back\//);
 
-  await open();
   await modal
     .getByRole('button', { name: 'Mark As Poor Result', exact: true })
     .click();
@@ -165,7 +165,7 @@ test('mobile partner actions use the clicked card and similarity reference hides
     .click({ position: { x: 15, y: 15 } });
   const modal = page.getByRole('dialog', { name: partner.name, exact: true });
   await expect(
-    modal.getByRole('link', { name: 'View Card Details' }),
+    modal.getByRole('link', { name: "Go To Card's Page" }),
   ).toHaveAttribute('href', `/card/${partner.oracle_id}`);
   await modal
     .getByRole('button', { name: 'Mark As Poor Result', exact: true })

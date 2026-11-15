@@ -31,20 +31,30 @@
     </UModal>
 
     <div class="preview-card-stack">
-      <NuxtLink
-        class="preview-image-wrapper block"
-        :to="`/card/${activeCardData?.oracle_id}`"
-        no-prefetch
-        @click="saveCurrentSearchQuery(route.query)"
-      >
-        <img
-          :src="getCardImageUrl(activeCardData!, isFlipped, 'large')"
-          :alt="activeCardData?.name"
-          class="preview-image cursor-pointer"
-          loading="eager"
-          decoding="async"
+      <div class="preview-image-wrapper card-image-wrapper">
+        <GameChangerBadge v-if="activeCardData?.game_changer" />
+        <NuxtLink
+          class="card-finish block rounded-2xl"
+          :data-card-finish="activeCardData?.selected_finish"
+          :to="`/card/${activeCardData?.oracle_id}`"
+          no-prefetch
+          @click="saveCurrentSearchQuery(route.query)"
+        >
+          <img
+            :src="getCardImageUrl(activeCardData!, isFlipped, 'large')"
+            :alt="activeCardData?.name"
+            class="preview-image cursor-pointer"
+            loading="eager"
+            decoding="async"
+          />
+        </NuxtLink>
+        <CardOverlayButtons
+          :card="activeCardData"
+          :is-dual-faced="isDualFaced"
+          show-flip-button
+          @flip="flipCard"
         />
-      </NuxtLink>
+      </div>
 
       <div class="space-y-2">
         <div>
@@ -52,18 +62,15 @@
           <p class="preview-subtitle">{{ simpleType }}</p>
         </div>
 
-        <div class="flex flex-wrap gap-2 text-xs">
+        <div
+          v-if="isSearched || isCommander"
+          class="flex flex-wrap gap-2 text-xs"
+        >
           <UBadge v-if="isSearched" color="primary" variant="subtle"
             >Searched Card</UBadge
           >
           <UBadge v-if="isCommander" color="warning" variant="subtle"
             >Commander</UBadge
-          >
-          <UBadge
-            v-if="activeCardData?.game_changer"
-            color="primary"
-            variant="subtle"
-            >Game Changer</UBadge
           >
         </div>
 
@@ -140,12 +147,11 @@
       </div>
 
       <HoveredCardActions
+        @view-card="saveCurrentSearchQuery(route.query)"
         :card="card"
         :buy-label="'Buy on TCGPlayer (' + priceLabel + ')'"
         :can-show-deck-menu="canShowDeckMenu"
         :find-similar-disabled="isSearched"
-        :is-in-clipboard="isInClipboard"
-        :is-dual-faced="isDualFaced"
         :show-commander-buttons="isCommander"
         :show-search-actions="
           !isSearched && (showAddToDeckbuilderButton || !hideThumbsDownButton)
@@ -156,8 +162,6 @@
         :is-in-decklist="isInDecklist"
         @find-similar="findSimilarCards"
         @open-add-to-deck="showAddToDeckModal = true"
-        @toggle-clipboard="toggleClipboard"
-        @flip-card="flipCard"
         @get-recommendations="getRecommendations"
         @view-popular-cards="viewPopularCards"
         @dislike="handleDislike"
@@ -170,17 +174,14 @@
 </template>
 
 <script setup lang="ts">
-import { getUsdPrice } from '~/utils/cardPrice';
 import type { Card } from '~/models/cardModel';
 import { getCardImageUrl } from '~/utils/scryfall';
-import { useClipboard } from '~/composables/useClipboard';
 
 const router = useRouter();
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const deckbuilderStore = useDeckbuilder();
-const clipboard = useClipboard();
 // Initialise feedback composable at setup so vue-query injection
 // context is available. Calling `useCardFeedback()` lazily inside a
 // click handler throws and the dislike POST is silently dropped.
@@ -242,25 +243,6 @@ const isDualFaced = computed(() => {
 const isInDecklist = computed(() => {
   if (!activeCardData.value?.name) return false;
   return deckbuilderStore.hasCard(activeCardData.value.name);
-});
-
-const clipboardCard = computed(() => {
-  const cardData = activeCardData.value;
-  if (!cardData) return null;
-
-  return {
-    id: cardData.id || '',
-    oracleId: cardData.oracle_id || '',
-    name: cardData.name || '',
-    set: cardData.set || '',
-    imageUrl: getCardImageUrl(cardData),
-    price: getUsdPrice(cardData.prices) || '0',
-  };
-});
-
-const isInClipboard = computed(() => {
-  if (!clipboardCard.value) return false;
-  return clipboard.has(clipboardCard.value.id);
 });
 
 const semanticScore = computed(
@@ -340,17 +322,6 @@ function flipCard() {
   if (props.card) emit('flip', props.card.card_data.id);
 }
 
-function toggleClipboard() {
-  if (!clipboardCard.value) return;
-
-  if (isInClipboard.value) {
-    clipboard.remove(clipboardCard.value.id);
-    return;
-  }
-
-  clipboard.add(clipboardCard.value);
-}
-
 function handleDislike() {
   if (
     isThumbsDownClicked.value ||
@@ -421,6 +392,8 @@ function viewPopularCards() {
 
 .preview-image-wrapper {
   position: relative;
+  transform-origin: center top;
+  transition: scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .preview-image {
@@ -428,11 +401,10 @@ function viewPopularCards() {
   aspect-ratio: 5 / 7;
   object-fit: cover;
   border-radius: 16px;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.preview-image-wrapper:hover .preview-image {
-  transform: scale(1.03);
+.preview-image-wrapper:hover {
+  scale: 1.03;
 }
 
 .preview-title {

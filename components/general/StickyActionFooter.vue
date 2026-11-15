@@ -1,22 +1,24 @@
 <template>
-  <Teleport to="body">
-    <div v-if="show && !nearPageBottom" class="sticky-footer-wrap">
-      <div class="sticky-footer-shell" :class="shellLayoutClass">
-        <slot v-if="slots.default" />
-        <div
-          v-else
-          class="max-w-[1900px] flex justify-center items-center gap-8"
-        >
-          <div v-if="hasLeftSlot" class="flex grow justify-end">
-            <slot name="left" />
-          </div>
-          <div v-if="hasRightSlot" class="shrink-0">
-            <slot name="right" />
+  <ClientOnly>
+    <Teleport to="body">
+      <div v-if="show && !nearPageBottom" class="sticky-footer-wrap">
+        <div class="sticky-footer-shell" :class="shellLayoutClass">
+          <slot v-if="slots.default" />
+          <div
+            v-else
+            class="max-w-[1900px] flex justify-center items-center gap-8"
+          >
+            <div v-if="hasLeftSlot" class="flex grow justify-end">
+              <slot name="left" />
+            </div>
+            <div v-if="hasRightSlot" class="shrink-0">
+              <slot name="right" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </Teleport>
+    </Teleport>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">

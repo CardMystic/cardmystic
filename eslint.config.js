@@ -10,6 +10,7 @@ export default defineConfig([
       '**/node_modules/**',
       '**/dist/**',
       '**/.nuxt/**',
+      '**/.nuxt-build/**',
       '**/.output/**',
     ],
   },

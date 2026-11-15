@@ -135,7 +135,18 @@ export function getCardArtUrl(
  * "K'rrik, Son of Yawgmoth" render blank). We additionally percent-encode
  * those characters here.
  */
-export function scryfallArtCropUrl(cardName: string): string {
+export function scryfallArtCropUrl(
+  cardName: string,
+  printingId?: string | null,
+): string {
+  if (
+    printingId &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      printingId,
+    )
+  ) {
+    return `https://api.scryfall.com/cards/${printingId}?format=image&version=art_crop`;
+  }
   const encoded = encodeURIComponent(cardName).replace(
     /['()!*]/g,
     (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
@@ -154,8 +165,20 @@ export async function fetchDirectArtCropUrl(
   cardName: string,
   backendUrl: string,
   requestFetch: typeof $fetch = $fetch,
+  printingId?: string | null,
 ): Promise<string | null> {
   try {
+    if (printingId) {
+      const card = await $fetch<ScryfallCard>(
+        `https://api.scryfall.com/cards/${encodeURIComponent(printingId)}`,
+        { signal: AbortSignal.timeout(5000) },
+      );
+      return (
+        card.image_uris?.art_crop ??
+        card.card_faces?.[0]?.image_uris?.art_crop ??
+        null
+      );
+    }
     const cards = await requestFetch<
       Array<{
         image_uris?: { art_crop?: string };

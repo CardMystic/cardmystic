@@ -10,6 +10,15 @@ onMounted(() => {
   mounted.value = true;
 });
 const signedIn = computed(() => mounted.value && !!userId.value);
+const hideAllowance = computed(
+  () =>
+    signedIn.value &&
+    ready.value &&
+    !pending.value &&
+    !error.value &&
+    access.value?.enabled &&
+    access.value.tier === 'enhanced',
+);
 const mode = computed(() =>
   !signedIn.value || route.query.useRerank === 'false' ? 'normal' : 'enhanced',
 );
@@ -40,7 +49,12 @@ function select(value: unknown) {
 
 <template>
   <div
-    class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1 sm:flex sm:flex-wrap"
+    class="grid items-center gap-x-3 gap-y-1 sm:flex sm:flex-wrap"
+    :class="
+      compact
+        ? 'grid-cols-1 justify-items-end'
+        : 'grid-cols-[auto_minmax(0,1fr)]'
+    "
   >
     <USelect
       :id="id"
@@ -49,7 +63,7 @@ function select(value: unknown) {
         { label: 'Normal', value: 'normal' },
         { label: 'Pro', value: 'enhanced', disabled: !signedIn },
       ]"
-      :aria-describedby="`${id}-description`"
+      :aria-describedby="hideAllowance ? undefined : `${id}-description`"
       aria-label="Search mode"
       class="search-mode w-32 min-h-11 sm:w-36"
       :data-mode="mode"
@@ -58,6 +72,7 @@ function select(value: unknown) {
       @update:model-value="select"
     />
     <span
+      v-if="!hideAllowance"
       :id="`${id}-description`"
       class="min-w-0 text-sm text-muted"
       aria-live="polite"

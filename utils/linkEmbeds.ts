@@ -8,7 +8,7 @@
  */
 
 export type LinkEmbedType =
-  'decklist' | 'article' | 'user' | 'search' | 'popular';
+  'decklist' | 'primer' | 'article' | 'user' | 'search' | 'popular';
 
 /** Slug/type breakdown for a `/search/...` or `/popular-.../...` URL. */
 export interface SearchEmbedInfo {
@@ -63,8 +63,13 @@ export function parseLinkEmbedTarget(
 
   let m: RegExpMatchArray | null;
 
-  m = path.match(/^\/lists\/([^/]+)$/);
-  if (m) return { href: path, type: 'decklist', id: decodeURIComponent(m[1]) };
+  m = path.match(/^\/lists\/([^/]+)(\/primer)?$/);
+  if (m)
+    return {
+      href: path,
+      type: m[2] ? 'primer' : 'decklist',
+      id: decodeURIComponent(m[1]),
+    };
 
   m = path.match(/^\/articles\/([^/]+)$/);
   if (m) return { href: path, type: 'article', id: decodeURIComponent(m[1]) };

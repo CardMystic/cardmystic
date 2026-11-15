@@ -1,7 +1,11 @@
 <script setup lang="ts">
 defineOptions({ name: 'ThemesCollectionPage' });
 const route = useRoute();
-definePageMeta({ key: (route) => route.path, title: 'MTG Themes' });
+definePageMeta({
+  key: (route) => route.path,
+  title: 'MTG Themes',
+  middleware: 'card-collection',
+});
 </script>
 
 <template>

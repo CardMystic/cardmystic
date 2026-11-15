@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
 export const DeckPreferencesSchema = z.object({
+  tracked_roles: z.array(z.string()).optional(),
+  visible_labels: z.array(z.enum(['roles', 'themes', 'tags'])).optional(),
+  show_card_metadata: z.boolean().optional(),
   deck_view: z.enum(['grid', 'text']),
   deck_group_by: z
     .enum([
@@ -14,11 +17,7 @@ export const DeckPreferencesSchema = z.object({
       'sets',
     ])
     .nullable()
-    .transform((value) =>
-      value === 'roles' || value === 'themes' || value === 'sets'
-        ? null
-        : value,
-    ),
+    .transform((value) => (value === 'sets' ? null : value)),
   deck_sort_by: z
     .enum([
       'name',
@@ -38,6 +37,9 @@ export type DeckDisplayPreferences = Omit<DeckPreferences, 'deck_sort_by'> & {
   deck_sort_by: DeckPreferences['deck_sort_by'] | 'ai_score';
 };
 export const defaultDeckPreferences: DeckPreferences = {
+  show_card_metadata: undefined,
+  tracked_roles: undefined,
+  visible_labels: undefined,
   deck_view: 'grid',
   deck_group_by: 'type',
   deck_sort_by: 'cmc',
@@ -54,6 +56,8 @@ export const deckGroupOptions = [
   { value: 'colorIdentity', label: 'Color Identity' },
   { value: 'cmc', label: 'Mana Value' },
   { value: 'tags', label: 'My Tags' },
+  { value: 'roles', label: 'Roles' },
+  { value: 'themes', label: 'Themes' },
 ] satisfies {
   value: NonNullable<DeckPreferences['deck_group_by']> | 'none';
   label: string;

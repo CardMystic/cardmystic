@@ -11,6 +11,8 @@
     <LazyCardActionsModal
       v-if="showActions"
       v-model:open="showActions"
+      :is-flipped="isFlipped"
+      @flip="flipCard"
       :card="actionCard"
       :actions="cardOverlayMenuItems"
       board="Search result"
@@ -43,16 +45,27 @@
       </template>
     </UModal>
     <div class="card-image-wrapper">
-      <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
-
       <!-- Partner commanders: two overlapping cards -->
-      <template v-if="hasPartner">
+      <NuxtLink
+        v-if="printingPending"
+        :to="`/card/${card.card_data.oracle_id}`"
+        no-prefetch
+        :aria-label="card.card_data.name"
+        class="block w-full rounded-xl bg-elevated"
+      >
+        <picture>
+          <source media="(scripting: none)" :srcset="cardImageUrl" />
+          <img width="488" height="680" alt="" class="block w-full aspect-[5/7] rounded-xl" />
+        </picture>
+      </NuxtLink>
+      <template v-else-if="hasPartner">
         <div class="partner-stack" @mouseleave="partnerHoveredIndex = null">
           <button
             type="button"
             aria-haspopup="dialog"
             :aria-expanded="showActions"
-            class="partner-card partner-back"
+            class="card-finish partner-card partner-back"
+            :data-card-finish="card.partner_card_data?.selected_finish"
             :class="{ 'partner-front': partnerFrontIndex === 1 }"
             :aria-label="`View ${card.partner_card_data!.name}`"
             @mouseenter="
@@ -61,6 +74,9 @@
             "
             @click="openActions(true)"
           >
+            <GameChangerBadge
+              v-if="showCardInfo && card.partner_card_data?.game_changer"
+            />
             <img
               class="card-large cursor-pointer"
               :src="partnerImageUrl"
@@ -75,7 +91,8 @@
             type="button"
             aria-haspopup="dialog"
             :aria-expanded="showActions"
-            class="partner-card"
+            class="card-finish partner-card"
+            :data-card-finish="card.card_data.selected_finish"
             :class="{ 'partner-front': partnerFrontIndex === 0 }"
             :aria-label="`View ${card.card_data.name}`"
             @mouseenter="
@@ -84,6 +101,9 @@
             "
             @click="openActions()"
           >
+            <GameChangerBadge
+              v-if="showCardInfo && card.card_data.game_changer"
+            />
             <img
               class="card-large cursor-pointer"
               :src="cardImageUrl"
@@ -103,10 +123,12 @@
         aria-haspopup="dialog"
         :aria-expanded="showActions"
         v-else
-        class="block w-full rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+        class="card-finish block w-full rounded-xl focus-visible:outline-2 focus-visible:outline-primary"
+        :data-card-finish="card.card_data.selected_finish"
         :aria-label="`Options for ${card.card_data.name}`"
         @click="openActions()"
       >
+        <GameChangerBadge v-if="showCardInfo && card.card_data.game_changer" />
         <img
           :class="sizeClass"
           :src="cardImageUrl"
@@ -249,6 +271,7 @@
           </template>
         </div>
         <span
+          v-if="!printingPending"
           class="shrink-0"
           :title="hasPartner ? combinedPriceTooltip : singleBuyTooltip"
         >
@@ -257,7 +280,7 @@
             v-if="hasPartner && showCardInfo && partnerTcgplayerId"
             :to="getAffiliateLink(partnerTcgplayerId)"
             external
-            color="success"
+            v-bind="cardActionStyles.buy"
             variant="outline"
             :size="isMobile ? 'xs' : 'sm'"
             target="_blank"
@@ -273,7 +296,7 @@
             "
             :to="getAffiliateLink(card.card_data.tcgplayer_id)"
             external
-            color="success"
+            v-bind="cardActionStyles.buy"
             variant="outline"
             :size="isMobile ? 'xs' : 'sm'"
             target="_blank"
@@ -297,7 +320,7 @@ import { getUsdPrice } from '~/utils/cardPrice';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
 import type { Card } from '~/models/cardModel';
-import type { CardAction } from '~/utils/card-actions';
+import { cardActionStyles, findSimilarAction, type CardActionMenu } from '~/utils/card-actions';
 import { useRouter } from 'vue-router';
 import {
   getAffiliateLink,
@@ -315,6 +338,7 @@ const { saveSearchMutation } = useSearchHistory();
 const isMobile = useIsMobile();
 
 const props = defineProps({
+  printingPending: Boolean,
   card: {
     type: Object as PropType<Card>,
     required: true,
@@ -464,80 +488,66 @@ function openActions(partner = false) {
 }
 const showAddToDeckModal = ref(false);
 
-const cardOverlayMenuItems = computed<CardAction[][]>(() => {
+const cardOverlayMenuItems = computed<CardActionMenu>(() => {
   const data = actionCard.value.card_data;
-  const generalActions: CardAction[] = [
-    {
-      label: 'View Card Details',
-      icon: 'i-lucide-info',
-      to: `/card/${data.oracle_id}`,
-    },
-    {
+  const menu: CardActionMenu = {
+    addToDeck: {
       label: deckbuilderStore?.selectedDeckId.value
         ? 'Add to Another Deck'
         : 'Add to Deck',
-      icon: 'i-lucide-library-big',
+      ...cardActionStyles.addToDeck,
       onSelect() {
         showAddToDeckModal.value = true;
       },
     },
-  ];
-  if (!actionPartner.value && isDualFaced.value) {
-    generalActions.push({
-      label: isFlipped.value ? 'Show Front Face' : 'Show Back Face',
-      icon: 'i-lucide-refresh-cw',
-      onSelect: flipCard,
-    });
-  }
-  generalActions.push({
+  };
+  menu.marketplace = {
     label: data.tcgplayer_id
       ? getUsdPrice(data.prices)
         ? `Buy on TCGPlayer · $${getUsdPrice(data.prices)}`
         : 'Buy on TCGPlayer'
       : 'Search on TCGPlayer',
-    icon: 'i-lucide-shopping-cart',
+    ...(data.tcgplayer_id
+      ? cardActionStyles.buy
+      : cardActionStyles.searchMarketplace),
     to: data.tcgplayer_id
       ? getAffiliateLink(data.tcgplayer_id)
       : generateTCGPlayerSearchUrl(data.name),
     target: '_blank',
     rel: 'noopener noreferrer',
-  });
+  };
   if (!props.isSearched) {
-    generalActions.push({
-      label: 'Find Similar Cards',
-      icon: 'i-mdi-cards-outline',
+    menu.similar = {
+      ...findSimilarAction,
       onSelect: () => findSimilarCards(data.name),
-    });
+    };
   }
   if (props.isCommander) {
-    generalActions.push(
-      {
-        label: 'Popular Cards for this Commander',
-        icon: 'i-lucide-flame',
-        onSelect: () => viewPopularCards(data.name),
-      },
-      {
-        label: 'Get Deck Recommendations',
-        icon: 'i-lucide-box',
-        onSelect: () => getRecommendations(data.name),
-      },
-    );
+    menu.popular = {
+      label: 'Popular Cards for this Commander',
+      ...cardActionStyles.popularForCommander,
+      onSelect: () => viewPopularCards(data.name),
+    };
+    menu.recommendations = {
+      label: 'Get Deck Recommendations',
+      ...cardActionStyles.recommendations,
+      onSelect: () => getRecommendations(data.name),
+    };
   }
-  const searchActions: CardAction[] = [];
   if (props.showCardInfo && !props.isSearched) {
     if (!props.hideThumbsDownButton) {
       const submitted = dislikedCards.value.has(data.name);
-      searchActions.push({
+      menu.feedback = {
         label: submitted ? 'Feedback Submitted' : 'Mark As Poor Result',
-        icon: 'i-lucide-thumbs-down',
+        ...cardActionStyles.feedback(submitted),
         disabled: submitted || !searchQuery.value,
         onSelect: () => handleDislike(data.name),
-      });
+      };
     }
     if (props.showAddToDeckbuilderButton && deckbuilderStore) {
       const inDeck = deckbuilderStore.hasCard(data.name);
       const selectedDeck = !!deckbuilderStore.selectedDeckId.value;
-      searchActions.push({
+      menu.addToSearch = {
         label: selectedDeck
           ? inDeck
             ? 'Added to deck'
@@ -545,7 +555,7 @@ const cardOverlayMenuItems = computed<CardAction[][]>(() => {
           : inDeck
             ? 'Added to search'
             : 'Add to search',
-        icon: inDeck ? 'i-lucide-check' : 'i-lucide-layers-plus',
+        ...cardActionStyles.addToSearch(inDeck),
         disabled:
           inDeck ||
           deckbuilderStore.pendingCards.value.includes(data.name) ||
@@ -553,12 +563,10 @@ const cardOverlayMenuItems = computed<CardAction[][]>(() => {
         onSelect: () => {
           void deckbuilderStore.addCard(data.name);
         },
-      });
+      };
     }
   }
-  return searchActions.length
-    ? [generalActions, searchActions]
-    : [generalActions];
+  return menu;
 });
 
 const isDualFaced = computed(() => {
@@ -781,12 +789,12 @@ function handleImageError(event: Event) {
   border: 1.5px solid rgba(234, 179, 8, 0.4);
 }
 
-.card-image-wrapper img {
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.card-image-wrapper > .card-finish {
+  transition: scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-image-wrapper:hover img {
-  transform: scale(1.03);
+.card-image-wrapper:hover > .card-finish {
+  scale: 1.03;
 }
 
 .card-root {
@@ -833,12 +841,12 @@ function handleImageError(event: Event) {
 }
 
 /* Partner images scale individually on hover */
-.partner-card img {
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.partner-card {
+  transition: scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.partner-card:hover img {
-  transform: scale(1.05);
+.partner-card:hover {
+  scale: 1.05;
   z-index: 2;
 }
 </style>

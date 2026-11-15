@@ -6,6 +6,10 @@ export interface DeckAnalytics {
   averageManaValue: number | null;
   types: { name: string; count: number }[];
   roles: { name: string; count: number }[] | null;
+  themes: { name: string; count: number }[] | null;
+  mainboardRoles: Record<string, number> | null;
+  topThemes: { name: string; count: number }[] | null;
+  topSets?: { code: string; name: string; count: number }[];
   prices: {
     knownPriceCents: number;
     missingPrices: number;

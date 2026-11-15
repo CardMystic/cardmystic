@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { commanderBracket } from '~/utils/commanderBrackets';
 
-const props = defineProps<{ bracket?: number | null; editable?: boolean }>();
+const props = defineProps<{
+  bracket?: number | null;
+  editable?: boolean;
+  fullLabel?: boolean;
+}>();
 const emit = defineEmits<{ edit: [] }>();
 const info = computed(() => commanderBracket(props.bracket));
 const label = computed(() =>
@@ -37,7 +41,7 @@ const description = computed(() =>
       ]"
       @click="editable && emit('edit')"
     >
-      {{ info?.value ?? '?' }}
+      {{ fullLabel ? label : (info?.value ?? '?') }}
     </component>
   </UTooltip>
 </template>

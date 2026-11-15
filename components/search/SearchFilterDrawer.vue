@@ -37,6 +37,14 @@
       </template>
       <template #body>
         <div v-if="open" class="space-y-5">
+          <UCheckbox
+            v-if="!commanderOnly"
+            label="Is A Commander"
+            :model-value="!!filters?.isCommander"
+            @update:model-value="
+              filters = { ...filters, isCommander: $event === true || undefined }
+            "
+          />
           <QuickFilters v-model="filters" :show="quickFilters" />
           <section
             v-if="commanderColors"
@@ -51,6 +59,7 @@
             v-model="filters"
             :hide-colors="hideColors || commanderColors"
             :hide-formats="hideFormats"
+            :commander-only="commanderOnly"
           />
         </div>
       </template>
@@ -84,11 +93,12 @@
 import { computed, ref } from 'vue';
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     hideColors?: boolean;
     hideFormats?: boolean;
     commanderColors?: boolean;
+    commanderOnly?: boolean;
     quickFilters?: string[];
     canApply?: boolean;
     applyLabel?: string;
@@ -116,9 +126,14 @@ const filterCount = computed(() => {
     [value.selectedCMC, value.selectedPower, value.selectedToughness].filter(
       (number) => number !== undefined && number !== '',
     ).length +
-    [value.isMTGO, value.isArena, value.isPaper, value.isGameChanger].filter(
-      Boolean,
-    ).length
+    Number(value.maxPriceUsd !== undefined) +
+    [
+      value.isMTGO,
+      value.isArena,
+      value.isPaper,
+      value.isGameChanger,
+      !props.commanderOnly && value.isCommander,
+    ].filter(Boolean).length
   );
 });
 

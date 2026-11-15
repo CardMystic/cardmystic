@@ -250,7 +250,7 @@ test('similarity counts the searched card on the first page and cached navigatio
   expect(state.hydrationWarnings).toEqual([]);
 });
 
-test('card-page similar cards show full groups, then paginate when ungrouped', async ({
+test('card-page similar cards paginate by default and support complete groups', async ({
   page,
 }) => {
   const state = await setup(page, 'similarity');
@@ -258,18 +258,28 @@ test('card-page similar cards show full groups, then paginate when ungrouped', a
   await expect(page.locator('.card-title-text')).toHaveText(
     state.seed.card_name,
   );
-  const related = page.locator('.similar-cards-section');
+  const related = page.locator('.card-results');
   const pages = pagination(related);
-  await expectCards(related, state.names);
-  await expect(pages).toHaveCount(0);
-  await related.getByRole('button', { name: 'Display', exact: true }).click();
-  await page.getByTitle('Clear grouping', { exact: true }).click();
-  await page.keyboard.press('Escape');
   await expectCards(related, state.names.slice(0, 40));
   await pages.getByRole('button', { name: 'Next Page', exact: true }).click();
   await expectCards(related, state.names.slice(40, 80));
   await pages.getByRole('button', { name: 'Page 3', exact: true }).click();
   await expectCards(related, state.names.slice(80));
+  await related.getByRole('button', { name: 'Display', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'Search grouping', exact: true })
+    .click();
+  await page.getByRole('option', { name: 'Color', exact: true }).click();
+  const blue = state.names.filter((_, index) => index % 2 === 0);
+  const white = state.names.filter((_, index) => index % 2 === 1);
+  await expectCards(related, [...blue, ...white]);
+  await expect(pages).toHaveCount(0);
+  await page.getByTitle('Clear grouping', { exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expectCards(related, state.names.slice(0, 40));
+  await expect(
+    pages.getByRole('button', { name: 'Page 1', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
   expect(state.requests()).toBe(1);
   expect(state.hydrationWarnings).toEqual([]);
 });

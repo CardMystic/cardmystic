@@ -33,6 +33,7 @@ export const ArticleSummarySchema = z.object({
     .describe('Last update timestamp (ISO 8601)'),
   user_id: z.string().describe("The author's user ID"),
   username: z.string().nullable().describe("The author's username"),
+  avatar_printing_id: z.string().uuid().nullable().optional(),
   avatar_card_name: z
     .string()
     .nullable()
@@ -218,6 +219,7 @@ export const ArticleCommentSchema = z.object({
   article_id: z.string().describe('The article ID the comment belongs to'),
   user_id: z.string().describe("The comment author's user ID"),
   username: z.string().nullable().describe("The comment author's username"),
+  avatar_printing_id: z.string().uuid().nullable().optional(),
   avatar_card_name: z
     .string()
     .nullable()

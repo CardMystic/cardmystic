@@ -96,7 +96,9 @@
           @mouseenter="clearPendingPreviewCard()"
         >
           <div v-if="isDesktopPreview" class="preview-sticky">
+            <HoveredPreviewSkeleton v-if="printingPending(previewCard)" variant="search" />
             <HoveredSearchResultPreview
+              v-else
               :card="previewCard"
               :query-param="queryParam"
               :is-commander="previewCardIsCommander"
@@ -126,11 +128,12 @@
             <div
               @mouseenter="setPreviewCard(searchedCard)"
               @focusin="setPreviewCard(searchedCard)"
-              @mouseleave="clearPendingPreviewCard(searchedCard.card_data.id)"
+              @mouseleave="clearPendingPreviewCard(resultKey(searchedCard))"
             >
               <Card
                 v-if="view === 'grid'"
                 :card="searchedCard"
+                :printing-pending="printingPending(searchedCard)"
                 :showCardInfo="true"
                 :is-searched="true"
                 :hide-progress-bar="false"
@@ -143,6 +146,7 @@
               <CardText
                 v-else
                 :card="searchedCard"
+                :printing-pending="printingPending(searchedCard)"
                 :show-card-info="true"
                 :is-searched="true"
                 :hide-progress-bar="false"
@@ -208,14 +212,15 @@
                 >
                   <div
                     v-for="result in group.cards"
-                    :key="result.card_data.id"
+                    :key="resultKey(result)"
                     @mouseenter="setPreviewCard(result)"
                     @focusin="setPreviewCard(result)"
-                    @mouseleave="clearPendingPreviewCard(result.card_data.id)"
+                    @mouseleave="clearPendingPreviewCard(resultKey(result))"
                   >
                     <Card
                       v-if="view === 'grid'"
                       :card="result"
+                      :printing-pending="printingPending(result)"
                       :showCardInfo="true"
                       :is-searched="false"
                       :hide-progress-bar="hideProgressBar"
@@ -231,6 +236,7 @@
                     <CardText
                       v-else
                       :card="result"
+                      :printing-pending="printingPending(result)"
                       :show-card-info="true"
                       :is-searched="false"
                       :hide-progress-bar="hideProgressBar"
@@ -260,14 +266,15 @@
             >
               <div
                 v-for="result in paginatedResults"
-                :key="result.card_data.id"
+                :key="resultKey(result)"
                 @mouseenter="setPreviewCard(result)"
                 @focusin="setPreviewCard(result)"
-                @mouseleave="clearPendingPreviewCard(result.card_data.id)"
+                @mouseleave="clearPendingPreviewCard(resultKey(result))"
               >
                 <Card
                   v-if="view === 'grid'"
                   :card="result"
+                  :printing-pending="printingPending(result)"
                   :showCardInfo="true"
                   :is-searched="
                     result.card_data.id === searchedCard?.card_data.id
@@ -283,6 +290,7 @@
                 <CardText
                   v-else
                   :card="result"
+                  :printing-pending="printingPending(result)"
                   :show-card-info="true"
                   :is-searched="
                     result.card_data.id === searchedCard?.card_data.id
@@ -370,7 +378,6 @@
 <script lang="ts" setup>
 const enhancementNotice = useSearchEnhancementNotice();
 const currentRoute = useRoute();
-provide('searchCardDeckMatches', true);
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import {
@@ -434,6 +441,7 @@ const props = withDefaults(
     hideGroupNavigation?: boolean;
     defaultGroupBy?: string;
     preserveResultOrder?: boolean;
+    useCanonicalPrintings?: boolean;
     rerankingEnabled?: boolean;
   }>(),
   {
@@ -444,6 +452,18 @@ const props = withDefaults(
 );
 
 defineEmits<{ retry: [] }>();
+
+const { cards: preferredResults, pending: printingPending } =
+  useSearchResultPrintings(
+    computed(() => props.useCanonicalPrintings ? undefined : props.searchResults),
+  );
+const displayResults = computed(
+  () => preferredResults.value ?? props.searchResults,
+);
+function resultKey(card: Card) {
+  if (props.useCanonicalPrintings) return card.card_data.id;
+  return card.card_data.oracle_id + (card.partner_card_data?.oracle_id ?? '');
+}
 
 const PAGE_SIZE = 40;
 const currentPage = ref(1);
@@ -549,13 +569,13 @@ const hasPopularity = computed(
 
 // Computed sorted results for flat display (no grouping, or similarity search)
 const sortedResults = computed(() => {
-  if (!props.searchResults || props.searchResults.length === 0) {
-    return props.searchResults;
+  if (!displayResults.value || displayResults.value.length === 0) {
+    return displayResults.value;
   }
 
   // For similarity search, keep the first card (the searched card) separate
   if (props.isSimilaritySearch && !props.hideSearchedCard) {
-    const [firstCard, ...restCards] = props.searchResults;
+    const [firstCard, ...restCards] = displayResults.value;
     const sortedRest = sortSearchResults(
       restCards,
       sortBy.value,
@@ -566,7 +586,7 @@ const sortedResults = computed(() => {
   }
 
   return sortSearchResults(
-    props.searchResults,
+    displayResults.value,
     sortBy.value,
     sortDirection.value,
     props.preserveResultOrder,
@@ -578,27 +598,27 @@ const searchedCard = computed(() => {
   if (
     !props.isSimilaritySearch ||
     props.hideSearchedCard ||
-    !props.searchResults ||
-    props.searchResults.length === 0
+    !displayResults.value ||
+    displayResults.value.length === 0
   ) {
     return undefined;
   }
-  return props.searchResults[0];
+  return displayResults.value[0];
 });
 
 // Grouped views show complete groups without pagination.
 const groupedResults = computed<CardGroup[] | null>(() => {
   if (
     !groupBy.value ||
-    !props.searchResults ||
-    props.searchResults.length === 0
+    !displayResults.value ||
+    displayResults.value.length === 0
   ) {
     return null;
   }
 
   // For similarity search, keep first card out of groups
   if (props.isSimilaritySearch && !props.hideSearchedCard) {
-    const [, ...restCards] = props.searchResults;
+    const [, ...restCards] = displayResults.value;
     return groupAndSortCards(
       restCards,
       groupBy.value,
@@ -611,7 +631,7 @@ const groupedResults = computed<CardGroup[] | null>(() => {
   }
 
   return groupAndSortCards(
-    props.searchResults,
+    displayResults.value,
     groupBy.value,
     sortBy.value,
     sortDirection.value,
@@ -661,7 +681,7 @@ const previewCard = computed(() => {
 
   const hoveredCard = hoveredCardId.value
     ? visibleCards.value.find(
-        (card) => card.card_data.id === hoveredCardId.value,
+        (card) => resultKey(card) === hoveredCardId.value,
       )
     : undefined;
 
@@ -707,7 +727,7 @@ function clearPendingPreviewCard(cardId?: string) {
 
 function setPreviewCard(card: Card) {
   if (!isDesktopPreview.value) return;
-  const nextCardId = card.card_data.id;
+  const nextCardId = resultKey(card);
   // Skip entirely if the card hasn't changed — prevents jitter from child mouseenter events
   if (nextCardId === hoveredCardId.value) return;
 
@@ -729,9 +749,13 @@ function setPreviewCard(card: Card) {
   }, HOVER_PREVIEW_DELAY_MS);
 }
 
-watch([currentPage, visibleCards], () => {
+watch(currentPage, () => {
   clearPendingPreviewCard();
   hoveredCardId.value = null;
+});
+watch(visibleCards, (cards) => {
+  if (hoveredCardId.value && !cards.some(card => resultKey(card) === hoveredCardId.value))
+    hoveredCardId.value = null;
 });
 
 onUnmounted(() => {

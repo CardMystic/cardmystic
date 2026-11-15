@@ -109,10 +109,18 @@ const sections = [
   },
 ];
 
+function sectionResult(page: Page, section: (typeof sections)[number]) {
+  return section.path === '/user/featured'
+    ? page.getByRole('link').filter({ hasText: section.result })
+    : page.getByRole('heading', { name: section.result, exact: true });
+}
+
 async function revealHomeSections(page: Page) {
-  await page
-    .getByRole('heading', { name: 'Recent Decklists', exact: true })
-    .scrollIntoViewIfNeeded();
+  const recent = page.getByRole('heading', {
+    name: 'Recent Decklists',
+    exact: true,
+  });
+  if (await recent.count()) await recent.scrollIntoViewIfNeeded();
   await page
     .getByRole('heading', { name: 'Awesome Decklists & Users', exact: true })
     .scrollIntoViewIfNeeded();
@@ -120,10 +128,16 @@ async function revealHomeSections(page: Page) {
     name: 'Recent Articles',
     exact: true,
   });
+  const primersHeading = page.getByRole('heading', {
+    name: 'Suggested Primer Reads',
+    exact: true,
+  });
+  if (await primersHeading.count())
+    await primersHeading.scrollIntoViewIfNeeded();
   if (await articlesHeading.count())
     await articlesHeading.scrollIntoViewIfNeeded();
   await page
-    .getByText('Total Searches Resolved', { exact: true })
+    .getByLabel('CardMystic community statistics')
     .scrollIntoViewIfNeeded();
 }
 
@@ -169,8 +183,10 @@ test.beforeEach(async ({ page }, testInfo) => {
       },
     );
   }
-  await page.route(BACKEND + '/metrics/query_count', (route) =>
-    route.fulfill({ json: { totalQueries: 346242 } }),
+  await page.route(BACKEND + '/metrics/site_stats', (route) =>
+    route.fulfill({
+      json: { totalQueries: 346242, totalUsers: 1200, totalDecks: 2300 },
+    }),
   );
 });
 
@@ -217,10 +233,7 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
           page.getByText(section.emptyText, { exact: true }),
         ).toHaveCount(0);
     }
-    const metrics = page
-      .getByText('Total Searches Resolved', { exact: true })
-      .locator('..')
-      .locator('..');
+    const metrics = page.getByLabel('CardMystic community statistics');
     await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
     if (failure === '429') {
       await expect(retryAlerts.first()).toContainText(
@@ -235,9 +248,7 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
           : retryAlerts.filter({ hasText: section.title });
       recovering.add(section.path);
       await alert.getByRole('button', { name: 'Retry', exact: true }).click();
-      await expect(
-        page.getByText(section.result, { exact: true }),
-      ).toBeVisible();
+      await expect(sectionResult(page, section)).toBeVisible();
       await expect(retryAlerts).toHaveCount(sections.length - recovering.size);
     }
   });
@@ -277,9 +288,15 @@ test('successful empty responses still show the real empty states', async ({
   ).toHaveCount(0);
 });
 
-test('initial mobile home loads recent decks and defers featured content until visible', async ({
+test('initial mobile home loads recent decks and defers featured refreshes until visible', async ({
   page,
 }) => {
+  const hydrationErrors: string[] = [];
+  page.on('console', (message) => {
+    if (/hydration.*mismatch/i.test(message.text())) {
+      hydrationErrors.push(message.text());
+    }
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   // Stale SSR data must refresh only once the corresponding section is visible.
   await page.clock.setFixedTime(new Date(Date.now() + 10 * 60 * 1000));
@@ -300,6 +317,13 @@ test('initial mobile home loads recent decks and defers featured content until v
   await expect(
     page.getByRole('button', { name: 'Search', exact: true }),
   ).toBeEnabled();
+  const recentBounds = await page
+    .getByRole('heading', { name: 'Recent Decklists', exact: true })
+    .boundingBox();
+  const showcaseBounds = await page
+    .getByRole('heading', { name: 'Your next deck starts here', exact: true })
+    .boundingBox();
+  expect(recentBounds!.y).toBeLessThan(showcaseBounds!.y);
   // Allow delayed hydration and auth work to settle while staying at the hero.
   await page.waitForTimeout(1000);
   expect(
@@ -310,8 +334,22 @@ test('initial mobile home loads recent decks and defers featured content until v
   ).toEqual([]);
 
   await revealHomeSections(page);
+  await expect(
+    page.getByText(
+      'Browse public decks or try building your own without an account.',
+    ),
+  ).toHaveCount(0);
+  const builder = page.getByRole('region', {
+    name: 'Deck & Collection Builder',
+    exact: true,
+  });
+  await builder.scrollIntoViewIfNeeded();
+  await expect(
+    builder.getByRole('link', { name: 'Build a deck', exact: true }),
+  ).toHaveAttribute('href', '/lists');
+  expect(hydrationErrors).toEqual([]);
   for (const section of sections) {
-    await expect(page.getByText(section.result, { exact: true })).toBeVisible();
+    await expect(sectionResult(page, section)).toBeVisible();
   }
   for (const [path, limit] of [
     ['/supabase/card-lists/featured', '3'],
@@ -320,6 +358,51 @@ test('initial mobile home loads recent decks and defers featured content until v
   ]) {
     const request = requested.find((url) => backendPath(url) === path);
     expect(request?.searchParams.get('limit')).toBe(limit);
+  }
+});
+
+test('signed-in desktop builder link hydrates correctly on direct visit and reload', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  const hydrationErrors: string[] = [];
+  page.on('console', (message) => {
+    if (/hydration.*mismatch/i.test(message.text()))
+      hydrationErrors.push(message.text());
+  });
+  for (const section of sections) {
+    await page.route(
+      (url) => backendPath(url) === section.path,
+      (route) => route.fulfill({ json: section.data }),
+    );
+  }
+  await gotoHydrated(page, '/');
+  for (const reload of [false, true]) {
+    if (reload) {
+      await page.reload();
+      await waitForHydration(page);
+    }
+    await expect(
+      page.getByRole('button', { name: 'Profile', exact: true }),
+    ).toBeVisible();
+    const stats = page.getByRole('group', {
+      name: 'CardMystic community statistics',
+    });
+    await expect(
+      stats.getByRole('link', { name: '1,200 users' }),
+    ).toHaveAttribute('href', '/explore/users');
+    await expect(
+      stats.getByRole('link', { name: '2,300 decks' }),
+    ).toHaveAttribute('href', '/explore/decklists');
+    const builder = page.getByRole('region', {
+      name: 'Deck & Collection Builder',
+      exact: true,
+    });
+    await builder.scrollIntoViewIfNeeded();
+    await expect(
+      builder.getByRole('link', { name: 'Build a deck', exact: true }),
+    ).toHaveAttribute('href', '/lists');
+    expect(hydrationErrors).toEqual([]);
   }
 });
 
@@ -342,46 +425,7 @@ test(
         (route) => route.fulfill({ json: section.data }),
       );
     }
-    const exampleQuery = 'Artifacts that produce mana';
-    const topQuery = 'Creatures that draw cards';
-    await page.route(BACKEND + '/search/example', (route) =>
-      route.fulfill({
-        json: {
-          query: exampleQuery,
-          cards: [
-            {
-              card_name: 'Sol Ring',
-              rank: 1,
-              card_data: {
-                id: '20000000-0000-4000-8000-000000000001',
-                oracle_id: '20000000-0000-4000-8000-000000000002',
-                name: 'Sol Ring',
-                mana_cost: '{1}',
-                cmc: 1,
-                type_line: 'Artifact',
-                oracle_text: '{T}: Add {C}{C}.',
-                colors: [],
-                color_identity: [],
-                keywords: [],
-                games: ['paper'],
-                legalities: { commander: 'legal' },
-                prices: { usd: '1.00' },
-                image_uris: {
-                  normal: 'https://cards.scryfall.io/normal/sol-ring.jpg',
-                },
-                layout: 'normal',
-                rarity: 'uncommon',
-                set: 'cmm',
-                collector_number: '396',
-              },
-            },
-          ],
-        },
-      }),
-    );
-    await page.route(BACKEND + '/cache/popular', (route) =>
-      route.fulfill({ json: [topQuery] }),
-    );
+    const topQuery = 'card draw';
     await page.route(
       /https:\/\/(?:api|cards)\.scryfall\.(?:com|io)\//,
       (route) =>
@@ -402,24 +446,24 @@ test(
             await waitForHydration(page);
           }
           await expect(
-            page.getByText('Login To Create Decklists!', { exact: true }),
+            page
+              .getByRole('link', {
+                name: 'Build a deck',
+                exact: true,
+              })
+              .first(),
           ).toBeVisible();
           await revealHomeSections(page);
-          for (const section of publicSections) {
-            await expect(
-              page.getByText(section.result, { exact: true }),
-            ).toBeVisible();
-          }
-          const metrics = page
-            .getByText('Total Searches Resolved', { exact: true })
-            .locator('..')
-            .locator('..');
-          await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
-          const example = page.locator('.example-content');
-          await example.scrollIntoViewIfNeeded();
-          await expect(example).toContainText(exampleQuery);
           await expect(
-            example.getByAltText('Sol Ring', { exact: true }),
+            page.getByRole('link', { name: deck.name, exact: true }),
+          ).toHaveAttribute('href', `/lists/${deck.id}`);
+          for (const section of publicSections) {
+            await expect(sectionResult(page, section)).toBeVisible();
+          }
+          const metrics = page.getByLabel('CardMystic community statistics');
+          await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
+          await expect(
+            page.getByRole('heading', { name: 'Your next deck starts here' }),
           ).toBeVisible();
           const top = page.locator('.top-queries-container').first();
           await top.scrollIntoViewIfNeeded();
@@ -428,6 +472,35 @@ test(
           await expect(
             page.getByRole('button', { name: 'Retry', exact: true }),
           ).toHaveCount(0);
+          if (visit === 'direct visit') {
+            for (const width of [1600, 1599, 1280, 390, 320]) {
+              await page.setViewportSize({ width, height: 844 });
+              await page.evaluate(() => window.scrollTo(0, 0));
+              if (width < 1600) {
+                await page
+                  .getByRole('button', { name: 'Open navigation menu' })
+                  .click();
+              }
+              const navigation =
+                width < 1600
+                  ? page.getByRole('dialog', { name: 'Open navigation menu' })
+                  : page.getByRole('navigation', {
+                      name: 'Main navigation',
+                      exact: true,
+                    });
+              const pricing = navigation.getByRole('link', {
+                name: 'Pro Features',
+                exact: true,
+              });
+              await expect(pricing).toBeVisible();
+              await expect(pricing).toHaveAttribute('href', '/memberships');
+              if (width < 1600) await page.keyboard.press('Escape');
+              expect(
+                await page.evaluate(() => document.documentElement.scrollWidth),
+              ).toBeLessThanOrEqual(width);
+            }
+            await page.setViewportSize({ width: 1440, height: 1000 });
+          }
         });
       }
     } finally {

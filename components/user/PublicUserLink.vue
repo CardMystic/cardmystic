@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :to="`/user/${profile.id}`"
-    class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group"
+    class="relative block border border-black-300 dark:border-gray-400 rounded-lg overflow-hidden shadow-lg shadow-black/30 hover:border-primary transition-colors cursor-pointer group"
   >
     <img
       v-if="bannerImageUrl"
@@ -49,6 +49,9 @@ const props = defineProps<{ profile: PublicProfile }>();
 
 const bannerImageUrl = computed(() => {
   if (!props.profile.avatar_card_name) return null;
-  return scryfallArtCropUrl(props.profile.avatar_card_name);
+  return scryfallArtCropUrl(
+    props.profile.avatar_card_name,
+    props.profile.avatar_printing_id,
+  );
 });
 </script>

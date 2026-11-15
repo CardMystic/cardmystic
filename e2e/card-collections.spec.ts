@@ -1,6 +1,160 @@
 import { expect, test } from '@playwright/test';
-import { BACKEND, gotoHydrated } from './utils/mocks';
+import { BACKEND, gotoHydrated, waitForHydration } from './utils/mocks';
 import type { CardCollectionCatalog } from '../models/collectionModel';
+
+test('collection detail banners render their artwork on the right over a blurred backdrop', async ({
+  page,
+  request,
+}) => {
+  const response = await request.get('/api/backend/card-collections');
+  expect(response.ok()).toBe(true);
+  const catalog = (await response.json()) as CardCollectionCatalog;
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (
+      /hydrat/i.test(message.text()) &&
+      ['error', 'warning'].includes(message.type())
+    )
+      errors.push(message.text());
+  });
+  for (const kind of ['sets', 'roles', 'themes'] as const) {
+    const entry = catalog[kind].find((entry) => entry.imageUrl)!;
+    const path = `/${kind}/${entry.slug}`;
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      const response =
+        width === 1440 ? await page.goto(path) : await page.reload();
+      expect(response?.ok()).toBe(true);
+      expect(await response!.text()).toMatch(/<img[^>]+class="banner-art"/);
+      await waitForHydration(page);
+      const banner = page.locator(
+        'section[aria-labelledby="collection-title"]',
+      );
+      const art = banner.locator('.banner-art');
+      const backdrop = banner.locator('.banner-backdrop');
+      await expect(art).toHaveAttribute('src', entry.imageUrl!);
+      await expect
+        .poll(() => art.evaluate((img: HTMLImageElement) => img.naturalWidth))
+        .toBeGreaterThan(0);
+      await expect(backdrop).toHaveAttribute('src', entry.imageUrl!);
+      await expect(backdrop).toHaveCSS('filter', /blur\(32px\)/);
+      await expect(art).toHaveCSS('filter', 'none');
+      const bounds = (await banner.boundingBox())!;
+      const picture = (await art.boundingBox())!;
+      expect(picture.x).toBeGreaterThan(bounds.x);
+      expect(picture.x + picture.width).toBeCloseTo(bounds.x + bounds.width, 0);
+      const link = banner.getByRole('link', { name: /^Go To All/ });
+      await link.focus();
+      await expect(link).toBeFocused();
+      await expect(link).toHaveAttribute('href', '/' + kind);
+    }
+  }
+  expect(errors).toEqual([]);
+});
+
+test('reviewed taxonomy has distinct Proliferate pages and permanent legacy redirects', async ({
+  page,
+  request,
+  browser,
+  baseURL,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (/hydrat/i.test(m.text()) && ['warning', 'error'].includes(m.type()))
+      errors.push(m.text());
+  });
+  for (const [source, target] of [
+    ['/roles/proliferate-engine', '/roles/proliferate'],
+    ['/roles/cycling', '/themes/cycling'],
+  ]) {
+    const res = await request.get(source + '?query=draw', { maxRedirects: 0 });
+    expect(res.status()).toBe(301);
+    expect(new URL(res.headers().location, baseURL).pathname).toBe(target);
+    expect(new URL(res.headers().location, baseURL).search).toBe('?query=draw');
+  }
+  for (const path of ['/themes/1-1-counters', '/roles/beater']) {
+    expect((await request.get(path, { maxRedirects: 0 })).status()).toBe(404);
+  }
+  const context = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+  });
+  try {
+    const plain = await context.newPage();
+    for (const kind of ['themes', 'roles'] as const) {
+      const path = `/${kind}/proliferate`;
+      const definition =
+        kind === 'themes'
+          ? /rewards proliferating/i
+          : /directly repeats proliferate/i;
+      expect((await plain.goto(path))?.status()).toBe(200);
+      await expect(
+        plain.getByRole('region', { name: /MTG Proliferate/ }),
+      ).toContainText(definition);
+      await expect(plain.locator('meta[name="description"]')).toHaveAttribute(
+        'content',
+        definition,
+      );
+      await expect(plain.locator('link[rel="canonical"]')).toHaveAttribute(
+        'href',
+        'https://cardmystic.com' + path,
+      );
+      await expect(
+        plain.getByRole('link', {
+          name: new RegExp('^Go To All ' + kind + '$', 'i'),
+        }),
+      ).toHaveAttribute('href', '/' + kind);
+      const listed: string[] = [];
+      let total: number;
+      do {
+        const result = await request.get(
+          `/api/backend/card-collections${path}?offset=${listed.length}&limit=100`,
+        );
+        expect(result.ok()).toBe(true);
+        const body = await result.json();
+        total = body.total;
+        expect(body.results.length).toBeGreaterThan(0);
+        listed.push(
+          ...body.results.map((row: { card_name: string }) => row.card_name),
+        );
+      } while (listed.length < total);
+      expect(listed.includes('Voidwing Hybrid')).toBe(kind === 'themes');
+      await gotoHydrated(page, path);
+      await page.reload();
+      await waitForHydration(page);
+      await expect(
+        page.getByRole('region', { name: /MTG Proliferate/ }),
+      ).toContainText(definition);
+      if (kind === 'themes') {
+        const card = page.getByRole('img', {
+          name: 'Voidwing Hybrid',
+          exact: true,
+        });
+        const pagination = page
+          .getByLabel('Search results pagination', { exact: true })
+          .first();
+        for (const button of await pagination.getByRole('button').all()) {
+          if (await card.count()) break;
+          if (/^\d+$/.test((await button.innerText()).trim()))
+            await button.click();
+        }
+        await expect(card.first()).toBeVisible();
+      }
+    }
+    const link = page.getByRole('link', {
+      name: 'Go To All Roles',
+      exact: true,
+    });
+    await link.focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/roles$/);
+    expect(errors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
 
 test('all collection directories and detail pages expose SEO without JavaScript', async ({
   browser,
@@ -83,7 +237,7 @@ test('collection directories, pagination, navigation, and mobile layout', async 
   page.on('console', (message) => {
     if (/hydration/i.test(message.text())) errors.push(message.text());
   });
-  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.setViewportSize({ width: 1600, height: 1000 });
   await gotoHydrated(page, '/sets');
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await expect(
@@ -127,7 +281,7 @@ test('collection directories, pagination, navigation, and mobile layout', async 
   await expect(page.getByTestId('collection-tile')).toHaveCount(
     Math.min(40, roleCount > 40 ? roleCount - 40 : roleCount),
   );
-  await page.getByRole('searchbox', { name: 'Filter roles' }).fill('ramp');
+  await page.getByRole('combobox', { name: 'Filter roles' }).fill('ramp');
   await expect(page).toHaveURL(/\/roles$/);
   await expect(page.getByTestId('collection-tile').first()).toContainText(
     /ramp/i,

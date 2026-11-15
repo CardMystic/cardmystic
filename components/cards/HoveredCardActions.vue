@@ -1,244 +1,58 @@
 <template>
-  <div class="preview-actions">
-    <UButton
-      v-if="card.card_data.tcgplayer_id"
-      class="cursor-pointer"
-      :to="getAffiliateLink(card.card_data.tcgplayer_id)"
-      external
-      color="success"
-      variant="solid"
-      icon="i-heroicons-shopping-cart"
-      size="md"
-      target="_blank"
-      rel="noopener noreferrer"
-      :label="buyLabel"
-      block
-    />
-    <UButton
-      v-else
-      :to="generateTCGPlayerSearchUrl(card.card_data.name)"
-      class="cursor-pointer"
-      external
-      color="primary"
-      variant="solid"
-      icon="i-heroicons-magnifying-glass"
-      size="md"
-      label="Search on TCGPlayer"
-      block
-    />
-
-    <UButton
-      v-if="canShowDeckMenu"
-      class="cursor-pointer"
-      color="info"
-      variant="outline"
-      icon="i-lucide-library-big"
-      size="md"
-      label="Add to Deck"
-      block
-      @click="emit('openAddToDeck')"
-    />
-    <UButton
-      class="cursor-pointer"
-      :color="isInClipboard ? 'success' : 'info'"
-      variant="outline"
-      :icon="isInClipboard ? 'i-heroicons-check' : 'i-heroicons-plus'"
-      size="md"
-      :label="isInClipboard ? 'Remove From Clipboard' : 'Add To Clipboard'"
-      block
-      @click="emit('toggleClipboard')"
-    />
-    <UButton
-      v-if="isDualFaced"
-      class="cursor-pointer"
-      color="neutral"
-      variant="outline"
-      icon="i-heroicons-arrow-path"
-      size="md"
-      label="Flip Card"
-      block
-      @click="emit('flipCard')"
-    />
-    <UButton
-      v-if="showCommanderButtons"
-      class="cursor-pointer"
-      color="primary"
-      variant="outline"
-      icon="i-lucide-box"
-      size="md"
-      label="Get Deck Recommendations"
-      block
-      @click="emit('getRecommendations')"
-    />
-    <UButton
-      v-if="showCommanderButtons"
-      class="cursor-pointer"
-      color="error"
-      variant="outline"
-      icon="i-lucide-flame"
-      size="md"
-      label="Popular Cards For Commander"
-      block
-      @click="emit('viewPopularCards')"
-    />
-    <UButton
-      color="neutral"
-      class="cursor-pointer"
-      variant="outline"
-      icon="i-mdi-cards-outline"
-      size="md"
-      label="Find Similar Cards"
-      block
-      :disabled="findSimilarDisabled"
-      @click="emit('findSimilar')"
+  <div class="grid gap-2">
+    <CardActionList
+      :oracle-id="card.card_data.oracle_id"
+      :actions="menu"
+      preview
+      @view-card="emit('viewCard')"
+      @select="(action) => action.onSelect?.()"
     />
   </div>
-
-  <div v-if="showListActions" class="preview-actions">
-    <p class="preview-section-label">List Actions</p>
-    <template v-if="showEditCopiesButtons">
-      <div class="grid grid-cols-2 gap-2">
-        <UButton
-          color="neutral"
-          class="cursor-pointer"
-          variant="outline"
-          icon="i-heroicons-plus"
-          size="md"
-          label="Add Copy"
-          :disabled="(numCopies ?? 1) >= 100"
-          @click="emit('addCopy')"
-        />
-        <UButton
-          color="neutral"
-          class="cursor-pointer"
-          variant="outline"
-          icon="i-lucide-minus"
-          size="md"
-          label="Remove Copy"
-          :disabled="(numCopies ?? 1) <= 1"
-          @click="emit('removeCopy')"
-        />
-      </div>
-      <UButton
-        color="neutral"
-        class="cursor-pointer"
-        variant="outline"
-        icon="i-lucide-hash"
-        size="md"
-        label="Set Copies"
-        block
-        @click="emit('setCopies')"
-      />
-    </template>
-    <UButton
-      v-for="boardOption in availableBoards"
-      size="md"
-      :key="boardOption"
-      color="neutral"
-      class="cursor-pointer"
-      variant="outline"
-      :icon="boardIcon(boardOption)"
-      :label="`Move to ${boardOption}`"
-      block
-      @click="emit('changeBoard', boardOption)"
-    />
-    <UButton
-      v-if="showSetCommander"
-      color="warning"
-      class="cursor-pointer"
-      variant="outline"
-      icon="i-lucide-crown"
-      size="md"
-      label="Set As Commander"
-      block
-      @click="emit('setCommander')"
-    />
-    <UButton
-      v-if="showClearCommander"
-      color="warning"
-      class="cursor-pointer"
-      variant="outline"
-      icon="i-lucide-crown"
-      size="md"
-      label="Remove Commander"
-      block
-      @click="emit('clearCommander')"
-    />
-    <UButton
-      color="error"
-      class="cursor-pointer"
-      variant="outline"
-      icon="i-lucide-trash-2"
-      size="md"
-      label="Remove From List"
-      block
-      @click="emit('removeFromList')"
-    />
-  </div>
-
-  <div v-if="showSearchActions" class="preview-actions">
-    <p class="preview-section-label">Search Actions</p>
-    <UButton
-      v-if="!hideThumbsDownButton"
-      class="cursor-pointer"
-      :color="isThumbsDownClicked ? 'error' : 'primary'"
-      variant="outline"
-      icon="i-lucide-thumbs-down"
-      size="md"
-      :label="
-        isThumbsDownClicked ? 'Feedback Submitted' : 'Mark As Poor Result'
-      "
-      block
-      :disabled="isThumbsDownClicked"
-      @click="emit('dislike')"
-    />
-    <UButton
-      v-if="showAddToDeckbuilderButton"
-      class="cursor-pointer"
-      :color="isInDecklist ? 'success' : 'primary'"
-      variant="outline"
-      :icon="isInDecklist ? 'i-lucide-check' : 'i-lucide-layers-plus'"
-      size="md"
-      :label="
-        deckbuilder.selectedDeckId.value
-          ? isInDecklist
-            ? 'Added to deck'
-            : 'Add to deck'
-          : isInDecklist
-            ? 'Added to search'
-            : 'Add to search'
-      "
-      :disabled="
-        isInDecklist ||
-        deckbuilder.pendingCards.value.length > 0 ||
-        (!!deckbuilder.selectedDeckId.value &&
-          !deckbuilder.savedDeckReady.value)
-      "
-      block
-      @click="emit('addToDeckbuilder')"
-    />
-  </div>
+  <UButton
+    v-bind="suggestDecksAction"
+    variant="outline"
+    block
+    @click="showSuggestions = true"
+  />
+  <LazyCardActionsModal
+    v-if="showSuggestions"
+    v-model:open="showSuggestions"
+    :card="card"
+    :actions="menu"
+    @view-card="emit('viewCard')"
+    :board="board"
+    :is-flipped="isFlipped"
+    suggest-decks
+    @flip="emit('flip')"
+  />
 </template>
 
 <script setup lang="ts">
 const deckbuilder = useDeckbuilder();
+import {
+  cardActionStyles,
+  findSimilarAction,
+  suggestDecksAction,
+  type CardAction,
+  type CardActionMenu,
+} from '~/utils/card-actions';
 import type { Card } from '~/models/cardModel';
 import {
   getAffiliateLink,
   generateTCGPlayerSearchUrl,
 } from '~/utils/tcgPlayer';
 
-const boardOptions = ['Mainboard', 'Sideboard', 'Considering'] as const;
-type Board = (typeof boardOptions)[number];
+type Board = 'Mainboard' | 'Sideboard' | 'Considering';
 
 const props = withDefaults(
   defineProps<{
     card: Card;
+    board?: string;
+    isFlipped?: boolean;
     buyLabel: string;
     canShowDeckMenu?: boolean;
     findSimilarDisabled?: boolean;
-    isInClipboard?: boolean;
-    isDualFaced?: boolean;
+    isListCard?: boolean;
     showCommanderButtons?: boolean;
     showListActions?: boolean;
     numCopies?: number;
@@ -253,10 +67,11 @@ const props = withDefaults(
     isInDecklist?: boolean;
   }>(),
   {
+    board: 'Search results',
+    isFlipped: false,
     canShowDeckMenu: false,
     findSimilarDisabled: false,
-    isInClipboard: false,
-    isDualFaced: false,
+    isListCard: false,
     showCommanderButtons: false,
     showListActions: false,
     numCopies: 1,
@@ -273,10 +88,10 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
+  (e: 'viewCard'): void;
+  (e: 'flip'): void;
   (e: 'findSimilar'): void;
   (e: 'openAddToDeck'): void;
-  (e: 'toggleClipboard'): void;
-  (e: 'flipCard'): void;
   (e: 'getRecommendations'): void;
   (e: 'viewPopularCards'): void;
   (e: 'addCopy'): void;
@@ -290,25 +105,132 @@ const emit = defineEmits<{
   (e: 'addToDeckbuilder'): void;
 }>();
 
+const listActions = computed<CardAction[]>(() => [
+  ...(props.showEditCopiesButtons
+    ? [
+        {
+          label: 'Add a copy',
+          group: 'copies' as const,
+          icon: 'i-heroicons-plus',
+          disabled: props.numCopies >= 100,
+          onSelect: () => emit('addCopy'),
+        },
+        {
+          label: 'Remove a copy',
+          group: 'copies' as const,
+          icon: 'i-lucide-minus',
+          disabled: props.numCopies <= 1,
+          onSelect: () => emit('removeCopy'),
+        },
+        {
+          label: 'Set Copies',
+          group: 'copies' as const,
+          icon: 'i-lucide-hash',
+          onSelect: () => emit('setCopies'),
+        },
+      ]
+    : []),
+  ...(props.showClearCommander ? [] : props.availableBoards).map((board) => ({
+    label: `Move to ${board}`,
+    group: 'board' as const,
+    icon: boardIcon(board),
+    onSelect: () => emit('changeBoard', board),
+  })),
+  ...(props.showClearCommander
+    ? []
+    : [
+        {
+          label: 'Remove From List',
+          group: 'remove' as const,
+          onSelect: () => emit('removeFromList'),
+        },
+      ]),
+]);
+
+const showSuggestions = ref(false);
+const menu = computed<CardActionMenu>(() => {
+  const data = props.card.card_data;
+  const actions: CardActionMenu = {
+    marketplace: {
+      label: data.tcgplayer_id ? props.buyLabel : 'Search on TCGPlayer',
+      ...(data.tcgplayer_id
+        ? cardActionStyles.buy
+        : cardActionStyles.searchMarketplace),
+      to: data.tcgplayer_id
+        ? getAffiliateLink(data.tcgplayer_id)
+        : generateTCGPlayerSearchUrl(data.name),
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    },
+    similar: {
+      ...findSimilarAction,
+      disabled: props.findSimilarDisabled,
+      onSelect: () => emit('findSimilar'),
+    },
+  };
+  if (props.canShowDeckMenu)
+    actions.addToDeck = {
+      label: props.isListCard ? 'Add to Another Deck' : 'Add to Deck',
+      ...cardActionStyles.addToDeck,
+      onSelect: () => emit('openAddToDeck'),
+    };
+  if (props.showCommanderButtons) {
+    actions.recommendations = {
+      label: 'Get Deck Recommendations',
+      ...cardActionStyles.recommendations,
+      onSelect: () => emit('getRecommendations'),
+    };
+    actions.popular = {
+      label: 'Popular Cards For Commander',
+      ...cardActionStyles.popularForCommander,
+      onSelect: () => emit('viewPopularCards'),
+    };
+  }
+  if (props.showListActions) actions.list = listActions.value;
+  if (props.showListActions && props.showSetCommander)
+    actions.commander = {
+      label: 'Set As Commander',
+      ...cardActionStyles.setCommander,
+      onSelect: () => emit('setCommander'),
+    };
+  if (props.showListActions && props.showClearCommander)
+    actions.commander = {
+      label: 'Remove Commander',
+      ...cardActionStyles.removeCommander,
+      onSelect: () => emit('clearCommander'),
+    };
+  if (props.showSearchActions && !props.hideThumbsDownButton)
+    actions.feedback = {
+      label: props.isThumbsDownClicked
+        ? 'Feedback Submitted'
+        : 'Mark As Poor Result',
+      ...cardActionStyles.feedback(props.isThumbsDownClicked),
+      disabled: props.isThumbsDownClicked,
+      onSelect: () => emit('dislike'),
+    };
+  if (props.showSearchActions && props.showAddToDeckbuilderButton)
+    actions.addToSearch = {
+      label: deckbuilder.selectedDeckId.value
+        ? props.isInDecklist
+          ? 'Added to deck'
+          : 'Add to deck'
+        : props.isInDecklist
+          ? 'Added to search'
+          : 'Add to search',
+      ...cardActionStyles.addToSearch(props.isInDecklist),
+      disabled:
+        props.isInDecklist ||
+        deckbuilder.pendingCards.value.length > 0 ||
+        (!!deckbuilder.selectedDeckId.value &&
+          !deckbuilder.savedDeckReady.value),
+      onSelect: () => emit('addToDeckbuilder'),
+    };
+  return actions;
+});
+
 function boardIcon(board: Board) {
   if (board === 'Mainboard') return 'i-lucide-layout-grid';
   if (board === 'Sideboard') return 'i-lucide-columns-2';
   return 'i-lucide-help-circle';
 }
 </script>
-
-<style scoped>
-.preview-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.preview-section-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(160, 160, 160, 0.9);
-}
-</style>

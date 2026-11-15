@@ -11,11 +11,13 @@
     <NuxtLink
       v-if="owner"
       :to="`/user/${owner.id}`"
-      class="flex items-center gap-2 mr-3 rounded-lg cursor-pointer group min-w-0"
+      class="flex items-center gap-2 mr-3 rounded-lg cursor-pointer group/deck-author min-w-0"
     >
       <img
         v-if="owner.avatar_card_name"
-        :src="scryfallArtCropUrl(owner.avatar_card_name)"
+        :src="
+          scryfallArtCropUrl(owner.avatar_card_name, owner.avatar_printing_id)
+        "
         :alt="owner.username ?? 'User'"
         class="rounded-full object-cover"
         :class="embedded ? 'size-6' : 'size-10'"
@@ -28,7 +30,7 @@
       />
       <div class="min-w-0">
         <p
-          class="font-semibold truncate group-hover:text-primary transition-colors"
+          class="font-semibold truncate group-hover/deck-author:text-primary transition-colors"
         >
           {{ owner.username || 'Anonymous' }}
         </p>
@@ -97,7 +99,7 @@
     </ClientOnly>
 
     <!-- Read-only stats -->
-    <span class="flex items-center gap-1 text-sm ml-2 opacity-80">
+    <span class="hidden md:flex items-center gap-1 text-sm ml-2 opacity-80">
       <UIcon name="i-lucide-message-circle" class="w-4 h-4" />
       {{ list.comment_count }}
       {{ list.comment_count === 1 ? 'comment' : 'comments' }}
@@ -118,6 +120,7 @@ interface DecklistOwner {
   id: string;
   username: string | null;
   avatar_card_name: string | null;
+  avatar_printing_id?: string | null;
 }
 
 const props = defineProps({

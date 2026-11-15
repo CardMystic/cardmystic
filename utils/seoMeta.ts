@@ -34,7 +34,7 @@ export function excerptFromMarkdown(md: string, max = 200): string {
 }
 
 export function buildArticleSeo(article: Article | null): SeoMeta {
-  if (!article) {
+  if (!article?.is_published) {
     return {
       title: 'Article | CardMystic',
       description: 'Read Magic: The Gathering articles on CardMystic.',
@@ -64,7 +64,7 @@ export function buildDecklistSeo(
   ownerUsername?: string | null,
   directImageUrl?: string | null,
 ): SeoMeta {
-  if (!list) {
+  if (list?.visibility !== 'public') {
     return {
       title: 'Decklist | CardMystic',
       description:
@@ -75,11 +75,16 @@ export function buildDecklistSeo(
     };
   }
 
-  const name = list.name || 'Untitled deck';
+  const collection = list.kind === 'collection';
+  const name =
+    list.name || (collection ? 'Untitled collection' : 'Untitled deck');
   const commanders = list.commanders ?? [];
 
   let description = list.description?.trim() ?? '';
-  if (!description) {
+  if (!description && collection) {
+    const owner = list.username || ownerUsername;
+    description = `Browse the Magic: The Gathering cards in ${name}${owner ? ` by ${owner}` : ''}.`;
+  } else if (!description) {
     const parts: string[] = [];
     if (list.format) parts.push(list.format);
     if (commanders.length) parts.push(`led by ${commanders.join(' & ')}`);
@@ -97,11 +102,11 @@ export function buildDecklistSeo(
   let image = FALLBACK_OG_IMAGE;
   if (directImageUrl) image = directImageUrl;
   else if (list.avatar_card_name)
-    image = scryfallArtCropUrl(list.avatar_card_name);
+    image = scryfallArtCropUrl(list.avatar_card_name, list.avatar_printing_id);
   else if (commanders[0]) image = scryfallArtCropUrl(commanders[0]);
 
   return {
-    title: `${name} | MTG Decklist | CardMystic`,
+    title: `${name} | MTG ${collection ? 'Collection' : 'Decklist'} | CardMystic`,
     description,
     image,
     imageAlt: `Art for ${name}`,
@@ -144,7 +149,10 @@ export function buildUserProfileSeo(
   let image = FALLBACK_OG_IMAGE;
   if (directImageUrl) image = directImageUrl;
   else if (profile.avatar_card_name)
-    image = scryfallArtCropUrl(profile.avatar_card_name);
+    image = scryfallArtCropUrl(
+      profile.avatar_card_name,
+      profile.avatar_printing_id,
+    );
 
   return {
     title: profile.username

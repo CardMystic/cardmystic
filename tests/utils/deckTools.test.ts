@@ -1,13 +1,150 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   parseDeckImport,
   exportDeck,
+  applyDeckImport,
+  excludeExistingImportCards,
+  summarizeImportBoards,
   type TransferCard,
 } from '~/utils/deckTransfer';
 import { analyzeDeck } from '~/utils/deckAnalysis';
 import type { ScryfallCard } from '~/models/cardModel';
 
 describe('deck import and export', () => {
+  it('lets the printing resolver select a supported finish for an Arena export', () => {
+    const card: TransferCard = {
+      name: 'Sauron, the Lidless Eye',
+      set: 'ltr',
+      collectorNumber: '288',
+      board: 'Mainboard',
+      quantity: 1,
+      finish: 'foil',
+    };
+    const [arena] = parseDeckImport(exportDeck([card], 'arena'), 'text');
+    expect(arena).toMatchObject({ set: 'ltr', collectorNumber: '288' });
+    expect(arena.finish).toBeUndefined();
+    expect(parseDeckImport(exportDeck([card], 'text'), 'text')[0].finish).toBe(
+      'foil',
+    );
+  });
+  it('skips existing cards across boards and printings without changing quantities or commander status', () => {
+    const existing: TransferCard[] = [
+      { name: 'Sol Ring', quantity: 1, board: 'Mainboard' },
+      { name: 'Island', quantity: 10, board: 'Sideboard' },
+      {
+        name: 'Tamiyo, Inquisitive Student // Tamiyo, Seasoned Scholar',
+        quantity: 1,
+        board: 'Mainboard',
+        commander: true,
+      },
+      { name: 'Negate', quantity: 1, board: 'Considering' },
+    ];
+    const incoming = parseDeckImport(
+      'Commander\n1 Tamiyo, Inquisitive Student\nMainboard\n20 Island\n2 Swamp\n\n1 sol ring (CMM) 410 *F*\n2 Negate',
+      'text',
+    );
+    const original = structuredClone(existing);
+    expect(excludeExistingImportCards(incoming, existing)).toEqual([
+      { name: 'Swamp', quantity: 2, board: 'Mainboard', commander: false },
+    ]);
+    expect(existing).toEqual(original);
+    expect(
+      excludeExistingImportCards(
+        parseDeckImport(exportDeck(existing, 'csv'), 'csv'),
+        existing,
+      ),
+    ).toEqual([]);
+  });
+  it('counts quantities by board rather than confusing entries with copies', () => {
+    expect(
+      summarizeImportBoards(
+        parseDeckImport(
+          'Mainboard\n97 Swamp\n1 Sol Ring\nSideboard\n9 Mountain',
+          'text',
+        ),
+      ),
+    ).toBe('98 Mainboard · 9 Sideboard');
+    const cards: TransferCard[] = [
+      ...Array.from({ length: 97 }, (_, index) => ({
+        name: `Card ${index}`,
+        quantity: 1,
+        board: 'Mainboard' as const,
+      })),
+      { name: 'Swamp', quantity: 10, board: 'Mainboard' },
+    ];
+    expect(cards).toHaveLength(98);
+    expect(summarizeImportBoards(cards)).toBe('107 Mainboard');
+  });
+  it('continues after unknown names and sets only recognized commanders', async () => {
+    const add = vi
+      .fn()
+      .mockResolvedValueOnce({
+        addedCount: 1,
+        updatedCount: 1,
+        invalidCardNames: ['Missing Leader'],
+      })
+      .mockResolvedValueOnce({
+        addedCount: 1,
+        updatedCount: 0,
+        invalidCardNames: [],
+      });
+    const setCommander = vi.fn();
+    const result = await applyDeckImport(
+      parseDeckImport(
+        'Commander\n1 Missing Leader\n1 Known Leader\nMainboard\n4 Swamp\nSideboard\n1 Negate',
+        'text',
+      ),
+      add,
+      setCommander,
+    );
+    expect(add).toHaveBeenLastCalledWith('Sideboard', ['1 Negate']);
+    expect(setCommander.mock.calls).toEqual([['Known Leader']]);
+    expect(result).toEqual({
+      confirmedEntries: 3,
+      invalidCardNames: ['Missing Leader'],
+      failure: null,
+    });
+  });
+  it('reports no confirmed additions when every name is unknown', async () => {
+    const result = await applyDeckImport(
+      parseDeckImport('1 Missing', 'text'),
+      vi.fn().mockResolvedValue({
+        addedCount: 0,
+        updatedCount: 0,
+        invalidCardNames: ['Missing'],
+      }),
+      vi.fn(),
+    );
+    expect(result.confirmedEntries).toBe(0);
+    expect(result.invalidCardNames).toEqual(['Missing']);
+    expect(result.failure).toBeNull();
+  });
+  it('preserves confirmed progress and stops after an unconfirmed batch failure', async () => {
+    const add = vi
+      .fn()
+      .mockResolvedValueOnce({
+        addedCount: 500,
+        updatedCount: 0,
+        invalidCardNames: [],
+      })
+      .mockRejectedValueOnce(new Error('Connection lost'));
+    const setCommander = vi.fn();
+    const cards: TransferCard[] = Array.from({ length: 501 }, (_, index) => ({
+      name: `Card ${index}`,
+      quantity: 1,
+      board: 'Mainboard',
+      commander: index === 0,
+    }));
+    cards.push({ name: 'Sideboard card', quantity: 1, board: 'Sideboard' });
+    const result = await applyDeckImport(cards, add, setCommander);
+    expect(add).toHaveBeenCalledTimes(2);
+    expect(setCommander).not.toHaveBeenCalled();
+    expect(result.confirmedEntries).toBe(500);
+    expect(result.failure).toEqual({
+      stage: 'cards',
+      message: 'Connection lost',
+    });
+  });
   it('round trips quoted CSV names, quantities, boards and commanders', () => {
     const cards: TransferCard[] = [
       {

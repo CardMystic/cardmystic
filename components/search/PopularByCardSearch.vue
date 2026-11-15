@@ -87,6 +87,7 @@ async function submit() {
       <SearchFilterDrawer
         ref="filtersRef"
         v-model="state.filters"
+        commander-only
         :can-apply="!!state.card_name"
         @apply="submit"
       />

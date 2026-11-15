@@ -6,7 +6,7 @@
     </template>
 
     <!-- Cards display -->
-    <template v-else-if="hasAnyCards">
+    <template v-else>
       <div class="results-layout xl:flex xl:items-start xl:gap-6">
         <aside
           v-if="previewCard"
@@ -16,17 +16,24 @@
           <div v-if="isDesktopPreview" class="preview-sticky">
             <HoveredListCardPreview
               :card="previewCard"
-              :is-owner="isOwner"
+              :is-owner="isOwner && hoveredBoard !== 'Suggested'"
+              :suggested="hoveredBoard === 'Suggested'"
               :isCommanderOfDecklist="
-                commanderOracleIds?.includes(previewCard.card_data.oracle_id) ??
-                false
+                hoveredBoard === 'Mainboard' &&
+                (commanderOracleIds?.includes(
+                  previewCard.card_data.oracle_id,
+                ) ??
+                  false)
               "
               :canBeACommander="isCommanderCard(previewCard)"
               :num-copies="
-                listItemsMap?.[hoveredBoard]?.[previewCard.card_data.oracle_id]
-                  ?.num_copies
+                hoveredBoard === 'Suggested'
+                  ? undefined
+                  : listItemsMap?.[hoveredBoard]?.[
+                      previewCard.card_data.oracle_id
+                    ]?.num_copies
               "
-              :board="hoveredBoard"
+              :board="hoveredBoard === 'Suggested' ? undefined : hoveredBoard"
               :decklist-card-names="decklistCardNames"
               :is-flipped="flippedCards[previewCard.card_data.id] ?? false"
               @remove="
@@ -61,6 +68,11 @@
         </aside>
 
         <div class="min-w-0 flex-1">
+          <slot
+            name="before-cards"
+            :set-preview-card="setPreviewCard"
+            :clear-pending-preview-card="clearPendingPreviewCard"
+          />
           <template v-if="groups && groups.length > 0">
             <!-- Mainboard header -->
             <div
@@ -88,13 +100,14 @@
               <div :class="cardGridClasses">
                 <div
                   v-for="card in group.cards"
-                  :key="card.card_data.id"
+                  :key="card.card_data.oracle_id"
                   @mouseenter="setPreviewCard(card, 'Mainboard')"
                   @focusin="setPreviewCard(card, 'Mainboard')"
                   @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                 >
                   <component
                     :is="cardComponent"
+                    is-list-card
                     :card="card"
                     :is-flipped="flippedCards[card.card_data.id] ?? false"
                     :is-deck-commander="
@@ -108,6 +121,7 @@
                         ?.num_copies
                     "
                     :board="'Mainboard'"
+                    :legality-quantity="legalityQuantity(card, 'Mainboard')"
                     :format="format"
                     :is-owner="isOwner"
                     :decklist-card-names="decklistCardNames"
@@ -188,13 +202,14 @@
                 >
                   <div
                     v-for="card in group.cards"
-                    :key="card.card_data.id"
+                    :key="card.card_data.oracle_id"
                     @mouseenter="setPreviewCard(card, 'Mainboard')"
                     @focusin="setPreviewCard(card, 'Mainboard')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
                     <component
                       :is="cardComponent"
+                      is-list-card
                       :card="card"
                       :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="
@@ -209,6 +224,7 @@
                           ?.num_copies
                       "
                       :board="'Mainboard'"
+                      :legality-quantity="legalityQuantity(card, 'Mainboard')"
                       :format="format"
                       :is-owner="isOwner"
                       :decklist-card-names="decklistCardNames"
@@ -280,13 +296,14 @@
                 <div :class="[cardGridClasses, 'mb-4']">
                   <div
                     v-for="card in group.cards"
-                    :key="card.card_data.id"
+                    :key="card.card_data.oracle_id"
                     @mouseenter="setPreviewCard(card, 'Sideboard')"
                     @focusin="setPreviewCard(card, 'Sideboard')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
                     <component
                       :is="cardComponent"
+                      is-list-card
                       :card="card"
                       :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="false"
@@ -297,6 +314,7 @@
                           ?.num_copies
                       "
                       :board="'Sideboard'"
+                      :legality-quantity="legalityQuantity(card, 'Sideboard')"
                       :format="format"
                       :is-owner="isOwner"
                       @remove="
@@ -350,13 +368,14 @@
                   <div :class="[cardGridClasses, 'p-2']">
                     <div
                       v-for="card in group.cards"
-                      :key="card.card_data.id"
+                      :key="card.card_data.oracle_id"
                       @mouseenter="setPreviewCard(card, 'Sideboard')"
                       @focusin="setPreviewCard(card, 'Sideboard')"
                       @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                     >
                       <component
                         :is="cardComponent"
+                        is-list-card
                         :card="card"
                         :is-flipped="flippedCards[card.card_data.id] ?? false"
                         :is-deck-commander="false"
@@ -367,6 +386,7 @@
                             ?.num_copies
                         "
                         :board="'Sideboard'"
+                        :legality-quantity="legalityQuantity(card, 'Sideboard')"
                         :format="format"
                         :is-owner="isOwner"
                         @remove="
@@ -438,13 +458,14 @@
                 <div :class="[cardGridClasses, 'mb-4']">
                   <div
                     v-for="card in group.cards"
-                    :key="card.card_data.id"
+                    :key="card.card_data.oracle_id"
                     @mouseenter="setPreviewCard(card, 'Considering')"
                     @focusin="setPreviewCard(card, 'Considering')"
                     @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                   >
                     <component
                       :is="cardComponent"
+                      is-list-card
                       :card="card"
                       :is-flipped="flippedCards[card.card_data.id] ?? false"
                       :is-deck-commander="false"
@@ -455,6 +476,7 @@
                           ?.num_copies
                       "
                       :board="'Considering'"
+                      :legality-quantity="legalityQuantity(card, 'Considering')"
                       :format="format"
                       :is-owner="isOwner"
                       @remove="
@@ -508,13 +530,14 @@
                   <div :class="[cardGridClasses, 'p-2']">
                     <div
                       v-for="card in group.cards"
-                      :key="card.card_data.id"
+                      :key="card.card_data.oracle_id"
                       @mouseenter="setPreviewCard(card, 'Considering')"
                       @focusin="setPreviewCard(card, 'Considering')"
                       @mouseleave="clearPendingPreviewCard(card.card_data.id)"
                     >
                       <component
                         :is="cardComponent"
+                        is-list-card
                         :card="card"
                         :is-flipped="flippedCards[card.card_data.id] ?? false"
                         :is-deck-commander="false"
@@ -525,6 +548,9 @@
                             ?.num_copies
                         "
                         :board="'Considering'"
+                        :legality-quantity="
+                          legalityQuantity(card, 'Considering')
+                        "
                         :format="format"
                         :is-owner="isOwner"
                         @remove="
@@ -561,29 +587,34 @@
               </UAccordion>
             </UCard>
           </template>
+          <div
+            v-if="!hideEmptyState && !hasAnyCards"
+            class="flex flex-col items-center justify-center py-12 text-center"
+          >
+            <UIcon
+              name="i-lucide-layers"
+              class="w-16 h-16 mb-4 text-gray-400"
+            />
+            <h3
+              class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300"
+            >
+              This list is empty!
+            </h3>
+            <p class="text-gray-500 dark:text-gray-400 max-w-md">
+              Use the search dropdown above, or the
+              <span class="font-medium">Add to Deck</span> button from the
+              clipboard to add cards to this deck.
+            </p>
+          </div>
         </div>
-      </div>
-    </template>
-
-    <!-- Empty State -->
-    <template v-else>
-      <div class="flex flex-col items-center justify-center py-12 text-center">
-        <UIcon name="i-lucide-layers" class="w-16 h-16 mb-4 text-gray-400" />
-        <h3 class="text-xl font-semibold mb-2 text-gray-600 dark:text-gray-300">
-          This list is empty!
-        </h3>
-        <p class="text-gray-500 dark:text-gray-400 max-w-md">
-          Use the search dropdown above, or the
-          <span class="font-medium">Add to Deck</span> button from the clipboard
-          to add cards to this deck.
-        </p>
       </div>
     </template>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { getUsdPrice } from '~/utils/cardPrice';
+import { deckCardGridClasses } from '~/composables/useDeckCardGrid';
+import { getUsdPrice, isBasicLand } from '~/utils/cardPrice';
 import type { Card } from '~/models/cardModel';
 import type { DeckPreferences } from '~/models/preferencesModel';
 import type { CardGroup } from '~/utils/sort';
@@ -609,6 +640,7 @@ const props = withDefaults(
     isLoading: boolean;
     isOwner: boolean;
     groups: CardGroup[] | null;
+    suggestions?: Card[];
     commanderOracleIds?: string[] | null;
     commanderColorIdentity?: string[] | null;
     listItemsMap?: Partial<
@@ -618,6 +650,8 @@ const props = withDefaults(
       >
     >;
     format?: string;
+    collection?: boolean;
+    hideEmptyState?: boolean;
     sideboardGroups?: CardGroup[] | null;
     consideringGroups?: CardGroup[] | null;
     decklistCardNames?: string[];
@@ -627,13 +661,32 @@ const props = withDefaults(
   },
 );
 
+// Considering is a workspace for alternatives, not part of the submitted deck.
+const deckQuantities = computed(() => {
+  const totals: Record<string, number> = {};
+  for (const board of ['Mainboard', 'Sideboard'] as const) {
+    for (const [id, item] of Object.entries(
+      props.listItemsMap?.[board] ?? {},
+    )) {
+      totals[id] = (totals[id] ?? 0) + item.num_copies;
+    }
+  }
+  return totals;
+});
+function legalityQuantity(card: Card, board: Board) {
+  const id = card.card_data.oracle_id;
+  return board === 'Considering'
+    ? props.listItemsMap?.Considering?.[id]?.num_copies
+    : deckQuantities.value[id];
+}
+
 const cardComponent = computed(() =>
   props.view === 'text' ? CardText : ListCard,
 );
 const cardGridClasses = computed(() =>
   props.view === 'text'
     ? 'grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-x-6 gap-y-0'
-    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2',
+    : deckCardGridClasses,
 );
 
 const { data: commandersSet } = provideCommandersSet();
@@ -722,40 +775,64 @@ function handleCardFlip(cardId: string) {
 }
 
 const hoveredCardId = ref<string | null>(null);
-const hoveredBoard = ref<Board>('Mainboard');
+type PreviewGroup = Board | 'Suggested';
+const hoveredBoard = ref<PreviewGroup>('Mainboard');
 
-const previewCandidates = computed(() => [
-  ...flattenGroups(props.groups),
-  ...flattenGroups(props.sideboardGroups),
-  ...flattenGroups(props.consideringGroups),
+const previewEntries = computed(() => [
+  ...flattenGroups(props.groups).map((card) => ({
+    card,
+    board: 'Mainboard' as Board,
+  })),
+  ...flattenGroups(props.sideboardGroups).map((card) => ({
+    card,
+    board: 'Sideboard' as Board,
+  })),
+  ...flattenGroups(props.consideringGroups).map((card) => ({
+    card,
+    board: 'Considering' as Board,
+  })),
+  ...(props.suggestions ?? []).map((card) => ({
+    card,
+    board: 'Suggested' as const,
+  })),
 ]);
+const previewCandidates = computed(() =>
+  previewEntries.value.map((entry) => entry.card),
+);
 
 const previewCard = computed(() => {
   if (previewCandidates.value.length === 0) return null;
   if (!hoveredCardId.value) return previewCandidates.value[0];
   return (
-    previewCandidates.value.find(
-      (card) => card.card_data.id === hoveredCardId.value,
-    ) ?? previewCandidates.value[0]
+    previewEntries.value.find(
+      ({ card, board }) =>
+        card.card_data.id === hoveredCardId.value &&
+        board === hoveredBoard.value,
+    )?.card ?? previewCandidates.value[0]
   );
 });
 
 const hasAnyCards = computed(() => previewCandidates.value.length > 0);
 
 watch(
-  previewCandidates,
-  (cards) => {
-    if (cards.length === 0) {
+  previewEntries,
+  (entries) => {
+    if (entries.length === 0) {
       hoveredCardId.value = null;
       return;
     }
 
     const stillExists = hoveredCardId.value
-      ? cards.some((card) => card.card_data.id === hoveredCardId.value)
+      ? entries.some(
+          ({ card, board }) =>
+            card.card_data.id === hoveredCardId.value &&
+            board === hoveredBoard.value,
+        )
       : false;
 
     if (!stillExists) {
-      hoveredCardId.value = cards[0].card_data.id;
+      hoveredCardId.value = entries[0].card.card_data.id;
+      hoveredBoard.value = entries[0].board;
     }
   },
   { immediate: true },
@@ -780,7 +857,7 @@ function clearPendingPreviewCard(cardId?: string) {
   _pendingPreviewCardId = null;
 }
 
-function setPreviewCard(card: Card, board: Board = 'Mainboard') {
+function setPreviewCard(card: Card, board: PreviewGroup = 'Mainboard') {
   // Touch interactions must not schedule updates for a preview that is hidden.
   if (!isDesktopPreview.value) return;
   const nextCardId = card.card_data.id;
@@ -798,6 +875,15 @@ function setPreviewCard(card: Card, board: Board = 'Mainboard') {
     if (_hoverRafId !== null) cancelAnimationFrame(_hoverRafId);
     _hoverRafId = requestAnimationFrame(() => {
       if (_pendingPreviewCardId !== nextCardId) return;
+      if (
+        !previewEntries.value.some(
+          (entry) =>
+            entry.card.card_data.id === nextCardId && entry.board === board,
+        )
+      ) {
+        clearPendingPreviewCard();
+        return;
+      }
       hoveredCardId.value = nextCardId;
       hoveredBoard.value = board;
       _pendingPreviewCardId = null;
@@ -867,7 +953,9 @@ function sumPrice(
   return uniqueGroupCards(groups).reduce(
     (total, card) =>
       total +
-      (parseFloat(getUsdPrice(card.card_data.prices) ?? '0') || 0) *
+      (props.collection || !isBasicLand(card.card_data)
+        ? parseFloat(getUsdPrice(card.card_data.prices) ?? '0') || 0
+        : 0) *
         (props.listItemsMap?.[board]?.[card.card_data.oracle_id]?.num_copies ??
           1),
     0,

@@ -1,21 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { BACKEND, gotoHydrated } from './utils/mocks';
 
-const popular = [
-  'card draw',
-  'artifact removal',
-  'mono white removal',
-  'treasure generators',
-  'treasure synergy',
-];
-
-test('popular searches power the homepage and keyboard/mouse autocomplete without per-keystroke requests', async ({
+test('bundled popular searches support keyboard/mouse autocomplete without backend requests', async ({
   page,
 }) => {
   let loads = 0;
   await page.route(`${BACKEND}/cache/popular`, (route) => {
     loads++;
-    return route.fulfill({ json: popular });
+    return route.fulfill({ status: 503, json: { message: 'Unavailable' } });
   });
   await page.route(`${BACKEND}/search/colbert`, (route) =>
     route.fulfill({ json: [] }),
@@ -59,7 +51,7 @@ test('popular searches power the homepage and keyboard/mouse autocomplete withou
   await expect(
     page.getByRole('listbox', { name: 'Popular search suggestions' }),
   ).toBeHidden();
-  expect(loads).toBe(1);
+  expect(loads).toBe(0);
 });
 
 test('search remains usable when popular suggestions fail to load', async ({

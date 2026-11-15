@@ -36,6 +36,11 @@ test('suggestions expose curated destinations before JavaScript runs', async ({
       ).toHaveAttribute('href', path);
     }
     await page.goto('/search/arena/similarity');
+    await expect(
+      page
+        .locator('.desktop-search-tabs')
+        .getByRole('link', { name: 'Keyword Search' }),
+    ).toHaveAttribute('href', '/search/all/keyword');
     const href = await page
       .getByRole('link', { name: 'Try Lightning Bolt', exact: true })
       .getAttribute('href');
@@ -51,18 +56,23 @@ test('home suggestion links preserve their exact queries and More remains a butt
   page,
 }) => {
   await gotoHydrated(page, '/');
-  const link = page.getByRole('link', { name: 'token doublers', exact: true });
+  const hero = page.locator('#home-search');
+  const link = hero.getByRole('link', { name: 'token doublers', exact: true });
   const url = new URL((await link.getAttribute('href'))!, page.url());
   expect(url.pathname).toBe('/search/all/smart');
   expect(url.searchParams.get('query')).toBe('token doublers');
-  await page
+  await hero
     .getByRole('button', { name: 'Show more suggested searches' })
     .click();
   await expect(
-    page.getByRole('link', { name: 'graveyard recursion', exact: true }),
+    hero.getByRole('link', { name: 'graveyard recursion', exact: true }),
   ).toBeVisible();
   await link.click();
-  await expect(page).toHaveURL(/\/search\/all\/smart\?query=token\+doublers$/);
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname === '/search/all/smart' &&
+      url.searchParams.get('query') === 'token doublers',
+  );
 });
 
 test('curated similarity introductions link the source card in server HTML', async ({
@@ -162,4 +172,37 @@ test('card actions are links to curated similarity, recommendation, and populari
   await expect(page).toHaveURL(
     /\/search\/all\/similarity\/kinnan-bonder-prodigy$/,
   );
+});
+
+test('homepage example card links have descriptive text or image alt text before JavaScript runs', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+  });
+  const page = await context.newPage();
+  try {
+    await page.goto('/');
+    const links = page.locator('a[href^="/card/"]');
+    expect(await links.count()).toBeGreaterThan(10);
+    const unnamed = await links.evaluateAll((anchors) =>
+      anchors
+        .filter(
+          (anchor) =>
+            !anchor.textContent?.trim() &&
+            !Array.from(anchor.querySelectorAll('img')).some((image) =>
+              image.alt.trim(),
+            ),
+        )
+        .map((anchor) => anchor.getAttribute('href')),
+    );
+    expect(unnamed).toEqual([]);
+    for (const path of ['/themes', '/roles', '/sets']) {
+      await expect(page.locator(`a[href="${path}"]`).first()).toBeAttached();
+    }
+  } finally {
+    await context.close();
+  }
 });

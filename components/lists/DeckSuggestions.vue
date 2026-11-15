@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { getUsdPrice } from '~/utils/cardPrice';
-import { useElementSize, useIntersectionObserver } from '@vueuse/core';
 import type { Card } from '~/models/cardModel';
-import type { CardAction } from '~/utils/card-actions';
+import {
+  cardActionStyles,
+  findSimilarAction,
+  type CardActionMenu,
+} from '~/utils/card-actions';
 import { getCardImageUrl } from '~/utils/scryfall';
 import {
   generateTCGPlayerSearchUrl,
@@ -10,9 +13,12 @@ import {
 } from '~/utils/tcgPlayer';
 const props = defineProps<{
   listId: string;
+  title: string;
   oracleIds: string[];
   ready: boolean;
   newestSet?: boolean;
+  automatic?: boolean;
+  acknowledge?: () => Promise<void>;
   savedBudget: number | null;
   budgetReady: boolean;
   budgetSaving: boolean;
@@ -33,65 +39,72 @@ watch(actionsOpen, async (open) => {
     if (actionTrigger.value?.isConnected) actionTrigger.value.focus();
   }
 });
-const cardActions = computed<CardAction[][]>(() => {
+const cardActions = computed<CardActionMenu>(() => {
   const card = selectedCard.value;
-  if (!card) return [];
+  if (!card) return {};
   const data = card.card_data;
-  return [
-    [
-      {
-        label: 'View Card Details',
-        icon: 'i-lucide-info',
-        to: `/card/${data.oracle_id}`,
+  return {
+    addToDeck: {
+      label: 'Add to Deck',
+      icon: 'i-lucide-plus',
+      disabled:
+        !!adding.value ||
+        !api.isPro.value ||
+        props.oracleIds.includes(data.oracle_id) ||
+        added.value.has(data.oracle_id),
+      onSelect: () => {
+        void add(card);
       },
-      {
-        label: 'Add to Deck',
-        icon: 'i-lucide-plus',
-        disabled:
-          !!adding.value ||
-          !api.isPro.value ||
-          props.oracleIds.includes(data.oracle_id) ||
-          added.value.has(data.oracle_id),
-        onSelect: () => {
-          void add(card);
-        },
-      },
-      {
-        label: 'Find Similar Cards',
-        icon: 'i-mdi-cards-outline',
-        to: `/search/all/similarity?${new URLSearchParams({ card_name: data.name, searchType: 'similarity' })}`,
-      },
-      {
-        label: data.tcgplayer_id ? 'Buy on TCGPlayer' : 'Search on TCGPlayer',
-        icon: 'i-lucide-shopping-cart',
-        to: data.tcgplayer_id
-          ? getAffiliateLink(data.tcgplayer_id)
-          : generateTCGPlayerSearchUrl(data.name),
-        target: '_blank',
-        rel: 'noopener noreferrer',
-      },
-    ],
-  ];
+    },
+    similar: {
+      ...findSimilarAction,
+      to: `/search/all/similarity?${new URLSearchParams({ card_name: data.name, searchType: 'similarity' })}`,
+    },
+    marketplace: {
+      label: data.tcgplayer_id ? 'Buy on TCGPlayer' : 'Search on TCGPlayer',
+      ...(data.tcgplayer_id
+        ? cardActionStyles.buy
+        : cardActionStyles.searchMarketplace),
+      to: data.tcgplayer_id
+        ? getAffiliateLink(data.tcgplayer_id)
+        : generateTCGPlayerSearchUrl(data.name),
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    },
+  };
 });
+
 const section = ref<HTMLElement | null>(null);
-const inView = ref(false);
-const emit = defineEmits<{ visible: [] }>();
-useIntersectionObserver(
-  section,
-  ([entry]) => {
-    inView.value = !!entry?.isIntersecting;
-    if (inView.value) emit('visible');
-  },
-  { rootMargin: '0px' },
-);
+const emit = defineEmits<{
+  close: [];
+  preview: [card: Card];
+  cancelPreview: [cardId: string];
+}>();
+const acknowledging = ref(false);
+async function closeSuggestions() {
+  if (!props.acknowledge) {
+    emit('close');
+    return;
+  }
+  if (acknowledging.value) return;
+  acknowledging.value = true;
+  error.value = '';
+  try {
+    await props.acknowledge();
+    emit('close');
+  } catch (cause) {
+    error.value = (cause as Error).message;
+  } finally {
+    acknowledging.value = false;
+  }
+}
 const { addCardsToListMutation } = useCardLists();
 const toast = useToast();
 const queue = ref<Card[]>([]),
   added = ref(new Set<string>());
 const loading = ref(false),
   error = ref(''),
-  adding = ref<string | null>(null),
-  loaded = ref(false);
+  adding = ref<string | null>(null);
 let sequence = 0;
 const remaining = computed(() => {
   const used = new Set([...props.oracleIds, ...added.value]);
@@ -106,11 +119,7 @@ const remaining = computed(() => {
     );
   });
 });
-const grid = ref<HTMLElement | null>(null);
-const { width } = useElementSize(grid);
-const rowCapacity = computed(() =>
-  Math.max(1, Math.floor((width.value + 12) / 108)),
-);
+const { rowCapacity, gridClasses } = useDeckCardGrid();
 const expanded = ref(false);
 const visibleCount = computed(() =>
   expanded.value ? remaining.value.length : rowCapacity.value,
@@ -125,10 +134,8 @@ watch(
   { immediate: true },
 );
 const setName = ref('');
-const title = computed(() =>
-  props.newestSet ? 'New Cards for Deck' : 'Suggested cards',
-);
 const visible = computed(() => remaining.value.slice(0, visibleCount.value));
+defineExpose({ visible });
 async function applyBudget() {
   const value = String(budgetInput.value).trim()
     ? Number(budgetInput.value)
@@ -148,13 +155,7 @@ async function applyBudget() {
   }
 }
 async function load() {
-  if (
-    !inView.value ||
-    !api.isPro.value ||
-    !props.ready ||
-    !props.budgetReady ||
-    loading.value
-  )
+  if (!api.isPro.value || !props.ready || !props.budgetReady || loading.value)
     return;
   const current = ++sequence;
   loading.value = true;
@@ -170,7 +171,6 @@ async function load() {
     if (current === sequence) {
       queue.value = result.results;
       setName.value = result.set?.name ?? '';
-      loaded.value = true;
     }
   } catch (cause) {
     if (current === sequence) error.value = (cause as Error).message;
@@ -184,6 +184,7 @@ watch(
     api.userId,
     () => props.listId,
     () => props.budgetReady,
+    () => props.ready,
     targetBudget,
   ],
   () => {
@@ -193,16 +194,12 @@ watch(
     queue.value = [];
     added.value = new Set();
     expanded.value = false;
-    loaded.value = false;
     loading.value = false;
     error.value = '';
     if (api.isPro.value && props.ready && props.budgetReady) void load();
   },
   { immediate: true },
 );
-watch([inView, () => props.ready], () => {
-  if (inView.value && props.ready && !loaded.value) void load();
-});
 onBeforeUnmount(() => sequence++);
 async function add(card: Card) {
   if (adding.value || !api.isPro.value) return;
@@ -230,6 +227,7 @@ async function add(card: Card) {
 </script>
 <template>
   <section
+    v-show="!automatic || remaining.length > 0"
     ref="section"
     class="my-6 rounded-lg border border-primary/25 bg-primary/5 p-4"
     :aria-label="title"
@@ -242,24 +240,38 @@ async function add(card: Card) {
       :board="newestSet ? 'New-card suggestion' : 'Suggested'"
     />
     <div class="flex items-center justify-between gap-3 mb-3">
-      <h2 class="font-semibold">
+      <h2 class="min-w-0 wrap-anywhere font-semibold">
         {{ title }} <span class="text-xs text-(--pro-accent)">Pro</span>
       </h2>
-      <UButton
-        v-if="api.isPro.value"
-        label="Refresh suggestions"
-        icon="i-lucide-refresh-cw"
-        size="xs"
-        color="neutral"
-        variant="ghost"
-        :disabled="!ready || !budgetReady || budgetSaving || !!adding"
-        :loading="loading"
-        @click="load"
-      />
+      <div class="flex flex-wrap items-center gap-1">
+        <UButton
+          v-if="api.isPro.value"
+          label="Refresh suggestions"
+          icon="i-lucide-refresh-cw"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+          :disabled="!ready || !budgetReady || budgetSaving || !!adding"
+          :loading="loading"
+          @click="load"
+        />
+        <UButton
+          icon="i-lucide-x"
+          :aria-label="
+            newestSet ? 'Close new-card suggestions' : 'Close suggested adds'
+          "
+          variant="ghost"
+          size="xs"
+          :loading="acknowledging"
+          :disabled="newestSet && !!adding"
+          @click="closeSuggestions"
+        />
+      </div>
     </div>
     <p v-if="newestSet" class="text-sm text-muted mb-3">
-      Suggestions from {{ setName || 'the newest released expansion' }}. Refresh
-      to check for new cards.
+      Suggestions from {{ setName || 'the newest released expansion' }}. Card
+      suggestions will show automatically when there are new cards you should
+      know about!
     </p>
     <form
       v-if="api.isPro.value"
@@ -292,7 +304,7 @@ async function add(card: Card) {
         estimates.</span
       >
     </form>
-    <div ref="grid">
+    <div>
       <NuxtLink
         v-if="!api.isPro.value"
         to="/memberships"
@@ -303,11 +315,11 @@ async function add(card: Card) {
             : 'Subscribe for suggestions'
         "
       >
-        <div class="flex gap-3 overflow-hidden" aria-hidden="true">
+        <div :class="gridClasses" aria-hidden="true">
           <div
             v-for="n in rowCapacity"
             :key="n"
-            class="w-24 aspect-[488/680] shrink-0 rounded-lg bg-muted/50"
+            class="w-full aspect-[488/680] rounded-[14px] bg-muted/50"
           />
         </div>
         <div
@@ -321,21 +333,17 @@ async function add(card: Card) {
       </NuxtLink>
       <div
         v-else-if="(!budgetReady || loading) && !visible.length"
-        class="flex gap-3 overflow-hidden"
+        :class="gridClasses"
         role="status"
         aria-label="Loading suggestions"
       >
         <USkeleton
           v-for="n in rowCapacity"
           :key="n"
-          class="w-24 aspect-[488/680] shrink-0 rounded-lg"
+          class="w-full aspect-[488/680] rounded-[14px]"
         />
       </div>
-      <div
-        v-else-if="visible.length"
-        class="grid gap-3 pb-2"
-        :style="{ gridTemplateColumns: `repeat(${rowCapacity}, 6rem)` }"
-      >
+      <div v-else-if="visible.length" :class="gridClasses">
         <button
           v-for="card in visible"
           :key="card.card_data.oracle_id"
@@ -346,16 +354,19 @@ async function add(card: Card) {
             actionsOpen &&
             selectedCard?.card_data.oracle_id === card.card_data.oracle_id
           "
-          class="block w-24 rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
+          class="deck-card-surface block min-w-0 w-full overflow-hidden rounded-[14px] focus-visible:outline-2 focus-visible:outline-primary"
+          @mouseenter="emit('preview', card)"
+          @focus="emit('preview', card)"
+          @mouseleave="emit('cancelPreview', card.card_data.id)"
           @click="openActions(card, $event)"
         >
           <img
             :src="getCardImageUrl(card.card_data)"
             :alt="card.card_name"
-            width="96"
-            height="134"
+            width="488"
+            height="680"
             loading="lazy"
-            class="w-24 aspect-[488/680] rounded-lg object-cover"
+            class="block w-full aspect-[488/680] rounded-[inherit] object-cover"
           />
         </button>
       </div>

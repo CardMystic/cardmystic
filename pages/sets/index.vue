@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineOptions({ name: 'SetsDirectoryPage' });
-definePageMeta({ title: 'MTG Sets' });
+definePageMeta({ title: 'MTG Sets', breadcrumbsInPage: true });
 </script>
 
 <template>

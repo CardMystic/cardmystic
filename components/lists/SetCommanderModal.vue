@@ -15,8 +15,7 @@
         />
         <UButton
           label="Set Commander"
-          color="primary"
-          icon="i-lucide-crown"
+          v-bind="cardActionStyles.setCommander"
           @click="onConfirm(close)"
         />
       </div>
@@ -25,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import { cardActionStyles } from '~/utils/card-actions';
 const props = defineProps<{
   open: boolean;
   cardName: string;

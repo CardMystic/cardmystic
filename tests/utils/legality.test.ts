@@ -102,6 +102,32 @@ describe('isLegal', () => {
     expect(result.legal).toBe(true);
   });
 
+  it.each([
+    ['seven', 7],
+    ['nine', 9],
+    ['3', 3],
+  ])('honors a card-specific limit of %s copies', (word, limit) => {
+    const text = `A deck can have up to ${word} cards named Test Card.`;
+    expect(
+      isLegal(
+        { commander: 'legal' },
+        'commander',
+        Number(limit),
+        'Creature',
+        text,
+      ).legal,
+    ).toBe(true);
+    expect(
+      isLegal(
+        { commander: 'legal' },
+        'commander',
+        Number(limit) + 1,
+        'Creature',
+        text,
+      ).legal,
+    ).toBe(false);
+  });
+
   it('allows more than 4 copies of "any number" cards in non-singleton', () => {
     const result = isLegal(
       { modern: 'legal' },

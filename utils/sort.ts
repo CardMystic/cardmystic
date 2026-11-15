@@ -1,7 +1,7 @@
 import { getUsdPrice } from '~/utils/cardPrice';
 import type { Ref } from 'vue';
 import type { Card } from '~/models/cardModel';
-import type { CardLabels } from '~/composables/useLibrary';
+import type { DeckCardLabels } from '~/utils/deckHighlight';
 import { pairings } from '~/utils/colorPairings';
 
 export type CardGroup = {
@@ -297,13 +297,16 @@ export function groupCards(
   groupBy: string,
   copiesMap?: Record<string, number>,
   allCards?: Card[],
-  labels?: Record<string, CardLabels>,
+  labels?: Record<string, DeckCardLabels>,
 ): CardGroup[] {
-  if (groupBy === 'tags') {
+  if (groupBy === 'tags' || groupBy === 'roles' || groupBy === 'themes') {
+    const fallback = { tags: 'Untagged', roles: 'No role', themes: 'No theme' }[
+      groupBy
+    ];
     const grouped = new Map<string, Card[]>();
     for (const card of cards) {
-      const names = labels?.[card.card_data.oracle_id]?.tags ?? [];
-      for (const name of new Set(names.length ? names : ['Untagged'])) {
+      const names = labels?.[card.card_data.oracle_id]?.[groupBy] ?? [];
+      for (const name of new Set(names.length ? names : [fallback])) {
         if (!grouped.has(name)) grouped.set(name, []);
         grouped.get(name)!.push(card);
       }
@@ -452,7 +455,7 @@ export function groupAndSortCards(
   copiesMap?: Record<string, number>,
   allCards?: Card[],
   preserveResultOrder = false,
-  labels?: Record<string, CardLabels>,
+  labels?: Record<string, DeckCardLabels>,
 ): CardGroup[] | null {
   if (!cards || cards.length === 0) return null;
 
