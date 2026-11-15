@@ -11,7 +11,7 @@
     "dev": "nuxt dev",
     "generate": "pnpm update:sitemap && nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
+    "postinstall": "nuxt prepare --envName development",
     "lint": "eslint . --ext .ts,.js,.vue",
     "lint:fix": "eslint . --ext .ts,.js,.vue --fix",
     "format": "prettier --write .",
