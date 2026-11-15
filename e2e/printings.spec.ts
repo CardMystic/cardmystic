@@ -14,6 +14,8 @@ import { BACKEND, SUPABASE, FAKE_USER, gotoHydrated } from './utils/mocks';
 import { emptyGuestDeck } from '../utils/guestDeck';
 
 // Opt in against a disposable database with real migrations and RLS, never hosted Supabase.
+// These tests reseed the same deck and printing rows in the disposable database.
+test.describe.configure({ mode: 'default' });
 const api = process.env.PRINTINGS_TEST_API;
 test.afterEach(async ({ page }) => {
   await page.unrouteAll({ behavior: 'wait' });
