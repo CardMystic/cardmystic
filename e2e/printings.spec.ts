@@ -139,7 +139,7 @@ async function choose(page: Page) {
     .click();
   const actions = page.getByRole('dialog', { name: card.name, exact: true });
   const tags = await actions
-    .getByRole('region', { name: 'My tags' })
+    .getByRole('region', { name: 'Tags', exact: true })
     .boundingBox();
   const selector = actions.getByRole('button', {
     name: 'Change printing',
@@ -202,6 +202,7 @@ test('saved deck selection persists through the real database API, reload, and d
     .getByRole('button', { name: `Options for ${card.name}`, exact: true })
     .click();
   await page
+    .getByRole('dialog', { name: card.name, exact: true })
     .getByRole('button', { name: 'Change printing', exact: true })
     .click();
   await page
@@ -455,6 +456,7 @@ test('printing picker loads further pages and filters by set name', async ({
       .getByRole('button', { name: `Options for ${card.name}`, exact: true })
       .click();
     await page
+      .getByRole('dialog', { name: card.name, exact: true })
       .getByRole('button', { name: 'Change printing', exact: true })
       .click();
     await page
