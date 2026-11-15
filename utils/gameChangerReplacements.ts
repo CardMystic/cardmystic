@@ -31,7 +31,7 @@ export function filterGameChangerReplacements(
   const used = new Set(deckOracleIds);
   return results.filter(({ card_data: card }) => {
     if (
-      card.game_changer ||
+      card.game_changer !== false ||
       used.has(card.oracle_id) ||
       !Array.isArray(card.color_identity) ||
       !card.color_identity.every((color) => allowed.has(color))

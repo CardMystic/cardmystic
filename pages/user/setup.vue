@@ -75,6 +75,7 @@ import { takeGuestDeckReturn } from '~/utils/guestDeck';
 import { useCardNames } from '~/composables/useBulkData';
 import { refDebounced } from '~/utils/refDebounced';
 
+useSeoMeta({ title: 'Set up your profile | CardMystic', robots: 'noindex, nofollow' });
 definePageMeta({
   layout: 'fullscreen',
 });

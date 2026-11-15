@@ -302,6 +302,7 @@ export type ColorRatios = z.infer<typeof ColorRatiosSchema>;
 export const DecklistSummarySchema = z.object({
   estimated_price_usd: z.number().nonnegative().nullable().optional(),
   price_estimate_incomplete: z.boolean().optional(),
+  author_avatar_printing_id: z.string().uuid().nullable().optional(),
   author_avatar_card_name: z.string().nullable().optional(),
   bracket: z.number().int().min(1).max(5).nullable().optional(),
   kind: z.enum(['deck', 'collection']).default('deck'),
@@ -310,6 +311,7 @@ export const DecklistSummarySchema = z.object({
   name: z.string().nullable().describe('The list name'),
   description: z.string().nullable().describe('The list description'),
   format: z.string().describe('The list format'),
+  avatar_printing_id: z.string().uuid().nullable().optional(),
   avatar_card_name: z
     .string()
     .nullable()
@@ -481,6 +483,9 @@ export type SearchDecklistsResponse = z.infer<
 // ---- Public Decklist View ----
 
 export const PublicDecklistItemSchema = z.object({
+  card_name: z.string().optional(),
+  printing_id: z.guid().nullable().optional(),
+  finish: z.enum(['nonfoil', 'foil', 'etched']).nullable().optional(),
   oracle_id: z.string().describe('Scryfall oracle ID of the card'),
   num_copies: z.number().int().min(1).describe('Number of copies'),
   board: z
@@ -498,6 +503,7 @@ export const GetPublicDecklistResponseSchema = z.object({
     .object({
       id: z.string().describe("The user's ID"),
       username: z.string().nullable().describe("The user's username"),
+      avatar_printing_id: z.string().uuid().nullable().optional(),
       avatar_card_name: z
         .string()
         .nullable()
@@ -577,6 +583,7 @@ export const DecklistCommentSchema = z.object({
   list_id: z.string().describe('The card list ID the comment belongs to'),
   user_id: z.string().describe("The comment author's user ID"),
   username: z.string().nullable().describe("The comment author's username"),
+  avatar_printing_id: z.string().uuid().nullable().optional(),
   avatar_card_name: z
     .string()
     .nullable()

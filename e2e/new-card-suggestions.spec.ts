@@ -3,7 +3,7 @@ import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { openDeckAction } from './utils/deckActions';
 import { BACKEND } from './utils/mocks';
 
-test('All Set stays dismissed across visits until a later release, with manual reopening', async ({
+test('closing new-card suggestions dismisses the release across visits, with manual reopening', async ({
   page,
 }) => {
   const state = await setupDeckDisplay(page, { pro: true, extraCards: 1 });
@@ -54,10 +54,13 @@ test('All Set stays dismissed across visits until a later release, with manual r
   );
   await page.reload();
   const panel = page.getByRole('region', {
-    name: 'New Cards for Deck',
+    name: `New Cards for ${state.deck.name}`,
     exact: true,
   });
   await expect(panel).toBeVisible();
+  await expect(panel.getByRole('heading', { level: 2 })).toContainText(
+    `New Cards for ${state.deck.name}`,
+  );
   expect(recommendationRequests).toBe(1);
   const panelBottom = await panel.evaluate(
     (element) => element.getBoundingClientRect().bottom,
@@ -68,8 +71,21 @@ test('All Set stays dismissed across visits until a later release, with manual r
       (element) => element.getBoundingClientRect().top,
     ),
   ).toBeGreaterThanOrEqual(panelBottom);
-  await panel.getByRole('button', { name: 'All Set', exact: true }).click();
+  const close = panel.getByRole('button', {
+    name: 'Close new-card suggestions',
+  });
+  await expect(
+    panel.getByRole('button', { name: 'All Set', exact: true }),
+  ).toHaveCount(0);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await panel
+    .getByRole('button', { name: `Options for ${state.catalog[3].name}` })
+    .hover();
+  const previewTitle = page.locator('.preview-rail .preview-title');
+  await expect(previewTitle).toHaveText(state.catalog[3].name);
+  await close.click();
   await expect(panel).toHaveCount(0);
+  await expect(previewTitle).not.toHaveText(state.catalog[3].name);
   expect(acknowledgements).toBe(1);
   await page.reload();
   await expect(
@@ -83,9 +99,8 @@ test('All Set stays dismissed across visits until a later release, with manual r
     panel.getByRole('button', { name: /^Options for / }),
   ).toHaveCount(1);
   expect(recommendationRequests).toBe(2);
-  await panel
-    .getByRole('button', { name: 'Close new-card suggestions' })
-    .click();
+  await close.click();
+  await expect(panel).toHaveCount(0);
   releasedAt = '2026-11-01';
   await page.reload();
   await expect(panel).toBeVisible();
@@ -94,7 +109,7 @@ test('All Set stays dismissed across visits until a later release, with manual r
   await page.screenshot({ path: '/tmp/cardmystic-new-cards-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   await panel.scrollIntoViewIfNeeded();
-  await expect(panel.getByRole('button', { name: 'All Set' })).toBeVisible();
+  await expect(close).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
@@ -105,7 +120,7 @@ for (const outcome of ['no matches', 'ranking unavailable'] as const) {
   test(`automatic alerts stay hidden for ${outcome}; manual action explains the result`, async ({
     page,
   }) => {
-    await setupDeckDisplay(page, { pro: true });
+    const state = await setupDeckDisplay(page, { pro: true });
     await page.route(BACKEND + '/library/lists/*/new-cards', (route) =>
       route.fulfill({
         json: {
@@ -132,7 +147,7 @@ for (const outcome of ['no matches', 'ranking unavailable'] as const) {
     await page.reload();
     await expect.poll(() => requests).toBe(1);
     const panel = page.getByRole('region', {
-      name: 'New Cards for Deck',
+      name: `New Cards for ${state.deck.name}`,
       exact: true,
     });
     await expect(panel).toBeHidden();
@@ -149,7 +164,7 @@ for (const outcome of ['no matches', 'ranking unavailable'] as const) {
   });
 }
 
-test('failed All Set keeps the panel open and allows retry', async ({
+test('failed dismissal keeps the panel open and allows retry', async ({
   page,
 }) => {
   const state = await setupDeckDisplay(page, { pro: true, extraCards: 1 });
@@ -177,15 +192,18 @@ test('failed All Set keeps the panel open and allows retry', async ({
   );
   await openDeckAction(page, 'Suggest New Cards · Pro');
   const panel = page.getByRole('region', {
-    name: 'New Cards for Deck',
+    name: `New Cards for ${state.deck.name}`,
     exact: true,
   });
-  await panel.getByRole('button', { name: 'All Set' }).click();
+  const close = panel.getByRole('button', {
+    name: 'Close new-card suggestions',
+  });
+  await close.click();
   await expect(panel.getByRole('alert')).toHaveText(
     'Could not save dismissal.',
   );
   await expect(panel).toBeVisible();
-  await panel.getByRole('button', { name: 'All Set' }).click();
+  await close.click();
   await expect(panel).toHaveCount(0);
   expect(attempts).toBe(2);
 });

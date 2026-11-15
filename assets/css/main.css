@@ -1,6 +1,104 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+@media (hover: hover) and (pointer: fine) {
+  .deck-card-surface {
+    transition: scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .deck-card-surface:hover,
+  .deck-card-hover:hover > .deck-card-surface {
+    scale: 1.03;
+  }
+}
+
+/* Finish effects belong to the image surface, never its buttons or captions. */
+:where(.card-finish) {
+  position: relative;
+  isolation: isolate;
+}
+.card-finish:is([data-card-finish='foil'], [data-card-finish='etched'])::before,
+.card-finish:is([data-card-finish='foil'], [data-card-finish='etched'])::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.card-finish:is(
+    [data-card-finish='foil'],
+    [data-card-finish='etched']
+  )::before {
+  background: linear-gradient(
+    125deg,
+    #ff70b8,
+    #9870ff 20%,
+    #64caff 38%,
+    #65efad 55%,
+    #ffe36b 72%,
+    #ff9b70 86%,
+    #ed85ff
+  );
+  mix-blend-mode: screen;
+  opacity: 0.28;
+}
+.card-finish:is([data-card-finish='foil'], [data-card-finish='etched'])::after {
+  background: linear-gradient(
+      115deg,
+      transparent 40%,
+      rgb(130 200 255 / 12%) 44%,
+      rgb(255 255 255 / 38%) 49%,
+      rgb(255 190 235 / 16%) 53%,
+      transparent 58%
+    )
+    100% 0 / 300% 100% no-repeat;
+  mix-blend-mode: screen;
+  animation: card-foil-sheen 12s ease-in-out infinite;
+}
+.card-finish[data-card-finish='etched']::before {
+  opacity: 0.18;
+}
+.card-finish[data-card-finish='etched']::after {
+  animation-name: card-etched-sheen;
+}
+@keyframes card-foil-sheen {
+  0% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.45;
+  }
+  25% {
+    background-position: 0% 0;
+    opacity: 0.45;
+  }
+  30%,
+  100% {
+    background-position: 0% 0;
+    opacity: 0;
+  }
+}
+@keyframes card-etched-sheen {
+  0% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.25;
+  }
+  25% {
+    background-position: 0% 0;
+    opacity: 0.25;
+  }
+  30%,
+  100% {
+    background-position: 0% 0;
+    opacity: 0;
+  }
+}
+
 @layer base {
   input,
   textarea,

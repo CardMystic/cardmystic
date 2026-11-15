@@ -27,6 +27,10 @@ const showPasswords = ref(false);
 
 // Profile icon card selection — optional, sent along with signup
 const selectedProfileCard = ref('');
+const selectedProfilePrinting = ref<string | null>(null);
+watch(selectedProfileCard, () => {
+  selectedProfilePrinting.value = null;
+});
 const avatarSearchTerm = ref('');
 const debouncedAvatarSearchTerm = refDebounced(avatarSearchTerm, 150);
 
@@ -109,6 +113,7 @@ const signUpWithEmail = async () => {
       password: password.value,
       confirmPassword: confirmPassword.value,
       avatarCardName: selectedProfileCard.value.trim() || undefined,
+      avatarPrintingId: selectedProfilePrinting.value ?? undefined,
     };
     const response = await signupWithEmail(credentials);
     successMessage.value = response.message;
@@ -204,6 +209,11 @@ const resendVerification = async () => {
       icon="i-lucide-image"
       class="w-full"
       size="lg"
+    />
+    <CardArtPrintingSelect
+      v-model="selectedProfilePrinting"
+      :card-name="selectedProfileCard"
+      :busy="loading"
     />
     <p class="text-xs text-zinc-400 -mt-2">
       Optional: pick an MTG card art as your profile icon.

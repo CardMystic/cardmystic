@@ -33,13 +33,19 @@ export const useAccountActions = () => {
   }
 
   const updateAvatarMutation = useMutation({
-    mutationFn: async (cardName: string) => {
+    mutationFn: async ({
+      cardName,
+      printingId,
+    }: {
+      cardName: string;
+      printingId: string | null;
+    }) => {
       if (!supabase || !userProfile.value?.id) {
         throw new Error('Invalid card name or user not logged in');
       }
       const { error } = await supabase
         .from('profiles')
-        .update({ avatar_card_name: cardName })
+        .update({ avatar_card_name: cardName, avatar_printing_id: printingId })
         .eq('id', userProfile.value.id);
       if (error) throw error;
     },

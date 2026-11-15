@@ -79,8 +79,6 @@ describe('formatRelativeTimeShort', () => {
 // ---------------------------------------------------------------------------
 describe('formatShortDate', () => {
   it('formats as Mon D, YYYY', () => {
-    expect(formatShortDate('2026-01-28T00:00:00Z')).toMatch(
-      /^Jan 2[78], 2026$/, // tolerate local timezone shifting the day
-    );
+    expect(formatShortDate('2026-01-28T00:00:00Z')).toBe('Jan 28, 2026');
   });
 });

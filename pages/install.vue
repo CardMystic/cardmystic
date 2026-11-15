@@ -1,7 +1,8 @@
 <script setup lang="ts">
 defineOptions({ name: 'InstallCardMysticPage' });
-useSeoMeta({
-  title: 'Install CardMystic | CardMystic',
+usePublicPageSeo({
+  path: '/install',
+  title: 'Install the CardMystic App',
   description:
     'Add CardMystic to your home screen or desktop with the CardMystic app icon.',
 });

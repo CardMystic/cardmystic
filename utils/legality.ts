@@ -44,6 +44,40 @@ function isUnlimitedCopies(typeLine?: string, oracleText?: string): boolean {
   return false;
 }
 
+function specifiedCopyLimit(oracleText?: string): number | undefined {
+  const match = oracleText?.match(
+    /a deck can have up to (\d+|[a-z]+) cards named/i,
+  );
+  if (!match) return undefined;
+  const words = [
+    'zero',
+    'one',
+    'two',
+    'three',
+    'four',
+    'five',
+    'six',
+    'seven',
+    'eight',
+    'nine',
+    'ten',
+    'eleven',
+    'twelve',
+    'thirteen',
+    'fourteen',
+    'fifteen',
+    'sixteen',
+    'seventeen',
+    'eighteen',
+    'nineteen',
+    'twenty',
+  ];
+  const limit = /^\d+$/.test(match[1])
+    ? Number(match[1])
+    : words.indexOf(match[1].toLowerCase());
+  return limit > 0 ? limit : undefined;
+}
+
 /**
  * Checks if a card is legal in a given format considering its legality status and quantity.
  * Does NOT check color identity — use `isColorIdentityLegal` for that.
@@ -78,6 +112,12 @@ export function isLegal(
 
   // Check quantity limits (skip for unlimited-copies cards)
   if (quantity > 1 && !isUnlimitedCopies(typeLine, oracleText)) {
+    const specifiedLimit = specifiedCopyLimit(oracleText);
+    if (specifiedLimit !== undefined) {
+      return quantity <= specifiedLimit
+        ? { legal: true }
+        : { legal: false, reason: `Max ${specifiedLimit} copies allowed` };
+    }
     if (singletonFormats.has(format) && quantity > 1) {
       return { legal: false, reason: `Only 1 copy allowed in ${format}` };
     }
@@ -132,15 +172,4 @@ export function isColorIdentityLegal(
 function isBasicLand(typeLine: string): boolean {
   if (!typeLine) return false;
   return /\bBasic\b/.test(typeLine) && /\bLand\b/.test(typeLine);
-}
-
-function colorLetterToName(letter: string): string {
-  const map: Record<string, string> = {
-    W: 'White',
-    U: 'Blue',
-    B: 'Black',
-    R: 'Red',
-    G: 'Green',
-  };
-  return map[letter.toUpperCase()] || letter;
 }

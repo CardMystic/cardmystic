@@ -76,17 +76,11 @@
 </template>
 
 <script setup lang="ts">
-useCanonicalUrl('/about');
-useSeoMeta({
-  title: 'About CardMystic - Smart Magic: The Gathering Search Engine',
-  description:
-    'Learn about CardMystic, a smart search engine for Magic: The Gathering cards. Custom trained models for accurate MTG card search using natural language.',
-  ogTitle: 'About CardMystic - Smart Magic: The Gathering Search Engine',
-  ogDescription:
-    'Learn about CardMystic, a smart search engine for Magic: The Gathering cards.',
-  ogType: 'website',
-  ogImage: () => 'https://cardmystic.com/cardmystic_preview.png',
-  ogImageAlt: () => 'CardMystic - About',
+usePublicPageSeo({
+  path: '/about',
+  title: 'About CardMystic | Magic: The Gathering Card Search',
+  description: 'Learn how CardMystic uses models trained on Magic: The Gathering cards to search by meaning, and how to contact the team.',
+  schemaType: 'AboutPage',
 });
 
 const { setPageInfo } = usePageInfo();

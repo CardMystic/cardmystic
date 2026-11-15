@@ -1,101 +1,148 @@
 <script setup lang="ts">
-import { useQueryClient } from '@tanstack/vue-query';
+import { suggestDecksAction } from '~/utils/card-actions';
+import {
+  useInfiniteQuery,
+  useQueryClient,
+  type InfiniteData,
+} from '@tanstack/vue-query';
 const client = useQueryClient();
-const props = defineProps<{ oracleId: string }>();
+const props = defineProps<{ oracleId: string; autoSuggest?: boolean }>();
 const api = useLibraryApi();
 const { addCardsToListMutation } = useCardLists();
-const matches = ref<{ id: string; name: string }[]>([]),
-  next = ref<number | null>(0),
-  error = ref('');
-const loading = ref(false),
+
+type DeckMatch = {
+  id: string;
+  name: string;
+  alreadyInDeck?: boolean;
+  added?: boolean;
+};
+type DeckMatchPage = {
+  results: DeckMatch[];
+  nextOffset: number | null;
+  supported: boolean;
+};
+const key = computed(
+  () => ['card-deck-matches', 'jev', api.userId.value, props.oracleId] as const,
+);
+const query = useInfiniteQuery({
+  queryKey: key,
+  // Suggestions are requested explicitly, but completed pages survive the modal.
+  enabled: false,
+  initialPageParam: 0,
+  queryFn: ({ pageParam, queryKey }) =>
+    api.request<DeckMatchPage>('/cards/deck-fit', 'POST', {
+      oracleId: queryKey[3],
+      offset: pageParam,
+    }),
+  getNextPageParam: (page) => page.nextOffset ?? undefined,
+  staleTime: 5 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+  retry: false,
+});
+const activated = ref(false),
   adding = ref(''),
-  added = ref(new Set<string>());
+  addError = ref('');
 const shown = ref(5);
-let sequence = 0;
-onBeforeUnmount(() => sequence++);
+const loading = query.isFetching;
+const requested = computed(
+  () =>
+    api.isPro.value && (activated.value || !!query.data.value || loading.value),
+);
+const matches = computed(() => {
+  if (!api.isPro.value) return [];
+  const unique = new Map<string, DeckMatch>();
+  for (const page of query.data.value?.pages ?? []) {
+    for (const deck of page.results)
+      if (!unique.has(deck.id)) unique.set(deck.id, deck);
+  }
+  return [...unique.values()];
+});
+const next = computed(
+  () =>
+    query.data.value?.pages.at(-1)?.nextOffset ?? (query.data.value ? null : 0),
+);
+const error = computed(
+  () => addError.value || query.error.value?.message || '',
+);
+async function suggest() {
+  if (!api.isPro.value) return navigateTo('/memberships');
+  activated.value = true;
+  if (!query.data.value) await query.refetch();
+}
 async function load() {
   if (!api.isPro.value || loading.value || next.value === null) return;
-  const current = sequence;
-  loading.value = true;
-  error.value = '';
-  try {
-    const oracleId = props.oracleId;
-    const offset = next.value;
-    const result = await client.fetchQuery({
-      queryKey: [
-        'card-deck-matches',
-        'jev',
-        api.userId.value,
-        oracleId,
-        offset,
-      ],
-      // The server caches individual judgments against current deck/catalog inputs.
-      staleTime: 0,
-      retry: false,
-      queryFn: () =>
-        api.request<{
-          results: { id: string; name: string }[];
-          nextOffset: number | null;
-          supported: boolean;
-        }>('/cards/deck-fit', 'POST', { oracleId, offset }),
-    });
-    if (current === sequence) {
-      const known = new Set(matches.value.map((deck) => deck.id));
-      matches.value.push(
-        ...result.results.filter((deck) => !known.has(deck.id)),
-      );
-      next.value = result.nextOffset;
-    }
-  } catch (cause) {
-    if (current === sequence) error.value = (cause as Error).message;
-  } finally {
-    if (current === sequence) loading.value = false;
-  }
+  if (query.data.value) await query.fetchNextPage();
+  else await query.refetch();
 }
+let sequence = 0;
+onBeforeUnmount(() => sequence++);
 watch(
-  [() => props.oracleId, api.isPro, api.userId],
+  [key, api.isPro, () => props.autoSuggest],
   () => {
     sequence++;
-    matches.value = [];
+    activated.value = false;
     shown.value = 5;
-    error.value = '';
-    next.value = 0;
-    added.value = new Set();
-    loading.value = false;
-    void load();
+    adding.value = '';
+    addError.value = '';
+    const cached = client.getQueryState(key.value);
+    if (
+      api.isPro.value &&
+      cached?.data &&
+      (cached.isInvalidated ||
+        Date.now() - cached.dataUpdatedAt > 5 * 60 * 1000)
+    ) {
+      void query.refetch();
+    } else if (props.autoSuggest) void suggest();
   },
   { immediate: true },
 );
 async function add(id: string) {
-  if (adding.value) return;
+  const deck = matches.value.find((match) => match.id === id);
+  if (adding.value || deck?.added || deck?.alreadyInDeck) return;
   adding.value = id;
-  error.value = '';
+  addError.value = '';
+  const current = sequence;
+  const cacheKey = key.value;
   try {
     await addCardsToListMutation.mutateAsync({
       listId: id,
       oracleIds: [props.oracleId],
       board: 'Mainboard',
     });
-    added.value = new Set([...added.value, id]);
+    // Retain the successful add even if the modal closed while saving.
+    client.setQueryData<InfiniteData<DeckMatchPage>>(
+      cacheKey,
+      (cached) =>
+        cached && {
+          ...cached,
+          pages: cached.pages.map((page) => ({
+            ...page,
+            results: page.results.map((match) =>
+              match.id === id ? { ...match, added: true } : match,
+            ),
+          })),
+        },
+    );
   } catch (cause) {
-    error.value = (cause as Error).message;
+    if (current === sequence) addError.value = (cause as Error).message;
   } finally {
-    adding.value = '';
+    if (current === sequence) adding.value = '';
   }
 }
 </script>
 <template>
-  <section class="border-t border-default pt-3 space-y-2">
-    <h3 class="font-semibold">
-      Suggested decks <span class="text-xs text-(--pro-accent)">Pro</span>
-    </h3>
-    <NuxtLink
-      v-if="!api.isPro.value"
-      to="/memberships"
-      class="text-primary underline"
-      >Subscribe for deck suggestions</NuxtLink
-    >
+  <section class="space-y-2">
+    <UButton
+      v-if="!requested"
+      v-bind="suggestDecksAction"
+      variant="ghost"
+      class="min-h-11 w-full justify-start"
+      @click="suggest"
+    />
     <template v-else>
+      <h3 class="font-semibold">
+        Suggested decks <span class="text-xs text-(--pro-accent)">Pro</span>
+      </h3>
       <div
         v-for="deck in matches.slice(0, shown)"
         :key="deck.id"
@@ -104,11 +151,19 @@ async function add(id: string) {
         <NuxtLink :to="`/lists/${deck.id}`" class="text-sm truncate">{{
           deck.name
         }}</NuxtLink>
+        <UBadge
+          v-if="deck.alreadyInDeck"
+          label="Already in deck"
+          color="neutral"
+          variant="soft"
+          class="shrink-0"
+        />
         <UButton
-          :label="added.has(deck.id) ? 'Added' : 'Add'"
+          v-else
+          :label="deck.added ? 'Added' : 'Add'"
           :aria-label="`Add to ${deck.name}`"
           :loading="adding === deck.id"
-          :disabled="!!adding || added.has(deck.id)"
+          :disabled="!!adding || !!deck.added"
           size="xs"
           @click="add(deck.id)"
         />
@@ -122,7 +177,7 @@ async function add(id: string) {
       <UButton
         v-if="matches.length > shown"
         label="Show more"
-        variant="outline"
+        variant="ghost"
         size="xs"
         @click="shown += 5"
       />
@@ -130,13 +185,12 @@ async function add(id: string) {
         v-else-if="next !== null"
         :label="loading ? 'Checking decks…' : 'Check more decks'"
         :loading="loading"
-        variant="outline"
+        variant="ghost"
         size="xs"
         @click="load"
       />
       <p v-if="next !== null" class="text-xs text-muted">
-        Checks your most recently edited decks first, 25 at a time. Decks
-        already containing this card are excluded.
+        Checks your most recently edited decks first, 25 at a time.
       </p>
       <p v-if="error" role="alert" class="text-sm text-error">{{ error }}</p>
     </template>

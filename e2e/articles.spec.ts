@@ -120,11 +120,79 @@ const mockArticles = async (page: Page) => {
 };
 
 test.describe('Articles', () => {
+  test('inline comments fit short threads and scroll at the height limit', async ({
+    page,
+  }) => {
+    const recent = await page.request.get(`${BACKEND}/articles/recent?limit=1`);
+    expect(recent.ok()).toBe(true);
+    const { articles } = await recent.json();
+    test.skip(
+      !articles.length,
+      'A published article is needed to verify the server-rendered thread.',
+    );
+    const articleId = articles[0].id;
+    const comments = Array.from({ length: 20 }, (_, index) => ({
+      ...AUTHOR,
+      article_id: articleId,
+      id: String(index),
+      body: `Comment ${index}`,
+      created_at: DETAIL.created_at,
+    }));
+    let count = 0;
+    await page.route(`${BACKEND}/articles/comments/${articleId}*`, (route) =>
+      route.fulfill({
+        json: { comments: comments.slice(0, count), nextCursor: null },
+      }),
+    );
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('console', (message) => {
+      if (
+        ['warning', 'error'].includes(message.type()) &&
+        /hydrat/i.test(message.text())
+      )
+        errors.push(message.text());
+    });
+    const thread = page.getByRole('region', { name: 'Comment thread' });
+    const firstLoad = await page.goto(`/articles/${articleId}`);
+    expect(await firstLoad!.text()).toContain('aria-label="Comment thread"');
+    for (count of [0, 1, comments.length]) {
+      if (count) await page.reload();
+      await expect(
+        thread.getByText(count ? 'Comment 0' : /No comments yet/, {
+          exact: true,
+        }),
+      ).toBeVisible();
+      for (const width of [390, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        const { height, cap, scrollable } = await thread.evaluate((el) => ({
+          height: el.getBoundingClientRect().height,
+          cap: parseFloat(getComputedStyle(el).maxHeight),
+          scrollable: el.scrollHeight > el.clientHeight,
+        }));
+        if (count < comments.length) expect(height).toBeLessThan(cap);
+        else expect(height).toBe(cap);
+        expect(scrollable).toBe(count === comments.length);
+      }
+    }
+    await thread.focus();
+    await page.keyboard.press('End');
+    await expect
+      .poll(() => thread.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(0);
+    expect(errors).toEqual([]);
+  });
+
   test('home page shows recent articles with a search box', async ({
     page,
   }) => {
     await mockArticles(page);
-    await gotoHydrated(page, '/');
+    // Recent articles are prefetched on the server on a direct load.
+    // Follow the home link so this browser's route fixture serves the cards.
+    await gotoHydrated(page, '/about');
+    await page
+      .getByRole('link', { name: 'CardMystic Logo', exact: true })
+      .click();
 
     const section = page.locator('text=Recent Articles').first();
     await section.scrollIntoViewIfNeeded();
@@ -149,7 +217,10 @@ test.describe('Articles', () => {
     page,
   }) => {
     await mockArticles(page);
-    await gotoHydrated(page, '/explore/articles');
+    await gotoHydrated(page, '/explore/decklists');
+    await page
+      .getByRole('link', { name: 'Go To Articles', exact: true })
+      .click();
 
     // Default view: recent articles
     await expect(

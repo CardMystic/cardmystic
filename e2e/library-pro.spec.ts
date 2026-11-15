@@ -132,6 +132,7 @@ test('Pro searches filter cards on the collection page, keyword works, and clear
 test('suggestion queue advances without searching again and refills only when exhausted', async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
   const state = await setupDeckDisplay(page, { pro: true, extraCards: 11 });
   await page.route(BACKEND + '/library/lists/*/budget', (route) =>
     route.fulfill({ json: { targetBudget: 1 } }),
@@ -156,11 +157,76 @@ test('suggestion queue advances without searching again and refills only when ex
     },
   );
   const section = page.getByRole('region', { name: 'Suggested cards' });
-  await openDeckAction(page, 'Suggest Adds · Pro');
+  await page.getByRole('button', { name: 'More deck actions' }).click();
+  const scrollBefore = await page.evaluate(() => window.scrollY);
+  await page
+    .getByRole('menuitem', { name: 'Suggest Adds · Pro', exact: true })
+    .click();
+  await expect(
+    section.getByRole('button', { name: /^Options for / }),
+  ).toHaveCount(7);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBe(scrollBefore);
   await section.scrollIntoViewIfNeeded();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
+  ).toHaveCount(7);
+  const firstSuggestion = section
+    .getByRole('button', { name: /^Options for / })
+    .first();
+  const suggestionBox = await firstSuggestion.boundingBox();
+  const deckCardBox = await page.locator('.list-card').first().boundingBox();
+  const previewBox = await page.locator('.preview-rail').boundingBox();
+  expect(suggestionBox!.x).toBeGreaterThan(previewBox!.x + previewBox!.width);
+  expect(Math.abs(suggestionBox!.width - deckCardBox!.width)).toBeLessThan(6);
+  const preview = page.locator('.preview-rail');
+  await firstSuggestion.hover();
+  await expect(firstSuggestion).toHaveCSS('scale', '1.03');
+  await expect(firstSuggestion.locator('img')).toHaveCSS(
+    'border-top-left-radius',
+    '14px',
+  );
+  await expect(preview.locator('.preview-title')).toHaveText(
+    state.catalog[3].name,
+  );
+  await expect(preview.getByText('Suggested', { exact: true })).toBeVisible();
+  await expect(
+    preview.getByRole('button', { name: 'Remove From List' }),
+  ).toHaveCount(0);
+  await page.locator('.list-card').first().hover();
+  await expect(preview.locator('.preview-title')).not.toHaveText(
+    state.catalog[3].name,
+  );
+  await firstSuggestion.focus();
+  await expect(preview.locator('.preview-title')).toHaveText(
+    state.catalog[3].name,
+  );
+  await section.getByRole('button', { name: 'Show more', exact: true }).click();
+  await expect(
+    section.getByRole('button', { name: /^Options for / }),
   ).toHaveCount(11);
+  await section.getByRole('button', { name: 'Show less', exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    section.getByRole('button', { name: /^Options for / }),
+  ).toHaveCount(2);
+  const mobileCards = await section
+    .getByRole('button', { name: /^Options for / })
+    .evaluateAll((cards) =>
+      cards.map((card) => ({
+        x: card.getBoundingClientRect().x,
+        y: card.getBoundingClientRect().y,
+        width: card.getBoundingClientRect().width,
+      })),
+    );
+  expect(mobileCards[0].width).toBeGreaterThan(120);
+  expect(mobileCards[0].y).toBe(mobileCards[1].y);
+  expect(mobileCards[1].x + mobileCards[1].width).toBeLessThanOrEqual(390);
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await expect(
+    section.getByRole('button', { name: /^Options for / }),
+  ).toHaveCount(7);
   await section
     .getByRole('button', {
       name: `Options for ${state.catalog[3].name}`,
@@ -173,10 +239,10 @@ test('suggestion queue advances without searching again and refills only when ex
   });
   await expect(modal).toBeVisible();
   await expect(
-    modal.getByRole('link', { name: 'View Card Details', exact: true }),
+    modal.getByRole('link', { name: "Go To Card's Page", exact: true }),
   ).toHaveAttribute('href', `/card/${state.catalog[3].oracle_id}`);
   await expect(
-    modal.getByRole('button', { name: 'Add to Clipboard', exact: true }),
+    modal.getByRole('button', { name: 'Add Card', exact: true }),
   ).toBeVisible();
   expect(state.writes).toHaveLength(0);
   expect(requests).toBe(1);
@@ -188,7 +254,7 @@ test('suggestion queue advances without searching again and refills only when ex
   ).toBeVisible();
   await expect(
     section.getByRole('button', {
-      name: `Options for ${state.catalog[13].name}`,
+      name: `Options for ${state.catalog[10].name}`,
       exact: true,
     }),
   ).toBeVisible();
@@ -222,12 +288,42 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   page,
 }) => {
   const state = await setupDeckDisplay(page);
-  const tags: { id: string; name: string }[] = [];
+  const createdId = '71000000-0000-4000-8000-000000000001';
+  const tags = [{ id: 'tag-ramp', name: 'Ramp' }, { id: 'tag-draw', name: 'Draw' }];
   const assignments: { oracle_id: string; tag_id: string }[] = [];
+  let releaseLabels!: () => void;
+  const labelsGate = new Promise<void>((resolve) => {
+    releaseLabels = resolve;
+  });
+  await page.route(BACKEND + '/card-collections/labels', async (route) => {
+    await labelsGate;
+    return route.fulfill({
+      json: {
+        [state.cards[0].oracle_id]: {
+          roles: [
+            'Card draw',
+            'Removal',
+            'Ramp',
+            'Counterspell',
+            'Board wipe',
+            'Graveyard hate',
+            'Protection',
+            'Sacrifice outlet',
+            'Token generator',
+            'Recursion',
+            'Mana fixing',
+            'Card selection',
+            'Finisher',
+          ],
+          themes: ['Artifacts'],
+        },
+      },
+    });
+  });
   await page.route(BACKEND + '/library/tags', (route) => {
     if (route.request().method() === 'POST') {
       const tag = {
-        id: '71000000-0000-4000-8000-000000000001',
+        id: createdId,
         name: route.request().postDataJSON().name,
       };
       tags.push(tag);
@@ -240,11 +336,12 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   );
   await page.route(BACKEND + '/library/tags/*/cards/*', (route) => {
     expect(route.request().headers()['content-type']).toBeUndefined();
-    if (route.request().method() === 'DELETE') assignments.splice(0);
+    const tagId = route.request().url().split('/').at(-3)!;
+    if (route.request().method() === 'DELETE') assignments.splice(assignments.findIndex((a) => a.tag_id === tagId), 1);
     else
       assignments.push({
         oracle_id: state.cards[0].oracle_id,
-        tag_id: tags[0].id,
+        tag_id: tagId,
       });
     return route.fulfill({ json: { saved: true } });
   });
@@ -254,42 +351,125 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
       exact: true,
     })
     .click();
-  const dialog = page.getByRole('dialog');
-  await dialog
-    .getByRole('combobox', { name: 'Add or create a tag', exact: true })
-    .fill('Removal');
-  await page
-    .getByRole('option', { name: 'Create “Removal”', exact: true })
-    .click();
+  const dialog = page.getByRole('dialog', { name: state.cards[0].name, exact: true });
+  const cardPage = dialog.getByRole('link', { name: "Go To Card's Page" });
+  const loadingRows = dialog.getByRole('status', {
+    name: 'Loading roles and themes',
+  });
+  try {
+    await expect(loadingRows).toBeVisible();
+    for (const width of [390, 1280]) {
+      await page.setViewportSize({ width, height: 844 });
+      const [first, second] = await loadingRows
+        .locator(':scope > div')
+        .evaluateAll((rows) =>
+          rows.map((row) => row.getBoundingClientRect().toJSON()),
+        );
+      expect(first.bottom).toBeLessThanOrEqual(second.top);
+      expect(first.width).toBeCloseTo(second.width);
+      expect(first.right).toBeLessThanOrEqual(width);
+    }
+  } finally {
+    releaseLabels();
+  }
+  await expect(loadingRows).toHaveCount(0);
   await expect(
-    dialog.getByRole('button', {
-      name: 'Remove Removal from this card',
-      exact: true,
-    }),
+    cardPage.locator('[class*="lucide:arrow-up-right"]'),
   ).toBeVisible();
-  await dialog
-    .getByRole('button', { name: 'Remove Removal from this card', exact: true })
-    .click();
+  await expect(cardPage).toHaveCount(1);
+  await expect(cardPage).toHaveClass(/\bbg-primary\b/);
+  const actions = dialog.getByRole('group', {
+    name: 'Card actions',
+    exact: true,
+  });
+  const controls = actions.locator('a[href], button');
+  await expect(controls.first()).toHaveAccessibleName("Go To Card's Page");
+  await expect(controls.nth(1)).toHaveAccessibleName(/Buy on TCGPlayer/);
+  await expect(controls.nth(1)).toHaveClass(/\btext-success\b/);
+  await expect(controls.nth(2)).toHaveAccessibleName('Add to Another Deck');
+  await expect(controls.last()).toHaveAccessibleName('Suggest Decks · Pro');
   await expect(
-    dialog.getByRole('button', {
-      name: 'Remove Removal from this card',
-      exact: true,
-    }),
-  ).toHaveCount(0);
-  await dialog
-    .getByRole('combobox', { name: 'Add or create a tag', exact: true })
-    .fill('Rem');
-  await page.getByRole('option', { name: /Removal/ }).click();
+    dialog.getByRole('button', { name: 'Move To', exact: true }),
+  ).not.toHaveClass(/\bring-inset\b/);
   await expect(
-    dialog.getByRole('button', {
-      name: 'Remove Removal from this card',
-      exact: true,
-    }),
-  ).toBeVisible();
-  expect(tags).toHaveLength(1);
+    dialog.getByRole('button', { name: 'Suggest Decks · Pro', exact: true }),
+  ).not.toHaveClass(/\bring-inset\b/);
+  await expect(dialog.getByRole('link', { name: 'Card draw' })).toHaveAttribute(
+    'href',
+    '/roles/card-draw',
+  );
+  await expect(dialog.getByRole('link', { name: 'Artifacts' })).toHaveAttribute(
+    'href',
+    '/themes/artifacts',
+  );
+  const roleRow = dialog.getByRole('region', { name: 'Roles', exact: true });
+  const themeRow = dialog.getByRole('region', { name: 'Themes', exact: true });
+  const roleBounds = (await roleRow.boundingBox())!;
   await expect(
-    dialog.getByRole('combobox', { name: 'Add or create a tag', exact: true }),
-  ).toBeEnabled();
+    roleRow
+      .getByRole('listitem')
+      .first()
+      .getByRole('link')
+      .locator('span')
+      .first(),
+  ).toHaveClass(/text-primary/);
+  await expect(
+    themeRow
+      .getByRole('listitem')
+      .first()
+      .getByRole('link')
+      .locator('span')
+      .first(),
+  ).toHaveClass(/text-success/);
+  const actionBounds = (await cardPage.boundingBox())!;
+  expect(roleBounds.width).toBeGreaterThan(actionBounds.width);
+  expect(roleBounds.y).toBeGreaterThan(actionBounds.y + actionBounds.height);
+  const desktopCount = await roleRow.getByRole('link').count();
+  await expect(themeRow.getByRole('button')).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect
+    .poll(() => roleRow.getByRole('link').count())
+    .toBeLessThan(desktopCount);
+  const chipTops = await roleRow
+    .locator('li a')
+    .evaluateAll((links) =>
+      links.map((link) => link.getBoundingClientRect().top),
+    );
+  expect(new Set(chipTops).size).toBe(1);
+  await roleRow.getByRole('button', { name: 'Show more roles' }).click();
+  await expect(roleRow.getByRole('link', { name: 'Finisher' })).toBeVisible();
+  await roleRow.getByRole('button', { name: 'Show fewer roles' }).click();
+  await expect(roleRow.getByRole('link', { name: 'Finisher' })).toHaveCount(0);
+  await page.setViewportSize({ width: 1280, height: 720 });
+  const editor = page.getByRole('dialog', { name: 'Edit tags', exact: true });
+  const menu = editor.getByRole('button', { name: 'Select tags' });
+  await dialog.getByRole('button', { name: 'Edit tags' }).click();
+  await expect(editor).toContainText('Tags are global across all your decks');
+  await editor.getByRole('textbox', { name: 'New tag' }).fill('Removal');
+  await editor.getByRole('button', { name: 'Add tag' }).click();
+  await expect(menu).toContainText('Removal');
+  await menu.click();
+  const ramp = page.getByRole('option', { name: /^Ramp/ });
+  const draw = page.getByRole('option', { name: /^Draw/ });
+  await ramp.click();
+  await draw.click();
+  await expect(ramp).toHaveAttribute('aria-selected', 'true');
+  await expect(draw).toHaveAttribute('aria-selected', 'true');
+  await ramp.click();
+  await draw.click();
+  await page.keyboard.press('Escape');
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(dialog).toBeVisible();
+  const tagRow = dialog.getByRole('region', { name: 'Tags', exact: true });
+  await expect(
+    tagRow.getByRole('listitem').first().locator('span').first(),
+  ).toHaveClass(/text-info/);
+  const tagBounds = (await tagRow.boundingBox())!;
+  expect(tagBounds.y + tagBounds.height).toBeLessThanOrEqual(
+    (await roleRow.boundingBox())!.y,
+  );
+  expect(tagBounds.width).toBe((await roleRow.boundingBox())!.width);
+  await expect(tagRow.getByRole('listitem')).toHaveText(['Removal']);
   await dialog.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: 'Display', exact: true }).click();
@@ -302,23 +482,21 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
     page.getByRole('button', { name: /Removal \(2\)/ }).first(),
   ).toBeVisible();
   expect(assignments).toEqual([
-    { oracle_id: state.cards[0].oracle_id, tag_id: tags[0].id },
+    { oracle_id: state.cards[0].oracle_id, tag_id: createdId },
   ]);
-  await page.route(BACKEND + '/library/tags/' + tags[0].id, (route) => {
+  await page.route(BACKEND + '/library/tags/' + createdId, (route) => {
     expect(route.request().headers()['content-type']).toBeUndefined();
-    tags.splice(0);
+    tags.splice(tags.findIndex((tag) => tag.id === createdId), 1);
     assignments.splice(0);
     return route.fulfill({ json: { deleted: true } });
   });
-  await page
-    .getByRole('button', {
-      name: `Options for ${state.cards[0].name}`,
-      exact: true,
-    })
-    .click();
-  await dialog
-    .getByRole('combobox', { name: 'Add or create a tag', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Show / Hide' }).click();
+  await page.getByRole('menuitem', { name: 'Show Tags' }).click();
+  const displayedCard = page.locator('.list-card').filter({
+    has: page.getByRole('button', { name: `Options for ${state.cards[0].name}`, exact: true }),
+  }).first();
+  await displayedCard.getByRole('button', { name: 'Edit tags' }).click();
+  await menu.click();
   await page
     .getByRole('button', { name: 'Delete Removal everywhere', exact: true })
     .click();
@@ -326,12 +504,10 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   await expect(warning).toContainText(
     'every card in all your decks and collections',
   );
-  expect(tags).toHaveLength(1);
+  expect(tags).toHaveLength(3);
   await warning.getByRole('button', { name: 'Cancel', exact: true }).click();
-  expect(tags).toHaveLength(1);
-  await dialog
-    .getByRole('combobox', { name: 'Add or create a tag', exact: true })
-    .click();
+  expect(tags).toHaveLength(3);
+  await menu.click();
   await page
     .getByRole('button', { name: 'Delete Removal everywhere', exact: true })
     .click();
@@ -339,15 +515,75 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
     .getByRole('button', { name: 'Delete tag', exact: true })
     .click();
   await expect(warning).toBeHidden();
-  await expect(
-    dialog.getByRole('button', {
-      name: 'Remove Removal from this card',
-      exact: true,
-    }),
-  ).toHaveCount(0);
-  expect(tags).toHaveLength(0);
+  await expect(editor).toBeVisible();
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
+  expect(tags).toHaveLength(2);
   expect(assignments).toHaveLength(0);
 });
+
+for (const [width, columns] of [
+  [390, 1],
+  [1024, 2],
+  [1600, 3],
+]) {
+  test(`library grid reserves nine deck cards at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const { deck } = await setupDeckDisplay(page);
+    const decklists = Array.from({ length: 9 }, (_, i) => ({
+      ...deck,
+      id: `72000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`,
+      name: `Deck ${i + 1}`,
+      commanders: ['Iron Man, Titan of Innovation'],
+      description: 'An artifact toolbox.',
+    }));
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route(BACKEND + '/supabase/card-lists?*', async (route) => {
+      await gate;
+      return route.fulfill({
+        json: {
+          decklists,
+          totalCount: 9,
+          totalPages: 1,
+          page: 1,
+          pageSize: 50,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      });
+    });
+    await page.route(BACKEND + '/library/folders', (route) =>
+      route.fulfill({ json: { folders: [] } }),
+    );
+    const loading = page.getByRole('group', { name: 'Loading lists' });
+    let placeholder;
+    try {
+      await gotoHydrated(page, '/lists?view=mine');
+      const tiles = loading.locator(':scope > *');
+      await expect(tiles).toHaveCount(9);
+      const rows = await tiles.evaluateAll(
+        (nodes) =>
+          new Set(nodes.map((node) => node.getBoundingClientRect().top)).size,
+      );
+      expect(rows).toBe(Math.ceil(9 / columns));
+      placeholder = await tiles.first().boundingBox();
+    } finally {
+      release();
+    }
+    await expect(loading).toHaveCount(0);
+    const card = page.getByTestId(`library-list-${decklists[0].id}`);
+    await expect(card).toBeVisible();
+    const loaded = await card.boundingBox();
+    expect(loaded!.width).toBeCloseTo(placeholder!.width);
+    expect(Math.abs(loaded!.height - placeholder!.height)).toBeLessThanOrEqual(
+      10,
+    );
+  });
+}
 
 test('my lists support folder management, typed deletion, sorting, list view and collection creation', async ({
   page,
@@ -496,8 +732,9 @@ test('collections paginate on mobile and Display fields stay aligned', async ({
   await expect(page.locator('.list-card')).toHaveCount(100);
   await page
     .getByRole('navigation', { name: 'Collection pages top' })
-    .getByRole('button', { name: 'Page 2', exact: true })
+    .getByRole('link', { name: 'Page 2', exact: true })
     .click();
+  await expect(page).toHaveURL(/\?page=2/);
   await expect(page.locator('.list-card')).toHaveCount(1);
   await expect(page.locator('.list-card').getByRole('img')).toHaveAttribute(
     'alt',
@@ -546,6 +783,7 @@ test('collections paginate on mobile and Display fields stay aligned', async ({
 test('Show more reveals queued cards without another recommendation request', async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
   const state = await setupDeckDisplay(page, { pro: true, extraCards: 15 });
   let requests = 0;
   await page.route(
@@ -571,15 +809,15 @@ test('Show more reveals queued cards without another recommendation request', as
   await section.scrollIntoViewIfNeeded();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
-  ).toHaveCount(11);
+  ).toHaveCount(4);
   await page.setViewportSize({ width: 1800, height: 1000 });
   await expect(
     section.getByRole('button', { name: /^Options for / }),
-  ).toHaveCount(15);
+  ).toHaveCount(7);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
     section.getByRole('button', { name: /^Options for / }),
-  ).toHaveCount(3);
+  ).toHaveCount(2);
   await section.getByRole('button', { name: 'Show more', exact: true }).click();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -587,7 +825,7 @@ test('Show more reveals queued cards without another recommendation request', as
   await section.getByRole('button', { name: 'Show less', exact: true }).click();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
-  ).toHaveCount(3);
+  ).toHaveCount(2);
   await section.getByRole('button', { name: 'Show more', exact: true }).click();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -674,9 +912,13 @@ test('free deck tools export CSV, preview an import, draw a hand and restore a v
   await page.getByRole('button', { name: 'Import', exact: true }).click();
   await page
     .getByRole('textbox', { name: 'Decklist to import' })
-    .fill('2 Island');
+    .fill('2 Swamp\n\n1 Island');
   await page.getByRole('button', { name: 'Preview import' }).click();
-  await expect(page.getByText('2 Island — Mainboard')).toBeVisible();
+  await expect(page.getByText('2 Swamp — Mainboard')).toBeVisible();
+  await expect(
+    page.getByText('1 card already in this list was skipped.'),
+  ).toBeVisible();
+  await expect(page.getByText('1 Island — Sideboard')).toHaveCount(0);
   expect(state.writes).toHaveLength(0);
   await page
     .getByRole('button', { name: 'Add imported cards', exact: true })
@@ -686,10 +928,10 @@ test('free deck tools export CSV, preview an import, draw a hand and restore a v
     .toEqual({
       listId: displayDeckId,
       board: 'Mainboard',
-      cardNames: ['2 Island'],
+      cardNames: ['2 Swamp'],
     });
   await expect(
-    page.getByText('Imported 1 card entries. Existing cards were kept.', {
+    page.getByText('Cards added.', {
       exact: true,
     }),
   ).toBeVisible();
@@ -777,7 +1019,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
     .poll(() => budgets)
     .toContainEqual({ targetBudget: 25, newestSet: false });
   const alerts = page.getByRole('region', {
-    name: 'New Cards for Deck',
+    name: `New Cards for ${state.deck.name}`,
     exact: true,
   });
   await openDeckAction(page, 'Suggest New Cards · Pro');
@@ -814,7 +1056,153 @@ test('Pro budget and ownership controls use the selected budget and collection',
   ).toHaveCount(1);
 });
 
-test('search card modal automatically fetches deck matches for Pro and adds directly', async ({
+test('deck suggestions persist across modals and previews and card pages open suggestions in the modal', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  const state = await setupDeckDisplay(page, { pro: true });
+  const card = state.cards[0];
+  const requests: string[] = [];
+  await page.route(BACKEND + '/library/cards/deck-fit', (route) => {
+    requests.push(route.request().postDataJSON().oracleId);
+    return route.fulfill({
+      json: {
+        results: [
+          { id: displayDeckId, name: 'My matching deck', alreadyInDeck: true },
+        ],
+        nextOffset: null,
+        supported: true,
+      },
+    });
+  });
+  await page.route(BACKEND + `/cards/with-llm/${card.oracle_id}`, (route) =>
+    route.fulfill({ json: { card, llm: null } }),
+  );
+  await page
+    .getByRole('button', { name: `Options for ${card.name}`, exact: true })
+    .hover();
+  await expect(
+    page
+      .locator('.preview-rail')
+      .getByRole('link', { name: "Go To Card's Page", exact: true }),
+  ).toHaveAttribute('href', `/card/${card.oracle_id}`);
+  expect(requests).toHaveLength(0);
+  await page
+    .locator('.preview-rail')
+    .getByRole('button', { name: 'Suggest Decks · Pro', exact: true })
+    .click();
+  const modal = page.getByRole('dialog', { name: card.name, exact: true });
+  await expect(
+    modal.getByText('Already in deck', { exact: true }),
+  ).toBeVisible();
+  expect(requests).toEqual([card.oracle_id]);
+  await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
+
+  await page
+    .getByRole('button', { name: `Options for ${card.name}`, exact: true })
+    .click();
+  await expect(
+    modal.getByText('Already in deck', { exact: true }),
+  ).toBeVisible();
+  expect(requests).toHaveLength(1);
+  await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
+
+  const preview = page.locator('.preview-rail');
+  const previewCardPage = preview.getByRole('link', {
+    name: "Go To Card's Page",
+    exact: true,
+  });
+  await expect(previewCardPage).toHaveAttribute('href', `/card/${card.oracle_id}`);
+  await expect(previewCardPage).toHaveClass(/\bbg-primary\b/);
+  const previewControls = previewCardPage.locator('..').locator('a[href], button');
+  await expect(previewControls.nth(0)).toHaveAccessibleName("Go To Card's Page");
+  await expect(previewControls.nth(1)).toHaveAccessibleName(/Buy on TCGPlayer/);
+  await expect(previewControls.nth(1)).toHaveClass(/\bbg-success\b/);
+  await expect(previewControls.nth(2)).toHaveAccessibleName('Add to Another Deck');
+  await expect(
+    previewCardPage.locator('[class*="lucide:arrow-up-right"]'),
+  ).toBeVisible();
+  await expect(
+    preview.getByText('Already in deck', { exact: true }),
+  ).toHaveCount(0);
+  await preview
+    .getByRole('button', { name: 'Suggest Decks · Pro', exact: true })
+    .click();
+  await expect(
+    modal.getByText('Already in deck', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    modal.getByRole('button', { name: 'Move To', exact: true }),
+  ).toBeVisible();
+  expect(requests).toHaveLength(1);
+  await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
+  await preview
+    .getByRole('link', { name: "Go To Card's Page", exact: true })
+    .click();
+  const detail = page.locator('.card-detail-section');
+  await expect(
+    detail.getByRole('button', { name: 'Suggest Decks · Pro', exact: true }),
+  ).toBeVisible();
+  expect(requests).toHaveLength(1);
+  const image = detail.locator('.card-image');
+  const before = await image.evaluate((node) => ({
+    width: (node as HTMLElement).offsetWidth,
+    height: (node as HTMLElement).offsetHeight,
+  }));
+  await detail
+    .getByRole('button', { name: 'Suggest Decks · Pro', exact: true })
+    .click();
+  const detailPageLink = modal.getByRole('link', {
+    name: "Go To Card's Page",
+    exact: true,
+  });
+  await expect(detailPageLink).toHaveCount(1);
+  await expect(detailPageLink).toHaveAttribute(
+    'href',
+    `/card/${card.oracle_id}`,
+  );
+  await expect(
+    modal.getByText('Already in deck', { exact: true }),
+  ).toBeVisible();
+  expect(requests).toEqual([card.oracle_id]);
+  await expect(
+    detail.getByText('Already in deck', { exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
+  const after = await image.evaluate((node) => ({
+    width: (node as HTMLElement).offsetWidth,
+    height: (node as HTMLElement).offsetHeight,
+  }));
+  expect(after).toEqual(before);
+
+  // A fresh page has no suggestion cache: the page button opens and loads in one click.
+  await gotoHydrated(page, '/about');
+  await page.evaluate((path) => {
+    const root = document.getElementById('__nuxt') as unknown as {
+      __vue_app__: {
+        config: {
+          globalProperties: {
+            $router: { push: (path: string) => Promise<unknown> };
+          };
+        };
+      };
+    };
+    return root.__vue_app__.config.globalProperties.$router.push(path);
+  }, `/card/${card.oracle_id}`);
+  await detail
+    .getByRole('button', { name: 'Suggest Decks · Pro', exact: true })
+    .click();
+  await expect(
+    modal.getByText('Already in deck', { exact: true }),
+  ).toBeVisible();
+  expect(requests).toEqual([card.oracle_id, card.oracle_id]);
+});
+
+test('search card modal fetches deck matches only on request and adds directly', async ({
   page,
 }) => {
   const state = await setupDeckDisplay(page, { pro: true });
@@ -838,7 +1226,14 @@ test('search card modal automatically fetches deck matches for Pro and adds dire
       json: {
         results:
           offset === 0
-            ? [{ id: displayDeckId, name: 'My deck' }]
+            ? [
+                { id: displayDeckId, name: 'My deck', alreadyInDeck: false },
+                {
+                  id: '41000000-0000-4000-8000-000000000098',
+                  name: 'Deck that already has it',
+                  alreadyInDeck: true,
+                },
+              ]
             : [
                 {
                   id: '41000000-0000-4000-8000-000000000099',
@@ -859,23 +1254,81 @@ test('search card modal automatically fetches deck matches for Pro and adds dire
     })
     .first()
     .click();
+  const modal = page.getByRole('dialog');
   await expect(
-    page.getByRole('heading', { name: 'Suggested decks Pro' }),
+    modal.getByRole('button', { name: 'Suggest Decks · Pro', exact: true }),
   ).toBeVisible();
-  await page
+  expect(requests).toBe(0);
+  await modal
+    .getByRole('button', { name: 'Suggest Decks · Pro', exact: true })
+    .click();
+  await expect(
+    modal.getByRole('heading', { name: 'Suggested decks Pro' }),
+  ).toBeVisible();
+  await expect(
+    modal.getByRole('link', { name: 'Deck that already has it', exact: true }),
+  ).toBeVisible();
+  await expect(
+    modal.getByText('Already in deck', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    modal.getByRole('button', {
+      name: 'Add to Deck that already has it',
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await modal
     .getByRole('button', { name: 'Add to My deck', exact: true })
     .click();
   await expect(
-    page.getByRole('button', { name: 'Add to My deck', exact: true }),
+    modal.getByRole('button', { name: 'Add to My deck', exact: true }),
   ).toHaveText('Added');
   expect(requests).toBe(1);
   expect(state.writes).toHaveLength(1);
-  await page
+  await modal
     .getByRole('button', { name: 'Check more decks', exact: true })
     .click();
   await expect(
-    page.getByRole('link', { name: 'Another matching deck', exact: true }),
+    modal.getByRole('link', { name: 'Another matching deck', exact: true }),
   ).toBeVisible();
+  expect(offsets).toEqual([0, 25]);
+  await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
+  const preview = page.locator('.preview-rail');
+  await expect(
+    preview.getByRole('link', { name: "Go To Card's Page", exact: true }),
+  ).toHaveAttribute('href', `/card/${state.cards[0].oracle_id}`);
+  await expect(
+    preview.getByRole('link', { name: 'My deck', exact: true }),
+  ).toHaveCount(0);
+  await preview
+    .getByRole('button', { name: 'Suggest Decks · Pro', exact: true })
+    .click();
+  await expect(
+    modal.getByRole('link', { name: 'Another matching deck', exact: true }),
+  ).toBeVisible();
+  await expect(
+    modal.getByRole('button', { name: 'Add to My deck', exact: true }),
+  ).toHaveText('Added');
+  await expect(
+    modal.getByRole('button', { name: 'Mark As Poor Result', exact: true }),
+  ).toBeVisible();
+  expect(offsets).toEqual([0, 25]);
+  await page.keyboard.press('Escape');
+  await expect(modal).toBeHidden();
+  await page
+    .getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
+      exact: true,
+    })
+    .first()
+    .click();
+  await expect(
+    modal.getByRole('link', { name: 'Another matching deck', exact: true }),
+  ).toBeVisible();
+  await expect(
+    modal.getByRole('button', { name: 'Add to My deck', exact: true }),
+  ).toHaveText('Added');
   expect(offsets).toEqual([0, 25]);
 });
 
@@ -920,21 +1373,29 @@ test('Suggested Decks distinguishes a Jev outage from an empty judgment and perm
     })
     .first()
     .click();
+  const modal = page.getByRole('dialog');
   await expect(
-    page.getByRole('alert').filter({ hasText: 'temporarily unavailable' }),
+    modal.getByRole('button', { name: 'Suggest Decks · Pro', exact: true }),
+  ).toBeVisible();
+  expect(requests).toBe(0);
+  await modal
+    .getByRole('button', { name: 'Suggest Decks · Pro', exact: true })
+    .click();
+  await expect(
+    modal.getByRole('alert').filter({ hasText: 'temporarily unavailable' }),
   ).toBeVisible();
   await expect(
-    page.getByText('No matching decks in this batch.', { exact: true }),
+    modal.getByText('No matching decks in this batch.', { exact: true }),
   ).not.toBeVisible();
   expect(requests).toBe(1);
-  await page
+  await modal
     .getByRole('button', { name: 'Check more decks', exact: true })
     .click();
   await expect(
-    page.getByText('No matching decks in this batch.', { exact: true }),
+    modal.getByText('No matching decks in this batch.', { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('alert').filter({ hasText: 'temporarily unavailable' }),
+    modal.getByRole('alert').filter({ hasText: 'temporarily unavailable' }),
   ).not.toBeVisible();
   expect(requests).toBe(2);
 });
@@ -1158,6 +1619,31 @@ test('deck toolbar stays compact and free accounts can highlight colors and coll
         exact: true,
       }),
     ).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(toolbar.locator('button:visible, a:visible')).toHaveCount(3);
+  for (const name of ['Recommend', 'Playtest', 'Search Within Deck · Pro'])
+    await expect(
+      toolbar.getByRole('button', { name, exact: true }),
+    ).toBeHidden();
+  await expect(
+    toolbar.getByRole('link', { name: 'Primer', exact: true }),
+  ).toBeVisible();
+  await expect(toolbar.getByRole('button', { name: /^Buy / })).toBeVisible();
+  await toolbar.getByRole('button', { name: 'More deck actions' }).click();
+  for (const name of ['Recommend', 'Playtest', 'Search Within Deck · Pro'])
+    await expect(
+      page.getByRole('menuitem', { name, exact: true }),
+    ).toBeVisible();
+  await page.getByRole('menuitem', { name: 'Playtest', exact: true }).click();
+  const playtest = page.getByRole('dialog', {
+    name: 'Playtest Beta',
+    exact: true,
+  });
+  await expect(
+    playtest.getByRole('region', { name: 'Hand', exact: true }),
+  ).toBeVisible();
+  await playtest.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.setViewportSize({ width: 1280, height: 720 });
   await expect(toolbar.getByRole('button', { name: /^Copy$/ })).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Deck analytics · Pro' }),
@@ -1178,7 +1664,7 @@ test('deck toolbar stays compact and free accounts can highlight colors and coll
       );
     }),
   ).toBe(true);
-  await expect(stats).not.toHaveAttribute('open', '');
+  await expect(stats).toHaveAttribute('open', '');
   const originalCardHeight = (await page
     .locator('.list-card')
     .first()
@@ -1263,7 +1749,7 @@ test('deck toolbar stays compact and free accounts can highlight colors and coll
   ).toHaveCount(2);
   await expect(page).toHaveURL(new RegExp(`/lists/${displayDeckId}$`));
   expect(ownershipRequests).toBe(1);
-  expect(analyticsRequests).toBe(0);
+  expect(analyticsRequests).toBe(1);
 });
 
 test('subfolders show only their own decks and keep the parent trail', async ({
@@ -1368,19 +1854,26 @@ test('suggested cuts appear inline and remove cards without rerunning suggestion
     }
     return route.fulfill({ json: state.items });
   });
-  await openDeckAction(page, 'Suggest cuts · Pro');
+  await openDeckAction(page, 'Suggest Cuts · Pro');
   const section = page.getByRole('region', {
-    name: 'Suggested cuts',
+    name: 'Suggested Cuts',
     exact: true,
   });
+  await expect(
+    section.getByRole('heading', { name: 'Suggested Cuts Pro', exact: true }),
+  ).toBeVisible();
   await expect(section).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await section
-    .getByRole('button', {
-      name: `Options for ${state.cards[1].name}`,
-      exact: true,
-    })
-    .click();
+  const cut = section.getByRole('button', {
+    name: `Options for ${state.cards[1].name}`,
+    exact: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await cut.hover();
+  await expect(page.locator('.preview-rail .preview-title')).toHaveText(
+    state.cards[1].name,
+  );
+  await cut.click();
   const modal = page.getByRole('dialog', {
     name: state.cards[1].name,
     exact: true,
@@ -1524,11 +2017,20 @@ test('deck settings duplicate the saved deck, show failures and open the named c
   });
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
-  await openDeckAction(page, 'Settings');
+  await page
+    .getByTestId('deck-banner')
+    .getByRole('button', { name: 'Deck settings', exact: true })
+    .click();
   const settings = page.getByRole('dialog', {
     name: 'Deck settings',
     exact: true,
   });
+  const banner = page.getByTestId('deck-banner');
+  for (const name of [state.deck.name!, state.deck.format!, state.deck.description!].filter(Boolean)) {
+    await settings.getByRole('button', { name: 'Close', exact: true }).click();
+    await banner.getByRole('button', { name, exact: true }).click();
+    await expect(settings).toBeVisible();
+  }
   const duplicate = settings.getByRole('button', {
     name: 'Duplicate Deck',
     exact: true,
@@ -1691,4 +2193,40 @@ test('library defaults to decks and collections with shared pagination and separ
       { kind: 'all', page: 1, folder: folderId },
     ]),
   );
+});
+
+test('deck prices, stats and sticky actions hydrate consistently on reload', async ({
+  page,
+}) => {
+  const hydrationWarnings: string[] = [];
+  page.on('console', (message) => {
+    if (/hydration.*mismatch|hydration completed but/i.test(message.text()))
+      hydrationWarnings.push(message.text());
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setupDeckDisplay(page, { cardCount: 15 });
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
+  for (let visit = 0; visit < 2; visit++) {
+    const response = await page.reload();
+    const html = await response!.text();
+    // A body teleport must not be emitted into the server HTML and then
+    // hydrated against a different set of card data in the browser.
+    expect(html).not.toMatch(/<div[^>]*class="sticky-footer-wrap"/);
+    await expect(page.getByTestId('deck-stats')).toBeAttached();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const buy = page
+      .getByRole('navigation', { name: 'Deck actions' })
+      .getByRole('button', { name: /^Buy \(/ });
+    await expect(buy).toBeEnabled();
+    const footer = page.locator('.sticky-footer-wrap');
+    await expect(footer).toBeVisible();
+    await expect(footer.getByRole('button', { name: /^Buy \(/ })).toHaveText(
+      await buy.innerText(),
+    );
+    await footer
+      .getByRole('button', { name: 'Deck Stats', exact: true })
+      .click();
+    await expect(page.getByTestId('deck-stats')).toHaveAttribute('open', '');
+    expect(hydrationWarnings).toEqual([]);
+  }
 });

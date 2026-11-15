@@ -49,6 +49,9 @@ const props = defineProps<{ profile: PublicProfile }>();
 
 const bannerImageUrl = computed(() => {
   if (!props.profile.avatar_card_name) return null;
-  return scryfallArtCropUrl(props.profile.avatar_card_name);
+  return scryfallArtCropUrl(
+    props.profile.avatar_card_name,
+    props.profile.avatar_printing_id,
+  );
 });
 </script>

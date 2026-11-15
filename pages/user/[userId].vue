@@ -117,6 +117,7 @@ const { data: ssrOgImageUrl } = await useAsyncData(
       ssrAvatarCardName.value,
       runtimeConfig.public.backendPath,
       requestFetch,
+      ssrProfile.value?.profile?.avatar_printing_id,
     );
   },
 );
@@ -125,7 +126,10 @@ const { profile, decklists, isLoading, error } = usePublicUserProfile(userId);
 
 const bannerImageUrl = computed(() => {
   if (!profile.value?.avatar_card_name) return null;
-  return scryfallArtCropUrl(profile.value.avatar_card_name);
+  return scryfallArtCropUrl(
+    profile.value.avatar_card_name,
+    profile.value.avatar_printing_id,
+  );
 });
 
 // ---- SEO ----

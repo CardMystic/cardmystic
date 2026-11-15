@@ -3,9 +3,15 @@ import type { ScryfallCard } from '~/models/cardModel';
 import {
   highlightColors,
   highlightTypes,
+  isLabelGroup,
+  cardLabelGroups,
   type DeckHighlightMode,
 } from '~/utils/deckHighlight';
-const props = defineProps<{ cards: ScryfallCard[] }>();
+const props = defineProps<{
+  cards: ScryfallCard[];
+  labelNames: string[];
+  labelsLoading: boolean;
+}>();
 const mode = defineModel<DeckHighlightMode>('mode', { default: 'none' });
 const target = defineModel<string>('target', { default: '' });
 const targetLabel = computed(() =>
@@ -60,9 +66,13 @@ const modes = [
   { label: 'Color', value: 'color' },
   { label: 'Mana value', value: 'manaValue' },
   { label: 'Card type', value: 'type' },
+  ...Object.entries(cardLabelGroups).map(([value, label]) => ({
+    value,
+    label,
+  })),
 ];
 function selectMode(value: DeckHighlightMode) {
-  if (value === 'owned' && !api.userId.value)
+  if ((value === 'owned' || value === 'tags') && !api.userId.value)
     return navigateTo({
       path: '/user/login',
       query: { redirect: route.fullPath },
@@ -162,6 +172,14 @@ onBeforeUnmount(() => sequence++);
             {{ error }}
           </p>
         </template>
+        <DeckLabelHighlightPicker
+          v-else-if="isLabelGroup(mode)"
+          :key="mode"
+          v-model="target"
+          :group="mode"
+          :names="labelNames"
+          :loading="labelsLoading"
+        />
         <template v-else-if="mode !== 'none'">
           <UFormField :label="targetLabel">
             <USelect

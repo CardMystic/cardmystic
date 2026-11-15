@@ -22,20 +22,17 @@
       </div>
 
       <div class="preview-actions">
-        <USkeleton class="h-11 w-full rounded-lg" />
-        <USkeleton class="h-11 w-full rounded-lg" />
-        <USkeleton class="h-11 w-full rounded-lg" />
+        <USkeleton v-for="n in 4" :key="n" class="h-10 w-full rounded-lg" />
       </div>
 
       <div v-if="variant === 'deck'" class="preview-actions">
-        <USkeleton class="h-4 w-28" />
-        <div class="grid grid-cols-2 gap-2">
-          <USkeleton class="h-10 w-full rounded-lg" />
-          <USkeleton class="h-10 w-full rounded-lg" />
+        <USkeleton class="h-10 w-full rounded-lg" />
+        <div class="flex gap-2">
+          <USkeleton class="h-10 flex-1 rounded-lg" />
+          <USkeleton class="size-10 rounded-lg" />
         </div>
-        <USkeleton class="h-10 w-full rounded-lg" />
-        <USkeleton class="h-10 w-full rounded-lg" />
-        <USkeleton class="h-10 w-full rounded-lg" />
+      </div>
+      <div class="preview-actions">
         <USkeleton class="h-10 w-full rounded-lg" />
       </div>
     </div>

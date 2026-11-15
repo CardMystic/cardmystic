@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core';
 import type { Card } from '~/models/cardModel';
-import type { CardAction } from '~/utils/card-actions';
+import { findSimilarAction, type CardActionMenu } from '~/utils/card-actions';
 import { getCardImageUrl } from '~/utils/scryfall';
 const props = defineProps<{
   listId: string;
   revision: string;
   oracleIds: string[];
+}>();
+const emit = defineEmits<{
+  preview: [card: Card];
+  cancelPreview: [cardId: string];
 }>();
 const api = useLibraryApi(),
   toast = useToast();
@@ -20,10 +23,7 @@ const results = ref<Card[]>([]),
 const expanded = ref(false),
   loadedRevision = ref('');
 const section = ref<HTMLElement | null>(null);
-const { width } = useElementSize(section);
-const rowCapacity = computed(() =>
-  Math.max(1, Math.floor((width.value - 32 + 12) / 108)),
-);
+const { rowCapacity, gridClasses } = useDeckCardGrid();
 const remaining = computed(() =>
   results.value.filter(
     (card) =>
@@ -38,33 +38,26 @@ const visible = computed(() =>
 );
 const selected = ref<Card | null>(null),
   modalOpen = ref(false);
-const actions = computed<CardAction[][]>(() =>
+const actions = computed<CardActionMenu>(() =>
   selected.value
-    ? [
-        [
-          {
-            label: 'View Card Details',
-            icon: 'i-lucide-info',
-            to: `/card/${selected.value.card_data.oracle_id}`,
+    ? {
+        cut: {
+          label: 'Remove from Deck',
+          icon: 'i-lucide-scissors',
+          color: 'error',
+          disabled: !!removing.value,
+          onSelect: () => {
+            if (selected.value) void cut(selected.value);
           },
-          {
-            label: 'Remove from Deck',
-            icon: 'i-lucide-scissors',
-            color: 'error',
-            disabled: !!removing.value,
-            onSelect: () => {
-              if (selected.value) void cut(selected.value);
-            },
-          },
-          {
-            label: 'Find Similar Cards',
-            icon: 'i-mdi-cards-outline',
-            to: `/search/all/similarity?${new URLSearchParams({ card_name: selected.value.card_name, searchType: 'similarity' })}`,
-          },
-        ],
-      ]
-    : [],
+        },
+        similar: {
+          ...findSimilarAction,
+          to: `/search/all/similarity?${new URLSearchParams({ card_name: selected.value.card_name, searchType: 'similarity' })}`,
+        },
+      }
+    : {},
 );
+
 let sequence = 0;
 async function load() {
   if (!api.isPro.value) return navigateTo('/memberships');
@@ -130,11 +123,13 @@ onBeforeUnmount(() => sequence++);
   <section
     v-if="open"
     ref="section"
-    aria-label="Suggested cuts"
+    aria-label="Suggested Cuts"
     class="my-4 rounded-lg border border-error/30 bg-error/5 p-4"
   >
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <h2 class="font-semibold">Suggested cuts</h2>
+      <h2 class="font-semibold">
+        Suggested Cuts <span class="text-xs text-(--pro-accent)">Pro</span>
+      </h2>
       <div class="flex gap-1">
         <UButton
           icon="i-lucide-refresh-cw"
@@ -156,18 +151,19 @@ onBeforeUnmount(() => sequence++);
       review it or remove all copies from the mainboard. Lands and commanders
       are excluded.
     </p>
-    <div v-if="loading" class="flex gap-3 overflow-hidden">
+    <div
+      v-if="loading"
+      :class="gridClasses"
+      role="status"
+      aria-label="Loading suggested cuts"
+    >
       <USkeleton
         v-for="n in rowCapacity"
         :key="n"
-        class="w-24 aspect-[488/680] shrink-0 rounded-lg"
+        class="w-full aspect-[488/680] rounded-[14px]"
       />
     </div>
-    <div
-      v-else
-      class="grid gap-3"
-      :style="{ gridTemplateColumns: `repeat(${rowCapacity}, 6rem)` }"
-    >
+    <div v-else :class="gridClasses">
       <button
         v-for="card in visible"
         :key="card.card_data.oracle_id"
@@ -178,7 +174,10 @@ onBeforeUnmount(() => sequence++);
           modalOpen &&
           selected?.card_data.oracle_id === card.card_data.oracle_id
         "
-        class="block w-24 rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
+        class="deck-card-surface block min-w-0 w-full overflow-hidden rounded-[14px] focus-visible:outline-2 focus-visible:outline-primary"
+        @mouseenter="emit('preview', card)"
+        @focus="emit('preview', card)"
+        @mouseleave="emit('cancelPreview', card.card_data.id)"
         @click="
           selected = card;
           modalOpen = true;
@@ -187,10 +186,10 @@ onBeforeUnmount(() => sequence++);
         <img
           :src="getCardImageUrl(card.card_data)"
           :alt="card.card_name"
-          width="96"
-          height="134"
+          width="488"
+          height="680"
           loading="lazy"
-          class="w-24 aspect-[488/680] object-cover rounded-lg"
+          class="block w-full aspect-[488/680] rounded-[inherit] object-cover"
         />
       </button>
     </div>

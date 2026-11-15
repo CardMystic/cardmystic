@@ -19,6 +19,7 @@ const props = defineProps<{
   isOwner: boolean;
   entries: AnalysisCard[];
   cardsLoading: boolean;
+  hasPrimer?: boolean;
 }>();
 const route = useRoute();
 const api = useLibraryApi();
@@ -84,20 +85,41 @@ const heroChoice = computed({
   },
 });
 const tagDraft = ref('');
-const handChoice = ref<string>();
-const handOptions = computed(() =>
-  cardOptions.value.filter((option) => {
-    const entry = props.entries.find(
-      (entry) => entry.card.oracle_id === option.value,
-    );
-    return (
-      entry &&
-      !entry.commander &&
-      draft.value.opening_hand.filter((id) => id === option.value).length <
-        entry.quantity
-    );
-  }),
+const initialDraft = ref('');
+const pendingLeave = ref<'close' | 'cancel' | null>(null);
+const hasUnsavedChanges = computed(
+  () =>
+    editing.value &&
+    (JSON.stringify(draft.value) !== initialDraft.value ||
+      !!tagDraft.value.trim()),
 );
+const modalOpen = computed({
+  get: () => open.value,
+  set: (value: boolean) => {
+    if (value) open.value = true;
+    else requestLeave('close');
+  },
+});
+const confirmDiscard = computed({
+  get: () => pendingLeave.value !== null,
+  set: (value: boolean) => {
+    if (!value) pendingLeave.value = null;
+  },
+});
+function requestLeave(target: 'close' | 'cancel') {
+  if (busy.value) return;
+  if (hasUnsavedChanges.value) pendingLeave.value = target;
+  else leave(target);
+}
+function leave(target: 'close' | 'cancel') {
+  pendingLeave.value = null;
+  editing.value = false;
+  tagDraft.value = '';
+  if (target === 'close' || !saved.value) open.value = false;
+}
+function discardChanges() {
+  if (pendingLeave.value) leave(pendingLeave.value);
+}
 function addTag() {
   const tag = tagDraft.value.trim();
   if (
@@ -110,23 +132,6 @@ function addTag() {
   )
     draft.value.playstyles.push(tag);
   tagDraft.value = '';
-}
-function addHandCard(value: unknown) {
-  if (
-    typeof value === 'string' &&
-    draft.value.opening_hand.length < 7 &&
-    handOptions.value.some((item) => item.value === value)
-  )
-    draft.value.opening_hand.push(value);
-  nextTick(() => {
-    handChoice.value = undefined;
-  });
-}
-function cardName(id: string) {
-  return (
-    cardOptions.value.find((option) => option.value === id)?.label ??
-    'Removed card'
-  );
 }
 const invalidCoreCount = computed(() => draft.value.core_oracle_ids.length > 3);
 let qrSequence = 0;
@@ -151,11 +156,8 @@ function edit() {
   };
   draft.value = {
     playstyles: [...(source.playstyles ?? [])],
-    opening_hand: (source.opening_hand ?? []).filter((id) => available.has(id)),
-    combos: (source.combos ?? []).map((combo) => ({
-      ...combo,
-      oracle_ids: combo.oracle_ids.filter((id) => available.has(id)),
-    })),
+    opening_hand: source.opening_hand ?? [],
+    combos: source.combos ?? [],
     summary: source.summary,
     win_plan: source.win_plan,
     hero_oracle_id:
@@ -164,6 +166,9 @@ function edit() {
         : null,
     core_oracle_ids: source.core_oracle_ids.filter((id) => available.has(id)),
   };
+  initialDraft.value = JSON.stringify(draft.value);
+  tagDraft.value = '';
+  pendingLeave.value = null;
   editing.value = true;
   error.value = '';
   confirmDelete.value = false;
@@ -291,6 +296,7 @@ async function printCard() {
 }
 watch([() => props.list.id, api.userId, () => props.isOwner], () => {
   open.value = false;
+  pendingLeave.value = null;
   editing.value = false;
   busy.value = false;
   error.value = '';
@@ -322,7 +328,7 @@ onBeforeUnmount(() => {
       />
     </UTooltip>
     <UModal
-      v-model:open="open"
+      v-model:open="modalOpen"
       :title="
         editing
           ? saved
@@ -331,7 +337,7 @@ onBeforeUnmount(() => {
           : 'Deck business card'
       "
       :dismissible="!busy"
-      :ui="{ content: 'max-w-5xl', body: 'space-y-4' }"
+      :ui="{ content: 'max-w-6xl', body: 'space-y-4' }"
     >
       <template #body>
         <div v-if="query.error.value" role="alert" class="space-y-2">
@@ -352,10 +358,6 @@ onBeforeUnmount(() => {
             class="space-y-4"
             @submit.prevent="save"
           >
-            <p class="text-sm text-muted">
-              Free for every deck. The name, format and cards stay linked to
-              your deck.
-            </p>
             <UFormField label="Playstyle tags (up to 10)">
               <div class="flex flex-wrap gap-2 mb-2">
                 <UButton
@@ -398,7 +400,7 @@ onBeforeUnmount(() => {
                 :rows="2"
                 class="w-full"
             /></UFormField>
-            <UFormField label="How does it win?"
+            <UFormField label="How does it win / play?"
               ><UTextarea
                 v-model="draft.win_plan"
                 aria-label="Business card win plan"
@@ -438,83 +440,6 @@ onBeforeUnmount(() => {
                   placeholder="Choose cards from this deck"
               /></UFormField>
             </div>
-            <UFormField label="Example opening hand (optional, up to 7 cards)">
-              <div class="flex flex-wrap gap-2 mb-2">
-                <UButton
-                  v-for="(id, index) in draft.opening_hand"
-                  :key="index"
-                  :label="cardName(id)"
-                  trailing-icon="i-lucide-x"
-                  variant="soft"
-                  :aria-label="`Remove opening hand card ${index + 1}`"
-                  @click="draft.opening_hand.splice(index, 1)"
-                />
-              </div>
-              <USelectMenu
-                v-model="handChoice"
-                :items="handOptions"
-                value-key="value"
-                aria-label="Opening hand card"
-                placeholder="Add a card to the example hand"
-                :disabled="draft.opening_hand.length >= 7"
-                class="w-full"
-                @update:model-value="addHandCard"
-              />
-            </UFormField>
-            <section class="space-y-3">
-              <h3 class="font-medium">Combos (optional)</h3>
-              <fieldset
-                v-for="(combo, index) in draft.combos"
-                :key="index"
-                class="border border-default rounded-lg p-3 space-y-3"
-              >
-                <UInput
-                  v-model="combo.name"
-                  :aria-label="`Combo ${index + 1} name`"
-                  placeholder="Combo name"
-                  :maxlength="80"
-                  required
-                  class="w-full"
-                />
-                <USelectMenu
-                  v-model="combo.oracle_ids"
-                  :items="cardOptions"
-                  value-key="value"
-                  multiple
-                  :aria-label="`Combo ${index + 1} cards`"
-                  placeholder="Choose 2 to 6 cards"
-                  class="w-full"
-                />
-                <UTextarea
-                  v-model="combo.description"
-                  :aria-label="`Combo ${index + 1} description`"
-                  placeholder="How it works"
-                  :maxlength="240"
-                  :rows="2"
-                  class="w-full"
-                />
-                <UButton
-                  :aria-label="`Remove combo ${index + 1}`"
-                  label="Remove combo"
-                  color="error"
-                  variant="ghost"
-                  @click="draft.combos.splice(index, 1)"
-                />
-              </fieldset>
-              <UButton
-                label="Add combo"
-                icon="i-lucide-plus"
-                variant="outline"
-                :disabled="draft.combos.length >= 6"
-                @click="
-                  draft.combos.push({
-                    name: '',
-                    description: '',
-                    oracle_ids: [],
-                  })
-                "
-              />
-            </section>
             <div class="flex flex-wrap gap-2">
               <UButton
                 type="submit"
@@ -526,7 +451,7 @@ onBeforeUnmount(() => {
                 color="neutral"
                 variant="outline"
                 :disabled="busy"
-                @click="saved ? (editing = false) : (open = false)"
+                @click="requestLeave('cancel')"
               />
             </div>
           </form>
@@ -605,12 +530,33 @@ onBeforeUnmount(() => {
             :name="list.name"
             :format="list.format"
             :bracket="list.bracket"
+            :has-primer="hasPrimer"
             :details="displayed"
             :entries="entries"
             :qr-image="qrImage"
             :deck-url="deckUrl"
           />
         </template>
+      </template>
+    </UModal>
+    <UModal
+      v-model:open="confirmDiscard"
+      title="Discard unsaved changes?"
+      description="Your business card changes haven't been saved."
+      :ui="{ footer: 'justify-end' }"
+    >
+      <template #footer>
+        <UButton
+          label="Keep editing"
+          color="neutral"
+          variant="outline"
+          @click="pendingLeave = null"
+        />
+        <UButton
+          label="Discard changes"
+          color="error"
+          @click="discardChanges"
+        />
       </template>
     </UModal>
   </template>

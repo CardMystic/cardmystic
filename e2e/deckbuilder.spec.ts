@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-import { BACKEND, gotoHydrated } from './utils/mocks';
+import {
+  BACKEND,
+  gotoHydrated,
+  mockSignedInUser,
+  waitForHydration,
+} from './utils/mocks';
 
 const SEARCH_TIMEOUT = 45_000;
 
@@ -43,7 +48,7 @@ test.describe('Deck Recommender', () => {
     page,
   }) => {
     // The deckbuilder page fires the ALS query when `?commander=` is
-    // present, even before the user types anything — this is the path
+    // present, even before the user types anything â€” this is the path
     // that SEO links and "Recommend for commander" CTAs use.
     const alsCall = page.waitForResponse(
       (resp) =>
@@ -95,27 +100,54 @@ test.describe('Deck Recommender', () => {
       .toBeGreaterThan(0);
   });
 
-  test('commander-only searches show the recommendation empty state', async ({
-    page,
-  }) => {
-    await page.route('**/als/recommend', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ results: [], not_found: [] }),
-      });
-    });
-
-    await gotoHydrated(
+  for (const session of ['guest', 'signed in']) {
+    test(`pending recommendations show skeletons until an empty response (${session})`, async ({
       page,
-      `/search/all/deckbuilder?commander=${encodeURIComponent(TEST_COMMANDER)}`,
-    );
-
-    await expect(
-      page.getByText('No Recommendations Available Yet'),
-    ).toBeVisible();
-    await expect(page.getByText('Enter a search query')).toHaveCount(0);
-  });
+    }) => {
+      if (session === 'signed in') await mockSignedInUser(page);
+      const errors: string[] = [];
+      page.on('pageerror', (error) => errors.push(error.message));
+      page.on('console', (message) => {
+        if (
+          /hydrat/i.test(message.text()) &&
+          ['warning', 'error'].includes(message.type())
+        )
+          errors.push(message.text());
+      });
+      const empty = page.getByText('No Recommendations Available Yet');
+      const path = `/search/all/deckbuilder?commander=${encodeURIComponent(TEST_COMMANDER)}`;
+      for (const navigate of [() => page.goto(path), () => page.reload()]) {
+        const gate = Promise.withResolvers<void>();
+        await page.route('**/als/recommend', async (route) => {
+          await gate.promise;
+          await route.fulfill({ json: { results: [], not_found: [] } });
+        });
+        const requested = page.waitForRequest('**/als/recommend');
+        try {
+          const response = await navigate();
+          expect(response?.ok()).toBe(true);
+          const html = await response!.text();
+          expect(html).toContain('data-testid="results-toolbar"');
+          expect(html).not.toContain('No Recommendations Available Yet');
+          await waitForHydration(page);
+          await requested;
+          await expect(
+            page
+              .locator('.results-layout')
+              .getByTestId('card-skeleton')
+              .first(),
+          ).toBeVisible();
+          await expect(empty).toHaveCount(0);
+        } finally {
+          gate.resolve();
+        }
+        await expect(empty).toBeVisible();
+        await expect(page.getByText('Enter a search query')).toHaveCount(0);
+        await page.unroute('**/als/recommend');
+      }
+      expect(errors).toEqual([]);
+    });
+  }
 
   test('guests default to paste mode and commander autocomplete filters suggestions', async ({
     page,
@@ -128,7 +160,7 @@ test.describe('Deck Recommender', () => {
     await expect(page.getByPlaceholder('Select a decklist...')).toHaveCount(0);
     await expect(
       page.getByRole('button', {
-        name: 'Select a decklist instead',
+        name: 'Select a Decklist',
         exact: true,
       }),
     ).toHaveCount(0);

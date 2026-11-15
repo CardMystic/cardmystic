@@ -56,6 +56,26 @@ process.env.WEBSITE_INSTANCE_ID = 'azure-gateway-regression';
 
 try {
   const { handle } = await import('../.output/server/functions/index.mjs');
+  await test('Azure serves dynamically requested icons from the production bundle', async () => {
+    for (const [collection, icon] of [
+      ['lucide', 'arrow-up'],
+      ['heroicons', 'arrow-path'],
+      ['mdi', 'cards-outline'],
+      ['simple-icons', 'discord'],
+    ]) {
+      const context = {};
+      await handle(context, {
+        method: 'GET',
+        headers: {
+          host: 'localhost',
+          'x-ms-original-url': `http://localhost/api/_nuxt_icon/${collection}.json?icons=${icon}`,
+        },
+      });
+      assert.equal(context.res.status, 200, `${collection}:${icon}`);
+      const body = JSON.parse(Buffer.from(context.res.body).toString());
+      assert.ok(body.icons[icon]?.body, `${collection}:${icon} has SVG data`);
+    }
+  });
   async function request(path, headers = {}) {
     const context = {};
     await handle(context, {

@@ -30,21 +30,26 @@ async function getAuthToken(
 /** Latest published articles, newest first. Public endpoint — no auth. */
 export function useRecentArticles(limit = 3) {
   const config = useRuntimeConfig();
+  const request = useRequestFetch();
 
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
+  const query = useQuery({
     queryKey: ['articles', 'recent', limit],
     queryFn: async () => {
-      const response = await fetch(
+      const response = await request(
         `${config.public.backendPath}/articles/recent?limit=${limit}`,
+        {
+          timeout: 5000,
+          retry: 0,
+        },
       );
-      if (!response.ok) {
-        throw new Error(`Failed to load recent articles (${response.status})`);
-      }
-      return GetRecentArticlesResponseSchema.parse(await response.json());
+      return GetRecentArticlesResponseSchema.parse(response);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });
+
+  onServerPrefetch(() => query.suspense().catch(() => {}));
+  const { data, isLoading, isFetching, error, refetch } = query;
 
   return {
     articles: computed(() => data.value?.articles ?? []),

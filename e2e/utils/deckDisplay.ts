@@ -149,6 +149,22 @@ export async function setupDeckDisplay(
     });
   });
   await page.route(BACKEND + '/**', (route) => route.fulfill({ json: {} }));
+  await page.route(BACKEND + '/library/lists/*/analytics', (route) =>
+    route.fulfill({
+      json: {
+        librarySize: cards.length,
+        lands: 0,
+        modalLands: 0,
+        commanders: 0,
+        averageManaValue: null,
+        types: [],
+        roles: [],
+        mainboardRoles: {},
+        topThemes: [],
+        prices: { knownPriceCents: 0, missingPrices: 0, topCards: [] },
+      },
+    }),
+  );
   await page.route(BACKEND + '/search-access', (route) =>
     route.fulfill({
       json: {

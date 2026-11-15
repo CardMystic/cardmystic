@@ -14,7 +14,9 @@ const props = withDefaults(
 defineEmits<{ settings: [] }>();
 const artwork = computed(() => {
   const name = props.list.avatar_card_name || props.list.commanders?.[0];
-  return name ? scryfallArtCropUrl(name) : undefined;
+  return name
+    ? scryfallArtCropUrl(name, props.list.avatar_printing_id)
+    : undefined;
 });
 const priceLabel = computed(() =>
   props.list.estimated_price_usd == null
@@ -52,7 +54,12 @@ const socialCounts = computed(() => [
       :draggable="false"
       no-prefetch
       class="absolute inset-0 z-10 rounded-lg focus-visible:outline-2 focus-visible:outline-primary focus-visible:-outline-offset-2"
-    />
+    >
+      <span class="sr-only">{{
+        list.name ||
+        (list.kind === 'collection' ? 'Untitled collection' : 'Untitled deck')
+      }}</span>
+    </NuxtLink>
     <header
       class="deck-link-header relative flex-1 p-4"
       :class="{ 'deck-link-header-primer': primerPreview !== undefined }"
@@ -61,7 +68,7 @@ const socialCounts = computed(() => [
         v-if="artwork"
         :src="artwork"
         alt=""
-        class="absolute inset-0 size-full object-cover object-[center_25%]"
+        class="absolute inset-0 size-full object-cover object-top"
       />
       <div class="relative">
         <div class="flex items-start justify-between gap-3">
@@ -178,7 +185,10 @@ const socialCounts = computed(() => [
         <UAvatar
           :src="
             list.author_avatar_card_name
-              ? scryfallArtCropUrl(list.author_avatar_card_name)
+              ? scryfallArtCropUrl(
+                  list.author_avatar_card_name,
+                  list.author_avatar_printing_id,
+                )
               : undefined
           "
           alt=""

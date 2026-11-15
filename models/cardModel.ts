@@ -145,6 +145,7 @@ export const ScryfallCardSchema = z.object({
   name: z.string(),
   lang: z.string(),
   flavor_name: z.string().optional(),
+  selected_finish: z.enum(['nonfoil', 'foil', 'etched']).optional(),
   name_aliases: z.array(z.string()).optional(),
   released_at: z.string(),
   uri: z.url(),

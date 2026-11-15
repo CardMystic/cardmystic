@@ -53,6 +53,11 @@ export default defineNuxtConfig({
     },
   ],
   compatibilityDate: '2025-05-15',
+  // A running dev server regenerates .nuxt templates. Keep production builds
+  // separate so it cannot replace bundled icon imports with development loaders.
+  $production: {
+    buildDir: '.nuxt-build',
+  },
   css: ['~/assets/css/main.css'],
   devtools: {
     enabled: true,

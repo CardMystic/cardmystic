@@ -1,4 +1,5 @@
 <script setup lang="ts">
+useSeoMeta({ title: 'Your account | CardMystic', robots: 'noindex, nofollow' });
 definePageMeta({
   middleware: 'auth',
   layout: 'fullscreen',

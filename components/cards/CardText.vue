@@ -84,6 +84,7 @@
         aria-haspopup="dialog"
         :aria-expanded="showActions"
         class="card-name"
+        :disabled="printingPending"
         @click="showActions = true"
         @mouseenter="emit('partner-hover', 0)"
         @focus="emit('partner-hover', 0)"
@@ -132,6 +133,8 @@
     <ManaCost
       v-if="displayManaCost"
       :mana-cost="displayManaCost"
+      role="img"
+      :aria-label="`Casting cost ${displayManaCost}`"
       class="mana-cost shrink-0"
     />
 
@@ -148,12 +151,17 @@
       </UTooltip>
     </div>
 
+    <DeckCardMetadata v-if="isListCard" :card="card.card_data" :face="displayedFace" text-view class="basis-full" />
+    <DeckCardLabels v-if="isListCard" :oracle-id="card.card_data.oracle_id" class="basis-full" />
     <LazyCardActionsModal
       v-if="showActions"
       v-model:open="showActions"
+      :is-flipped="isFlipped"
+      @flip="flipCard"
       :card="card"
       :actions="menuItems"
-      :board="currentBoard"
+      @view-card="rememberSearch"
+      :board="isListCard ? currentBoard : 'Search results'"
     />
   </div>
 </template>
@@ -162,7 +170,7 @@
 import { getUsdPrice } from '~/utils/cardPrice';
 const highlight = useDeckHighlight(() => props.card.card_data);
 import type { Card } from '~/models/cardModel';
-import type { CardAction } from '~/utils/card-actions';
+import { cardActionStyles, findSimilarAction, type CardAction, type CardActionMenu } from '~/utils/card-actions';
 const showActions = ref(false);
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import {
@@ -179,12 +187,15 @@ type Board = 'Mainboard' | 'Sideboard' | 'Considering';
 const props = withDefaults(
   defineProps<{
     card: Card;
+    printingPending?: boolean;
     isDeckCommander?: boolean;
     isCommanderCard?: boolean;
     isCommander?: boolean;
     isOwner?: boolean;
+    isListCard?: boolean;
     commanderColorIdentity?: string[] | null;
     numCopies?: number;
+    legalityQuantity?: number;
     board?: Board | string;
     format?: string;
     decklistCardNames?: string[];
@@ -297,9 +308,12 @@ const formatLegality = computed(() => {
   return isLegal(
     props.card.card_data.legalities,
     legalityKey.value,
-    props.numCopies ?? 1,
+    props.legalityQuantity ?? props.numCopies ?? 1,
     props.card.card_data.type_line,
-    props.card.card_data.oracle_text,
+    props.card.card_data.oracle_text ??
+      props.card.card_data.card_faces
+        ?.map((face) => face.oracle_text)
+        .join('\n'),
   );
 });
 const colorLegality = computed(() => {
@@ -400,73 +414,51 @@ const buyPrice = computed(() => {
   return hasPrice ? total.toFixed(2) : null;
 });
 
-const genericActions = computed(() => {
-  const actions: CardAction[] = [
-    {
-      label: 'View Card',
-      icon: 'i-lucide-external-link',
-      onSelect: () => navigateToCard(props.card.card_data.oracle_id),
-    },
-  ];
+const menuItems = computed<CardActionMenu>(() => {
+  const menu: CardActionMenu = {};
 
   if (!props.isSearched) {
-    actions.push({
-      label: 'Find Similar',
-      icon: 'i-mdi-cards-outline',
+    menu.similar = {
+      ...findSimilarAction,
       onSelect: findSimilarCards,
-    });
+    };
   }
 
   if (isCommanderCardComputed.value) {
-    actions.push(
-      {
-        label: 'Recommend Cards',
-        icon: 'i-lucide-box',
-        onSelect: getRecommendations,
-      },
-      {
-        label: 'Popular Cards',
-        icon: 'i-lucide-flame',
-        onSelect: viewPopularCards,
-      },
-    );
+    menu.recommendations = {
+      label: 'Recommend Cards',
+      ...cardActionStyles.recommendations,
+      onSelect: getRecommendations,
+    };
+    menu.popular = {
+      label: 'Popular Cards',
+      ...cardActionStyles.popularForCommander,
+      onSelect: viewPopularCards,
+    };
   }
 
   if (canShowDeckMenu.value) {
-    actions.push({
-      label: 'Add to Deck',
-      icon: 'i-lucide-library-big',
+    menu.addToDeck = {
+      label: props.isListCard ? 'Add to Another Deck' : 'Add to Deck',
+      ...cardActionStyles.addToDeck,
       onSelect: () => {
         showAddToDeckModal.value = true;
       },
-    });
-  }
-
-  if (isDualFaced.value) {
-    actions.push({
-      label: isFlipped.value ? 'Show Front Face' : 'Show Back Face',
-      icon: 'i-lucide-refresh-cw',
-      onSelect: flipCard,
-    });
+    };
   }
 
   const tcgplayerId = buyTcgplayerId.value;
   if (tcgplayerId) {
-    actions.push({
+    menu.marketplace = {
       label: buyPrice.value ? `Buy ($${buyPrice.value})` : 'Buy on TCGPlayer',
-      icon: 'i-lucide-shopping-cart',
+      ...cardActionStyles.buy,
       to: getAffiliateLink(tcgplayerId),
       target: '_blank',
-    });
+    };
   }
 
-  return actions;
-});
-
-const searchActions = computed(() => {
-  const actions: CardAction[] = [];
   if (props.showAddToDeckbuilderButton && deckbuilderStore) {
-    actions.push({
+    menu.addToSearch = {
       label: deckbuilderStore.selectedDeckId.value
         ? isInDecklist.value
           ? 'Added to deck'
@@ -474,7 +466,7 @@ const searchActions = computed(() => {
         : isInDecklist.value
           ? 'Added to search'
           : 'Add to search',
-      icon: isInDecklist.value ? 'i-lucide-check' : 'i-lucide-layers-plus',
+      ...cardActionStyles.addToSearch(isInDecklist.value),
       disabled:
         isInDecklist.value ||
         deckbuilderStore.pendingCards.value.includes(
@@ -483,23 +475,20 @@ const searchActions = computed(() => {
         (!!deckbuilderStore.selectedDeckId.value &&
           !deckbuilderStore.savedDeckReady.value),
       onSelect: () => deckbuilderStore.addCard(props.card.card_data.name),
-    });
+    };
   }
   if (props.showCardInfo && !props.isSearched && !props.hideThumbsDownButton) {
-    actions.push({
+    menu.feedback = {
       label: isThumbsDownClicked.value
         ? 'Feedback Submitted'
         : 'Disagree with this Result',
-      icon: 'i-lucide-thumbs-down',
+      ...cardActionStyles.feedback(isThumbsDownClicked.value),
       disabled: isThumbsDownClicked.value,
       onSelect: handleDislike,
-    });
+    };
   }
-  return actions;
-});
 
-const ownerActions = computed(() => {
-  if (!props.isOwner) return [];
+  if (!props.isOwner) return menu;
   const copies = props.numCopies ?? 1;
   const actions: CardAction[] = [];
 
@@ -507,6 +496,7 @@ const ownerActions = computed(() => {
     actions.push(
       {
         label: 'Add a Copy',
+        group: 'copies' as const,
         icon: 'i-heroicons-plus',
         disabled: copies >= 100,
         onSelect: () =>
@@ -519,6 +509,7 @@ const ownerActions = computed(() => {
       },
       {
         label: 'Remove a Copy',
+        group: 'copies' as const,
         icon: 'i-lucide-minus',
         disabled: copies <= 1,
         onSelect: () =>
@@ -531,6 +522,7 @@ const ownerActions = computed(() => {
       },
       {
         label: 'Set Copies',
+        group: 'copies' as const,
         icon: 'i-lucide-hash',
         onSelect: () => {
           showSetCopiesInput.value = true;
@@ -539,10 +531,11 @@ const ownerActions = computed(() => {
     );
   }
 
-  for (const board of boardOptions) {
+  for (const board of props.isDeckCommander ? [] : boardOptions) {
     if (board === currentBoard.value) continue;
     actions.push({
       label: `Move to ${board}`,
+      group: 'board' as const,
       icon:
         board === 'Mainboard'
           ? 'i-lucide-layout-grid'
@@ -560,38 +553,35 @@ const ownerActions = computed(() => {
   }
 
   if (props.isDeckCommander) {
-    actions.push({
+    menu.commander = {
       label: 'Remove as Commander',
-      icon: 'i-lucide-crown',
+      ...cardActionStyles.removeCommander,
       onSelect: () => {
         showClearCommanderModal.value = true;
       },
-    });
+    };
   } else if (isCommanderCardComputed.value) {
-    actions.push({
+    menu.commander = {
       label: 'Set as Commander',
-      icon: 'i-lucide-crown',
+      ...cardActionStyles.setCommander,
       onSelect: () => {
         showCommanderModal.value = true;
       },
-    });
+    };
   }
 
-  actions.push({
-    label: 'Remove Card',
-    icon: 'i-lucide-trash-2',
-    color: 'error',
-    onSelect: () =>
-      emit('remove', props.card.card_data.oracle_id, currentBoard.value),
-  });
-  return actions;
+  if (!props.isDeckCommander)
+    actions.push({
+      label: 'Remove Card',
+      group: 'remove' as const,
+      icon: 'i-lucide-trash-2',
+      color: 'error',
+      onSelect: () =>
+        emit('remove', props.card.card_data.oracle_id, currentBoard.value),
+    });
+  menu.list = actions;
+  return menu;
 });
-
-const menuItems = computed(() =>
-  [genericActions.value, searchActions.value, ownerActions.value].filter(
-    (group) => group.length > 0,
-  ),
-);
 
 function confirmSetCopies(numCopies: number) {
   emit(
@@ -616,10 +606,6 @@ function rememberSearch() {
   if (route.path.startsWith('/search/')) saveCurrentSearchQuery(route.query);
 }
 
-function navigateToCard(cardId: string | undefined) {
-  rememberSearch();
-  if (cardId) router.push(`/card/${cardId}`);
-}
 function findSimilarCards() {
   if (route.path.startsWith('/search/')) saveCurrentSearchQuery(route.query);
   router.push({
@@ -686,6 +672,10 @@ function confirmDislike() {
 .card-text-row:focus-within {
   background: var(--ui-bg-elevated);
   outline: none;
+}
+
+.card-text-row:has(> dl) {
+  flex-wrap: wrap;
 }
 
 .commander-row {

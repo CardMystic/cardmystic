@@ -698,9 +698,17 @@ watch([display, sort, direction], () => {
       <div
         v-else-if="active.isLoading.value || (own && foldersLoading)"
         class="grid"
-        :class="gridClass"
+        :class="[gridClass, { 'auto-rows-fr': own }]"
+        aria-label="Loading lists"
+        aria-busy="true"
+        role="group"
       >
-        <CardListLinkSkeleton v-for="n in 8" :key="n" />
+        <CardListLinkSkeleton
+          v-for="n in 9"
+          :key="n"
+          :show-settings-button="own"
+          :collection="view === 'collections'"
+        />
       </div>
       <p v-else-if="active.error?.value" role="alert" class="text-error">
         {{ active.error.value.message }}

@@ -11,7 +11,12 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
   Object.assign(state.cards[1], { game_changer: true });
   state.items[0].is_commander = true;
   state.cards[2].color_identity = ['R'];
-  const alternatives = createDisplayCards(10).slice(3);
+  const alternatives = createDisplayCards(10)
+    .slice(3)
+    .map((card) => ({
+      ...card,
+      game_changer: false,
+    }));
   alternatives[0].color_identity = ['R'];
   alternatives[2].color_identity = [];
   let calls = 0;
@@ -22,6 +27,12 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
       seed === state.cards[0].name
         ? [
             state.cards[0],
+            {
+              ...alternatives[1],
+              oracle_id: '43000000-0000-4000-8000-000000000099',
+              name: 'Another game changer',
+              game_changer: true,
+            },
             alternatives[0],
             state.cards[1],
             state.cards[2],
@@ -71,6 +82,9 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
   );
   await row.getByRole('button', { name: 'See more results' }).click();
   await expect(row.getByRole('img')).toHaveCount(7);
+  await expect(
+    row.getByRole('img', { name: 'Another game changer' }),
+  ).toHaveCount(0);
   await row.getByRole('button', { name: 'Show fewer results' }).click();
   await expect(row.getByRole('img')).toHaveCount(4);
   await panel.screenshot({ path: '/tmp/cardmystic-game-changers-desktop.png' });

@@ -70,8 +70,7 @@
               Add to Deck
             </UButton>
             <UButton
-              icon="i-heroicons-shopping-cart"
-              color="success"
+              v-bind="cardActionStyles.buy"
               variant="solid"
               size="sm"
               block
@@ -117,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+import { cardActionStyles } from '~/utils/card-actions';
 import { useClipboard as useClipboardStore } from '~/composables/useClipboard';
 import { getMassEntryAffiliateLink } from '~/utils/tcgPlayer';
 import { useToast } from '#imports';

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import {
-  GetPublicDecklistResponseSchema,
-  type GetPublicDecklistResponse,
+  GetFeaturedDecklistsResponseSchema,
+  type DecklistSummary,
 } from '~/models/cardListModel';
 import {
   ArticleResponseSchema,
@@ -39,36 +39,41 @@ export function useLinkEmbeds(targets: Ref<LinkEmbedTarget[]>) {
   const config = useRuntimeConfig();
 
   const decklistIds = computed(() =>
-    dedupeIds(targets.value, 'decklist').sort(),
+    [
+      ...new Set([
+        ...dedupeIds(targets.value, 'decklist'),
+        ...dedupeIds(targets.value, 'primer'),
+      ]),
+    ].sort(),
   );
   const articleIds = computed(() => dedupeIds(targets.value, 'article').sort());
   const userIds = computed(() => dedupeIds(targets.value, 'user').sort());
 
   const decklistQuery = useQuery({
-    queryKey: computed(() => ['embed', 'decklists', decklistIds.value]),
+    queryKey: computed(() => [
+      'embed',
+      'decklist-summaries',
+      decklistIds.value,
+    ]),
     queryFn: async () => {
-      const map = new Map<string, GetPublicDecklistResponse>();
-      const results = await Promise.all(
-        decklistIds.value.map(async (id) => {
-          try {
-            const res = await fetch(
-              `${config.public.backendPath}/supabase/card-lists/view/${encodeURIComponent(id)}`,
-            );
-            if (!res.ok) return null;
-            return [
-              id,
-              GetPublicDecklistResponseSchema.parse(await res.json()),
-            ] as const;
-          } catch {
-            return null;
-          }
-        }),
-      );
-      for (const r of results) if (r) map.set(r[0], r[1]);
+      const map = new Map<string, DecklistSummary>();
+      for (let offset = 0; offset < decklistIds.value.length; offset += 20) {
+        const params = new URLSearchParams({
+          ids: decklistIds.value.slice(offset, offset + 20).join(','),
+        });
+        const res = await fetch(
+          `${config.public.backendPath}/supabase/card-lists/summaries?${params}`,
+          { signal: AbortSignal.timeout(15_000) },
+        );
+        if (!res.ok) throw new Error('Could not load linked decks.');
+        const body = GetFeaturedDecklistsResponseSchema.parse(await res.json());
+        for (const deck of body.decklists) map.set(deck.id, deck);
+      }
       return map;
     },
     enabled: computed(() => import.meta.client && decklistIds.value.length > 0),
     staleTime: STALE_TIME_MS,
+    retry: false,
     refetchOnWindowFocus: false,
   });
 
@@ -141,6 +146,25 @@ export function useLinkEmbeds(targets: Ref<LinkEmbedTarget[]>) {
         users: userQuery.data.value,
       });
       if (data) map.set(target.url, data);
+      else {
+        const query =
+          target.type === 'decklist' || target.type === 'primer'
+            ? decklistQuery
+            : target.type === 'article'
+              ? articleQuery
+              : target.type === 'user'
+                ? userQuery
+                : null;
+        if (query && (query.isSuccess.value || query.isError.value))
+          map.set(target.url, {
+            href: target.href,
+            eyebrow: '',
+            title: 'Open linked page',
+            description: '',
+            imageUrl: null,
+            meta: '',
+          });
+      }
     }
     return map;
   });
@@ -158,7 +182,7 @@ function dedupeIds(
 }
 
 interface Caches {
-  decklists: Map<string, GetPublicDecklistResponse> | undefined;
+  decklists: Map<string, DecklistSummary> | undefined;
   articles: Map<string, ArticleResponse> | undefined;
   users: Map<string, GetUserProfileResponse> | undefined;
 }
@@ -169,6 +193,7 @@ function resolveEmbed(
 ): LinkEmbedData | null {
   switch (target.type) {
     case 'decklist':
+    case 'primer':
       return resolveDecklist(target, caches.decklists);
     case 'article':
       return resolveArticle(target, caches.articles);
@@ -182,23 +207,23 @@ function resolveEmbed(
 
 function resolveDecklist(
   target: LinkEmbedTarget,
-  cache: Map<string, GetPublicDecklistResponse> | undefined,
+  cache: Map<string, DecklistSummary> | undefined,
 ): LinkEmbedData | null {
   if (!target.id || !cache) return null;
   const payload = cache.get(target.id);
   if (!payload) return null;
-  const { decklist, owner } = payload;
+  const decklist = payload;
   const imageUrl = decklist.avatar_card_name
-    ? scryfallArtCropUrl(decklist.avatar_card_name)
+    ? scryfallArtCropUrl(decklist.avatar_card_name, decklist.avatar_printing_id)
     : decklist.commanders[0]
       ? scryfallArtCropUrl(decklist.commanders[0])
       : null;
   const parts: string[] = [];
   if (decklist.format) parts.push(prettyFormat(decklist.format));
-  if (owner.username) parts.push(`by ${owner.username}`);
+  if (decklist.username) parts.push(`by ${decklist.username}`);
   return {
     href: target.href,
-    eyebrow: 'Decklist',
+    eyebrow: target.type === 'primer' ? 'Primer' : 'Decklist',
     title: decklist.name?.trim() || 'Untitled Decklist',
     description: decklist.description?.trim() || '',
     imageUrl,
@@ -217,7 +242,7 @@ function resolveArticle(
   const imageUrl =
     article.image_url ||
     (article.avatar_card_name
-      ? scryfallArtCropUrl(article.avatar_card_name)
+      ? scryfallArtCropUrl(article.avatar_card_name, article.avatar_printing_id)
       : null);
   const parts: string[] = [];
   if (article.username) parts.push(`by ${article.username}`);
@@ -242,7 +267,7 @@ function resolveUser(
   if (!payload) return null;
   const { profile } = payload;
   const imageUrl = profile.avatar_card_name
-    ? scryfallArtCropUrl(profile.avatar_card_name)
+    ? scryfallArtCropUrl(profile.avatar_card_name, profile.avatar_printing_id)
     : null;
   const followerLabel =
     profile.follower_count === 1

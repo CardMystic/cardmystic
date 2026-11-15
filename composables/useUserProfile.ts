@@ -134,7 +134,10 @@ export const useUserProfile = () => {
 
   const profileIconUrl = computed(() => {
     if (!profileData.value?.avatar_card_name) return null;
-    return scryfallArtCropUrl(profileData.value.avatar_card_name);
+    return scryfallArtCropUrl(
+      profileData.value.avatar_card_name,
+      profileData.value.avatar_printing_id,
+    );
   });
 
   // Listen to auth state changes - only initialize once globally

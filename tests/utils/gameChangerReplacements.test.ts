@@ -37,6 +37,7 @@ describe('game changer replacements', () => {
     const results = [
       card('off', ['R']),
       card('changer', ['U'], true),
+      { ...card('unknown', ['U']), game_changer: undefined },
       card('already', ['U']),
       card('blue', ['U']),
       card('two-color', ['U', 'B']),

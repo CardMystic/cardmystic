@@ -1,6 +1,10 @@
 <template>
-  <div v-if="hasAnyData" class="llm-stack">
-    <UCard v-if="hasPowerLevelData" class="llm-card">
+  <template v-if="hasAnyData">
+    <UCard
+      v-if="hasPowerLevelData"
+      class="llm-card power-card"
+      :ui="{ body: 'px-0 py-4 sm:px-0 sm:py-4 lg:px-4' }"
+    >
       <h3 class="llm-title flex items-center gap-2">Power Level</h3>
 
       <div class="power-section">
@@ -36,108 +40,163 @@
       </div>
     </UCard>
 
-    <UCard v-if="hasSummaryData" class="llm-card">
-      <h3 class="llm-title flex items-center gap-2">Summary</h3>
+    <div v-if="hasStrategyData || hasSummaryData" class="playstyle-summary-row">
+      <UCard
+        v-if="hasStrategyData"
+        class="llm-card playstyle-card"
+        :ui="{ body: 'p-2 sm:p-2' }"
+      >
+        <div class="chart-wrap">
+          <svg
+            :viewBox="`0 0 ${size} ${size}`"
+            class="radar-chart"
+            role="img"
+            :aria-label="`Playstyle scores: ${labels.map((label, i) => `${label} ${values[i]}`).join(', ')}`"
+          >
+            <g>
+              <polygon
+                v-for="(ring, i) in ringPolygons"
+                :key="`ring-${i}`"
+                :points="ring"
+                class="ring"
+                :class="{ 'ring-outer': i === ringPolygons.length - 1 }"
+              />
+            </g>
 
-      <div v-if="hasStrategyData" class="chart-wrap">
-        <svg
-          :viewBox="`0 0 ${size} ${size}`"
-          class="radar-chart"
-          role="img"
-          aria-label="AI strategy radar chart"
-        >
-          <g>
-            <polygon
-              v-for="(ring, i) in ringPolygons"
-              :key="`ring-${i}`"
-              :points="ring"
-              class="ring"
-              :class="{ 'ring-outer': i === ringPolygons.length - 1 }"
+            <g>
+              <line
+                v-for="(pt, i) in axisPoints"
+                :key="`axis-${i}`"
+                :x1="center"
+                :y1="center"
+                :x2="pt.x"
+                :y2="pt.y"
+                class="axis"
+              />
+            </g>
+
+            <polygon :points="valuePolygon" class="value-fill" />
+            <polygon :points="valuePolygon" class="value-line" />
+
+            <circle
+              v-for="(pt, i) in valuePoints"
+              :key="`dot-${i}`"
+              :cx="pt.x"
+              :cy="pt.y"
+              r="3.2"
+              class="value-dot"
             />
-          </g>
 
-          <g>
-            <line
-              v-for="(pt, i) in axisPoints"
-              :key="`axis-${i}`"
-              :x1="center"
-              :y1="center"
-              :x2="pt.x"
-              :y2="pt.y"
-              class="axis"
-            />
-          </g>
-
-          <polygon :points="valuePolygon" class="value-fill" />
-          <polygon :points="valuePolygon" class="value-line" />
-
-          <circle
-            v-for="(pt, i) in valuePoints"
-            :key="`dot-${i}`"
-            :cx="pt.x"
-            :cy="pt.y"
-            r="3.2"
-            class="value-dot"
-          />
-
-          <text
-            v-for="(label, i) in labels"
-            :key="`label-${i}`"
-            :x="labelPoints[i].x"
-            :y="labelPoints[i].y"
-            text-anchor="middle"
-            dominant-baseline="middle"
-            class="label"
-          >
-            {{ label }}
-          </text>
-        </svg>
-      </div>
-
-      <div v-if="longSummary">
-        <p class="summary-text">{{ longSummary }}</p>
-
-        <div
-          v-if="cardRoles.length || cardThemes.length || cardSentiment.length"
-          class="roles-wrap"
-        >
-          <UBadge
-            v-for="role in cardRoles"
-            :key="role"
-            color="primary"
-            variant="subtle"
-            size="sm"
-            class="role-badge"
-          >
-            {{ role }}
-          </UBadge>
-          <UBadge
-            v-for="theme in cardThemes"
-            :key="theme"
-            color="success"
-            variant="subtle"
-            size="sm"
-            class="role-badge"
-          >
-            {{ theme }}
-          </UBadge>
-          <UBadge
-            v-for="sentiment in cardSentiment"
-            :key="sentiment"
-            color="info"
-            variant="subtle"
-            size="sm"
-            class="role-badge"
-          >
-            {{ sentiment }}
-          </UBadge>
+            <text
+              v-for="(label, i) in labels"
+              :key="`label-${i}`"
+              :x="labelPoints[i].x"
+              :y="labelPoints[i].y"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              class="label"
+            >
+              {{ label }}
+            </text>
+            <foreignObject
+              v-for="(value, i) in values"
+              :key="`score-${i}`"
+              :x="labelPoints[i].x - 14"
+              :y="labelPoints[i].y + (i === 0 ? -34 : 12)"
+              width="28"
+              height="26"
+            >
+              <span
+                class="flex h-6 w-7 items-center justify-center rounded text-base font-semibold leading-none ring-1 ring-inset"
+                :class="
+                  commanderBracket(value)?.classes ??
+                  'bg-gray-100 text-gray-700 ring-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600'
+                "
+                >{{ value }}</span
+              >
+            </foreignObject>
+          </svg>
         </div>
-      </div>
-    </UCard>
-  </div>
+      </UCard>
+      <UCard
+        v-if="hasSummaryData"
+        class="llm-card summary-card"
+        :ui="{
+          body: 'flex h-full items-center px-0 py-0 sm:px-0 sm:py-0 lg:px-4',
+        }"
+      >
+        <div
+          v-if="
+            longSummary ||
+            cardRoles.length ||
+            cardThemes.length ||
+            cardSentiment.length
+          "
+          class="min-w-0"
+        >
+          <h3 class="llm-title">Card Summary</h3>
+          <p v-if="longSummary" class="summary-text">{{ longSummary }}</p>
+
+          <div
+            v-if="cardRoles.length || cardThemes.length || cardSentiment.length"
+            class="roles-wrap"
+          >
+            <component
+              :is="collectionTagPath('roles', role) ? NuxtLink : 'span'"
+              v-for="role in cardRoles"
+              :key="role"
+              :to="collectionTagPath('roles', role)"
+              no-prefetch
+              class="rounded focus-visible:outline-2 focus-visible:outline-primary hover:underline"
+            >
+              <UBadge
+                :color="cardLabelColors.roles"
+                variant="subtle"
+                size="sm"
+                class="role-badge"
+              >
+                {{ role }}
+              </UBadge>
+            </component>
+            <component
+              :is="collectionTagPath('themes', theme) ? NuxtLink : 'span'"
+              v-for="theme in cardThemes"
+              :key="theme"
+              :to="collectionTagPath('themes', theme)"
+              no-prefetch
+              class="rounded focus-visible:outline-2 focus-visible:outline-primary hover:underline"
+            >
+              <UBadge
+                :color="cardLabelColors.themes"
+                variant="subtle"
+                size="sm"
+                class="role-badge"
+              >
+                {{ theme }}
+              </UBadge>
+            </component>
+            <UBadge
+              v-for="sentiment in cardSentiment"
+              :key="sentiment"
+              color="info"
+              variant="subtle"
+              size="sm"
+              class="role-badge"
+            >
+              {{ sentiment }}
+            </UBadge>
+          </div>
+        </div>
+      </UCard>
+    </div>
+  </template>
 </template>
 
 <script setup lang="ts">
+import { NuxtLink } from '#components';
+import { collectionTagPath } from '~/utils/card-collections';
+import { cardLabelColors } from '~/utils/deckHighlight';
+import { commanderBracket } from '~/utils/commanderBrackets';
 import type { LlmCardAttributes } from '~/models/llmModel';
 
 const props = defineProps<{
@@ -158,10 +217,9 @@ const longSummary = computed(() => {
   return `${s.slice(0, 497).trimEnd()}...`;
 });
 
-const chartPadding = 18;
-const size = 240 + chartPadding * 2;
+const size = 320;
 const center = size / 2;
-const radius = 78;
+const radius = 74;
 const ringCount = 5;
 const maxStrategyScore = 5;
 
@@ -197,10 +255,7 @@ const valuePolygon = computed(() =>
 );
 
 const labelPoints = computed(() =>
-  labels.map((_, i) => {
-    const extraOffset = i === 1 || i === 3 ? 8 : 0; // Midrange + Combo
-    return pointAt(i, radius + 20 + extraOffset);
-  }),
+  labels.map((_, i) => pointAt(i, radius + (i % 2 === 0 ? 20 : 47))),
 );
 
 function toMeterPercent(value: number): number {
@@ -250,7 +305,6 @@ const hasStrategyData = computed(() => values.value.some((v) => v > 0));
 
 const hasSummaryData = computed(
   () =>
-    hasStrategyData.value ||
     !!longSummary.value ||
     cardRoles.value.length > 0 ||
     cardThemes.value.length > 0 ||
@@ -258,7 +312,8 @@ const hasSummaryData = computed(
 );
 
 const hasAnyData = computed(
-  () => hasPowerLevelData.value || hasSummaryData.value,
+  () =>
+    hasPowerLevelData.value || hasStrategyData.value || hasSummaryData.value,
 );
 
 function meterColor(percent: number) {
@@ -269,27 +324,39 @@ function meterColor(percent: number) {
 </script>
 
 <style scoped lang="sass">
-.llm-stack
-  display: flex
-  flex-direction: column
+.playstyle-summary-row
+  display: grid
+  grid-column: 1 / -1
+  grid-template-columns: minmax(0, 1fr)
   gap: 8px
+  min-width: 0
+
+@container card-info (min-width: 600px)
+  .playstyle-summary-row:has(.playstyle-card):has(.summary-card)
+    grid-template-columns: 256px minmax(0, 1fr)
 
 .llm-card
-  border-radius: 24px
-  border: 1px solid rgba(147, 114, 255, 0.3)
-  background: var(--ui-bg-elevated)
+  border-radius: 0
+  border: 0
+  background: transparent
   color: var(--ui-text)
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1)
+  box-shadow: none
+
+.power-card
+  width: 100%
+
+  @media (min-width: 1024px)
+    max-width: 24rem
 
 .llm-title
-  font-size: 1.6rem
+  font-size: 1.25rem
   font-weight: 700
+  margin-bottom: 8px
 
 .power-section
   display: flex
   flex-direction: column
   gap: 10px
-  margin-bottom: 12px
 
 .format-meters
   display: grid
@@ -324,7 +391,7 @@ function meterColor(percent: number) {
 
 .radar-chart
   width: 100%
-  max-width: 260px
+  max-width: 240px
   height: auto
 
 .ring
@@ -354,7 +421,7 @@ function meterColor(percent: number) {
 
 .label
   fill: var(--ui-text-toned)
-  font-size: 11px
+  font-size: 16px
   font-weight: 600
 
 .summary-text
