@@ -1,3 +1,4 @@
+import { readGuestDefaultPrinting } from '~/utils/guestDefaultPrinting';
 import { parseDeckImport } from '~/utils/deckTransfer';
 import {
   computed,
@@ -80,6 +81,8 @@ function createBrowserDeckSource() {
               list_id: BROWSER_DECK_ID,
               oracle_id: card.oracle_id,
               card_id: card.oracle_id,
+              printing_id: entry.printingId ?? null,
+              finish: entry.finish ?? null,
               board: entry.board,
               num_copies: entry.quantity,
               is_commander:
@@ -118,6 +121,7 @@ function createBrowserDeckSource() {
       format: draft.value.format,
       bracket: draft.value.bracket,
       avatar_card_name: draft.value.avatarCardName,
+      avatar_printing_id: draft.value.avatarPrintingId,
       commanders: draft.value.commanders,
       color_ratios,
       visibility: 'private',
@@ -163,7 +167,7 @@ function createBrowserDeckSource() {
     const resolved = await resolve(entries.map((entry) => entry.name));
     let addedCount = 0,
       updatedCount = 0;
-    edit((next) => {
+    await edit((next) => {
       for (const [index, card] of resolved.entries()) {
         const entry = next.cards.find(
           (entry) => entry.name === card.name && entry.board === board,
@@ -177,6 +181,7 @@ function createBrowserDeckSource() {
           card.name,
           board,
           (entry?.quantity ?? 0) + entries[index].quantity,
+          readGuestDefaultPrinting(card.name),
         );
       }
     });
@@ -201,10 +206,10 @@ function createBrowserDeckSource() {
     );
     return { ...result, invalidOracleIds: [] as string[] };
   }
-  function remove(ids: string | string[], board?: GuestBoard) {
+  async function remove(ids: string | string[], board?: GuestBoard) {
     const selected = new Set(Array.isArray(ids) ? ids : [ids]);
     let removedCount = 0;
-    edit((next) => {
+    await edit((next) => {
       for (const entry of [...next.cards]) {
         const card = catalog.value.get(entry.name.toLowerCase());
         if (
@@ -219,14 +224,27 @@ function createBrowserDeckSource() {
     });
     return { removedCount };
   }
-  async function bulkEdit(request: BulkEditRequest) {
+  async function bulkEdit(
+    request: BulkEditRequest,
+    originalGuestCards?: string,
+  ) {
     await resolve(
       request.entries.flatMap((entry) => entry.cards.map((card) => card.name)),
     );
     const before = new Set(
       draft.value.cards.map((card) => `${card.board}:${card.name}`),
     );
-    edit((next) => {
+    await edit((next) => {
+      if (
+        originalGuestCards !== undefined &&
+        JSON.stringify(next.cards) !== originalGuestCards
+      )
+        throw new Error(
+          'Your draft changed while Bulk Edit was open. Reopen it to use the latest cards.',
+        );
+      const previous = new Map(
+        next.cards.map((card) => [`${card.board}:${card.name}`, card]),
+      );
       const boards = new Set(request.entries.map((entry) => entry.board));
       next.cards = next.cards.filter(
         (card) =>
@@ -243,7 +261,16 @@ function createBrowserDeckSource() {
             entry.board === 'Mainboard' && next.commanders.includes(name)
               ? 1
               : card.num_copies,
+            readGuestDefaultPrinting(name),
           );
+          const old = previous.get(`${entry.board}:${name}`);
+          const current = next.cards.find(
+            (row) => row.name === name && row.board === entry.board,
+          );
+          if (old && current) {
+            current.printingId = old.printingId;
+            current.finish = old.finish;
+          }
         }
     });
     const after = new Set(
@@ -255,29 +282,32 @@ function createBrowserDeckSource() {
       invalidCardNames: [] as string[],
     };
   }
-  function copies(
+  async function copies(
     name: string,
     count: number,
     board: GuestBoard = 'Mainboard',
   ) {
-    edit((next) => {
+    await edit((next) => {
       if (board === 'Mainboard' && next.commanders.includes(name) && count > 1)
         throw new Error('Commanders can only have one copy.');
-      setGuestCopies(next, name, board, count);
+      setGuestCopies(next, name, board, count, readGuestDefaultPrinting(name));
     });
     return { cardName: name, numCopies: count };
   }
-  function move(
+  async function move(
     name: string,
     board: GuestBoard,
     fromBoard: GuestBoard = 'Mainboard',
   ) {
-    edit((next) => {
+    await edit((next) => {
       if (board === fromBoard) return;
       const source = next.cards.find(
         (card) => card.name === name && card.board === fromBoard,
       );
       if (!source) throw new Error('Card not found in this board.');
+      const target = next.cards.find(
+        (card) => card.name === name && card.board === board,
+      );
       const quantity =
         source.quantity +
         (next.cards.find((card) => card.name === name && card.board === board)
@@ -286,6 +316,13 @@ function createBrowserDeckSource() {
         throw new Error('Commanders can only have one copy.');
       setGuestCopies(next, name, fromBoard, 0);
       setGuestCopies(next, name, board, quantity);
+      if (!target) {
+        const moved = next.cards.find(
+          (card) => card.name === name && card.board === board,
+        )!;
+        moved.printingId = source.printingId;
+        moved.finish = source.finish;
+      }
     });
     return { cardName: name, board };
   }
@@ -296,7 +333,7 @@ function createBrowserDeckSource() {
       throw new Error(
         'Choose a valid commander. The commander catalog may still be loading.',
       );
-    edit((next) => {
+    await edit((next) => {
       if (next.format !== 'Commander')
         throw new Error('Choose Commander format first.');
       if (!next.commanders.includes(name)) {
@@ -310,11 +347,33 @@ function createBrowserDeckSource() {
           getValidPartners(type, partners.value, first).includes(name);
         next.commanders = pair ? [first, name] : [name];
       }
-      setGuestCopies(next, name, 'Mainboard', 1);
+      const existing =
+        next.cards.find(
+          (card) => card.name === name && card.board === 'Mainboard',
+        ) ??
+        next.cards.find(
+          (card) => card.name === name && card.board === 'Sideboard',
+        ) ??
+        next.cards.find((card) => card.name === name);
+      if (existing) {
+        existing.board = 'Mainboard';
+        existing.quantity = 1;
+        next.cards = next.cards.filter(
+          (card) => card.name !== name || card === existing,
+        );
+      } else {
+        setGuestCopies(
+          next,
+          name,
+          'Mainboard',
+          1,
+          readGuestDefaultPrinting(name),
+        );
+      }
     });
   }
-  function clearCommander(id?: string) {
-    edit((next) => {
+  async function clearCommander(id?: string) {
+    await edit((next) => {
       next.commanders = id
         ? next.commanders.filter(
             (name) => catalog.value.get(name.toLowerCase())?.oracle_id !== id,
@@ -322,29 +381,30 @@ function createBrowserDeckSource() {
         : [];
     });
   }
-  function updateFormat(format: CardListFormatType) {
-    const commandersCleared =
-      format !== 'Commander' && draft.value.commanders.length > 0;
-    edit((next) => {
+  async function updateFormat(format: CardListFormatType) {
+    let commandersCleared = false;
+    await edit((next) => {
+      commandersCleared = format !== 'Commander' && next.commanders.length > 0;
       next.format = format;
       if (commandersCleared) next.commanders = [];
     });
     return { format, commandersCleared };
   }
-  function update(updates: {
+  async function update(updates: {
     name?: string;
     description?: string;
     bracket?: number | null;
   }) {
-    edit((next) => Object.assign(next, updates));
+    await edit((next) => Object.assign(next, updates));
   }
-  function avatar(name: string) {
-    edit((next) => {
+  async function avatar(name: string, printingId: string | null = null) {
+    await edit((next) => {
       next.avatarCardName = name;
+      next.avatarPrintingId = printingId;
     });
   }
-  function reset() {
-    edit((next) => Object.assign(next, emptyGuestDeck()));
+  async function reset() {
+    await edit((next) => Object.assign(next, emptyGuestDeck()));
   }
   return {
     ...guest,
@@ -354,6 +414,7 @@ function createBrowserDeckSource() {
     loading,
     error: query.error,
     retry: query.refetch,
+    resolve,
     addNames,
     addIds,
     remove,

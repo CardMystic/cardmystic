@@ -1,5 +1,26 @@
 <template>
   <div class="flex flex-col grow min-h-0 gap-3 pb-0">
+    <LazyCardActionsModal
+      v-if="activeCard && cardActionsOpen"
+      v-model:open="cardActionsOpen"
+      :card="activeCard"
+      :actions="cardActions"
+      board="Embedded"
+    />
+    <LazyAddToDeckModal
+      v-if="activeCard && addToDeckOpen"
+      v-model:open="addToDeckOpen"
+      :oracle-ids="[activeCard.card_data.oracle_id]"
+    />
+    <LazyPrintingPicker
+      v-if="printingTarget && editable"
+      :oracle-id="printingTarget.oracleId"
+      :name="printingTarget.name"
+      :selected-id="printingTarget.printingId"
+      :selected-finish="printingTarget.finish"
+      :save="saveCardPrinting"
+      @close="printingTarget = null"
+    />
     <!-- Mode toggle / action bar -->
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-2">
@@ -168,6 +189,17 @@
               />
             </template>
           </UPopover>
+          <UDropdownMenu v-if="primerListId" :items="primerDeckMenu">
+            <UButton
+              label="Deck content"
+              icon="i-lucide-chart-column"
+              trailing-icon="i-lucide-chevron-down"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="cursor-pointer"
+            />
+          </UDropdownMenu>
         </div>
 
         <LazyMarkdownSourceEditor
@@ -177,7 +209,7 @@
           :active="mode !== 'preview'"
           @scroll="onEditorScroll"
           @card-hover="onEditorCardHover"
-          @card-leave="tokenPreview = null"
+          @card-leave="schedulePreviewDismiss"
         />
       </div>
       <!-- Right: live preview -->
@@ -203,6 +235,7 @@
     <!-- Preview-only mode -->
     <div
       v-if="!editable || mode === 'preview'"
+      ref="fullPreviewRef"
       class="primer-preview grow min-h-0 overflow-y-auto px-1"
       @click="handlePreviewClick"
       @submit="handleSearchEmbedSubmit"
@@ -218,20 +251,44 @@
       </p>
     </div>
 
-    <!-- Floating card preview shown while hovering (desktop) or after tapping
-         (mobile) a ((...)) / [[...]] token. Non-interactive: dismisses on
-         outside pointerdown or mouse leaving the source token. -->
+    <LazyPrimerDeckEmbeds
+      v-if="
+        primerListId &&
+        renderedHtml.includes('data-primer-deck=') &&
+        (!editable || mode !== 'edit')
+      "
+      :key="primerListId"
+      :list-id="primerListId"
+      :owner="editable"
+      :container="mode === 'split' ? previewRef : fullPreviewRef"
+      :html="renderedHtml"
+    />
+
+    <!-- Allow moving from the source token onto the floating card. -->
     <Teleport to="body">
-      <div
-        v-if="tokenPreview"
-        class="editor-card-preview"
-        :style="{
-          left: `${tokenPreview.x}px`,
-          top: `${tokenPreview.y}px`,
-        }"
-      >
-        <img :src="tokenPreview.imageUrl" alt="" />
-      </div>
+      <Transition name="editor-card-fade">
+        <button
+          v-if="tokenPreview"
+          type="button"
+          class="editor-card-preview card-finish"
+          :data-card-finish="
+            cardImageMap.get(tokenPreview.reference.toLowerCase())?.card
+              .card_data.selected_finish
+          "
+          :aria-label="`Card options for ${parseMarkdownCardReference(tokenPreview.reference).name}`"
+          @pointerenter="cancelPreviewDismiss"
+          @pointerleave="schedulePreviewDismiss"
+          @focus="cancelPreviewDismiss"
+          @blur="schedulePreviewDismiss"
+          @click="openCardActions(tokenPreview.reference)"
+          :style="{
+            left: `${tokenPreview.x}px`,
+            top: `${tokenPreview.y}px`,
+          }"
+        >
+          <img :src="tokenPreview.imageUrl" alt="" />
+        </button>
+      </Transition>
     </Teleport>
 
     <!-- Unsaved changes confirmation modal -->
@@ -291,11 +348,25 @@ import {
   renderSearchEmbed,
 } from '~/utils/searchEmbeds';
 import { extractAndTokenizeLinkEmbeds } from '~/utils/linkEmbeds';
+import {
+  parseMarkdownCardReference,
+  formatMarkdownCardReference,
+  markdownCardTokens,
+} from '~/utils/markdownCardReference';
+import { withPrinting, type Printing, type Finish } from '~/utils/printings';
+import type { Card } from '~/models/cardModel';
+import { cardActionStyles, findSimilarAction, type CardActionMenu } from '~/utils/card-actions';
+import {
+  primerDeckBlocks,
+  restorePrimerDeckEmbeds,
+} from '~/utils/primerDeckEmbeds';
 
 const props = withDefaults(
   defineProps<{
     modelValue: string;
     editable: boolean;
+    /** Only primer pages can embed data from their associated deck. */
+    primerListId?: string;
     isSaving?: boolean;
     /** Include surrounding form fields in the save button and leave guard. */
     hasUnsavedChanges?: boolean;
@@ -352,6 +423,20 @@ const draft = ref(props.modelValue);
 const lastSavedAt = ref<number | null>(null);
 const sourceEditorRef = ref<MarkdownSourceEditorHandle | null>(null);
 const previewRef = ref<HTMLDivElement | null>(null);
+const fullPreviewRef = ref<HTMLDivElement | null>(null);
+const primerDeckMenu = primerDeckBlocks.map((block) => ({
+  label: block.label,
+  icon: block.icon,
+  onSelect() {
+    const editor = sourceEditorRef.value;
+    if (!props.primerListId || !editor) return;
+    insertAtCursor(
+      ensureBlockBoundary(draft.value, editor.getSelection().from) +
+        `@[deck](${block.type})\n\n`,
+    );
+    nextTick(() => editor.focus());
+  },
+}));
 
 // --- Unsaved changes guard ---
 const showUnsavedModal = ref(false);
@@ -388,6 +473,7 @@ function handleBeforeUnload(e: BeforeUnloadEvent) {
 
 function handleDocumentPointerDown(e: PointerEvent) {
   const el = e.target as HTMLElement | null;
+  if (el?.closest('.editor-card-preview')) return;
   // Keep the preview open while tapping its link again. Any other interaction
   // ends the pending double tap, including a tap on a different card.
   const cardLink = el?.closest('.card-inline-link');
@@ -402,6 +488,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  cancelPreviewDismiss();
   window.removeEventListener('beforeunload', handleBeforeUnload);
   document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
 });
@@ -417,10 +504,25 @@ function onEditorScroll(position: { top: number; max: number }) {
 
 // --- Card token hover preview ---
 const tokenPreview = ref<{
+  reference: string;
   imageUrl: string;
   x: number;
   y: number;
 } | null>(null);
+
+let previewDismissTimer: ReturnType<typeof setTimeout> | undefined;
+function cancelPreviewDismiss() {
+  clearTimeout(previewDismissTimer);
+  previewDismissTimer = undefined;
+}
+function schedulePreviewDismiss() {
+  // Pointer movement away from a link must not keep extending its lifetime.
+  if (previewDismissTimer !== undefined || !tokenPreview.value) return;
+  previewDismissTimer = setTimeout(() => {
+    previewDismissTimer = undefined;
+    tokenPreview.value = null;
+  }, 100);
+}
 
 const PREVIEW_WIDTH = 220;
 const PREVIEW_HEIGHT = 307; // 220 * 1.395 (MTG card aspect)
@@ -428,6 +530,7 @@ const CARD_DOUBLE_TAP_MS = 450;
 let lastCardTap: { element: HTMLElement; time: number } | null = null;
 
 function onEditorCardHover(card: EditorCardHover) {
+  cancelPreviewDismiss();
   const entry = cardImageMap.value.get(card.name.toLowerCase());
   if (!entry) {
     tokenPreview.value = null;
@@ -436,6 +539,7 @@ function onEditorCardHover(card: EditorCardHover) {
   const preferredTop = card.top - PREVIEW_HEIGHT - 8;
   const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
   tokenPreview.value = {
+    reference: card.name,
     imageUrl: entry.imageUrl,
     x: Math.min(Math.max(card.left, 8), Math.max(maxX, 8)),
     y: preferredTop < 8 ? card.bottom + 8 : preferredTop,
@@ -455,11 +559,13 @@ function showCardLinkPreview(e: MouseEvent) {
     '.card-inline-link',
   ) as HTMLElement | null;
   if (!target) {
-    tokenPreview.value = null;
+    schedulePreviewDismiss();
     lastCardTap = null;
     return;
   }
-  const name = (target.textContent ?? '').trim();
+  const name =
+    target.dataset.cardReference ?? (target.textContent ?? '').trim();
+  cancelPreviewDismiss();
   const entry = cardImageMap.value.get(name.toLowerCase());
   if (!entry) {
     tokenPreview.value = null;
@@ -471,6 +577,7 @@ function showCardLinkPreview(e: MouseEvent) {
   const maxX = window.innerWidth - PREVIEW_WIDTH - 8;
   const x = Math.min(Math.max(rect.left, 8), Math.max(maxX, 8));
   tokenPreview.value = {
+    reference: name,
     imageUrl: entry.imageUrl,
     x,
     y,
@@ -481,7 +588,7 @@ function onPreviewPointerLeave(event: PointerEvent) {
   // Touch ends with pointerleave, followed by synthetic mouse events. Neither
   // should dismiss the preview or cancel the pending second tap.
   if (event.pointerType === 'touch') return;
-  tokenPreview.value = null;
+  schedulePreviewDismiss();
   lastCardTap = null;
 }
 
@@ -500,7 +607,7 @@ const previewSource = computed(() => {
 // --- Card embeds: ((Card Name)) and [[Card Name]] ---
 // Explicit full preview and read-only rendering stay immediate, including SSR.
 
-const referencedCardNames = computed(() => {
+const referencedCardTokens = computed(() => {
   const names = new Set<string>();
   const imgPattern = /\(\(([^)]+)\)\)/g;
   const linkPattern = /\[\[([^\]]+)\]\]/g;
@@ -511,6 +618,14 @@ const referencedCardNames = computed(() => {
     names.add(m[1].trim());
   return [...names];
 });
+const referencedCardNames = computed(() => [
+  ...new Set(
+    referencedCardTokens.value.map(
+      (value) => parseMarkdownCardReference(value).name,
+    ),
+  ),
+]);
+const markdownPrintings = useMarkdownPrintings(referencedCardTokens);
 
 const { cards: referencedCards, suspense: resolveReferencedCards } =
   useCardsByName(referencedCardNames);
@@ -530,32 +645,156 @@ const cardImageMap = computed(() => {
   const map = new Map<
     string,
     {
+      card: Card;
       imageUrl: string;
       oracleId: string;
-      isCommander: boolean;
-      price: string | null;
-      tcgplayerId?: number;
-      backImageUrl: string | null;
     }
   >();
-  for (const card of referencedCards.value ?? []) {
-    const imageUrl = getCardImageUrl(card.card_data, false, 'normal');
-    const flippedImageUrl = getCardImageUrl(card.card_data, true, 'normal');
-    const hasDistinctBack =
-      (card.card_data.card_faces?.length ?? 0) >= 2 &&
-      Boolean(flippedImageUrl) &&
-      flippedImageUrl !== imageUrl;
-    map.set(card.card_data.name.toLowerCase(), {
+  for (const reference of referencedCardTokens.value) {
+    const parsed = parseMarkdownCardReference(reference);
+    const card = referencedCards.value?.find(
+      (card) => card.card_data.name.toLowerCase() === parsed.name.toLowerCase(),
+    );
+    if (!card) continue;
+    const display = withPrinting(
+      card.card_data,
+      {
+        oracle_id: card.card_data.oracle_id,
+        board: 'mainboard',
+        printing_id: parsed.printingId,
+        finish: parsed.finish,
+      },
+      parsed.printingId
+        ? markdownPrintings.byId.value.get(parsed.printingId)
+        : undefined,
+    );
+    const imageUrl = getCardImageUrl(display, false, 'normal');
+    map.set(reference.toLowerCase(), {
+      card: { ...card, card_data: display },
       imageUrl,
       oracleId: card.card_data.oracle_id,
-      isCommander: commanderNames.value?.has(card.card_data.name) ?? false,
-      price: getUsdPrice(card.card_data.prices) ?? null,
-      tcgplayerId: card.card_data.tcgplayer_id,
-      backImageUrl: hasDistinctBack ? flippedImageUrl : null,
     });
   }
   return map;
 });
+
+const activeCard = shallowRef<Card | null>(null);
+const cardActionsOpen = ref(false);
+const addToDeckOpen = ref(false);
+function openCardActions(reference: string) {
+  const entry = cardImageMap.value.get(reference.toLowerCase());
+  if (!entry) return;
+  cancelPreviewDismiss();
+  tokenPreview.value = null;
+  activeCard.value = entry.card;
+  cardActionsOpen.value = true;
+}
+const cardActions = computed<CardActionMenu>(() => {
+  if (!activeCard.value) return {};
+  const data = activeCard.value.card_data;
+  const encodedName = encodeURIComponent(data.name);
+  const menu: CardActionMenu = {
+    addToDeck: {
+      label: 'Add to Deck',
+      ...cardActionStyles.addToDeck,
+      onSelect: () => {
+        addToDeckOpen.value = true;
+      },
+    },
+    similar: {
+      ...findSimilarAction,
+      to: `/search/all/similarity?card_name=${encodedName}&searchType=similarity`,
+    },
+  };
+  if (commanderNames.value?.has(data.name)) {
+    menu.popular = {
+      label: 'Popular Cards for this Commander',
+      ...cardActionStyles.popularForCommander,
+      to: `/popular-by-commander/all?commander=${encodedName}`,
+    };
+    menu.recommendations = {
+      label: 'Get Deck Recommendations',
+      ...cardActionStyles.recommendations,
+      to: `/search/all/deckbuilder?commander=${encodedName}`,
+    };
+  }
+  if (data.tcgplayer_id) {
+    const price = getUsdPrice(data.prices);
+    menu.marketplace = {
+      label: price ? `Buy on TCGPlayer · $${price}` : 'Buy on TCGPlayer',
+      ...cardActionStyles.buy,
+      to: getAffiliateLink(data.tcgplayer_id),
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    };
+  }
+  return menu;
+});
+
+const printingTarget = ref<
+  | (ReturnType<typeof parseMarkdownCardReference> & {
+      oracleId: string;
+      source: string;
+      from: number;
+      to: number;
+      image: boolean;
+    })
+  | null
+>(null);
+function chooseCardPrinting(
+  token: ReturnType<typeof markdownCardTokens>[number],
+  source: string,
+) {
+  if (!props.editable) return;
+  const parsed = parseMarkdownCardReference(token.value);
+  const entry = cardImageMap.value.get(token.value.toLowerCase());
+  if (!entry) {
+    useToast().add({
+      title: 'Wait for this card to load, then try again.',
+      color: 'error',
+    });
+    return;
+  }
+  tokenPreview.value = null;
+  printingTarget.value = {
+    ...parsed,
+    oracleId: entry.oracleId,
+    source,
+    from: token.from,
+    to: token.to,
+    image: token.image,
+  };
+}
+async function saveCardPrinting(
+  printing: Printing | null,
+  finish: Finish | null,
+) {
+  const target = printingTarget.value;
+  if (!props.editable || !target) return;
+  if (draft.value !== target.source)
+    throw new Error(
+      'The text changed. Close the picker and choose the card again.',
+    );
+  if (printing && printing.oracle_id !== target.oracleId)
+    throw new Error('This printing belongs to a different card.');
+  const reference = formatMarkdownCardReference(
+    target.name,
+    printing?.id,
+    finish,
+  );
+  const text = target.image ? `((${reference}))` : `[[${reference}]]`;
+  if (printing) markdownPrintings.remember(printing);
+  const editor = sourceEditorRef.value;
+  if (editor)
+    editor.replaceSelection(text, undefined, {
+      from: target.from,
+      to: target.to,
+    });
+  else
+    draft.value =
+      draft.value.slice(0, target.from) + text + draft.value.slice(target.to);
+  printingTarget.value = null;
+}
 
 // --- Link unfurls: bare CardMystic URLs on their own line ---
 // Discord-style unfurl for decklists, articles, users, and search pages.
@@ -568,27 +807,6 @@ const linkEmbedTargets = computed(() => {
   return extractAndTokenizeLinkEmbeds(src).targets;
 });
 const { embedMap: linkEmbedMap } = useLinkEmbeds(linkEmbedTargets);
-
-const embeddedActionIcons = {
-  similar:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.19 2.25c-.26 0-.52.06-.77.15L3.06 5.45a1.994 1.994 0 0 0-1.09 2.6L6.93 20a2 2 0 0 0 1.81 1.25c.26 0 .53-.03.79-.15l7.37-3.05a2.02 2.02 0 0 0 1.23-1.8c.01-.25-.04-.54-.13-.8L13 3.5a1.95 1.95 0 0 0-1.81-1.25m3.48 0l3.45 8.35V4.25a2 2 0 0 0-2-2m4.01 1.54v9.03l2.43-5.86a1.99 1.99 0 0 0-1.09-2.6m-10.28-.14l4.98 12.02l-7.39 3.06L3.8 7.29"/></svg>',
-  popular:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0a5 5 0 0 1 1-3a1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></svg>',
-  recommend:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7l8.7 5l8.7-5M12 22V12"/></g></svg>',
-  buy: '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></g></svg>',
-  flip: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>',
-};
-
-function embeddedCardAction(
-  href: string,
-  label: string,
-  buttonLabel: string,
-  modifier: string,
-  icon: string,
-): string {
-  return `<a class="card-inline-action ${modifier}" href="${href}" aria-label="${label}" data-tooltip="${label}">${icon}<span>${buttonLabel}</span></a>`;
-}
 
 // Escape user-provided strings before injecting into raw HTML. All embed
 // content originates from API responses (decklist name, article title, etc.)
@@ -703,8 +921,11 @@ const renderedHtml = computed(() => {
   // so card names / URLs can never be misinterpreted as emoji names.
   pre = emojify(pre);
 
-  const html = parseColoredMarkdown(pre);
-  const sanitized = sanitizeMarkdownHtml(html);
+  const html = parseColoredMarkdown(pre, !!props.primerListId);
+  const safeHtml = sanitizeMarkdownHtml(html);
+  const sanitized = props.primerListId
+    ? restorePrimerDeckEmbeds(safeHtml)
+    : safeHtml;
 
   // --- Post-process: swap tokens back with final HTML ---
   let result = sanitized.replace(
@@ -716,61 +937,41 @@ const renderedHtml = computed(() => {
     },
   );
 
+  // Markdown preprocessing separates image rows from surrounding prose.
+  result = result.replace(
+    /<p>((?:\s|<br\s*\/?>|CARDIMGTOKEN\d+CARDIMGTOKEN)+)<\/p>/g,
+    '<p class="card-embed-row">$1</p>',
+  );
+
   result = result.replace(/CARDIMGTOKEN(\d+)CARDIMGTOKEN/g, (_, idx) => {
-    const name = cardImgNames[Number(idx)];
-    if (!name) return '';
-    const entry = cardImageMap.value.get(name.toLowerCase());
+    const reference = cardImgNames[Number(idx)];
+    if (!reference) return '';
+    const { name } = parseMarkdownCardReference(reference);
+    const entry = cardImageMap.value.get(reference.toLowerCase());
     if (!entry || !isOracleId(entry.oracleId))
       return `<em class="card-unknown">${escapeEmbedHtml(name)}</em>`;
     const safeName = escapeEmbedHtml(name);
     const imageUrl = escapeEmbedHtml(entry.imageUrl);
-    const backImageUrl = entry.backImageUrl
-      ? escapeEmbedHtml(entry.backImageUrl)
-      : null;
-    const price = entry.price ? escapeEmbedHtml(entry.price) : null;
-    const encodedName = encodeURIComponent(name);
-    const commanderActions = entry.isCommander
-      ? embeddedCardAction(
-          `/popular-by-commander/all?commander=${encodedName}`,
-          'Popular Cards for this Commander',
-          'Popular',
-          'card-inline-action-popular',
-          embeddedActionIcons.popular,
-        ) +
-        embeddedCardAction(
-          `/search/all/deckbuilder?commander=${encodedName}`,
-          'Get Deck Recommendations for this Commander',
-          'Recommend',
-          'card-inline-action-recommend',
-          embeddedActionIcons.recommend,
-        )
+    const printingAction = props.editable
+      ? `<button type="button" class="card-printing-button" data-card-printing="${idx}" aria-label="Select printing for ${safeName}">Select Printing</button>`
       : '';
-    const similarAction = embeddedCardAction(
-      `/search/all/similarity?card_name=${encodedName}&amp;searchType=similarity`,
-      'Find Similar Cards',
-      'Similar',
-      'card-inline-action-similar',
-      embeddedActionIcons.similar,
-    );
-    const buyAction = entry.tcgplayerId
-      ? `<a class="card-inline-action card-inline-action-buy" href="${escapeEmbedHtml(getAffiliateLink(entry.tcgplayerId))}" target="_blank" rel="noopener noreferrer" aria-label="Buy on TCGPlayer" data-tooltip="${price ? `Buy on TCGPlayer ($${price})` : 'Buy on TCGPlayer'}">${embeddedActionIcons.buy}<span>Buy${price ? ` $${price}` : ''}</span></a>`
-      : '';
-    const flipAction = entry.backImageUrl
-      ? `<button type="button" class="card-inline-action card-inline-action-flip" aria-label="Flip Card" data-tooltip="Flip card" data-card-flip>${embeddedActionIcons.flip}<span>Flip</span></button>`
-      : '';
-    return `<span class="card-inline-embed" data-front-image="${imageUrl}"${backImageUrl ? ` data-back-image="${backImageUrl}"` : ''}><a class="card-inline-img-link" href="/card/${entry.oracleId}"><img class="card-inline-img" src="${imageUrl}" alt="${safeName}" data-card-face="front" loading="lazy" /></a><span class="card-inline-actions">${flipAction}${similarAction}${commanderActions}${buyAction}</span></span>`;
+    const image = imageUrl
+      ? `<img class="card-inline-img" src="${imageUrl}" alt="${safeName}" loading="lazy" />`
+      : `<span class="card-inline-placeholder">${safeName}</span>`;
+    return `<span class="card-inline-embed"><a class="card-inline-img-link card-finish" data-card-finish="${escapeEmbedHtml(entry.card.card_data.selected_finish ?? '')}" data-card-reference="${escapeEmbedHtml(reference)}" href="/card/${entry.oracleId}" aria-label="Card options for ${safeName}">${image}</a>${printingAction}</span>`;
   });
 
   result = result.replace(/CARDLINKTOKEN(\d+)CARDLINKTOKEN/g, (_, idx) => {
-    const name = cardLinkNames[Number(idx)];
-    if (!name) return '';
+    const reference = cardLinkNames[Number(idx)];
+    if (!reference) return '';
+    const { name } = parseMarkdownCardReference(reference);
     const safeName = escapeEmbedHtml(name);
-    const entry = cardImageMap.value.get(name.toLowerCase());
+    const entry = cardImageMap.value.get(reference.toLowerCase());
     // Unresolved names stay plain text instead of linking to a missing card.
     if (!entry || !isOracleId(entry.oracleId)) {
       return `<span class="card-unknown">${safeName}</span>`;
     }
-    return `<a class="card-inline-link" href="/card/${entry.oracleId}">${safeName}</a>`;
+    return `<a class="card-inline-link" data-card-reference="${escapeEmbedHtml(reference)}" href="/card/${entry.oracleId}">${safeName}</a>`;
   });
 
   result = result.replace(
@@ -818,10 +1019,24 @@ function handleSearchEmbedSubmit(event: Event) {
 
 function handlePreviewClick(event: MouseEvent) {
   const target = event.target as HTMLElement | null;
+  const cardImage = target?.closest<HTMLAnchorElement>('.card-inline-img-link');
+  if (cardImage && event.button === 0 && !isModifiedClick(event)) {
+    event.preventDefault();
+    openCardActions(cardImage.dataset.cardReference ?? '');
+    return;
+  }
+  const printingButton = target?.closest<HTMLElement>('[data-card-printing]');
+  if (printingButton && props.editable) {
+    const token = markdownCardTokens(previewSource.value).filter(
+      (token) => token.image,
+    )[Number(printingButton.dataset.cardPrinting)];
+    if (token) chooseCardPrinting(token, previewSource.value);
+    return;
+  }
 
   const cardLink = target?.closest<HTMLAnchorElement>('.card-inline-link');
   if (cardLink) {
-    // Preserve modifier clicks, middle clicks, and keyboard activation. Touch
+    // Preserve modifier and middle clicks. Touch
     // clicks use two quick taps on the same link; browsers do not consistently
     // emit dblclick for touch, so track the taps directly.
     if (event.button !== 0 || isModifiedClick(event)) return;
@@ -843,6 +1058,9 @@ function handlePreviewClick(event: MouseEvent) {
       }
     }
     lastCardTap = null;
+    event.preventDefault();
+    openCardActions(cardLink.dataset.cardReference ?? '');
+    return;
   }
 
   // These anchors are injected as raw HTML. Route ordinary activations through
@@ -859,23 +1077,6 @@ function handlePreviewClick(event: MouseEvent) {
       return;
     }
   }
-
-  const flipButton = target?.closest<HTMLButtonElement>('[data-card-flip]');
-  if (!flipButton) return;
-
-  const embed = flipButton.closest<HTMLElement>('.card-inline-embed');
-  const image = embed?.querySelector<HTMLImageElement>('.card-inline-img');
-  const frontImage = embed?.dataset.frontImage;
-  const backImage = embed?.dataset.backImage;
-  if (!image || !frontImage || !backImage) return;
-
-  const showBack = image.dataset.cardFace !== 'back';
-  image.src = showBack ? backImage : frontImage;
-  image.dataset.cardFace = showBack ? 'back' : 'front';
-  flipButton.setAttribute(
-    'aria-label',
-    showBack ? 'Show Front Face' : 'Show Back Face',
-  );
 }
 
 type ToolbarActionId =
@@ -895,6 +1096,7 @@ type ToolbarActionId =
   | 'youtube'
   | 'search-embed'
   | 'card-image'
+  | 'card-printing'
   | 'card-link';
 
 interface ToolbarAction {
@@ -948,6 +1150,11 @@ const toolbarGroups: ToolbarAction[][] = [
       icon: 'i-lucide-external-link',
       tooltip: 'Card link with hover preview  [[Card Name]]',
     },
+    {
+      id: 'card-printing',
+      icon: 'i-lucide-images',
+      tooltip: 'Choose card printing',
+    },
   ],
 ];
 
@@ -964,6 +1171,17 @@ function applyAction(id: ToolbarActionId) {
   let blockMode = false;
 
   switch (id) {
+    case 'card-printing': {
+      const token = markdownCardTokens(value).find(
+        (token) => start >= token.from && end <= token.to,
+      );
+      if (token) chooseCardPrinting(token, value);
+      else
+        useToast().add({
+          title: 'Place your cursor inside a card image or card link first.',
+        });
+      return;
+    }
     case 'h1':
       before = '# ';
       placeholder = 'Heading';
@@ -1383,98 +1601,68 @@ function insertMagicSymbol(token: string) {
 }
 .primer-preview :deep(.card-inline-img-link) {
   display: block;
+  width: 280px;
+  max-width: 100%;
+  flex-shrink: 0;
   text-align: center;
   text-decoration: none;
+  border-radius: 10px;
 }
 .primer-preview :deep(.card-inline-embed) {
-  display: flex;
+  display: inline-flex;
   width: fit-content;
-  flex-direction: row;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  margin: 0.5rem auto;
+  margin: 0.5rem 0.5rem 0.5rem 0;
+  max-width: 100%;
+  vertical-align: top;
+}
+.primer-preview :deep(.card-embed-row) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+.primer-preview :deep(.card-embed-row > .card-inline-embed) {
+  margin: 0.5rem 0;
 }
 .primer-preview :deep(.card-inline-img) {
   display: inline-block;
-  width: 200px;
-  max-width: 500px;
+  width: 100%;
+  max-width: 100%;
   border-radius: 10px;
   vertical-align: middle;
-  margin: 0.25rem;
+  margin: 0;
 }
-.primer-preview :deep(.card-inline-actions) {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  gap: 0.35rem;
-}
-.primer-preview :deep(.card-inline-action) {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 2rem;
-  min-width: 6.5rem;
-  gap: 0.35rem;
-  padding: 0.375rem 0.5rem;
-  border: 1px solid currentColor;
-  border-radius: 0.375rem;
-  box-sizing: border-box;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1;
-  text-decoration: none;
-}
-.primer-preview :deep(.card-inline-action svg) {
-  width: 1rem;
-  height: 1rem;
-}
-.primer-preview :deep(.card-inline-action::after) {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 0.45rem);
-  z-index: 20;
-  padding: 0.3rem 0.5rem;
-  border-radius: 0.375rem;
-  background: var(--ui-bg-inverted);
-  color: var(--ui-text-inverted);
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, 0.2rem);
-  transition:
-    opacity 120ms ease,
-    transform 120ms ease;
-}
-.primer-preview :deep(.card-inline-action:hover::after),
-.primer-preview :deep(.card-inline-action:focus-visible::after) {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-.primer-preview :deep(.card-inline-action:hover) {
-  background: rgba(127, 127, 127, 0.12);
-}
-.primer-preview :deep(.card-inline-action-similar) {
+.primer-preview :deep(.card-inline-placeholder) {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 488 / 680;
+  padding: 1rem;
+  border-radius: inherit;
+  background: var(--ui-bg-elevated);
   color: var(--ui-text-muted);
 }
-.primer-preview :deep(.card-inline-action-popular) {
-  color: var(--ui-error);
-}
-.primer-preview :deep(.card-inline-action-recommend) {
-  color: var(--ui-primary);
-}
-.primer-preview :deep(.card-inline-action-buy) {
-  color: var(--ui-success);
-}
-.primer-preview :deep(.card-inline-action-flip) {
-  color: var(--ui-text-muted);
+.primer-preview :deep(.card-printing-button) {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.375rem;
+  color: var(--ui-text);
+  font-size: 0.875rem;
   cursor: pointer;
+}
+.primer-preview :deep(.card-printing-button:hover) {
+  background: var(--ui-bg-elevated);
+}
+.primer-preview :deep(.primer-deck-slot:empty) {
+  min-height: 18rem;
+}
+.primer-preview :deep(.primer-deck-slot ul) {
+  list-style: none;
+  padding-left: 0;
 }
 .primer-preview :deep(.card-inline-link) {
   color: #3b82f6;
@@ -1734,12 +1922,25 @@ function insertMagicSymbol(token: string) {
   overflow: hidden;
   z-index: 1000;
   background: #000;
-  pointer-events: none;
+  cursor: pointer;
+  padding: 0;
+  border: 0;
 }
 .editor-card-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.editor-card-fade-enter-active {
+  transition: opacity 140ms ease-out;
+}
+.editor-card-fade-leave-active {
+  transition: opacity 100ms ease-out;
+  pointer-events: none;
+}
+.editor-card-fade-enter-from,
+.editor-card-fade-leave-to {
+  opacity: 0;
 }
 </style>

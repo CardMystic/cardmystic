@@ -14,6 +14,18 @@ const cards = createDisplayCards(4);
 const storageKey = 'cardmystic-guest-decks-v2';
 const deckId = '41000000-0000-4000-8000-000000000009';
 
+function hydrationWarnings(page: Page) {
+  const warnings: string[] = [];
+  page.on('console', (message) => {
+    if (/hydration.*mismatch|mismatch.*hydration/i.test(message.text()))
+      warnings.push(message.text());
+  });
+  page.on('pageerror', (error) => {
+    if (/hydration/i.test(error.message)) warnings.push(error.message);
+  });
+  return warnings;
+}
+
 async function setup(page: Page) {
   await page.route(BACKEND + '/**', (route) => route.fulfill({ json: [] }));
   await page.route(SUPABASE + '/rest/v1/**', (route) =>
@@ -70,6 +82,7 @@ async function setup(page: Page) {
 test('guest builds one draft and reloads without account writes on mobile', async ({
   page,
 }) => {
+  const warnings = hydrationWarnings(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await setup(page);
   const writes: string[] = [];
@@ -85,20 +98,25 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
   });
   await gotoHydrated(page, '/build');
   await page
-    .getByRole('heading', { name: 'My first deck', exact: true })
+    .getByRole('button', { name: 'Deck settings', exact: true })
     .click();
-  await page
-    .getByTestId('deck-banner')
-    .locator('input')
+  const settings = page.getByRole('dialog', { name: 'Deck settings' });
+  await settings
+    .getByRole('textbox', { name: 'Name', exact: true })
     .fill('My browser deck');
-  await page.getByTestId('deck-banner').locator('input').press('Enter');
+  await settings.getByRole('button', { name: 'Save changes' }).click();
+  await expect(settings).toBeHidden();
   await page.getByPlaceholder('Add a card to the deck...').fill('Display Card');
   await page.getByRole('option', { name: cards[3].name, exact: true }).click();
   await expect(page.getByText('1 cards', { exact: true })).toBeVisible();
   await page
     .getByRole('button', { name: `Options for ${cards[3].name}`, exact: true })
     .click();
-  await page.getByRole('button', { name: 'Add a copy', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Set # of Copies', exact: true })
+    .click();
+  await page.getByRole('menuitem', { name: 'Add a copy', exact: true }).click();
   await page.keyboard.press('Escape');
   await expect(page.getByText('2 cards', { exact: true })).toBeVisible();
   await page.reload();
@@ -126,6 +144,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  expect(warnings).toEqual([]);
   expect(writes).toEqual([]);
   expect(draftRequests).toEqual([]);
   await expect(
@@ -149,6 +168,7 @@ for (const failure of ['network', 'invalid cards', 'metadata'] as const) {
   test(`signed-in save preserves boards and retries the same deck after ${failure} failure`, async ({
     page,
   }) => {
+    const warnings = hydrationWarnings(page);
     await setup(page);
     await mockSupabaseAuth(page);
     await page.route(SUPABASE + '/rest/v1/profiles**', (route) =>
@@ -294,6 +314,7 @@ for (const failure of ['network', 'invalid cards', 'metadata'] as const) {
       .getByRole('button', { name: 'Retry saving deck', exact: true })
       .click();
     await expect(page).toHaveURL(new RegExp(`/lists/${deckId}$`));
+    expect(warnings).toEqual([]);
     expect(creates).toBe(1);
     expect(attempts).toBe(2);
     expect(metadataAttempts).toBe(failure === 'metadata' ? 2 : 1);
@@ -306,6 +327,158 @@ for (const failure of ['network', 'invalid cards', 'metadata'] as const) {
     ).toEqual([]);
   });
 }
+
+test('two open tabs retain concurrent card additions after reload', async ({
+  page,
+  context,
+}) => {
+  const other = await context.newPage();
+  const tabs = [page, other];
+  await Promise.all(
+    tabs.map(async (tab) => {
+      await setup(tab);
+      await gotoHydrated(tab, '/build');
+    }),
+  );
+  await Promise.all(
+    tabs.map(async (tab, index) => {
+      await tab
+        .getByPlaceholder('Add a card to the deck...')
+        .fill(cards[index + 2].name);
+      await tab
+        .getByRole('option', { name: cards[index + 2].name, exact: true })
+        .click();
+    }),
+  );
+  await Promise.all(
+    tabs.map((tab) =>
+      expect(tab.getByText('2 cards', { exact: true })).toBeVisible(),
+    ),
+  );
+  await other.reload();
+  for (const card of [cards[2], cards[3]]) {
+    await expect(
+      other.getByRole('button', {
+        name: `Options for ${card.name}`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
+});
+
+test('a draft can be edited after its account destination disappears', async ({
+  page,
+}) => {
+  await setup(page);
+  await mockSupabaseAuth(page);
+  await page.addInitScript(
+    ({ token, user, key }) => {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          access_token: token,
+          refresh_token: 'fake-refresh',
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          user,
+        }),
+      );
+    },
+    {
+      token: fakeJwt(),
+      user: FAKE_USER,
+      key: 'sb-' + new URL(SUPABASE).hostname.split('.')[0] + '-auth-token',
+    },
+  );
+  await page.route(SUPABASE + '/rest/v1/profiles**', (route) =>
+    route.fulfill({
+      json: {
+        id: FAKE_USER.id,
+        username: 'Draft tester',
+        avatar_card_name: null,
+      },
+    }),
+  );
+  await page.route(BACKEND + '/supabase/card-lists/bulk-edit', (route) =>
+    route.fulfill({ status: 404, json: { message: 'Deck not found' } }),
+  );
+  await seedDraft(page, {
+    pendingSave: { userId: FAKE_USER.id, listId: deckId },
+  });
+  await gotoHydrated(page, '/build');
+  const missing = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/supabase/card-lists/bulk-edit') &&
+      response.status() === 404,
+  );
+  await page.getByRole('button', { name: 'Retry saving deck' }).click();
+  await missing;
+  await page.getByRole('button', { name: 'Resume editing' }).press('Enter');
+  await expect.poll(async () => (await readDraft(page)).pendingSave).toBeNull();
+  await page
+    .getByRole('button', { name: 'Deck settings', exact: true })
+    .click();
+  const settings = page.getByRole('dialog', { name: 'Deck settings' });
+  await settings
+    .getByRole('textbox', { name: 'Name', exact: true })
+    .fill('Recovered');
+  await settings.getByRole('button', { name: 'Save changes' }).click();
+  await expect.poll(async () => (await readDraft(page)).name).toBe('Recovered');
+});
+
+test('export waits for the selected printing before exposing set and collector number', async ({
+  page,
+}) => {
+  await setup(page);
+  const printingId = '41000000-0000-4000-8000-000000000010';
+  await seedDraft(page, {
+    commanders: [],
+    cards: [
+      {
+        name: cards[3].name,
+        board: 'Mainboard',
+        quantity: 1,
+        printingId,
+        finish: 'foil',
+      },
+    ],
+  });
+  let release!: () => void;
+  const delay = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(SUPABASE + '/rest/v1/card_printings**', async (route) => {
+    await delay;
+    await route.fulfill({
+      json: [
+        {
+          id: printingId,
+          oracle_id: cards[3].oracle_id,
+          set_code: 'xyz',
+          collector_number: '42',
+          finish_mask: 2,
+          lang: 'en',
+          image_paths: ['front/a/b/test.jpg'],
+        },
+      ],
+    });
+  });
+  await gotoHydrated(page, '/build');
+  await openDraftAction(page, 'Import / Export');
+  const dialog = page.getByRole('dialog', { name: 'Import / Export' });
+  try {
+    await expect(dialog.getByRole('button', { name: 'Copy' })).toBeDisabled();
+    await expect(
+      dialog.getByRole('button', { name: 'Download' }),
+    ).toBeDisabled();
+    await expect(dialog.getByLabel('Exported decklist')).toHaveValue('');
+  } finally {
+    release();
+  }
+  await expect(dialog.getByLabel('Exported decklist')).toHaveValue(
+    /\(XYZ\) 42 \*F\*/,
+  );
+  await expect(dialog.getByRole('button', { name: 'Download' })).toBeEnabled();
+});
 
 test('a guest adds a search result to the same browser draft', async ({
   page,
@@ -559,10 +732,24 @@ test('draft uses shared import, comparison, board controls and export without sa
   await transfer
     .getByRole('button', { name: 'Add imported cards', exact: true })
     .click();
-  await expect(transfer.getByRole('status')).toContainText('Imported');
+  await expect(transfer.getByRole('status')).toHaveText('Cards added.');
   await expect
     .poll(async () => (await readDraft(page)).commanders)
     .toEqual([cards[0].name]);
+  const beforeReimport = await readDraft(page);
+  await transfer
+    .getByLabel('Decklist to import')
+    .fill(`8 Island\n\n1 ${cards[0].name.split(' // ')[0]}`);
+  await transfer
+    .getByRole('button', { name: 'Preview import', exact: true })
+    .click();
+  await expect(
+    transfer.getByText('2 cards already in this list were skipped.'),
+  ).toBeVisible();
+  await expect(
+    transfer.getByRole('button', { name: 'Add imported cards', exact: true }),
+  ).toHaveCount(0);
+  expect(await readDraft(page)).toEqual(beforeReimport);
   await transfer.getByRole('button', { name: 'Export', exact: true }).click();
   await expect(transfer.getByLabel('Exported decklist')).toHaveValue(
     /5 Island/,
@@ -602,7 +789,10 @@ test('draft uses shared import, comparison, board controls and export without sa
     .click();
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: 'Move to Considering', exact: true })
+    .getByRole('button', { name: 'Move To', exact: true })
+    .click();
+  await page
+    .getByRole('menuitem', { name: 'Move to Considering', exact: true })
     .click();
   await expect
     .poll(
@@ -705,7 +895,7 @@ test('draft uses shared stats, playtester, display and recommendation flow with 
     page.getByRole('combobox', { name: 'Deck sorting', exact: true }),
   ).toBeVisible();
   await page.keyboard.press('Escape');
-  await page.getByTestId('deck-stats').locator('summary').click();
+  await expect(page.getByTestId('deck-stats')).toHaveAttribute('open', '');
   await expect(
     page.getByText('Cards in library', { exact: true }),
   ).toBeVisible();

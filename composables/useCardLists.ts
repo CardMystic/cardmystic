@@ -465,11 +465,14 @@ export const useCardLists = () => {
     },
   });
 
-  const bulkEditList = async (
-    request: BulkEditRequest,
-  ): Promise<BulkEditResponse> => {
+  const bulkEditList = async ({
+    originalGuestCards,
+    ...request
+  }: BulkEditRequest & {
+    originalGuestCards?: string;
+  }): Promise<BulkEditResponse> => {
     if (browser && request.listId === BROWSER_DECK_ID)
-      return browser.bulkEdit(request);
+      return browser.bulkEdit(request, originalGuestCards);
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -505,9 +508,7 @@ export const useCardLists = () => {
   };
 
   const bulkEditListMutation = useMutation({
-    mutationFn: async (request: BulkEditRequest) => {
-      return bulkEditList(request);
-    },
+    mutationFn: bulkEditList,
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({
         queryKey: ['list-items', request.listId],
@@ -791,8 +792,13 @@ export const useCardLists = () => {
     },
   });
 
-  const updateListAvatar = async (listId: string, cardName: string) => {
-    if (browser && listId === BROWSER_DECK_ID) return browser.avatar(cardName);
+  const updateListAvatar = async (
+    listId: string,
+    cardName: string,
+    printingId: string | null = null,
+  ) => {
+    if (browser && listId === BROWSER_DECK_ID)
+      return browser.avatar(cardName, printingId);
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -802,6 +808,7 @@ export const useCardLists = () => {
       .from('card_lists')
       .update({
         avatar_card_name: cardName,
+        avatar_printing_id: printingId,
         updated_at: new Date().toISOString(),
       })
       .eq('id', listId);
@@ -813,12 +820,14 @@ export const useCardLists = () => {
     mutationFn: async ({
       listId,
       cardName,
+      printingId = null,
     }: {
       listId: string;
       cardName: string;
+      printingId?: string | null;
     }) => {
       if (!supabase) return;
-      return updateListAvatar(listId, cardName);
+      return updateListAvatar(listId, cardName, printingId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-lists'] });

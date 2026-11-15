@@ -1,44 +1,58 @@
 <template>
   <div
-    class="w-full flex flex-col relative z-10 pt-4"
+    class="w-full flex flex-col relative z-10"
     :class="{
       'max-w-[2000px] mx-auto': !isCreator || editorMode === 'preview',
     }"
   >
-    <!-- Back button -->
-    <div class="mb-4">
-      <UButton
-        :to="`/lists/${listId}`"
-        icon="i-lucide-arrow-left"
-        color="neutral"
-        variant="outline"
-        label="Back to Decklist"
-        class="cursor-pointer"
-      />
+    <div class="mb-4 w-full max-w-[2000px] mx-auto">
+      <CardListBanner
+        :list="list"
+        :is-loading="isLoadingLists"
+        :is-owner="isCreator"
+      >
+        <template #bottom>
+          <UButton
+            :to="`/lists/${listId}`"
+            icon="i-lucide-arrow-left"
+            color="neutral"
+            variant="subtle"
+            label="Back to Decklist"
+          />
+        </template>
+      </CardListBanner>
     </div>
 
     <!-- Primer editor / viewer -->
     <div class="flex flex-col mb-5">
       <MarkdownEditor
         v-model="primerContent"
+        :primer-list-id="listId"
         :editable="isCreator"
         :is-saving="isSaving"
         :save-handler="handleSave"
         @mode-change="editorMode = $event"
       />
     </div>
+    <RelatedContent
+      v-if="list && primerText?.trim() && editorMode === 'preview'"
+      :source-id="listId"
+      kind="primer"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query';
+import { excerptFromMarkdown, FALLBACK_OG_IMAGE } from '~/utils/seoMeta';
+import { safeJsonLd } from '~/utils/safeJsonLd';
 import { useOwnedDecklist } from '~/composables/useCardLists';
-import { usePublicDecklist } from '~/composables/useDiscovery';
+import { usePublicDecklistSummaries } from '~/composables/useDiscovery';
 import { usePrimer } from '~/composables/usePrimer';
 import { useSupabase } from '~/composables/useSupabase';
 import {
   GetPrimerResponseSchema,
-  GetPublicDecklistResponseSchema,
+  GetFeaturedDecklistsResponseSchema,
 } from '~/models/cardListModel';
 import { fetchDirectArtCropUrl } from '~/utils/scryfall';
 import { useToast } from '#imports';
@@ -58,9 +72,9 @@ const queryClient = useQueryClient();
 // vue-query caches to avoid immediately repeating either request on hydration.
 const ssrPublicList = await useSsrQuerySeed({
   cacheKey: `primer-list-ssr-${listId}`,
-  path: `/supabase/card-lists/view/${encodeURIComponent(listId)}`,
-  schema: GetPublicDecklistResponseSchema,
-  queryKey: ['discovery', 'public-decklist', listId],
+  path: `/supabase/card-lists/summaries?ids=${encodeURIComponent(listId)}`,
+  schema: GetFeaturedDecklistsResponseSchema,
+  queryKey: ['discovery', 'public-list-summaries', [listId]],
 });
 
 const { data: ssrPrimerResponse } = await useAsyncData(
@@ -86,7 +100,7 @@ if (ssrPrimerResponse.value) {
 // Resolve the deck's selected avatar to a direct CDN URL because Discord does
 // not reliably follow Scryfall's named-card redirect for og:image.
 const ssrSocialCardName = computed(() => {
-  const decklist = ssrPublicList.value?.decklist;
+  const decklist = ssrPublicList.value?.decklists[0];
   return decklist?.avatar_card_name || null;
 });
 const { data: ssrOgImageUrl } = await useAsyncData(
@@ -97,6 +111,7 @@ const { data: ssrOgImageUrl } = await useAsyncData(
       ssrSocialCardName.value,
       config.public.backendPath,
       requestFetch,
+      ssrPublicList.value?.decklists[0]?.avatar_printing_id,
     );
   },
 );
@@ -107,10 +122,14 @@ const { decklist: ownedList, isLoading: isLoadingLists } =
 
 // Non-owners viewing a public primer still get the deck metadata (name,
 // commanders, avatar art) so the primer page can render rich SEO/social
-// previews. usePublicDecklist is a no-op for private decks.
-const { decklist: publicDecklist } = usePublicDecklist(listIdRef);
+// previews without downloading all the cards in the deck.
+const { decklists: publicDecklists } = usePublicDecklistSummaries(
+  computed(() => [listId]),
+);
 
-const list = computed(() => ownedList.value ?? publicDecklist.value ?? null);
+const list = computed(
+  () => ownedList.value ?? publicDecklists.value[0] ?? null,
+);
 
 const isCreator = computed(() => !!ownedList.value);
 
@@ -161,45 +180,32 @@ async function handleSave(value: string) {
 }
 
 // ---- SEO ----
-const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_preview.png';
 
 const canonicalUrl = computed(
   () => `https://cardmystic.com/lists/${listId}/primer`,
 );
 
-// The primer endpoint only returns text for public lists (or to the
-// owner). If we have primer text server-side, the list is public.
-const hasPrimerText = computed(() => !!primerText.value?.trim());
+const publicList = computed(() =>
+  list.value?.visibility === 'public' ? list.value : null,
+);
+const hasPublicPrimer = computed(
+  () => !!publicList.value && !!primerText.value?.trim(),
+);
 
-const seoTitle = computed(() => {
-  if (!list.value) return 'Deck Primer | CardMystic';
-  return `${list.value.name || 'Untitled deck'} — Primer | CardMystic`;
-});
+const seoTitle = computed(() =>
+  publicList.value
+    ? `${publicList.value.name || 'Untitled deck'} — Primer | CardMystic`
+    : 'Deck Primer | CardMystic',
+);
 
-// Description is the first ~200 chars of the primer text (plain), or a
-// synthesized fallback keyed off the deck name / commanders.
 const seoDescription = computed(() => {
-  const text = primerText.value?.trim() ?? '';
-  if (text) {
-    const plain = text
-      .replace(/```[\s\S]*?```/g, ' ')
-      .replace(/`[^`]*`/g, ' ')
-      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-      .replace(/^>\s?/gm, '')
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/[*_~]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const snippet = plain.length > 200 ? `${plain.slice(0, 199)}…` : plain;
-    if (snippet) return snippet;
-  }
-  if (!list.value) {
+  if (!publicList.value)
     return 'Read Magic: The Gathering deck primers on CardMystic.';
-  }
-  const cmds = (list.value.commanders as string[] | undefined) ?? [];
+  const snippet = excerptFromMarkdown(primerText.value ?? '');
+  if (snippet) return snippet;
+  const cmds = publicList.value.commanders ?? [];
   const cmdLine = cmds.length ? ` led by ${cmds.join(' & ')}` : '';
-  return `Primer for ${list.value.name || 'this deck'}${cmdLine}. Read the strategy, mulligans, and card choices on CardMystic.`;
+  return `Primer for ${publicList.value.name || 'this deck'}${cmdLine}. Read the strategy, mulligans, and card choices on CardMystic.`;
 });
 
 const seoImage = computed(() => ssrOgImageUrl.value || FALLBACK_OG_IMAGE);
@@ -208,7 +214,7 @@ const seoImage = computed(() => ssrOgImageUrl.value || FALLBACK_OG_IMAGE);
 // private decks return no primer text to anonymous crawlers and stay out
 // of the index.
 const seoRobots = computed(() =>
-  hasPrimerText.value ? 'index, follow' : 'noindex, nofollow',
+  hasPublicPrimer.value ? 'index, follow' : 'noindex, nofollow',
 );
 
 useSeoMeta({
@@ -221,8 +227,8 @@ useSeoMeta({
   ogUrl: () => canonicalUrl.value,
   ogImage: () => seoImage.value,
   ogImageAlt: () =>
-    list.value
-      ? `Art for ${list.value.name || 'Untitled deck'}`
+    publicList.value
+      ? `Art for ${publicList.value.name || 'Untitled deck'}`
       : 'CardMystic decklist primer',
   ogSiteName: 'CardMystic',
   twitterCard: 'summary_large_image',
@@ -231,7 +237,27 @@ useSeoMeta({
   twitterImage: () => seoImage.value,
 });
 
-useHead({
+useHead(() => ({
   link: [{ rel: 'canonical', href: () => canonicalUrl.value }],
-});
+  script: hasPublicPrimer.value
+    ? [
+        {
+          key: 'deck-primer',
+          type: 'application/ld+json',
+          innerHTML: safeJsonLd({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: `${publicList.value?.name || 'Untitled deck'} — Primer`,
+            description: seoDescription.value,
+            url: canonicalUrl.value,
+            image: seoImage.value,
+            about: { '@id': `https://cardmystic.com/lists/${listId}` },
+            author: publicList.value?.username
+              ? { '@type': 'Person', name: publicList.value.username }
+              : undefined,
+          }),
+        },
+      ]
+    : [],
+}));
 </script>

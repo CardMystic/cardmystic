@@ -138,6 +138,30 @@ describe('browser draft editing and persistence', () => {
     expect(savedDeck().cards[0].quantity).toBe(4);
     expect(fetchCards).toHaveBeenCalledTimes(1);
   });
+  it('preserves intervening changes when a stale bulk editor submits', async () => {
+    const source = editor();
+    await source.addNames(['Sol Ring']);
+    const original = JSON.stringify(source.draft.value.cards);
+    await source.addNames(['Island']);
+    await expect(
+      source.bulkEdit(
+        {
+          listId: BROWSER_DECK_ID,
+          entries: [
+            {
+              board: 'Mainboard',
+              cards: [{ name: 'Sol Ring', num_copies: 2 }],
+            },
+          ],
+        },
+        original,
+      ),
+    ).rejects.toThrow('draft changed');
+    expect(
+      savedDeck().cards.map((entry: { name: string }) => entry.name),
+    ).toEqual(['Sol Ring', 'Island']);
+  });
+
   it('adds canonical names and quantities independently on each board without account requests', async () => {
     const source = editor();
     await source.addNames(['2 island', 'Sol Ring']);
@@ -236,16 +260,16 @@ describe('browser draft editing and persistence', () => {
     const source = editor();
     await source.addNames(['3 Island']);
     await source.addNames(['2 Island'], 'Sideboard');
-    source.move('Island', 'Sideboard');
+    await source.move('Island', 'Sideboard');
     expect(savedDeck().cards).toEqual([
       { name: 'Island', board: 'Sideboard', quantity: 5 },
     ]);
     await source.addNames(['Island']);
-    source.remove(catalog[0].oracle_id, 'Sideboard');
+    await source.remove(catalog[0].oracle_id, 'Sideboard');
     expect(savedDeck().cards).toEqual([
       { name: 'Island', board: 'Mainboard', quantity: 1 },
     ]);
-    source.copies('Island', 0);
+    await source.copies('Island', 0);
     expect(savedDeck().cards).toEqual([]);
   });
 
@@ -254,11 +278,48 @@ describe('browser draft editing and persistence', () => {
     await source.addNames(['80 Island']);
     await source.addNames(['30 Island'], 'Sideboard');
     const before = snapshot(source);
-    expect(() => source.move('Island', 'Sideboard')).toThrow();
-    expect(() => source.move('Negate', 'Sideboard')).toThrow('Card not found');
+    await expect(source.move('Island', 'Sideboard')).rejects.toThrow();
+    await expect(source.move('Negate', 'Sideboard')).rejects.toThrow(
+      'Card not found',
+    );
     expect(snapshot(source)).toEqual(before);
     expect(savedDeck()).toEqual(before);
   });
+
+  it.each(['Sideboard', 'Considering'] as const)(
+    'promotes a %s card in place and preserves its printing',
+    async (board) => {
+      const source = editor({
+        ...emptyGuestDeck(),
+        cards: [
+          {
+            name: 'Partner A',
+            quantity: 3,
+            board,
+            printingId: '42000000-0000-4000-8000-000000000001',
+            finish: 'foil',
+          },
+        ],
+      });
+      await source.setCommander('Partner A');
+      expect(savedDeck().cards).toEqual([
+        {
+          name: 'Partner A',
+          quantity: 1,
+          board: 'Mainboard',
+          printingId: '42000000-0000-4000-8000-000000000001',
+          finish: 'foil',
+        },
+      ]);
+      expect(savedDeck().commanders).toEqual(['Partner A']);
+      await source.addNames(['Partner A'], 'Sideboard');
+      await source.setCommander('Partner A');
+      expect(savedDeck().cards).toHaveLength(1);
+      expect(savedDeck().cards[0].printingId).toBe(
+        '42000000-0000-4000-8000-000000000001',
+      );
+    },
+  );
 
   it('pairs valid partners, replaces incompatible commanders, and keeps one mainboard copy', async () => {
     const source = editor();
@@ -266,11 +327,11 @@ describe('browser draft editing and persistence', () => {
     await source.setCommander('Partner B');
     expect(savedDeck().commanders).toEqual(['Partner A', 'Partner B']);
     await source.addNames(['Partner A']);
-    expect(() => source.copies('Partner A', 2)).toThrow('one copy');
+    await expect(source.copies('Partner A', 2)).rejects.toThrow('one copy');
     await source.addNames(['Partner A'], 'Sideboard');
-    expect(() => source.move('Partner A', 'Mainboard', 'Sideboard')).toThrow(
-      'one copy',
-    );
+    await expect(
+      source.move('Partner A', 'Mainboard', 'Sideboard'),
+    ).rejects.toThrow('one copy');
     expect(
       savedDeck().cards.filter((card) => card.name === 'Partner A'),
     ).toHaveLength(2);
@@ -290,13 +351,13 @@ describe('browser draft editing and persistence', () => {
   it('clears commander designation when moved, explicitly cleared, or changing format', async () => {
     const source = editor();
     await source.setCommander('Partner A');
-    source.move('Partner A', 'Considering');
+    await source.move('Partner A', 'Considering');
     expect(savedDeck().commanders).toEqual([]);
     await source.setCommander('Partner B');
-    source.clearCommander(catalog[4].oracle_id);
+    await source.clearCommander(catalog[4].oracle_id);
     expect(savedDeck().commanders).toEqual([]);
     await source.setCommander('Partner B');
-    expect(source.updateFormat('Modern')).toEqual({
+    expect(await source.updateFormat('Modern')).toEqual({
       format: 'Modern',
       commandersCleared: true,
     });
@@ -323,16 +384,22 @@ describe('browser draft editing and persistence', () => {
         entries: [{ board: 'Mainboard', cards: [] }],
       }),
     ).rejects.toThrow('Finish saving');
-    expect(() => source.update({ name: 'Changed' })).toThrow('Finish saving');
-    expect(() => source.reset()).toThrow('Finish saving');
+    await expect(source.update({ name: 'Changed' })).rejects.toThrow(
+      'Finish saving',
+    );
+    await expect(source.reset()).rejects.toThrow('Finish saving');
     expect(savedDeck()).toEqual(initial);
   });
 
   it('persists metadata and resets cards and settings together', async () => {
     const source = editor();
     await source.setCommander('Partner A');
-    source.update({ name: 'My deck', description: 'Testing', bracket: 3 });
-    source.avatar('Partner A');
+    await source.update({
+      name: 'My deck',
+      description: 'Testing',
+      bracket: 3,
+    });
+    await source.avatar('Partner A');
     expect(savedDeck()).toMatchObject({
       name: 'My deck',
       description: 'Testing',
@@ -345,7 +412,7 @@ describe('browser draft editing and persistence', () => {
       bracket: 3,
       avatar_card_name: 'Partner A',
     });
-    source.reset();
+    await source.reset();
     expect(savedDeck()).toEqual(emptyGuestDeck());
     expect(source.items.value).toEqual([]);
   });
@@ -360,7 +427,7 @@ describe('browser draft editing and persistence', () => {
     expect(source.storageError.value).toContain('could not be saved');
     expect(source.draft.value.cards).toHaveLength(2);
     expect(savedDeck().cards).toHaveLength(1);
-    source.update({ name: 'Recovered' });
+    await source.update({ name: 'Recovered' });
     expect(source.storageError.value).toBe('');
     expect(savedDeck().cards).toHaveLength(2);
     expect(savedDeck().name).toBe('Recovered');
@@ -387,9 +454,9 @@ describe('browser draft editing and persistence', () => {
     storage.setItem.mockImplementationOnce(() => {
       throw new Error('quota');
     });
-    source.update({ name: 'Updated legacy deck' });
+    await source.update({ name: 'Updated legacy deck' });
     expect(stored.has(LEGACY_GUEST_DECK_KEY)).toBe(true);
-    source.update({ description: 'Recovered' });
+    await source.update({ description: 'Recovered' });
     expect(stored.has(LEGACY_GUEST_DECK_KEY)).toBe(false);
     expect(savedDeck()).toMatchObject({
       name: 'Updated legacy deck',

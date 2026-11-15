@@ -16,6 +16,7 @@ const {
   updateListMutation,
   updateListAvatarMutation,
 } = useCardLists();
+const printingDb = import.meta.server ? null : useSupabase();
 const saving = ref(false);
 const message = ref('');
 const visibility = ref<'public' | 'private'>('public');
@@ -29,12 +30,12 @@ watch(activeIndex, () => {
 const total = computed(() =>
   draft.value.cards.reduce((total, card) => total + card.quantity, 0),
 );
-useSeoMeta({
+usePublicPageSeo({
+  path: '/build',
   title: 'Build a deck - CardMystic',
   description:
     'Build a Magic: The Gathering deck in your browser. Sign in to save your deck.',
 });
-useCanonicalUrl('/build');
 function signIn() {
   try {
     sessionStorage.setItem(GUEST_RETURN_KEY, 'true');
@@ -49,49 +50,79 @@ async function save() {
   saving.value = true;
   message.value = '';
   try {
-    let pending = draft.value.pendingSave;
-    if (pending && pending.userId !== userId)
-      throw new Error(
-        'Sign in with the account that started saving this draft to finish saving it.',
-      );
-    if (!pending) {
-      const result = await createListMutation.mutateAsync({
-        name: draft.value.name.trim() || 'My first deck',
-        format: draft.value.format,
-        description: draft.value.description,
-        visibility: visibility.value,
-        commanders: draft.value.commanders,
-      });
-      if (!result?.id)
+    await source.withDraftLock(async () => {
+      if (!total.value) return;
+      let pending = draft.value.pendingSave;
+      if (pending && pending.userId !== userId)
         throw new Error(
-          'Could not create your deck. Your browser draft is still here.',
+          'Sign in with the account that started saving this draft to finish saving it.',
         );
-      pending = { userId, listId: result.id };
-      persist({ ...draft.value, pendingSave: pending });
-    }
-    const result = await bulkEditListMutation.mutateAsync({
-      listId: pending.listId,
-      entries: guestDeckEntries(draft.value),
-    });
-    if (result.invalidCardNames.length)
-      throw new Error(
-        `Could not save: ${result.invalidCardNames.join(', ')}. Your browser draft has been kept.`,
-      );
-    await updateListMutation.mutateAsync({
-      listId: pending.listId,
-      updates: {
-        description: draft.value.description,
-        bracket: draft.value.bracket,
-      },
-    });
-    if (draft.value.avatarCardName)
-      await updateListAvatarMutation.mutateAsync({
+      if (!pending) {
+        await source.resolve(draft.value.cards.map((entry) => entry.name));
+        const result = await createListMutation.mutateAsync({
+          name: draft.value.name.trim() || 'My first deck',
+          format: draft.value.format,
+          description: draft.value.description,
+          visibility: visibility.value,
+          commanders: draft.value.commanders,
+        });
+        if (!result?.id)
+          throw new Error(
+            'Could not create your deck. Your browser draft is still here.',
+          );
+        pending = { userId, listId: result.id };
+        persist({ ...draft.value, pendingSave: pending });
+      }
+      const result = await bulkEditListMutation.mutateAsync({
         listId: pending.listId,
-        cardName: draft.value.avatarCardName,
+        entries: guestDeckEntries(draft.value),
       });
-    const listId = pending.listId;
-    persist(emptyGuestDeck());
-    await navigateTo(`/lists/${listId}`);
+      if (result.invalidCardNames.length)
+        throw new Error(
+          `Could not save: ${result.invalidCardNames.join(', ')}. Your browser draft has been kept.`,
+        );
+      const selections = source.items.value
+        .filter((item) => item.printing_id)
+        .map((item) => ({
+          oracle_id: item.oracle_id,
+          board: item.board,
+          printing_id: item.printing_id,
+          finish: item.finish,
+        }));
+      if (
+        selections.length !==
+        draft.value.cards.filter((card) => card.printingId).length
+      )
+        throw new Error(
+          'Printing choices are still loading. Your browser draft has been kept. Retry saving.',
+        );
+      if (selections.length) {
+        const { error } = await printingDb!.rpc('set_deck_printings', {
+          p_list: pending.listId,
+          p_items: selections,
+        });
+        if (error)
+          throw new Error(
+            'Could not save printing choices. Your browser draft has been kept. Retry saving.',
+          );
+      }
+      await updateListMutation.mutateAsync({
+        listId: pending.listId,
+        updates: {
+          description: draft.value.description,
+          bracket: draft.value.bracket,
+        },
+      });
+      if (draft.value.avatarCardName)
+        await updateListAvatarMutation.mutateAsync({
+          listId: pending.listId,
+          cardName: draft.value.avatarCardName,
+          printingId: draft.value.avatarPrintingId,
+        });
+      const listId = pending.listId;
+      persist(emptyGuestDeck());
+      await navigateTo(`/lists/${listId}`);
+    });
   } catch (error) {
     message.value =
       error instanceof Error
@@ -99,6 +130,18 @@ async function save() {
         : 'Could not save your deck. Your browser draft is still here.';
   } finally {
     saving.value = false;
+  }
+}
+async function resumeEditing() {
+  if (saving.value) return;
+  try {
+    await source.withDraftLock(() =>
+      persist({ ...draft.value, pendingSave: null }),
+    );
+    message.value = '';
+  } catch (error) {
+    message.value =
+      error instanceof Error ? error.message : 'Could not reopen this draft.';
   }
 }
 </script>
@@ -113,7 +156,7 @@ async function save() {
         deleted. Sign in to save your deck.
       </p>
       <UButton
-        v-if="!userProfile"
+        v-if="!ready || !userProfile"
         label="Sign in"
         icon="i-lucide-log-in"
         class="shrink-0"
@@ -162,7 +205,14 @@ async function save() {
         <UAlert
           v-if="draft.pendingSave"
           color="warning"
-          description="Saving started but did not finish. Retry saving to finish moving this draft to your account."
+          description="Retry saving to the same deck, or resume editing this browser draft. Resuming leaves any unfinished account deck in Your Decks."
+          :actions="[
+            {
+              label: 'Resume editing',
+              disabled: saving,
+              onClick: resumeEditing,
+            },
+          ]"
           class="mb-4"
         />
         <UAlert

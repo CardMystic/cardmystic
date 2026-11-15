@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { usePrintingImport } from '~/composables/usePrintingImport';
 import {
   exportDeck,
   applyDeckImport,
+  excludeExistingImportCards,
   parseDeckImport,
   summarizeImportBoards,
   type TransferCard,
@@ -11,21 +13,35 @@ const props = defineProps<{
   listId: string;
   name: string;
   cards: TransferCard[];
+  cardsLoading?: boolean;
+  printingError?: boolean;
   owner: boolean;
   deckFormat: string;
 }>();
+const emit = defineEmits<{ retryPrintings: [] }>();
 const open = defineModel<boolean>('open', { default: false });
 const mode = ref<'export' | 'import'>('export');
 const format = ref<DeckExportFormat>('text'),
   input = ref(''),
   inputFormat = ref<'text' | 'csv'>('text');
+const skipped = ref(0);
 const preview = ref<TransferCard[]>([]),
   error = ref(''),
   message = ref(''),
   busy = ref(false),
   applied = ref(false);
 const { addCardsByNameToListMutation, setCommanderMutation } = useCardLists();
-const output = computed(() => exportDeck(props.cards, format.value));
+const printingImport = usePrintingImport(props.listId);
+const exportPending = computed(
+  () =>
+    props.cardsLoading ||
+    props.cards.some(
+      (card) => card.printingId && (!card.set || !card.collectorNumber),
+    ),
+);
+const output = computed(() =>
+  exportPending.value ? '' : exportDeck(props.cards, format.value),
+);
 const importSummary = computed(() => summarizeImportBoards(preview.value));
 const unsupported = computed(() =>
   format.value === 'arena' || format.value === 'mtgo'
@@ -35,8 +51,10 @@ const unsupported = computed(() =>
     : 0,
 );
 function inspect() {
+  if (props.cardsLoading) return;
   error.value = '';
   preview.value = [];
+  skipped.value = 0;
   applied.value = false;
   message.value = '';
   try {
@@ -46,6 +64,9 @@ function inspect() {
         ...card,
         commander: false,
       }));
+    const imported = preview.value;
+    preview.value = excludeExistingImportCards(imported, props.cards);
+    skipped.value = imported.length - preview.value.length;
     if (preview.value.filter((card) => card.commander).length > 2) {
       preview.value = [];
       throw new Error('A deck can have at most two commanders.');
@@ -56,6 +77,7 @@ function inspect() {
 }
 watch([input, inputFormat], () => {
   preview.value = [];
+  skipped.value = 0;
   applied.value = false;
 });
 async function fileChanged(event: Event) {
@@ -71,15 +93,30 @@ async function fileChanged(event: Event) {
   inspect();
 }
 async function apply() {
-  if (!props.owner || busy.value || applied.value || !preview.value.length)
+  if (
+    !props.owner ||
+    props.cardsLoading ||
+    busy.value ||
+    applied.value ||
+    !preview.value.length
+  )
     return;
   busy.value = true;
   applied.value = true;
   error.value = '';
   message.value = '';
   try {
+    // Recheck against current contents in case the deck changed after previewing.
+    const newCards = excludeExistingImportCards(preview.value, props.cards);
+    skipped.value += preview.value.length - newCards.length;
+    preview.value = newCards;
+    if (!newCards.length) {
+      message.value = 'No cards were added.';
+      return;
+    }
+    const applyPrintings = await printingImport.prepare(newCards);
     const result = await applyDeckImport(
-      preview.value,
+      newCards,
       (board, cardNames) =>
         addCardsByNameToListMutation.mutateAsync({
           listId: props.listId,
@@ -91,6 +128,7 @@ async function apply() {
           listId: props.listId,
           commanderName,
         }),
+      applyPrintings,
     );
     const missing = result.invalidCardNames.length
       ? `Not found: ${result.invalidCardNames.join(', ')}.`
@@ -105,7 +143,9 @@ async function apply() {
         missing,
         result.failure.stage === 'cards'
           ? `Import stopped: ${result.failure.message} Check your list before retrying the last batch.`
-          : `Could not set the commander: ${result.failure.message}`,
+          : result.failure.stage === 'printings'
+            ? result.failure.message
+            : `Could not set the commander: ${result.failure.message}`,
       ]
         .filter(Boolean)
         .join(' ');
@@ -117,11 +157,16 @@ async function apply() {
           : 'Cards added.'
         : 'No cards were added.';
     }
+  } catch (cause) {
+    error.value =
+      cause instanceof Error ? cause.message : 'Could not import cards.';
+    applied.value = false;
   } finally {
     busy.value = false;
   }
 }
 function download() {
+  if (exportPending.value) return;
   const url = URL.createObjectURL(
     new Blob([output.value], {
       type:
@@ -137,6 +182,7 @@ function download() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 async function copy() {
+  if (exportPending.value) return;
   try {
     await navigator.clipboard.writeText(output.value);
     message.value = 'Copied.';
@@ -167,6 +213,14 @@ async function copy() {
           />
         </div>
         <template v-if="mode === 'export'">
+          <UAlert
+            v-if="printingError && exportPending"
+            color="error"
+            title="Could not load selected printings"
+            :actions="[
+              { label: 'Retry', onClick: () => emit('retryPrintings') },
+            ]"
+          />
           <USelect
             v-model="format"
             aria-label="Export format"
@@ -187,7 +241,11 @@ async function copy() {
             v-if="format === 'arena' || format === 'mtgo'"
             class="text-sm text-muted"
           >
-            Considering cards are excluded. No specific printing is selected.
+            Considering cards are excluded.{{
+              format === 'mtgo'
+                ? ' Magic Online text exports use card names only.'
+                : ''
+            }}
           </p>
           <UTextarea
             :model-value="output"
@@ -197,7 +255,12 @@ async function copy() {
             class="w-full"
           />
           <div class="flex gap-2">
-            <UButton label="Download" @click="download" /><UButton
+            <UButton
+              label="Download"
+              :disabled="exportPending"
+              @click="download"
+            /><UButton
+              :disabled="exportPending"
               label="Copy"
               variant="outline"
               @click="copy"
@@ -238,9 +301,18 @@ async function copy() {
           />
           <UButton
             label="Preview import"
-            :disabled="busy || !input.trim()"
+            :disabled="busy || cardsLoading || !input.trim()"
             @click="inspect"
           />
+          <p v-if="skipped" class="text-sm text-muted">
+            {{ skipped }}
+            {{
+              skipped === 1
+                ? 'card already in this list was'
+                : 'cards already in this list were'
+            }}
+            skipped.
+          </p>
           <template v-if="preview.length">
             <p>
               {{ importSummary }}
@@ -257,7 +329,7 @@ async function copy() {
             <UButton
               label="Add imported cards"
               :loading="busy"
-              :disabled="applied"
+              :disabled="applied || cardsLoading"
               @click="apply"
             />
           </template>

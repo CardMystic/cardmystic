@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { refDebounced } from '~/utils/refDebounced';
+import { useCardNames } from '~/composables/useBulkData';
 import { bracketOptions } from '~/utils/commanderBrackets';
 import { folderTrail } from '~/utils/deckFolders';
 import {
@@ -10,6 +12,7 @@ const browser = useBrowserDeckSource();
 const open = defineModel<boolean>('open', { default: false });
 const {
   updateListMutation,
+  updateListAvatarMutation,
   updateFormatMutation,
   updateVisibilityMutation,
   deleteListMutation,
@@ -26,6 +29,8 @@ const noun = computed(() =>
 );
 // This modal is mounted for one selection. Background refetches must not overwrite edits.
 const saved = reactive({
+  avatarCardName: props.list.avatar_card_name ?? '',
+  avatarPrintingId: props.list.avatar_printing_id ?? null,
   bracket: props.list.bracket ?? null,
   name: props.list.name ?? '',
   description: props.list.description ?? '',
@@ -35,6 +40,27 @@ const saved = reactive({
       ? ('public' as const)
       : ('private' as const),
 });
+const bannerCard = ref(saved.avatarCardName);
+const bannerPrinting = ref(saved.avatarPrintingId);
+const bannerSearch = ref('');
+const debouncedBannerSearch = refDebounced(bannerSearch, 150);
+const { data: cardNames } = useCardNames(() => open.value);
+const bannerOptions = computed(() => {
+  const query = debouncedBannerSearch.value.trim().toLowerCase();
+  const selected = bannerCard.value ? [bannerCard.value] : [];
+  if (query.length < 2) return selected;
+  for (const name of cardNames.value ?? []) {
+    if (selected.length >= 100) break;
+    if (name.toLowerCase().includes(query) && !selected.includes(name))
+      selected.push(name);
+  }
+  return selected;
+});
+const bannerChanged = computed(
+  () =>
+    bannerCard.value !== saved.avatarCardName ||
+    bannerPrinting.value !== saved.avatarPrintingId,
+);
 const bracket = ref(saved.bracket ?? 0);
 const name = ref(saved.name);
 const description = ref(saved.description);
@@ -58,6 +84,7 @@ const folderOptions = computed(() => [
 ]);
 const changed = computed(
   () =>
+    bannerChanged.value ||
     (bracket.value || null) !== saved.bracket ||
     name.value.trim() !== saved.name ||
     description.value !== saved.description ||
@@ -103,6 +130,15 @@ async function save() {
       saved.bracket = bracket.value || null;
       saved.name = name.value.trim();
       saved.description = description.value;
+    }
+    if (bannerChanged.value && bannerCard.value) {
+      await updateListAvatarMutation.mutateAsync({
+        listId: props.list.id,
+        cardName: bannerCard.value,
+        printingId: bannerPrinting.value,
+      });
+      saved.avatarCardName = bannerCard.value;
+      saved.avatarPrintingId = bannerPrinting.value;
     }
     if (format.value !== saved.format) {
       await updateFormatMutation.mutateAsync({
@@ -187,6 +223,30 @@ async function move() {
                 :rows="3"
                 class="w-full"
             /></UFormField>
+            <UFormField label="Banner image">
+              <UInputMenu
+                v-model="bannerCard"
+                v-model:search-term="bannerSearch"
+                :items="bannerOptions"
+                aria-label="Banner image"
+                placeholder="Search for a card..."
+                icon="i-lucide-search"
+                class="w-full"
+                @update:model-value="bannerPrinting = null"
+              />
+              <CardArtPrintingSelect
+                v-model="bannerPrinting"
+                :card-name="bannerCard"
+                :busy="busy"
+                class="mt-2"
+              />
+              <img
+                v-if="bannerCard"
+                :src="scryfallArtCropUrl(bannerCard, bannerPrinting)"
+                alt="Banner preview"
+                class="mt-2 h-24 w-full rounded-lg object-cover object-top"
+              />
+            </UFormField>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <UFormField v-if="list.kind !== 'collection'" label="Format"
                 ><USelect

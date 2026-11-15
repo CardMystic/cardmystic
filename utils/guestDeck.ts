@@ -1,3 +1,4 @@
+import { censorUserText } from './textModeration';
 import { z } from 'zod';
 import { CardListFormatSchema } from '~/models/cardListModel';
 
@@ -10,6 +11,8 @@ const entrySchema = z.object({
   name: z.string().min(1).max(200),
   quantity: z.number().int().min(1).max(100),
   board: z.enum(guestBoards),
+  printingId: z.guid().optional(),
+  finish: z.enum(['nonfoil', 'foil', 'etched']).optional(),
 });
 export const guestDeckSchema = z.object({
   version: z.literal(1),
@@ -18,6 +21,7 @@ export const guestDeckSchema = z.object({
   description: z.string().max(1000).default(''),
   bracket: z.number().int().min(1).max(5).nullable().default(null),
   avatarCardName: z.string().max(200).nullable().default(null),
+  avatarPrintingId: z.string().uuid().nullable().default(null),
   cards: z.array(entrySchema).max(1000),
   commanders: z.array(z.string().min(1).max(200)).max(2),
   pendingSave: z.object({ userId: z.guid(), listId: z.guid() }).nullable(),
@@ -31,6 +35,7 @@ export function emptyGuestDeck(): GuestDeck {
     description: '',
     bracket: null,
     avatarCardName: null,
+    avatarPrintingId: null,
     cards: [],
     commanders: [],
     pendingSave: null,
@@ -96,6 +101,8 @@ export function editGuestDeck(
     throw new Error('Finish saving this draft before editing it.');
   const next = structuredClone(deck);
   edit(next);
+  next.name = censorUserText(next.name);
+  next.description = censorUserText(next.description);
   if (next.cards.reduce((total, card) => total + card.quantity, 0) > 1000) {
     throw new Error(
       'Browser drafts support up to 1,000 cards. Save your deck to keep building.',
@@ -109,6 +116,7 @@ export function setGuestCopies(
   name: string,
   board: GuestBoard,
   quantity: number,
+  printing?: Pick<GuestDeck['cards'][number], 'printingId' | 'finish'>,
 ) {
   const index = deck.cards.findIndex(
     (card) => card.name === name && card.board === board,
@@ -118,7 +126,7 @@ export function setGuestCopies(
     if (board === 'Mainboard')
       deck.commanders = deck.commanders.filter((card) => card !== name);
   } else if (index >= 0) deck.cards[index].quantity = quantity;
-  else deck.cards.push({ name, board, quantity });
+  else deck.cards.push({ name, board, quantity, ...printing });
 }
 
 export function guestDeckEntries(deck: GuestDeck) {

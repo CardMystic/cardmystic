@@ -14,6 +14,108 @@ export type Database = {
   };
   public: {
     Tables: {
+      user_default_printings: {
+        Row: {
+          user_id: string;
+          oracle_id: string;
+          printing_id: string;
+          finish: string;
+        };
+        Insert: {
+          user_id: string;
+          oracle_id: string;
+          printing_id: string;
+          finish: string;
+        };
+        Update: {
+          user_id?: string;
+          oracle_id?: string;
+          printing_id?: string;
+          finish?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_default_printings_printing_id_fkey';
+            columns: ['printing_id'];
+            isOneToOne: false;
+            referencedRelation: 'card_printings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      card_printings: {
+        Row: {
+          id: string;
+          oracle_id: string;
+          set_code: string;
+          collector_number: string;
+          lang: string;
+          released_at: string;
+          finish_mask: number;
+          image_paths: string[];
+          flavor_name: string | null;
+          tcgplayer_id: number | null;
+          usd_cents: number | null;
+          foil_cents: number | null;
+          etched_cents: number | null;
+        };
+        Insert: {
+          id: string;
+          oracle_id: string;
+          set_code: string;
+          collector_number: string;
+          lang: string;
+          released_at: string;
+          finish_mask: number;
+          image_paths: string[];
+          flavor_name: string | null;
+          tcgplayer_id: number | null;
+          usd_cents: number | null;
+          foil_cents: number | null;
+          etched_cents: number | null;
+        };
+        Update: {
+          id?: string;
+          oracle_id?: string;
+          set_code?: string;
+          collector_number?: string;
+          lang?: string;
+          released_at?: string;
+          finish_mask?: number;
+          image_paths?: string[];
+          flavor_name?: string | null;
+          tcgplayer_id?: number | null;
+          usd_cents?: number | null;
+          foil_cents?: number | null;
+          etched_cents?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'card_printings_set_code_fkey';
+            columns: ['set_code'];
+            isOneToOne: false;
+            referencedRelation: 'card_printing_sets';
+            referencedColumns: ['code'];
+          },
+        ];
+      };
+      card_printing_sets: {
+        Row: { code: string; name: string };
+        Insert: { code: string; name: string };
+        Update: { code?: string; name?: string };
+        Relationships: [];
+      };
+      card_printing_sync: {
+        Row: { id: boolean; source_version: string; completed_at: string };
+        Insert: { id: boolean; source_version: string; completed_at: string };
+        Update: {
+          id?: boolean;
+          source_version?: string;
+          completed_at?: string;
+        };
+        Relationships: [];
+      };
+
       deck_business_cards: {
         Row: {
           list_id: string;
@@ -92,6 +194,26 @@ export type Database = {
         Relationships: [];
       };
 
+      card_comments: {
+        Row: {
+          id: number;
+          oracle_id: string;
+          user_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: { oracle_id: string; body: string };
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: 'card_comments_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       article_comments: {
         Row: {
           article_id: string;
@@ -221,6 +343,8 @@ export type Database = {
       };
       card_list_items: {
         Row: {
+          printing_id: string | null;
+          finish: string | null;
           board: string;
           card_id: string | null;
           created_at: string;
@@ -231,6 +355,8 @@ export type Database = {
           oracle_id: string;
         };
         Insert: {
+          printing_id?: string | null;
+          finish?: string | null;
           board?: string;
           card_id?: string | null;
           created_at?: string;
@@ -241,6 +367,8 @@ export type Database = {
           oracle_id: string;
         };
         Update: {
+          printing_id?: string | null;
+          finish?: string | null;
           board?: string;
           card_id?: string | null;
           created_at?: string;
@@ -312,7 +440,12 @@ export type Database = {
           summary?: Json;
           undo?: Json;
         };
-        Update: { action?: string; snapshot?: Json; summary?: Json; undo?: Json };
+        Update: {
+          action?: string;
+          snapshot?: Json;
+          summary?: Json;
+          undo?: Json;
+        };
         Relationships: [];
       };
       card_lists: {
@@ -323,6 +456,7 @@ export type Database = {
           kind: string;
           folder_id: string | null;
           avatar_card_name: string | null;
+          avatar_printing_id: string | null;
           color_ratios: Json;
           commanders: string[];
           comment_count: number;
@@ -345,6 +479,7 @@ export type Database = {
           kind?: string;
           folder_id?: string | null;
           avatar_card_name?: string | null;
+          avatar_printing_id?: string | null;
           color_ratios?: Json;
           commanders?: string[];
           comment_count?: number;
@@ -367,6 +502,7 @@ export type Database = {
           kind?: string;
           folder_id?: string | null;
           avatar_card_name?: string | null;
+          avatar_printing_id?: string | null;
           color_ratios?: Json;
           commanders?: string[];
           comment_count?: number;
@@ -528,6 +664,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_card_name: string;
+          avatar_printing_id: string | null;
           created_at: string;
           follower_count: number;
           id: string;
@@ -538,6 +675,7 @@ export type Database = {
         };
         Insert: {
           avatar_card_name?: string;
+          avatar_printing_id?: string | null;
           created_at?: string;
           follower_count?: number;
           id: string;
@@ -548,6 +686,7 @@ export type Database = {
         };
         Update: {
           avatar_card_name?: string;
+          avatar_printing_id?: string | null;
           created_at?: string;
           follower_count?: number;
           id?: string;
@@ -608,6 +747,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      set_deck_printings: {
+        Args: { p_list: string; p_items: Json };
+        Returns: undefined;
+      };
+      sync_card_printings: {
+        Args: { p_sets: Json; p_rows: Json };
+        Returns: undefined;
+      };
       update_card_list_contents: {
         Args: { p_list: string; p_boards: string[]; p_items: Json };
         Returns: Json;

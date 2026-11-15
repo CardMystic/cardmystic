@@ -1,4 +1,5 @@
 import { Marked, type TokenizerAndRendererExtension } from 'marked';
+import { primerDeckExtension } from './primerDeckEmbeds';
 
 /** Match one inline color, including nested Markdown links and escaped brackets. */
 export function matchMarkdownTextColor(source: string) {
@@ -59,11 +60,32 @@ const colorExtension: TokenizerAndRendererExtension = {
   },
 };
 
+// Image embeds get their own paragraph, while adjacent cards stay together.
+// Preserve code spans and fenced code when inserting these block boundaries.
+function separateCardImageRows(source: string) {
+  return source.replace(
+    /(`+)[\s\S]*?\1(?!`)|(~{3,})[^\n]*\n[\s\S]*?\2|CARDIMGTOKEN\d+CARDIMGTOKEN(?:[ \t]*(?:\r?\n[ \t]*)?CARDIMGTOKEN\d+CARDIMGTOKEN)*/g,
+    (match, backticks, fence) =>
+      backticks || fence ? match : `\n\n${match}\n\n`,
+  );
+}
+
 const coloredMarkdown = new Marked({ extensions: [colorExtension] });
+const primerMarkdown = new Marked({
+  extensions: [colorExtension, primerDeckExtension],
+});
 
 /** Output still goes through the normal HTML sanitizer before display. */
-export function parseColoredMarkdown(source: string): string {
-  return coloredMarkdown.parse(source, { async: false });
+export function parseColoredMarkdown(
+  source: string,
+  deckEmbeds = false,
+): string {
+  return (deckEmbeds ? primerMarkdown : coloredMarkdown).parse(
+    separateCardImageRows(source),
+    {
+      async: false,
+    },
+  );
 }
 
 /** Keep Markdown block markers outside the inline color syntax. */

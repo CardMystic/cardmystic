@@ -3,6 +3,7 @@ import {
   parseDeckImport,
   exportDeck,
   applyDeckImport,
+  excludeExistingImportCards,
   summarizeImportBoards,
   type TransferCard,
 } from '~/utils/deckTransfer';
@@ -10,6 +11,50 @@ import { analyzeDeck } from '~/utils/deckAnalysis';
 import type { ScryfallCard } from '~/models/cardModel';
 
 describe('deck import and export', () => {
+  it('lets the printing resolver select a supported finish for an Arena export', () => {
+    const card: TransferCard = {
+      name: 'Sauron, the Lidless Eye',
+      set: 'ltr',
+      collectorNumber: '288',
+      board: 'Mainboard',
+      quantity: 1,
+      finish: 'foil',
+    };
+    const [arena] = parseDeckImport(exportDeck([card], 'arena'), 'text');
+    expect(arena).toMatchObject({ set: 'ltr', collectorNumber: '288' });
+    expect(arena.finish).toBeUndefined();
+    expect(parseDeckImport(exportDeck([card], 'text'), 'text')[0].finish).toBe(
+      'foil',
+    );
+  });
+  it('skips existing cards across boards and printings without changing quantities or commander status', () => {
+    const existing: TransferCard[] = [
+      { name: 'Sol Ring', quantity: 1, board: 'Mainboard' },
+      { name: 'Island', quantity: 10, board: 'Sideboard' },
+      {
+        name: 'Tamiyo, Inquisitive Student // Tamiyo, Seasoned Scholar',
+        quantity: 1,
+        board: 'Mainboard',
+        commander: true,
+      },
+      { name: 'Negate', quantity: 1, board: 'Considering' },
+    ];
+    const incoming = parseDeckImport(
+      'Commander\n1 Tamiyo, Inquisitive Student\nMainboard\n20 Island\n2 Swamp\n\n1 sol ring (CMM) 410 *F*\n2 Negate',
+      'text',
+    );
+    const original = structuredClone(existing);
+    expect(excludeExistingImportCards(incoming, existing)).toEqual([
+      { name: 'Swamp', quantity: 2, board: 'Mainboard', commander: false },
+    ]);
+    expect(existing).toEqual(original);
+    expect(
+      excludeExistingImportCards(
+        parseDeckImport(exportDeck(existing, 'csv'), 'csv'),
+        existing,
+      ),
+    ).toEqual([]);
+  });
   it('counts quantities by board rather than confusing entries with copies', () => {
     expect(
       summarizeImportBoards(
@@ -63,13 +108,11 @@ describe('deck import and export', () => {
   it('reports no confirmed additions when every name is unknown', async () => {
     const result = await applyDeckImport(
       parseDeckImport('1 Missing', 'text'),
-      vi
-        .fn()
-        .mockResolvedValue({
-          addedCount: 0,
-          updatedCount: 0,
-          invalidCardNames: ['Missing'],
-        }),
+      vi.fn().mockResolvedValue({
+        addedCount: 0,
+        updatedCount: 0,
+        invalidCardNames: ['Missing'],
+      }),
       vi.fn(),
     );
     expect(result.confirmedEntries).toBe(0);

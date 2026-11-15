@@ -3,19 +3,35 @@
     class="mx-auto pb-8 relative z-10 w-full"
     :class="{ 'pb-24': showStickyFooter }"
   >
+    <LazyPrintingPicker
+      v-if="printings.target.value"
+      :key="`${printings.target.value.board}:${printings.target.value.card.card_data.oracle_id}`"
+      :oracle-id="printings.target.value.card.card_data.oracle_id"
+      :name="printings.target.value.card.card_data.name"
+      :selected-id="printings.selection.value?.printing_id"
+      :selected-finish="printings.selection.value?.finish"
+      :save="printings.save"
+      @close="printings.target.value = null"
+    />
+    <UAlert
+      v-if="printings.error.value"
+      color="error"
+      title="Could not load selected printings"
+      :actions="[
+        {
+          label: 'Retry',
+          onClick: () => {
+            void printings.retry();
+          },
+        },
+      ]"
+      class="mb-4"
+    />
     <CardListBanner
       :list="list"
       :is-loading="isLoadingLists"
       :is-owner="isOwner"
     >
-      <template #social>
-        <DecklistSocialBar
-          v-if="list && list.visibility === 'public'"
-          :list="list"
-          :owner="!isOwner ? decklistOwner : null"
-          embedded
-        />
-      </template>
       <template #actions>
         <DeckBusinessCard
           v-if="!isBrowser && list && !isCollection"
@@ -23,6 +39,7 @@
           :is-owner="isOwner"
           :entries="analysisCards"
           :cards-loading="loading"
+          :has-primer="hasPrimer"
         />
       </template>
     </CardListBanner>
@@ -44,24 +61,26 @@
         <UButton
           v-if="!isCollection"
           label="Recommend"
-          icon="i-lucide-box"
+          class="hidden md:inline-flex"
+          v-bind="cardActionStyles.recommendations"
           variant="ghost"
-          :disabled="loading || !cards?.length"
+          :disabled="!cardActionsReady"
           @click="goToRecommend"
         />
-        <DeckPlaytest
-          v-if="!isCollection"
-          :entries="analysisCards"
-          :format="list.format"
-          :name="list.name || 'Deck'"
-          :loading="loading"
-        />
+        <div v-if="!isCollection" class="hidden md:block">
+          <DeckPlaytest
+            ref="deckPlaytest"
+            :entries="analysisCards"
+            :format="list.format"
+            :name="list.name || 'Deck'"
+            :loading="loading"
+          />
+        </div>
         <UButton
-          icon="i-heroicons-shopping-cart"
-          color="success"
+          v-bind="cardActionStyles.buy"
           variant="ghost"
-          :label="`Buy ($${totalPrice.toFixed(2)})`"
-          :disabled="loading || !cards?.length"
+          :label="buyLabel"
+          :disabled="!cardActionsReady"
           @click="openMassEntry"
         />
         <UButton
@@ -73,6 +92,7 @@
           "
           icon="i-lucide-search"
           variant="ghost"
+          class="hidden md:inline-flex"
           :aria-expanded="searchOpen"
           @click="
             proAction(() => {
@@ -109,6 +129,12 @@
           v-model:mode="highlightMode"
           v-model:target="highlightTarget"
           :cards="highlightCards"
+          :label-names="highlightLabelNames"
+          :labels-loading="
+            highlightMode === 'tags'
+              ? tagsPending
+              : collectionLabels.isFetching.value
+          "
           @ownership="ownershipQuantities = $event"
         />
         <UButton
@@ -126,6 +152,17 @@
               : (multiTag.active.value = true)
           "
         />
+        <UDropdownMenu :items="labelVisibilityMenu">
+          <UButton
+            icon="i-lucide-eye"
+            aria-label="Show / Hide"
+            title="Show / Hide"
+            variant="ghost"
+            :color="
+              showMetadata || visibleLabels.length ? 'primary' : 'neutral'
+            "
+          />
+        </UDropdownMenu>
         <UPopover>
           <UButton
             icon="i-lucide-settings-2"
@@ -168,11 +205,6 @@
       :oracle-ids="listItems.map((item) => item.oracle_id)"
     />
 
-    <DeckSettingsModal
-      v-if="isOwner && list && settingsOpen"
-      v-model:open="settingsOpen"
-      :list="list"
-    />
     <DeckTransfer
       v-if="list"
       v-model:open="transferOpen"
@@ -180,63 +212,17 @@
       :name="list.name || 'Untitled list'"
       :deck-format="list.format"
       :cards="transferCards"
+      :cards-loading="loading || transferCards.length < listItems.length"
+      :printing-error="!!printings.error.value"
+      @retry-printings="printings.retry()"
       :owner="isOwner"
     />
 
-    <DeckCuts
-      v-if="!isBrowser && isOwner && !isCollection"
-      v-model:open="cutsOpen"
-      :oracle-ids="oracleIds"
-      :list-id="listId"
-      :revision="listRevision"
-    />
     <LazyDeckGameChangerReplacements
       v-if="gameChangerReplacementsOpen && !isCollection"
       v-model:open="gameChangerReplacementsOpen"
       :entries="analysisCards"
     />
-    <template v-if="canSuggest && pro.isPro.value">
-      <p
-        v-if="(addsOpen || showNewCards) && deckBudget.error.value"
-        role="alert"
-        class="text-error text-sm my-3"
-      >
-        Could not load the saved card budget.
-        <UButton
-          label="Retry budget"
-          variant="link"
-          @click="deckBudget.retry()"
-        />
-      </p>
-      <DeckSuggestions
-        v-if="addsOpen"
-        id="deck-suggestions"
-        :list-id="listId"
-        :oracle-ids="oracleIds"
-        :ready="!loading"
-        :saved-budget="deckBudget.budget.value"
-        :budget-ready="deckBudget.ready.value"
-        :budget-saving="deckBudget.saving.value"
-        :save-budget="deckBudget.save"
-        @close="addsOpen = false"
-      />
-      <DeckSuggestions
-        v-if="showNewCards"
-        :key="newRelease.status.value?.set?.slug || 'latest'"
-        id="deck-new-cards"
-        :list-id="listId"
-        :oracle-ids="oracleIds"
-        :ready="!loading"
-        :saved-budget="deckBudget.budget.value"
-        :budget-ready="deckBudget.ready.value"
-        :budget-saving="deckBudget.saving.value"
-        :save-budget="deckBudget.save"
-        :automatic="!newCardsOpen"
-        :acknowledge="newRelease.acknowledge"
-        newest-set
-        @close="closeNewCards"
-      />
-    </template>
     <DeckSearch
       v-if="!isBrowser && list"
       v-model:open="searchOpen"
@@ -246,7 +232,7 @@
       @results="receiveSearchResults($event)"
     />
     <p v-if="isCollection" class="text-sm text-muted mb-3">
-      Collection · {{ totalCardCount.toLocaleString() }} copies. Grouping
+      Collection · {{ totalCardCount.toLocaleString('en-US') }} copies. Grouping
       applies to the cards on this page.
     </p>
 
@@ -255,16 +241,34 @@
     </p>
 
     <p
-      v-if="labelsError && groupBy === 'tags'"
+      v-if="
+        labelsError &&
+        (groupBy === 'tags' ||
+          highlightMode === 'tags' ||
+          visibleLabels.includes('tags'))
+      "
       role="alert"
       class="text-sm text-error"
     >
-      Could not load card groups.
+      Could not load your card tags.
       <UButton label="Retry groups" variant="link" @click="retryLabels" />
+    </p>
+    <p
+      v-if="labelIds.length && collectionLabels.isError.value"
+      role="alert"
+      class="text-sm text-error"
+    >
+      Could not load card labels.
+      <UButton
+        label="Retry labels"
+        variant="link"
+        @click="collectionLabels.refetch()"
+      />
     </p>
     <UPagination
       v-if="isCollection && filteredOracleIds.length > 100"
-      v-model:page="collectionPage"
+      :page="collectionPage"
+      :to="collectionPageLink"
       :total="filteredOracleIds.length"
       :items-per-page="100"
       class="my-3 justify-start"
@@ -282,13 +286,15 @@
     <!-- Cards Results -->
     <ClientOnly>
       <CardListResults
-        v-if="searchMatches?.length !== 0"
+        :collection="isCollection"
+        :hide-empty-state="searchMatches?.length === 0"
         ref="cardListResultsRef"
         class="mb-8"
         :view="view"
-        :isLoading="loading"
+        :isLoading="loading || loadingGroupLabels"
         :is-owner="isOwner"
         :groups="cardGroups"
+        :suggestions="visibleSuggestions"
         :commander-oracle-ids="commanderOracleIds"
         :commander-color-identity="commanderColorIdentity"
         :list-items-map="listItemsMap"
@@ -301,15 +307,96 @@
         @clearCommander="handleClearCommander"
         @updateNumCopies="handleUpdateNumCopies"
         @changeBoard="handleChangeBoard"
-      />
+      >
+        <template #before-cards="{ setPreviewCard, clearPendingPreviewCard }">
+          <DeckCuts
+            v-if="!isBrowser && isOwner && !isCollection"
+            v-model:open="cutsOpen"
+            :oracle-ids="oracleIds"
+            :list-id="listId"
+            :revision="listRevision"
+            @preview="setPreviewCard($event, 'Mainboard')"
+            @cancel-preview="clearPendingPreviewCard"
+          />
+          <template v-if="canSuggest && pro.isPro.value">
+            <p
+              v-if="(addsOpen || showNewCards) && deckBudget.error.value"
+              role="alert"
+              class="text-error text-sm my-3"
+            >
+              Could not load the saved card budget.
+              <UButton
+                label="Retry budget"
+                variant="link"
+                @click="deckBudget.retry()"
+              />
+            </p>
+            <DeckSuggestions
+              v-if="addsOpen"
+              ref="suggestedAdds"
+              id="deck-suggestions"
+              title="Suggested cards"
+              :list-id="listId"
+              :oracle-ids="oracleIds"
+              :ready="!loading"
+              :saved-budget="deckBudget.budget.value"
+              :budget-ready="deckBudget.ready.value"
+              :budget-saving="deckBudget.saving.value"
+              :save-budget="deckBudget.save"
+              @close="addsOpen = false"
+              @preview="setPreviewCard($event, 'Suggested')"
+              @cancel-preview="clearPendingPreviewCard"
+            />
+            <DeckSuggestions
+              v-if="showNewCards"
+              ref="suggestedNewCards"
+              :key="newRelease.status.value?.set?.slug || 'latest'"
+              id="deck-new-cards"
+              :title="`New Cards for ${list?.name || 'Untitled deck'}`"
+              :list-id="listId"
+              :oracle-ids="oracleIds"
+              :ready="!loading"
+              :saved-budget="deckBudget.budget.value"
+              :budget-ready="deckBudget.ready.value"
+              :budget-saving="deckBudget.saving.value"
+              :save-budget="deckBudget.save"
+              :automatic="!newCardsOpen"
+              :acknowledge="newRelease.acknowledge"
+              newest-set
+              @close="closeNewCards"
+              @preview="setPreviewCard($event, 'Suggested')"
+              @cancel-preview="clearPendingPreviewCard"
+            />
+          </template>
+        </template>
+      </CardListResults>
       <template #fallback>
-        <CardListResultsSkeleton :view="view" />
+        <ul
+          v-if="publicCardLinks.length"
+          aria-label="Cards in this list"
+          class="my-3 grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <li
+            v-for="item in publicCardLinks"
+            :key="item.board + item.oracle_id"
+          >
+            {{ item.num_copies }}×
+            <NuxtLink
+              :to="`/card/${item.oracle_id}`"
+              no-prefetch
+              class="text-primary hover:underline"
+              >{{ item.card_name }}</NuxtLink
+            >
+          </li>
+        </ul>
+        <CardListResultsSkeleton v-else :view="view" />
       </template>
     </ClientOnly>
 
     <UPagination
       v-if="isCollection && filteredOracleIds.length > 100"
-      v-model:page="collectionPage"
+      :page="collectionPage"
+      :to="collectionPageLink"
       :total="filteredOracleIds.length"
       :items-per-page="100"
       :sibling-count="1"
@@ -320,20 +407,48 @@
 
     <DeckStatsPanel
       ref="statsPanel"
-      v-if="list && !isCollection && analysisCards.length"
+      v-if="
+        list &&
+        !isCollection &&
+        (initialAnalytics ||
+          (mounted &&
+            (analysisCards.length ||
+              (loading &&
+                listItems.some((item) => item.board === 'Mainboard')))))
+      "
+      :initial-analytics="initialAnalytics"
       :list-id="listId"
       :revision="listRevision"
-      :format="list.format"
-      :entries="analysisCards"
+      :entries="mounted ? analysisCards : []"
       :loading="loading"
-      :is-owner="isOwner"
-    />
+      :is-owner="mounted && isOwner"
+      :optional-roles="preferences.tracked_roles"
+      @update:optional-roles="updatePreferences({ tracked_roles: $event })"
+    >
+      <template #tags>
+        <DeckTagCounts
+          v-if="mounted && pro.userId.value"
+          :key="listId + pro.userId.value"
+          :items="listItems"
+          :labels="cardLabels"
+          :loading="isLoadingItems || loadingCardTags"
+          :error="!!labelsError"
+          @retry="retryLabels"
+        />
+      </template>
+    </DeckStatsPanel>
 
     <!-- Comments (public lists only) -->
     <DecklistComments
       v-if="list && list.visibility === 'public'"
       :list-id="listId"
       :is-list-owner="isOwner"
+    />
+
+    <RelatedContent
+      v-if="list && !isCollection && !isBrowser"
+      :source-id="listId"
+      kind="deck"
     />
   </div>
 
@@ -396,11 +511,11 @@
         >{{ totalCardCount }} cards</span
       >
       <UButton
-        icon="i-lucide-shopping-cart"
-        color="success"
+        v-bind="cardActionStyles.buy"
         variant="ghost"
         size="sm"
-        :label="`Buy ($${totalPrice.toFixed(2)})`"
+        :label="buyLabel"
+        :disabled="!cardActionsReady"
         @click="openMassEntry"
       />
       <template v-if="!isCollection && analysisCards.length">
@@ -445,6 +560,7 @@
 </template>
 
 <script setup lang="ts">
+import { cardActionStyles } from '~/utils/card-actions';
 import { getUsdPrice, isBasicLand } from '~/utils/cardPrice';
 import { useCardLists, useOwnedDecklist } from '~/composables/useCardLists';
 import { usePublicDecklist } from '~/composables/useDiscovery';
@@ -466,7 +582,18 @@ import type {
 } from '~/models/preferencesModel';
 import type { ListSearchResults } from '~/composables/useLibrary';
 import type { DropdownMenuItem } from '@nuxt/ui';
-import type { DeckHighlightMode } from '~/utils/deckHighlight';
+import {
+  cardLabelGroups,
+  isLabelGroup,
+  type DeckHighlightMode,
+  type DeckCardLabels,
+  type VisibleLabelGroup,
+} from '~/utils/deckHighlight';
+import {
+  deckCardLabelsKey,
+  deckTagDialogCountKey,
+} from '~/composables/useDeckHighlight';
+import type { DeckAnalytics } from '~/utils/deckAnalytics';
 const props = defineProps<{ listId: string }>();
 const browser = useBrowserDeckSource();
 const isBrowser = !!browser;
@@ -502,6 +629,7 @@ const { data: ssrOgImageUrl } = await useAsyncData(
       ssrPrimaryCardName.value,
       runtimeConfig.public.backendPath,
       requestFetch,
+      ssrPublicList.value?.decklist?.avatar_printing_id,
     );
   },
 );
@@ -543,16 +671,72 @@ const pro = useLibraryApi();
 const searchResult = ref<ListSearchResults | null>(null);
 const searchMatches = computed(() => searchResult.value?.oracleIds ?? null);
 const searchPreferences = ref<DeckDisplayPreferences | null>(null);
-const collectionPage = ref(1);
+const route = useRoute();
+function collectionPageLink(page: number) {
+  return {
+    path: route.path,
+    query: { ...route.query, page: page > 1 ? String(page) : undefined },
+    hash: route.hash,
+  };
+}
+const collectionPage = computed({
+  get: () => {
+    const page = Number(route.query.page);
+    if (!Number.isSafeInteger(page) || page < 1) return 1;
+    return Math.min(
+      page,
+      Math.max(1, Math.ceil(filteredOracleIds.value.length / 100)),
+    );
+  },
+  set: (page: number) => {
+    if (isCollection.value && (route.query.page || page > 1))
+      void router.replace(collectionPageLink(page));
+  },
+});
 const listRevision = computed(() =>
   JSON.stringify(
     listItems.value.map((item) => [
       item.oracle_id,
       item.board,
       item.num_copies,
+      item.is_commander,
+      item.printing_id,
+      item.finish,
     ]),
   ),
 );
+// Seed only the anonymous public response. Owner and browser drafts load in the editor.
+const mounted = ref(false);
+const publicAnalytics = useState<{
+  revision: string;
+  data: DeckAnalytics;
+} | null>(`initial-deck-analytics-${listId}`, () => null);
+const initialAnalytics = computed(() => {
+  const snapshot = publicAnalytics.value;
+  if (snapshot && (!mounted.value || snapshot.revision === listRevision.value))
+    return snapshot.data;
+});
+onBeforeUnmount(() => {
+  publicAnalytics.value = null;
+});
+onServerPrefetch(async () => {
+  const snapshot = ssrPublicList.value;
+  if (
+    snapshot?.decklist.visibility !== 'public' ||
+    snapshot.decklist.kind === 'collection' ||
+    !snapshot.items.some((item) => item.board === 'Mainboard')
+  )
+    return;
+  try {
+    const data = await requestFetch<DeckAnalytics>(
+      `${runtimeConfig.public.backendPath}/library/lists/${encodeURIComponent(listId)}/analytics`,
+      { retry: 0, timeout: 5000 },
+    );
+    publicAnalytics.value = { revision: listRevision.value, data };
+  } catch {
+    // The editor retries analytics after hydration if the public endpoint was unavailable.
+  }
+});
 // Record a view once per visit when the deck resolves as public
 useDecklistViewTracker(
   listIdRef,
@@ -564,98 +748,90 @@ const { primerText } = usePrimer(listIdRef);
 const hasPrimer = computed(() => !!primerText.value?.trim());
 
 // ---- SEO ----
-const canonicalUrl = computed(() =>
-  isBrowser
-    ? 'https://cardmystic.com/build'
-    : `https://cardmystic.com/lists/${listId}`,
-);
+if (!isBrowser) {
+  const canonicalUrl = computed(() => `https://cardmystic.com/lists/${listId}`);
+  const isPublicList = computed(() => list.value?.visibility === 'public');
+  const seo = computed(() =>
+    buildDecklistSeo(
+      list.value ?? null,
+      decklistOwner.value?.username,
+      ssrOgImageUrl.value,
+    ),
+  );
 
-const isPublicList = computed(() => list.value?.visibility === 'public');
+  useSeoMeta({
+    title: () => seo.value.title,
+    description: () => seo.value.description,
+    robots: () => seo.value.robots,
+    ogTitle: () => seo.value.title,
+    ogDescription: () => seo.value.description,
+    ogType: () => (isCollection.value ? 'website' : 'article'),
+    ogUrl: () => canonicalUrl.value,
+    ogImage: () => seo.value.image,
+    ogImageAlt: () => seo.value.imageAlt,
+    ogSiteName: 'CardMystic',
+    twitterCard: 'summary_large_image',
+    twitterTitle: () => seo.value.title,
+    twitterDescription: () => seo.value.description,
+    twitterImage: () => seo.value.image,
+  });
 
-const seo = computed(() =>
-  isBrowser
-    ? {
-        title: 'Build a deck - CardMystic',
-        description:
-          'Build a Magic: The Gathering deck in your browser. Sign in to save your deck.',
-        robots: 'index, follow',
-        image: undefined,
-        imageAlt: undefined,
-      }
-    : buildDecklistSeo(
-        list.value ?? null,
-        decklistOwner.value?.username,
-        ssrOgImageUrl.value,
-      ),
-);
-
-useSeoMeta({
-  title: () => seo.value.title,
-  description: () => seo.value.description,
-  robots: () => seo.value.robots,
-  ogTitle: () => seo.value.title,
-  ogDescription: () => seo.value.description,
-  ogType: 'article',
-  ogUrl: () => canonicalUrl.value,
-  ogImage: () => seo.value.image,
-  ogImageAlt: () => seo.value.imageAlt,
-  ogSiteName: 'CardMystic',
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => seo.value.title,
-  twitterDescription: () => seo.value.description,
-  twitterImage: () => seo.value.image,
-});
-
-useHead({
-  link: [{ rel: 'canonical', href: () => canonicalUrl.value }],
-  script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: () => {
-        if (!list.value || !isPublicList.value) return '';
-        const author =
-          (list.value as any).username || decklistOwner.value?.username;
-        const authorId = (list.value as any).user_id || decklistOwner.value?.id;
-        return safeJsonLd({
-          '@context': 'https://schema.org',
-          '@type': 'CreativeWork',
-          name: list.value.name || 'Untitled deck',
-          description: seo.value.description,
-          image: seo.value.image,
-          url: canonicalUrl.value,
-          genre: 'Magic: The Gathering deck',
-          dateModified: (list.value as any).updated_at ?? undefined,
-          dateCreated: (list.value as any).created_at ?? undefined,
-          author: author
-            ? {
-                '@type': 'Person',
-                name: author,
-                url: authorId
-                  ? `https://cardmystic.com/user/${authorId}`
-                  : undefined,
-              }
-            : undefined,
-          about: {
-            '@type': 'Game',
-            name: 'Magic: The Gathering',
+  useHead({
+    link: [{ rel: 'canonical', href: () => canonicalUrl.value }],
+    script: [
+      {
+        type: 'application/ld+json',
+        innerHTML: () => {
+          if (!list.value || !isPublicList.value) return '';
+          const author =
+            (list.value as any).username || decklistOwner.value?.username;
+          const authorId =
+            (list.value as any).user_id || decklistOwner.value?.id;
+          return safeJsonLd({
+            '@context': 'https://schema.org',
+            '@type': isCollection.value ? 'CollectionPage' : 'CreativeWork',
+            name:
+              list.value.name ||
+              (isCollection.value ? 'Untitled collection' : 'Untitled deck'),
+            description: seo.value.description,
+            image: seo.value.image,
+            url: canonicalUrl.value,
+            genre: isCollection.value
+              ? 'Magic: The Gathering collection'
+              : 'Magic: The Gathering deck',
+            dateModified: (list.value as any).updated_at ?? undefined,
+            dateCreated: (list.value as any).created_at ?? undefined,
+            author: author
+              ? {
+                  '@type': 'Person',
+                  name: author,
+                  url: authorId
+                    ? `https://cardmystic.com/user/${authorId}`
+                    : undefined,
+                }
+              : undefined,
+            about: {
+              '@type': 'Game',
+              name: 'Magic: The Gathering',
+              publisher: {
+                '@type': 'Organization',
+                name: 'Wizards of the Coast',
+              },
+            },
             publisher: {
               '@type': 'Organization',
-              name: 'Wizards of the Coast',
+              name: 'CardMystic',
             },
-          },
-          publisher: {
-            '@type': 'Organization',
-            name: 'CardMystic',
-          },
-          mainEntityOfPage: {
-            '@type': 'WebPage',
-            '@id': canonicalUrl.value,
-          },
-        });
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': canonicalUrl.value,
+            },
+          });
+        },
       },
-    },
-  ],
-});
+    ],
+  });
+}
 
 // Add card state
 const addCardInput = useTemplateRef<{
@@ -685,6 +861,13 @@ const { data: ownedListItems, isLoading: isLoadingOwnedItems } =
 const listItems = computed(() =>
   isOwner.value ? (ownedListItems.value ?? []) : publicItems.value,
 );
+const printings = useDeckPrintings(listId, listItems, isOwner);
+const displayItem = (item: {
+  oracle_id: string;
+  board: string;
+  printing_id?: string | null;
+  finish?: string | null;
+}) => printings.display(cardsByOracleId.value[item.oracle_id], item);
 const isLoadingItems = computed(() =>
   isOwner.value ? isLoadingOwnedItems.value : isLoadingPublic.value,
 );
@@ -696,7 +879,11 @@ const oracleIds = computed(
 );
 
 type Board = 'Mainboard' | 'Sideboard' | 'Considering';
-type RowInfo = { num_copies: number };
+type RowInfo = {
+  num_copies: number;
+  printing_id?: string | null;
+  finish?: string | null;
+};
 
 // Nested by board so the same oracle_id can appear in multiple boards.
 const listItemsMap = computed<Record<Board, Record<string, RowInfo>>>(() => {
@@ -709,7 +896,11 @@ const listItemsMap = computed<Record<Board, Record<string, RowInfo>>>(() => {
     for (const item of listItems.value) {
       if (!item.oracle_id) continue;
       const board = (item.board ?? 'Mainboard') as Board;
-      map[board][item.oracle_id] = { num_copies: item.num_copies ?? 1 };
+      map[board][item.oracle_id] = {
+        num_copies: item.num_copies ?? 1,
+        printing_id: item.printing_id,
+        finish: item.finish,
+      };
     }
   }
   return map;
@@ -733,7 +924,9 @@ const cardsByOracleId = computed(() => {
 
 const transferCards = computed(() =>
   listItems.value.flatMap((item) => {
-    const card = cardsByOracleId.value[item.oracle_id]?.card_data;
+    const card = displayItem(item)?.card_data;
+    const printing =
+      item.printing_id && printings.byId.value.get(item.printing_id);
     return card
       ? [
           {
@@ -743,6 +936,14 @@ const transferCards = computed(() =>
             commander: !!item.is_commander,
             arena: card.games?.includes('arena'),
             mtgo: card.games?.includes('mtgo'),
+            printingId: item.printing_id ?? undefined,
+            ...(printing && printing.oracle_id === item.oracle_id
+              ? {
+                  set: printing.set_code,
+                  collectorNumber: printing.collector_number,
+                  finish: item.finish as 'nonfoil' | 'foil' | 'etched',
+                }
+              : {}),
           },
         ]
       : [];
@@ -752,7 +953,7 @@ const analysisCards = computed(() =>
   listItems.value
     .filter((item) => item.board === 'Mainboard')
     .flatMap((item) => {
-      const card = cardsByOracleId.value[item.oracle_id]?.card_data;
+      const card = displayItem(item)?.card_data;
       return card
         ? [{ card, quantity: item.num_copies, commander: !!item.is_commander }]
         : [];
@@ -774,6 +975,14 @@ const sectionLinks = computed(() => [
   { label: 'Deck Stats', onSelect: () => jumpToSection('deck-stats') },
 ]);
 const addsOpen = ref(false);
+const suggestedAdds = useTemplateRef<{ visible: Card[] }>('suggestedAdds');
+const suggestedNewCards = useTemplateRef<{ visible: Card[] }>(
+  'suggestedNewCards',
+);
+const visibleSuggestions = computed(() => [
+  ...(suggestedAdds.value?.visible ?? []),
+  ...(suggestedNewCards.value?.visible ?? []),
+]);
 const gameChangerReplacementsOpen = ref(false);
 const newCardsOpen = ref(false);
 const newCardsClosed = ref(false);
@@ -828,10 +1037,12 @@ provide('deckHighlight', {
 
 function boardCards(board: Board, onlyVisible = true): Card[] {
   return Object.keys(listItemsMap.value[board])
-    .map((oid) => cardsByOracleId.value[oid])
+    .map((oid) =>
+      displayItem({ oracle_id: oid, board, ...listItemsMap.value[board][oid] }),
+    )
     .filter(
-      (card) =>
-        card &&
+      (card): card is Card =>
+        !!card &&
         (!onlyVisible || visibleOracleIds.value.has(card.card_data.oracle_id)),
     )
     .map((card) => (onlyVisible ? withSearchScore(card) : card));
@@ -866,6 +1077,12 @@ const loading = computed(
     isLoadingItems.value ||
     isLoadingCards.value ||
     (oracleIds.value.length > 0 && cards.value.length === 0),
+);
+
+// Query loading state may change between SSR and hydration. Keep card actions
+// disabled in both initial renders, then enable them when client data is ready.
+const cardActionsReady = computed(
+  () => mounted.value && !loading.value && cards.value.length > 0,
 );
 
 const {
@@ -939,21 +1156,122 @@ const visibleOracleIds = computed(
         : filteredOracleIds.value,
     ),
 );
-watch(
-  () => filteredOracleIds.value.length,
-  (length) => {
-    collectionPage.value = Math.min(
-      collectionPage.value,
-      Math.max(1, Math.ceil(length / 100)),
-    );
-  },
+const publicCardLinks = computed(() =>
+  (ssrPublicList.value?.items ?? []).filter(
+    (item) => item.card_name && visibleOracleIds.value.has(item.oracle_id),
+  ),
 );
 
 const {
   labels: cardLabels,
+  pending: tagsPending,
+  isLoading: loadingCardTags,
   error: labelsError,
   retry: retryLabels,
-} = useCardLabels(() => (isBrowser ? [] : [...visibleOracleIds.value]));
+} = useCardLabels(() =>
+  !isCollection.value || highlightMode.value === 'tags'
+    ? oracleIds.value
+    : [...visibleOracleIds.value],
+);
+const openTagDialogs = ref(0);
+provide(deckTagDialogCountKey, openTagDialogs);
+const groupByClassification = computed(
+  () => groupBy.value === 'roles' || groupBy.value === 'themes',
+);
+const availableLabelGroups = computed(() =>
+  (['tags', 'roles', 'themes'] as const).filter(
+    (kind) => kind !== 'tags' || !!pro.userId.value,
+  ),
+);
+const visibleLabels = computed(() =>
+  availableLabelGroups.value.filter((kind) =>
+    preferences.value.visible_labels?.includes(kind),
+  ),
+);
+const showMetadata = computed(() => !!preferences.value.show_card_metadata);
+const labelVisibilityMenu = computed(() => [
+  {
+    label: `${showMetadata.value ? 'Hide' : 'Show'} Card Metadata`,
+    onSelect: () =>
+      updatePreferences({
+        show_card_metadata: showMetadata.value ? undefined : true,
+      }),
+  },
+  ...availableLabelGroups.value.map((group) => ({
+    label: `${visibleLabels.value.includes(group) ? 'Hide' : 'Show'} ${cardLabelGroups[group]}`,
+    onSelect: () => {
+      const next: VisibleLabelGroup[] = visibleLabels.value.includes(group)
+        ? visibleLabels.value.filter((item) => item !== group)
+        : [...visibleLabels.value, group];
+      updatePreferences({ visible_labels: next.length ? next : undefined });
+    },
+  })),
+]);
+const labelIds = computed(() => {
+  const mode = highlightMode.value;
+  const ids =
+    isLabelGroup(mode) && mode !== 'tags'
+      ? oracleIds.value
+      : groupByClassification.value ||
+          visibleLabels.value.some((group) => group !== 'tags')
+        ? [...visibleOracleIds.value]
+        : [];
+  return [...new Set<string>(ids)].sort();
+});
+const collectionLabels = useCollectionLabels(
+  labelIds,
+  computed(() => highlightMode.value === 'sets'),
+);
+const loadingGroupLabels = computed(
+  () => groupByClassification.value && collectionLabels.isLoading.value,
+);
+const groupingLabels = computed<Record<string, DeckCardLabels> | undefined>(
+  (previous) => {
+    if (groupByClassification.value) return collectionLabels.data.value;
+    if (groupBy.value === 'tags') {
+      return openTagDialogs.value && previous ? previous : cardLabels.value;
+    }
+    return undefined;
+  },
+);
+// Keep cards visible without misclassifying them if the label request fails.
+const loadedGroupBy = computed(() =>
+  groupByClassification.value && !collectionLabels.data.value
+    ? undefined
+    : groupBy.value,
+);
+const deckLabels = computed<Record<string, DeckCardLabels>>(() => {
+  const result: Record<string, DeckCardLabels> = {
+    ...collectionLabels.data.value,
+  };
+  for (const [id, { tags }] of Object.entries(cardLabels.value))
+    result[id] = { ...result[id], tags };
+  return result;
+});
+provide(deckCardLabelsKey, {
+  showMetadata,
+  labels: deckLabels,
+  visible: visibleLabels,
+  loading: computed(() =>
+    visibleLabels.value.filter((kind) =>
+      kind === 'tags'
+        ? loadingCardTags.value
+        : collectionLabels.isLoading.value,
+    ),
+  ),
+});
+const highlightLabelNames = computed(() => {
+  const mode = highlightMode.value;
+  return isLabelGroup(mode)
+    ? [
+        ...new Set(
+          Object.values(deckLabels.value).flatMap(
+            (labels) => labels[mode] ?? [],
+          ),
+        ),
+      ]
+    : [];
+});
 
 // Handle removing a card from the list
 async function handleRemoveCard(
@@ -997,13 +1315,13 @@ const cardGroups = computed(() => {
 
   const groups = groupAndSortCards(
     mainboardCards,
-    groupBy.value,
+    loadedGroupBy.value,
     sortBy.value,
     sortDirection.value,
     boardCopiesMap('Mainboard'),
     undefined,
     false,
-    cardLabels.value,
+    groupingLabels.value,
   );
 
   // Prepend commanders as their own group if present
@@ -1024,13 +1342,13 @@ const sideboardGroups = computed(() => {
   if (sideboardCards.length === 0) return null;
   return groupAndSortCards(
     sideboardCards,
-    groupBy.value,
+    loadedGroupBy.value,
     sortBy.value,
     sortDirection.value,
     boardCopiesMap('Sideboard'),
     undefined,
     false,
-    cardLabels.value,
+    groupingLabels.value,
   );
 });
 
@@ -1040,13 +1358,13 @@ const consideringGroups = computed(() => {
   if (consideringCards.length === 0) return null;
   return groupAndSortCards(
     consideringCards,
-    groupBy.value,
+    loadedGroupBy.value,
     sortBy.value,
     sortDirection.value,
     boardCopiesMap('Considering'),
     undefined,
     false,
-    cardLabels.value,
+    groupingLabels.value,
   );
 });
 
@@ -1066,13 +1384,13 @@ const jumpToBoardSections = computed(() => {
   return sections;
 });
 
-const showStickyFooter = computed(() => {
-  return (
-    totalCardCount.value > 0 ||
-    jumpToGroups.value.length > 0 ||
-    jumpToBoardSections.value.length > 1
-  );
-});
+const showStickyFooter = computed(
+  () =>
+    mounted.value &&
+    (totalCardCount.value > 0 ||
+      jumpToGroups.value.length > 0 ||
+      jumpToBoardSections.value.length > 1),
+);
 
 const cardListResultsRef = ref<{
   expandBoard: (board: 'Sideboard' | 'Considering') => void;
@@ -1196,16 +1514,51 @@ async function confirmAddDuplicate() {
 // Bulk edit state
 const isBulkEditModalOpen = ref(false);
 const isCompareModalOpen = ref(false);
-const settingsOpen = ref(false);
 const transferOpen = ref(false);
 const cutsOpen = ref(false);
 const searchOpen = ref(false);
+const deckPlaytest = ref<{ launch: () => void; disabled: boolean } | null>(
+  null,
+);
 function proAction(action: () => void) {
   if (pro.isPro.value) action();
   else void navigateTo('/memberships');
 }
 const moreActions = computed<DropdownMenuItem[][]>(() => [
   [
+    ...(!isCollection.value
+      ? [
+          {
+            label: 'Recommend',
+            ...cardActionStyles.recommendations,
+            class: 'md:hidden',
+            disabled: !cardActionsReady.value,
+            onSelect: goToRecommend,
+          },
+          {
+            label: 'Playtest',
+            icon: 'i-lucide-play',
+            class: 'md:hidden',
+            disabled: deckPlaytest.value?.disabled ?? true,
+            onSelect: () => deckPlaytest.value?.launch(),
+          },
+        ]
+      : []),
+    ...(!isBrowser
+      ? [
+          {
+            label: isCollection.value
+              ? 'Search Within Collection · Pro'
+              : 'Search Within Deck · Pro',
+            icon: 'i-lucide-search',
+            class: 'md:hidden',
+            onSelect: () =>
+              proAction(() => {
+                searchOpen.value = !searchOpen.value;
+              }),
+          },
+        ]
+      : []),
     {
       label: 'Import / Export',
       icon: 'i-lucide-arrow-left-right',
@@ -1218,7 +1571,7 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [
       ? [
           {
             label: 'Replace Gamechangers',
-            icon: 'i-lucide-arrow-left-right',
+            icon: 'i-lucide-replace-all',
             disabled:
               loading.value ||
               !analysisCards.value.some(({ card }) => card.game_changer),
@@ -1232,13 +1585,6 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [
   ...(isOwner.value
     ? [
         [
-          {
-            label: 'Settings',
-            icon: 'i-lucide-settings',
-            onSelect: () => {
-              settingsOpen.value = true;
-            },
-          },
           {
             label: 'Compare decks',
             icon: 'i-lucide-scale',
@@ -1274,7 +1620,6 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [
                   onSelect: () =>
                     proAction(() => {
                       addsOpen.value = true;
-                      void jumpToSection('deck-suggestions');
                     }),
                 },
                 {
@@ -1284,11 +1629,10 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [
                   onSelect: () =>
                     proAction(() => {
                       newCardsOpen.value = true;
-                      void jumpToSection('deck-new-cards');
                     }),
                 },
                 {
-                  label: 'Suggest cuts · Pro',
+                  label: 'Suggest Cuts · Pro',
                   icon: 'i-lucide-scissors',
                   onSelect: () =>
                     proAction(() => {
@@ -1303,12 +1647,18 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [
 ]);
 
 function boardLines(board: 'Mainboard' | 'Sideboard' | 'Considering') {
+  if (browser)
+    return browser.draft.value.cards
+      .filter((entry) => entry.board === board)
+      .map((entry) =>
+        entry.quantity > 1 ? `${entry.quantity} ${entry.name}` : entry.name,
+      );
   if (!listItems.value || listItems.value.length === 0) return [];
   const lines: string[] = [];
   for (const item of listItems.value) {
     if (!item.oracle_id) continue;
     if ((item.board ?? 'Mainboard') !== board) continue;
-    const card = cardsByOracleId.value[item.oracle_id];
+    const card = displayItem(item);
     if (!card) continue;
     const copies = item.num_copies ?? 1;
     const name = card.card_data.name;
@@ -1559,13 +1909,19 @@ const totalPrice = computed(() => {
   let sum = 0;
   for (const item of listItems.value) {
     if (!item.oracle_id) continue;
-    const card = cardsByOracleId.value[item.oracle_id];
+    const card = displayItem(item);
     if (!isCollection.value && isBasicLand(card?.card_data)) continue;
     const price = getUsdPrice(card?.card_data?.prices);
     if (price) sum += parseFloat(price) * (item.num_copies ?? 1);
   }
   return sum;
 });
+
+// Card queries can finish after the server renders but before its cache is
+// serialized. Keep both Buy buttons identical until client hydration completes.
+const buyLabel = computed(() =>
+  cardActionsReady.value ? `Buy ($${totalPrice.value.toFixed(2)})` : 'Buy',
+);
 
 const totalCardCount = computed(() => {
   if (!listItems.value || listItems.value.length === 0) return 0;
@@ -1580,7 +1936,7 @@ function openMassEntry() {
   const names: string[] = [];
   for (const item of listItems.value) {
     if (!item.oracle_id) continue;
-    const card = cardsByOracleId.value[item.oracle_id];
+    const card = displayItem(item);
     if (!card) continue;
     const copies = item.num_copies ?? 1;
     for (let i = 0; i < copies; i++) names.push(card.card_data.name);
@@ -1590,6 +1946,7 @@ function openMassEntry() {
 }
 
 onMounted(() => {
+  mounted.value = true;
   // Check if list exists after both data sources have finished loading
   watch(
     [list, isLoadingLists, isLoadingPublic],

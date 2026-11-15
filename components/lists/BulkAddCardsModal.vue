@@ -41,7 +41,9 @@
             <div class="pt-3 space-y-1">
               <p class="text-xs text-gray-500 dark:text-gray-400">
                 {{ boardCardCount(consideringText, 'Considering') }} card{{
-                  boardCardCount(consideringText, 'Considering') === 1 ? '' : 's'
+                  boardCardCount(consideringText, 'Considering') === 1
+                    ? ''
+                    : 's'
                 }}
               </p>
               <UTextarea
@@ -135,6 +137,8 @@ const isOpen = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
 const { bulkEditListMutation } = useCardLists();
+const browser = useBrowserDeckSource();
+let originalGuestCards: string | undefined;
 
 const mainboardText = ref('');
 const sideboardText = ref('');
@@ -151,6 +155,9 @@ const tabs = [
 // Pre-populate each board textarea when modal opens
 watch(isOpen, (open) => {
   if (open) {
+    originalGuestCards = browser
+      ? JSON.stringify(browser.draft.value.cards)
+      : undefined;
     mainboardText.value = props.mainboardNames?.join('\n') ?? '';
     sideboardText.value = props.sideboardNames?.join('\n') ?? '';
     consideringText.value = props.consideringNames?.join('\n') ?? '';
@@ -181,7 +188,10 @@ async function handleBulkEdit() {
       { board: 'Considering', text: consideringText.value },
     ] as const
   )
-    .map(({ board, text }) => ({ board, cards: parseBulkEditBoard(text, board) }))
+    .map(({ board, text }) => ({
+      board,
+      cards: parseBulkEditBoard(text, board),
+    }))
     .filter((entry) => entry.cards.length > 0);
 
   bulkEditLoading.value = true;
@@ -191,6 +201,7 @@ async function handleBulkEdit() {
     const result = await bulkEditListMutation.mutateAsync({
       listId: props.listId,
       entries,
+      originalGuestCards,
     });
 
     bulkEditResult.value = result;

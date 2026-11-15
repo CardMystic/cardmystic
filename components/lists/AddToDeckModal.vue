@@ -226,7 +226,7 @@ async function addToDraft() {
       names = resolved.map((card) => card.name);
     }
     if (!names.length) throw new Error('No cards selected.');
-    addGuestNames(names);
+    await addGuestNames(names);
     toast.add({ title: 'Added to browser draft', color: 'success' });
     if (!guestStorageError.value) isOpen.value = false;
     emit('success');
