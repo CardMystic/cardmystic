@@ -40,3 +40,6 @@ CLAUDE.md
 
 # Supabase
 /supabase
+
+# Locally installed wordmark rendering tools
+/output/wordmarks-custom-white/.tools/
