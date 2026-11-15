@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
+import { NuxtLink } from '#components';
 const config = useRuntimeConfig();
 const mounted = ref(false);
 onMounted(() => {
@@ -23,25 +24,45 @@ const stats = computed(() => [
     count: data.value?.totalQueries,
     icon: 'i-lucide-search',
   },
-  { label: 'users', count: data.value?.totalUsers, icon: 'i-lucide-users' },
-  { label: 'decks', count: data.value?.totalDecks, icon: 'i-lucide-layers' },
+  {
+    label: 'users',
+    count: data.value?.totalUsers,
+    icon: 'i-lucide-users',
+    to: '/explore/users',
+  },
+  {
+    label: 'decks',
+    count: data.value?.totalDecks,
+    icon: 'i-lucide-layers',
+    to: '/explore/decklists',
+  },
 ]);
 </script>
 
 <template>
   <div
+    role="group"
     class="flex w-full min-h-8 flex-wrap justify-center gap-2"
     aria-label="CardMystic community statistics"
   >
     <template v-for="stat in stats" :key="stat.label">
-      <span
-        v-if="typeof stat.count === 'number' && Number.isFinite(stat.count)"
+      <component
+        :is="stat.to ? NuxtLink : 'span'"
+        v-if="stat.to || Number.isFinite(stat.count)"
+        v-bind="stat.to ? { to: stat.to, noPrefetch: true } : {}"
         class="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 text-purple-200 px-3 py-1 text-xs sm:text-sm"
+        :class="
+          stat.to &&
+          'hover:border-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+        "
       >
         <UIcon :name="stat.icon" class="size-4" aria-hidden="true" />
-        <strong>{{ stat.count.toLocaleString('en-US') }}</strong>
+        <strong
+          v-if="typeof stat.count === 'number' && Number.isFinite(stat.count)"
+          >{{ stat.count.toLocaleString('en-US') }}</strong
+        >
         {{ stat.label }}
-      </span>
+      </component>
     </template>
   </div>
 </template>

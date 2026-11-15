@@ -173,6 +173,29 @@ describe('buildDecklistSeo', () => {
     expect(seo.title).toBe('Untitled deck | MTG Decklist | CardMystic');
   });
 
+  it('describes collections as collections even when they have no description', () => {
+    const seo = buildDecklistSeo(
+      makeDecklist({ name: 'Vintage', kind: 'collection', description: null }),
+    );
+    expect(seo.title).toBe('Vintage | MTG Collection | CardMystic');
+    expect(seo.description).toContain('cards in Vintage');
+    expect(seo.description).not.toContain('decklist');
+  });
+
+  it('uses generic previews for private lists and unpublished articles', () => {
+    const list = buildDecklistSeo(
+      makeDecklist({ visibility: 'private', name: 'Private title' }),
+    );
+    const article = buildArticleSeo(
+      makeArticle({ is_published: false, title: 'Private title' }),
+    );
+    for (const preview of [list, article]) {
+      expect(preview.title).not.toContain('Private title');
+      expect(preview.image).toBe(FALLBACK_OG_IMAGE);
+      expect(preview.robots).toBe('noindex, nofollow');
+    }
+  });
+
   it('prefers the owner-supplied description over the synthesized one', () => {
     const seo = buildDecklistSeo(
       makeDecklist({ description: '  Aggro goblins go brrr.  ' }),

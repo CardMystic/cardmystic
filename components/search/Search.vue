@@ -1,7 +1,8 @@
 <template>
   <div class="search-container">
+    <SearchBackground v-if="!hideBackground" :type="searchType" />
     <!-- Search type tabs -->
-    <SearchTabs :compact="showSuggestedSearches" @select="selectSearchType" />
+    <SearchTabs @select="selectSearchType" />
 
     <!-- <UForm class="search-form" @submit="onSubmit"> -->
     <div class="search-input-row">
@@ -65,6 +66,7 @@ const ALSSearch = defineAsyncComponent(() => import('./ALSSearch.vue'));
 
 // Define props
 const props = defineProps<{
+  hideBackground?: boolean;
   similarity?: boolean;
   defaultSearchType?:
     'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend';
@@ -167,6 +169,8 @@ function selectSearchType(newType: SearchTabType) {
 
 <style scoped>
 .search-container {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   margin: 0 auto;
 }

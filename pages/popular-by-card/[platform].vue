@@ -48,22 +48,16 @@ const description = computed(() =>
     ? `Find commanders most often played with ${cardName.value}.`
     : 'Choose a card to find the commanders whose decks include it.',
 );
-const canonical = `https://cardmystic.com/popular-by-card/${platform}`;
-useHead(() => ({
-  link: cardName.value ? [] : [{ rel: 'canonical', href: canonical }],
-}));
-useSeoMeta({
+const hasSearch = computed(
+  () => !!(cardName.value || queryText.value || route.query.filters),
+);
+usePublicPageSeo({
+  path: () => (hasSearch.value ? null : `/popular-by-card/${platform}`),
   title: () => `${title.value} | CardMystic`,
-  description: () => description.value,
-  robots: () =>
-    cardName.value || queryText.value || route.query.filters
-      ? 'noindex, follow'
-      : 'index, follow',
-  ogType: 'website',
-  ogTitle: () => `${title.value} | CardMystic`,
-  ogDescription: () => description.value,
-  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
-  twitterCard: 'summary_large_image',
+  description,
+});
+useSeoMeta({
+  robots: () => (hasSearch.value ? 'noindex, follow' : 'index, follow'),
 });
 definePageMeta({ title: 'Popular Commanders for a Card' });
 </script>
@@ -100,8 +94,13 @@ definePageMeta({ title: 'Popular Commanders for a Card' });
           is-searched
         />
       </div>
+      <SearchLandingContent
+        v-if="!invalid && !cardName"
+        search-type="popular-by-card"
+        :platform="platform"
+      />
       <SearchResults
-        v-if="!invalid"
+        v-else-if="!invalid"
         class="w-full mb-10"
         :search-results="searchResults"
         :is-loading="isLoading"

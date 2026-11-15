@@ -109,6 +109,12 @@ const sections = [
   },
 ];
 
+function sectionResult(page: Page, section: (typeof sections)[number]) {
+  return section.path === '/user/featured'
+    ? page.getByRole('link').filter({ hasText: section.result })
+    : page.getByRole('heading', { name: section.result, exact: true });
+}
+
 async function revealHomeSections(page: Page) {
   const recent = page.getByRole('heading', {
     name: 'Recent Decklists',
@@ -242,9 +248,7 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
           : retryAlerts.filter({ hasText: section.title });
       recovering.add(section.path);
       await alert.getByRole('button', { name: 'Retry', exact: true }).click();
-      await expect(
-        page.getByText(section.result, { exact: true }),
-      ).toBeVisible();
+      await expect(sectionResult(page, section)).toBeVisible();
       await expect(retryAlerts).toHaveCount(sections.length - recovering.size);
     }
   });
@@ -284,9 +288,15 @@ test('successful empty responses still show the real empty states', async ({
   ).toHaveCount(0);
 });
 
-test('initial mobile home loads recent decks and defers featured content until visible', async ({
+test('initial mobile home loads recent decks and defers featured refreshes until visible', async ({
   page,
 }) => {
+  const hydrationErrors: string[] = [];
+  page.on('console', (message) => {
+    if (/hydration.*mismatch/i.test(message.text())) {
+      hydrationErrors.push(message.text());
+    }
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   // Stale SSR data must refresh only once the corresponding section is visible.
   await page.clock.setFixedTime(new Date(Date.now() + 10 * 60 * 1000));
@@ -324,8 +334,22 @@ test('initial mobile home loads recent decks and defers featured content until v
   ).toEqual([]);
 
   await revealHomeSections(page);
+  await expect(
+    page.getByText(
+      'Browse public decks or try building your own without an account.',
+    ),
+  ).toHaveCount(0);
+  const builder = page.getByRole('region', {
+    name: 'Deck & Collection Builder',
+    exact: true,
+  });
+  await builder.scrollIntoViewIfNeeded();
+  await expect(
+    builder.getByRole('link', { name: 'Build a deck', exact: true }),
+  ).toHaveAttribute('href', '/lists');
+  expect(hydrationErrors).toEqual([]);
   for (const section of sections) {
-    await expect(page.getByText(section.result, { exact: true })).toBeVisible();
+    await expect(sectionResult(page, section)).toBeVisible();
   }
   for (const [path, limit] of [
     ['/supabase/card-lists/featured', '3'],
@@ -334,6 +358,51 @@ test('initial mobile home loads recent decks and defers featured content until v
   ]) {
     const request = requested.find((url) => backendPath(url) === path);
     expect(request?.searchParams.get('limit')).toBe(limit);
+  }
+});
+
+test('signed-in desktop builder link hydrates correctly on direct visit and reload', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  const hydrationErrors: string[] = [];
+  page.on('console', (message) => {
+    if (/hydration.*mismatch/i.test(message.text()))
+      hydrationErrors.push(message.text());
+  });
+  for (const section of sections) {
+    await page.route(
+      (url) => backendPath(url) === section.path,
+      (route) => route.fulfill({ json: section.data }),
+    );
+  }
+  await gotoHydrated(page, '/');
+  for (const reload of [false, true]) {
+    if (reload) {
+      await page.reload();
+      await waitForHydration(page);
+    }
+    await expect(
+      page.getByRole('button', { name: 'Profile', exact: true }),
+    ).toBeVisible();
+    const stats = page.getByRole('group', {
+      name: 'CardMystic community statistics',
+    });
+    await expect(
+      stats.getByRole('link', { name: '1,200 users' }),
+    ).toHaveAttribute('href', '/explore/users');
+    await expect(
+      stats.getByRole('link', { name: '2,300 decks' }),
+    ).toHaveAttribute('href', '/explore/decklists');
+    const builder = page.getByRole('region', {
+      name: 'Deck & Collection Builder',
+      exact: true,
+    });
+    await builder.scrollIntoViewIfNeeded();
+    await expect(
+      builder.getByRole('link', { name: 'Build a deck', exact: true }),
+    ).toHaveAttribute('href', '/lists');
+    expect(hydrationErrors).toEqual([]);
   }
 });
 
@@ -389,9 +458,7 @@ test(
             page.getByRole('link', { name: deck.name, exact: true }),
           ).toHaveAttribute('href', `/lists/${deck.id}`);
           for (const section of publicSections) {
-            await expect(
-              page.getByText(section.result, { exact: true }),
-            ).toBeVisible();
+            await expect(sectionResult(page, section)).toBeVisible();
           }
           const metrics = page.getByLabel('CardMystic community statistics');
           await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
@@ -406,16 +473,16 @@ test(
             page.getByRole('button', { name: 'Retry', exact: true }),
           ).toHaveCount(0);
           if (visit === 'direct visit') {
-            for (const width of [1280, 390, 320]) {
+            for (const width of [1600, 1599, 1280, 390, 320]) {
               await page.setViewportSize({ width, height: 844 });
               await page.evaluate(() => window.scrollTo(0, 0));
-              if (width < 1280) {
+              if (width < 1600) {
                 await page
                   .getByRole('button', { name: 'Open navigation menu' })
                   .click();
               }
               const navigation =
-                width < 1280
+                width < 1600
                   ? page.getByRole('dialog', { name: 'Open navigation menu' })
                   : page.getByRole('navigation', {
                       name: 'Main navigation',
@@ -427,7 +494,7 @@ test(
               });
               await expect(pricing).toBeVisible();
               await expect(pricing).toHaveAttribute('href', '/memberships');
-              if (width < 1280) await page.keyboard.press('Escape');
+              if (width < 1600) await page.keyboard.press('Escape');
               expect(
                 await page.evaluate(() => document.documentElement.scrollWidth),
               ).toBeLessThanOrEqual(width);

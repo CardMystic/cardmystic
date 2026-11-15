@@ -249,24 +249,21 @@ export const searchDemos: SearchDemo[] = [
         score: 88.5,
       },
       {
-        name: 'Balefire Dragon',
-        id: '3d783beb-9ca6-4681-9276-fc3ad13b993f',
+        name: 'Archfiend of Despair',
+        id: '9c36760b-57c5-488b-afc9-ef141942c6ab',
         image:
-          'https://cards.scryfall.io/normal/front/e/4/e4510ee2-8a2e-4fe5-94af-df420a6a35a0.jpg?1783907975',
-        score: 80.9,
+          'https://cards.scryfall.io/normal/front/1/3/137b69ad-3296-49f1-bddf-24818a03830f.jpg?1789599815',
+        score: 63.7,
       },
     ],
     examples: deckExamples,
   },
 ];
 
-// Fixed public-list snapshots; homepage previews never fetch list data.
-export { builder as builderExamples } from './home-examples.json';
-
 // Hand-picked cards illustrate the Pro controls; no account or live recommendations are loaded.
 export const proExamples = [
   {
-    title: 'Suggested adds',
+    title: 'Suggested Adds & New Card Alerts',
     action: 'Add',
     icon: 'i-lucide-plus',
     color: 'success',

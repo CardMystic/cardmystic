@@ -24,96 +24,81 @@
       >
     </div>
 
-    <ClientOnly>
-      <!-- Decklists row -->
-      <SearchError
-        v-if="decklistsError"
-        :error="decklistsError"
-        title="Could not load featured decklists"
-        description="Please try again."
-        retry-label="Retry"
-        :is-retrying="isFetchingDecklists"
-        @retry="refetchDecklists()"
-        class="mb-4"
+    <!-- Decklists row -->
+    <SearchError
+      v-if="decklistsError"
+      :error="decklistsError"
+      title="Could not load featured decklists"
+      description="Please try again."
+      retry-label="Retry"
+      :is-retrying="isFetchingDecklists"
+      @retry="refetchDecklists()"
+      class="mb-4"
+    />
+    <div
+      v-if="isLoadingDecklists"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
+    >
+      <CardListLinkSkeleton v-for="i in 3" :key="i" />
+    </div>
+
+    <div
+      v-else-if="visibleDecklists.length > 0"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
+    >
+      <CardListLink
+        v-for="list in visibleDecklists"
+        :key="list.id"
+        :list="list"
+        :show-settings-button="false"
+        :showAuthor="true"
       />
-      <div
-        v-if="isLoadingDecklists"
-        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
-      >
-        <CardListLinkSkeleton v-for="i in 3" :key="i" />
-      </div>
+    </div>
 
-      <div
-        v-else-if="visibleDecklists.length > 0"
-        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
-      >
-        <CardListLink
-          v-for="list in visibleDecklists"
-          :key="list.id"
-          :list="list"
-          :show-settings-button="false"
-          :showAuthor="true"
-        />
-      </div>
+    <div v-else-if="!decklistsError" class="empty-state mb-4">
+      <UIcon name="i-lucide-stars" class="text-5xl opacity-30 mb-3" />
+      <p class="mb-4">No featured decklists yet!</p>
+      <UButton to="/explore/decklists" color="primary" variant="soft">
+        Search Decklists
+      </UButton>
+    </div>
 
-      <div v-else-if="!decklistsError" class="empty-state mb-4">
-        <UIcon name="i-lucide-stars" class="text-5xl opacity-30 mb-3" />
-        <p class="mb-4">No featured decklists yet!</p>
-        <UButton to="/explore/decklists" color="primary" variant="soft">
-          Search Decklists
-        </UButton>
-      </div>
+    <!-- Users row -->
+    <SearchError
+      v-if="usersError"
+      :error="usersError"
+      title="Could not load featured users"
+      description="Please try again."
+      retry-label="Retry"
+      :is-retrying="isFetchingUsers"
+      @retry="refetchUsers()"
+      class="mb-4"
+    />
+    <div
+      v-if="isLoadingUsers"
+      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
+    >
+      <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
+    </div>
 
-      <!-- Users row -->
-      <SearchError
-        v-if="usersError"
-        :error="usersError"
-        title="Could not load featured users"
-        description="Please try again."
-        retry-label="Retry"
-        :is-retrying="isFetchingUsers"
-        @retry="refetchUsers()"
-        class="mb-4"
+    <div
+      v-else-if="visibleUsers.length > 0"
+      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
+    >
+      <PublicUserLink
+        v-for="profile in visibleUsers"
+        :key="profile.id"
+        :profile="profile"
       />
-      <div
-        v-if="isLoadingUsers"
-        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
-      >
-        <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
-      </div>
+    </div>
 
-      <div
-        v-else-if="visibleUsers.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
-      >
-        <PublicUserLink
-          v-for="profile in visibleUsers"
-          :key="profile.id"
-          :profile="profile"
-        />
-      </div>
-
-      <div v-else-if="!usersError" class="empty-state">
-        <UIcon name="i-lucide-users" class="text-5xl opacity-30 mb-3" />
-        <p class="mb-4">No featured users yet!</p>
-        <UButton to="/explore/users" color="primary" variant="soft">
-          Search Users
-        </UButton>
-      </div>
-
-      <template #fallback>
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
-        >
-          <CardListLinkSkeleton v-for="i in 3" :key="i" />
-        </div>
-        <div
-          class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
-        >
-          <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
-        </div>
-      </template>
-    </ClientOnly>
+    <div v-else-if="!usersError" class="empty-state">
+      <UIcon name="i-lucide-users" class="text-5xl opacity-30 mb-3" />
+      <p class="mb-4">No featured users yet!</p>
+      <UButton to="/explore/users" color="primary" variant="soft">
+        Search Users
+      </UButton>
+    </div>
   </div>
 </template>
 
@@ -123,7 +108,13 @@ import { computed } from 'vue';
 // Resolve auth inside the deferred section; changing a parent prop would force
 // hydration as soon as a returning user's session is restored.
 const { userProfile } = useUserProfile();
-const showSignIn = computed(() => !userProfile.value);
+// Auth can resolve before this section hydrates after scrolling into view.
+// Match the anonymous server HTML until this component has mounted.
+const mounted = ref(false);
+onMounted(() => {
+  mounted.value = true;
+});
+const showSignIn = computed(() => !mounted.value || !userProfile.value);
 import {
   useFeaturedDecklists,
   useFeaturedUsers,

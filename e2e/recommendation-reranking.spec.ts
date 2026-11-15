@@ -53,7 +53,7 @@ for (const [path, endpoint] of [
       // A commander URL keeps its editable pasted input even when signed in.
       await expect(
         page.getByRole('button', {
-          name: 'Select a decklist instead',
+          name: 'Select a Decklist',
           exact: true,
         }),
       ).toBeVisible();

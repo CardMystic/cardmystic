@@ -226,7 +226,7 @@ test('Back and Forward preserve a curated suggestion after changing modes', asyn
       }),
     );
   });
-  await page.getByRole('button', { name: 'Smart Search', exact: true }).click();
+  await page.getByRole('link', { name: 'Smart Search', exact: true }).click();
   await expect(
     page.getByPlaceholder('Describe the cards you want...'),
   ).toHaveValue('creatures that draw cards');
@@ -268,9 +268,7 @@ test('search tabs restore each mode with its saved platform filters', async ({
     );
   });
 
-  await page
-    .getByRole('button', { name: 'Keyword Search', exact: true })
-    .click();
+  await page.getByRole('link', { name: 'Keyword Search', exact: true }).click();
   await expect(page.getByPlaceholder('Search cards by keywords…')).toHaveValue(
     'flying',
   );
@@ -282,7 +280,7 @@ test('search tabs restore each mode with its saved platform filters', async ({
   ).toEqual(Object.fromEntries(smartQuery));
 
   await page
-    .getByRole('button', { name: 'Similarity Search', exact: true })
+    .getByRole('link', { name: 'Similarity Search', exact: true })
     .click();
   await expect(page.getByPlaceholder('Enter a card name...')).toHaveValue(
     'Sol Ring',
@@ -292,7 +290,7 @@ test('search tabs restore each mode with its saved platform filters', async ({
     isMTGO: true,
   });
 
-  await page.getByRole('button', { name: 'Smart Search', exact: true }).click();
+  await page.getByRole('link', { name: 'Smart Search', exact: true }).click();
   await expect(
     page.getByPlaceholder('Describe the cards you want...'),
   ).toHaveValue('creatures that draw cards');

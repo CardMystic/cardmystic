@@ -189,6 +189,7 @@
               color="error"
               variant="solid"
               label="Clear All"
+              icon="i-lucide-trash-2"
               :loading="clearAllLoading"
               @click="handleClearAll"
             />

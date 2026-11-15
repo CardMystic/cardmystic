@@ -57,6 +57,24 @@
           </UButton>
         </div>
 
+        <UButton
+          v-if="!commanderOnly && modelValue?.isCommander"
+          size="sm"
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-circle-x"
+          @click="updateFilters({ isCommander: undefined })"
+          >Is A Commander</UButton
+        >
+        <UButton
+          v-if="modelValue?.maxPriceUsd !== undefined"
+          size="sm"
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-circle-x"
+          @click="updateFilters({ maxPriceUsd: undefined })"
+          >Max price ${{ modelValue.maxPriceUsd.toFixed(2) }}</UButton
+        >
         <!-- Stats Chips -->
         <div v-if="selectedCMC">
           <UButton
@@ -240,6 +258,22 @@
                 :ui="{ base: 'text-base' }"
               />
             </div>
+          </template>
+          <template #price>
+            <UFormField label="Max price (USD)" class="accordion-item">
+              <UInputNumber
+                :model-value="modelValue?.maxPriceUsd"
+                :min="0"
+                :step="0.01"
+                placeholder="Any price"
+                class="w-full"
+                @update:model-value="
+                  updateFilters({
+                    maxPriceUsd: Number.isFinite($event) ? $event : undefined,
+                  })
+                "
+              />
+            </UFormField>
           </template>
           <!-- Colors Filter -->
           <template #colors>
@@ -457,14 +491,21 @@ function collapse() {
 
 defineExpose({ collapse });
 
-const { modelValue, hideColors, hideFormats, hideControls, embedded } =
-  defineProps<{
-    modelValue?: CardSearchFilters;
-    hideColors?: boolean;
-    hideFormats?: boolean;
-    hideControls?: boolean;
-    embedded?: boolean;
-  }>();
+const {
+  modelValue,
+  hideColors,
+  hideFormats,
+  hideControls,
+  embedded,
+  commanderOnly,
+} = defineProps<{
+  modelValue?: CardSearchFilters;
+  hideColors?: boolean;
+  hideFormats?: boolean;
+  hideControls?: boolean;
+  embedded?: boolean;
+  commanderOnly?: boolean;
+}>();
 
 const orientation = computed(() =>
   embedded || isMobile.value ? 'vertical' : 'horizontal',
@@ -489,6 +530,11 @@ const allItems = [
     label: 'Rarities',
     icon: 'i-lucide-star',
     slot: 'rarities' as const,
+  },
+  {
+    label: 'Price',
+    icon: 'i-lucide-tag',
+    slot: 'price' as const,
   },
   {
     label: 'Stats',
@@ -560,6 +606,8 @@ const hasActiveFilters = computed(() => {
     filters.isMTGO ||
     filters.isArena ||
     filters.isPaper ||
+    (!commanderOnly && filters.isCommander) ||
+    filters.maxPriceUsd !== undefined ||
     filters.isGameChanger
   );
 });
@@ -579,6 +627,8 @@ const hasNonColorFilters = computed(() => {
     filters.isMTGO ||
     filters.isArena ||
     filters.isPaper ||
+    (!commanderOnly && filters.isCommander) ||
+    filters.maxPriceUsd !== undefined ||
     filters.isGameChanger
   );
 });
@@ -819,6 +869,9 @@ function clearAllFilters() {
     selectedToughnessOption: undefined,
     selectedColorFilterOption: 'Match Exactly',
     selectedCardFormats: undefined,
+    maxPriceUsd: undefined,
+    isCommander: commanderOnly ? modelValue?.isCommander : undefined,
+    isGameChanger: undefined,
     isMTGO: undefined,
     isArena: undefined,
     isPaper: undefined,

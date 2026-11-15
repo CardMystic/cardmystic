@@ -38,7 +38,7 @@
         v-if="commanderNames.length"
         class="w-full mt-4 flex flex-wrap gap-4 justify-center"
       >
-        <template v-if="commanderCardsLoading">
+        <template v-if="!mounted || commanderCardsLoading">
           <div
             v-for="name in commanderNames"
             :key="name"
@@ -94,7 +94,6 @@
           "
           empty-title="No Recommendations Available Yet"
           empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
-          default-group-by="type"
         />
       </div>
     </div>
@@ -128,6 +127,7 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
+import { useMounted } from '@vueuse/core';
 import { useRoute } from 'vue-router';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePageInfo } from '~/composables/usePageInfo';
@@ -299,8 +299,9 @@ const decklistCardNames = computed(() => {
 const { searchResults, isLoading, isFetching, error, refetch, notFound } =
   useAlsRecommend(alsRequest);
 
+const mounted = useMounted();
 const { cards: commanderCards, isLoading: commanderCardsLoading } =
-  useCardsByName(commanderNames);
+  useCardsByName(computed(() => (mounted.value ? commanderNames.value : [])));
 
 const { setPageInfo, getPageInfo } = usePageInfo();
 const { saveSearchQuery } = useSearchType();

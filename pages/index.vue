@@ -9,22 +9,22 @@
       >
         <!-- Left: title + search -->
         <div
-          class="flex flex-col gap-5 items-center lg:items-start text-center lg:text-left"
+          class="flex flex-col items-center lg:items-start text-center lg:text-left"
         >
           <p class="hero-eyebrow">MTG SMART CARD SEARCH</p>
-          <h1 class="hero-title text-white">
+          <h1 class="hero-title mt-5 text-white">
             Describe It.
             <span class="hero-title-highlight">Find It.</span>
           </h1>
-          <p class="hero-subtitle">
-            Just describe the effect you're looking for and we'll handle the
-            rest! Free to use, no account needed!
+          <p class="hero-subtitle mt-5">
+            Smart search, similar cards, deck recommendations, and much more!
           </p>
+          <b class="hero-subtitle mb-5">Free to use, no account needed!</b>
 
           <!-- Search (suggested searches + advanced filters render directly
                below the search bar on all breakpoints) -->
-          <Search :show-suggested-searches="true" />
-          <HeroStats />
+          <Search :show-suggested-searches="true" hide-background />
+          <HeroStats class="mt-5" />
         </div>
 
         <!-- Desktop artwork stays server-rendered. Mobile selects an inline
@@ -168,25 +168,15 @@ import mondrakImage from '~/assets/images/mondrak.webp';
 
 import { safeJsonLd } from '~/utils/safeJsonLd';
 
-useCanonicalUrl('/');
 defineOptions({ name: 'HomePage' });
 definePageMeta({
   layout: 'fullscreen',
 });
-useSeoMeta({
-  title: 'CardMystic - Smart Search Engine for Magic: The Gathering',
+usePublicPageSeo({
+  path: '/',
+  title: 'CardMystic | MTG Card Search and Deck Builder',
   description:
-    'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
-  ogTitle: 'CardMystic - Smart Search Engine for Magic: The Gathering',
-  ogDescription:
-    'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
-  ogType: 'website',
-  ogImage: 'https://cardmystic.com/cardmystic_preview.png',
-  ogImageAlt: () => 'CardMystic - Smart Search Engine for Magic: The Gathering',
-  twitterCard: 'summary_large_image',
-  twitterTitle: 'CardMystic - Smart Search Engine for Magic: The Gathering',
-  twitterDescription:
-    'Search Magic: The Gathering cards using natural language. Find MTG cards by describing what you want in plain English.',
+    'Search Magic: The Gathering cards in plain English, build decks, track your collection, and explore decks shared by the community.',
 });
 
 useHead({

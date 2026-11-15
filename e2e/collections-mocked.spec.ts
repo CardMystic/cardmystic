@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { setupDeckDisplay } from './utils/deckDisplay';
-import { BACKEND } from './utils/mocks';
+import { createDisplayCards } from './utils/deckDisplay';
+import { BACKEND, gotoHydrated } from './utils/mocks';
 
 test('Game Changers is the first role and has Commander SEO and structured data', async ({
   page,
 }) => {
-  const state = await setupDeckDisplay(page, { owner: false });
+  const cards = createDisplayCards();
   const gameChangers = {
     slug: 'game-changers',
     name: 'Game Changers',
@@ -35,26 +35,17 @@ test('Game Changers is the first role and has Commander SEO and structured data'
           dataReleaseId: 'game-changer-release',
           offset: 0,
           total: 3,
-          results: state.cards.map((card) => ({
+          results: cards.map((card) => ({
             card_name: card.name,
             card_data: { ...card, game_changer: true },
           })),
         },
       }),
   );
-  await page.reload();
-  await page.evaluate(() => {
-    const root = document.querySelector('#__nuxt') as unknown as {
-      __vue_app__: {
-        config: {
-          globalProperties: {
-            $router: { push: (path: string) => Promise<void> };
-          };
-        };
-      };
-    };
-    return root.__vue_app__.config.globalProperties.$router.push('/roles');
-  });
+  await gotoHydrated(page, '/roles/proliferate');
+  await page
+    .getByRole('link', { name: 'Go To All Roles', exact: true })
+    .click();
   await expect(page.getByTestId('collection-tile').first()).toContainText(
     'Game Changers',
   );
@@ -86,16 +77,20 @@ test('Game Changers is the first role and has Commander SEO and structured data'
     'content',
     'index, follow',
   );
-  const structured = await page
-    .locator('script[type="application/ld+json"]')
-    .allTextContents();
-  expect(structured.map((value) => JSON.parse(value))).toContainEqual(
-    expect.objectContaining({
-      '@type': 'CollectionPage',
-      url: 'https://cardmystic.com/roles/game-changers',
-      breadcrumb: expect.objectContaining({ '@type': 'BreadcrumbList' }),
-    }),
-  );
+  const schema = page.locator('script[type="application/ld+json"]');
+  await expect
+    .poll(async () =>
+      (await schema.allTextContents())
+        .filter(Boolean)
+        .map((value) => JSON.parse(value)),
+    )
+    .toContainEqual(
+      expect.objectContaining({
+        '@type': 'CollectionPage',
+        url: 'https://cardmystic.com/roles/game-changers',
+        breadcrumb: expect.objectContaining({ '@type': 'BreadcrumbList' }),
+      }),
+    );
 });
 
 test('collections match the navigation, responsive directory layout, and SEO metadata', async ({
@@ -115,37 +110,25 @@ test('collections match the navigation, responsive directory layout, and SEO met
     ],
     roles: [{ slug: 'ramp', name: 'Ramp', cardCount: 3, imageUrl: null }],
   };
-  const state = await setupDeckDisplay(page, { owner: false });
+  const cards = createDisplayCards();
   await page.route(BACKEND + '/card-collections', (route) =>
     route.fulfill({ json: catalog }),
   );
-  await page.reload();
-  await expect(page.locator('.list-card')).toHaveCount(3);
+  await gotoHydrated(page, '/sets/lea');
   await page.route(BACKEND + '/card-collections/**', (route) =>
     route.fulfill({
       json: {
         dataReleaseId: 'test-release',
         offset: 0,
         total: 3,
-        results: state.cards.map((card) => ({
+        results: cards.map((card) => ({
           card_name: card.name,
           card_data: card,
         })),
       },
     }),
   );
-  await page.evaluate(() => {
-    const root = document.querySelector('#__nuxt') as unknown as {
-      __vue_app__: {
-        config: {
-          globalProperties: {
-            $router: { push: (path: string) => Promise<void> };
-          };
-        };
-      };
-    };
-    return root.__vue_app__.config.globalProperties.$router.push('/sets');
-  });
+  await page.getByRole('link', { name: 'Go To All Sets', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'MTG Sets', exact: true }),
   ).toBeVisible();
@@ -155,11 +138,12 @@ test('collections match the navigation, responsive directory layout, and SEO met
     'href',
     'https://cardmystic.com/sets',
   );
-  await page
-    .getByRole('searchbox', { name: 'Filter sets' })
-    .fill('Test Set 44');
+  const setPicker = page.getByRole('combobox', { name: 'Filter sets' });
+  await setPicker.fill('set-44');
   await expect(page.getByTestId('collection-tile')).toHaveCount(1);
-  await page.getByTestId('collection-tile').click();
+  await expect(page.getByRole('option')).toHaveText(['Test Set 44 (SET-44)']);
+  await setPicker.press('ArrowDown');
+  await setPicker.press('Enter');
   await expect(page).toHaveURL(/\/sets\/set-44$/);
   await expect(page.locator('h1')).toContainText('Test Set 44');
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
@@ -185,7 +169,10 @@ test('collections match the navigation, responsive directory layout, and SEO met
       await page
         .getByRole('link', { name: 'Go To Roles', exact: true })
         .click();
-    await page.getByTestId('collection-tile').click();
+    await page
+      .getByRole('combobox', { name: `Filter ${kind}` })
+      .fill(name.slice(0, 3));
+    await page.getByRole('option', { name, exact: true }).click();
     const crumbs = page.getByRole('navigation', {
       name: 'Breadcrumb',
       exact: true,
@@ -206,5 +193,20 @@ test('collections match the navigation, responsive directory layout, and SEO met
       })
       .click();
     await expect(page).toHaveURL(new RegExp(`/${kind}$`));
+  }
+  for (const width of [390, 1680]) {
+    await page.setViewportSize({ width, height: 900 });
+    if (width === 390)
+      await page.getByRole('button', { name: 'Open navigation menu' }).click();
+    const navigation =
+      width === 390 ? page.getByRole('dialog') : page.getByRole('banner');
+    await navigation.getByRole('button', { name: 'Sets', exact: true }).click();
+    const picker = page.getByRole('combobox', { name: 'Find sets' });
+    await picker.fill(width === 390 ? 'set-42' : 'set-43');
+    await page.getByRole('option').click();
+    await expect(page).toHaveURL(
+      new RegExp(`/sets/set-${width === 390 ? '42' : '43'}$`),
+    );
+    await expect(picker).toBeHidden();
   }
 });

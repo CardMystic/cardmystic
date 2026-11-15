@@ -9,7 +9,7 @@ import SearchDemo from './SearchDemo.vue';
 const deckSearchDemo: SearchDemoConfig = {
   id: 'within-deck',
   title: 'Search within your deck',
-  input: 'Non artifact board wipe',
+  input: 'Non artifact board wipes',
   inputLabel: '',
   icon: 'i-lucide-search',
   cards: deckSearchCards,
@@ -88,8 +88,7 @@ function toggleCard(id: string, name: string, action: string) {
         <strong>Find cards that fit your deck.</strong> Get personalized
         suggestions based on what you're building, and set
         <strong>a target budget</strong> to keep the options affordable.
-        <strong>New-card alerts</strong> help you spot additions as new cards
-        come out.
+        <strong>New cards suggested automatically</strong> as new cards come out.
       </p>
       <p v-else>
         <strong>Make room for your next addition.</strong> See suggested cuts
@@ -124,7 +123,7 @@ function toggleCard(id: string, name: string, action: string) {
               >
                 <PreviewImage
                   :src="card.image"
-                  alt=""
+                  :alt="card.name"
                   width="200"
                   height="279"
                   class="w-full aspect-[200/279]"
@@ -171,7 +170,7 @@ function toggleCard(id: string, name: string, action: string) {
             >
               <PreviewImage
                 :src="artifactCards[0].image"
-                alt=""
+                :alt="artifactCards[0].name"
                 width="200"
                 height="279"
                 class="w-full aspect-[200/279]"

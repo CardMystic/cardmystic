@@ -17,157 +17,160 @@
       style="position: absolute; left: -9999px; width: 1px; height: 1px"
     />
 
-    <UFormField name="description" class="mb-2">
-      <div class="flex gap-2 items-start">
-        <UInput
-          v-model="state.description"
-          placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
-          icon="i-lucide-search"
-          class="flex-1 min-w-0"
-          :ui="{ trailing: 'pe-1', base: 'text-base h-10' }"
-        >
-          <template v-if="state.description?.length" #trailing>
+    <div class="flex flex-col gap-2">
+      <UFormField name="description">
+        <div class="flex gap-2 items-start">
+          <UInput
+            v-model="state.description"
+            placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
+            icon="i-lucide-search"
+            class="flex-1 min-w-0"
+            :ui="{ trailing: 'pe-1', base: 'text-base h-10' }"
+          >
+            <template v-if="state.description?.length" #trailing>
+              <UButton
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="i-lucide-circle-x"
+                aria-label="Clear input"
+                @click="
+                  () => {
+                    state.description = '';
+                  }
+                "
+              />
+            </template>
+          </UInput>
+          <UButton
+            icon="i-lucide-box"
+            :disabled="
+              (sourceMode === 'select' &&
+                !deckbuilderStore.savedDeckReady.value) ||
+              (!state.decklist?.trim() && !state.commander?.trim())
+            "
+            type="submit"
+            aria-label="Recommend"
+            class="cursor-pointer h-10 shrink-0"
+          >
+            <span class="hidden sm:inline">Recommend</span>
+          </UButton>
+        </div>
+      </UFormField>
+
+      <div class="flex items-start gap-2">
+        <UFormField v-if="sourceMode === 'select'" class="min-w-0 flex-1">
+          <UInputMenu
+            v-model="selectedDeckId"
+            v-model:search-term="deckSearchTerm"
+            :items="deckOptions"
+            open-on-focus
+            open-on-click
+            value-key="value"
+            label-key="label"
+            placeholder="Select a decklist..."
+            aria-label="Select a decklist"
+            class="w-full"
+            :ui="{ base: 'text-base h-10' }"
+            :loading="decksLoading || deckLoading"
+            :ignore-filter="true"
+          />
+          <p v-if="deckLoadError" class="text-error mt-2">
+            Couldn't load this deck. Try selecting it again.
+          </p>
+        </UFormField>
+        <UFormField v-else name="commander" class="min-w-0 flex-1">
+          <div class="flex gap-2 items-center">
+            <UInputMenu
+              v-model="state.commander"
+              v-model:search-term="commanderSearchTerm"
+              :items="filteredCommanders"
+              placeholder="Select a commander (optional)..."
+              aria-label="Select a commander (optional)"
+              icon="i-lucide-crown"
+              class="min-w-0 flex-1"
+              :ui="{ base: 'text-base h-10' }"
+            />
             <UButton
+              v-if="state.commander"
+              class="cursor-pointer"
               color="neutral"
               variant="link"
               size="sm"
               icon="i-lucide-circle-x"
-              aria-label="Clear input"
+              aria-label="Clear commander"
               @click="
                 () => {
-                  state.description = '';
+                  state.commander = '';
                 }
               "
             />
-          </template>
-        </UInput>
+          </div>
+        </UFormField>
+
         <UButton
-          icon="i-lucide-box"
-          :disabled="
-            (sourceMode === 'select' &&
-              !deckbuilderStore.savedDeckReady.value) ||
-            (!state.decklist?.trim() && !state.commander?.trim())
-          "
-          type="submit"
-          aria-label="Recommend"
-          class="cursor-pointer h-10 shrink-0"
+          v-if="userId"
+          type="button"
+          variant="link"
+          class="h-10 shrink-0 px-1"
+          @click="sourceMode = sourceMode === 'select' ? 'paste' : 'select'"
         >
-          <span class="hidden sm:inline">Recommend</span>
+          {{ sourceMode === 'select' ? 'Manual Entry' : 'Select a Decklist' }}
         </UButton>
       </div>
-    </UFormField>
 
-    <div v-if="userProfile" class="flex justify-end">
-      <UButton
-        type="button"
-        variant="link"
-        class="min-h-11 px-0"
-        @click="sourceMode = sourceMode === 'select' ? 'paste' : 'select'"
-      >
-        {{
-          sourceMode === 'select'
-            ? 'Paste a decklist instead'
-            : 'Select a decklist instead'
-        }}
-      </UButton>
+      <template v-if="sourceMode === 'paste'">
+        <UFormField v-if="showPartnerField" name="partnerCommander">
+          <div class="flex gap-2 items-center">
+            <UInputMenu
+              v-model="state.partnerCommander"
+              v-model:search-term="partnerSearchTerm"
+              :items="filteredPartners"
+              placeholder="Select a partner commander (optional)..."
+              icon="i-lucide-crown"
+              class="flex-1"
+              :ui="{ base: 'text-base h-10' }"
+            />
+            <UButton
+              v-if="state.partnerCommander"
+              color="neutral"
+              variant="link"
+              size="sm"
+              icon="i-lucide-circle-x"
+              aria-label="Clear partner commander"
+              @click="
+                () => {
+                  state.partnerCommander = '';
+                }
+              "
+            />
+          </div>
+        </UFormField>
+
+        <UFormField name="decklist">
+          <div class="relative">
+            <UTextarea
+              v-model="state.decklist"
+              placeholder="Paste your decklist here (one card per line)..."
+              :rows="6"
+              class="w-full"
+              :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }"
+              autocomplete="off"
+            />
+            <UButton
+              v-if="onSaveToDeck && hasCards"
+              icon="i-lucide-list-plus"
+              color="primary"
+              variant="soft"
+              size="xs"
+              :label="`Save ${numCardsInDecklist} cards to Deck`"
+              class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
+              @click="onSaveToDeck"
+            />
+          </div>
+        </UFormField>
+      </template>
     </div>
-    <UFormField v-if="sourceMode === 'select'">
-      <UInputMenu
-        v-model="selectedDeckId"
-        v-model:search-term="deckSearchTerm"
-        :items="deckOptions"
-        open-on-focus
-        open-on-click
-        value-key="value"
-        label-key="label"
-        placeholder="Select a decklist..."
-        class="w-full"
-        :loading="decksLoading || deckLoading"
-        :ignore-filter="true"
-      />
-      <p v-if="deckLoadError" class="text-error mt-2">
-        Couldn't load this deck. Try selecting it again.
-      </p>
-    </UFormField>
-    <template v-if="sourceMode === 'paste'">
-      <UFormField name="commander" class="mb-2">
-        <div class="flex gap-2 items-center">
-          <UInputMenu
-            v-model="state.commander"
-            v-model:search-term="commanderSearchTerm"
-            :items="filteredCommanders"
-            placeholder="Select a commander (optional)..."
-            icon="i-lucide-crown"
-            class="flex-1"
-            :ui="{ base: 'text-base h-10' }"
-          />
-          <UButton
-            v-if="state.commander"
-            class="cursor-pointer"
-            color="neutral"
-            variant="link"
-            size="sm"
-            icon="i-lucide-circle-x"
-            aria-label="Clear commander"
-            @click="
-              () => {
-                state.commander = '';
-              }
-            "
-          />
-        </div>
-      </UFormField>
-
-      <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
-        <div class="flex gap-2 items-center">
-          <UInputMenu
-            v-model="state.partnerCommander"
-            v-model:search-term="partnerSearchTerm"
-            :items="filteredPartners"
-            placeholder="Select a partner commander (optional)..."
-            icon="i-lucide-crown"
-            class="flex-1"
-            :ui="{ base: 'text-base h-10' }"
-          />
-          <UButton
-            v-if="state.partnerCommander"
-            color="neutral"
-            variant="link"
-            size="sm"
-            icon="i-lucide-circle-x"
-            aria-label="Clear partner commander"
-            @click="
-              () => {
-                state.partnerCommander = '';
-              }
-            "
-          />
-        </div>
-      </UFormField>
-
-      <UFormField name="decklist">
-        <div class="relative">
-          <UTextarea
-            v-model="state.decklist"
-            placeholder="Paste your decklist here (one card per line)..."
-            :rows="6"
-            class="w-full"
-            :ui="{ base: 'text-base resize-y min-h-39 max-h-39' }"
-            autocomplete="off"
-          />
-          <UButton
-            v-if="onSaveToDeck && hasCards"
-            icon="i-lucide-list-plus"
-            color="primary"
-            variant="soft"
-            size="xs"
-            :label="`Save ${numCardsInDecklist} cards to Deck`"
-            class="absolute bottom-2 right-2 cursor-pointer opacity-80 hover:opacity-100"
-            @click="onSaveToDeck"
-          />
-        </div>
-      </UFormField>
-    </template>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
       <SearchFilterDrawer
@@ -188,6 +191,7 @@
 
 <script lang="ts" setup>
 import * as z from 'zod';
+import { useMounted } from '@vueuse/core';
 import { useRoute } from 'vue-router';
 import { refDebounced } from '~/utils/refDebounced';
 import { parseDecklist } from '~/utils/decklist';
@@ -304,14 +308,12 @@ const state = reactive<Partial<Schema>>({
 });
 
 const { userProfile } = useUserProfile();
+const mounted = useMounted();
+const userId = computed(() =>
+  mounted.value ? userProfile.value?.id : undefined,
+);
 const sourceMode = ref<'select' | 'paste'>(
-  route.query.deckId
-    ? 'select'
-    : route.query.decklist || route.query.commander || pageDefaults
-      ? 'paste'
-      : userProfile.value
-        ? 'select'
-        : 'paste',
+  route.query.deckId ? 'select' : 'paste',
 );
 const { selectedDeckId } = deckbuilderStore;
 selectedDeckId.value = String(route.query.deckId || '');
@@ -320,9 +322,7 @@ const { decklists: savedDecks, isLoading: decksLoading } = useMyDecklistsSearch(
   refDebounced(deckSearchTerm, 250),
 );
 const activeDeckId = computed(() =>
-  sourceMode.value === 'select' && userProfile.value
-    ? selectedDeckId.value
-    : '',
+  sourceMode.value === 'select' && userId.value ? selectedDeckId.value : '',
 );
 const {
   decklist: ownedDeck,
@@ -414,22 +414,19 @@ watch(
 watch(sourceMode, (mode) => {
   if (mode === 'paste') selectedDeckId.value = '';
 });
-watch(
-  () => userProfile.value?.id,
-  (id, previous) => {
-    if (id === previous) return;
-    if (id && route.query.deckId) {
-      selectedDeckId.value = String(route.query.deckId);
-      sourceMode.value = 'select';
-      return;
-    }
-    selectedDeckId.value = '';
-    sourceMode.value =
-      id && !route.query.decklist && !route.query.commander && !pageDefaults
-        ? 'select'
-        : 'paste';
-  },
-);
+watch(userId, (id, previous) => {
+  if (id === previous) return;
+  if (id && route.query.deckId) {
+    selectedDeckId.value = String(route.query.deckId);
+    sourceMode.value = 'select';
+    return;
+  }
+  selectedDeckId.value = '';
+  sourceMode.value =
+    id && !route.query.decklist && !route.query.commander && !pageDefaults
+      ? 'select'
+      : 'paste';
+});
 watch(
   () => route.query.deckId,
   (id) => {

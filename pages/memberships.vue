@@ -1,12 +1,13 @@
 <script setup lang="ts">
-useCanonicalUrl('/memberships');
+import { membershipPlans } from '~/utils/membershipPlans';
 defineOptions({ name: 'MembershipsPage' });
 definePageMeta({ layout: 'fullscreen' });
 const { userId } = useUserProfile();
-useSeoMeta({
+usePublicPageSeo({
+  path: '/memberships',
   title: 'Memberships | CardMystic',
   description:
-    'Get CardMystic Pro for $4.99/month with unlimited Pro searches, deck suggestions and search within your decks and collections.',
+    `Get CardMystic Pro for $${membershipPlans[0].price.toFixed(2)}/month with unlimited Pro searches, deck suggestions and search within your decks and collections.`,
 });
 </script>
 

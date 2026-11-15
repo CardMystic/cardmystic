@@ -20,7 +20,9 @@ test.beforeEach(async ({ page }) => {
             name: id.startsWith('058da0b2')
               ? 'Vintage Collection'
               : 'Iron Man Living Forge',
-            description: '',
+            description: id.startsWith('058da0b2')
+              ? 'A vintage cube collection.'
+              : 'An artifact toolbox deck.',
             format: 'Commander',
             avatar_card_name: null,
             commanders: [],
@@ -33,7 +35,7 @@ test.beforeEach(async ({ page }) => {
             like_count: 0,
             save_count: 0,
             comment_count: 0,
-            view_count: 0,
+            view_count: id.startsWith('058da0b2') ? 19 : 47,
           })),
         },
       });
@@ -172,6 +174,50 @@ test.describe('desktop without JavaScript', () => {
   test.use({
     javaScriptEnabled: false,
     viewport: { width: 1440, height: 1000 },
+  });
+
+  test('community statistics link to the public search directories', async ({
+    page,
+  }) => {
+    const stats = page.getByRole('group', {
+      name: 'CardMystic community statistics',
+    });
+    for (const [label, path] of [
+      ['users', '/explore/users'],
+      ['decks', '/explore/decklists'],
+    ]) {
+      await page.goto('/');
+      const link = stats.getByRole('link', { name: label });
+      await expect(link).toHaveAttribute('href', path);
+      await link.focus();
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(new RegExp(path + '$'));
+    }
+  });
+
+  test('homepage workflow links navigate by keyboard without JavaScript', async ({
+    page,
+  }) => {
+    const workflow = page.getByRole('list', { name: 'CardMystic workflow' });
+    for (const [index, [label, path]] of [
+      ['Search', '/search/all/smart'],
+      ['Compare', '/search/all/similarity'],
+      ['Build', '/build'],
+      ['Recommend', '/search/all/deckbuilder'],
+    ].entries()) {
+      await page.goto('/');
+      const link = workflow.getByRole('link', { name: label, exact: true });
+      await expect(link).toHaveAttribute('href', path);
+      await workflow.getByRole('link').first().focus();
+      for (let step = 0; step < index; step++) await page.keyboard.press('Tab');
+      await expect(link).toBeFocused();
+      const [response] = await Promise.all([
+        page.waitForNavigation(),
+        page.keyboard.press('Enter'),
+      ]);
+      expect(response?.ok()).toBe(true);
+      expect(new URL(page.url()).pathname).toBe(path);
+    }
   });
 
   test('the server-rendered hero and search remain visible and images load', async ({
@@ -352,6 +398,17 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
       .first()
       .getByRole('link', { name: 'Toxic Deluge', exact: true }),
   ).toHaveAttribute('href', '/card/afaef788-34d1-460b-b884-9d7ae6ddeb18');
+  const archfiend = showcase.getByRole('link', {
+    name: 'Archfiend of Despair',
+    exact: true,
+  });
+  await expect(archfiend).toHaveAttribute(
+    'href',
+    '/card/9c36760b-57c5-488b-afc9-ef141942c6ab',
+  );
+  await expect(
+    archfiend.getByRole('img', { name: 'Archfiend of Despair' }),
+  ).toBeVisible();
   const source = showcase.locator('.searched-card');
   await expect(source).toHaveAttribute('aria-label', "Teferi's Protection");
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -374,8 +431,21 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   });
   await examples.scrollIntoViewIfNeeded();
   await expect(examples.locator('.deck-link')).toHaveCount(2);
-  expect(previewRequests).toEqual([]);
-  await expect(examples).toContainText('Tutoring toolbox with a pinch of stax');
+  for (const [name, description, views] of [
+    ['Iron Man Living Forge', 'An artifact toolbox deck.', 47],
+    ['Vintage Collection', 'A vintage cube collection.', 19],
+  ] as const) {
+    const card = examples.getByRole('article').filter({
+      has: page.getByRole('link', { name, exact: true }),
+    });
+    await expect(card).toContainText(description);
+    await expect(
+      card.getByLabel(`${views} views`, { exact: true }),
+    ).toBeVisible();
+    for (const stat of ['likes', 'comments', 'saves']) {
+      await expect(card.getByLabel(`0 ${stat}`, { exact: true })).toBeVisible();
+    }
+  }
   await expect(
     examples.getByRole('link', { name: /Iron Man/ }),
   ).toHaveAttribute('href', '/lists/e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a');
@@ -425,7 +495,7 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   });
   await deckSearch.scrollIntoViewIfNeeded();
   await expect(deckSearch.locator('.demo-typed')).toHaveText(
-    'Non artifact board wipe',
+    'Non artifact board wipes',
   );
   await expect(deckSearch.locator('.results-ready')).toHaveCount(3);
   await expect(deckSearch.locator('.demo-input')).not.toHaveAttribute('href');
@@ -459,7 +529,7 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await expect(pro.getByRole('heading', { level: 3 })).toHaveText([
     'Pro Search',
     'Search within your deck',
-    'Suggested adds',
+    'Suggested Adds & New Card Alerts',
     'Suggested cuts',
     'Recommended decks for each card',
   ]);
@@ -497,7 +567,10 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
     .click();
   await expect(pro.getByRole('status')).toContainText('Manalith cut');
   await expect(pro.getByRole('textbox')).toHaveCount(0);
-  for (const title of ['Suggested adds preview', 'Suggested cuts preview']) {
+  for (const title of [
+    'Suggested Adds & New Card Alerts preview',
+    'Suggested cuts preview',
+  ]) {
     await expect(
       pro.getByRole('figure', { name: title, exact: true }).getByRole('link'),
     ).toHaveCount(3);
@@ -589,7 +662,8 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await businessSection.screenshot({
     path: '/tmp/cardmystic-business-desktop.png',
   });
-  expect(previewRequests).toEqual([]);
+  expect(previewRequests).toHaveLength(1);
+  expect(previewRequests[0]!.pathname).toMatch(/\/card-lists\/summaries$/);
   await showcase
     .getByRole('link', { name: 'Search: X spell board wipes', exact: true })
     .click();
@@ -744,7 +818,7 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     );
     await expect(demo.locator('.demo-result').first()).toHaveCSS(
       'transition-duration',
-      '0.4s',
+      '0.32s',
     );
     const recommendations = page.getByRole('figure', {
       name: 'Deck Recommender example',

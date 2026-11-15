@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
-import { BACKEND, gotoHydrated } from './utils/mocks';
+import { BACKEND, waitForHydration } from './utils/mocks';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -89,9 +89,7 @@ test('saved deck recommendations add cards without searching until rerun', async
   await expect.poll(() => searches.length).toBe(2);
   expect(searches[1].cards).toContain(added.name);
   await expect(rerun).toHaveCount(0);
-  await page
-    .getByRole('button', { name: 'Paste a decklist instead', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Manual Entry', exact: true }).click();
   await expect(page.getByPlaceholder(/Paste your decklist/)).toBeVisible();
 });
 
@@ -100,24 +98,69 @@ test('signed-in users default to selecting a saved deck', async ({ page }) => {
   await page.route(BACKEND + '/supabase/card-lists/mine/search**', (route) =>
     route.fulfill({ json: { decklists: [state.deck] } }),
   );
-  // Start with a fresh query cache after replacing the setup's deck-picker data.
-  await gotoHydrated(page, '/about');
-  await page.evaluate(() => {
-    const root = document.getElementById('__nuxt') as unknown as {
-      __vue_app__: {
-        config: {
-          globalProperties: {
-            $router: { push: (path: string) => Promise<unknown> };
-          };
-        };
-      };
-    };
-    return root.__vue_app__.config.globalProperties.$router.push(
-      '/search/all/deckbuilder',
-    );
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (
+      /hydrat/i.test(message.text()) &&
+      ['warning', 'error'].includes(message.type())
+    )
+      errors.push(message.text());
   });
-  const selector = page.getByPlaceholder('Select a decklist...');
-  await expect(selector).toBeVisible();
+  const selector = page.getByRole('combobox', {
+    name: 'Select a decklist',
+    exact: true,
+  });
+  const paste = page.getByRole('button', { name: 'Manual Entry' });
+  const select = page.getByRole('button', {
+    name: 'Select a Decklist',
+    exact: true,
+  });
+  const commander = page.getByRole('combobox', {
+    name: 'Select a commander (optional)',
+    exact: true,
+  });
+  async function expectBeside(field: Locator, button: Locator) {
+    const input = (await field.boundingBox())!;
+    const action = (await button.boundingBox())!;
+    expect(action.x).toBeGreaterThanOrEqual(input.x + input.width);
+    expect(action.y + action.height / 2).toBeCloseTo(
+      input.y + input.height / 2,
+      0,
+    );
+  }
+  const textarea = page.getByPlaceholder(/Paste your decklist/);
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    const response =
+      width === 1440
+        ? await page.goto('/search/all/deckbuilder')
+        : await page.reload();
+    expect(response?.ok()).toBe(true);
+    expect(await response!.text()).toContain('Paste your decklist here');
+    await waitForHydration(page);
+    expect(errors).toEqual([]);
+    await expect(selector).toBeVisible();
+    await expect(selector).toHaveCSS('font-size', '16px');
+    await expectBeside(selector, paste);
+    await paste.focus();
+    await page.keyboard.press('Enter');
+    await expect(commander).toBeVisible();
+    await expectBeside(commander, select);
+    const description = (await page
+      .getByPlaceholder(/Describe the cards/)
+      .boundingBox())!;
+    const commanderBox = (await commander.boundingBox())!;
+    const decklist = (await textarea.boundingBox())!;
+    expect(commanderBox.y - description.y - description.height).toBeCloseTo(
+      8,
+      0,
+    );
+    expect(decklist.y - commanderBox.y - commanderBox.height).toBeCloseTo(8, 0);
+    await expect(select).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(selector).toBeVisible();
+  }
   await expect(page.getByPlaceholder(/Paste your decklist/)).toHaveCount(0);
   await selector.click();
   await expect(selector).toHaveValue('');
@@ -130,14 +173,11 @@ test('signed-in users default to selecting a saved deck', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: 'Recommend', exact: true }),
   ).toBeEnabled();
-  await page
-    .getByRole('button', { name: 'Paste a decklist instead', exact: true })
-    .click();
-  await expect(page.getByPlaceholder(/Paste your decklist/)).toHaveValue(
-    /Island/,
-  );
-  await page
-    .getByRole('button', { name: 'Select a decklist instead', exact: true })
-    .click();
+  await paste.focus();
+  await page.keyboard.press('Enter');
+  await expect(textarea).toHaveValue(/Island/);
+  await expect(select).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(selector).toBeVisible();
+  expect(errors).toEqual([]);
 });

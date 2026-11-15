@@ -19,7 +19,7 @@ function play() {
   if (started) return;
   started = true;
   observer?.disconnect();
-  [350, 1000, 1600, 2250, 2800].forEach((delay, index) => {
+  [280, 800, 1280, 1800, 2240].forEach((delay, index) => {
     timers.push(
       setTimeout(() => {
         phase.value = index + 1;
@@ -234,7 +234,7 @@ function toggle(id: string, action: string, name: string) {
             >
               <PreviewImage
                 :src="preview.image"
-                alt=""
+                :alt="preview.name"
                 width="200"
                 height="279"
                 class="aspect-[200/279] w-full"
@@ -328,8 +328,8 @@ function toggle(id: string, action: string, name: string) {
 <style scoped>
 .compare-deck {
   transition:
-    border-color 0.25s ease,
-    background-color 0.25s ease;
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 .deck-active,
 .deck-selected {
@@ -339,15 +339,15 @@ function toggle(id: string, action: string, name: string) {
   background-color: color-mix(in srgb, var(--ui-primary) 8%, var(--ui-bg));
 }
 .compare-choice {
-  animation: deck-choice-appear 0.25s ease both;
+  animation: deck-choice-appear 0.2s ease both;
 }
 .compare-results {
   opacity: 0;
   visibility: hidden;
   transform: translateY(6px);
   transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
+    opacity 0.32s ease,
+    transform 0.32s ease;
 }
 .comparison-ready {
   opacity: 1;

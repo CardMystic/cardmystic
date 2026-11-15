@@ -1,6 +1,16 @@
 <script setup lang="ts">
-import { builderExamples } from '~/utils/search-showcase';
+import { DecklistSummarySchema } from '~/models/cardListModel';
+import { builder } from '~/utils/home-examples.json';
+const examples = DecklistSummarySchema.array().parse(builder);
 const { userId } = useUserProfile();
+const mounted = ref(false);
+const { decklists } = usePublicDecklistSummaries(
+  computed(() => (mounted.value ? examples.map((list) => list.id) : [])),
+  examples,
+);
+onMounted(() => {
+  mounted.value = true;
+});
 </script>
 
 <template>
@@ -25,7 +35,7 @@ const { userId } = useUserProfile();
         <strong>save unlimited decks and collections for free</strong>.
       </p>
       <UButton
-        :to="userId ? '/lists' : '/build'"
+        :to="mounted && userId ? '/lists' : '/build'"
         no-prefetch
         icon="i-lucide-layers"
         class="mt-6"
@@ -33,13 +43,15 @@ const { userId } = useUserProfile();
       >
     </div>
     <nav
+      v-if="decklists.length"
       aria-label="Example deck and collection"
       class="grid gap-4 sm:grid-cols-2"
     >
-      <BuilderExampleList
-        v-for="example in builderExamples"
-        :key="example.id"
-        :example="example"
+      <CardListLink
+        v-for="list in decklists"
+        :key="list.id"
+        :list="list"
+        show-author
       />
     </nav>
   </section>

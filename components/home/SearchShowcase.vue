@@ -1,5 +1,20 @@
 <script setup lang="ts">
 import { searchDemos } from '~/utils/search-showcase';
+
+const workflow = [
+  { label: 'Search', icon: 'i-lucide-search', to: '/search/all/smart' },
+  {
+    label: 'Compare',
+    icon: 'i-mdi-cards-outline',
+    to: '/search/all/similarity',
+  },
+  { label: 'Build', icon: 'i-lucide-layers', to: '/build' },
+  {
+    label: 'Recommend',
+    icon: 'i-lucide-list-plus',
+    to: '/search/all/deckbuilder',
+  },
+];
 </script>
 
 <template>
@@ -24,27 +39,28 @@ import { searchDemos } from '~/utils/search-showcase';
         aria-label="CardMystic workflow"
       >
         <li
-          v-for="(step, index) in [
-            { label: 'Search', icon: 'i-lucide-search' },
-            { label: 'Compare', icon: 'i-mdi-cards-outline' },
-            { label: 'Build', icon: 'i-lucide-layers' },
-            { label: 'Recommend', icon: 'i-lucide-list-plus' },
-          ]"
+          v-for="(step, index) in workflow"
           :key="step.label"
-          class="relative flex flex-col items-center gap-3"
+          class="relative flex justify-center"
         >
-          <span
-            class="flex size-10 items-center justify-center rounded-xl border border-accented bg-default text-primary sm:size-16"
+          <NuxtLink
+            :to="step.to"
+            no-prefetch
+            class="group flex flex-col items-center gap-3 rounded-xl hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
-            <UIcon
-              :name="step.icon"
-              class="size-5 sm:size-7"
-              aria-hidden="true"
-            />
-          </span>
-          <span class="text-xs font-medium sm:text-sm">{{ step.label }}</span>
+            <span
+              class="flex size-10 items-center justify-center rounded-xl border border-accented bg-default text-primary group-hover:border-primary sm:size-16"
+            >
+              <UIcon
+                :name="step.icon"
+                class="size-5 sm:size-7"
+                aria-hidden="true"
+              />
+            </span>
+            <span class="text-xs font-medium sm:text-sm">{{ step.label }}</span>
+          </NuxtLink>
           <UIcon
-            v-if="index < 3"
+            v-if="index < workflow.length - 1"
             name="i-lucide-arrow-right"
             class="absolute left-[calc(100%+0.25rem)] top-5 size-4 -translate-x-1/2 -translate-y-1/2 text-primary sm:top-8 sm:size-5"
             aria-hidden="true"

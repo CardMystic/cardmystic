@@ -12,13 +12,11 @@ withDefaults(
 );
 
 const openMenu = shallowRef<string>();
-const expandedItems = shallowRef<string[]>([]);
 const route = useRoute();
 watch(
   () => route.fullPath,
   () => {
     openMenu.value = undefined;
-    expandedItems.value = [];
   },
 );
 
@@ -82,6 +80,13 @@ function updateOpen(label: string | undefined, value: boolean) {
             }"
             @click="closeOnNavigation"
           >
+            <template #collection-picker="{ item: picker }">
+              <CollectionAutocomplete
+                v-if="picker.collectionKind"
+                :kind="picker.collectionKind"
+                :label="`Find ${picker.collectionKind}`"
+              />
+            </template>
             <template #item-leading="{ item: child }">
               <SetSymbol
                 v-if="child.setCode"
@@ -101,7 +106,7 @@ function updateOpen(label: string | undefined, value: boolean) {
   </nav>
   <UNavigationMenu
     v-else
-    v-model="expandedItems"
+    :key="route.fullPath"
     :items="items"
     orientation="vertical"
     color="neutral"
@@ -114,6 +119,13 @@ function updateOpen(label: string | undefined, value: boolean) {
       childLinkLabel: 'whitespace-normal',
     }"
   >
+    <template #collection-picker="{ item: picker }">
+      <CollectionAutocomplete
+        v-if="picker.collectionKind"
+        :kind="picker.collectionKind"
+        :label="`Find ${picker.collectionKind}`"
+      />
+    </template>
     <template #item-leading="{ item }">
       <SetSymbol
         v-if="item.setCode"

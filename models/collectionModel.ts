@@ -1,6 +1,8 @@
 import type { Card } from './cardModel';
 export type CardCollectionKind = 'themes' | 'roles' | 'sets';
 export interface CardCollectionEntry {
+  taxonomyId?: string;
+  definition?: string;
   slug: string;
   name: string;
   cardCount: number;

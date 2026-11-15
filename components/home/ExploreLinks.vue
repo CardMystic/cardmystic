@@ -30,27 +30,16 @@
 </template>
 
 <script setup lang="ts">
+import {
+  cardDirectoryLinks,
+  communityDirectoryLinks,
+} from '~/utils/site-navigation';
+
 const linkGroups = [
   {
     label: 'Browse Cards',
     icon: 'i-mdi-cards-outline',
-    links: [
-      {
-        label: 'Themes',
-        icon: 'i-lucide-tags',
-        to: '/themes',
-      },
-      {
-        label: 'Roles',
-        icon: 'i-lucide-list-filter',
-        to: '/roles',
-      },
-      {
-        label: 'Sets',
-        icon: 'i-mdi-cards-outline',
-        to: '/sets',
-      },
-    ],
+    links: cardDirectoryLinks,
   },
   {
     label: 'Search',
@@ -76,23 +65,7 @@ const linkGroups = [
   {
     label: 'Community',
     icon: 'i-lucide-users',
-    links: [
-      {
-        label: 'Decklists',
-        icon: 'i-lucide-list-tree',
-        to: '/explore/decklists',
-      },
-      {
-        label: 'Users',
-        icon: 'i-lucide-user-search',
-        to: '/explore/users',
-      },
-      {
-        label: 'Articles',
-        icon: 'i-lucide-newspaper',
-        to: '/explore/articles',
-      },
-    ],
+    links: communityDirectoryLinks,
   },
   {
     label: 'Popular Cards',

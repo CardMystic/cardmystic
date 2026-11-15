@@ -45,28 +45,12 @@
 </template>
 
 <script setup lang="ts">
+import { baseQueries, moreQueries } from '~/utils/searchExamples';
 import { searchDemos, deckExamples } from '~/utils/search-showcase';
 const props = withDefaults(
   defineProps<{ mode?: 'smart' | 'similarity' | 'recommend' }>(),
   { mode: 'smart' },
 );
-
-// Curated example queries shown under the home hero search bar.
-// These queries have no equivalent curated page; keep their exact searches
-// as crawlable links without prefetching results for every chip.
-const baseQueries = [
-  'X spell board wipes',
-  'lands that make any color',
-  'aristocrats draw engine',
-  'token doublers',
-];
-
-const moreQueries = [
-  'etb triggers',
-  'instant speed enchantment removal',
-  'graveyard recursion',
-  'mana rocks that cost 2 or less',
-];
 
 const showAll = ref(false);
 const visibleQueries = computed(() => {

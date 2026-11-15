@@ -48,16 +48,15 @@
         :key="article.id"
         :article="article"
       />
-      <NuxtLink to="/explore/articles">
-        <UButton
-          color="primary"
-          variant="outline"
-          class="h-full w-full justify-center"
-          icon="i-lucide-search"
-        >
-          Search Articles
-        </UButton>
-      </NuxtLink>
+      <UButton
+        to="/explore/articles"
+        color="primary"
+        variant="outline"
+        class="h-full w-full justify-center"
+        icon="i-lucide-search"
+      >
+        Search Articles
+      </UButton>
     </div>
   </div>
 </template>

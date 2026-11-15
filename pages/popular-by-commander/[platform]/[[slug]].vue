@@ -45,7 +45,12 @@
       </div>
 
       <!-- Results -->
-      <div class="mb-10 w-full">
+      <SearchLandingContent
+        v-if="!commanderParam"
+        search-type="popular-by-commander"
+        :platform="platform"
+      />
+      <div v-else class="mb-10 w-full">
         <SearchResults
           :reranking-enabled="route.query.useRerank !== 'false'"
           :is-loading="isLoading"

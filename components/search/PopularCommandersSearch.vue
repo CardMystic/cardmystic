@@ -47,6 +47,7 @@
         ref="filtersRef"
         v-model="state.filters"
         commander-colors
+        commander-only
         hide-formats
         :quick-filters="['arena', 'mtgo', 'paper']"
         @apply="formRef?.submit()"

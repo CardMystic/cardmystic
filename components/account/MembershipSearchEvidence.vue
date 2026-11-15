@@ -191,6 +191,12 @@ const displayScore = (score: number) =>
 .evidence-row[data-mode='enhanced'] .evidence-fill {
   transition-delay: 160ms;
 }
+.compact .evidence-fill {
+  transition-duration: 720ms;
+}
+.compact .evidence-row[data-mode='enhanced'] .evidence-fill {
+  transition-delay: 128ms;
+}
 .evidence-axis {
   display: flex;
   justify-content: space-between;

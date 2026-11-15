@@ -1,5 +1,10 @@
 import type { NavigationMenuItem } from '@nuxt/ui';
-import { collectionPath, type CardCollectionKind } from './card-collections';
+import {
+  collectionIcons,
+  collectionLabels,
+  collectionPath,
+  type CardCollectionKind,
+} from './card-collections';
 import {
   navigationEntries,
   type NavigationCatalog,
@@ -7,6 +12,7 @@ import {
 
 export interface SiteNavigationItem extends NavigationMenuItem {
   setCode?: string;
+  collectionKind?: CardCollectionKind;
   children?: SiteNavigationItem[];
 }
 
@@ -20,20 +26,38 @@ export const utilityNavigation: SiteNavigationItem[] = [
   },
 ];
 
+export const cardDirectoryLinks = (
+  Object.keys(collectionLabels) as CardCollectionKind[]
+).map((kind) => ({
+  label: collectionLabels[kind],
+  icon: collectionIcons[kind],
+  to: collectionPath(kind),
+}));
+
+export const communityDirectoryLinks = [
+  {
+    label: 'Decklists',
+    icon: 'i-lucide-list-tree',
+    to: '/explore/decklists',
+  },
+  { label: 'Users', icon: 'i-lucide-user-search', to: '/explore/users' },
+  {
+    label: 'Articles',
+    icon: 'i-lucide-newspaper',
+    to: '/explore/articles',
+  },
+];
+
 function collectionNavigation(
   kind: CardCollectionKind,
   catalog: NavigationCatalog | null | undefined,
   status: string,
 ): SiteNavigationItem {
-  const label = kind.charAt(0).toUpperCase() + kind.slice(1);
+  const label = collectionLabels[kind];
   const entries = navigationEntries(kind, catalog?.[kind] ?? []);
   return {
     label,
-    icon: {
-      sets: 'i-mdi-cards-outline',
-      roles: 'i-lucide-list-filter',
-      themes: 'i-lucide-tags',
-    }[kind],
+    icon: collectionIcons[kind],
     children: [
       ...(entries.length
         ? []
@@ -53,6 +77,7 @@ function collectionNavigation(
         to: collectionPath(kind, entry.slug),
         ...(kind === 'sets' ? { setCode: entry.slug } : {}),
       })),
+      { type: 'label', slot: 'collection-picker', collectionKind: kind },
       {
         label: `All ${kind}`,
         to: collectionPath(kind),
@@ -101,19 +126,7 @@ export function siteNavigation(
     {
       label: 'Community',
       icon: 'i-lucide-users',
-      children: [
-        {
-          label: 'Decklists',
-          icon: 'i-lucide-list-tree',
-          to: '/explore/decklists',
-        },
-        { label: 'Users', icon: 'i-lucide-user-search', to: '/explore/users' },
-        {
-          label: 'Articles',
-          icon: 'i-lucide-newspaper',
-          to: '/explore/articles',
-        },
-      ],
+      children: communityDirectoryLinks,
     },
     {
       label: 'Popular Cards',

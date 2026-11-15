@@ -25,7 +25,7 @@ function revealNext() {
     revealedCount.value++;
     revealTimer = undefined;
     revealNext();
-  }, 300);
+  }, 240);
 }
 function imageReady(index: number, failed = false) {
   loadedCards.value[index] = true;
@@ -39,17 +39,17 @@ function play() {
   const typeNext = () => {
     if (typedLength.value < props.demo.input.length) {
       typedLength.value++;
-      timer = setTimeout(typeNext, 75);
+      timer = setTimeout(typeNext, 60);
     } else if (typedQueryLength.value < (props.demo.query?.length ?? 0)) {
       typedQueryLength.value++;
-      timer = setTimeout(typeNext, 100);
+      timer = setTimeout(typeNext, 80);
     } else {
       timer = setTimeout(() => {
         resultsReady.value = true;
-      }, 200);
+      }, 160);
     }
   };
-  timer = setTimeout(typeNext, 350);
+  timer = setTimeout(typeNext, 280);
 }
 onMounted(() => {
   if (!('IntersectionObserver' in window)) {
@@ -165,10 +165,11 @@ onBeforeUnmount(() => {
                 'searched-card': card.searched,
               }"
             >
+              <span class="sr-only">{{ card.name }}</span>
               <img
                 v-if="resultsReady && !failedCards[index]"
                 :src="card.image"
-                alt=""
+                :alt="card.name"
                 width="200"
                 height="279"
                 loading="lazy"
@@ -277,10 +278,10 @@ progress[data-color='error'] {
 .demo-result {
   border-radius: 5% / 3.6%;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.32s ease;
 }
 .demo-score {
-  transition: opacity 0.4s ease;
+  transition: opacity 0.32s ease;
 }
 .demo-result.results-ready {
   opacity: 1;

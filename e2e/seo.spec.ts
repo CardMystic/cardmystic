@@ -31,7 +31,9 @@ test.describe('SEO infrastructure', () => {
     }
 
     await expect(
-      page.getByRole('link', { name: 'Build a deck' }),
+      page
+        .getByRole('region', { name: 'Deck & Collection Builder', exact: true })
+        .getByRole('link', { name: 'Build a deck', exact: true }),
     ).toHaveAttribute('href', '/build');
     await expect(
       page
@@ -218,6 +220,9 @@ test.describe('SSR meta tags for crawlers', () => {
       expect(ogDescription.length).toBeGreaterThan(0);
       const ogImage = metaContent(html, 'property', 'og:image');
       expect(ogImage).toMatch(/^https?:\/\//);
+      expect(metaContent(html, 'property', 'og:url')).toBe(
+        `https://cardmystic.com${path}`,
+      );
 
       // Twitter card must be a large-image summary for rich previews.
       expect(metaContent(html, 'name', 'twitter:card')).toBe(
@@ -241,6 +246,7 @@ test.describe('SSR meta tags for crawlers', () => {
     const html = await resp.text();
     expect(metaContent(html, 'name', 'robots')).toBe('noindex, follow');
     expect(html).not.toContain('rel="canonical"');
+    expect(metaContent(html, 'property', 'og:url')).toBe('');
   });
 
   test('bare landing pages are indexable with generic (but valid) meta', async ({
@@ -299,6 +305,53 @@ test.describe('SSR meta tags for crawlers', () => {
       expect(html).toContain(
         `<link rel="canonical" href="https://cardmystic.com${path}">`,
       );
+    }
+  });
+
+  test('shared page previews are complete in the initial HTML', async ({
+    request,
+    page,
+  }) => {
+    for (const path of [
+      '/',
+      '/build',
+      '/about',
+      '/memberships',
+      '/install',
+      '/privacyPolicy',
+      '/terms',
+      '/billing-policy',
+      '/explore/decklists',
+      '/explore/articles',
+      '/explore/users',
+      '/popular-by-card/all',
+    ]) {
+      const response = await request.get(path);
+      expect(response.ok(), path).toBeTruthy();
+      const html = await response.text();
+      const { title, meta } = await page.evaluate((source) => {
+        const doc = new DOMParser().parseFromString(source, 'text/html');
+        const meta = Object.fromEntries(
+          [...doc.head.querySelectorAll('meta')].map((tag) => [
+            tag.name || tag.getAttribute('property'),
+            tag.content,
+          ]),
+        );
+        return { title: doc.title, meta };
+      }, html);
+      const description = meta.description;
+      expect(title, path).toContain('CardMystic');
+      expect(description, path).toBeTruthy();
+      expect(meta['og:title'], path).toBe(title);
+      expect(meta['twitter:title'], path).toBe(title);
+      expect(meta['og:description'], path).toBe(description);
+      expect(meta['twitter:description'], path).toBe(description);
+      expect(meta['og:url'], path).toBe(`https://cardmystic.com${path}`);
+      expect(meta['og:image'], path).toMatch(/^https:\/\//);
+      expect(meta['twitter:image'], path).toBe(meta['og:image']);
+      if (path.startsWith('/explore/'))
+        expect(meta.robots).toBe('noindex, follow');
+      if (path === '/about') expect(html).toContain('"@type":"AboutPage"');
     }
   });
 });

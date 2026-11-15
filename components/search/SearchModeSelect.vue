@@ -49,7 +49,12 @@ function select(value: unknown) {
 
 <template>
   <div
-    class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1 sm:flex sm:flex-wrap"
+    class="grid items-center gap-x-3 gap-y-1 sm:flex sm:flex-wrap"
+    :class="
+      compact
+        ? 'grid-cols-1 justify-items-end'
+        : 'grid-cols-[auto_minmax(0,1fr)]'
+    "
   >
     <USelect
       :id="id"
