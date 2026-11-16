@@ -2,12 +2,12 @@
   <SpaceBackground>
     <ClientOnly>
       <div
-        class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl w-full max-w-sm"
+        class="flex flex-col space-y-4 rounded-xl bg-elevated text-default p-6 shadow-xl w-full max-w-sm"
       >
-        <h1 class="text-xl font-bold text-white text-center">
+        <h1 class="text-xl font-bold text-highlighted text-center">
           Personalize your Profile
         </h1>
-        <p class="text-zinc-400 text-sm text-center">
+        <p class="text-toned text-sm text-center">
           Pick a username and profile icon to display on your decklists and
           profile.
         </p>
@@ -16,6 +16,8 @@
           v-model="username"
           type="text"
           placeholder="Username"
+          aria-label="Username"
+          autocomplete="username"
           size="lg"
           class="w-full"
           :disabled="loading"
@@ -42,16 +44,17 @@
             :items="filteredAvatarCards"
             :loading="cardsStatus === 'pending' || avatarSaving"
             placeholder="Optional: choose a profile icon card"
+            aria-label="Optional: choose a profile icon card"
             icon="i-lucide-image"
             class="w-full"
             @update:model-value="selectProfileCard"
           />
-          <p v-if="avatarError" class="text-red-400 text-xs text-center">
+          <p v-if="avatarError" class="text-error text-xs text-center">
             {{ avatarError }}
           </p>
         </div>
 
-        <p v-if="errorMessage" class="text-red-400 text-sm text-center">
+        <p v-if="errorMessage" class="text-error text-sm text-center">
           {{ errorMessage }}
         </p>
 

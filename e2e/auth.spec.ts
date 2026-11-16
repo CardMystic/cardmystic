@@ -97,7 +97,7 @@ test.describe('Login page', () => {
     await page.getByRole('button', { name: /^sign in$/i }).click();
 
     await page.waitForURL((url) => url.pathname === '/', { timeout: 20_000 });
-    await expect(page.getByRole('button', { name: /^login$/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /^login$/i })).toHaveCount(0);
   });
 });
 
@@ -156,7 +156,7 @@ test.describe('Google OAuth', () => {
       )
       .not.toEqual([]);
 
-    await expect(page.getByRole('button', { name: /^login$/i })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /^login$/i })).toHaveCount(0);
   });
 });
 
@@ -257,23 +257,14 @@ test.describe('Logout', () => {
     await page.getByRole('button', { name: /^sign in$/i }).click();
     await page.waitForURL((url) => url.pathname === '/', { timeout: 20_000 });
 
-    // The Logout button lives inside the Profile popover. The popover
-    // trigger is the cursor-pointer div wrapping the avatar img (or the
-    // "Profile" UButton when there's no avatar). Click via the alt-text
-    // image's parent so the Nuxt UI popover handler actually fires.
-    const trigger = page
-      .locator(
-        'header div.cursor-pointer:has(img[alt]):visible, header button:has-text("Profile"):visible',
-      )
-      .first();
-    await trigger.click();
+    await page.getByRole('button', { name: 'Profile', exact: true }).click();
     await page
       .getByRole('button', { name: /^logout$/i })
       .first()
       .click();
 
     await expect(
-      page.getByRole('button', { name: /^login$/i }).first(),
+      page.getByRole('link', { name: /^login$/i }).first(),
     ).toBeVisible({ timeout: 15_000 });
     await expect
       .poll(async () =>

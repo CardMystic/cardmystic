@@ -205,7 +205,7 @@ async function resumeEditing() {
         <UAlert
           v-if="draft.pendingSave"
           color="warning"
-          description="Retry saving to the same deck, or resume editing this browser draft. Resuming leaves any unfinished account deck in Your Decks."
+          description="Retry saving to the same deck, or resume editing this browser draft. Resuming leaves any unfinished account deck in My Decks."
           :actions="[
             {
               label: 'Resume editing',

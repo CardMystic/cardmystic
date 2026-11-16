@@ -4,12 +4,12 @@
       <!-- Step 1: Request reset email -->
       <div
         v-if="!isRecoverySession"
-        class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl"
+        class="flex flex-col space-y-4 rounded-xl bg-elevated text-default p-6 shadow-xl"
       >
-        <h1 class="text-xl font-bold text-white text-center">
+        <h1 class="text-xl font-bold text-highlighted text-center">
           Reset your password
         </h1>
-        <p class="text-zinc-400 text-sm text-center">
+        <p class="text-toned text-sm text-center">
           Enter your email and we'll send you a link to reset your password.
         </p>
 
@@ -17,6 +17,8 @@
           v-model="email"
           type="email"
           placeholder="Email"
+          aria-label="Email"
+          autocomplete="email"
           size="lg"
           class="w-full"
         />
@@ -49,24 +51,28 @@
           {{ loading ? 'Sending…' : 'Send reset link' }}
         </UButton>
 
-        <p v-if="errorMessage" class="text-red-400 text-sm text-center">
+        <p
+          v-if="errorMessage"
+          role="alert"
+          class="text-error text-sm text-center"
+        >
           {{ errorMessage }}
         </p>
-        <p v-if="successMessage" class="text-green-400 text-sm text-center">
+        <p
+          v-if="successMessage"
+          role="status"
+          class="text-success text-sm text-center"
+        >
           {{ successMessage }}
         </p>
 
-        <div class="text-center text-zinc-400 text-sm">
+        <div class="text-center text-toned text-sm">
           <UButton
             variant="link"
             color="primary"
             size="sm"
             :padded="false"
-            @click="
-              () => {
-                router.push('/user/login');
-              }
-            "
+            to="/user/login"
           >
             Back to login
           </UButton>
@@ -76,9 +82,9 @@
       <!-- Step 2: Set new password (arrived via magic link) -->
       <div
         v-else
-        class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl"
+        class="flex flex-col space-y-4 rounded-xl bg-elevated text-default p-6 shadow-xl"
       >
-        <h1 class="text-xl font-bold text-white text-center">
+        <h1 class="text-xl font-bold text-highlighted text-center">
           Set a new password
         </h1>
 
@@ -86,6 +92,8 @@
           v-model="newPassword"
           :type="showPasswords ? 'text' : 'password'"
           placeholder="New password"
+          aria-label="New password"
+          autocomplete="new-password"
           size="lg"
           class="w-full"
         >
@@ -94,6 +102,7 @@
               variant="link"
               color="neutral"
               :padded="false"
+              :aria-label="showPasswords ? 'Hide passwords' : 'Show passwords'"
               :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
               @click="
                 () => {
@@ -107,6 +116,8 @@
           v-model="confirmPassword"
           :type="showPasswords ? 'text' : 'password'"
           placeholder="Confirm new password"
+          aria-label="Confirm new password"
+          autocomplete="new-password"
           size="lg"
           class="w-full"
         >
@@ -115,6 +126,7 @@
               variant="link"
               color="neutral"
               :padded="false"
+              :aria-label="showPasswords ? 'Hide passwords' : 'Show passwords'"
               :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
               @click="
                 () => {
@@ -142,7 +154,7 @@
           aria-hidden="true"
         />
 
-        <ul class="text-xs text-zinc-500 space-y-0.5 list-disc list-inside">
+        <ul class="text-xs text-toned space-y-0.5 list-disc list-inside">
           <li>At least 8 characters</li>
           <li>Uppercase &amp; lowercase letters</li>
           <li>At least one number</li>
@@ -161,17 +173,25 @@
           {{ loading ? 'Updating…' : 'Update password' }}
         </UButton>
 
-        <p v-if="errorMessage" class="text-red-400 text-sm text-center">
+        <p
+          v-if="errorMessage"
+          role="alert"
+          class="text-error text-sm text-center"
+        >
           {{ errorMessage }}
         </p>
-        <p v-if="successMessage" class="text-green-400 text-sm text-center">
+        <p
+          v-if="successMessage"
+          role="status"
+          class="text-success text-sm text-center"
+        >
           {{ successMessage }}
         </p>
       </div>
 
       <template #fallback>
         <div
-          class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl"
+          class="flex flex-col space-y-4 rounded-xl bg-elevated text-default p-6 shadow-xl"
         >
           <USkeleton class="h-7 w-48 mx-auto" />
           <USkeleton class="h-4 w-64 mx-auto" />

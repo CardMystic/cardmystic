@@ -361,6 +361,73 @@ test('initial mobile home loads recent decks and defers featured refreshes until
   }
 });
 
+for (const signedIn of [false, true]) {
+  test(
+    `mobile My Decks opens the ${signedIn ? 'account library' : 'guest builder'} in one click`,
+    { tag: signedIn ? [] : '@anonymous' },
+    async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      const hydrationErrors: string[] = [];
+      page.on('console', (message) => {
+        if (/hydration.*mismatch/i.test(message.text()))
+          hydrationErrors.push(message.text());
+      });
+      const destination = signedIn ? '/lists' : '/build';
+      await gotoHydrated(page, '/about');
+      const header = page.getByRole('banner').first();
+      const decks = header.getByRole('link', { name: 'My Decks', exact: true });
+      for (const reload of [false, true]) {
+        if (reload) {
+          await page.reload();
+          await waitForHydration(page);
+        }
+        await expect(decks).toHaveAttribute('href', destination);
+        await expect(decks).toBeInViewport({ ratio: 1 });
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth),
+        ).toBe(320);
+      }
+      const trigger = header.getByRole('button', {
+        name: signedIn ? 'Profile' : 'Open navigation menu',
+        exact: true,
+      });
+      await trigger.focus();
+      await page.keyboard.press('Enter');
+      await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      await page.keyboard.press('Escape');
+      await expect(trigger).toBeFocused();
+      await decks.click();
+      await expect(page).toHaveURL(new RegExp(destination + '$'));
+      expect(hydrationErrors).toEqual([]);
+    },
+  );
+}
+
+test(
+  'mobile guest can open My Decks without JavaScript',
+  { tag: '@anonymous' },
+  async ({ browser, baseURL }) => {
+    const context = await browser.newContext({
+      baseURL,
+      javaScriptEnabled: false,
+      viewport: { width: 320, height: 720 },
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto('/about');
+      const link = page
+        .locator('header')
+        .getByRole('link', { name: 'My Decks', exact: true });
+      await expect(link).toBeInViewport({ ratio: 1 });
+      await expect(link).toHaveAttribute('href', '/build');
+      await link.click();
+      await expect(page).toHaveURL(/\/build$/);
+    } finally {
+      await context.close();
+    }
+  },
+);
+
 test('signed-in desktop builder link hydrates correctly on direct visit and reload', async ({
   page,
 }) => {

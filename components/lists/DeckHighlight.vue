@@ -162,7 +162,7 @@ onBeforeUnmount(() => sequence++);
             v-if="!decklists.length && !isFetching && !collectionsError"
             class="text-sm"
           >
-            Create a collection on Your Decks to track the cards you own.
+            Create a collection on <NuxtLink to="/lists" class="underline">My Decks</NuxtLink> to track the cards you own.
           </p>
           <p v-if="collectionsError" role="alert" class="text-sm text-error">
             Could not load your collections.
