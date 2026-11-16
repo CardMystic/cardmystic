@@ -389,7 +389,11 @@
             >
           </li>
         </ul>
-        <CardListResultsSkeleton v-else :view="view" />
+        <CardListResultsSkeleton
+          v-else
+          :view="view"
+          :commander-count="commanderOracleIds.length"
+        />
       </template>
     </ClientOnly>
 
