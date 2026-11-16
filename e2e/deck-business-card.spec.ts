@@ -132,6 +132,14 @@ test('free owners create, edit, reload and remove a business card without changi
 test('visitors see a saved public business card on mobile, with no editing controls and a printable QR', async ({
   page,
 }) => {
+  const hydrationErrors: string[] = [];
+  page.on('console', (message) => {
+    if (
+      /hydrat/i.test(message.text()) &&
+      ['warning', 'error'].includes(message.type())
+    )
+      hydrationErrors.push(message.text());
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   const state = await setupDeckDisplay(page, { owner: false });
   await page.route(
@@ -354,6 +362,7 @@ test('visitors see a saved public business card on mobile, with no editing contr
     format: 'A4',
     printBackground: true,
   });
+  expect(hydrationErrors).toEqual([]);
 });
 
 test('banner title leaves room for descenders on its last line', async ({
