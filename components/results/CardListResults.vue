@@ -2,7 +2,10 @@
   <div class="mt-3 w-full">
     <!-- Loading State -->
     <template v-if="isLoading">
-      <CardListResultsSkeleton :view="view" />
+      <CardListResultsSkeleton
+        :view="view"
+        :commander-count="commanderOracleIds?.length"
+      />
     </template>
 
     <!-- Cards display -->
@@ -92,15 +95,16 @@
               >
               <div class="board-divider-line"></div>
             </div>
-            <!-- Commander card(s) at the top (groups with empty label) -->
-            <template
-              v-for="(group, index) in ungroupedGroups"
-              :key="'ungrouped-' + index"
-            >
-              <div :class="cardGridClasses">
+            <!-- Commander and mainboard groups start on separate rows of the same grid. -->
+            <div v-if="ungroupedGroups.length" :class="cardGridClasses">
+              <template
+                v-for="(group, index) in ungroupedGroups"
+                :key="'ungrouped-' + index"
+              >
                 <div
-                  v-for="card in group.cards"
+                  v-for="(card, cardIndex) in group.cards"
                   :key="card.card_data.oracle_id"
+                  :class="{ 'col-start-1': cardIndex === 0 }"
                   @mouseenter="setPreviewCard(card, 'Mainboard')"
                   @focusin="setPreviewCard(card, 'Mainboard')"
                   @mouseleave="clearPendingPreviewCard(card.card_data.id)"
@@ -154,8 +158,8 @@
                     @flip="handleCardFlip"
                   />
                 </div>
-              </div>
-            </template>
+              </template>
+            </div>
 
             <!-- Grouped Cards (Accordion) -->
             <div

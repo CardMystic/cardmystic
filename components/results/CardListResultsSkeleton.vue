@@ -15,7 +15,11 @@
 
     <div class="min-w-0 flex-1">
       <div v-if="view !== 'text'" :class="deckCardGridClasses">
-        <div v-for="i in skeletonCount" :key="`skeleton-${i}`">
+        <div
+          v-for="i in skeletonCount"
+          :key="`skeleton-${i}`"
+          :class="{ 'col-start-1': i === commanderCount + 1 }"
+        >
           <ListCardSkeleton />
           <DeckCardMetadata />
           <CardChipRowSkeleton
@@ -34,6 +38,7 @@
         <div
           v-for="i in skeletonCount"
           :key="`text-skeleton-${i}`"
+          :class="{ 'col-start-1': i === commanderCount + 1 }"
           class="min-w-0 px-1.5 border-b border-default"
         >
           <div class="h-9 flex items-center gap-2">
@@ -68,10 +73,12 @@ const visibleLabels = inject(deckCardLabelsKey, undefined)?.visible;
 withDefaults(
   defineProps<{
     skeletonCount?: number;
+    commanderCount?: number;
     view?: DeckPreferences['deck_view'];
   }>(),
   {
     skeletonCount: 40,
+    commanderCount: 0,
     view: 'grid',
   },
 );
