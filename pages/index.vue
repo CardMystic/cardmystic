@@ -375,11 +375,11 @@ setPageInfo({
   font-weight: 700
   letter-spacing: 0.15em
   text-transform: uppercase
-  color: #8f6edf
+  color: #6841b5
 
 .ready-icon
   font-size: 1.1rem
-  color: #8f6edf
+  color: #6841b5
   flex-shrink: 0
 
 .ready-query

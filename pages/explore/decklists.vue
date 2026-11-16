@@ -25,7 +25,7 @@
           :disabled="!searchInput.trim()"
           @click="syncQueryToUrl"
         >
-          <span class="hidden sm:inline">Search</span>
+          <span class="sr-only sm:not-sr-only">Search</span>
         </UButton>
       </div>
     </div>
