@@ -1,7 +1,7 @@
 <template>
   <section class="border-y border-default py-5">
     <nav
-      class="grid grid-cols-2 gap-x-5 gap-y-6 md:grid-cols-4 md:gap-8"
+      class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-x-5 gap-y-6 md:grid-cols-4 md:gap-8"
       aria-label="Explore CardMystic"
     >
       <div v-for="group in linkGroups" :key="group.label" class="min-w-0">
@@ -13,7 +13,7 @@
             <NuxtLink
               :to="link.to"
               no-prefetch
-              class="inline-flex min-h-11 items-center gap-2 rounded text-sm hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+              class="inline-flex max-w-full [overflow-wrap:anywhere] min-h-11 items-center gap-2 rounded text-sm hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
             >
               <UIcon
                 :name="link.icon"

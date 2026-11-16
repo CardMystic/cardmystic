@@ -35,7 +35,7 @@ const workflow = [
         smarter decks!
       </p>
       <ol
-        class="mx-auto mt-8 grid max-w-3xl grid-cols-4 items-start gap-2"
+        class="mx-auto mt-8 grid max-w-3xl grid-cols-[repeat(auto-fit,minmax(min(100%,5rem),1fr))] items-start gap-2"
         aria-label="CardMystic workflow"
       >
         <li

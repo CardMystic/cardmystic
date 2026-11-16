@@ -5,7 +5,7 @@
       v-if="
         !error && (isLoading || deferringHeavyRender || searchResults?.length)
       "
-      class="mb-3 flex min-h-11 items-center justify-between gap-3"
+      class="mb-3 flex flex-wrap min-h-11 items-center justify-between gap-3"
       data-testid="results-toolbar"
     >
       <div class="flex min-h-11 min-w-0 items-center gap-3">
@@ -28,7 +28,12 @@
             :total="totalResults"
             :items-per-page="PAGE_SIZE"
             :sibling-count="1"
-            :ui="{ first: 'hidden', last: 'hidden' }"
+            :ui="{
+              root: 'max-w-full',
+              list: 'flex-wrap',
+              first: 'hidden',
+              last: 'hidden',
+            }"
             size="xs"
             aria-label="Search results pagination"
             @update:page="changePage"
@@ -50,6 +55,7 @@
             <SortComponent
               :key="rerankingEnabled ? 'reranked' : 'original'"
               :default-sort-by="sortBy"
+              :collection-order="collectionOrder"
               :default-direction="sortDirection"
               :has-als-score="hasAlsScore"
               :has-ai-score="hasAiScore"
@@ -96,7 +102,10 @@
           @mouseenter="clearPendingPreviewCard()"
         >
           <div v-if="isDesktopPreview" class="preview-sticky">
-            <HoveredPreviewSkeleton v-if="printingPending(previewCard)" variant="search" />
+            <HoveredPreviewSkeleton
+              v-if="printingPending(previewCard)"
+              variant="search"
+            />
             <HoveredSearchResultPreview
               v-else
               :card="previewCard"
@@ -169,7 +178,9 @@
               groupedResults[0].label
             "
           >
-            <div class="flex justify-center sm:justify-end gap-1 mb-1">
+            <div
+              class="flex flex-wrap justify-center sm:justify-end gap-1 mb-1"
+            >
               <UButton
                 class="cursor-pointer"
                 icon="i-lucide-chevrons-down"
@@ -322,7 +333,12 @@
           :total="totalResults"
           :items-per-page="PAGE_SIZE"
           :sibling-count="1"
-          :ui="{ first: 'hidden', last: 'hidden' }"
+          :ui="{
+            root: 'max-w-full',
+            list: 'flex-wrap',
+            first: 'hidden',
+            last: 'hidden',
+          }"
           aria-label="Search results pagination"
           @update:page="changePage"
         />
@@ -439,6 +455,8 @@ const props = withDefaults(
     hideSearchedCard?: boolean;
     hideThumbsDownButton?: boolean;
     hideGroupNavigation?: boolean;
+    collectionOrder?: boolean;
+    initialSort?: { field?: string; direction: 'asc' | 'desc' };
     defaultGroupBy?: string;
     preserveResultOrder?: boolean;
     useCanonicalPrintings?: boolean;
@@ -451,11 +469,16 @@ const props = withDefaults(
   },
 );
 
-defineEmits<{ retry: [] }>();
+const emit = defineEmits<{
+  retry: [];
+  sort: [field: string | undefined, direction: 'asc' | 'desc'];
+}>();
 
 const { cards: preferredResults, pending: printingPending } =
   useSearchResultPrintings(
-    computed(() => props.useCanonicalPrintings ? undefined : props.searchResults),
+    computed(() =>
+      props.useCanonicalPrintings ? undefined : props.searchResults,
+    ),
   );
 const displayResults = computed(
   () => preferredResults.value ?? props.searchResults,
@@ -498,8 +521,13 @@ function handlePartnerHover(index: 0 | 1) {
 }
 
 // Sorting state
-const sortBy = ref<string | undefined>(undefined);
-const sortDirection = ref<'asc' | 'desc'>('asc');
+const sortBy = ref<string | undefined>(props.initialSort?.field);
+const clientSort = computed(() =>
+  props.collectionOrder ? undefined : sortBy.value,
+);
+const sortDirection = ref<'asc' | 'desc'>(
+  props.initialSort?.direction ?? 'asc',
+);
 
 watch(
   () => props.rerankingEnabled,
@@ -525,6 +553,7 @@ const resultsGridClass = computed(() =>
 const groupBy = ref<string | undefined>(props.defaultGroupBy);
 
 function handleSort(sortOption: string | undefined, direction: 'asc' | 'desc') {
+  emit('sort', sortOption, direction);
   sortBy.value = sortOption;
   sortDirection.value = direction;
 }
@@ -578,7 +607,7 @@ const sortedResults = computed(() => {
     const [firstCard, ...restCards] = displayResults.value;
     const sortedRest = sortSearchResults(
       restCards,
-      sortBy.value,
+      clientSort.value,
       sortDirection.value,
       props.preserveResultOrder,
     );
@@ -587,7 +616,7 @@ const sortedResults = computed(() => {
 
   return sortSearchResults(
     displayResults.value,
-    sortBy.value,
+    clientSort.value,
     sortDirection.value,
     props.preserveResultOrder,
   );
@@ -622,7 +651,7 @@ const groupedResults = computed<CardGroup[] | null>(() => {
     return groupAndSortCards(
       restCards,
       groupBy.value,
-      sortBy.value,
+      clientSort.value,
       sortDirection.value,
       undefined,
       undefined,
@@ -633,7 +662,7 @@ const groupedResults = computed<CardGroup[] | null>(() => {
   return groupAndSortCards(
     displayResults.value,
     groupBy.value,
-    sortBy.value,
+    clientSort.value,
     sortDirection.value,
     undefined,
     undefined,
@@ -680,9 +709,7 @@ const previewCard = computed(() => {
   if (!visibleCards.value.length) return undefined;
 
   const hoveredCard = hoveredCardId.value
-    ? visibleCards.value.find(
-        (card) => resultKey(card) === hoveredCardId.value,
-      )
+    ? visibleCards.value.find((card) => resultKey(card) === hoveredCardId.value)
     : undefined;
 
   return hoveredCard ?? visibleCards.value[0];
@@ -754,7 +781,10 @@ watch(currentPage, () => {
   hoveredCardId.value = null;
 });
 watch(visibleCards, (cards) => {
-  if (hoveredCardId.value && !cards.some(card => resultKey(card) === hoveredCardId.value))
+  if (
+    hoveredCardId.value &&
+    !cards.some((card) => resultKey(card) === hoveredCardId.value)
+  )
     hoveredCardId.value = null;
 });
 

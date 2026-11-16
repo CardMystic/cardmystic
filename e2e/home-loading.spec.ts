@@ -393,7 +393,12 @@ for (const signedIn of [false, true]) {
       });
       await trigger.focus();
       await page.keyboard.press('Enter');
-      await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      if (signedIn)
+        await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      else
+        await expect(
+          page.getByRole('dialog', { name: 'Navigation', exact: true }),
+        ).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(trigger).toBeFocused();
       await decks.click();
@@ -569,7 +574,10 @@ test(
               }
               const navigation =
                 width < 1600
-                  ? page.getByRole('dialog', { name: 'Open navigation menu' })
+                  ? page.getByRole('dialog', {
+                      name: 'Navigation',
+                      exact: true,
+                    })
                   : page.getByRole('navigation', {
                       name: 'Main navigation',
                       exact: true,

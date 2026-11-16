@@ -49,12 +49,8 @@ function select(value: unknown) {
 
 <template>
   <div
-    class="grid items-center gap-x-3 gap-y-1 sm:flex sm:flex-wrap"
-    :class="
-      compact
-        ? 'grid-cols-1 justify-items-end'
-        : 'grid-cols-[auto_minmax(0,1fr)]'
-    "
+    class="flex min-w-0 max-w-full flex-wrap items-center gap-x-3 gap-y-1"
+    :class="{ 'flex-col items-end sm:flex-row sm:items-center': compact }"
   >
     <USelect
       :id="id"
@@ -74,7 +70,7 @@ function select(value: unknown) {
     <span
       v-if="!hideAllowance"
       :id="`${id}-description`"
-      class="min-w-0 text-sm text-muted"
+      class="min-w-0 max-w-full [overflow-wrap:anywhere] text-sm text-muted"
       aria-live="polite"
     >
       <NuxtLink

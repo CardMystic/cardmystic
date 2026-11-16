@@ -9,7 +9,7 @@
       >
         <!-- Left: title + search -->
         <div
-          class="flex flex-col items-center lg:items-start text-center lg:text-left"
+          class="min-w-0 flex flex-col items-center lg:items-start text-center lg:text-left"
         >
           <p class="hero-eyebrow">MTG SMART CARD SEARCH</p>
           <h1 class="hero-title mt-5 text-white">
@@ -251,6 +251,9 @@ setPageInfo({
 </script>
 
 <style lang="sass" scoped>
+.home-gallery, .home-reading
+  overflow-wrap: anywhere
+
 .home-gallery
   width: 100%
   max-width: 1440px
@@ -283,6 +286,8 @@ setPageInfo({
   color: var(--ui-text-highlighted)
 
 .hero-title
+  max-width: 100%
+  overflow-wrap: anywhere
   font-size: clamp(2.5rem, 5vw, 4.5rem)
   font-weight: 900
   line-height: 0.95

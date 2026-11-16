@@ -148,6 +148,8 @@ const displayScore = (score: number) =>
 }
 .evidence-bars {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow-wrap: anywhere;
   gap: 0.75rem;
 }
 .evidence-row {

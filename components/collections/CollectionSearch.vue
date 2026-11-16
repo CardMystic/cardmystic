@@ -6,7 +6,7 @@ const props = defineProps<{ targetPath: string; labelText: string }>();
 const route = useRoute();
 const router = useRouter();
 const schema = z.object({
-  query: z.string(),
+  query: z.string().trim().optional(),
   filters: CardSearchFiltersSchema,
 });
 const state = reactive({
@@ -34,12 +34,14 @@ watch(
 async function submit(event: FormSubmitEvent<z.output<typeof schema>>) {
   if (honeypot.value) return;
   drawer.value?.collapse();
+  const query = event.data.query || undefined;
+  const filters = JSON.stringify(event.data.filters);
   await router.push({
     path: props.targetPath,
     query: {
-      query: event.data.query.trim() || undefined,
-      filters: JSON.stringify(event.data.filters),
-      useRerank: String(route.query.useRerank !== 'false'),
+      query,
+      filters: filters === '{}' ? undefined : filters,
+      useRerank: query ? String(route.query.useRerank !== 'false') : undefined,
     },
   });
 }
@@ -67,7 +69,7 @@ async function submit(event: FormSubmitEvent<z.output<typeof schema>>) {
         <UInput
           v-model="state.query"
           :aria-label="labelText"
-          :placeholder="labelText"
+          placeholder="Describe cards or apply filters"
           icon="i-lucide-brain"
           class="flex-1 min-w-0"
           :ui="{ trailing: 'pe-1', base: 'text-base h-10' }"

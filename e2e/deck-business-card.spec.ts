@@ -255,6 +255,56 @@ test('visitors see a saved public business card on mobile, with no editing contr
   const stats = preview.getByRole('region', {
     name: 'Business card deck stats',
   });
+  for (const size of [
+    { width: 320, height: 568 },
+    { width: 390, height: 844 },
+    { width: 624, height: 932 },
+    { width: 640, height: 932 },
+    { width: 1440, height: 1000 },
+  ]) {
+    await page.setViewportSize(size);
+    if (size.height >= 844) {
+      await expect(preview).toBeInViewport({ ratio: 0.999 });
+    } else {
+      await preview.locator('footer').scrollIntoViewIfNeeded();
+      await expect(preview.locator('footer')).toBeInViewport();
+    }
+    await expect
+      .poll(() =>
+        preview.evaluate((card) => {
+          const artwork = card
+            .querySelector('.business-art')!
+            .getBoundingClientRect();
+          const core = card
+            .querySelector('.business-core')!
+            .getBoundingClientRect();
+          const bounds = card.getBoundingClientRect();
+          return (
+            Math.abs(bounds.width - Math.min(390, innerWidth)) < 1 &&
+            Math.abs((bounds.left + bounds.right) / 2 - innerWidth / 2) < 1 &&
+            parseFloat(
+              getComputedStyle(card.querySelector('.business-win-plan p')!)
+                .fontSize,
+            ) >= 16 &&
+            getComputedStyle(card).zoom === '1' &&
+            Math.abs(core.left - artwork.left) < 1 &&
+            core.top >= artwork.bottom
+          );
+        }),
+      )
+      .toBe(true);
+  }
+  await page.setViewportSize({ width: 320, height: 568 });
+  const largerText = await page.addStyleTag({
+    content: 'html { font-size: 200% !important; }',
+  });
+  await expect
+    .poll(() => preview.evaluate((el) => getComputedStyle(el).zoom))
+    .toBe('1');
+  expect(await preview.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await largerText.evaluate((el) => el.remove());
   await stats.scrollIntoViewIfNeeded();
   await expect(
     stats.getByRole('figure', { name: 'Mana curve', exact: true }),

@@ -116,7 +116,7 @@ useHead({
       :aria-label="`Loading ${collectionLabels[kind].toLowerCase()}`"
       aria-busy="true"
     >
-      <USkeleton class="mx-auto mb-4 h-20 w-64" aria-hidden="true" />
+      <USkeleton class="mx-auto mb-4 h-20 w-64 max-w-full" aria-hidden="true" />
       <div
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
         aria-hidden="true"

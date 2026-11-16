@@ -156,7 +156,7 @@ function toggle(id: string, action: string, name: string) {
         />
         Compare decks
       </figcaption>
-      <div class="mb-4 grid min-w-0 grid-cols-2 gap-3" aria-hidden="true">
+      <div class="mb-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-3" aria-hidden="true">
         <div v-for="deck in decks" :key="deck.label" class="relative min-w-0">
           <p class="mb-2 text-xs text-toned">{{ deck.label }}</p>
           <div

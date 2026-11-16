@@ -337,7 +337,14 @@ onBeforeUnmount(() => {
           : 'Deck business card'
       "
       :dismissible="!busy"
-      :ui="{ content: 'max-w-6xl', body: 'space-y-4' }"
+      :ui="{
+        content: editing
+          ? 'w-full max-h-dvh max-sm:rounded-none sm:w-[calc(100vw-2rem)] max-w-6xl'
+          : 'w-full max-w-[26.375rem] max-h-dvh max-sm:rounded-none sm:max-h-[calc(100dvh-1rem)]',
+        header: 'max-sm:min-h-12 max-sm:py-2',
+        close: 'max-sm:top-2',
+        body: 'space-y-4 px-4 py-2 sm:px-4 sm:py-2',
+      }"
     >
       <template #body>
         <div v-if="query.error.value" role="alert" class="space-y-2">
@@ -349,10 +356,6 @@ onBeforeUnmount(() => {
           />
         </div>
         <template v-else>
-          <p v-if="list.visibility !== 'public'" class="text-sm text-muted">
-            This deck is private. Only you can open it. The QR code does not
-            give other people access.
-          </p>
           <form
             v-if="editing && isOwner"
             class="space-y-4"
@@ -455,8 +458,25 @@ onBeforeUnmount(() => {
               />
             </div>
           </form>
+          <p v-if="editing" class="font-medium">Preview</p>
+          <DeckBusinessCardPreview
+            v-if="displayed"
+            class="max-sm:-mx-4"
+            :name="list.name"
+            :format="list.format"
+            :bracket="list.bracket"
+            :has-primer="hasPrimer"
+            :details="displayed"
+            :entries="entries"
+            :qr-image="qrImage"
+            :deck-url="deckUrl"
+          />
+          <p v-if="list.visibility !== 'public'" class="text-sm text-muted">
+            This deck is private. Only you can open it. The QR code does not
+            give other people access.
+          </p>
           <div
-            v-else-if="saved"
+            v-if="saved && !editing"
             class="flex flex-wrap items-center gap-2 business-card-controls"
           >
             <UButton
@@ -524,18 +544,6 @@ onBeforeUnmount(() => {
               @click="generateQr"
             />
           </div>
-          <p v-if="editing" class="font-medium">Preview</p>
-          <DeckBusinessCardPreview
-            v-if="displayed"
-            :name="list.name"
-            :format="list.format"
-            :bracket="list.bracket"
-            :has-primer="hasPrimer"
-            :details="displayed"
-            :entries="entries"
-            :qr-image="qrImage"
-            :deck-url="deckUrl"
-          />
         </template>
       </template>
     </UModal>

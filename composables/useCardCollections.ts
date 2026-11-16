@@ -57,6 +57,7 @@ export function useCollectionCards(
   slug: string,
   enabled: ComputedRef<boolean>,
   filters: ComputedRef<CardSearchFilters>,
+  sort: Ref<{ field?: string; direction: 'asc' | 'desc' }>,
 ) {
   const request = useRequestFetch();
   const path = useRuntimeConfig().public.backendPath;
@@ -67,6 +68,7 @@ export function useCollectionCards(
       kind,
       slug,
       filters.value,
+      sort.value,
     ]),
     enabled,
     initialPageParam: { offset: 0, release: undefined as string | undefined },
@@ -77,6 +79,8 @@ export function useCollectionCards(
           query: {
             offset: pageParam.offset,
             limit: 100,
+            sort: sort.value.field,
+            direction: sort.value.direction,
             filters: JSON.stringify(filters.value),
           },
           signal,

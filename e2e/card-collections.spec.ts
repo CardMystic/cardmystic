@@ -328,10 +328,45 @@ test('collection detail preserves scope through guest search, filters, and load-
     .getByRole('button', { name: 'Load more cards', exact: true })
     .click();
   await expect(page.getByText(/200 of \d+ cards loaded/)).toBeVisible();
+  await page.getByRole('button', { name: 'Display', exact: true }).click();
+  const sorting = page.getByRole('combobox', { name: 'Search sorting' });
+  await expect(sorting).toContainText('Commanders first, then color identity');
+  await sorting.click();
+  const reordered = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      url.pathname.endsWith('/card-collections/sets/lea') &&
+      url.searchParams.get('sort') === 'cmc' &&
+      url.searchParams.get('offset') === '0'
+    );
+  });
+  await page.getByRole('option', { name: 'Mana Cost', exact: true }).click();
+  const sorted = await (await reordered).json();
+  expect(sorted.results[0].card_data.cmc).toBe(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByText(/100 of \d+ cards loaded/)).toBeVisible();
   await page.getByRole('button', { name: 'Filters', exact: true }).click();
   await expect(
     page.getByRole('dialog', { name: 'Search filters' }),
   ).toBeVisible();
+  const drawer = page.getByRole('dialog', { name: 'Search filters' });
+  await drawer.getByRole('button', { name: 'Price', exact: true }).click();
+  const budget = drawer.getByRole('spinbutton');
+  await budget.fill('5');
+  await budget.press('Tab');
+  const filtered = page.waitForRequest((req) => {
+    const url = new URL(req.url());
+    return (
+      url.pathname.endsWith('/card-collections/sets/lea') &&
+      JSON.parse(url.searchParams.get('filters') || '{}').maxPriceUsd === 5
+    );
+  });
+  await drawer.getByRole('button', { name: 'Search', exact: true }).click();
+  await filtered;
+  await expect(drawer).toBeHidden();
+  expect(new URL(page.url()).searchParams.has('query')).toBe(false);
+  await page.getByRole('link', { name: 'Show all cards in this set' }).click();
+  await page.getByRole('button', { name: 'Filters', exact: true }).click();
   await page.getByRole('button', { name: 'Rarities', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Rare', exact: true }).check();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
