@@ -81,9 +81,7 @@ async function search() {
       <UInput
         v-model="query"
         :placeholder="
-          mode === 'smart'
-            ? 'e.g. cards that remove creatures'
-            : 'Card name, type, or rules text'
+          mode === 'smart' ? 'e.g. removal' : 'Card name, type, or rules text'
         "
         aria-label="Search within list"
         class="flex-1 min-w-40"

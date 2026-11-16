@@ -91,11 +91,13 @@ async function submit(event: FormSubmitEvent<z.output<typeof schema>>) {
         >
       </div>
     </UFormField>
-    <SearchModeSelect compact />
-    <SearchFilterDrawer
-      ref="drawer"
-      v-model="state.filters"
-      @apply="form?.submit()"
-    />
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <SearchFilterDrawer
+        ref="drawer"
+        v-model="state.filters"
+        @apply="form?.submit()"
+      />
+      <SearchModeSelect />
+    </div>
   </UForm>
 </template>

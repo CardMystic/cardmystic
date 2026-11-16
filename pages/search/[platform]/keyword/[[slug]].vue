@@ -84,6 +84,8 @@ const searchPlatformProp = getSearchPlatformProp(platform);
 const queryParam = computed(() => String(route.query?.query || ''));
 const displayQuery = computed(() => seoEntry?.query || queryParam.value);
 
+useCanonicalUrl(() => (seoEntry || !queryParam.value ? route.path : null));
+
 useSeoMeta({
   robots: () =>
     seoEntry

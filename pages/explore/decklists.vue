@@ -1,29 +1,33 @@
 <template>
   <UContainer class="mb-10 max-w-full">
-    <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        fallback-title="Search Decklists"
-        fallback-description="Find public decklists created with CardMystic's Deck Builder."
-      />
-      <p></p>
-    </div>
-    <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
-      <UInput
-        v-model="searchInput"
-        placeholder="Search decklists by name or description…"
-        icon="i-lucide-search"
-        class="flex-1"
-        :ui="{ base: 'text-base h-10' }"
-        @keydown.enter="syncQueryToUrl"
-      />
-      <UButton
-        icon="i-lucide-search"
-        class="h-10 cursor-pointer"
-        :disabled="!searchInput.trim()"
-        @click="syncQueryToUrl"
-      >
-        <span class="hidden sm:inline">Search</span>
-      </UButton>
+    <div class="relative isolate">
+      <SearchBackground type="decklists" placement="header" />
+      <NavigationBreadcrumbs />
+      <div class="w-full flex flex-col items-center">
+        <SearchSEOTitleAndDescription
+          fallback-title="Search Decklists"
+          fallback-description="Find public decklists created with CardMystic's Deck Builder."
+        />
+        <DirectoryNavigation group="community" />
+      </div>
+      <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
+        <UInput
+          v-model="searchInput"
+          placeholder="Search decklists by name or description…"
+          icon="i-lucide-search"
+          class="flex-1"
+          :ui="{ base: 'text-base h-10' }"
+          @keydown.enter="syncQueryToUrl"
+        />
+        <UButton
+          icon="i-lucide-search"
+          class="h-10 cursor-pointer"
+          :disabled="!searchInput.trim()"
+          @click="syncQueryToUrl"
+        >
+          <span class="hidden sm:inline">Search</span>
+        </UButton>
+      </div>
     </div>
 
     <UPagination
@@ -89,35 +93,28 @@
       >
         Featured Decklists
       </h2>
-      <ClientOnly>
-        <div
-          v-if="isLoadingFeatured"
-          class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
-        >
-          <CardListLinkSkeleton v-for="i in 6" :key="i" />
-        </div>
-        <div
-          v-else-if="featuredDecklists.length > 0"
-          class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
-        >
-          <CardListLink
-            v-for="list in featuredDecklists"
-            :key="list.id"
-            :list="list"
-            :show-settings-button="false"
-            :showAuthor="true"
-          />
-        </div>
-        <div v-else class="empty-state">
-          <UIcon name="i-lucide-search" class="text-5xl opacity-30 mb-3" />
-          <p>Enter a keyword above to search public decklists.</p>
-        </div>
-        <template #fallback>
-          <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
-            <CardListLinkSkeleton v-for="i in 6" :key="i" />
-          </div>
-        </template>
-      </ClientOnly>
+      <div
+        v-if="isLoadingFeatured"
+        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
+      >
+        <CardListLinkSkeleton v-for="i in 6" :key="i" />
+      </div>
+      <div
+        v-else-if="featuredDecklists.length > 0"
+        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3"
+      >
+        <CardListLink
+          v-for="list in featuredDecklists"
+          :key="list.id"
+          :list="list"
+          :show-settings-button="false"
+          :showAuthor="true"
+        />
+      </div>
+      <div v-else class="empty-state">
+        <UIcon name="i-lucide-search" class="text-5xl opacity-30 mb-3" />
+        <p>Enter a keyword above to search public decklists.</p>
+      </div>
     </div>
   </UContainer>
 </template>
@@ -133,14 +130,15 @@ import {
 import { refDebounced } from '~/utils/refDebounced';
 import CardListLink from '~/components/lists/CardListLink.vue';
 
-definePageMeta({ title: 'Search Decklists' });
+definePageMeta({ title: 'Search Decklists', breadcrumbsInPage: true });
 
-useSeoMeta({
+usePublicPageSeo({
+  path: '/explore/decklists',
   title: 'Search Decklists | CardMystic',
   description:
     'Search public Magic: The Gathering decklists shared by the CardMystic community.',
-  robots: 'noindex, follow',
 });
+useSeoMeta({ robots: 'noindex, follow' });
 
 const route = useRoute();
 const router = useRouter();

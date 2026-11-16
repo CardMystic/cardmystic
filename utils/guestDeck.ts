@@ -1,0 +1,152 @@
+import { censorUserText } from './textModeration';
+import { z } from 'zod';
+import { CardListFormatSchema } from '~/models/cardListModel';
+
+export const LEGACY_GUEST_DECK_KEY = 'cardmystic-guest-deck-v1';
+export const GUEST_DECK_KEY = 'cardmystic-guest-decks-v2';
+export const GUEST_RETURN_KEY = 'cardmystic-return-to-draft';
+export const guestBoards = ['Mainboard', 'Sideboard', 'Considering'] as const;
+export type GuestBoard = (typeof guestBoards)[number];
+const entrySchema = z.object({
+  name: z.string().min(1).max(200),
+  quantity: z.number().int().min(1).max(100),
+  board: z.enum(guestBoards),
+  printingId: z.guid().optional(),
+  finish: z.enum(['nonfoil', 'foil', 'etched']).optional(),
+});
+export const guestDeckSchema = z.object({
+  version: z.literal(1),
+  name: z.string().max(200),
+  format: CardListFormatSchema,
+  description: z.string().max(1000).default(''),
+  bracket: z.number().int().min(1).max(5).nullable().default(null),
+  avatarCardName: z.string().max(200).nullable().default(null),
+  avatarPrintingId: z.string().uuid().nullable().default(null),
+  cards: z.array(entrySchema).max(1000),
+  commanders: z.array(z.string().min(1).max(200)).max(2),
+  pendingSave: z.object({ userId: z.guid(), listId: z.guid() }).nullable(),
+});
+export type GuestDeck = z.infer<typeof guestDeckSchema>;
+export function emptyGuestDeck(): GuestDeck {
+  return {
+    version: 1,
+    name: 'My first deck',
+    format: 'Commander',
+    description: '',
+    bracket: null,
+    avatarCardName: null,
+    avatarPrintingId: null,
+    cards: [],
+    commanders: [],
+    pendingSave: null,
+  };
+}
+
+export const guestDecksSchema = z
+  .object({
+    version: z.literal(2),
+    activeIndex: z.number().int().min(0).max(2),
+    // Accept older three-draft saves so existing work stays recoverable.
+    decks: z.array(guestDeckSchema).min(1).max(3),
+  })
+  .refine((value) => value.activeIndex < value.decks.length);
+export type GuestDecks = z.infer<typeof guestDecksSchema>;
+export function emptyGuestDecks(): GuestDecks {
+  return {
+    version: 2,
+    activeIndex: 0,
+    decks: [emptyGuestDeck()],
+  };
+}
+export function loadGuestDecks(
+  saved: string | null,
+  legacy: string | null,
+): GuestDecks {
+  if (saved) {
+    const previous = guestDecksSchema.parse(JSON.parse(saved));
+    const defaults = ['My first deck', 'My second deck', 'My third deck'];
+    const kept = previous.decks.flatMap((deck, index) =>
+      deck.cards.length ||
+      deck.commanders.length ||
+      deck.pendingSave ||
+      deck.name !== defaults[index] ||
+      deck.description ||
+      deck.bracket ||
+      deck.avatarCardName ||
+      deck.format !== 'Commander'
+        ? [{ deck, index }]
+        : [],
+    );
+    if (!kept.length) return emptyGuestDecks();
+    return {
+      version: 2,
+      activeIndex: Math.max(
+        0,
+        kept.findIndex(({ index }) => index === previous.activeIndex),
+      ),
+      decks: kept.map(({ deck }) => deck),
+    };
+  }
+  const drafts = emptyGuestDecks();
+  if (legacy) drafts.decks[0] = guestDeckSchema.parse(JSON.parse(legacy));
+  return drafts;
+}
+
+/** Apply one edit atomically; reject it instead of silently dropping cards. */
+export function editGuestDeck(
+  deck: GuestDeck,
+  edit: (next: GuestDeck) => void,
+): GuestDeck {
+  if (deck.pendingSave)
+    throw new Error('Finish saving this draft before editing it.');
+  const next = structuredClone(deck);
+  edit(next);
+  next.name = censorUserText(next.name);
+  next.description = censorUserText(next.description);
+  if (next.cards.reduce((total, card) => total + card.quantity, 0) > 1000) {
+    throw new Error(
+      'Browser drafts support up to 1,000 cards. Save your deck to keep building.',
+    );
+  }
+  return guestDeckSchema.parse(next);
+}
+
+export function setGuestCopies(
+  deck: GuestDeck,
+  name: string,
+  board: GuestBoard,
+  quantity: number,
+  printing?: Pick<GuestDeck['cards'][number], 'printingId' | 'finish'>,
+) {
+  const index = deck.cards.findIndex(
+    (card) => card.name === name && card.board === board,
+  );
+  if (quantity === 0) {
+    if (index >= 0) deck.cards.splice(index, 1);
+    if (board === 'Mainboard')
+      deck.commanders = deck.commanders.filter((card) => card !== name);
+  } else if (index >= 0) deck.cards[index].quantity = quantity;
+  else deck.cards.push({ name, board, quantity, ...printing });
+}
+
+export function guestDeckEntries(deck: GuestDeck) {
+  return guestBoards
+    .map((board) => ({
+      board,
+      cards: deck.cards
+        .filter((card) => card.board === board)
+        .map((card) => ({ name: card.name, num_copies: card.quantity })),
+    }))
+    .filter((entry) => entry.cards.length);
+}
+
+/** Only a fixed local destination is read from storage, never an arbitrary URL. */
+export function takeGuestDeckReturn(): string | null {
+  try {
+    if (sessionStorage.getItem(GUEST_RETURN_KEY) !== 'true') return null;
+    sessionStorage.removeItem(GUEST_RETURN_KEY);
+    return '/build';
+  } catch {
+    return null;
+  }
+}

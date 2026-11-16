@@ -103,6 +103,7 @@ export function useCardTags() {
   }
   return {
     tags: computed(() => query.data.value?.tags ?? []),
+    refresh: query.refetch,
     error: query.error,
     pending: query.isLoading,
     change,
@@ -111,7 +112,7 @@ export function useCardTags() {
 }
 export function useCardLabels(ids: MaybeRefOrGetter<string[]>) {
   const api = useLibraryApi();
-  const { tags } = useCardTags();
+  const tagLibrary = useCardTags();
   const oracleIds = computed(() => [...new Set(toValue(ids))].sort());
   async function batches<T>(
     fn: (batch: string[]) => Promise<T[]>,
@@ -148,7 +149,9 @@ export function useCardLabels(ids: MaybeRefOrGetter<string[]>) {
       result[id] = {
         tags: [],
       };
-    const names = new Map(tags.value.map((tag) => [tag.id, tag.name]));
+    const names = new Map(
+      tagLibrary.tags.value.map((tag) => [tag.id, tag.name]),
+    );
     for (const assignment of assignments.data.value ?? []) {
       const name = names.get(assignment.tag_id);
       if (name && result[assignment.oracle_id])
@@ -158,8 +161,15 @@ export function useCardLabels(ids: MaybeRefOrGetter<string[]>) {
   });
   return {
     labels,
+    userId: api.userId,
     assignments: assignments.data,
-    error: assignments.error,
-    retry: assignments.refetch,
+    isLoading: computed(
+      () => assignments.isLoading.value || tagLibrary.pending.value,
+    ),
+    pending: computed(
+      () => assignments.isFetching.value || tagLibrary.pending.value,
+    ),
+    error: computed(() => assignments.error.value ?? tagLibrary.error.value),
+    retry: () => Promise.all([assignments.refetch(), tagLibrary.refresh()]),
   };
 }

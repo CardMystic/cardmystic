@@ -26,6 +26,7 @@ export const CardSearchFiltersSchema = z.object({
   selectedToughness: z.string().optional(),
   selectedCardFormats: SelectedCardFormatsSchema,
   isCommander: z.boolean().optional(),
+  maxPriceUsd: z.number().nonnegative().optional(),
   isMTGO: z.boolean().optional(),
   isArena: z.boolean().optional(),
   isPaper: z.boolean().optional(),

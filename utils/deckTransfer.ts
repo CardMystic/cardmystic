@@ -6,8 +6,103 @@ export interface TransferCard {
   commander?: boolean;
   arena?: boolean;
   mtgo?: boolean;
+  printingId?: string;
+  set?: string;
+  collectorNumber?: string;
+  finish?: 'nonfoil' | 'foil' | 'etched';
 }
 export type DeckExportFormat = 'text' | 'arena' | 'mtgo' | 'csv';
+const transferBoards = ['Mainboard', 'Sideboard', 'Considering'] as const;
+
+// Match both full double-faced names and their commonly exported front-face name.
+export function excludeExistingImportCards(
+  incoming: TransferCard[],
+  existing: TransferCard[],
+): TransferCard[] {
+  const key = (name: string) =>
+    name
+      .split('//')[0]
+      .normalize('NFKC')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
+  const names = new Set(existing.map((card) => key(card.name)));
+  return incoming.filter((card) => !names.has(key(card.name)));
+}
+
+export function summarizeImportBoards(cards: TransferCard[]): string {
+  return transferBoards
+    .map((board) => ({
+      board,
+      count: cards
+        .filter((card) => card.board === board)
+        .reduce((sum, card) => sum + card.quantity, 0),
+    }))
+    .filter(({ count }) => count > 0)
+    .map(({ board, count }) => `${count} ${board}`)
+    .join(' · ');
+}
+
+interface ImportBatchResult {
+  addedCount: number;
+  updatedCount: number;
+  invalidCardNames: string[];
+}
+
+export async function applyDeckImport(
+  cards: TransferCard[],
+  add: (
+    board: TransferBoard,
+    cardNames: string[],
+  ) => Promise<ImportBatchResult>,
+  setCommander: (name: string) => Promise<unknown>,
+  setPrintings?: (cards: TransferCard[]) => Promise<unknown>,
+) {
+  let confirmedEntries = 0;
+  const missing = new Map<string, string>();
+  let stage: 'cards' | 'commanders' | 'printings' = 'cards';
+  try {
+    for (const board of transferBoards) {
+      const entries = cards.filter((card) => card.board === board);
+      for (let offset = 0; offset < entries.length; offset += 500) {
+        const result = await add(
+          board,
+          entries
+            .slice(offset, offset + 500)
+            .map((card) => `${card.quantity} ${card.name}`),
+        );
+        confirmedEntries += result.addedCount + result.updatedCount;
+        for (const name of result.invalidCardNames)
+          missing.set(name.trim().toLowerCase(), name);
+      }
+    }
+    stage = 'commanders';
+    for (const card of cards.filter((card) => card.commander)) {
+      if (!missing.has(card.name.trim().toLowerCase()))
+        await setCommander(card.name);
+    }
+    stage = 'printings';
+    if (setPrintings)
+      await setPrintings(
+        cards.filter((card) => !missing.has(card.name.trim().toLowerCase())),
+      );
+    return {
+      confirmedEntries,
+      invalidCardNames: [...missing.values()],
+      failure: null,
+    };
+  } catch (cause) {
+    return {
+      confirmedEntries,
+      invalidCardNames: [...missing.values()],
+      failure: {
+        stage,
+        message: cause instanceof Error ? cause.message : String(cause),
+      },
+    };
+  }
+}
+
 const header = (s: string) => s.trim().toLowerCase().replace(/[ _-]/g, '');
 const boardFor = (s: string): TransferBoard =>
   /sideboard|companion|^sb$/i.test(s)
@@ -24,7 +119,7 @@ function quantity(raw: string) {
 function cleanName(raw: string) {
   return raw
     .replace(/\s*#!.*$/, '')
-    .replace(/\s*\*F\*\s*$/i, '')
+    .replace(/\s*\*(?:F|E)\*\s*$/i, '')
     .replace(/\s*\([A-Z0-9]+\)\s*[\w-]+\s*$/i, '')
     .trim();
 }
@@ -73,6 +168,10 @@ export function parseDeckImport(
     const countIndex = index(['quantity', 'qty', 'count', 'amount']);
     const boardIndex = index(['board', 'section', 'category', 'categories']);
     const commanderIndex = index(['commander', 'iscommander']);
+    const printingIndex = index(['printingid', 'scryfallid']);
+    const setIndex = index(['set', 'setcode']);
+    const collectorIndex = index(['collectornumber']);
+    const finishIndex = index(['finish']);
     if (nameIndex < 0)
       throw new Error(
         'CSV needs a Name or Card Name column. Quantity/Count and Board columns are optional.',
@@ -82,6 +181,16 @@ export function parseDeckImport(
       if (!name) throw new Error('A CSV row has no card name.');
       cards.push({
         name,
+        ...(row[printingIndex] ? { printingId: row[printingIndex] } : {}),
+        ...(row[setIndex] && row[collectorIndex]
+          ? {
+              set: row[setIndex].toLowerCase(),
+              collectorNumber: row[collectorIndex],
+            }
+          : {}),
+        ...(['nonfoil', 'foil', 'etched'].includes(row[finishIndex])
+          ? { finish: row[finishIndex] as TransferCard['finish'] }
+          : {}),
         quantity: quantity(countIndex < 0 ? '1' : row[countIndex]),
         board: boardFor(row[boardIndex] ?? ''),
         commander:
@@ -124,9 +233,25 @@ export function parseDeckImport(
       separated = false;
       const match = /^(\d+)x?\s+(.+)$/i.exec(line);
       const name = cleanName(match?.[2] ?? line);
+      const printing =
+        /\s+\(([A-Z0-9]+)\)\s+([\w-]+)(?:\s+\*(F|E)\*)?\s*$/i.exec(line);
       if (!name) throw new Error('A card name is missing.');
       cards.push({
         name,
+        ...(printing
+          ? {
+              set: printing[1].toLowerCase(),
+              collectorNumber: printing[2],
+              ...(printing[3]
+                ? {
+                    finish:
+                      printing[3].toUpperCase() === 'F'
+                        ? ('foil' as const)
+                        : ('etched' as const),
+                  }
+                : {}),
+            }
+          : {}),
         quantity: quantity(match?.[1] ?? '1'),
         board,
         commander,
@@ -141,6 +266,16 @@ export function parseDeckImport(
   for (const card of cards) {
     const key = `${card.board}:${card.name.toLowerCase()}`;
     const old = merged.get(key);
+    if (
+      old &&
+      (old.printingId !== card.printingId ||
+        old.set !== card.set ||
+        old.collectorNumber !== card.collectorNumber ||
+        old.finish !== card.finish)
+    )
+      throw new Error(
+        `Choose one printing and finish for ${card.name} in ${card.board}.`,
+      );
     const combined = (old?.quantity ?? 0) + card.quantity;
     if (combined > 100)
       throw new Error(`More than 100 copies of ${card.name}.`);
@@ -159,15 +294,22 @@ export function exportDeck(
 ): string {
   if (format === 'csv')
     return [
-      'Name,Quantity,Board,Commander',
+      'Name,Quantity,Board,Commander,Printing ID,Set,Collector Number,Finish',
       ...cards.map((card) =>
-        [csvCell(card.name), card.quantity, card.board, !!card.commander].join(
-          ',',
-        ),
+        [
+          csvCell(card.name),
+          card.quantity,
+          card.board,
+          !!card.commander,
+          card.printingId ?? '',
+          card.set ?? '',
+          card.collectorNumber ? csvCell(card.collectorNumber) : '',
+          card.finish ?? '',
+        ].join(','),
       ),
     ].join('\r\n');
   const line = (card: TransferCard) =>
-    `${card.quantity} ${format === 'arena' ? card.name.split(' // ')[0] : card.name}`;
+    `${card.quantity} ${format === 'arena' ? card.name.split(' // ')[0] : card.name}${format !== 'mtgo' && card.set && card.collectorNumber ? ` (${card.set.toUpperCase()}) ${card.collectorNumber}${format === 'text' && card.finish === 'foil' ? ' *F*' : format === 'text' && card.finish === 'etched' ? ' *E*' : ''}` : ''}`;
   const main = cards.filter((card) => card.board === 'Mainboard');
   const side = cards.filter((card) => card.board === 'Sideboard');
   if (format === 'mtgo')

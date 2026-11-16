@@ -28,13 +28,13 @@
       class="cursor-pointer"
       tabindex="0"
       aria-label="Flip Card"
-      color="neutral"
+      :color="cardActionStyles.flip.color"
       variant="solid"
       size="md"
       square
       @click.stop="emit('flip')"
     >
-      <UIcon name="i-heroicons-arrow-path" class="action-icon" />
+      <UIcon :name="cardActionStyles.flip.icon" class="action-icon" />
     </UButton>
   </div>
 
@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+import { cardActionStyles } from '~/utils/card-actions';
 import { getUsdPrice } from '~/utils/cardPrice';
 import { computed } from 'vue';
 import type { Card, ScryfallCard } from '~/models/cardModel';

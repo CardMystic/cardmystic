@@ -2,6 +2,7 @@
 import { manaNames, manaColors } from '~/utils/manaDisplay';
 const props = defineProps<{
   compact?: boolean;
+  view?: 'curve' | 'colors';
   curve: { label: string; count: number }[];
   colors: { label: string; count: number }[];
 }>();
@@ -26,8 +27,8 @@ const pie = computed(() => {
 });
 </script>
 <template>
-  <div class="grid gap-8 sm:grid-cols-2">
-    <figure aria-label="Mana curve">
+  <div class="grid gap-8" :class="{ 'sm:grid-cols-2': !view }">
+    <figure v-if="view !== 'colors'" aria-label="Mana curve">
       <figcaption
         class="font-medium mb-4"
         :class="{ 'border-b border-white/15 pb-2': compact }"
@@ -59,7 +60,7 @@ const pie = computed(() => {
         Mana value
       </p>
     </figure>
-    <figure aria-label="Color identity">
+    <figure v-if="view !== 'curve'" aria-label="Color identity">
       <figcaption
         class="font-medium mb-4"
         :class="{ 'border-b border-white/15 pb-2': compact }"
@@ -105,8 +106,7 @@ const pie = computed(() => {
       </div>
       <p v-else class="text-sm text-muted">Add cards to see their colors.</p>
       <p v-if="!compact" class="text-xs text-muted mt-3">
-        Multicolor cards count in each of their colors. Percentages show each
-        slice’s share of the chart.
+        Multicolor cards count in each of their colors.
       </p>
     </figure>
   </div>

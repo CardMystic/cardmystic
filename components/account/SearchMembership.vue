@@ -589,6 +589,7 @@ watch(
 
 <style scoped>
 .membership {
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   padding: 1rem;
 }

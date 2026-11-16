@@ -31,7 +31,7 @@ import { expect, gotoHydrated, test } from './utils/fixtures';
  *   30. Change-board merge — bump Mainboard Sol Ring to 2 copies, then
  *       move to Sideboard (already has 1 from test 29); backend merges
  *       and returns success
- *   31. Update num copies — increment via "+Copy" and verify backend call
+ *   31. Update num copies — increment via the copies menu and verify backend call
  *       reflects new count
  *
  *  ── Legality warnings ──────────────────────────────────────────────────
@@ -398,18 +398,15 @@ test.describe('Card lists CRUD', () => {
       .toBeGreaterThan(0);
 
     // Remove it so downstream legality/bulk-edit tests don't see it.
-    const splitCard = page
-      .locator(`.card-image-wrapper:has(${splitImageSel})`)
-      .first();
-    await splitCard.scrollIntoViewIfNeeded();
-    await splitCard.hover();
-    await splitCard
-      .getByRole('button', { name: /Options for/i })
-      .first()
-      .click({ force: true });
     await page
-      .getByRole('button', { name: /^remove$/i })
-      .first()
+      .getByRole('button', {
+        name: `Options for ${SPLIT_CARD_NAME}`,
+        exact: true,
+      })
+      .click();
+    await page
+      .getByRole('dialog', { name: SPLIT_CARD_NAME, exact: true })
+      .getByRole('button', { name: 'Remove From List', exact: true })
       .click();
 
     await expect(page.locator(splitImageSel)).toHaveCount(0, {
@@ -567,7 +564,10 @@ test.describe('Card lists CRUD', () => {
       { timeout: API_TIMEOUT },
     );
     await cardDialog
-      .getByRole('button', { name: 'Move to Sideboard', exact: true })
+      .getByRole('button', { name: 'Move To', exact: true })
+      .click();
+    await page
+      .getByRole('menuitem', { name: 'Move to Sideboard', exact: true })
       .click();
     const changeBoardResp = await changeBoardCall;
     expect(changeBoardResp.ok()).toBeTruthy();
@@ -584,7 +584,7 @@ test.describe('Card lists CRUD', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Test 31 — Update num copies via the +Copy button in the preview rail
+  // Test 31 — Update num copies via the copies menu in the preview rail
   // ---------------------------------------------------------------------------
   test('update num copies fires update-num-copies and changes the displayed count', async ({
     page,
@@ -593,35 +593,17 @@ test.describe('Card lists CRUD', () => {
 
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
-    // Wait for cards to render — Atraxa should be present from test 28.
-    await expect
-      .poll(
-        () =>
-          page.locator('.card-image-wrapper:has(img[alt*="Atraxa"])').count(),
-        { timeout: API_TIMEOUT },
-      )
-      .toBeGreaterThan(0);
-
-    // Hover Atraxa to open the preview rail.
-    const atraxaCard = page
-      .locator('.card-image-wrapper:has(img[alt*="Atraxa"])')
-      .first();
-    await atraxaCard.scrollIntoViewIfNeeded();
-    await atraxaCard.hover();
-
-    // Atraxa is a Commander — copy controls are hidden for the deck commander.
-    // Instead test with Sol Ring (non-commander card).
-    // Sol Ring may be in Sideboard after test 30; find whichever wrapper is first.
+    // Scope to a deck row so hovering does not make the preview image a match.
     const solRingCard = page
-      .locator('.card-image-wrapper:has(img[alt="Sol Ring"])')
+      .locator('.list-card')
+      .filter({
+        has: page.getByRole('button', {
+          name: 'Options for Sol Ring',
+          exact: true,
+        }),
+      })
       .first();
-    const hasSolRing = (await solRingCard.count()) > 0;
-    test.skip(
-      !hasSolRing,
-      'Sol Ring not present — tests 27/29/30 likely skipped; nothing to update',
-    );
-
-    await solRingCard.scrollIntoViewIfNeeded();
+    await expect(solRingCard).toBeVisible({ timeout: API_TIMEOUT });
     await solRingCard.hover();
 
     const updateCall = page.waitForResponse(
@@ -631,10 +613,13 @@ test.describe('Card lists CRUD', () => {
       { timeout: API_TIMEOUT },
     );
 
-    // Click "+Copy" in the preview rail.
+    const preview = page.locator('.preview-rail');
+    await expect(preview.locator('.preview-title')).toHaveText('Sol Ring');
+    await preview
+      .getByRole('button', { name: 'Set # of Copies', exact: true })
+      .click();
     await page
-      .getByRole('button', { name: /^add copy$/i })
-      .first()
+      .getByRole('menuitem', { name: 'Add a copy', exact: true })
       .click();
 
     const updateResp = await updateCall;
@@ -644,7 +629,10 @@ test.describe('Card lists CRUD', () => {
       numCopies: number;
     };
     expect(updateBody.cardName).toMatch(/Sol Ring/i);
-    expect(updateBody.numCopies).toBeGreaterThanOrEqual(1);
+    expect(updateBody.numCopies).toBeGreaterThan(1);
+    await expect(solRingCard.locator('.copy-count-badge')).toHaveText(
+      `x${updateBody.numCopies}`,
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -751,10 +739,11 @@ test.describe('Card lists CRUD', () => {
       .click();
     await addCall;
 
-    const cardWrapper = page
-      .locator(`.card-image-wrapper:has(img[alt="${SINGLETON_TEST_CARD}"])`)
-      .first();
-    await expect(cardWrapper).toBeVisible({ timeout: API_TIMEOUT });
+    const options = page.getByRole('button', {
+      name: `Options for ${SINGLETON_TEST_CARD}`,
+      exact: true,
+    });
+    const cardRow = page.locator('.list-card').filter({ has: options });
 
     // ── Step 2: bump Counterspell to 2 copies via the card-overlay menu ─
     // The menu is scoped to the specific card wrapper, so it works
@@ -766,26 +755,20 @@ test.describe('Card lists CRUD', () => {
       { timeout: API_TIMEOUT },
     );
 
-    await cardWrapper.scrollIntoViewIfNeeded();
-    await cardWrapper.hover();
-    await cardWrapper
-      .getByRole('button', { name: /Options for/i })
-      .first()
-      .click({ force: true });
+    await options.click();
     await page
-      .getByRole('button', { name: /^add a copy$/i })
+      .getByRole('dialog', { name: SINGLETON_TEST_CARD, exact: true })
+      .getByRole('button', { name: 'Set # of Copies', exact: true })
+      .click();
+    await page
+      .getByRole('menuitem', { name: /^add a copy$/i })
       .first()
       .click();
     await updateCall;
 
     // ── Step 3: verify the singleton overlay is shown on Counterspell ───
     // Legality is reactive — no reload required.
-    const illegalCard = page
-      .locator(`.card-image-wrapper:has(img[alt="${SINGLETON_TEST_CARD}"])`)
-      .first();
-    await expect(illegalCard).toBeVisible({ timeout: API_TIMEOUT });
-
-    const overlay = illegalCard.locator('.legality-overlay').first();
+    const overlay = cardRow.locator('.legality-overlay');
     await expect(overlay).toBeVisible();
     await expect(overlay).toContainText(/1 copy|singleton|commander/i);
   });
@@ -894,51 +877,27 @@ test.describe('Card lists CRUD', () => {
 
     await gotoHydrated(page, `/lists/${LIST_ID}`);
 
-    // Wait for cards to render.
-    await expect
-      .poll(() => page.locator('.card-image-wrapper').count(), {
-        timeout: API_TIMEOUT,
-      })
-      .toBeGreaterThan(0);
-
-    // Pick Sol Ring (added in test 27, not a commander).
-    const solRingCard = page
-      .locator('.card-image-wrapper:has(img[alt="Sol Ring"])')
-      .first();
-    const hasSolRing = (await solRingCard.count()) > 0;
-    test.skip(
-      !hasSolRing,
-      'Sol Ring not present (test 27 likely skipped/failed) — nothing to remove',
-    );
-
-    const initialSolRingCount = await page
-      .locator('.card-image-wrapper:has(img[alt="Sol Ring"])')
-      .count();
-    const initialCount = await page.locator('.card-image-wrapper').count();
-
-    // Open the menu on Sol Ring's card and pick "Remove".
-    await solRingCard.scrollIntoViewIfNeeded();
-    await solRingCard.hover();
-    await solRingCard
-      .getByRole('button', { name: /Options for/i })
-      .first()
-      .click({ force: true });
+    const deckCards = page.locator('.list-card');
+    const solRingCards = deckCards.getByRole('button', {
+      name: 'Options for Sol Ring',
+      exact: true,
+    });
+    await expect(solRingCards.first()).toBeVisible({ timeout: API_TIMEOUT });
+    const initialSolRingCount = await solRingCards.count();
+    const initialCount = await deckCards.count();
+    await solRingCards.first().click();
 
     await page
-      .getByRole('button', { name: /^remove$/i })
-      .first()
+      .getByRole('dialog', { name: 'Sol Ring', exact: true })
+      .getByRole('button', { name: 'Remove From List', exact: true })
       .click();
 
     // Sol Ring may still exist in a different board after test 29 placed it in
     // Sideboard, so just assert one wrapper went away (and total count drops).
-    await expect(
-      page.locator('.card-image-wrapper:has(img[alt="Sol Ring"])'),
-    ).toHaveCount(initialSolRingCount - 1, { timeout: API_TIMEOUT });
-    await expect
-      .poll(() => page.locator('.card-image-wrapper').count(), {
-        timeout: API_TIMEOUT,
-      })
-      .toBeLessThan(initialCount);
+    await expect(solRingCards).toHaveCount(initialSolRingCount - 1, {
+      timeout: API_TIMEOUT,
+    });
+    await expect(deckCards).toHaveCount(initialCount - 1);
   });
 
   // ---------------------------------------------------------------------------

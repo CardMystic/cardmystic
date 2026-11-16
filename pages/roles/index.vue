@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineOptions({ name: 'RolesDirectoryPage' });
-definePageMeta({ title: 'MTG Roles' });
+definePageMeta({ title: 'MTG Roles', breadcrumbsInPage: true });
 </script>
 
 <template>

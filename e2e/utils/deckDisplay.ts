@@ -149,6 +149,22 @@ export async function setupDeckDisplay(
     });
   });
   await page.route(BACKEND + '/**', (route) => route.fulfill({ json: {} }));
+  await page.route(BACKEND + '/library/lists/*/analytics', (route) =>
+    route.fulfill({
+      json: {
+        librarySize: cards.length,
+        lands: 0,
+        modalLands: 0,
+        commanders: 0,
+        averageManaValue: null,
+        types: [],
+        roles: [],
+        mainboardRoles: {},
+        topThemes: [],
+        prices: { knownPriceCents: 0, missingPrices: 0, topCards: [] },
+      },
+    }),
+  );
   await page.route(BACKEND + '/search-access', (route) =>
     route.fulfill({
       json: {
@@ -162,6 +178,11 @@ export async function setupDeckDisplay(
     }),
   );
   let savedBudget: number | null = null;
+  await page.route(BACKEND + '/library/lists/*/new-cards', (route) =>
+    route.fulfill({
+      json: { set: null, acknowledgedAt: null, shouldSuggest: false },
+    }),
+  );
   await page.route(BACKEND + '/library/lists/*/budget', (route) => {
     if (route.request().method() === 'PUT')
       savedBudget = route.request().postDataJSON().targetBudget;

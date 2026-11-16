@@ -41,6 +41,12 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Restore last validated sitemap build data
+        uses: actions/cache@v4
+        with:
+          path: .cache/sitemap
+          key: sitemap-data-${{ runner.os }}-unit-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: sitemap-data-${{ runner.os }}-
       - name: Run unit tests
         run: pnpm test
       - name: Check Azure gateway responses
@@ -112,6 +118,13 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             playwright-${{ runner.os }}-
+
+      - name: Restore last validated sitemap build data
+        uses: actions/cache@v4
+        with:
+          path: .cache/sitemap
+          key: sitemap-data-${{ runner.os }}-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: sitemap-data-${{ runner.os }}-
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'

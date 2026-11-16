@@ -186,6 +186,7 @@ export function useDecklistComments(
   const {
     data,
     isLoading,
+    refetch,
     isFetchingNextPage,
     error,
     fetchNextPage,
@@ -264,6 +265,7 @@ export function useDecklistComments(
       () => data.value?.pages.flatMap((p) => p.comments) ?? [],
     ),
     isLoading,
+    refetch,
     isFetchingNextPage,
     error,
     fetchNextPage,

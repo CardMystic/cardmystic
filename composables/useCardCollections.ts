@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/vue-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
 import type { ComputedRef } from 'vue';
 import type {
   CardCollectionCatalog,
@@ -6,6 +6,41 @@ import type {
   CollectionCardsPage,
 } from '~/models/collectionModel';
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
+import type { DeckCardLabels } from '~/utils/deckHighlight';
+
+export function useCollectionLabels(
+  ids: ComputedRef<string[]>,
+  includeSets: ComputedRef<boolean>,
+) {
+  const base = useRuntimeConfig().public.backendPath;
+  return useQuery({
+    queryKey: computed(
+      () => ['collection-card-labels', ids.value, includeSets.value] as const,
+    ),
+    enabled: computed(() => import.meta.client && ids.value.length > 0),
+    queryFn: async ({ queryKey: [, oracleIds, sets], signal }) => {
+      const labels: Record<string, DeckCardLabels> = {};
+      for (let i = 0; i < oracleIds.length; i += 200) {
+        Object.assign(
+          labels,
+          await $fetch<Record<string, DeckCardLabels>>(
+            `${base}/card-collections/labels`,
+            {
+              method: 'POST',
+              body: {
+                oracleIds: oracleIds.slice(i, i + 200),
+                includeSets: sets,
+              },
+              signal,
+            },
+          ),
+        );
+      }
+      return labels;
+    },
+    staleTime: 300_000,
+  });
+}
 
 export function useCardCollections() {
   const request = useRequestFetch();

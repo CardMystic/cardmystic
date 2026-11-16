@@ -1,11 +1,6 @@
 <template>
   <div class="top-queries-container mt-2 mb-2">
-    <TopQueriesSkeleton v-if="isLoading" />
-
-    <div
-      v-else-if="popularQueries && popularQueries.length > 0"
-      class="top-queries-content"
-    >
+    <div class="top-queries-content">
       <div class="queries-header">
         <UIcon name="i-lucide-trending-up" class="mr-2 text-primary text-xl" />
         <h3 class="queries-title">Popular Searches</h3>
@@ -25,7 +20,8 @@
               color="primary"
               variant="outline"
               size="sm"
-              @click="tryQuery(query)"
+              :to="queryLink(query)"
+              no-prefetch
               icon="i-lucide-search"
               class="try-btn cursor-pointer"
             >
@@ -47,7 +43,8 @@
               color="primary"
               variant="outline"
               size="sm"
-              @click="tryQuery(query)"
+              :to="queryLink(query)"
+              no-prefetch
               icon="i-lucide-search"
               class="try-btn cursor-pointer"
             >
@@ -57,22 +54,14 @@
         </div>
       </div>
     </div>
-
-    <div v-else-if="error" class="error-state">
-      <UIcon name="i-lucide-alert-circle" class="mr-2 text-red-500" />
-      <span class="error-text">Failed to load popular queries</span>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { usePopularQueries } from '~/composables/usePopularQueries';
 
-const router = useRouter();
-
-const { popularQueries, isLoading, error } = usePopularQueries();
+const { popularQueries } = usePopularQueries();
 
 // Split queries into left and right columns
 const leftColumnQueries = computed(() => {
@@ -83,15 +72,14 @@ const rightColumnQueries = computed(() => {
   return popularQueries.value?.slice(5, 10) || [];
 });
 
-function tryQuery(query: string) {
-  // Navigate to search page with the current query
-  router.push({
+function queryLink(query: string) {
+  return {
     path: '/search/all/smart',
     query: {
       query,
       isTryTopQuery: 'true',
     },
-  });
+  };
 }
 </script>
 

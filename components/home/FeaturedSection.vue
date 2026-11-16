@@ -1,6 +1,9 @@
 <template>
   <div>
     <h2 class="section-title mb-4">Awesome Decklists & Users</h2>
+    <p v-if="showSignIn" class="mb-4 text-center text-muted">
+      Browse public decks or try building your own without an account.
+    </p>
     <div class="mb-6 flex flex-wrap justify-center gap-3">
       <UButton
         to="/explore/decklists"
@@ -9,6 +12,9 @@
         class="min-h-11"
         >Search Decklists</UButton
       >
+      <UButton v-if="showSignIn" to="/build" no-prefetch class="min-h-11">
+        Build a deck
+      </UButton>
       <UButton
         to="/explore/users"
         variant="outline"
@@ -18,145 +24,103 @@
       >
     </div>
 
-    <ClientOnly>
-      <!-- Decklists row -->
-      <SearchError
-        v-if="decklistsError"
-        :error="decklistsError"
-        title="Could not load featured decklists"
-        description="Please try again."
-        retry-label="Retry"
-        :is-retrying="isFetchingDecklists"
-        @retry="refetchDecklists()"
-        class="mb-4"
+    <!-- Decklists row -->
+    <SearchError
+      v-if="decklistsError"
+      :error="decklistsError"
+      title="Could not load featured decklists"
+      description="Please try again."
+      retry-label="Retry"
+      :is-retrying="isFetchingDecklists"
+      @retry="refetchDecklists()"
+      class="mb-4"
+    />
+    <div
+      v-if="isLoadingDecklists"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
+    >
+      <CardListLinkSkeleton v-for="i in 3" :key="i" />
+    </div>
+
+    <div
+      v-else-if="visibleDecklists.length > 0"
+      class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
+    >
+      <CardListLink
+        v-for="list in visibleDecklists"
+        :key="list.id"
+        :list="list"
+        :show-settings-button="false"
+        :showAuthor="true"
       />
-      <div
-        v-if="isLoadingDecklists"
-        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
-      >
-        <CardListLinkSkeleton v-for="i in 3" :key="i" />
-      </div>
+    </div>
 
-      <div
-        v-else-if="visibleDecklists.length > 0"
-        class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
-      >
-        <CardListLink
-          v-for="list in visibleDecklists"
-          :key="list.id"
-          :list="list"
-          :show-settings-button="false"
-          :showAuthor="true"
-        />
-      </div>
+    <div v-else-if="!decklistsError" class="empty-state mb-4">
+      <UIcon name="i-lucide-stars" class="text-5xl opacity-30 mb-3" />
+      <p class="mb-4">No featured decklists yet!</p>
+      <UButton to="/explore/decklists" color="primary" variant="soft">
+        Search Decklists
+      </UButton>
+    </div>
 
-      <div v-else-if="!decklistsError" class="empty-state mb-4">
-        <UIcon name="i-lucide-stars" class="text-5xl opacity-30 mb-3" />
-        <p class="mb-4">No featured decklists yet!</p>
-        <UButton to="/explore/decklists" color="primary" variant="soft">
-          Search Decklists
-        </UButton>
-      </div>
+    <!-- Users row -->
+    <SearchError
+      v-if="usersError"
+      :error="usersError"
+      title="Could not load featured users"
+      description="Please try again."
+      retry-label="Retry"
+      :is-retrying="isFetchingUsers"
+      @retry="refetchUsers()"
+      class="mb-4"
+    />
+    <div
+      v-if="isLoadingUsers"
+      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
+    >
+      <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
+    </div>
 
-      <!-- Users row -->
-      <SearchError
-        v-if="usersError"
-        :error="usersError"
-        title="Could not load featured users"
-        description="Please try again."
-        retry-label="Retry"
-        :is-retrying="isFetchingUsers"
-        @retry="refetchUsers()"
-        class="mb-4"
+    <div
+      v-else-if="visibleUsers.length > 0"
+      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
+    >
+      <PublicUserLink
+        v-for="profile in visibleUsers"
+        :key="profile.id"
+        :profile="profile"
       />
-      <div
-        v-if="isLoadingUsers"
-        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
-      >
-        <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
-      </div>
+    </div>
 
-      <div
-        v-else-if="visibleUsers.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
-      >
-        <PublicUserLink
-          v-for="profile in visibleUsers"
-          :key="profile.id"
-          :profile="profile"
-        />
-      </div>
-
-      <div v-else-if="!usersError" class="empty-state">
-        <UIcon name="i-lucide-users" class="text-5xl opacity-30 mb-3" />
-        <p class="mb-4">No featured users yet!</p>
-        <UButton to="/explore/users" color="primary" variant="soft">
-          Search Users
-        </UButton>
-      </div>
-
-      <!-- Primers row -->
-      <template
-        v-if="isLoadingPrimers || primersError || visiblePrimers.length > 0"
-      >
-        <h2 class="section-title mt-14 mb-4">Suggested Primer Reads</h2>
-
-        <SearchError
-          v-if="primersError"
-          :error="primersError"
-          title="Could not load suggested primers"
-          description="Please try again."
-          retry-label="Retry"
-          :is-retrying="isFetchingPrimers"
-          @retry="refetchPrimers()"
-          class="mb-4"
-        />
-
-        <div
-          v-if="isLoadingPrimers"
-          class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4"
-        >
-          <CardListLinkSkeleton v-for="i in 2" :key="i" primer />
-        </div>
-
-        <div
-          v-else-if="visiblePrimers.length > 0"
-          class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4"
-        >
-          <FeaturedPrimerLink
-            v-for="primer in visiblePrimers"
-            :key="primer.decklist.id"
-            :primer="primer"
-          />
-        </div>
-      </template>
-
-      <template #fallback>
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 md:gap-4 mb-4"
-        >
-          <CardListLinkSkeleton v-for="i in 3" :key="i" />
-        </div>
-        <div
-          class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-4"
-        >
-          <USkeleton v-for="i in 3" :key="i" class="user-skeleton" />
-        </div>
-      </template>
-    </ClientOnly>
+    <div v-else-if="!usersError" class="empty-state">
+      <UIcon name="i-lucide-users" class="text-5xl opacity-30 mb-3" />
+      <p class="mb-4">No featured users yet!</p>
+      <UButton to="/explore/users" color="primary" variant="soft">
+        Search Users
+      </UButton>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+
+// Resolve auth inside the deferred section; changing a parent prop would force
+// hydration as soon as a returning user's session is restored.
+const { userProfile } = useUserProfile();
+// Auth can resolve before this section hydrates after scrolling into view.
+// Match the anonymous server HTML until this component has mounted.
+const mounted = ref(false);
+onMounted(() => {
+  mounted.value = true;
+});
+const showSignIn = computed(() => !mounted.value || !userProfile.value);
 import {
   useFeaturedDecklists,
   useFeaturedUsers,
-  useFeaturedPrimers,
 } from '~/composables/useDiscovery';
 import CardListLink from '~/components/lists/CardListLink.vue';
 import PublicUserLink from '~/components/user/PublicUserLink.vue';
-import FeaturedPrimerLink from '~/components/home/FeaturedPrimerLink.vue';
 
 const {
   decklists,
@@ -172,17 +136,9 @@ const {
   error: usersError,
   refetch: refetchUsers,
 } = useFeaturedUsers(3);
-const {
-  primers,
-  isLoading: isLoadingPrimers,
-  isFetching: isFetchingPrimers,
-  error: primersError,
-  refetch: refetchPrimers,
-} = useFeaturedPrimers(2);
 
 const visibleDecklists = computed(() => decklists.value.slice(0, 3));
 const visibleUsers = computed(() => users.value.slice(0, 3));
-const visiblePrimers = computed(() => primers.value.slice(0, 2));
 </script>
 
 <style scoped lang="sass">

@@ -75,6 +75,12 @@
         :article-id="article.id"
         :is-article-owner="isOwner"
       />
+
+      <RelatedContent
+        v-if="article.is_published"
+        :source-id="article.id"
+        kind="article"
+      />
     </template>
   </UContainer>
 </template>
@@ -132,10 +138,10 @@ useSeoMeta({
   ogImageAlt: () => seo.value.imageAlt,
   ogSiteName: 'CardMystic',
   articleAuthor: () =>
-    article.value?.username ? [article.value.username] : undefined,
-  articlePublishedTime: () => article.value?.published_at || undefined,
+    article.value?.is_published && article.value.username ? [article.value.username] : undefined,
+  articlePublishedTime: () => article.value?.is_published ? article.value.published_at || undefined : undefined,
   articleModifiedTime: () =>
-    article.value?.updated_at || article.value?.published_at || undefined,
+    article.value?.is_published ? article.value.updated_at || article.value.published_at || undefined : undefined,
   articleSection: 'Magic: The Gathering',
   twitterCard: 'summary_large_image',
   twitterTitle: () => seo.value.title,

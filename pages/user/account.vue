@@ -1,4 +1,5 @@
 <script setup lang="ts">
+useSeoMeta({ title: 'Your account | CardMystic', robots: 'noindex, nofollow' });
 definePageMeta({
   middleware: 'auth',
   layout: 'fullscreen',
@@ -261,7 +262,7 @@ onBeforeUnmount(() => followingObserver?.disconnect());
         class="shadow-2xl lg:col-span-3 lg:col-start-3 lg:row-start-2 min-w-0"
       >
         <h2 class="text-xl font-bold flex items-center gap-2 mb-4">
-          <UIcon name="i-lucide-credit-card" class="w-5 h-5" />
+          <UIcon name="i-lucide-crown" class="w-5 h-5" />
           Your membership
         </h2>
         <ClientOnly>

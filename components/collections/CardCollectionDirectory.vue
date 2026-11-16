@@ -5,6 +5,7 @@ import {
   collectionLabels,
   collectionDescriptions,
   collectionPath,
+  matchingCollections,
   type CardCollectionKind,
 } from '~/utils/card-collections';
 
@@ -20,11 +21,7 @@ if (import.meta.server && error.value) {
 const filter = shallowRef('');
 const pageSize = 40;
 const entries = computed(() =>
-  (data.value?.[props.kind] ?? []).filter((entry) =>
-    `${entry.name} ${entry.slug}`
-      .toLowerCase()
-      .includes(filter.value.trim().toLowerCase()),
-  ),
+  matchingCollections(data.value?.[props.kind] ?? [], filter.value),
 );
 const pageCount = computed(() =>
   Math.max(1, Math.ceil(entries.value.length / pageSize)),
@@ -85,44 +82,29 @@ useHead({
 
 <template>
   <UContainer class="mb-10 px-0 max-w-full text-default">
-    <div class="flex flex-col items-center">
+    <div class="relative isolate flex flex-col items-center">
+      <SearchBackground :type="kind" placement="header" />
+      <NavigationBreadcrumbs />
       <SearchSEOTitleAndDescription
         :fallback-title="`MTG ${collectionLabels[kind]}`"
         :fallback-description="collectionDescriptions[kind]"
       />
-      <nav
-        aria-label="Browse cards"
-        class="flex flex-wrap justify-center gap-3 mb-6"
-      >
-        <UButton
-          v-for="(label, category) in collectionLabels"
-          :key="category"
-          :to="collectionPath(category)"
-          :label="`Go To ${label}`"
-          color="neutral"
-          :variant="category === kind ? 'soft' : 'outline'"
-          class="min-h-11"
-          :aria-current="category === kind ? 'page' : undefined"
-        />
-      </nav>
+      <DirectoryNavigation group="cards" />
       <UFormField
         :label="`Filter ${collectionLabels[kind].toLowerCase()}`"
         class="w-full max-w-xl mb-6"
       >
-        <UInput
-          v-model="filter"
-          type="search"
-          :aria-label="`Filter ${collectionLabels[kind].toLowerCase()}`"
-          :placeholder="kind === 'sets' ? 'Set name or code' : 'Name'"
-          class="w-full"
-          :ui="{ base: 'min-h-11' }"
+        <CollectionAutocomplete
+          v-model:search-term="filter"
+          :matches="entries"
+          :kind="kind"
+          :label="`Filter ${kind}`"
         />
       </UFormField>
     </div>
     <div v-if="error" role="alert" class="text-center space-y-3 py-8">
       <p>{{ collectionLabels[kind] }} could not be loaded.</p>
       <UButton
-        color="neutral"
         label="Retry"
         class="min-h-11"
         @click="refresh()"

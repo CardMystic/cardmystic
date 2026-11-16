@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { getUsdPrice } from '~/utils/cardPrice';
+import { getUsdPrice, isBasicLand } from '~/utils/cardPrice';
 import { analyzeDeck } from '~/utils/deckAnalysis';
 import type { AnalysisCard } from '~/utils/deckAnalysis';
 import type { DeckBusinessCardDetails } from '~/utils/deckBusinessCard';
 import { getCardImageUrl } from '~/utils/scryfall';
+const { columns, details: detailsColumn } = useBusinessCardColumns();
 const props = defineProps<{
   name: string;
   format: string;
   bracket?: number | null;
+  hasPrimer?: boolean;
   details: DeckBusinessCardDetails;
   entries: AnalysisCard[];
   qrImage: string;
@@ -41,6 +43,7 @@ const price = computed(() => {
   let cents = 0,
     missing = 0;
   for (const { card, quantity } of props.entries) {
+    if (isBasicLand(card)) continue;
     const raw = getUsdPrice(card.prices);
     const value = raw == null ? NaN : Number(raw);
     if (Number.isFinite(value) && value >= 0)
@@ -53,31 +56,6 @@ const price = computed(() => {
     date: new Date().toLocaleDateString(),
   };
 });
-const openingHand = computed(() => {
-  const counts = new Map<string, number>();
-  return (props.details.opening_hand ?? []).flatMap((id) => {
-    const entry = props.entries.find(
-      (entry) => entry.card.oracle_id === id && !entry.commander,
-    );
-    const used = counts.get(id) ?? 0;
-    if (!entry || used >= entry.quantity) return [];
-    counts.set(id, used + 1);
-    return [entry.card];
-  });
-});
-const combos = computed(() =>
-  (props.details.combos ?? [])
-    .map((combo) => ({
-      ...combo,
-      cards: combo.oracle_ids.flatMap((id) => {
-        const entry = props.entries.find(
-          (entry) => entry.card.oracle_id === id,
-        );
-        return entry ? [entry.card] : [];
-      }),
-    }))
-    .filter((combo) => combo.cards.length >= 2),
-);
 </script>
 <template>
   <article
@@ -94,15 +72,7 @@ const combos = computed(() =>
           height="28"
         /><span>CardMystic</span>
       </div>
-      <img
-        v-if="qrImage"
-        :src="qrImage"
-        alt="QR code linking to this deck"
-        width="64"
-        height="64"
-        class="business-qr"
-      />
-      <div class="text-right">
+      <div class="ml-auto text-right">
         <strong class="text-lg tabular-nums"
           >{{ price.missing ? 'From ' : '' }}${{ price.amount }}</strong
         >
@@ -113,17 +83,30 @@ const combos = computed(() =>
           {{ price.missing }} copies without prices
         </p>
       </div>
+      <img
+        v-if="qrImage"
+        :src="qrImage"
+        alt="QR code linking to this deck"
+        width="64"
+        height="64"
+        class="business-qr"
+      />
     </header>
-    <div class="business-content">
+    <div ref="columns" class="business-content">
       <div class="business-art">
-        <img
+        <div
           v-if="hero"
-          :src="getCardImageUrl(hero.card, false, 'normal')"
-          :alt="hero.card.name"
-          width="488"
-          height="680"
-          class="business-hero"
-        />
+          class="card-finish business-hero-surface rounded-xl"
+          :data-card-finish="hero.card.selected_finish"
+        >
+          <img
+            :src="getCardImageUrl(hero.card, false, 'normal')"
+            :alt="hero.card.name"
+            width="488"
+            height="680"
+            class="business-hero"
+          />
+        </div>
         <div v-else class="business-no-art">
           <img
             src="/android-chrome-512x512.png"
@@ -133,7 +116,7 @@ const combos = computed(() =>
           />
         </div>
       </div>
-      <div class="business-details">
+      <div ref="detailsColumn" class="business-details">
         <div class="business-meta">
           <div
             v-if="colors.length"
@@ -143,26 +126,32 @@ const combos = computed(() =>
             <ManaColorIcon v-for="color in colors" :key="color" :type="color" />
           </div>
           <p class="business-format">{{ format }} · {{ cardCount }} cards</p>
+          <UBadge
+            v-if="hasPrimer"
+            color="info"
+            variant="soft"
+            size="sm"
+            icon="i-lucide-notebook-text"
+            label="Primer"
+          />
+          <DeckBracketBadge v-if="bracket" :bracket="bracket" full-label />
         </div>
         <h2>{{ name || 'Untitled deck' }}</h2>
-        <div
-          v-if="details.playstyles?.length || bracket"
-          class="business-labels"
-        >
-          <span v-for="tag in details.playstyles" :key="tag">{{ tag }}</span
-          ><span v-if="bracket">Bracket {{ bracket }}</span>
+        <div v-if="details.playstyles?.length" class="business-labels">
+          <span v-for="tag in details.playstyles" :key="tag">{{ tag }}</span>
         </div>
-        <p v-if="details.summary" class="business-summary">
+        <p v-if="details.summary" class="business-summary line-clamp-2">
           {{ details.summary }}
         </p>
-        <section v-if="details.win_plan">
-          <h3 class="business-section-title">How it wins</h3>
-          <p>{{ details.win_plan }}</p>
-        </section>
         <section v-if="coreCards.length" class="business-core">
           <h3 class="business-section-title">Core cards</h3>
           <div class="business-core-grid">
-            <figure v-for="card in coreCards" :key="card.oracle_id">
+            <figure
+              v-for="card in coreCards"
+              :key="card.oracle_id"
+              class="card-finish rounded-lg"
+              :data-card-finish="card.selected_finish"
+            >
               <img
                 :src="getCardImageUrl(card, false, 'normal')"
                 :alt="card.name"
@@ -175,48 +164,17 @@ const combos = computed(() =>
       </div>
     </div>
     <section
+      v-if="details.win_plan"
+      class="business-win-plan px-4 sm:px-6 pb-6"
+    >
+      <h3 class="business-section-title">How it wins / plays</h3>
+      <p>{{ details.win_plan }}</p>
+    </section>
+    <section
       class="px-4 sm:px-6 pb-6 business-charts"
       aria-label="Business card deck stats"
     >
       <DeckCharts :curve="stats.curve" :colors="stats.colors" compact />
-    </section>
-    <section v-if="openingHand.length" class="px-4 sm:px-6 pb-6">
-      <h3 class="business-section-title">Example opening hand</h3>
-      <div class="business-hand-grid">
-        <img
-          v-for="(card, index) in openingHand"
-          :key="index"
-          :src="getCardImageUrl(card)"
-          :alt="card.name"
-          width="488"
-          height="680"
-          class="w-full rounded-md"
-        />
-      </div>
-    </section>
-    <section v-if="combos.length" class="px-4 sm:px-6 pb-6 space-y-4">
-      <h3 class="business-section-title">Combos</h3>
-      <article
-        v-for="(combo, index) in combos"
-        :key="index"
-        class="business-combo"
-      >
-        <h4 class="font-medium">{{ combo.name }}</h4>
-        <p class="text-sm text-slate-300 whitespace-pre-wrap break-words my-2">
-          {{ combo.description }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <img
-            v-for="card in combo.cards"
-            :key="card.oracle_id"
-            :src="getCardImageUrl(card)"
-            :alt="card.name"
-            width="96"
-            height="134"
-            class="w-20 rounded-md"
-          />
-        </div>
-      </article>
     </section>
     <footer>
       <a :href="deckUrl">{{ deckUrl.replace('https://', '') }}</a>
@@ -234,8 +192,7 @@ const combos = computed(() =>
 }
 .business-brand {
   padding: 8px 24px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 12px;
   background: #1e203a;
@@ -246,9 +203,6 @@ const combos = computed(() =>
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.business-brand > .text-right {
-  grid-column: 3;
 }
 .business-meta {
   display: flex;
@@ -266,7 +220,11 @@ const combos = computed(() =>
 .business-content {
   padding: 24px;
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(0, var(--business-art-width, 0.8fr)) minmax(
+      0,
+      1.3fr
+    );
+  align-items: start;
   gap: 28px;
 }
 .business-art,
@@ -286,7 +244,7 @@ const combos = computed(() =>
   place-items: center;
 }
 .business-qr {
-  grid-column: 2;
+  flex-shrink: 0;
   width: 64px;
   height: auto;
   background: white;
@@ -320,7 +278,8 @@ const combos = computed(() =>
 .business-summary {
   margin-top: 18px;
 }
-.business-details p {
+.business-details p,
+.business-win-plan p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   line-height: 1.5;
@@ -335,7 +294,7 @@ const combos = computed(() =>
   padding-bottom: 8px;
   border-bottom: 1px solid rgb(255 255 255 / 15%);
 }
-.business-details section p {
+.business-win-plan p {
   font-size: 14px;
   color: #d6dfec;
 }
@@ -352,16 +311,11 @@ const combos = computed(() =>
   border-radius: 6px;
 }
 
-.business-hand-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-}
 .business-charts :deep(.text-muted) {
   color: #b6c4db;
 }
 .business-charts,
-.business-combo {
+.business-win-plan {
   break-inside: avoid;
 }
 footer {
@@ -372,9 +326,6 @@ footer {
   overflow-wrap: anywhere;
 }
 @media (max-width: 639px) {
-  .business-hand-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
   .business-brand {
     padding: 8px 12px;
   }
@@ -396,7 +347,7 @@ footer {
     display: flex;
     justify-content: center;
   }
-  .business-hero {
+  .business-hero-surface {
     width: 45%;
     flex-shrink: 0;
   }

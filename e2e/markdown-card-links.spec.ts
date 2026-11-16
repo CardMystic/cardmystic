@@ -23,7 +23,7 @@ const content = [
   '[[Unknown Card]] and [[Invalid ID Card]].',
   '[[<img src=x onerror="window.__markdownInjected=1">]]',
   '((<img src=x onerror="window.__markdownInjected=1">))',
-  '((Lightning Bolt))',
+  'Paragraph before the card.\n((Lightning Bolt))\nParagraph after the card.',
 ].join('\n\n');
 
 const cards = [
@@ -203,17 +203,59 @@ test('article mentions expose canonical links with one batch lookup and safe unr
     'href',
     `/card/${BOLT_ID}`,
   );
+  const cardRow = page.locator('.card-embed-row').filter({
+    has: page.locator('.card-inline-img-link'),
+  });
+  await expect(cardRow).toHaveCount(1);
+  await expect(cardRow).not.toContainText('Paragraph');
+  const rowBox = await cardRow.boundingBox();
+  const imageBox = await cardRow.locator('.card-inline-img-link').boundingBox();
+  expect(
+    Math.abs(imageBox!.x + imageBox!.width / 2 - rowBox!.x - rowBox!.width / 2),
+  ).toBeLessThan(2);
+
+  await links.first().hover();
+  await expect(page.locator('.editor-card-preview')).toBeVisible();
+  // Continuous movement over prose must not restart the dismissal timer.
+  await page.evaluate(async () => {
+    const paragraph =
+      document.querySelector('.card-embed-row')!.previousElementSibling!;
+    for (let i = 0; i < 12; i++) {
+      paragraph.dispatchEvent(
+        new PointerEvent('pointermove', {
+          bubbles: true,
+          pointerType: 'mouse',
+        }),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    if (document.querySelector('.editor-card-preview'))
+      throw new Error('Preview lingered over prose');
+  });
 
   await links.first().hover();
   await expect(page.locator('.editor-card-preview img')).toHaveAttribute(
     'src',
     '/ugin.webp',
   );
-  await links.first().click();
+  await page
+    .getByRole('button', {
+      name: 'Card options for Lightning Bolt',
+      exact: true,
+    })
+    .click();
+  const modal = page.getByRole('dialog', {
+    name: 'Lightning Bolt',
+    exact: true,
+  });
+  await expect(modal).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/articles/${ARTICLE_ID}$`));
+  await expect(page.locator('[data-card-printing]')).toHaveCount(0);
+  await modal.getByRole('link', { name: "Go To Card's Page" }).click();
   await expect(page).toHaveURL(new RegExp(`/card/${BOLT_ID}$`));
 });
 
-test('primer mentions use the same crawlable card links and keyboard navigation', async ({
+test('primer mentions keep crawlable links and open card options with the keyboard', async ({
   page,
 }) => {
   await openMarkdown(page, 'primer');
@@ -221,7 +263,10 @@ test('primer mentions use the same crawlable card links and keyboard navigation'
   await expect(link).toHaveAttribute('href', `/card/${BOLT_ID}`);
   await link.focus();
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(new RegExp(`/card/${BOLT_ID}$`));
+  await expect(
+    page.getByRole('dialog', { name: 'Lightning Bolt', exact: true }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/lists/${LIST_ID}/primer$`));
 });
 
 test('Back from a primer card link keeps the card visible while the primer loads', async ({
@@ -229,6 +274,10 @@ test('Back from a primer card link keeps the card visible while the primer loads
 }) => {
   await openMarkdown(page, 'primer');
   await page.locator('a.card-inline-link').first().click();
+  await page
+    .getByRole('dialog', { name: 'Lightning Bolt', exact: true })
+    .getByRole('link', { name: "Go To Card's Page" })
+    .click();
   await expect(page).toHaveURL(new RegExp('/card/' + BOLT_ID + '$'));
   await expect(page.locator('img.card-image')).toHaveAttribute(
     'src',
@@ -267,7 +316,7 @@ test('Back from a primer card link keeps the card visible while the primer loads
   });
   let primerWaiting = false;
   await page.route(
-    BACKEND + '/supabase/card-lists/view/' + LIST_ID,
+    BACKEND + '/supabase/card-lists/summaries?**',
     async (route) => {
       primerWaiting = true;
       await primerGate;
@@ -308,6 +357,10 @@ test('card-to-card navigation and canonical redirects keep each card request sco
 }) => {
   await openMarkdown(page, 'primer');
   await page.locator('a.card-inline-link').first().click();
+  await page
+    .getByRole('dialog', { name: 'Lightning Bolt', exact: true })
+    .getByRole('link', { name: "Go To Card's Page" })
+    .click();
   await expect(page.locator('img.card-image')).toHaveAttribute(
     'src',
     '/ugin.webp',
@@ -433,7 +486,7 @@ test.describe('touch card mentions', () => {
     hasTouch: true,
   });
 
-  test('a single tap previews; slow taps stay previews and a quick double tap navigates', async ({
+  test('a single tap previews; slow taps stay previews and a quick double tap opens card options', async ({
     page,
   }) => {
     await openMarkdown(page, 'primer');
@@ -453,7 +506,10 @@ test.describe('touch card mentions', () => {
     await page.waitForTimeout(600);
     await link.tap();
     await link.tap();
-    await expect(page).toHaveURL(new RegExp(`/card/${BOLT_ID}$`));
+    await expect(
+      page.getByRole('dialog', { name: 'Lightning Bolt', exact: true }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/lists/${LIST_ID}/primer$`));
   });
 
   test('switching cards or dismissing the preview resets the pending double tap', async ({
@@ -480,13 +536,16 @@ test.describe('touch card mentions', () => {
     );
   });
 
-  test('keyboard activation on a touch device still navigates in one step', async ({
+  test('keyboard activation on a touch device opens card options in one step', async ({
     page,
   }) => {
     await openMarkdown(page);
     await page.locator('a.card-inline-link').first().focus();
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(new RegExp(`/card/${BOLT_ID}$`));
+    await expect(
+      page.getByRole('dialog', { name: 'Lightning Bolt', exact: true }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/articles/${ARTICLE_ID}$`));
   });
 });
 

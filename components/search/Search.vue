@@ -1,5 +1,6 @@
 <template>
   <div class="search-container">
+    <SearchBackground v-if="!hideBackground" :type="searchType" />
     <!-- Search type tabs -->
     <SearchTabs @select="selectSearchType" />
 
@@ -30,6 +31,14 @@
       <!-- Deck Recommender -->
       <ALSSearch v-else-if="searchType === 'recommend'" :platform="platform" />
     </div>
+    <SuggestedSearches
+      v-if="
+        showSuggestedSearches &&
+        ['similarity', 'recommend'].includes(searchType)
+      "
+      :mode="searchType === 'similarity' ? 'similarity' : 'recommend'"
+      class="mt-4"
+    />
   </div>
 </template>
 
@@ -57,6 +66,7 @@ const ALSSearch = defineAsyncComponent(() => import('./ALSSearch.vue'));
 
 // Define props
 const props = defineProps<{
+  hideBackground?: boolean;
   similarity?: boolean;
   defaultSearchType?:
     'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend';
@@ -159,6 +169,8 @@ function selectSearchType(newType: SearchTabType) {
 
 <style scoped>
 .search-container {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   margin: 0 auto;
 }

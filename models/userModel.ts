@@ -8,6 +8,7 @@ export const SignUpSchema = z.object({
   password: z.string(),
   confirmPassword: z.string(),
   username: z.string().min(1).max(50).trim(),
+  avatarPrintingId: z.string().uuid().optional(),
   avatarCardName: z
     .string()
     .trim()
@@ -52,6 +53,7 @@ export type UpdatePasswordResponse = z.infer<
 export const PublicProfileSchema = z.object({
   id: z.string().describe("The user's ID"),
   username: z.string().nullable().describe("The user's username"),
+  avatar_printing_id: z.string().uuid().nullable().optional(),
   avatar_card_name: z
     .string()
     .nullable()

@@ -1,7 +1,11 @@
 <script setup lang="ts">
 defineOptions({ name: 'RolesCollectionPage' });
 const route = useRoute();
-definePageMeta({ key: (route) => route.path, title: 'MTG Roles' });
+definePageMeta({
+  key: (route) => route.path,
+  title: 'MTG Roles',
+  middleware: 'card-collection',
+});
 </script>
 
 <template>

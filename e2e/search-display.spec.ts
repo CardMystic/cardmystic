@@ -131,15 +131,22 @@ for (const width of [390, 1440]) {
       expect(
         (await page.locator('.card-text-row').first().boundingBox())!.y,
       ).toBe(rowTop);
+      await drawer.getByRole('checkbox', { name: 'Is A Commander' }).check();
       await drawer
         .getByRole('button', { name: 'Rarities', exact: true })
         .click();
       await drawer.getByRole('checkbox', { name: 'Rare', exact: true }).check();
+      await drawer.getByRole('button', { name: 'Price', exact: true }).click();
+      const priceCap = drawer.getByRole('spinbutton', {
+        name: 'Max price (USD)',
+      });
+      await priceCap.fill('2.50');
+      await priceCap.blur();
       await page.screenshot({ path: `.cache/search-filters-${width}.png` });
       await drawer.getByRole('button', { name: 'Done', exact: true }).click();
       expect(requests).toHaveLength(1);
       await page
-        .getByRole('button', { name: 'Filters (1 selected)', exact: true })
+        .getByRole('button', { name: 'Filters (3 selected)', exact: true })
         .click();
       await drawer
         .getByRole('button', { name: 'Rarities', exact: true })
@@ -150,7 +157,11 @@ for (const width of [390, 1440]) {
       await drawer.getByRole('button', { name: 'Search', exact: true }).click();
       await expect(drawer).not.toBeVisible();
       await expect.poll(() => requests.length).toBe(2);
-      expect(requests[1].filters).toMatchObject({ selectedRarities: ['Rare'] });
+      expect(requests[1].filters).toMatchObject({
+        selectedRarities: ['Rare'],
+        isCommander: true,
+        maxPriceUsd: 2.5,
+      });
       expect(errors).toEqual([]);
     } finally {
       releaseSearch();

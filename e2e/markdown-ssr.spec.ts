@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test as base, type Page } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
 import {
@@ -13,6 +13,19 @@ import { FAKE_USER, fakeJwt, waitForHydration } from './utils/mocks';
 
 // Browser routing cannot intercept requests made by Nitro during SSR. Run the
 // production build against a real local fixture backend on isolated ports.
+const test = base.extend({
+  page: async ({ page }, use) => {
+    const hydrationErrors: string[] = [];
+    const record = (message: string) => {
+      if (/hydration.*mismatch|mismatch.*hydration/i.test(message))
+        hydrationErrors.push(message);
+    };
+    page.on('console', (message) => record(message.text()));
+    page.on('pageerror', (error) => record(error.message));
+    await use(page);
+    expect(hydrationErrors).toEqual([]);
+  },
+});
 test.describe.configure({ mode: 'default' });
 
 const ARTICLE_ID = '10000000-0000-4000-8000-000000000911';
@@ -20,6 +33,7 @@ const LIST_ID = '10000000-0000-4000-8000-000000000912';
 const FAILURE_ID = '10000000-0000-4000-8000-000000000913';
 const DRAFT_ID = '10000000-0000-4000-8000-000000000914';
 const PRIVATE_ID = '10000000-0000-4000-8000-000000000915';
+const DECK_ACTIONS_ID = '10000000-0000-4000-8000-000000000916';
 const BOLT_ID = '4457ed35-7c10-48c8-9776-456485fdf070';
 const ORACLE_ID = '1de1b591-a73f-4974-b507-8c63e07a0868';
 const OWNER_TOKEN = fakeJwt(FAKE_USER.id);
@@ -66,6 +80,7 @@ const cards = [
     colors: ['R'],
     prices: { usd: '1.00' },
     set_name: 'Test set',
+    set: 'tst',
     rarity: 'common',
     games: ['paper'],
   },
@@ -131,6 +146,7 @@ function decklist(id: string) {
 }
 
 const batches: string[][] = [];
+let cardLookupReady: Promise<void> = Promise.resolve();
 const fixtureRequests: {
   path: string;
   authorized: boolean;
@@ -240,6 +256,11 @@ async function handleFixture(
     }
     return;
   }
+  if (path === '/cards/cards-by-oracle-ids') {
+    await cardLookupReady;
+    json(response, [cards[0]]);
+    return;
+  }
   if (path.startsWith('/articles/view/')) {
     const id = path.split('/').pop()!;
     if (id === DRAFT_ID && !authorized) {
@@ -265,6 +286,20 @@ async function handleFixture(
     }
     return;
   }
+  if (path === '/supabase/card-lists/summaries') {
+    const ids =
+      new URL(request.url!, 'http://fixture.test').searchParams
+        .get('ids')
+        ?.split(',') ?? [];
+    json(response, {
+      decklists: ids.filter((id) => id !== PRIVATE_ID).map(decklist),
+    });
+    return;
+  }
+  if (path === '/supabase/card-lists/featured') {
+    json(response, { decklists: [decklist(LIST_ID)] });
+    return;
+  }
   if (path.startsWith('/supabase/card-lists/view/')) {
     const id = path.split('/').pop()!;
     if (id === PRIVATE_ID) {
@@ -272,7 +307,18 @@ async function handleFixture(
     } else {
       json(response, {
         decklist: decklist(id),
-        items: [],
+        items:
+          id === DECK_ACTIONS_ID
+            ? [
+                {
+                  oracle_id: BOLT_ID,
+                  card_name: 'Lightning Bolt',
+                  num_copies: 1,
+                  board: 'Mainboard',
+                  is_commander: false,
+                },
+              ]
+            : [],
         owner: {
           id: FAKE_USER.id,
           username: 'fixture-writer',
@@ -281,6 +327,23 @@ async function handleFixture(
         },
       });
     }
+    return;
+  }
+  if (path === `/library/lists/${DECK_ACTIONS_ID}/analytics`) {
+    json(response, {
+      librarySize: 1,
+      lands: 0,
+      modalLands: 0,
+      commanders: 0,
+      averageManaValue: authorized ? 2.5 : 1,
+      types: [{ name: 'Instant', count: 1 }],
+      roles: [{ name: 'Removal', count: 1 }],
+      themes: [{ name: 'Burn', count: 1 }],
+      mainboardRoles: { Removal: 1 },
+      topThemes: [{ name: 'Burn', count: 1 }],
+      topSets: [{ code: 'tst', name: 'Test set', count: 1 }],
+      prices: { knownPriceCents: 100, missingPrices: 0, topCards: [] },
+    });
     return;
   }
   if (path.startsWith('/supabase/card-lists/mine/')) {
@@ -406,6 +469,191 @@ test.beforeEach(() => {
   batches.length = 0;
   fixtureRequests.length = 0;
   gatewayRequests.length = 0;
+});
+
+test('featured decks are linked in the community directory before JavaScript runs', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    await page.goto(previewUrl + '/explore/decklists');
+    await expect(
+      page.getByRole('link', { name: decklist(LIST_ID).name, exact: true }),
+    ).toHaveAttribute('href', '/lists/' + LIST_ID);
+  } finally {
+    await context.close();
+  }
+});
+
+async function signIn(page: Page) {
+  await page.addInitScript(
+    ({ token, user }) => {
+      localStorage.setItem(
+        'sb-127-auth-token',
+        JSON.stringify({
+          access_token: token,
+          refresh_token: 'fixture-refresh-token',
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'bearer',
+          user,
+        }),
+      );
+    },
+    { token: OWNER_TOKEN, user: FAKE_USER },
+  );
+}
+
+test('card artwork resolves the default before its first image on direct load and reload', async ({
+  page,
+  browser,
+}) => {
+  const url = previewUrl + '/card/' + BOLT_ID;
+  const printingId = '77000000-0000-4000-8000-000000000001';
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const publicPage = await context.newPage();
+    await publicPage.goto(url);
+    await expect(
+      publicPage.locator('.card-detail-art img.card-image'),
+    ).toHaveJSProperty('currentSrc', previewUrl + '/ugin.webp');
+  } finally {
+    await context.close();
+  }
+  await page.addInitScript((id) => {
+    localStorage.setItem(
+      'cardmystic-guest-deck-printing:lightning bolt',
+      JSON.stringify({ printingId: id, finish: 'foil' }),
+    );
+  }, printingId);
+  const canonicalArt: string[] = [];
+  page.on('request', (request) => {
+    if (
+      request.resourceType() === 'image' &&
+      request.url() === previewUrl + '/ugin.webp'
+    )
+      canonicalArt.push(request.url());
+  });
+  await page.route('https://api.scryfall.com/cards/' + printingId, (route) =>
+    route.fulfill({
+      json: {
+        ...cards[0],
+        id: printingId,
+        image_uris: { normal: '/kaalia.webp', art_crop: '/kaalia.webp' },
+      },
+    }),
+  );
+  await page.goto(url);
+  const image = page.locator('.card-detail-art img.card-image');
+  await expect(image).toHaveAttribute('src', '/kaalia.webp');
+  await page.reload();
+  await expect(image).toHaveAttribute('src', '/kaalia.webp');
+  expect(canonicalArt).toEqual([]);
+});
+
+test('deck Buy and Recommend actions stay disabled through hydration until cards load', async ({
+  page,
+}) => {
+  const url = `${previewUrl}/lists/${DECK_ACTIONS_ID}`;
+  const html = await (await page.request.get(url)).text();
+  for (const [path, label] of [
+    [`/card/${BOLT_ID}`, 'Lightning Bolt'],
+    ['/roles/removal', 'Removal'],
+    ['/themes/burn', 'Burn'],
+    ['/sets/tst', 'Test set'],
+  ]) {
+    expect(html).toMatch(
+      new RegExp(`<a\\b[^>]*href="${path}"[^>]*>\\s*${label}\\s*</a>`),
+    );
+  }
+  const serverButtons = [
+    ...html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g),
+  ].filter((match) => />(Buy|Recommend)</.test(match[2]));
+  expect(serverButtons.length).toBeGreaterThanOrEqual(2);
+  for (const button of serverButtons) expect(button[1]).toMatch(/\bdisabled\b/);
+
+  let release!: () => void;
+  const cardsReady = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  cardLookupReady = cardsReady;
+  const actions = page.getByRole('navigation', { name: 'Deck actions' });
+  try {
+    await page.goto(url);
+    await waitForHydration(page);
+    await expect(
+      actions.getByRole('button', { name: 'Buy', exact: true }),
+    ).toBeDisabled();
+    await expect(
+      actions.getByRole('button', { name: 'Recommend', exact: true }),
+    ).toBeDisabled();
+  } finally {
+    release();
+    cardLookupReady = Promise.resolve();
+  }
+  await expect(
+    actions.getByRole('button', { name: 'Buy ($1.00)', exact: true }),
+  ).toBeEnabled();
+  await expect(
+    actions.getByRole('button', { name: 'Recommend', exact: true }),
+  ).toBeEnabled();
+});
+
+test('signed-in visitors hydrate public deck stats while analytics refresh', async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.route(`**/supabase/card-lists/mine/${DECK_ACTIONS_ID}`, (route) =>
+    route.fulfill({ status: 404, json: { message: 'Not owned' } }),
+  );
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let refreshing = false;
+  await page.route(
+    `**/library/lists/${DECK_ACTIONS_ID}/analytics`,
+    async (route) => {
+      refreshing = true;
+      await gate;
+      await route.continue();
+    },
+  );
+  try {
+    const response = await page.goto(previewUrl + '/lists/' + DECK_ACTIONS_ID);
+    expect(await response!.text()).toContain('Cards in library');
+    await waitForHydration(page);
+    await expect.poll(() => refreshing).toBe(true);
+    const stats = page.getByTestId('deck-stats');
+    await expect(
+      stats.getByRole('heading', { name: 'Deck cost' }),
+    ).toBeVisible();
+    await expect(
+      stats.getByRole('link', { name: 'Burn', exact: true }),
+    ).toBeVisible();
+    const input = stats.getByRole('combobox', {
+      name: 'Role, theme, or card type',
+    });
+    await expect(input).toBeVisible();
+    expect(
+      await input.evaluate(
+        (el) =>
+          parseFloat(getComputedStyle(el).fontSize) >=
+          parseFloat(getComputedStyle(document.documentElement).fontSize),
+      ),
+    ).toBe(true);
+    await input.focus();
+    await input.press('ArrowDown');
+    await expect(input).toHaveAttribute('aria-expanded', 'true');
+    await input.press('Escape');
+    await expect(input).toBeFocused();
+  } finally {
+    release();
+  }
+  await expect(
+    page.getByTestId('deck-stats').getByText('2.50', { exact: true }),
+  ).toBeVisible();
 });
 
 for (const [kind, path] of [
@@ -567,7 +815,11 @@ for (const site of ['cross-site', 'same-site']) {
     }
     expect(fixtureRequests.length).toBeGreaterThan(0);
     for (const upstream of fixtureRequests) {
-      expect(['127.0.0.1', '::ffff:127.0.0.1']).toContain(upstream.clientIp);
+      // Navigation refreshes its shared public catalog outside the page request.
+      if (upstream.path === '/card-collections') continue;
+      expect(['127.0.0.1', '::ffff:127.0.0.1'], upstream.path).toContain(
+        upstream.clientIp,
+      );
       expect(upstream.origin).toBeUndefined();
       expect(upstream.fetchSite).toBeUndefined();
       // Node fetch may add its own cors mode after navigation headers are removed.
@@ -607,7 +859,9 @@ test('an external card link renders successfully before and after hydration', as
   await page.getByRole('link', { name: 'View Lightning Bolt' }).click();
   const response = await navigation;
   expect(response.status()).toBe(200);
-  expect(await response.text()).toContain('Lightning Bolt (MTG) - CardMystic');
+  const html = await response.text();
+  expect(html).toContain('Lightning Bolt (MTG) - CardMystic');
+  expect(html).toContain('Discuss Card');
   await waitForHydration(page);
   await expect(page.locator('.card-title-text')).toHaveText('Lightning Bolt');
   expect(
@@ -615,6 +869,11 @@ test('an external card link renders successfully before and after hydration', as
       (entry) => entry.path === '/cards/with-llm/' + BOLT_ID,
     ),
   ).toHaveLength(1);
+  await page.reload();
+  await waitForHydration(page);
+  await expect(
+    page.getByRole('button', { name: 'Discuss Card', exact: true }),
+  ).toBeVisible();
 });
 
 test('a failed card lookup leaves the server-rendered article readable', async ({
@@ -668,12 +927,6 @@ test('anonymous SSR keeps draft and private text out of both HTML and payload', 
 test('public article hydration preserves SSR links without repeating the card batch', async ({
   page,
 }) => {
-  const hydrationErrors: string[] = [];
-  page.on('console', (message) => {
-    if (/hydration.*mismatch|mismatch.*hydration/i.test(message.text())) {
-      hydrationErrors.push(message.text());
-    }
-  });
   await page.route('https://**', (route) => route.abort());
   await page.goto(previewUrl + '/articles/' + ARTICLE_ID);
   await waitForHydration(page);
@@ -685,29 +938,13 @@ test('public article hydration preserves SSR links without repeating the card ba
   );
   expect(batches).toHaveLength(1);
   expect(await page.evaluate(() => '__markdownInjected' in window)).toBe(false);
-  expect(hydrationErrors).toEqual([]);
 });
 
 test('a private primer loads for its owner after anonymous SSR without leaking its body', async ({
   page,
 }) => {
   await page.route('https://**', (route) => route.abort());
-  await page.addInitScript(
-    ({ token, user }) => {
-      localStorage.setItem(
-        'sb-127-auth-token',
-        JSON.stringify({
-          access_token: token,
-          refresh_token: 'fixture-refresh-token',
-          expires_in: 3600,
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
-          token_type: 'bearer',
-          user,
-        }),
-      );
-    },
-    { token: OWNER_TOKEN, user: FAKE_USER },
-  );
+  await signIn(page);
   const response = await page.goto(
     previewUrl + '/lists/' + PRIVATE_ID + '/primer',
   );

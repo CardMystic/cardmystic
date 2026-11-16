@@ -32,22 +32,34 @@
     />
 
     <div class="preview-card-stack">
-      <NuxtLink
-        class="preview-image-wrapper block"
-        :to="`/card/${card.card_data.oracle_id}`"
-        no-prefetch
-      >
-        <img
-          :src="getCardImageUrl(card.card_data, isFlipped, 'large')"
-          :alt="card.card_data.name"
-          class="preview-image cursor-pointer"
-          loading="eager"
-          decoding="async"
-        />
-        <span v-if="!isCommanderOfDecklist" class="copy-count-pill"
-          >x{{ numCopies ?? 1 }}</span
+      <div class="preview-image-wrapper card-image-wrapper">
+        <GameChangerBadge v-if="card.card_data.game_changer" />
+        <NuxtLink
+          class="card-finish block rounded-2xl"
+          :data-card-finish="card.card_data.selected_finish"
+          :to="`/card/${card.card_data.oracle_id}`"
+          no-prefetch
         >
-      </NuxtLink>
+          <img
+            :src="getCardImageUrl(card.card_data, isFlipped, 'large')"
+            :alt="card.card_data.name"
+            class="preview-image cursor-pointer"
+            loading="eager"
+            decoding="async"
+          />
+          <span
+            v-if="!suggested && !isCommanderOfDecklist"
+            class="copy-count-pill"
+            >x{{ numCopies ?? 1 }}</span
+          >
+        </NuxtLink>
+        <CardOverlayButtons
+          :card="card"
+          :is-dual-faced="isDualFaced"
+          show-flip-button
+          @flip="flipCard"
+        />
+      </div>
 
       <div class="space-y-2">
         <div>
@@ -56,20 +68,32 @@
         </div>
 
         <div class="flex flex-wrap gap-2 text-xs">
-          <UBadge color="neutral" variant="subtle">{{ currentBoard }}</UBadge>
+          <UBadge color="neutral" variant="subtle">{{
+            suggested ? 'Suggested' : currentBoard
+          }}</UBadge>
+          <UButton
+            v-if="isOwner && pickPrinting"
+            label="Change printing"
+            v-bind="cardActionStyles.printing"
+            variant="ghost"
+            size="xs"
+            @click="pickPrinting(card!, currentBoard)"
+          />
         </div>
       </div>
 
       <HoveredCardActions
         :card="card"
+        :board="suggested ? 'Suggested' : currentBoard"
+        :is-flipped="isFlipped"
+        @flip="flipCard"
         :buy-label="
           getUsdPrice(card.card_data.prices)
             ? `Buy on TCGPlayer ($${getUsdPrice(card.card_data.prices)})`
             : 'Buy on TCGPlayer'
         "
+        :is-list-card="!suggested"
         :can-show-deck-menu="canShowDeckMenu"
-        :is-in-clipboard="isInClipboard"
-        :is-dual-faced="isDualFaced"
         :show-commander-buttons="isCommanderCardComputed"
         :show-list-actions="isOwner"
         :num-copies="numCopies ?? 1"
@@ -79,8 +103,6 @@
         :show-edit-copies-buttons="!isCommanderOfDecklist"
         @find-similar="findSimilarCards"
         @open-add-to-deck="showAddToDeckModal = true"
-        @toggle-clipboard="toggleClipboard"
-        @flip-card="flipCard"
         @get-recommendations="getRecommendations"
         @view-popular-cards="viewPopularCards"
         @add-copy="
@@ -112,22 +134,24 @@
 </template>
 
 <script setup lang="ts">
+import { cardActionStyles } from '~/utils/card-actions';
+import { printingPickerKey } from '~/composables/useDeckPrintings';
+const pickPrinting = inject(printingPickerKey, null);
 import { getUsdPrice } from '~/utils/cardPrice';
 import type { Card } from '~/models/cardModel';
 import { useSearchType } from '~/composables/useSearchType';
 import { useSearchHistory } from '~/composables/useSearchHistory';
 import { useCommandersSet } from '~/composables/useBulkData';
-import { useClipboard } from '~/composables/useClipboard';
 import { getCardImageUrl } from '~/utils/scryfall';
 
 const router = useRouter();
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const { data: commanders } = useCommandersSet();
-const clipboard = useClipboard();
 
 const props = defineProps<{
   card: Card | null;
+  suggested?: boolean;
   isCommanderOfDecklist: boolean; // Whether this card is the commander of the deck list
   canBeACommander?: boolean; // Whether this card CAN be a commander of a deck list
   isOwner?: boolean; // List actions section is owner-only
@@ -197,25 +221,6 @@ const isDualFaced = computed(() => {
   );
 });
 
-const clipboardCard = computed(() => {
-  const cardData = props.card?.card_data;
-  if (!cardData) return null;
-
-  return {
-    id: cardData.id || '',
-    oracleId: cardData.oracle_id || '',
-    name: cardData.name || '',
-    set: cardData.set || '',
-    imageUrl: getCardImageUrl(cardData),
-    price: getUsdPrice(cardData.prices) || '0',
-  };
-});
-
-const isInClipboard = computed(() => {
-  if (!clipboardCard.value) return false;
-  return clipboard.has(clipboardCard.value.id);
-});
-
 const simpleType = computed(() => {
   const typeLine = props.card?.card_data.type_line;
   if (!typeLine) return 'Unknown';
@@ -226,17 +231,6 @@ const simpleType = computed(() => {
 
 function flipCard() {
   if (props.card) emit('flip', props.card.card_data.id);
-}
-
-function toggleClipboard() {
-  if (!clipboardCard.value) return;
-
-  if (isInClipboard.value) {
-    clipboard.remove(clipboardCard.value.id);
-    return;
-  }
-
-  clipboard.add(clipboardCard.value);
 }
 
 function openSetCopiesModal() {
@@ -316,6 +310,8 @@ function handleChangeBoard(board: 'Mainboard' | 'Sideboard' | 'Considering') {
 
 .preview-image-wrapper {
   position: relative;
+  transform-origin: center top;
+  transition: scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .preview-image {
@@ -323,11 +319,10 @@ function handleChangeBoard(board: 'Mainboard' | 'Sideboard' | 'Considering') {
   aspect-ratio: 5 / 7;
   object-fit: cover;
   border-radius: 16px;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.preview-image-wrapper:hover .preview-image {
-  transform: scale(1.03);
+.preview-image-wrapper:hover {
+  scale: 1.03;
 }
 
 .copy-count-pill {

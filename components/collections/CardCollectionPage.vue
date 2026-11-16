@@ -4,29 +4,18 @@ import { CardSearchFiltersSchema } from '~/models/frontend-specific/filtersModel
 import { WordSearchSchema } from '~/models/searchModel';
 import { safeJsonLd } from '~/utils/safeJsonLd';
 import {
+  collectionIcons,
   collectionLabels,
   collectionPath,
   collectionTitle,
   collectionDescription,
   type CardCollectionKind,
+  type CardCollectionEntry,
 } from '~/utils/card-collections';
 
 const props = defineProps<{ kind: CardCollectionKind; slug: string }>();
 const route = useRoute();
-const { data, error: catalogError } = await useCardCollections();
-if (catalogError.value)
-  throw createError({
-    statusCode: 503,
-    statusMessage: 'Card collections are temporarily unavailable.',
-  });
-const entry = data.value?.[props.kind].find(
-  (entry) => entry.slug === props.slug,
-);
-if (!entry)
-  throw createError({
-    statusCode: 404,
-    statusMessage: 'Card collection not found.',
-  });
+const entry = route.meta.collectionEntry as CardCollectionEntry;
 const title = collectionTitle(props.kind, entry);
 const description = collectionDescription(props.kind, entry);
 const query = computed(() => String(route.query.query ?? '').trim());
@@ -140,18 +129,10 @@ function retry() {
     <div class="w-full flex flex-col items-center">
       <section
         aria-labelledby="collection-title"
-        class="relative isolate w-full overflow-hidden rounded-lg bg-gray-900 flex items-center justify-center px-6 py-6 text-center text-white"
+        class="relative isolate flex min-h-48 w-full items-end overflow-hidden rounded-lg bg-gray-900 text-white md:min-h-64"
       >
-        <img
-          v-if="entry.imageUrl"
-          :src="entry.imageUrl"
-          alt=""
-          class="absolute inset-0 -z-20 h-full w-full object-cover object-[center_10%]"
-          fetchpriority="high"
-          decoding="async"
-        />
-        <div class="absolute inset-0 -z-10 bg-black/65" />
-        <div class="max-w-2xl">
+        <BannerArtwork v-if="entry.imageUrl" :src="entry.imageUrl" />
+        <div class="relative w-full p-4 pt-16 md:max-w-[65%] md:p-6">
           <h1 id="collection-title" class="text-3xl md:text-4xl font-bold mb-3">
             <SetSymbol
               v-if="kind === 'sets'"
@@ -161,11 +142,13 @@ function retry() {
             />
             {{ title }}
           </h1>
-          <p class="text-base text-white">{{ description }}</p>
+          <p class="max-w-2xl text-base text-white">
+            {{ entry.definition ?? description }}
+          </p>
           <UButton
             :to="collectionPath(kind)"
             :label="`Go To All ${collectionLabels[kind]}`"
-            icon="i-lucide-arrow-left"
+            :icon="collectionIcons[kind]"
             color="neutral"
             variant="outline"
             class="min-h-11 mt-4"
@@ -199,6 +182,7 @@ function retry() {
       <SearchResults
         v-if="!searchError"
         :search-results="results"
+        :use-canonical-printings="kind === 'sets'"
         :is-loading="loading"
         :is-fetching="fetching"
         :error="error"

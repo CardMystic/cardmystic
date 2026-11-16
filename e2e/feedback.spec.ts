@@ -10,8 +10,8 @@ import { BACKEND, gotoHydrated, reliableFill } from './utils/mocks';
  *   33. Card feedback (dislike) — POST `/metrics/dislike` is mocked
  *       (we don't have a way to remove a dislike yet, so don't pollute
  *       prod metrics).
- *   34. Trending queries clickthrough — homepage `/cache/popular` Try
- *       button → AI search.
+ *   34. Trending queries clickthrough — bundled homepage suggestion
+ *       links → AI search.
  *   35. Mobile viewport — Pixel 5 subset of homepage + AI search to
  *       guard `useIsMobile` / Navbar regressions.
  *   36. 404 — `/card/<bad-id>` shows the "Card Not Found" UI.
@@ -64,7 +64,11 @@ test.describe('Card feedback', () => {
 
     const colbertCall = waitForSearchCall(page, '/search/colbert');
     await input.press('Enter');
-    expect((await colbertCall).ok()).toBeTruthy();
+    const response = await colbertCall;
+    expect(
+      response.ok(),
+      `Search returned HTTP ${response.status()}`,
+    ).toBeTruthy();
 
     const grid = resultsGrid(page);
     await expect(grid).toBeVisible({ timeout: SEARCH_TIMEOUT });
@@ -111,27 +115,22 @@ test.describe('Card feedback', () => {
 // ─── 34. Trending queries clickthrough ────────────────────────────────
 
 test.describe('Trending queries', () => {
-  test('clicking a Try button on the homepage runs an AI search', async ({
+  test('clicking a popular search link on the homepage runs an AI search', async ({
     page,
   }) => {
     await gotoHydrated(page, '/');
 
-    // The TopQueries panel ("Popular Searches") and the
-    // ExampleQueries panel both render a Try button. The TopQueries
-    // ones have `.try-btn`; ExampleQueries does not. Use that to
-    // disambiguate. The panel is wrapped in ClientOnly + LazyTopQueries,
-    // so it lives below the fold and renders after hydration — scroll
-    // it into view to ensure the lazy chunk loads.
-    const tryBtn = page.locator('button.try-btn').first();
+    const panel = page.locator('.top-queries-container');
+    const tryBtn = panel
+      .getByRole('link', { name: 'Try', exact: true })
+      .first();
     await tryBtn.scrollIntoViewIfNeeded({ timeout: 20_000 });
     await expect(tryBtn).toBeVisible({ timeout: 15_000 });
 
-    // Pull the query straight out of the rendered card so we can
-    // assert it round-trips through the URL.
-    const queryRow = tryBtn.locator(
-      'xpath=ancestor::*[self::tr or self::li or self::div][1]',
-    );
-    const expectedQuery = (await queryRow.innerText()).split('\n')[0].trim();
+    const expectedQuery = await panel
+      .locator('.query-text')
+      .first()
+      .innerText();
     expect(expectedQuery.length).toBeGreaterThan(0);
 
     const colbertCall = waitForSearchCall(page, '/search/colbert');
@@ -142,30 +141,20 @@ test.describe('Trending queries', () => {
       .toContain('/search/all/smart');
     const url = new URL(page.url());
     expect(url.searchParams.get('isTryTopQuery')).toBe('true');
-    expect(url.searchParams.get('query')).toBeTruthy();
+    expect(url.searchParams.get('query')).toBe(expectedQuery);
 
     expect((await colbertCall).ok()).toBeTruthy();
     await expect(resultsGrid(page)).toBeVisible({ timeout: SEARCH_TIMEOUT });
   });
 
-  test('clicking the ExampleQueries TRY button navigates to Smart search', async ({
+  test('clicking a showcase example navigates to Smart search', async ({
     page,
   }) => {
     await gotoHydrated(page, '/');
-
-    // ExampleQueries is the "Try An Example Query" panel. Its TRY
-    // button does NOT have the `.try-btn` class. Scope by the panel's
-    // heading text. Regression guard: previously called
-    // `router.push({ name: 'search' })` against a route name that
-    // doesn't exist, throwing an unhandled rejection and silently
-    // doing nothing on click.
-    const panel = page
-      .locator('div', { hasText: /try an example query/i })
-      .first();
-    const tryBtn = panel.getByRole('button', { name: /^try$/i }).first();
-    await tryBtn.scrollIntoViewIfNeeded({ timeout: 20_000 });
-    await expect(tryBtn).toBeVisible({ timeout: 15_000 });
-
+    const tryBtn = page
+      .getByRole('navigation', { name: 'Smart Search examples' })
+      .getByRole('link', { name: 'X spell board wipes', exact: true });
+    await tryBtn.scrollIntoViewIfNeeded();
     const colbertCall = waitForSearchCall(page, '/search/colbert');
     await tryBtn.click();
 
@@ -173,8 +162,12 @@ test.describe('Trending queries', () => {
       .poll(() => page.url(), { timeout: 15_000 })
       .toContain('/search/all/smart');
     const url = new URL(page.url());
-    expect(url.searchParams.get('query')).toBeTruthy();
-    expect((await colbertCall).ok()).toBeTruthy();
+    expect(url.searchParams.get('query')).toBe('X spell board wipes');
+    const response = await colbertCall;
+    expect(
+      response.ok(),
+      `Search returned HTTP ${response.status()}`,
+    ).toBeTruthy();
   });
 });
 

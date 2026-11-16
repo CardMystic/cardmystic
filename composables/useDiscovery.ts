@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/vue-query';
 import { computed, type Ref } from 'vue';
 import {
+  type DecklistSummary,
   GetFeaturedDecklistsResponseSchema,
   GetFeaturedPrimersResponseSchema,
   GetPublicDecklistResponseSchema,
@@ -20,23 +21,27 @@ import {
  */
 export function useFeaturedDecklists(limit = 10) {
   const config = useRuntimeConfig();
+  const request = useRequestFetch();
 
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
+  const query = useQuery({
     queryKey: ['discovery', 'featured-decklists', limit],
     queryFn: async () => {
-      const response = await fetch(
+      const response = await request(
         `${config.public.backendPath}/supabase/card-lists/featured?limit=${limit}`,
+        {
+          timeout: 5000,
+          retry: 0,
+        },
       );
-      if (!response.ok) {
-        throw new Error(
-          `Failed to load featured decklists (${response.status})`,
-        );
-      }
-      return GetFeaturedDecklistsResponseSchema.parse(await response.json());
+      return GetFeaturedDecklistsResponseSchema.parse(response);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });
+
+  // Render public links in HTML; a failed feed must not block the homepage.
+  onServerPrefetch(() => query.suspense().catch(() => {}));
+  const { data, isLoading, isFetching, error, refetch } = query;
 
   return {
     decklists: computed(() => data.value?.decklists ?? []),
@@ -54,21 +59,27 @@ export function useFeaturedDecklists(limit = 10) {
  */
 export function useFeaturedUsers(limit = 10) {
   const config = useRuntimeConfig();
+  const request = useRequestFetch();
 
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
+  const query = useQuery({
     queryKey: ['discovery', 'featured-users', limit],
     queryFn: async () => {
-      const response = await fetch(
+      const response = await request(
         `${config.public.backendPath}/user/featured?limit=${limit}`,
+        {
+          timeout: 5000,
+          retry: 0,
+        },
       );
-      if (!response.ok) {
-        throw new Error(`Failed to load featured users (${response.status})`);
-      }
-      return GetFeaturedUsersResponseSchema.parse(await response.json());
+      return GetFeaturedUsersResponseSchema.parse(response);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });
+
+  // Render public links in HTML; a failed feed must not block the homepage.
+  onServerPrefetch(() => query.suspense().catch(() => {}));
+  const { data, isLoading, isFetching, error, refetch } = query;
 
   return {
     users: computed(() => data.value?.users ?? []),
@@ -87,21 +98,27 @@ export function useFeaturedUsers(limit = 10) {
  */
 export function useFeaturedPrimers(limit = 6) {
   const config = useRuntimeConfig();
+  const request = useRequestFetch();
 
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
+  const query = useQuery({
     queryKey: ['discovery', 'featured-primers', limit],
     queryFn: async () => {
-      const response = await fetch(
+      const response = await request(
         `${config.public.backendPath}/supabase/card-lists/featured-primers?limit=${limit}`,
+        {
+          timeout: 5000,
+          retry: 0,
+        },
       );
-      if (!response.ok) {
-        throw new Error(`Failed to load featured primers (${response.status})`);
-      }
-      return GetFeaturedPrimersResponseSchema.parse(await response.json());
+      return GetFeaturedPrimersResponseSchema.parse(response);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });
+
+  // Render public links in HTML; a failed feed must not block the homepage.
+  onServerPrefetch(() => query.suspense().catch(() => {}));
+  const { data, isLoading, isFetching, error, refetch } = query;
 
   return {
     primers: computed(() => data.value?.primers ?? []),
@@ -252,10 +269,38 @@ export function usePublicUserProfile(userId: Ref<string | null | undefined>) {
 }
 
 /**
- * Fetches a single public decklist by ID, including its summary and items.
- * Used as a fallback on the list detail page when the list doesn't belong
- * to the authenticated user.
+ * Fetches public list previews without downloading their card contents.
  */
+export function usePublicDecklistSummaries(
+  listIds: Ref<string[]>,
+  fallback: DecklistSummary[] = [],
+) {
+  const config = useRuntimeConfig();
+  const { data, isLoading } = useQuery({
+    queryKey: computed(() => [
+      'discovery',
+      'public-list-summaries',
+      listIds.value,
+    ]),
+    queryFn: async () => {
+      const params = new URLSearchParams({ ids: listIds.value.join(',') });
+      const response = await fetch(
+        `${config.public.backendPath}/supabase/card-lists/summaries?${params}`,
+      );
+      if (!response.ok)
+        throw new Error(`Failed to load list summaries (${response.status})`);
+      return GetFeaturedDecklistsResponseSchema.parse(await response.json());
+    },
+    enabled: computed(() => listIds.value.length > 0),
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+  return {
+    decklists: computed(() => data.value?.decklists ?? fallback),
+    isLoading,
+  };
+}
+
 export function usePublicDecklist(listId: Ref<string | null | undefined>) {
   const config = useRuntimeConfig();
 

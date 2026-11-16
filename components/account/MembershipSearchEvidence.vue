@@ -1,7 +1,32 @@
 <script setup lang="ts">
 import benchmark from '~~/public/benchmarks/search-quality-graded-2026-09-28.json';
+defineProps<{ stacked?: boolean; compact?: boolean }>();
 const headingId = useId();
 const captionId = useId();
+const chart = useTemplateRef<HTMLElement>('chart');
+const barsReady = ref(false);
+let observer: IntersectionObserver | undefined;
+onMounted(() => {
+  if (!('IntersectionObserver' in window)) {
+    barsReady.value = true;
+    return;
+  }
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries.some(
+          (entry) => entry.isIntersecting && entry.intersectionRatio >= 0.35,
+        )
+      ) {
+        barsReady.value = true;
+        observer?.disconnect();
+      }
+    },
+    { threshold: [0, 0.35] },
+  );
+  if (chart.value) observer.observe(chart.value);
+});
+onBeforeUnmount(() => observer?.disconnect());
 const modes = benchmark.modes
   .filter((mode) => mode.id !== 'pro')
   .map((mode) => ({
@@ -20,9 +45,14 @@ const displayScore = (score: number) =>
 </script>
 
 <template>
-  <section class="search-evidence" :aria-labelledby="headingId">
+  <section
+    class="search-evidence"
+    :class="{ stacked, compact }"
+    :aria-labelledby="compact ? undefined : headingId"
+    :aria-label="compact ? 'Pro and Normal search comparison' : undefined"
+  >
     <div class="evidence-intro">
-      <h3 :id="headingId">Better matches near the top</h3>
+      <h3 v-if="!compact" :id="headingId">Better matches near the top</h3>
       <p class="evidence-lift" data-mode="enhanced">
         Pro:
         <strong
@@ -31,13 +61,18 @@ const displayScore = (score: number) =>
         >
         than Normal.
       </p>
-      <p class="evidence-scope">
+      <p v-if="!compact" class="evidence-scope">
         Across {{ benchmark.scoredQueries }} graded benchmark queries. Results
         vary.
       </p>
     </div>
-    <figure class="evidence-chart" :aria-labelledby="captionId">
-      <figcaption :id="captionId">
+    <figure
+      ref="chart"
+      class="evidence-chart"
+      :class="{ 'bars-ready': barsReady }"
+      :aria-labelledby="captionId"
+    >
+      <figcaption :id="captionId" :class="{ 'sr-only': compact }">
         Ranking quality score <span>(out of 100)</span>
       </figcaption>
       <dl class="evidence-bars">
@@ -47,7 +82,7 @@ const displayScore = (score: number) =>
           class="evidence-row"
           :data-mode="mode.id"
         >
-          <dt>{{ mode.name }}</dt>
+          <dt>{{ mode.name }}{{ compact ? ' Search' : '' }}</dt>
           <dd>
             <span class="evidence-value">{{ displayScore(mode.score) }}</span
             ><span class="evidence-track" aria-hidden="true"
@@ -58,7 +93,7 @@ const displayScore = (score: number) =>
           </dd>
         </div>
       </dl>
-      <div class="evidence-axis" aria-hidden="true">
+      <div v-if="!compact" class="evidence-axis" aria-hidden="true">
         <span>0</span><span>50</span><span>100</span>
       </div>
     </figure>
@@ -77,6 +112,10 @@ const displayScore = (score: number) =>
   display: grid;
   align-content: start;
   gap: 0.75rem;
+}
+.search-evidence.compact {
+  border-top: 0;
+  padding-top: 0;
 }
 .search-evidence h3 {
   font-size: 1.125rem;
@@ -142,6 +181,21 @@ const displayScore = (score: number) =>
   display: block;
   height: 100%;
   background: var(--bar-color);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bars-ready .evidence-fill {
+  transform: scaleX(1);
+}
+.evidence-row[data-mode='enhanced'] .evidence-fill {
+  transition-delay: 160ms;
+}
+.compact .evidence-fill {
+  transition-duration: 720ms;
+}
+.compact .evidence-row[data-mode='enhanced'] .evidence-fill {
+  transition-delay: 128ms;
 }
 .evidence-axis {
   display: flex;
@@ -157,13 +211,13 @@ const displayScore = (score: number) =>
   --bar-color: var(--pro-accent);
 }
 @media (min-width: 768px) {
-  .search-evidence {
+  .search-evidence:not(.stacked) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.75rem 2rem;
   }
 }
 @media (min-width: 1100px) {
-  .search-evidence {
+  .search-evidence:not(.stacked) {
     column-gap: 3rem;
   }
 }

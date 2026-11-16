@@ -23,13 +23,14 @@ const wizardImage = computed(() => {
 const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
   useUserProfile();
 const yourDecksTarget = computed(() =>
-  isMounted.value && userProfile.value ? '/lists' : '/user/login',
+  isMounted.value && userProfile.value ? '/lists' : '/build',
 );
 const yourDecksItems = computed<NavigationMenuItem[]>(() => [
   {
     label: 'Your Decks',
     icon: 'i-lucide-layers',
     to: yourDecksTarget.value,
+    prefetch: false,
   },
 ]);
 const isAuthor = computed(() => !!profileData.value?.is_author);
@@ -55,7 +56,8 @@ function closePopover() {
   isOpen.value = false;
 }
 
-const { data: collections, status: collectionStatus } = useCardCollections();
+const { data: collections, status: collectionStatus } =
+  useNavigationCollections();
 const searchItems = computed(() =>
   siteNavigation(collections.value, collectionStatus.value),
 );
@@ -79,7 +81,7 @@ watch(() => route.fullPath, closePopover);
     ]"
   >
     <!-- Mobile -->
-    <div class="xl:hidden flex flex-row justify-between w-full">
+    <div class="min-[1600px]:hidden flex flex-row justify-between w-full">
       <!-- Mobile Menu Button -->
       <UPopover v-model:open="isOpen" @close="closePopover">
         <UButton
@@ -95,6 +97,7 @@ watch(() => route.fullPath, closePopover);
           >
             <NuxtLink
               :to="yourDecksTarget"
+              no-prefetch
               class="flex items-center gap-2"
               @click="closePopover"
             >
@@ -116,7 +119,7 @@ watch(() => route.fullPath, closePopover);
             v-if="!userProfile && !loading"
             class="relative flex items-center"
           >
-            <!-- Login/Register Button with Tooltip -->
+            <!-- Login/Register Button -->
             <UButton
               class="cursor-pointer ml-2"
               color="primary"
@@ -129,8 +132,6 @@ watch(() => route.fullPath, closePopover);
                 }
               "
             />
-
-            <LoginTooltip class="ml-2" />
           </span>
           <div
             v-else-if="loading"
@@ -251,7 +252,10 @@ watch(() => route.fullPath, closePopover);
           </template>
         </ClientOnly>
 
-        <NuxtLink to="/" class="hover:opacity-80 transition-opacity ml-4">
+        <NuxtLink
+          to="/"
+          class="flex items-center gap-3 hover:opacity-80 transition-opacity ml-4"
+        >
           <ClientOnly>
             <img
               :src="wizardImage"
@@ -266,14 +270,24 @@ watch(() => route.fullPath, closePopover);
               />
             </template>
           </ClientOnly>
+          <img
+            src="/cardmystic-white.svg"
+            alt=""
+            width="2082"
+            height="307"
+            class="hidden sm:block w-36 h-auto invert dark:invert-0"
+          />
         </NuxtLink>
       </div>
     </div>
 
     <!-- Desktop -->
-    <div class="flex-row hidden xl:flex items-center">
+    <div class="flex-row hidden min-[1600px]:flex items-center">
       <!-- Logo -->
-      <NuxtLink to="/" class="hover:opacity-80 transition-opacity mr-6">
+      <NuxtLink
+        to="/"
+        class="flex shrink-0 items-center gap-3 hover:opacity-80 transition-opacity mr-6"
+      >
         <ClientOnly>
           <img
             :src="wizardImage"
@@ -288,6 +302,13 @@ watch(() => route.fullPath, closePopover);
             />
           </template>
         </ClientOnly>
+        <img
+          src="/cardmystic-white.svg"
+          alt=""
+          width="2082"
+          height="307"
+          class="w-44 h-auto invert dark:invert-0"
+        />
       </NuxtLink>
 
       <!-- Desktop Navigation -->
@@ -309,7 +330,7 @@ watch(() => route.fullPath, closePopover);
 
       <ClientOnly>
         <span v-if="!userProfile && !loading" class="relative">
-          <!-- Login/Register Button with Tooltip -->
+          <!-- Login/Register Button -->
           <UButton
             class="cursor-pointer ml-2"
             color="primary"
@@ -322,8 +343,6 @@ watch(() => route.fullPath, closePopover);
               }
             "
           />
-
-          <LoginTooltip class="ml-2" />
         </span>
 
         <div

@@ -1,29 +1,34 @@
 <template>
   <UContainer class="mb-10 max-w-full">
-    <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        fallback-title="Search Users"
-        fallback-description="Find other CardMystic users by their username."
-      />
-    </div>
+    <div class="relative isolate">
+      <SearchBackground type="users" placement="header" />
+      <NavigationBreadcrumbs />
+      <div class="w-full flex flex-col items-center">
+        <SearchSEOTitleAndDescription
+          fallback-title="Search Users"
+          fallback-description="Find other CardMystic users by their username."
+        />
+        <DirectoryNavigation group="community" />
+      </div>
 
-    <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
-      <UInput
-        v-model="searchInput"
-        placeholder="Search users by username…"
-        icon="i-lucide-user-search"
-        class="flex-1"
-        :ui="{ base: 'text-base h-10' }"
-        @keydown.enter="syncQueryToUrl"
-      />
-      <UButton
-        icon="i-lucide-user-search"
-        class="h-10 cursor-pointer"
-        :disabled="!searchInput.trim()"
-        @click="syncQueryToUrl"
-      >
-        <span class="hidden sm:inline">Search</span>
-      </UButton>
+      <div class="flex gap-2 mb-6 max-w-2xl mx-auto">
+        <UInput
+          v-model="searchInput"
+          placeholder="Search users by username…"
+          icon="i-lucide-user-search"
+          class="flex-1"
+          :ui="{ base: 'text-base h-10' }"
+          @keydown.enter="syncQueryToUrl"
+        />
+        <UButton
+          icon="i-lucide-user-search"
+          class="h-10 cursor-pointer"
+          :disabled="!searchInput.trim()"
+          @click="syncQueryToUrl"
+        >
+          <span class="hidden sm:inline">Search</span>
+        </UButton>
+      </div>
     </div>
 
     <UPagination
@@ -113,19 +118,21 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ExploreUsersPage' });
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserSearch, useFeaturedUsers } from '~/composables/useDiscovery';
 import { refDebounced } from '~/utils/refDebounced';
 import PublicUserLink from '~/components/user/PublicUserLink.vue';
 
-definePageMeta({ title: 'Search Users' });
+definePageMeta({ title: 'Search Users', breadcrumbsInPage: true });
 
-useSeoMeta({
+usePublicPageSeo({
+  path: '/explore/users',
   title: 'Search Users | CardMystic',
   description: 'Find other CardMystic users by their username.',
-  robots: 'noindex, follow',
 });
+useSeoMeta({ robots: 'noindex, follow' });
 
 const route = useRoute();
 const router = useRouter();

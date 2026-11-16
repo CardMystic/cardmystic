@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCardImageUrl } from '~/utils/scryfall';
+import { getCardImageUrl, scryfallArtCropUrl } from '~/utils/scryfall';
 import type { ScryfallCard } from '~/models/cardModel';
 
 const card = (image_uris: Record<string, string> | undefined) =>
@@ -10,6 +10,18 @@ const dualFaced = (
 ): ScryfallCard => ({ card_faces: faces }) as unknown as ScryfallCard;
 
 describe('getCardImageUrl', () => {
+  it('uses the chosen printing for artwork and preserves name-based defaults', () => {
+    const id = '44000000-0000-4000-8000-000000000001';
+    expect(scryfallArtCropUrl('Island', id)).toBe(
+      `https://api.scryfall.com/cards/${id}?format=image&version=art_crop`,
+    );
+    expect(scryfallArtCropUrl('Island', null)).toContain(
+      '/cards/named?exact=Island&',
+    );
+    expect(scryfallArtCropUrl('Island', 'not-an-id')).toContain(
+      '/cards/named?exact=Island&',
+    );
+  });
   it('defaults to the normal Scryfall variant', () => {
     const url = getCardImageUrl(card({ small: 'S', normal: 'N', large: 'L' }));
     expect(url).toBe('N');

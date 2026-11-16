@@ -43,186 +43,43 @@
 </template>
 
 <script setup lang="ts">
+import { landingConfigs, type LandingSearchType } from '~/utils/searchExamples';
 import type { LocationQuery } from 'vue-router';
 import { getSearchLink } from '~/utils/searchLinks';
 import type { Platform } from '~/utils/platformConfig';
 
-type LandingSearchType =
-  'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend';
-
-interface Suggestion {
-  label: string;
-  icon: string;
-}
-
-interface LandingConfig {
-  heading: string;
-  suggestions: Suggestion[];
-}
-
 const props = defineProps<{
   searchType: LandingSearchType;
   platform: Platform;
-  platformName: string;
+  platformName?: string;
 }>();
-
-const landingConfigs: Record<LandingSearchType, LandingConfig> = {
-  smart: {
-    heading: 'The Fastest Way To Find The Right Cards',
-    suggestions: [
-      {
-        label: 'Creatures that draw cards',
-        icon: 'i-lucide-book-open',
-      },
-      {
-        label: 'Two-mana mana rocks',
-        icon: 'i-lucide-gem',
-      },
-      {
-        label: 'Instant-speed protection',
-        icon: 'i-lucide-shield',
-      },
-      {
-        label: 'Graveyard recursion',
-        icon: 'i-lucide-refresh-cw',
-      },
-      {
-        label: 'Token doublers',
-        icon: 'i-lucide-copy-plus',
-      },
-      {
-        label: 'Exile board wipes',
-        icon: 'i-lucide-sparkles',
-      },
-    ],
-  },
-  similarity: {
-    heading: 'Find Similar Effects & Alternatives to Your Favorite Cards',
-    suggestions: [
-      {
-        label: 'Lightning Bolt',
-        icon: 'i-lucide-zap',
-      },
-      { label: 'Sol Ring', icon: 'i-lucide-circle-dot' },
-      {
-        label: 'Rhystic Study',
-        icon: 'i-lucide-book-open',
-      },
-      {
-        label: 'Swords to Plowshares',
-        icon: 'i-lucide-swords',
-      },
-      {
-        label: 'Cyclonic Rift',
-        icon: 'i-lucide-waves',
-      },
-      {
-        label: 'Counterspell',
-        icon: 'i-lucide-shield-x',
-      },
-    ],
-  },
-  commander: {
-    heading: 'Find the Perfect Commander for Your Next Deck',
-    suggestions: [
-      {
-        label: 'Graveyard recursion',
-        icon: 'i-lucide-refresh-cw',
-      },
-      {
-        label: 'Spellslinger',
-        icon: 'i-lucide-wand-sparkles',
-      },
-      {
-        label: 'Artifact combo',
-        icon: 'i-lucide-cog',
-      },
-      {
-        label: 'Group hug',
-        icon: 'i-lucide-hand-heart',
-      },
-      {
-        label: 'Voltron',
-        icon: 'i-lucide-swords',
-      },
-      {
-        label: 'Token army',
-        icon: 'i-lucide-users',
-      },
-    ],
-  },
-  keyword: {
-    heading: 'Search MTG Cards by Mechanics and Rules Text',
-    suggestions: [
-      {
-        label: 'Draw a card',
-        icon: 'i-lucide-book-open',
-      },
-      {
-        label: 'Create a token',
-        icon: 'i-lucide-copy-plus',
-      },
-      {
-        label: 'Destroy target creature',
-        icon: 'i-lucide-skull',
-      },
-      {
-        label: 'Counter target spell',
-        icon: 'i-lucide-shield-x',
-      },
-      {
-        label: 'Whenever a creature dies',
-        icon: 'i-lucide-refresh-ccw',
-      },
-      {
-        label: 'Enters the battlefield',
-        icon: 'i-lucide-log-in',
-      },
-    ],
-  },
-  recommend: {
-    heading: 'Find Cards That Belong in Your Deck',
-    suggestions: [
-      {
-        label: 'Korvold, Fae-Cursed King',
-        icon: 'i-mdi-crown',
-      },
-      {
-        label: 'Kaalia of the Vast',
-        icon: 'i-mdi-crown',
-      },
-      {
-        label: "Atraxa, Praetors' Voice",
-        icon: 'i-mdi-crown',
-      },
-      {
-        label: 'Muldrotha, the Gravetide',
-        icon: 'i-mdi-crown',
-      },
-      {
-        label: 'Isshin, Two Heavens as One',
-        icon: 'i-mdi-crown',
-      },
-      {
-        label: "Yuriko, the Tiger's Shadow",
-        icon: 'i-mdi-crown',
-      },
-    ],
-  },
-};
 
 const config = computed(() => landingConfigs[props.searchType]);
 const { saveSearchQuery } = useSearchType();
 
 function saveSuggestion(value: string) {
   const query: LocationQuery = { searchType: props.searchType };
-  if (props.searchType === 'similarity') query.card_name = value;
-  else if (props.searchType === 'recommend') query.commander = value;
+  if (
+    props.searchType === 'similarity' ||
+    props.searchType === 'popular-by-card'
+  )
+    query.card_name = value;
+  else if (
+    props.searchType === 'recommend' ||
+    props.searchType === 'popular-by-commander'
+  )
+    query.commander = value;
   else query.query = value;
   saveSearchQuery(props.searchType, query);
 }
 
 function suggestionLink(query: string) {
+  if (props.searchType === 'popular-by-card') {
+    return {
+      path: `/popular-by-card/${props.platform}`,
+      query: { card_name: query },
+    };
+  }
   return getSearchLink({
     platform: props.platform,
     searchType: props.searchType,
@@ -255,7 +112,8 @@ function suggestionLink(query: string) {
   --landing-color: #1d4ed8
   --landing-rgb: 59, 130, 246
 
-.search-landing--recommend
+.search-landing--recommend,
+.search-landing--popular-by-commander
   --landing-color: #c2410c
   --landing-rgb: 249, 115, 22
 
@@ -406,7 +264,8 @@ function suggestionLink(query: string) {
 </style>
 
 <style lang="sass">
-html.dark .search-landing--smart
+html.dark .search-landing--smart,
+html.dark .search-landing--popular-by-card
   --landing-color: #c4b5fd
 
 html.dark .search-landing--similarity
@@ -419,6 +278,7 @@ html.dark .search-landing--commander
 html.dark .search-landing--keyword
   --landing-color: #93c5fd
 
-html.dark .search-landing--recommend
+html.dark .search-landing--recommend,
+html.dark .search-landing--popular-by-commander
   --landing-color: #fdba74
 </style>

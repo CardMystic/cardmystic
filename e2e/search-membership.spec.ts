@@ -17,16 +17,11 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
   page.on('console', (message) => {
     if (/hydration/i.test(message.text())) errors.push(message.text());
   });
-  await page.route(`${BACKEND}/search-access`, (route) =>
-    route.fulfill({
-      json: {
-        ...access,
-        authenticated: false,
-        enhancedRemaining: 0,
-        resetsAt: null,
-      },
-    }),
-  );
+  let guestAccessRequests = 0;
+  await page.route(`${BACKEND}/search-access`, (route) => {
+    guestAccessRequests++;
+    return route.fulfill({ status: 401, json: { message: 'Unauthorized' } });
+  });
   await page.route(`${BACKEND}/search/colbert`, (route) => {
     expect(route.request().headers()['content-type']).toBe('application/json');
     expect(route.request().postDataJSON().useRerank).toBe(false);
@@ -117,6 +112,11 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
   await expect(
     page.getByRole('button', { name: 'Refresh search membership' }),
   ).toHaveText('');
+  await page.getByRole('button', { name: 'Refresh search membership' }).click();
+  await expect(page.locator('.membership-current')).toContainText('Free');
+  await expect(page.locator('.membership-account [role="alert"]')).toHaveCount(
+    0,
+  );
   await expect(
     page.locator('.membership-plan-action + .search-evidence'),
   ).toBeVisible();
@@ -127,8 +127,34 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
     path: '.cache/membership-desktop.png',
     fullPage: true,
   });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
+  for (const width of [320, 375, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    // Body overflow can be hidden while the grid's contents are still clipped.
+    for (const selector of [
+      '.membership-account',
+      '.membership-plan',
+      '.evidence-chart',
+      '#plan-features-title + div',
+    ]) {
+      await expect(async () => {
+        const bounds = await page.locator(selector).boundingBox();
+        expect(bounds).not.toBeNull();
+        expect(bounds!.x).toBeGreaterThanOrEqual(0);
+        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+      }).toPass();
+    }
+    const comparison = page.locator('#plan-features-title + div');
+    await comparison.evaluate((element) => {
+      element.scrollLeft = element.scrollWidth;
+    });
+    await expect(async () => {
+      const edge = await comparison.evaluate((element) => {
+        const table = element.querySelector('table')!;
+        return table.getBoundingClientRect().right;
+      });
+      expect(edge).toBeLessThanOrEqual(width);
+    }).toPass();
+  }
   await page.screenshot({
     path: '.cache/membership-mobile.png',
     fullPage: true,
@@ -162,6 +188,7 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
     path: '.cache/guest-search-mobile.png',
     fullPage: true,
   });
+  expect(guestAccessRequests).toBe(0);
   expect(errors).toEqual([]);
 });
 
@@ -246,10 +273,11 @@ test('search allowance can recover from a failed lookup beside the mode selector
   );
   available = true;
   await page.getByRole('button', { name: 'Retry allowance' }).click();
-  await expect(description).toHaveText('Unlimited | Memberships');
+  await expect(description).toHaveCount(0);
+  await expect(mode).not.toHaveAttribute('aria-describedby');
   await mode.click();
   await page.getByRole('option', { name: 'Normal', exact: true }).click();
-  await expect(description).toHaveText('Unlimited | Memberships');
+  await expect(description).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Retry allowance' }),
   ).toHaveCount(0);

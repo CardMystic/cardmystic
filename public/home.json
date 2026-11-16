@@ -5,7 +5,7 @@
     "@id": "https://cardmystic.com/#organization",
     "name": "CardMystic",
     "url": "https://cardmystic.com",
-    "logo": "https://cardmystic.com/logo.png"
+    "logo": "https://cardmystic.com/wizard.svg"
   },
   {
     "@context": "https://schema.org",
@@ -16,7 +16,7 @@
     "publisher": { "@id": "https://cardmystic.com/#organization" },
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://cardmystic.com/search?q={search_term_string}",
+      "target": "https://cardmystic.com/search/all/smart?query={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   }

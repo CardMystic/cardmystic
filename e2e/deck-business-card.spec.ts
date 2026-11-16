@@ -7,6 +7,10 @@ test('free owners create, edit, reload and remove a business card without changi
   page,
 }) => {
   const state = await setupDeckDisplay(page);
+  await page.route(
+    BACKEND + `/supabase/card-lists/primer/${displayDeckId}`,
+    (route) => route.fulfill({ json: { text: null } }),
+  );
   Object.assign(state.deck, { bracket: 3 });
   await page.reload();
   let saved: (DeckBusinessCardDetails & { list_id: string }) | null = null;
@@ -50,12 +54,12 @@ test('free owners create, edit, reload and remove a business card without changi
     .click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('option')).toHaveCount(0);
-  await dialog
-    .getByRole('button', { name: 'Opening hand card', exact: true })
-    .click();
-  await page
-    .getByRole('option', { name: state.cards[2].name, exact: true })
-    .click();
+  await expect(
+    dialog.getByRole('button', { name: 'Opening hand card', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    dialog.getByRole('button', { name: 'Add combo', exact: true }),
+  ).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(
     dialog.getByRole('heading', { name: 'Deck business card', exact: true }),
@@ -64,6 +68,9 @@ test('free owners create, edit, reload and remove a business card without changi
     dialog.getByText('My favorite value deck.', { exact: true }),
   ).toBeVisible();
   await expect(dialog.getByText('Bracket 3', { exact: true })).toBeVisible();
+  await expect(
+    dialog.locator('.business-meta').getByText('Primer', { exact: true }),
+  ).toHaveCount(0);
   await expect(dialog.getByText(/This deck is private/)).toBeVisible();
   await expect(
     dialog.getByRole('img', { name: 'QR code linking to this deck' }),
@@ -91,6 +98,20 @@ test('free owners create, edit, reload and remove a business card without changi
     dialog.getByText('Updated summary.', { exact: true }),
   ).toBeVisible();
   await dialog
+    .getByRole('button', { name: 'Edit business card', exact: true })
+    .click();
+  await dialog
+    .getByRole('textbox', { name: 'Business card summary' })
+    .fill('Discard this edit.');
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Discard unsaved changes?', exact: true })
+    .getByRole('button', { name: 'Discard changes', exact: true })
+    .click();
+  await expect(
+    dialog.getByText('Updated summary.', { exact: true }),
+  ).toBeVisible();
+  await dialog
     .getByRole('button', { name: 'Remove business card', exact: true })
     .click();
   expect(changes).toEqual(['PUT', 'PUT']);
@@ -113,6 +134,11 @@ test('visitors see a saved public business card on mobile, with no editing contr
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const state = await setupDeckDisplay(page, { owner: false });
+  await page.route(
+    BACKEND + `/supabase/card-lists/primer/${displayDeckId}`,
+    (route) =>
+      route.fulfill({ json: { text: 'A guide to playing this deck.' } }),
+  );
   expect(
     await page
       .getByRole('button', { name: 'View deck business card', exact: true })
@@ -215,6 +241,12 @@ test('visitors see a saved public business card on mobile, with no editing contr
     dialog.getByRole('link', { name: /cardmystic.com\/lists/ }),
   ).toHaveAttribute('href', `https://cardmystic.com/lists/${displayDeckId}`);
   const preview = dialog.getByRole('article', { name: 'Deck business card' });
+  await expect(
+    preview.locator('.business-meta').getByText('Primer', { exact: true }),
+  ).toBeVisible();
+  await expect(preview.locator('.business-meta')).toHaveText(
+    /cards\s*Primer\s*Bracket 3/,
+  );
   expect(
     await preview.evaluate(
       (element) => element.scrollWidth <= element.clientWidth,
@@ -232,10 +264,10 @@ test('visitors see a saved public business card on mobile, with no editing contr
   ).toBeVisible();
   await expect(
     preview.getByRole('heading', { name: 'Example opening hand', exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     preview.getByRole('heading', { name: 'Test combo', exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await page.screenshot({
     path: '/tmp/cardmystic-business-card-stats-mobile.png',
   });
@@ -274,7 +306,40 @@ test('visitors see a saved public business card on mobile, with no editing contr
   });
 });
 
-test('owners can set, change and clear an unset bracket from the banner', async ({
+test('banner title leaves room for descenders on its last line', async ({
+  page,
+}) => {
+  const { deck } = await setupDeckDisplay(page);
+  deck.name = '🤖 Iron Man Living Forge 🚀';
+  await page.reload();
+  const title = page
+    .getByTestId('deck-banner')
+    .getByRole('heading', { name: deck.name });
+  await expect(title).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  for (const width of [1280, 320]) {
+    await page.setViewportSize({ width, height: 800 });
+    const clearance = await title.evaluate((heading) => {
+      // An empty inline block sits on the last line's text baseline.
+      const marker = document.createElement('span');
+      marker.style.display = 'inline-block';
+      heading.append(marker);
+      const baseline = marker.getBoundingClientRect().bottom;
+      marker.remove();
+      const style = getComputedStyle(heading);
+      const canvas = document.createElement('canvas').getContext('2d')!;
+      canvas.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      return (
+        heading.getBoundingClientRect().bottom -
+        baseline -
+        canvas.measureText('g').actualBoundingBoxDescent
+      );
+    });
+    expect(clearance).toBeGreaterThanOrEqual(0);
+  }
+});
+
+test('owners can set, change and clear an unset bracket in settings', async ({
   page,
 }) => {
   const state = await setupDeckDisplay(page);
@@ -294,41 +359,46 @@ test('owners can set, change and clear an unset bracket from the banner', async 
     Object.assign(state.deck, { bracket });
     return route.fulfill({ status: 204 });
   });
-  await banner
-    .getByRole('button', { name: 'Edit bracket: unknown', exact: true })
-    .click();
-  await banner.getByRole('combobox', { name: 'Deck bracket' }).click();
-  await page
-    .getByRole('option', { name: 'Bracket 3: Upgraded', exact: true })
-    .click();
-  await expect(
-    page.getByText('Could not update bracket', { exact: true }),
-  ).toBeVisible();
+  const settings = page.getByRole('dialog', {
+    name: 'Deck settings',
+    exact: true,
+  });
+  const openSettings = () =>
+    banner.getByRole('button', { name: 'Deck settings', exact: true }).click();
+  const save = () =>
+    settings.getByRole('button', { name: 'Save changes', exact: true }).click();
+  const chooseBracket = async (name: string) => {
+    await settings.getByRole('combobox', { name: 'Deck bracket' }).click();
+    await page.getByRole('option', { name, exact: true }).click();
+  };
+  const unknownBracket = banner.getByRole('button', {
+    name: 'Edit bracket: unknown',
+    exact: true,
+  });
+  await unknownBracket.click();
+  await chooseBracket('Bracket 3: Upgraded');
+  await save();
+  await expect(settings.getByRole('alert')).toBeVisible();
   expect(writes).toEqual([]);
   fail = false;
-  await banner.getByRole('combobox', { name: 'Deck bracket' }).click();
-  await page
-    .getByRole('option', { name: 'Bracket 3: Upgraded', exact: true })
-    .click();
+  await save();
+  await expect(settings).toBeHidden();
   await expect(
     banner.getByRole('button', { name: 'Edit bracket 3', exact: true }),
   ).toBeVisible();
   await page.reload();
-  await banner
-    .getByRole('button', { name: 'Edit bracket 3', exact: true })
-    .click();
-  await banner.getByRole('combobox', { name: 'Deck bracket' }).click();
-  await page
-    .getByRole('option', { name: 'Bracket 5: cEDH', exact: true })
-    .click();
-  await banner
-    .getByRole('button', { name: 'Edit bracket 5', exact: true })
-    .click();
-  await banner.getByRole('combobox', { name: 'Deck bracket' }).click();
-  await page.getByRole('option', { name: 'Unknown', exact: true }).click();
+  await openSettings();
+  await chooseBracket('Bracket 5: cEDH');
+  await save();
+  await expect(settings).toBeHidden();
   await expect(
-    banner.getByRole('button', { name: 'Edit bracket: unknown', exact: true }),
+    banner.getByRole('button', { name: 'Edit bracket 5', exact: true }),
   ).toBeVisible();
+  await openSettings();
+  await chooseBracket('Unknown');
+  await save();
+  await expect(settings).toBeHidden();
+  await expect(unknownBracket).toBeVisible();
   expect(writes).toEqual([3, 5, null]);
 });
 
@@ -348,4 +418,74 @@ test('visitors see bracket descriptions without an edit control', async ({
   await expect(
     banner.getByRole('button', { name: /^Edit bracket/ }),
   ).toHaveCount(0);
+});
+
+test('business card close paths warn only when the draft has unsaved changes', async ({
+  page,
+}) => {
+  await setupDeckDisplay(page);
+  await page.route(
+    BACKEND + `/library/lists/${displayDeckId}/business-card`,
+    (route) => route.fulfill({ json: { card: null } }),
+  );
+  const launch = page.getByRole('button', {
+    name: 'Create deck business card',
+    exact: true,
+  });
+  const editor = page.getByRole('dialog', {
+    name: 'Create a deck business card',
+    exact: true,
+  });
+  const warning = page.getByRole('dialog', {
+    name: 'Discard unsaved changes?',
+    exact: true,
+  });
+  await launch.click();
+  // Opening the form with its default summary isn't an edit.
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(editor).toBeHidden();
+  await expect(warning).toBeHidden();
+  await launch.click();
+  const summary = editor.getByRole('textbox', {
+    name: 'Business card summary',
+  });
+  const initial = await summary.inputValue();
+  await summary.fill('Keep my draft.');
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(warning).toBeVisible();
+  await warning
+    .getByRole('button', { name: 'Keep editing', exact: true })
+    .click();
+  await expect(summary).toHaveValue('Keep my draft.');
+  await page.keyboard.press('Escape');
+  await expect(warning).toBeVisible();
+  // Dismissing the warning itself also keeps the draft.
+  await page.keyboard.press('Escape');
+  await expect(warning).toBeHidden();
+  await expect(summary).toHaveValue('Keep my draft.');
+  await page.mouse.click(2, 2);
+  await expect(warning).toBeVisible();
+  await warning
+    .getByRole('button', { name: 'Keep editing', exact: true })
+    .click();
+  // Reverting an edit removes the dirty state.
+  await summary.fill(initial);
+  await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(editor).toBeHidden();
+  await expect(warning).toBeHidden();
+  await launch.click();
+  await editor
+    .getByRole('textbox', { name: 'Business card playstyle' })
+    .fill('Unsubmitted tag');
+  await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(warning).toBeVisible();
+  await warning
+    .getByRole('button', { name: 'Discard changes', exact: true })
+    .click();
+  await expect(editor).toBeHidden();
+  await launch.click();
+  await expect(
+    editor.getByRole('textbox', { name: 'Business card playstyle' }),
+  ).toBeEmpty();
+  await expect(summary).toHaveValue(initial);
 });

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { setupDeckDisplay } from './utils/deckDisplay';
+import { openDeckAction } from './utils/deckActions';
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
@@ -7,7 +8,10 @@ async function openPlaytest(page: Page, cardCount = 15) {
   const fixture = await setupDeckDisplay(page, { cardCount });
   const cookie = page.getByRole('button', { name: 'Reject all', exact: true });
   if (await cookie.isVisible()) await cookie.click();
-  await page.getByRole('button', { name: 'Playtest', exact: true }).click();
+  if ((page.viewportSize()?.width ?? 1440) < 768)
+    await openDeckAction(page, 'Playtest');
+  else
+    await page.getByRole('button', { name: 'Playtest', exact: true }).click();
   const board = page.getByRole('dialog', {
     name: 'Playtest Beta',
     exact: true,

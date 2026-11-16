@@ -6,6 +6,11 @@ import {
 } from '~/utils/linkEmbeds';
 
 describe('parseLinkEmbedTarget', () => {
+  it('keeps primer links pointing to the primer', () => {
+    expect(
+      parseLinkEmbedTarget('https://cardmystic.com/lists/abc-123/primer'),
+    ).toEqual({ href: '/lists/abc-123/primer', type: 'primer', id: 'abc-123' });
+  });
   it('parses relative decklist paths', () => {
     expect(parseLinkEmbedTarget('/lists/abc-123')).toEqual({
       href: '/lists/abc-123',

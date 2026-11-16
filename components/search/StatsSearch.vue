@@ -1,5 +1,6 @@
 <template>
   <div class="search-container">
+    <SearchBackground :type="statsType" />
     <!-- Stats search type tabs -->
     <ExploreTabs :stats-type="statsType" @select="switchType" />
 
@@ -76,6 +77,8 @@ onMounted(() => {
 
 <style scoped>
 .search-container {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   margin: 0 auto;
 }

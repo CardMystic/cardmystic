@@ -136,16 +136,10 @@ test.describe('Decklist social & discovery', () => {
 
     await reliableFill(dialog.getByPlaceholder('Enter list name'), LIST_NAME);
 
-    // Flip visibility to Public directly from the create modal — owners
-    // can also change it later from the banner selector on the deck page.
-    // reka-ui's SelectTrigger inside a UModal can swallow the popover open
-    // on a plain Playwright click, so open the listbox via keyboard which
-    // reliably works from the focused trigger button.
+    // New decks default to Public without changing the visibility dropdown.
     const visibilitySelect = dialog.getByTestId('create-visibility-select');
     await expect(visibilitySelect).toBeVisible();
-    await visibilitySelect.focus();
-    await visibilitySelect.press('Enter');
-    await page.getByRole('option', { name: 'Public' }).click();
+    await expect(visibilitySelect).toContainText('Public');
 
     const createCall = page.waitForResponse(
       (resp) =>

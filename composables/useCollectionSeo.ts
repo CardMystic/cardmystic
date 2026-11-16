@@ -1,5 +1,5 @@
 import type { ComputedRef } from 'vue';
-const FALLBACK_OG_IMAGE = 'https://cardmystic.com/cardmystic_preview.png';
+import { FALLBACK_OG_IMAGE } from '~/utils/seoMeta';
 
 export function useCollectionSeo(
   title: string,
@@ -15,6 +15,7 @@ export function useCollectionSeo(
     description,
     robots: () => (noindex.value ? 'noindex, follow' : 'index, follow'),
     ogType: 'website',
+    ogSiteName: 'CardMystic',
     ogTitle: `${title} | CardMystic`,
     ogDescription: description,
     ogUrl: canonical,
@@ -24,6 +25,7 @@ export function useCollectionSeo(
     twitterTitle: `${title} | CardMystic`,
     twitterDescription: description,
     twitterImage: image || FALLBACK_OG_IMAGE,
+    twitterImageAlt: image ? title : 'CardMystic preview',
   });
   useHead({ link: [{ rel: 'canonical', href: canonical }] });
 }

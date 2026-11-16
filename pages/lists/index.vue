@@ -19,6 +19,7 @@ useSeoMeta({
   title: 'My decks and collections | CardMystic',
   robots: 'noindex, nofollow',
 });
+const { hasDrafts: hasBrowserDrafts } = useGuestDeck();
 const route = useRoute();
 const router = useRouter();
 type LibraryView = 'all' | 'mine' | 'collections' | 'liked' | 'saved';
@@ -370,6 +371,18 @@ watch([display, sort, direction], () => {
         @click="router.push(location('', tab.key))"
       />
     </div>
+    <UAlert
+      v-if="hasBrowserDrafts"
+      class="mb-4"
+      color="info"
+      title="You have an unsaved browser draft"
+    >
+      <template #description
+        ><NuxtLink to="/build" class="underline"
+          >Continue editing or save it to your account</NuxtLink
+        ></template
+      >
+    </UAlert>
     <p v-if="view === 'collections'" class="mb-4 text-muted">
       Keep track of cards you own. Collections support up to 50,000 card
       entries. Search within them with CardMystic Pro.
@@ -685,9 +698,17 @@ watch([display, sort, direction], () => {
       <div
         v-else-if="active.isLoading.value || (own && foldersLoading)"
         class="grid"
-        :class="gridClass"
+        :class="[gridClass, { 'auto-rows-fr': own }]"
+        aria-label="Loading lists"
+        aria-busy="true"
+        role="group"
       >
-        <CardListLinkSkeleton v-for="n in 8" :key="n" />
+        <CardListLinkSkeleton
+          v-for="n in 9"
+          :key="n"
+          :show-settings-button="own"
+          :collection="view === 'collections'"
+        />
       </div>
       <p v-else-if="active.error?.value" role="alert" class="text-error">
         {{ active.error.value.message }}

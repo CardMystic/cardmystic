@@ -90,17 +90,17 @@ async function setup(page: Page) {
 test('owner can select and save Any as the deck format', async ({ page }) => {
   const state = await setup(page);
   await page
-    .getByRole('button', { name: 'Edit list format', exact: true })
+    .getByRole('button', { name: 'Deck settings', exact: true })
     .click();
   const format = page.getByRole('combobox', {
-    name: 'List format',
+    name: 'Format',
     exact: true,
   });
   await format.click();
   await page.getByRole('option', { name: 'Any', exact: true }).click();
-  await page.getByRole('heading', { name: title, exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
   await expect.poll(() => state.formats).toEqual([{ listId, format: 'Any' }]);
   await expect(
-    page.getByText('Format updated!', { exact: true }),
-  ).toBeVisible();
+    page.getByRole('dialog', { name: 'Deck settings', exact: true }),
+  ).toBeHidden();
 });

@@ -1,66 +1,162 @@
 <script setup lang="ts">
 import { analyzeDeck, type AnalysisCard } from '~/utils/deckAnalysis';
+import { collectionPath, collectionSlug } from '~/utils/card-collections';
+import type { DeckAnalytics } from '~/utils/deckAnalytics';
 const props = defineProps<{
   listId: string;
   revision: string;
-  format: string;
   entries: AnalysisCard[];
   loading: boolean;
   isOwner: boolean;
+  initialAnalytics?: DeckAnalytics;
 }>();
+const optionalRoles = defineModel<string[]>('optionalRoles');
+const gameChangers = computed(() =>
+  props.entries.reduce(
+    (total, { card, quantity }) => total + (card.game_changer ? quantity : 0),
+    0,
+  ),
+);
 const details = useTemplateRef<HTMLDetailsElement>('details');
 defineExpose({
   open: () => {
     if (details.value) details.value.open = true;
   },
 });
-const opened = ref(false);
 const stats = computed(() => analyzeDeck(props.entries));
+const entrySets = computed(() => {
+  const sets = new Map<string, { code: string; name: string; count: number }>();
+  for (const { card, quantity } of props.entries) {
+    if (!card.set) continue;
+    const code = card.set.toLowerCase();
+    sets.set(code, {
+      code,
+      name: card.set_name || code.toUpperCase(),
+      count: (sets.get(code)?.count ?? 0) + quantity,
+    });
+  }
+  return [...sets.values()]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    .slice(0, 4);
+});
 </script>
 <template>
   <details
+    open
     ref="details"
     id="deck-stats"
     class="my-4 rounded-lg border border-default p-4"
     data-testid="deck-stats"
-    @toggle="opened = ($event.target as HTMLDetailsElement).open"
   >
     <summary class="cursor-pointer font-semibold">Deck Stats</summary>
-    <div v-if="opened" class="mt-4 space-y-6">
-      <p v-if="loading" role="status">Loading deck stats…</p>
-      <template v-else-if="entries.length">
-        <p>
-          {{ stats.total }} cards in the library · {{ stats.lands }} lands<span
-            v-if="stats.modalLands"
+    <div class="mt-4 space-y-6">
+      <DeckStatsSkeleton
+        v-if="loading && !initialAnalytics"
+        :is-owner="isOwner"
+        :extra-roles="optionalRoles?.length"
+      >
+        <template #tags><slot name="tags" /></template>
+      </DeckStatsSkeleton>
+      <DeckAnalytics
+        v-else-if="entries.length || initialAnalytics"
+        :initial-data="initialAnalytics"
+        :list-id="listId"
+        :revision="revision"
+        :is-owner="isOwner"
+      >
+        <template #roles="{ mainboardRoles, pending }">
+          <DeckRoleCounts
+            :loading="pending"
+            v-model:optional-roles="optionalRoles"
+            :counts="mainboardRoles"
+            :game-changers="
+              entries.length ? gameChangers : mainboardRoles?.['Game Changers']
+            "
+          />
+        </template>
+        <template #tags><slot name="tags" /></template>
+        <template #themes="{ topThemes, topSets }">
+          <section
+            v-if="topThemes !== undefined"
+            aria-labelledby="deck-top-themes-title"
+            class="space-y-3"
           >
-            + {{ stats.modalLands }}
-            <UTooltip
-              text="Modal double-faced cards let you play either side. These have a spell on the front and a land on the back."
-              :ui="{
-                content: 'max-w-72 h-auto',
-                text: 'whitespace-normal break-words',
-              }"
-              ><button type="button" class="underline decoration-dotted">
-                MDFCs
-              </button></UTooltip
-            ></span
-          >.
-        </p>
-        <p class="text-sm text-muted">
-          {{ stats.averageOpeningLands.toFixed(2) }} lands on average in your
-          opening hand. {{ Math.round(stats.atLeastTwo * 100) }}% chance of at
-          least two lands in an opening hand of seven, before mulligans.
-          Commanders are excluded. Double-faced land options are not counted in
-          this estimate; there isn't one right land count for every deck.
-        </p>
-        <LazyDeckCharts :curve="stats.curve" :colors="stats.colors" />
-        <LazyDeckAnalytics
-          :list-id="listId"
-          :revision="revision"
-          :format="format"
-          :is-owner="isOwner"
-        />
-      </template>
+            <h3 id="deck-top-themes-title" class="text-lg font-semibold">
+              <NuxtLink to="/themes" class="hover:underline"
+                >Top Themes</NuxtLink
+              >
+            </h3>
+            <dl
+              v-if="topThemes?.length"
+              class="grid grid-cols-2 gap-3 lg:grid-cols-4"
+            >
+              <div
+                v-for="theme in topThemes"
+                :key="theme.name"
+                class="rounded-lg border border-default p-3"
+              >
+                <dt class="text-sm">
+                  <NuxtLink
+                    :to="
+                      collectionPath(
+                        'themes',
+                        collectionSlug(theme.name, 'themes'),
+                      )
+                    "
+                    class="text-success hover:underline"
+                    >{{ theme.name }}</NuxtLink
+                  >
+                </dt>
+                <dd class="text-2xl font-semibold tabular-nums">
+                  {{ theme.count }}
+                </dd>
+              </div>
+            </dl>
+            <p v-else class="text-sm text-muted">
+              {{
+                topThemes === null
+                  ? 'Theme counts are temporarily unavailable.'
+                  : 'No themes found in this deck.'
+              }}
+            </p>
+          </section>
+          <section
+            v-if="(topSets ?? entrySets).length"
+            aria-labelledby="deck-top-sets-title"
+            class="space-y-3"
+          >
+            <h3 id="deck-top-sets-title" class="text-lg font-semibold">
+              <NuxtLink to="/sets" class="hover:underline">Top Sets</NuxtLink>
+            </h3>
+            <dl class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div
+                v-for="set in topSets ?? entrySets"
+                :key="set.code"
+                class="rounded-lg border border-default p-3"
+              >
+                <dt class="text-sm">
+                  <NuxtLink
+                    :to="collectionPath('sets', set.code)"
+                    no-prefetch
+                    class="text-primary hover:underline"
+                    >{{ set.name }}</NuxtLink
+                  >
+                </dt>
+                <dd class="text-2xl font-semibold tabular-nums">
+                  {{ set.count }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        </template>
+        <template #charts>
+          <LazyDeckCharts
+            v-if="entries.length"
+            :curve="stats.curve"
+            :colors="stats.colors"
+          />
+        </template>
+      </DeckAnalytics>
     </div>
   </details>
 </template>

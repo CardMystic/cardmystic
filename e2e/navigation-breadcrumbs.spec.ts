@@ -37,7 +37,8 @@ for (const width of [1440, 390]) {
       .getByRole('button', { name: 'Options for Island', exact: true })
       .click();
     await page
-      .getByRole('link', { name: 'View Card Details', exact: true })
+      .getByRole('dialog')
+      .getByRole('link', { name: "Go To Card's Page", exact: true })
       .click();
     const crumbs = page.getByRole('navigation', {
       name: 'Browsing history',

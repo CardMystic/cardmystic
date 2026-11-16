@@ -14,7 +14,9 @@ const props = withDefaults(
 defineEmits<{ settings: [] }>();
 const artwork = computed(() => {
   const name = props.list.avatar_card_name || props.list.commanders?.[0];
-  return name ? scryfallArtCropUrl(name) : undefined;
+  return name
+    ? scryfallArtCropUrl(name, props.list.avatar_printing_id)
+    : undefined;
 });
 const priceLabel = computed(() =>
   props.list.estimated_price_usd == null
@@ -23,8 +25,8 @@ const priceLabel = computed(() =>
 );
 const priceDescription = computed(() =>
   props.list.price_estimate_incomplete
-    ? 'Incomplete estimate: some cards or prices are missing. USD, all boards.'
-    : 'Estimated USD price from Scryfall, including all boards. Actual prices may vary.',
+    ? 'Incomplete estimate: some cards or prices are missing. USD, all boards, excluding basic lands.'
+    : 'Estimated USD price from Scryfall, all boards, excluding basic lands.',
 );
 const updated = computed(() => props.list.updated_at || props.list.created_at);
 const socialCounts = computed(() => [
@@ -41,7 +43,7 @@ const socialCounts = computed(() => [
 
 <template>
   <article
-    class="dark deck-link relative flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-default text-white transition-colors hover:border-primary group"
+    class="dark deck-link relative flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-default text-white shadow-lg shadow-black/30 transition-colors hover:border-primary group"
   >
     <NuxtLink
       :to="`/lists/${list.id}${primerPreview !== undefined ? '/primer' : ''}`"
@@ -52,7 +54,12 @@ const socialCounts = computed(() => [
       :draggable="false"
       no-prefetch
       class="absolute inset-0 z-10 rounded-lg focus-visible:outline-2 focus-visible:outline-primary focus-visible:-outline-offset-2"
-    />
+    >
+      <span class="sr-only">{{
+        list.name ||
+        (list.kind === 'collection' ? 'Untitled collection' : 'Untitled deck')
+      }}</span>
+    </NuxtLink>
     <header
       class="deck-link-header relative flex-1 p-4"
       :class="{ 'deck-link-header-primer': primerPreview !== undefined }"
@@ -61,7 +68,7 @@ const socialCounts = computed(() => [
         v-if="artwork"
         :src="artwork"
         alt=""
-        class="absolute inset-0 size-full object-cover object-[center_25%]"
+        class="absolute inset-0 size-full object-cover object-top"
       />
       <div class="relative">
         <div class="flex items-start justify-between gap-3">
@@ -123,10 +130,13 @@ const socialCounts = computed(() => [
           {{ list.commanders.join(', ') }}
         </p>
         <p
-          v-if="list.description && primerPreview === undefined"
+          v-if="primerPreview === undefined"
           class="relative z-[1] mt-3 text-sm leading-relaxed line-clamp-3 break-words"
         >
-          {{ list.description }}
+          <template v-if="list.description?.trim()">{{
+            list.description
+          }}</template>
+          <em v-else>No description</em>
         </p>
         <p
           v-if="primerPreview"
@@ -175,7 +185,10 @@ const socialCounts = computed(() => [
         <UAvatar
           :src="
             list.author_avatar_card_name
-              ? scryfallArtCropUrl(list.author_avatar_card_name)
+              ? scryfallArtCropUrl(
+                  list.author_avatar_card_name,
+                  list.author_avatar_printing_id,
+                )
               : undefined
           "
           alt=""

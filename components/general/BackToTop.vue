@@ -51,7 +51,7 @@ onUnmounted(() => {
   top: 83px
   left: 50%
   transform: translateX(-50%)
-  z-index: 9999
+  z-index: 40
   background: white
   color: black
   padding: 8px 20px

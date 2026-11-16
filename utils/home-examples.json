@@ -1,0 +1,161 @@
+{
+  "builder": [
+    {
+      "kind": "deck",
+      "folder_id": null,
+      "id": "e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a",
+      "name": "🤖 Iron Man Living Forge 🚀",
+      "description": "Tutoring toolbox with a pinch of stax | No infinite combos",
+      "format": "Commander",
+      "avatar_card_name": "Iron Man, Titan of Innovation",
+      "commanders": ["Iron Man, Titan of Innovation"],
+      "color_ratios": {
+        "W": 0,
+        "U": 0.41,
+        "B": 0,
+        "R": 0.19,
+        "G": 0,
+        "C": 0.4
+      },
+      "updated_at": "2026-11-11T19:30:37.854991",
+      "created_at": "2026-08-07T21:48:16.878474+00:00",
+      "visibility": "public",
+      "user_id": "8664ca13-e06a-4a4f-ae1d-69b12addc6f9",
+      "username": "Andrew",
+      "like_count": 2,
+      "save_count": 1,
+      "comment_count": 0,
+      "view_count": 237,
+      "estimated_price_usd": 3295.29,
+      "price_estimate_incomplete": true,
+      "author_avatar_printing_id": null,
+      "author_avatar_card_name": "Balance",
+      "bracket": 3,
+      "avatar_printing_id": "7542b1d1-e34d-46dc-af24-1b718034c0e4"
+    },
+    {
+      "kind": "collection",
+      "folder_id": null,
+      "id": "058da0b2-95f8-4527-b9a1-6eaf3a6da05e",
+      "name": "Vintage Collection",
+      "description": "My collection of vintage cards I use for vintage cube drafts",
+      "format": "Any",
+      "avatar_card_name": "Black Lotus",
+      "commanders": [],
+      "color_ratios": {
+        "W": 0.18,
+        "U": 0.2,
+        "B": 0.17,
+        "R": 0.17,
+        "G": 0.17,
+        "C": 0.11
+      },
+      "updated_at": "2026-11-08T22:59:50.103",
+      "created_at": "2026-11-04T15:40:00.379526+00:00",
+      "visibility": "public",
+      "user_id": "8664ca13-e06a-4a4f-ae1d-69b12addc6f9",
+      "username": "Andrew",
+      "like_count": 0,
+      "save_count": 0,
+      "comment_count": 0,
+      "view_count": 3,
+      "estimated_price_usd": null,
+      "price_estimate_incomplete": true,
+      "author_avatar_printing_id": null,
+      "author_avatar_card_name": "Balance",
+      "bracket": null,
+      "avatar_printing_id": null
+    }
+  ],
+  "business": {
+    "hasPrimer": true,
+    "name": "Iron Man Living Forge",
+    "url": "https://cardmystic.com/lists/e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a",
+    "format": "Commander",
+    "bracket": 3,
+    "count": 100,
+    "playstyles": ["Combo", "Stax", "Tutor", "Artifacts"],
+    "summary": "Tutoring toolbox with a pinch of stax | No infinite combos",
+    "winPlan": "Use repurposing bay and Iron Man to tutor up a variety of wins: copy simulacrum synthesizer multiple times for tons of constructs, academy manufactor + pingers, or animate your artifacts with Cyberdrive Awakener / Brudiclad. When losing on board: tutor up a toolbox of stax pieces to slow things down. When all else fails: get the One Ring",
+    "hero": {
+      "name": "Iron Man, Titan of Innovation",
+      "image": "https://cards.scryfall.io/normal/front/2/0/20d54b22-62e8-48ac-ba65-0bdbf42d6cad.jpg?1783903309"
+    },
+    "core": [
+      {
+        "name": "Repurposing Bay",
+        "image": "https://cards.scryfall.io/normal/front/0/c/0cf1ace1-b7f5-4bd9-a494-ee7cb6c1f854.jpg?1783907906"
+      },
+      {
+        "name": "Simulacrum Synthesizer",
+        "image": "https://cards.scryfall.io/normal/front/a/a/aaa05ad1-5cda-4edd-b6bf-562ae3e5011a.jpg?1783912002"
+      },
+      {
+        "name": "The One Ring",
+        "image": "https://cards.scryfall.io/normal/front/d/5/d5806e68-1054-458e-866d-1f2470f682b2.jpg?1790212038"
+      }
+    ],
+    "curve": [
+      {
+        "label": "0",
+        "count": 2
+      },
+      {
+        "label": "1",
+        "count": 9
+      },
+      {
+        "label": "2",
+        "count": 20
+      },
+      {
+        "label": "3",
+        "count": 19
+      },
+      {
+        "label": "4",
+        "count": 7
+      },
+      {
+        "label": "5",
+        "count": 3
+      },
+      {
+        "label": "6",
+        "count": 4
+      },
+      {
+        "label": "7+",
+        "count": 3
+      }
+    ],
+    "colors": [
+      {
+        "label": "W",
+        "count": 0
+      },
+      {
+        "label": "U",
+        "count": 44
+      },
+      {
+        "label": "B",
+        "count": 0
+      },
+      {
+        "label": "R",
+        "count": 21
+      },
+      {
+        "label": "G",
+        "count": 0
+      },
+      {
+        "label": "C",
+        "count": 44
+      }
+    ],
+    "price": "$2,811.97",
+    "priceDate": "Nov 9, 2026"
+  }
+}

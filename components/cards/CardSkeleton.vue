@@ -15,7 +15,7 @@
       class="mt-1 flex min-h-8 items-center gap-2"
     >
       <USkeleton v-if="!hideProgressBar" class="h-2 min-w-0 flex-1" />
-      <USkeleton v-if="showCardInfo" class="h-7 w-14 shrink-0 rounded-md" />
+      <USkeleton v-if="showCardInfo" class="h-7 w-16 shrink-0 rounded-md" />
     </div>
   </UCard>
 </template>

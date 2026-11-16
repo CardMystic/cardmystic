@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { CardSchema } from '@/models/cardModel';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
+import type { CardSearchFilters } from '@/models/frontend-specific/filtersModel';
+
+export type CardDetailsSearchState = {
+  query: string;
+  filters: CardSearchFilters;
+};
 
 export type ExampleQueryResponse = z.infer<typeof ExampleQueryResponseSchema>;
 export const ExampleQueryResponseSchema = z.object({

@@ -91,6 +91,9 @@ const props = defineProps<{ article: ArticleSummary }>();
 
 const avatarImageUrl = computed(() => {
   if (!props.article.avatar_card_name) return undefined;
-  return `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(props.article.avatar_card_name)}&format=image&version=art_crop`;
+  return scryfallArtCropUrl(
+    props.article.avatar_card_name,
+    props.article.avatar_printing_id,
+  );
 });
 </script>
