@@ -481,7 +481,15 @@ test(
     // Expire any prerendered query snapshot so this checks client requests too.
     await page.clock.setFixedTime(new Date(Date.now() + 10 * 60 * 1000));
     const pageErrors: string[] = [];
+    page.on('console', (message) => {
+      if (/hydration.*mismatch|mismatch.*hydration/i.test(message.text()))
+        pageErrors.push(message.text());
+    });
     page.on('pageerror', (error) => pageErrors.push(error.message));
+
+    const initialHtml = await (await page.request.get('/')).text();
+    expect(initialHtml).toContain('Geno Doak');
+    expect(initialHtml).toContain('/devIcons/geno.webp');
 
     const publicSections = sections.filter(
       (section) => section.path !== '/supabase/card-lists',
@@ -536,6 +544,17 @@ test(
           await top.scrollIntoViewIfNeeded();
           await expect(top).toContainText('Popular Searches');
           await expect(top).toContainText(topQuery);
+          const writer = page.getByRole('heading', { name: 'Geno Doak' });
+          await writer.scrollIntoViewIfNeeded();
+          await expect(
+            writer.locator('..').getByText('Writer', { exact: true }),
+          ).toBeVisible();
+          const avatar = page.getByRole('img', { name: 'Geno Doak' });
+          await expect
+            .poll(() =>
+              avatar.evaluate((img) => (img as HTMLImageElement).naturalWidth),
+            )
+            .toBeGreaterThan(0);
           await expect(
             page.getByRole('button', { name: 'Retry', exact: true }),
           ).toHaveCount(0);
