@@ -82,6 +82,11 @@ const developers: Developer[] = [
     profilePicture: '/devIcons/terry.webp',
     socialLinks: {},
   },
+  {
+    name: 'Geno Doak',
+    role: 'Writer',
+    profilePicture: '/devIcons/geno.webp',
+  },
 ];
 
 const getSocialIcon = (platform: string): string => {
