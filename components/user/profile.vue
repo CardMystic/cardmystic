@@ -248,6 +248,7 @@ const handleSignOut = async () => {
                       :loading="updateAvatarMutation.isPending.value"
                       :items="filteredCards"
                       placeholder="Search for a card..."
+                      aria-label="Search for a card..."
                       icon="i-lucide-search"
                       class="w-full"
                       @update:model-value="(name) => updateProfileCard(name)"
@@ -284,6 +285,8 @@ const handleSignOut = async () => {
               v-model="username"
               type="text"
               placeholder="Username"
+              aria-label="Username"
+              autocomplete="username"
               size="lg"
               class="w-full"
             />
@@ -308,6 +311,8 @@ const handleSignOut = async () => {
               v-model="newEmail"
               type="email"
               placeholder="New email address"
+              aria-label="New email address"
+              autocomplete="email"
               size="lg"
               class="w-full"
             />
@@ -371,6 +376,8 @@ const handleSignOut = async () => {
               v-model="currentPassword"
               :type="showPasswords ? 'text' : 'password'"
               placeholder="Current Password"
+              aria-label="Current Password"
+              autocomplete="current-password"
               size="lg"
               class="w-full"
             >
@@ -379,6 +386,7 @@ const handleSignOut = async () => {
                   variant="link"
                   color="neutral"
                   :padded="false"
+                  :aria-label="showPasswords ? 'Hide passwords' : 'Show passwords'"
                   :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
                   @click="
                     () => {
@@ -392,6 +400,8 @@ const handleSignOut = async () => {
               v-model="newPassword"
               :type="showPasswords ? 'text' : 'password'"
               placeholder="New Password"
+              aria-label="New Password"
+              autocomplete="new-password"
               size="lg"
               class="w-full"
             >
@@ -400,6 +410,7 @@ const handleSignOut = async () => {
                   variant="link"
                   color="neutral"
                   :padded="false"
+                  :aria-label="showPasswords ? 'Hide passwords' : 'Show passwords'"
                   :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
                   @click="
                     () => {
@@ -413,6 +424,8 @@ const handleSignOut = async () => {
               v-model="confirmPassword"
               :type="showPasswords ? 'text' : 'password'"
               placeholder="Confirm New Password"
+              aria-label="Confirm New Password"
+              autocomplete="new-password"
               size="lg"
               class="w-full"
             >
@@ -421,6 +434,7 @@ const handleSignOut = async () => {
                   variant="link"
                   color="neutral"
                   :padded="false"
+                  :aria-label="showPasswords ? 'Hide passwords' : 'Show passwords'"
                   :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
                   @click="
                     () => {
@@ -447,10 +461,10 @@ const handleSignOut = async () => {
         </div>
 
         <!-- Messages -->
-        <p v-if="errorMessage" class="text-red-400 text-sm mb-4">
+        <p v-if="errorMessage" role="alert" class="text-error text-sm mb-4">
           {{ errorMessage }}
         </p>
-        <p v-if="successMessage" class="text-green-400 text-sm mb-4">
+        <p v-if="successMessage" role="status" class="text-success text-sm mb-4">
           {{ successMessage }}
         </p>
 
@@ -458,11 +472,11 @@ const handleSignOut = async () => {
         <div
           class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4"
         >
-          <p class="text-xs text-gray-400">
+          <p class="text-xs text-toned">
             Experiencing issues? Contact us at
             <a
               href="mailto:thecardmystic@gmail.com"
-              class="text-purple-400 hover:text-purple-300 underline"
+              class="text-primary underline"
               >thecardmystic@gmail.com</a
             >
           </p>
