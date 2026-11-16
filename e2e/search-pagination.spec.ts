@@ -52,7 +52,7 @@ async function setup(
     .slice(1)
     .map((card, index) =>
       result(
-        card,
+        { ...card, cmc: index % 2 === 0 ? 1 : 0 },
         `Match ${String(index + 1).padStart(3, '0')}`,
         options.zeroScores ? 0 : index === 0 ? 1 : 0.2,
         index % 2 === 0 ? 'U' : 'W',
@@ -312,4 +312,28 @@ test('deck recommender hides the limit input and always requests 100', async ({
   await expectCards(page, [state.seed.card_name]);
   expect(limit).toBe(100);
   await expect(page.getByPlaceholder(/Results limit/)).toHaveCount(0);
+});
+
+test('mana cost sorts every Smart Search match before the 40-card page split', async ({
+  page,
+}) => {
+  const state = await setup(page, 'smart', { zeroScores: true });
+  await navigate(page, '/search/all/smart?query=curve');
+  await pagination(page)
+    .getByRole('button', { name: 'Page 3', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Display', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Search sorting' }).click();
+  await page.getByRole('option', { name: 'Mana Cost', exact: true }).click();
+  await page.keyboard.press('Escape');
+  const sorted = [
+    ...state.names.filter((_, i) => i % 2 === 1),
+    ...state.names.filter((_, i) => i % 2 === 0),
+  ];
+  await expectCards(page, sorted.slice(0, 40));
+  await pagination(page)
+    .getByRole('button', { name: 'Page 2', exact: true })
+    .click();
+  await expectCards(page, sorted.slice(40, 80));
+  expect(state.requests()).toBe(1);
 });

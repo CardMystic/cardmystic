@@ -34,11 +34,18 @@ const filters = computed(() =>
     : CardSearchFiltersSchema.parse({}),
 );
 const searchError = computed(() => !parsedFilters.value.success);
+const browseSort = ref<{ field?: string; direction: 'asc' | 'desc' }>({
+  direction: 'asc',
+});
+function sortCollection(field: string | undefined, direction: 'asc' | 'desc') {
+  if (!query.value) browseSort.value = { field, direction };
+}
 const browse = useCollectionCards(
   props.kind,
   props.slug,
   computed(() => !query.value && !searchError.value),
   filters,
+  browseSort,
 );
 const params = computed(() =>
   query.value && !searchError.value
@@ -162,11 +169,11 @@ function retry() {
         class="mt-4 w-full max-w-5xl"
       />
       <NuxtLink
-        v-if="query || searchError"
+        v-if="query || route.query.filters || searchError"
         :to="path"
         class="min-h-11 inline-flex items-center underline underline-offset-4 focus-visible:outline-primary"
       >
-        {{ kind === 'sets' ? 'Show all cards in this set' : 'Show top cards' }}
+        {{ kind === 'sets' ? 'Show all cards in this set' : 'Show all cards' }}
       </NuxtLink>
       <p v-if="searchError" role="alert">
         The search filters are invalid. Clear the search to browse this
@@ -188,6 +195,10 @@ function retry() {
         :error="error"
         :query-param="query || entry.name"
         :reranking-enabled="!!query && route.query.useRerank !== 'false'"
+        :key="query ? 'search' : 'browse'"
+        :collection-order="!query"
+        :initial-sort="!query ? browseSort : undefined"
+        @sort="sortCollection"
         preserve-result-order
         :hide-progress-bar="!query"
         :hide-thumbs-down-button="true"
