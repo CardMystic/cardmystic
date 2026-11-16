@@ -47,7 +47,9 @@ export default defineEventHandler(async (event) => {
     config.backendApiKey,
     event.context.backendClientIp ?? undefined,
     internalRequest,
-    !!process.env.WEBSITE_INSTANCE_ID,
+    import.meta.preset === 'azure-swa' ||
+      import.meta.preset === 'azure-functions' ||
+      !!process.env.WEBSITE_INSTANCE_ID,
   );
   // Explicit headers prevent client-supplied keys, cookies, Host, and forwarding
   // headers from reaching the backend. Bearer JWTs retain per-user authorization.
