@@ -88,9 +88,10 @@ test.describe('Clipboard', () => {
 
     // Remove the card via the remove button next to it.
     await page
-      .getByRole('button', { name: /remove/i })
-      .or(page.locator('li button[aria-label="Remove"]'))
-      .first()
+      .getByRole('button', {
+        name: 'Remove Lightning Bolt from clipboard',
+        exact: true,
+      })
       .click();
 
     // Popover now shows "Clipboard is empty."

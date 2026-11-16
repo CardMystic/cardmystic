@@ -36,7 +36,7 @@ const items = computed<BreadcrumbItem[]>(() => {
     if (ownedDeck.value && deckId.value && pages.length >= 2) {
       const collection = ownedDeck.value.kind === 'collection';
       pages[0] = {
-        label: collection ? 'My Collections' : 'My Decklists',
+        label: collection ? 'My Collections' : 'My Decks',
         to: collection ? '/lists?view=collections' : '/lists',
       };
       pages[1] = {

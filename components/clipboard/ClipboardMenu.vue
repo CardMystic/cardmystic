@@ -2,7 +2,7 @@
   <div :class="$attrs.class" class="flex items-center">
     <UPopover v-model:open="isOpen">
       <UButton
-        class="cursor-pointer"
+        class="min-h-11 min-w-11 justify-center cursor-pointer"
         icon="i-lucide-clipboard-list"
         color="primary"
         variant="solid"
@@ -10,14 +10,16 @@
         :aria-label="`Clipboard: ${clipboardLabel} ${clipboard.count.value === 1 ? 'card' : 'cards'}`"
       ></UButton>
       <template #content>
-        <div class="p-3 w-72 max-w-xs">
+        <div
+          class="w-72 max-w-[calc(100vw-1rem)] max-h-[var(--reka-popover-content-available-height)] overflow-y-auto p-3"
+        >
           <div class="font-semibold mb-2 flex items-center gap-2">
             <UIcon name="i-lucide-clipboard-list" class="w-5 h-5" />
             Clipboard
           </div>
           <div
             v-if="clipboard.list.value.length === 0"
-            class="text-gray-400 text-sm py-4 text-center"
+            class="text-toned text-sm py-4 text-center"
           >
             Clipboard is empty.
           </div>
@@ -27,12 +29,13 @@
               :key="card.id"
               class="flex items-center justify-between py-1 px-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              <span
-                class="truncate flex-1 cursor-pointer hover:text-primary hover:underline"
-                @click="navigateToCard(card.oracleId ?? card.id)"
+              <NuxtLink
+                :to="`/card/${card.oracleId ?? card.id}`"
+                class="min-w-0 flex-1 truncate rounded hover:text-primary hover:underline focus-visible:outline-primary"
+                @click="isOpen = false"
               >
                 {{ card.name }}
-              </span>
+              </NuxtLink>
               <UButton
                 class="cursor-pointer"
                 icon="i-lucide-x"
@@ -40,7 +43,7 @@
                 color="error"
                 variant="ghost"
                 @click.stop="clipboard.remove(card.id)"
-                aria-label="Remove"
+                :aria-label="`Remove ${card.name} from clipboard`"
               />
             </li>
           </ul>
@@ -127,7 +130,6 @@ defineOptions({
 
 const clipboard = useClipboardStore();
 const toast = useToast();
-const router = useRouter();
 const isOpen = ref(false);
 const isAddToDeckOpen = ref(false);
 
@@ -140,13 +142,6 @@ const clipboardOracleIds = computed(() =>
 const clipboardLabel = computed(() => {
   return clipboard.count.value > 0 ? clipboard.count.value + '' : '0';
 });
-
-function navigateToCard(cardId: string) {
-  isOpen.value = false;
-  nextTick(() => {
-    router.push(`/card/${cardId}`);
-  });
-}
 
 async function copyNames() {
   if (clipboard.list.value.length === 0) return;

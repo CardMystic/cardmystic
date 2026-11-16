@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui';
 import { siteNavigation, utilityNavigation } from '~/utils/site-navigation';
 const route = useRoute();
 const ClipboardMenu = defineAsyncComponent(
@@ -12,31 +11,30 @@ const {
 } = useRuntimeConfig();
 
 const isOpen = ref(false);
-const isMobileProfilePopoverOpen = ref(false);
-const isDesktopProfilePopoverOpen = ref(false);
-const colorMode = useColorMode();
+const profileOpen = ref(false);
 const isMounted = ref(false);
 
-const wizardImage = computed(() => {
-  return colorMode.value === 'dark' ? '/wizard.svg' : '/wizard_black.svg';
-});
-const { userProfile, profileData, profileIconUrl, username, signOut, loading } =
+const { userProfile, profileData, profileIconUrl, signOut, loading } =
   useUserProfile();
-const yourDecksTarget = computed(() =>
-  isMounted.value && userProfile.value ? '/lists' : '/build',
-);
-const yourDecksItems = computed<NavigationMenuItem[]>(() => [
-  {
-    label: 'Your Decks',
-    icon: 'i-lucide-layers',
-    to: yourDecksTarget.value,
-    prefetch: false,
-  },
-]);
+const myDecks = computed(() => ({
+  label: 'My Decks',
+  icon: 'i-lucide-layers',
+  to: isMounted.value && userProfile.value ? '/lists' : '/build',
+}));
 const isAuthor = computed(() => !!profileData.value?.is_author);
 const articlesNavLabel = computed(() =>
   isAuthor.value ? 'Your Articles' : 'Liked Articles',
 );
+const profileLinks = computed(() => [
+  myDecks.value,
+  { label: 'History', icon: 'i-lucide-history', to: '/user/history' },
+  {
+    label: articlesNavLabel.value,
+    icon: 'i-lucide-newspaper',
+    to: '/articles/mine',
+  },
+  { label: 'Account', icon: 'i-lucide-user-cog', to: '/user/account' },
+]);
 const router = useRouter();
 
 const handleLogout = async () => {
@@ -54,6 +52,7 @@ const props = defineProps<{
 
 function closePopover() {
   isOpen.value = false;
+  profileOpen.value = false;
 }
 
 const { data: collections, status: collectionStatus } =
@@ -77,409 +76,155 @@ watch(() => route.fullPath, closePopover);
   <header
     :class="[
       props.isFixed ? 'fixed' : 'sticky',
-      'left-0 right-0 top-0 z-50 px-4 py-4 flex items-center justify-center bg-white dark:bg-gray-950/75 backdrop-blur border-b border-gray-200 dark:border-gray-800',
+      'inset-x-0 top-0 z-50 border-b border-default bg-default dark:bg-gray-950/90 backdrop-blur',
     ]"
   >
-    <!-- Mobile -->
-    <div class="min-[1600px]:hidden flex flex-row justify-between w-full">
-      <!-- Mobile Menu Button -->
-      <UPopover v-model:open="isOpen" @close="closePopover">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-10 rounded-md bg-default p-2 text-highlighted"
+      >Skip to main content</a
+    >
+    <div
+      class="mx-auto flex w-full items-center gap-1 px-2 py-2 sm:gap-2 sm:px-4 min-[1600px]:justify-center min-[1600px]:py-4"
+    >
+      <UPopover
+        v-model:open="isOpen"
+        :content="{ align: 'start', sideOffset: 6 }"
+      >
         <UButton
+          class="size-11 justify-center min-[1600px]:hidden"
           color="neutral"
           variant="subtle"
           icon="i-lucide-menu"
           aria-label="Open navigation menu"
         />
-
         <template #content>
           <div
-            class="p-2 w-80 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-2 max-h-[500px] overflow-y-auto"
+            class="w-80 max-w-[calc(100vw-1rem)] max-h-[min(32rem,var(--reka-popover-content-available-height))] overflow-y-auto overscroll-contain rounded bg-default p-2 shadow"
           >
-            <NuxtLink
-              :to="yourDecksTarget"
-              no-prefetch
-              class="flex items-center gap-2"
-              @click="closePopover"
-            >
-              <UIcon name="i-lucide-layers" class="w-5 h-5" />
-              <span>Your Decks</span>
-            </NuxtLink>
             <SiteNavigation :items="mainItemsMobile" orientation="vertical" />
           </div>
         </template>
       </UPopover>
 
-      <!-- Logo -->
-      <div class="flex flex-row items-center">
-        <!-- Clipboard Button -->
-        <ClipboardMenu class="cursor-pointer" />
-
-        <ClientOnly>
-          <span
-            v-if="!userProfile && !loading"
-            class="relative flex items-center"
-          >
-            <!-- Login/Register Button -->
-            <UButton
-              class="cursor-pointer ml-2"
-              color="primary"
-              variant="solid"
-              icon="i-lucide-user"
-              label="Login"
-              @click="
-                () => {
-                  router.push('/user/login');
-                }
-              "
-            />
-          </span>
-          <div
-            v-else-if="loading"
-            class="w-10 h-10 flex items-center justify-center ml-4"
-          >
-            <UIcon
-              name="i-heroicons-arrow-path"
-              class="w-12 h-12 animate-spin text-primary"
-            />
-          </div>
-          <UPopover
-            v-else
-            v-model:open="isMobileProfilePopoverOpen"
-            class="ml-4"
-          >
-            <div class="cursor-pointer">
-              <div
-                v-if="profileIconUrl"
-                class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform"
-              >
-                <img
-                  :src="profileIconUrl"
-                  :alt="username || 'Profile'"
-                  class="w-full h-full object-cover"
-                />
-              </div>
-              <UButton
-                v-else
-                color="primary"
-                variant="solid"
-                icon="i-lucide-user"
-                label="Profile"
-              />
-            </div>
-            <template #content>
-              <div
-                class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1"
-              >
-                <UButton
-                  class="cursor-pointer justify-start text-left"
-                  icon="i-lucide-layers"
-                  color="neutral"
-                  variant="ghost"
-                  label="Your Decks"
-                  block
-                  @click="
-                    router.push('/lists');
-                    isMobileProfilePopoverOpen = false;
-                  "
-                />
-                <UButton
-                  class="cursor-pointer justify-start text-left"
-                  icon="i-lucide-history"
-                  color="neutral"
-                  variant="ghost"
-                  label="History"
-                  block
-                  @click="
-                    router.push('/user/history');
-                    isMobileProfilePopoverOpen = false;
-                  "
-                />
-                <UButton
-                  class="cursor-pointer justify-start text-left"
-                  icon="i-lucide-newspaper"
-                  color="neutral"
-                  variant="ghost"
-                  :label="articlesNavLabel"
-                  block
-                  @click="
-                    router.push('/articles/mine');
-                    isMobileProfilePopoverOpen = false;
-                  "
-                />
-                <UButton
-                  class="cursor-pointer justify-start text-left"
-                  icon="i-lucide-user-cog"
-                  color="neutral"
-                  variant="ghost"
-                  label="Account"
-                  block
-                  @click="
-                    router.push('/user/account');
-                    isMobileProfilePopoverOpen = false;
-                  "
-                />
-                <div
-                  class="border-t border-gray-200 dark:border-gray-700 my-1"
-                ></div>
-                <UButton
-                  class="cursor-pointer justify-start text-left"
-                  icon="i-lucide-log-out"
-                  color="error"
-                  variant="ghost"
-                  label="Logout"
-                  block
-                  @click="
-                    handleLogout();
-                    isMobileProfilePopoverOpen = false;
-                  "
-                />
-              </div>
-            </template>
-          </UPopover>
-          <template #fallback>
-            <UButton
-              class="cursor-pointer ml-2"
-              color="primary"
-              variant="solid"
-              icon="i-lucide-user"
-              label="Login"
-              @click="
-                () => {
-                  router.push('/user/login');
-                }
-              "
-            />
-          </template>
-        </ClientOnly>
-
-        <NuxtLink
-          to="/"
-          class="flex items-center gap-3 hover:opacity-80 transition-opacity ml-4"
-        >
-          <ClientOnly>
-            <img
-              :src="wizardImage"
-              alt="CardMystic Logo"
-              class="w-10 h-10 object-contain"
-            />
-            <template #fallback>
-              <img
-                src="/wizard.svg"
-                alt="CardMystic Logo"
-                class="w-10 h-10 object-contain"
-              />
-            </template>
-          </ClientOnly>
-          <img
-            src="/cardmystic-white.svg"
-            alt=""
-            width="2082"
-            height="307"
-            class="hidden sm:block w-36 h-auto invert dark:invert-0"
-          />
-        </NuxtLink>
-      </div>
-    </div>
-
-    <!-- Desktop -->
-    <div class="flex-row hidden min-[1600px]:flex items-center">
-      <!-- Logo -->
       <NuxtLink
         to="/"
-        class="flex shrink-0 items-center gap-3 hover:opacity-80 transition-opacity mr-6"
+        aria-label="CardMystic Logo"
+        class="mr-auto flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-primary min-[1600px]:mr-3"
       >
-        <ClientOnly>
-          <img
-            :src="wizardImage"
-            alt="CardMystic Logo"
-            class="w-12 h-12 object-contain"
-          />
-          <template #fallback>
-            <img
-              src="/wizard.svg"
-              alt="CardMystic Logo"
-              class="w-12 h-12 object-contain"
-            />
-          </template>
-        </ClientOnly>
+        <img
+          src="/wizard_black.svg"
+          alt=""
+          class="size-9 object-contain dark:hidden min-[1600px]:size-12"
+        />
+        <img
+          src="/wizard.svg"
+          alt=""
+          class="hidden size-9 object-contain dark:block min-[1600px]:size-12"
+        />
         <img
           src="/cardmystic-white.svg"
           alt=""
           width="2082"
           height="307"
-          class="w-44 h-auto invert dark:invert-0"
+          class="hidden h-auto w-36 invert sm:block dark:invert-0 min-[1600px]:w-44"
         />
       </NuxtLink>
 
-      <!-- Desktop Navigation -->
-      <SiteNavigation :items="desktopItems" />
-      <div
-        class="w-px h-6 self-center bg-gray-300 dark:bg-gray-700 mx-2"
-        aria-hidden="true"
-      />
+      <div class="hidden items-center min-[1600px]:flex">
+        <SiteNavigation :items="desktopItems" />
+        <div class="mx-2 h-6 w-px bg-accented" aria-hidden="true" />
+        <UButton
+          to="/install"
+          icon="i-lucide-download"
+          aria-label="Install CardMystic"
+          variant="ghost"
+          color="neutral"
+          class="size-11 justify-center"
+        />
+      </div>
       <UButton
-        to="/install"
-        icon="i-lucide-download"
-        aria-label="Install CardMystic"
+        v-bind="myDecks"
+        :prefetch="false"
         variant="ghost"
         color="neutral"
-        class="text-muted"
+        class="min-h-11 shrink-0 whitespace-nowrap"
       />
-      <UNavigationMenu :items="yourDecksItems" />
-      <ClipboardMenu class="ml-2 h-12.5" />
-
-      <ClientOnly>
-        <span v-if="!userProfile && !loading" class="relative">
-          <!-- Login/Register Button -->
-          <UButton
-            class="cursor-pointer ml-2"
-            color="primary"
-            variant="solid"
-            icon="i-lucide-user"
-            label="Login"
-            @click="
-              () => {
-                router.push('/user/login');
-              }
-            "
-          />
-        </span>
-
-        <div
-          v-else-if="loading"
-          class="w-10 h-10 flex items-center justify-center ml-2"
+      <ClipboardMenu />
+      <UButton
+        v-if="!isMounted || (!userProfile && !loading)"
+        to="/user/login"
+        icon="i-lucide-user"
+        aria-label="Login"
+        class="min-h-11 min-w-11 justify-center"
+      >
+        <span class="hidden min-[360px]:inline">Login</span>
+      </UButton>
+      <span
+        v-else-if="loading"
+        role="status"
+        class="flex size-11 shrink-0 items-center justify-center"
+      >
+        <UIcon
+          name="i-heroicons-arrow-path"
+          class="size-6 animate-spin text-primary"
+        />
+        <span class="sr-only">Loading profile</span>
+      </span>
+      <UPopover v-else v-model:open="profileOpen" :content="{ align: 'end' }">
+        <UButton
+          aria-label="Profile"
+          color="neutral"
+          variant="ghost"
+          class="size-11 justify-center rounded-full p-0"
+          :icon="profileIconUrl ? undefined : 'i-lucide-user'"
         >
-          <UIcon
-            name="i-heroicons-arrow-path"
-            class="w-12 h-12 animate-spin text-primary"
+          <img
+            v-if="profileIconUrl"
+            :src="profileIconUrl"
+            alt=""
+            class="size-10 rounded-full border-2 border-primary object-cover"
           />
-        </div>
-
-        <UPopover
-          v-else
-          v-model:open="isDesktopProfilePopoverOpen"
-          class="ml-2"
-        >
-          <div class="cursor-pointer">
-            <div
-              v-if="profileIconUrl"
-              class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-md hover:scale-105 transition-transform"
-            >
-              <img
-                :src="profileIconUrl"
-                :alt="username || 'Profile'"
-                class="w-full h-full object-cover"
-              />
-            </div>
+        </UButton>
+        <template #content>
+          <div
+            class="flex max-h-[var(--reka-popover-content-available-height)] flex-col gap-1 overflow-y-auto rounded bg-default p-2"
+          >
             <UButton
-              v-else
-              color="primary"
-              variant="solid"
-              icon="i-lucide-user"
-              label="Profile"
+              v-for="link in profileLinks"
+              :key="link.to"
+              v-bind="link"
+              :prefetch="false"
+              color="neutral"
+              variant="ghost"
+              class="min-h-11 justify-start"
+              @click="closePopover"
+            />
+            <USeparator />
+            <UButton
+              label="Logout"
+              icon="i-lucide-log-out"
+              color="error"
+              variant="ghost"
+              class="min-h-11 justify-start"
+              @click="
+                closePopover();
+                handleLogout();
+              "
             />
           </div>
-          <template #content>
-            <div
-              class="p-2 bg-white dark:bg-gray-900 rounded shadow flex flex-col gap-1"
-            >
-              <UButton
-                class="cursor-pointer justify-start text-left"
-                icon="i-lucide-layers"
-                color="neutral"
-                variant="ghost"
-                label="Your Decks"
-                block
-                @click="
-                  router.push('/lists');
-                  isDesktopProfilePopoverOpen = false;
-                "
-              />
-              <UButton
-                class="cursor-pointer justify-start text-left"
-                icon="i-lucide-history"
-                color="neutral"
-                variant="ghost"
-                label="History"
-                block
-                @click="
-                  router.push('/user/history');
-                  isDesktopProfilePopoverOpen = false;
-                "
-              />
-              <UButton
-                class="cursor-pointer justify-start text-left"
-                icon="i-lucide-newspaper"
-                color="neutral"
-                variant="ghost"
-                :label="articlesNavLabel"
-                block
-                @click="
-                  router.push('/articles/mine');
-                  isDesktopProfilePopoverOpen = false;
-                "
-              />
-              <UButton
-                class="cursor-pointer justify-start text-left"
-                icon="i-lucide-user-cog"
-                color="neutral"
-                variant="ghost"
-                label="Account"
-                block
-                @click="
-                  router.push('/user/account');
-                  isDesktopProfilePopoverOpen = false;
-                "
-              />
-              <div
-                class="border-t border-gray-200 dark:border-gray-700 my-1"
-              ></div>
-              <UButton
-                class="cursor-pointer justify-start text-left"
-                icon="i-lucide-log-out"
-                color="error"
-                variant="ghost"
-                label="Logout"
-                block
-                @click="
-                  handleLogout();
-                  isDesktopProfilePopoverOpen = false;
-                "
-              />
-            </div>
-          </template>
-        </UPopover>
-        <template #fallback>
-          <UButton
-            class="cursor-pointer ml-2"
-            color="primary"
-            variant="solid"
-            icon="i-lucide-user"
-            label="Login"
-            @click="
-              () => {
-                router.push('/user/login');
-              }
-            "
-          />
         </template>
-      </ClientOnly>
+      </UPopover>
     </div>
-  </header>
-
-  <ClientOnly>
     <div
       v-if="maintenanceMode === 'enabled'"
-      class="fixed left-0 right-0 z-40 bg-yellow-500 text-black py-1 px-4 text-sm font-medium"
-      style="top: 83px"
+      class="flex items-center justify-center gap-2 bg-yellow-500 px-4 py-1 text-sm font-medium text-black"
     >
-      <div class="flex items-center justify-center gap-1.5">
-        <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 shrink-0" />
-        <span
-          >CardMystic is currently under maintenance and may not work properly.
-          We apologize for the inconvenience.</span
-        >
-      </div>
+      <UIcon name="i-lucide-alert-triangle" class="size-4 shrink-0" />
+      <span
+        >CardMystic is currently under maintenance and may not work properly. We
+        apologize for the inconvenience.</span
+      >
     </div>
-  </ClientOnly>
+  </header>
 </template>

@@ -2,6 +2,8 @@
   <div class="layout-container">
     <navbar />
     <main
+      id="main-content"
+      tabindex="-1"
       class="main-content"
       :class="{ 'overflow-x-clip': route.meta.breadcrumbsInPage }"
     >

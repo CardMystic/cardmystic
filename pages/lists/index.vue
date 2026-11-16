@@ -16,7 +16,7 @@ import {
 } from '~/utils/deckLibrary';
 definePageMeta({ middleware: 'auth' });
 useSeoMeta({
-  title: 'My decks and collections | CardMystic',
+  title: 'My Decks and Collections | CardMystic',
   robots: 'noindex, nofollow',
 });
 const { hasDrafts: hasBrowserDrafts } = useGuestDeck();
