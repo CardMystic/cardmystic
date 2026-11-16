@@ -1,7 +1,7 @@
 <template>
   <div class="layout-container">
     <navbar :is-fixed="true" />
-    <main class="main-content">
+    <main id="main-content" tabindex="-1" class="main-content">
       <slot />
     </main>
     <Footer />

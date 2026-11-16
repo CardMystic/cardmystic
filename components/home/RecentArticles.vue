@@ -1,13 +1,13 @@
 <template>
   <div v-if="isLoading || error || articles.length > 0">
     <h2 class="section-title mb-0">Recent Articles</h2>
-    <p class="text-sm opacity-70 mb-4 text-center">
+    <p class="text-sm text-toned mb-4 text-center">
       Want to become a writer? Contact us on
       <a
         href="https://discord.gg/Qhcg87q88r"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-primary hover:underline"
+        class="text-primary underline"
         >Discord</a
       >
       or by
@@ -15,7 +15,7 @@
         href="mailto:thecardmystic@gmail.com"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-primary hover:underline"
+        class="text-primary underline"
         >Email</a
       >
       to get started!

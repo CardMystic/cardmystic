@@ -81,7 +81,9 @@ const resendVerification = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
+  <div
+    class="flex flex-col space-y-4 rounded-xl bg-elevated text-default p-6 shadow-xl"
+  >
     <!-- Honeypot field - hidden from users but visible to bots -->
     <input
       v-model="honeypot"
@@ -93,7 +95,7 @@ const resendVerification = async () => {
       style="position: absolute; left: -9999px; width: 1px; height: 1px"
     />
 
-    <h1 class="text-xl font-bold text-white text-center">
+    <h1 class="text-xl font-bold text-highlighted text-center">
       Sign in to CardMystic
     </h1>
 
@@ -109,13 +111,15 @@ const resendVerification = async () => {
       </template>
     </UButton>
 
-    <div class="text-center text-zinc-400 text-sm">or</div>
+    <div class="text-center text-toned text-sm">or</div>
 
     <UInput
       class="w-full"
       v-model="email"
       type="email"
       placeholder="Email"
+      aria-label="Email"
+      autocomplete="email"
       size="lg"
     />
 
@@ -124,6 +128,8 @@ const resendVerification = async () => {
       v-model="password"
       :type="showPassword ? 'text' : 'password'"
       placeholder="Password"
+      aria-label="Password"
+      autocomplete="current-password"
       size="lg"
     >
       <template #trailing>
@@ -131,6 +137,7 @@ const resendVerification = async () => {
           variant="link"
           color="neutral"
           :padded="false"
+          :aria-label="showPassword ? 'Hide password' : 'Show password'"
           :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
           @click="
             () => {
@@ -144,14 +151,10 @@ const resendVerification = async () => {
     <div class="flex justify-end -mt-2">
       <UButton
         variant="link"
-        color="neutral"
+        color="primary"
         size="xs"
         :padded="false"
-        @click="
-          () => {
-            router.push('/user/reset-password');
-          }
-        "
+        to="/user/reset-password"
       >
         Forgot password?
       </UButton>
@@ -168,13 +171,13 @@ const resendVerification = async () => {
       {{ loading ? 'Signing in…' : 'Sign in' }}
     </UButton>
 
-    <p v-if="errorMessage" class="text-red-400 text-sm text-center">
+    <p v-if="errorMessage" role="alert" class="text-error text-sm text-center">
       {{ errorMessage }}
     </p>
 
     <p
       v-if="showResendVerification"
-      class="text-zinc-400 text-xs text-center -mt-2"
+      class="text-toned text-xs text-center -mt-2"
     >
       <UButton
         variant="link"
@@ -189,32 +192,26 @@ const resendVerification = async () => {
       </UButton>
     </p>
 
-    <p v-if="resendMessage" class="text-zinc-400 text-xs text-center -mt-2">
+    <p v-if="resendMessage" class="text-toned text-xs text-center -mt-2">
       {{ resendMessage }}
     </p>
 
-    <div class="text-center text-zinc-400 text-sm">
+    <div class="text-center text-toned text-sm">
       Don't have an account?
       <UButton
         variant="link"
         color="primary"
         size="sm"
         :padded="false"
-        @click="
-          () => {
-            router.push('/user/register');
-          }
-        "
+        to="/user/register"
       >
         Register Instead
       </UButton>
     </div>
 
-    <p class="text-xs text-gray-400 text-center">
+    <p class="text-xs text-toned text-center">
       Experiencing issues? Contact us at
-      <a
-        href="mailto:thecardmystic@gmail.com"
-        class="text-purple-400 hover:text-purple-300 underline"
+      <a href="mailto:thecardmystic@gmail.com" class="text-primary underline"
         >thecardmystic@gmail.com</a
       >
     </p>

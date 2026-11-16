@@ -3,8 +3,6 @@ import type { SignUpRequest } from '@/models/userModel';
 import { useCardNames } from '~/composables/useBulkData';
 import { refDebounced } from '~/utils/refDebounced';
 
-const router = useRouter();
-
 const {
   signupWithEmail,
   signupWithGoogle,
@@ -154,7 +152,9 @@ const resendVerification = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col space-y-4 rounded-xl bg-zinc-900 p-6 shadow-xl">
+  <div
+    class="flex flex-col space-y-4 rounded-xl bg-elevated text-default p-6 shadow-xl"
+  >
     <!-- Honeypot field - hidden from users but visible to bots -->
     <input
       v-model="honeypot"
@@ -166,7 +166,7 @@ const resendVerification = async () => {
       style="position: absolute; left: -9999px; width: 1px; height: 1px"
     />
 
-    <h1 class="text-xl font-bold text-white text-center">
+    <h1 class="text-xl font-bold text-highlighted text-center">
       Create your CardMystic account
     </h1>
 
@@ -182,13 +182,15 @@ const resendVerification = async () => {
       </template>
     </UButton>
 
-    <div class="text-center text-zinc-400 text-sm">or</div>
+    <div class="text-center text-toned text-sm">or</div>
 
     <UInput
       class="w-full"
       v-model="username"
       type="text"
       placeholder="Username"
+      aria-label="Username"
+      autocomplete="username"
       size="lg"
     />
 
@@ -197,6 +199,8 @@ const resendVerification = async () => {
       v-model="email"
       type="email"
       placeholder="Email"
+      aria-label="Email"
+      autocomplete="email"
       size="lg"
     />
 
@@ -206,6 +210,7 @@ const resendVerification = async () => {
       :items="filteredAvatarCards"
       :loading="cardsStatus === 'pending'"
       placeholder="Optional: choose a profile icon card"
+      aria-label="Optional: choose a profile icon card"
       icon="i-lucide-image"
       class="w-full"
       size="lg"
@@ -215,7 +220,7 @@ const resendVerification = async () => {
       :card-name="selectedProfileCard"
       :busy="loading"
     />
-    <p class="text-xs text-zinc-400 -mt-2">
+    <p class="text-xs text-toned -mt-2">
       Optional: pick an MTG card art as your profile icon.
     </p>
 
@@ -224,6 +229,8 @@ const resendVerification = async () => {
       v-model="password"
       :type="showPasswords ? 'text' : 'password'"
       placeholder="Password"
+      aria-label="Password"
+      autocomplete="new-password"
       size="lg"
     >
       <template #trailing>
@@ -231,6 +238,7 @@ const resendVerification = async () => {
           variant="link"
           color="neutral"
           :padded="false"
+          :aria-label="showPasswords ? 'Hide passwords' : 'Show passwords'"
           :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
           @click="
             () => {
@@ -246,6 +254,8 @@ const resendVerification = async () => {
       v-model="confirmPassword"
       :type="showPasswords ? 'text' : 'password'"
       placeholder="Confirm Password"
+      aria-label="Confirm Password"
+      autocomplete="new-password"
       size="lg"
     >
       <template #trailing>
@@ -253,6 +263,7 @@ const resendVerification = async () => {
           variant="link"
           color="neutral"
           :padded="false"
+          :aria-label="showPasswords ? 'Hide passwords' : 'Show passwords'"
           :icon="showPasswords ? 'i-lucide-eye-off' : 'i-lucide-eye'"
           @click="
             () => {
@@ -274,17 +285,17 @@ const resendVerification = async () => {
       {{ loading ? 'Creating account…' : 'Create account' }}
     </UButton>
 
-    <div v-if="errorMessage" class="text-center space-y-1">
-      <p class="text-red-400 text-sm">
+    <div v-if="errorMessage" role="alert" class="text-center space-y-1">
+      <p class="text-error text-sm">
         {{ errorMessage }}
       </p>
     </div>
 
-    <div v-if="successMessage" class="text-center space-y-1">
-      <p class="text-green-400 text-sm">
+    <div v-if="successMessage" role="status" class="text-center space-y-1">
+      <p class="text-success text-sm">
         {{ successMessage }}
       </p>
-      <p v-if="signedUpEmail" class="text-zinc-400 text-xs">
+      <p v-if="signedUpEmail" class="text-toned text-xs">
         Didn't get the email?
         <UButton
           variant="link"
@@ -298,33 +309,27 @@ const resendVerification = async () => {
           Resend verification email
         </UButton>
       </p>
-      <p v-if="resendMessage" class="text-zinc-400 text-xs">
+      <p v-if="resendMessage" class="text-toned text-xs">
         {{ resendMessage }}
       </p>
     </div>
 
-    <div class="text-center text-zinc-400 text-sm">
+    <div class="text-center text-toned text-sm">
       Already have an account?
       <UButton
         variant="link"
         color="primary"
         size="sm"
         :padded="false"
-        @click="
-          () => {
-            router.push('/user/login');
-          }
-        "
+        to="/user/login"
       >
         Login Instead
       </UButton>
     </div>
 
-    <p class="text-xs text-gray-400 text-center">
+    <p class="text-xs text-toned text-center">
       Experiencing issues? Contact us at
-      <a
-        href="mailto:thecardmystic@gmail.com"
-        class="text-purple-400 hover:text-purple-300 underline"
+      <a href="mailto:thecardmystic@gmail.com" class="text-primary underline"
         >thecardmystic@gmail.com</a
       >
     </p>

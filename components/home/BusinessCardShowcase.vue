@@ -71,7 +71,7 @@ const { columns, details } = useBusinessCardColumns();
         />
         <div ref="details" class="min-w-0">
           <div class="flex flex-wrap items-center gap-2 text-sm text-[#d5c5f5]">
-            <span class="flex text-2xl" aria-label="Blue and red"
+            <span class="flex text-2xl" role="img" aria-label="Blue and red"
               ><ManaColorIcon type="U" /><ManaColorIcon type="R"
             /></span>
             <span>{{ example.format }} · {{ example.count }} cards</span>
@@ -82,6 +82,7 @@ const { columns, details } = useBusinessCardColumns();
               size="sm"
               icon="i-lucide-notebook-text"
               label="Primer"
+              class="text-blue-300"
             />
             <DeckBracketBadge :bracket="example.bracket" full-label />
           </div>

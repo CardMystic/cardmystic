@@ -133,7 +133,7 @@
 }
 
 :root {
-  --ui-primary: #8f6edf;
+  --ui-primary: #6841b5;
   --ui-secondary: #383d7a;
   --pro-accent: #946111;
   --pro-bg: #fffaf0;
@@ -142,8 +142,13 @@
   --pro-button-text: #2b210d;
 }
 
+:root:not(.dark) {
+  --ui-success: var(--color-green-800);
+  --ui-error: var(--color-red-700);
+}
+
 .dark {
-  --ui-primary: #8f6edf;
+  --ui-primary: #b49ae9;
   --ui-secondary: #383d7a;
   --pro-accent: #f2cc72;
   --pro-bg: #292418;
@@ -158,16 +163,8 @@ body {
   padding: 0;
 }
 
-@media (prefers-color-scheme: light) {
-  body {
-    color: rgba(0, 0, 0, 0.9);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  body {
-    color: rgba(255, 255, 255, 0.9);
-  }
+body {
+  color: var(--ui-text);
 }
 
 #__nuxt {

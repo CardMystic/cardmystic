@@ -14,7 +14,7 @@
         :href="item.link"
         target="_blank"
         class="flex flex-col items-center justify-center p-8 rounded-lg border border-gray-700 transition-all hover:scale-105 cursor-pointer min-h-[200px]"
-        :style="{ backgroundColor: item.bgColor }"
+        :style="{ backgroundColor: item.bgColor, color: item.color }"
       >
         <UIcon :name="item.icon" class="text-6xl mb-4" />
         <h3 class="text-2xl font-bold text-center">{{ item.title }}</h3>
@@ -28,6 +28,7 @@ interface CommunityItem {
   title: string;
   icon: string;
   bgColor: string;
+  color: string;
   link: string;
 }
 
@@ -36,12 +37,14 @@ const communityItems: CommunityItem[] = [
     title: 'Support Us On Patreon!',
     icon: 'i-lucide-heart',
     bgColor: '#FF424D',
+    color: '#18181b',
     link: 'https://patreon.com/thecardmystic',
   },
   {
     title: 'Chat With Us On Discord!',
     icon: 'i-lucide-message-circle',
     bgColor: '#5865F2',
+    color: '#fff',
     link: 'https://discord.gg/Qhcg87q88r',
   },
 ];

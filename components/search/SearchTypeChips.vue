@@ -141,7 +141,7 @@ function selectLink(event: MouseEvent, value: string) {
 
 .search-tab-button-new.active {
   background: #a37aff;
-  color: #fff;
+  color: #211730;
   border-color: #a37aff;
   box-shadow:
     0 6px 24px 0 rgba(147, 114, 255, 0.22),

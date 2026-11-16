@@ -58,13 +58,13 @@
         <span class="text-xs md:text-sm font-medium truncate">
           {{ article.username || 'Anonymous' }}
         </span>
-        <span class="text-xs opacity-60 ml-auto shrink-0">
+        <span class="text-xs text-toned ml-auto shrink-0">
           {{ formatShortDate(article.published_at ?? article.created_at) }}
         </span>
       </div>
 
       <!-- Social counts -->
-      <div class="flex items-center gap-3 mt-2 text-xs opacity-70">
+      <div class="flex items-center gap-3 mt-2 text-xs text-toned">
         <span class="flex items-center gap-1">
           <UIcon name="i-lucide-heart" class="w-3.5 h-3.5" />
           {{ article.like_count }}

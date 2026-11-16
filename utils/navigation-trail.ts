@@ -250,7 +250,7 @@ export function pageBreadcrumbs(path: string): PageBreadcrumb[] {
     '/privacyPolicy': 'Privacy Policy',
     '/terms': 'Terms of Service',
     '/billing-policy': 'Billing & Refunds',
-    '/lists': 'Your Decks',
+    '/lists': 'My Decks',
     '/articles/mine': 'Your Articles',
     '/explore/articles': 'Articles',
     '/explore/decklists': 'Decklists',

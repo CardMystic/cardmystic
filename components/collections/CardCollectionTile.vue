@@ -42,7 +42,6 @@ const releaseDate = computed(() =>
   <NuxtLink
     data-testid="collection-tile"
     :to="collectionPath(kind, entry.slug)"
-    :aria-label="`${entry.name} ${entry.cardCount} cards`"
     no-prefetch
     class="flex h-full flex-col rounded-lg border border-default bg-default hover:bg-elevated focus-visible:outline-primary"
   >
