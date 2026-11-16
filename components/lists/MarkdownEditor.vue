@@ -1606,7 +1606,8 @@ function insertMagicSymbol(token: string) {
   flex-shrink: 0;
   text-align: center;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 5% / 3.6%;
+  overflow: hidden;
 }
 .primer-preview :deep(.card-inline-embed) {
   display: inline-flex;
@@ -1630,11 +1631,10 @@ function insertMagicSymbol(token: string) {
   margin: 0.5rem 0;
 }
 .primer-preview :deep(.card-inline-img) {
-  display: inline-block;
+  display: block;
   width: 100%;
   max-width: 100%;
-  border-radius: 10px;
-  vertical-align: middle;
+  border-radius: inherit;
   margin: 0;
 }
 .primer-preview :deep(.card-inline-placeholder) {
