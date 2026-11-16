@@ -80,7 +80,7 @@ export function useGuestDeck() {
   }
 
   async function withDraftLock<T>(action: () => T | Promise<T>): Promise<T> {
-    const run = () => {
+    const run = async () => {
       if (!ready.value)
         throw new Error('Your draft is still loading. Please try again.');
       // Read under the same lock as the write, even if the storage event is still queued.
