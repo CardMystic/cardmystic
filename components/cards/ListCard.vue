@@ -520,7 +520,7 @@ function handleImageError(event: Event) {
 
 .placeholder-text {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 16px;
+  font-size: 1rem;
   margin-top: 8px;
   text-align: center;
 }

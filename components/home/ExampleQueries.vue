@@ -135,11 +135,11 @@ function tryQuery() {
   flex-shrink: 0
 
 .query-value
-  font-size: 16px
+  font-size: 1rem
   font-weight: bold
   font-style: italic
   @media (max-width: 768px)
-    font-size: 12px
+    font-size: 0.75rem
 
 .card-scroll-track
   display: flex

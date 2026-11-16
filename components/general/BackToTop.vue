@@ -60,7 +60,7 @@ onUnmounted(() => {
   align-items: center
   justify-content: center
   font-weight: 500
-  font-size: 14px
+  font-size: 0.875rem
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15)
   border: 1px solid rgba(0, 0, 0, 0.1)
   opacity: 0.9

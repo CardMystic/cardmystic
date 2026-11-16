@@ -421,7 +421,7 @@ function meterColor(percent: number) {
 
 .label
   fill: var(--ui-text-toned)
-  font-size: 16px
+  font-size: 1rem
   font-weight: 600
 
 .summary-text

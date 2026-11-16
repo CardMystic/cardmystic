@@ -160,7 +160,7 @@
             <!-- Grouped Cards (Accordion) -->
             <div
               v-if="labeledGroups.length > 0"
-              class="flex justify-center sm:justify-end gap-1 mb-1"
+              class="flex flex-wrap justify-center sm:justify-end gap-1 mb-1"
             >
               <UButton
                 class="cursor-pointer"
@@ -1014,7 +1014,7 @@ defineExpose({ expandBoard });
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
