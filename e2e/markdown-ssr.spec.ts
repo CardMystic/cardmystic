@@ -718,9 +718,12 @@ for (const [kind, path] of [
           '/card/' + ORACLE_ID,
         );
         await expect(links.nth(2)).toHaveAttribute('href', '/card/' + BOLT_ID);
-        await expect(body.locator('a.card-inline-img-link')).toHaveAttribute(
-          'href',
-          '/card/' + BOLT_ID,
+        const cardImageLink = body.locator('a.card-inline-img-link');
+        await expect(cardImageLink).toHaveAttribute('href', '/card/' + BOLT_ID);
+        await expect(cardImageLink).toHaveCSS('overflow', 'hidden');
+        await expect(cardImageLink).toHaveCSS(
+          'border-top-left-radius',
+          '5% 3.6%',
         );
         await expect(
           body.locator('.card-unknown').filter({ hasText: 'Unknown Card' }),
