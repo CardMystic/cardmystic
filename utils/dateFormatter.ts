@@ -51,7 +51,13 @@ export function formatRelativeTimeShort(dateString: string): string {
  * e.g., "Jan 28, 2026"
  */
 export function formatShortDate(dateString: string): string {
-  const date = new Date(dateString);
+  // Database timestamps without an offset represent UTC on these public views.
+  const date = new Date(
+    dateString.replace(
+      /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2}(?:\.\d+)?)$/,
+      '$1T$2Z',
+    ),
+  );
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',

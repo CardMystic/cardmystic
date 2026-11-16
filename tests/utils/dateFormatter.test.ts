@@ -78,6 +78,10 @@ describe('formatRelativeTimeShort', () => {
 // formatShortDate
 // ---------------------------------------------------------------------------
 describe('formatShortDate', () => {
+  it('keeps database dates near midnight consistent with the UTC server', () => {
+    expect(formatShortDate('2026-10-07T23:10:22.293')).toBe('Oct 7, 2026');
+    expect(formatShortDate('2026-10-07T23:10:22-04:00')).toBe('Oct 8, 2026');
+  });
   it('formats as Mon D, YYYY', () => {
     expect(formatShortDate('2026-01-28T00:00:00Z')).toBe('Jan 28, 2026');
   });
