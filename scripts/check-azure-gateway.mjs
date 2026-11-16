@@ -52,7 +52,8 @@ await once(upstream, 'listening');
 process.env.NUXT_BACKEND_URL = `http://127.0.0.1:${upstream.address().port}`;
 process.env.NUXT_BACKEND_API_KEY = apiKey;
 process.env.NUXT_FRONTEND_URL = 'http://localhost';
-process.env.WEBSITE_INSTANCE_ID = 'azure-gateway-regression';
+// Managed Static Web Apps can omit the App Service instance variable.
+delete process.env.WEBSITE_INSTANCE_ID;
 
 try {
   const { handle } = await import('../.output/server/functions/index.mjs');
