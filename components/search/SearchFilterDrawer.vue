@@ -3,9 +3,10 @@
     <USlideover
       v-model:open="open"
       title="Search filters"
+      :content="{ onCloseAutoFocus: restoreTriggerFocus }"
       description="Choose filters, then search to update results. Closing keeps your choices."
       :ui="{
-        content: 'w-full max-w-md h-dvh',
+        content: 'w-full max-w-none sm:max-w-md h-dvh',
         header: 'shrink-0',
         body: 'min-h-0 overflow-y-auto overscroll-contain',
         footer:
@@ -16,6 +17,7 @@
         type="button"
         color="primary"
         variant="outline"
+        @click="filterTrigger = $event.currentTarget as HTMLElement"
         icon="i-lucide-sliders-horizontal"
         class="min-h-11 cursor-pointer"
         :aria-label="
@@ -42,7 +44,10 @@
             label="Is A Commander"
             :model-value="!!filters?.isCommander"
             @update:model-value="
-              filters = { ...filters, isCommander: $event === true || undefined }
+              filters = {
+                ...filters,
+                isCommander: $event === true || undefined,
+              }
             "
           />
           <QuickFilters v-model="filters" :show="quickFilters" />
@@ -109,6 +114,12 @@ const props = withDefaults(
 const filters = defineModel<CardSearchFilters>();
 const emit = defineEmits<{ apply: [] }>();
 const open = ref(false);
+const filterTrigger = shallowRef<HTMLElement>();
+function restoreTriggerFocus() {
+  requestAnimationFrame(() =>
+    filterTrigger.value?.focus({ preventScroll: true }),
+  );
+}
 const appliedFilters = ref(JSON.stringify(filters.value));
 const pendingChanges = computed(
   () => JSON.stringify(filters.value) !== appliedFilters.value,
