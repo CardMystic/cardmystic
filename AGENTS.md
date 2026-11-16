@@ -1,3 +1,7 @@
+# Branches and commits
+
+Name every feature branch `Andrew/name` with a capital A and a short, descriptive name after the slash. Split changes into commits by functionality. Write descriptive commit messages in Andrew’s language, following his recent commits in the repository. Describe what changed and include the reason or user-visible behavior when it helps explain the change.
+
 # Content preferences
 
 Keep product copy simple. Do not add labels, disclaimers, or explanations that repeat what is already obvious from the surrounding UI. For example, homepage feature previews do not need an "Example deck" label. Add explanatory text only when it helps the user understand or use the feature.
@@ -31,6 +35,10 @@ For changes to server-rendered views, exercise a direct load and reload against 
 Use a font size of at least 1rem for text in every input, textarea, select, autocomplete, and editable surface, including compact controls on mobile. Check the computed size when overriding shared styles.
 
 Use semantic HTML, accessible names and labels, visible keyboard focus, adequate contrast, and text alternatives for meaningful images. Make each interaction work by keyboard. In dialogs, manage focus on open and return it to the trigger on close. Expose validation errors and meaningful status changes to assistive technology. Verify the changed flow by keyboard and check its accessible roles and names.
+
+# User font size
+
+Respect the browser default font size. Use rem or em for text and text-dependent spacing and breakpoints. Allow labels, buttons, and rows to wrap or grow. Truncate secondary text only when the full value is accessible. Keep primary actions, values, and keyboard focus visible. Check changed screens at the default size and at 200% text on a narrow viewport. Allow vertical scrolling and avoid shrinking text to undo the user's preference.
 
 # Links and crawlability
 

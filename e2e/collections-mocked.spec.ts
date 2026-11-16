@@ -155,6 +155,23 @@ test('collections match the navigation, responsive directory layout, and SEO met
     'https://cardmystic.com/sets/set-44',
   );
   await page.setViewportSize({ width: 390, height: 844 });
+  const opener = page.getByRole('button', { name: 'Open navigation menu' });
+  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+  await opener.focus();
+  await opener.press('Enter');
+  const menu = page.getByRole('dialog', { name: 'Navigation', exact: true });
+  await expect(menu).toBeVisible();
+  await expect
+    .poll(async () => Math.round((await menu.boundingBox())!.width))
+    .toBe(390);
+  expect(await menu.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await menu
+    .getByRole('button', { name: 'Close navigation menu' })
+    .press('Enter');
+  await expect(opener).toBeFocused();
+  await page.addStyleTag({ content: 'html { font-size: 100% !important; }' });
   await page.getByRole('button', { name: 'Open navigation menu' }).click();
   await page.getByRole('button', { name: 'Themes', exact: true }).click();
   await page.getByRole('link', { name: 'All themes', exact: true }).click();

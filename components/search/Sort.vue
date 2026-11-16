@@ -1,9 +1,11 @@
 <template>
   <div class="flex items-center gap-2 justify-start min-h-10">
     <UIcon name="i-lucide-arrow-up-down" class="size-4 shrink-0" />
-    <span class="text-sm w-11 shrink-0">Sort</span>
+    <span class="text-sm min-w-11 shrink-0">Sort</span>
     <USelect
-      :model-value="selectedSortValue"
+      :model-value="
+        selectedSortValue ?? (collectionOrder ? collectionDefault : undefined)
+      "
       @update:model-value="selectSort"
       aria-label="Search sorting"
       :items="sortOptions"
@@ -40,6 +42,7 @@
 import { ref, watch } from 'vue';
 
 const props = defineProps<{
+  collectionOrder?: boolean;
   defaultSortBy?: string;
   defaultDirection?: 'asc' | 'desc';
   hasAlsScore?: boolean;
@@ -47,6 +50,7 @@ const props = defineProps<{
   hasPopularity?: boolean;
 }>();
 
+const collectionDefault = 'collection-order';
 const sortOptions = computed(() => {
   const options = [
     { value: 'name', label: 'Name (A-Z)' },
@@ -64,6 +68,11 @@ const sortOptions = computed(() => {
     options.unshift({ value: 'deck_score', label: 'Deck Score' });
   if (props.hasAiScore)
     options.unshift({ value: 'ai_score', label: 'Smart Score' });
+  if (props.collectionOrder)
+    options.unshift({
+      value: collectionDefault,
+      label: 'Commanders first, then color identity',
+    });
   return options;
 });
 
@@ -87,6 +96,7 @@ watch(
 );
 
 function selectSort(value: string) {
+  if (value === collectionDefault) return clearSort();
   selectedSortValue.value = value;
   if (scoreOptions.includes(value)) sortDirection.value = 'desc';
   emit('sort', value, sortDirection.value);

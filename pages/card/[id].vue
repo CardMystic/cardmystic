@@ -1786,24 +1786,24 @@ const isPopularCommandersEffectivelyLoading = computed(() => {
 
 .legality-chip
   flex-shrink: 0
-  font-size: 9px !important
+  font-size: 0.5625rem !important
   font-weight: 600
-  min-width: 77.5px
+  min-width: 4.85rem
   text-transform: uppercase
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)
   justify-content: center
   @media (max-width: 768px)
-    font-size: 8px !important
+    font-size: 0.5rem !important
     min-width: 71.2px
 
 .format-name
   min-width: 0
   overflow-wrap: anywhere
-  font-size: 11px
+  font-size: 0.6875rem
   font-weight: bold
   text-align: left
   @media (max-width: 768px)
-    font-size: 10px
+    font-size: 0.625rem
 
 // Price Card Styling
 .price-card

@@ -130,11 +130,11 @@ function queryLink(query: string) {
 
 .queries-grid
   display: grid
-  grid-template-columns: 1fr 1fr
+  grid-template-columns: repeat(2, minmax(0, 1fr))
   gap: 16px
 
   @media (max-width: 768px)
-    grid-template-columns: 1fr
+    grid-template-columns: minmax(0, 1fr)
     gap: 8px
 
 .queries-column
@@ -168,11 +168,13 @@ function queryLink(query: string) {
   border-radius: 50%
   background-color: black
   color: white
-  font-size: 12px
+  font-size: 0.75rem
   font-weight: 600
   flex-shrink: 0
 
 .query-text
+  min-width: 0
+  overflow-wrap: anywhere
   font-size: 0.95rem
   font-weight: 500
   flex: 1

@@ -11,6 +11,12 @@ const {
 } = useRuntimeConfig();
 
 const isOpen = ref(false);
+const menuTrigger = shallowRef<HTMLElement>();
+function restoreTriggerFocus() {
+  requestAnimationFrame(() =>
+    menuTrigger.value?.focus({ preventScroll: true }),
+  );
+}
 const profileOpen = ref(false);
 const isMounted = ref(false);
 
@@ -85,53 +91,71 @@ watch(() => route.fullPath, closePopover);
       >Skip to main content</a
     >
     <div
-      class="mx-auto flex w-full items-center gap-1 px-2 py-2 sm:gap-2 sm:px-4 min-[1600px]:justify-center min-[1600px]:py-4"
+      class="mx-auto flex w-full flex-wrap items-center gap-1 px-2 py-2 sm:gap-2 sm:px-4 min-[100rem]:justify-center min-[100rem]:py-4"
     >
-      <UPopover
+      <USlideover
         v-model:open="isOpen"
-        :content="{ align: 'start', sideOffset: 6 }"
+        title="Navigation"
+        :content="{ onCloseAutoFocus: restoreTriggerFocus }"
+        :ui="{
+          content: 'w-full max-w-none sm:max-w-md h-dvh',
+          header: 'shrink-0',
+          body: 'min-h-0 overflow-y-auto overscroll-contain',
+        }"
       >
         <UButton
-          class="size-11 justify-center min-[1600px]:hidden"
+          @click="menuTrigger = $event.currentTarget as HTMLElement"
+          class="size-11 justify-center min-[100rem]:hidden"
           color="neutral"
           variant="subtle"
           icon="i-lucide-menu"
           aria-label="Open navigation menu"
         />
-        <template #content>
+        <template #close>
+          <UButton
+            icon="i-lucide-x"
+            aria-label="Close navigation menu"
+            color="neutral"
+            variant="ghost"
+            class="min-h-11 min-w-11"
+          />
+        </template>
+        <template #body>
           <div
-            class="w-80 max-w-[calc(100vw-1rem)] max-h-[min(32rem,var(--reka-popover-content-available-height))] overflow-y-auto overscroll-contain rounded bg-default p-2 shadow"
+            @click="
+              ($event.target as Element)?.closest('a[href]') && closePopover()
+            "
           >
             <SiteNavigation :items="mainItemsMobile" orientation="vertical" />
           </div>
         </template>
-      </UPopover>
+      </USlideover>
 
       <NuxtLink
         to="/"
         aria-label="CardMystic Logo"
-        class="mr-auto flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-primary min-[1600px]:mr-3"
+        class="mr-auto flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-primary min-[100rem]:mr-3"
       >
         <img
           src="/wizard_black.svg"
           alt=""
-          class="size-9 object-contain dark:hidden min-[1600px]:size-12"
+          class="size-9 object-contain dark:hidden min-[100rem]:size-12"
         />
         <img
           src="/wizard.svg"
           alt=""
-          class="hidden size-9 object-contain dark:block min-[1600px]:size-12"
+          class="hidden size-9 object-contain dark:block min-[100rem]:size-12"
         />
         <img
           src="/cardmystic-white.svg"
           alt=""
           width="2082"
           height="307"
-          class="hidden h-auto w-36 invert sm:block dark:invert-0 min-[1600px]:w-44"
+          class="hidden h-auto w-36 invert sm:block dark:invert-0 min-[100rem]:w-44"
         />
       </NuxtLink>
 
-      <div class="hidden items-center min-[1600px]:flex">
+      <div class="hidden items-center min-[100rem]:flex">
         <SiteNavigation :items="desktopItems" />
         <div class="mx-2 h-6 w-px bg-accented" aria-hidden="true" />
         <UButton
@@ -158,7 +182,7 @@ watch(() => route.fullPath, closePopover);
         aria-label="Login"
         class="min-h-11 min-w-11 justify-center"
       >
-        <span class="hidden min-[360px]:inline">Login</span>
+        <span class="hidden min-[22.5rem]:inline">Login</span>
       </UButton>
       <span
         v-else-if="loading"
