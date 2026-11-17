@@ -45,12 +45,12 @@ defineOptions({ name: 'TermsOfService' });
         CardMystic.
       </p>
       <p>
-        CardMystic Pro membership includes unlimited Pro searches, deck
-        suggestions and search within decks and collections while your
-        membership is active, including during an eligible free trial. It is for
-        your use through CardMystic, and does not include a separate API, resale
-        rights, or permission to share a paid account. Limits on how quickly you
-        can send requests still apply to keep the service available to everyone.
+        CardMystic Pro membership includes unlimited Pro searches, new-card
+        alerts and search within decks and collections while your membership is
+        active, including during an eligible free trial. It is for your use
+        through CardMystic, and does not include a separate API, resale rights,
+        or permission to share a paid account. Limits on how quickly you can
+        send requests still apply to keep the service available to everyone.
       </p>
       <p>
         Memberships renew automatically until canceled. Top-ups are separate

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ id: string; title: string }>();
+defineProps<{ id: string; title: string; free?: boolean }>();
 </script>
 
 <template>
@@ -10,12 +10,17 @@ defineProps<{ id: string; title: string }>();
     <div class="min-w-0">
       <div class="flex flex-wrap items-center gap-3">
         <h3 :id="id" class="text-2xl font-bold sm:text-3xl">{{ title }}</h3>
-        <FeatureAccessBadge pro />
+        <FeatureAccessBadge :pro="!free" :account-required="free" />
       </div>
       <div class="mt-4 text-base leading-relaxed text-toned"><slot /></div>
     </div>
     <div
-      class="min-w-0 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 shadow-xl shadow-black/35 sm:p-5"
+      class="min-w-0 rounded-xl border p-4 shadow-xl shadow-black/35 sm:p-5"
+      :class="
+        free
+          ? 'border-primary/25 bg-primary/5'
+          : 'border-amber-500/30 bg-amber-500/5'
+      "
     >
       <slot name="preview" />
     </div>

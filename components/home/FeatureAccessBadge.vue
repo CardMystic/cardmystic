@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ pro?: boolean }>();
+defineProps<{ pro?: boolean; accountRequired?: boolean }>();
 </script>
 
 <template>
@@ -15,6 +15,7 @@ defineProps<{ pro?: boolean }>();
       ><UIcon name="i-lucide-crown" class="size-3.5" aria-hidden="true" />Pro
       Features</template
     >
+    <template v-else-if="accountRequired">Free with an account</template>
     <template v-else
       >Free <span aria-hidden="true">·</span> No account required</template
     >

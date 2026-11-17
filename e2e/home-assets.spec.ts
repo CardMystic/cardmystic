@@ -323,6 +323,39 @@ test('all deferred search modes work and color filters render SVG symbols withou
   expect(manaRequests).toEqual([]);
 });
 
+test('free adds and cuts appear before Pro in the initial homepage and after reload', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const hydrationWarnings: string[] = [];
+  page.on('console', (message) => {
+    if (
+      ['error', 'warning'].includes(message.type()) &&
+      /hydrat/i.test(message.text())
+    )
+      hydrationWarnings.push(message.text());
+  });
+  page.on('pageerror', (error) => hydrationWarnings.push(error.message));
+  const response = await page.goto('/');
+  const html = await response!.text();
+  const free = html.indexOf('aria-label="Free deck suggestions preview"');
+  expect(free).toBeGreaterThan(-1);
+  expect(html.indexOf('aria-label="Pro tools preview"')).toBeGreaterThan(free);
+  await page.reload();
+  await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+  const features = page.getByLabel('Free deck suggestions preview');
+  await expect(
+    features.getByText('Free with an account', { exact: true }),
+  ).toHaveCount(2);
+  await features.scrollIntoViewIfNeeded();
+  expect(
+    await features.evaluate(
+      (el) => el.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
+  expect(hydrationWarnings).toEqual([]);
+});
+
 test('search showcase examples and artwork work on mobile and desktop', async ({
   page,
 }) => {
@@ -529,8 +562,6 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await expect(pro.getByRole('heading', { level: 3 })).toHaveText([
     'Pro Search',
     'Search within your deck',
-    'Suggested Adds & New Card Alerts',
-    'Suggested cuts',
     'Recommended decks for each card',
   ]);
   expect(
@@ -553,26 +584,40 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
     '59.8',
     '80.6',
   ]);
-  await pro
+  const freeSuggestions = showcase.getByLabel('Free deck suggestions preview');
+  await expect(freeSuggestions.getByRole('heading', { level: 3 })).toHaveText([
+    'Suggested Adds',
+    'Suggested cuts',
+  ]);
+  await expect(
+    freeSuggestions.getByText('Free with an account', { exact: true }),
+  ).toHaveCount(2);
+  expect(
+    await freeSuggestions.evaluate((el) =>
+      el.nextElementSibling?.getAttribute('aria-label'),
+    ),
+  ).toBe('Pro tools preview');
+  await freeSuggestions
     .getByRole('button', {
       name: 'Add Foundry Inspector in preview',
       exact: true,
     })
     .click();
-  await expect(pro.getByRole('status')).toContainText(
+  await expect(freeSuggestions.getByRole('status')).toContainText(
     'Foundry Inspector added',
   );
-  await pro
+  await freeSuggestions
     .getByRole('button', { name: 'Cut Manalith in preview', exact: true })
     .click();
-  await expect(pro.getByRole('status')).toContainText('Manalith cut');
+  await expect(freeSuggestions.getByRole('status')).toContainText(
+    'Manalith cut',
+  );
   await expect(pro.getByRole('textbox')).toHaveCount(0);
-  for (const title of [
-    'Suggested Adds & New Card Alerts preview',
-    'Suggested cuts preview',
-  ]) {
+  for (const title of ['Suggested Adds preview', 'Suggested cuts preview']) {
     await expect(
-      pro.getByRole('figure', { name: title, exact: true }).getByRole('link'),
+      freeSuggestions
+        .getByRole('figure', { name: title, exact: true })
+        .getByRole('link'),
     ).toHaveCount(3);
   }
   await expect(
