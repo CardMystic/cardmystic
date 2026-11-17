@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { proExamples } from '~/utils/search-showcase';
+import { deckSuggestionExamples } from '~/utils/search-showcase';
 const stage = useTemplateRef<HTMLElement>('stage');
 const phase = ref(0);
 const decks = [
@@ -53,7 +53,7 @@ onBeforeUnmount(() => {
 const show = ref('all');
 const rows = [
   {
-    ...proExamples[1].cards[1],
+    ...deckSuggestionExamples[1].cards[1],
     kind: 'extra',
     label: 'Only in your deck',
     color: 'error',
@@ -63,7 +63,7 @@ const rows = [
     style: 'border-red-500/50 bg-red-500/10',
   },
   {
-    ...proExamples[0].cards[1],
+    ...deckSuggestionExamples[0].cards[1],
     kind: 'missing',
     label: 'Missing from your deck',
     color: 'success',
@@ -73,7 +73,7 @@ const rows = [
     style: 'border-green-500/50 bg-green-500/10',
   },
   {
-    ...proExamples[0].cards[0],
+    ...deckSuggestionExamples[0].cards[0],
     kind: 'missing',
     label: 'Missing from your deck',
     color: 'success',
@@ -83,7 +83,7 @@ const rows = [
     style: 'border-green-500/50 bg-green-500/10',
   },
   {
-    ...proExamples[0].cards[2],
+    ...deckSuggestionExamples[0].cards[2],
     kind: 'both',
     label: 'In Both Decks',
     color: 'neutral',
@@ -156,7 +156,10 @@ function toggle(id: string, action: string, name: string) {
         />
         Compare decks
       </figcaption>
-      <div class="mb-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-3" aria-hidden="true">
+      <div
+        class="mb-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-3"
+        aria-hidden="true"
+      >
         <div v-for="deck in decks" :key="deck.label" class="relative min-w-0">
           <p class="mb-2 text-xs text-toned">{{ deck.label }}</p>
           <div

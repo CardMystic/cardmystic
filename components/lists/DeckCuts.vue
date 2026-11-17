@@ -60,7 +60,6 @@ const actions = computed<CardActionMenu>(() =>
 
 let sequence = 0;
 async function load() {
-  if (!api.isPro.value) return navigateTo('/memberships');
   loading.value = true;
   error.value = '';
   expanded.value = false;
@@ -84,7 +83,7 @@ async function load() {
   }
 }
 async function cut(card: Card) {
-  if (removing.value || !api.isPro.value) return;
+  if (removing.value) return;
   removing.value = card.card_data.oracle_id;
   error.value = '';
   try {
@@ -112,7 +111,7 @@ watch(open, (value) => {
     loading.value = false;
   }
 });
-watch([api.isPro, api.userId, () => props.listId], () => {
+watch([api.userId, () => props.listId], () => {
   sequence++;
   open.value = false;
   results.value = [];
@@ -127,9 +126,7 @@ onBeforeUnmount(() => sequence++);
     class="my-4 rounded-lg border border-error/30 bg-error/5 p-4"
   >
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <h2 class="font-semibold">
-        Suggested Cuts <span class="text-xs text-(--pro-accent)">Pro</span>
-      </h2>
+      <h2 class="font-semibold">Suggested Cuts</h2>
       <div class="flex gap-1">
         <UButton
           icon="i-lucide-refresh-cw"

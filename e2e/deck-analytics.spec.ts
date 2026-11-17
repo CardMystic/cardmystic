@@ -401,7 +401,7 @@ test('stats open automatically, suggestions wait for their menu actions, and cut
   ).toBeVisible();
   expect(requested).toEqual([]);
   await expect.poll(() => analyticsRequests).toBe(1);
-  await openDeckAction(page, 'Suggest Adds · Pro');
+  await openDeckAction(page, 'Suggest Adds');
   await expect.poll(() => requested.includes(false)).toBe(true);
   await openDeckAction(page, 'Suggest New Cards · Pro');
   await expect.poll(() => requested.includes(true)).toBe(true);

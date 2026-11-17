@@ -260,10 +260,10 @@ export const searchDemos: SearchDemo[] = [
   },
 ];
 
-// Hand-picked cards illustrate the Pro controls; no account or live recommendations are loaded.
-export const proExamples = [
+// Hand-picked cards illustrate suggested adds and cuts; no account or live recommendations are loaded.
+export const deckSuggestionExamples = [
   {
-    title: 'Suggested Adds & New Card Alerts',
+    title: 'Suggested Adds',
     action: 'Add',
     icon: 'i-lucide-plus',
     color: 'success',
