@@ -22,7 +22,7 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
       <ul>
         <li>
           <strong>CardMystic Pro membership:</strong> ${{ monthlyPrice }} USD
-          per month for unlimited Pro searches, deck suggestions, and Smart or
+          per month for unlimited Pro searches, new-card alerts, and Smart or
           keyword search within your decks and collections while your membership
           is active. It renews automatically each month until you cancel.
         </li>
@@ -30,7 +30,7 @@ const topUpPrice = enhancedTopUpPrice.toFixed(2);
           <strong>Search top-up:</strong> ${{ topUpPrice }} USD for 500 Pro
           searches. This is a one-time purchase with no subscription required
           and no automatic top-up purchases. Top-ups do not unlock subscriber
-          tools such as deck suggestions or search within lists.
+          tools such as new-card alerts or search within lists.
         </li>
       </ul>
       <p>

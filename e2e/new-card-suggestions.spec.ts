@@ -217,7 +217,7 @@ test('Suggest Adds opens above the deck and closes without leaving a bottom pane
     exact: true,
   });
   await expect(panel).toHaveCount(0);
-  await openDeckAction(page, 'Suggest Adds · Pro');
+  await openDeckAction(page, 'Suggest Adds');
   await expect(panel).toBeVisible();
   expect(await page.locator('#deck-suggestions').count()).toBe(1);
   const top = await panel.evaluate(

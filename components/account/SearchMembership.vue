@@ -26,15 +26,15 @@ const planFeatures: {
   { name: 'Compare decks', free: true, pro: true },
   { name: 'Deck Analytics', free: true, pro: true },
   { name: 'Highlight cards owned in a collection', free: true, pro: true },
+  { name: 'Suggested adds and cuts on your decks', free: true, pro: true },
   { name: 'Search within decks and collections', free: false, pro: true },
   {
-    name: 'Inline deck suggestions and target budgets',
+    name: 'Target budgets for suggested cards',
     free: false,
     pro: true,
   },
   { name: 'New-card alerts on your decks', free: false, pro: true },
   { name: 'Suggested decks for search results', free: false, pro: true },
-  { name: 'Suggested cuts', free: false, pro: true },
 ];
 const emit = defineEmits<{ changed: [] }>();
 const { userProfile: session, userId } = useUserProfile();
@@ -535,7 +535,7 @@ watch(
           buy one. Unused top-up searches carry forward. We use your free daily
           searches first, then your top-up searches. While your CardMystic Pro
           membership is active, your top-up credits aren't used. Top-ups cover
-          Pro searches only; deck suggestions and search within lists require
+          Pro searches only; new-card alerts and search within lists require
           Pro.
         </p>
       </details>

@@ -6,8 +6,7 @@ const { userId } = useUserProfile();
 usePublicPageSeo({
   path: '/memberships',
   title: 'Memberships | CardMystic',
-  description:
-    `Get CardMystic Pro for $${membershipPlans[0].price.toFixed(2)}/month with unlimited Pro searches, deck suggestions and search within your decks and collections.`,
+  description: `Get CardMystic Pro for $${membershipPlans[0].price.toFixed(2)}/month with unlimited Pro searches, new-card alerts and search within your decks and collections.`,
 });
 </script>
 
