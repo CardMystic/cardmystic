@@ -4,17 +4,15 @@ import { test, expect } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { BACKEND, SUPABASE, gotoHydrated } from './utils/mocks';
 
-test('free users get Pro actions without fetching recommendations', async ({
-  page,
-}) => {
+test('free deck owners request suggested adds on demand', async ({ page }) => {
   let requests = 0;
-  page.on('request', (request) => {
-    if (request.url().endsWith('/suggestions')) requests++;
-  });
-  const state = await setupDeckDisplay(page);
+  const state = await setupDeckDisplay(page, { extraCards: 1 });
+  const suggested = state.catalog[3];
   await page.route(BACKEND + '/library/lists/*/suggestions', (route) => {
     requests++;
-    return route.fulfill({ json: { results: [] } });
+    return route.fulfill({
+      json: { results: [{ card_name: suggested.name, card_data: suggested }] },
+    });
   });
   await expect(
     page.getByRole('region', { name: 'Suggested cards' }),
@@ -23,9 +21,22 @@ test('free users get Pro actions without fetching recommendations', async ({
   await openDeckAction(page, 'Compare decks');
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
-  await openDeckAction(page, 'Suggest Adds · Pro');
-  await expect(page).toHaveURL(/\/memberships/);
   expect(requests).toBe(0);
+  await openDeckAction(page, 'Suggest Adds');
+  const panel = page.getByRole('region', { name: 'Suggested cards' });
+  await expect(panel).toBeVisible();
+  const card = panel.getByRole('button', {
+    name: `Options for ${suggested.name}`,
+  });
+  await card.focus();
+  await page.keyboard.press('Enter');
+  const modal = page.getByRole('dialog', { name: suggested.name, exact: true });
+  await modal.getByRole('button', { name: 'Add to Deck', exact: true }).click();
+  await expect(card).toHaveCount(0);
+  await expect(panel.getByText('No more suggestions right now.')).toBeVisible();
+  expect(state.writes).toHaveLength(1);
+  await expect(panel.getByLabel('Target card budget (USD)')).toHaveCount(0);
+  expect(requests).toBe(1);
 });
 
 test('Pro searches filter cards on the collection page, keyword works, and clear restores the saved list', async ({
@@ -160,7 +171,7 @@ test('suggestion queue advances without searching again and refills only when ex
   await page.getByRole('button', { name: 'More deck actions' }).click();
   const scrollBefore = await page.evaluate(() => window.scrollY);
   await page
-    .getByRole('menuitem', { name: 'Suggest Adds · Pro', exact: true })
+    .getByRole('menuitem', { name: 'Suggest Adds', exact: true })
     .click();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -289,7 +300,10 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
 }) => {
   const state = await setupDeckDisplay(page);
   const createdId = '71000000-0000-4000-8000-000000000001';
-  const tags = [{ id: 'tag-ramp', name: 'Ramp' }, { id: 'tag-draw', name: 'Draw' }];
+  const tags = [
+    { id: 'tag-ramp', name: 'Ramp' },
+    { id: 'tag-draw', name: 'Draw' },
+  ];
   const assignments: { oracle_id: string; tag_id: string }[] = [];
   let releaseLabels!: () => void;
   const labelsGate = new Promise<void>((resolve) => {
@@ -337,7 +351,11 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   await page.route(BACKEND + '/library/tags/*/cards/*', (route) => {
     expect(route.request().headers()['content-type']).toBeUndefined();
     const tagId = route.request().url().split('/').at(-3)!;
-    if (route.request().method() === 'DELETE') assignments.splice(assignments.findIndex((a) => a.tag_id === tagId), 1);
+    if (route.request().method() === 'DELETE')
+      assignments.splice(
+        assignments.findIndex((a) => a.tag_id === tagId),
+        1,
+      );
     else
       assignments.push({
         oracle_id: state.cards[0].oracle_id,
@@ -351,7 +369,10 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
       exact: true,
     })
     .click();
-  const dialog = page.getByRole('dialog', { name: state.cards[0].name, exact: true });
+  const dialog = page.getByRole('dialog', {
+    name: state.cards[0].name,
+    exact: true,
+  });
   const cardPage = dialog.getByRole('link', { name: "Go To Card's Page" });
   const loadingRows = dialog.getByRole('status', {
     name: 'Loading roles and themes',
@@ -486,15 +507,24 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   ]);
   await page.route(BACKEND + '/library/tags/' + createdId, (route) => {
     expect(route.request().headers()['content-type']).toBeUndefined();
-    tags.splice(tags.findIndex((tag) => tag.id === createdId), 1);
+    tags.splice(
+      tags.findIndex((tag) => tag.id === createdId),
+      1,
+    );
     assignments.splice(0);
     return route.fulfill({ json: { deleted: true } });
   });
   await page.getByRole('button', { name: 'Show / Hide' }).click();
   await page.getByRole('menuitem', { name: 'Show Tags' }).click();
-  const displayedCard = page.locator('.list-card').filter({
-    has: page.getByRole('button', { name: `Options for ${state.cards[0].name}`, exact: true }),
-  }).first();
+  const displayedCard = page
+    .locator('.list-card')
+    .filter({
+      has: page.getByRole('button', {
+        name: `Options for ${state.cards[0].name}`,
+        exact: true,
+      }),
+    })
+    .first();
   await displayedCard.getByRole('button', { name: 'Edit tags' }).click();
   await menu.click();
   await page
@@ -805,7 +835,7 @@ test('Show more reveals queued cards without another recommendation request', as
     name: 'Suggested cards',
     exact: true,
   });
-  await openDeckAction(page, 'Suggest Adds · Pro');
+  await openDeckAction(page, 'Suggest Adds');
   await section.scrollIntoViewIfNeeded();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -1008,7 +1038,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
     name: 'Suggested cards',
     exact: true,
   });
-  await openDeckAction(page, 'Suggest Adds · Pro');
+  await openDeckAction(page, 'Suggest Adds');
   await suggestions.scrollIntoViewIfNeeded();
   await expect(
     suggestions.getByText('Target card budget (USD)', { exact: true }),
@@ -1025,7 +1055,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
   await openDeckAction(page, 'Suggest New Cards · Pro');
   await expect(alerts.getByRole('spinbutton')).toHaveValue('25');
   await page.reload();
-  await openDeckAction(page, 'Suggest Adds · Pro');
+  await openDeckAction(page, 'Suggest Adds');
   await openDeckAction(page, 'Suggest New Cards · Pro');
   await suggestions.scrollIntoViewIfNeeded();
   await expect(suggestions.getByRole('spinbutton')).toHaveValue('25');
@@ -1034,7 +1064,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
   await alerts.getByRole('button', { name: 'Apply budget' }).click();
   await expect(suggestions.getByRole('spinbutton')).toHaveValue('');
   await page.reload();
-  await openDeckAction(page, 'Suggest Adds · Pro');
+  await openDeckAction(page, 'Suggest Adds');
   await suggestions.scrollIntoViewIfNeeded();
   await expect(suggestions.getByRole('spinbutton')).toHaveValue('');
   await page.getByRole('button', { name: 'Highlight', exact: true }).click();
@@ -1114,13 +1144,22 @@ test('deck suggestions persist across modals and previews and card pages open su
     name: "Go To Card's Page",
     exact: true,
   });
-  await expect(previewCardPage).toHaveAttribute('href', `/card/${card.oracle_id}`);
+  await expect(previewCardPage).toHaveAttribute(
+    'href',
+    `/card/${card.oracle_id}`,
+  );
   await expect(previewCardPage).toHaveClass(/\bbg-primary\b/);
-  const previewControls = previewCardPage.locator('..').locator('a[href], button');
-  await expect(previewControls.nth(0)).toHaveAccessibleName("Go To Card's Page");
+  const previewControls = previewCardPage
+    .locator('..')
+    .locator('a[href], button');
+  await expect(previewControls.nth(0)).toHaveAccessibleName(
+    "Go To Card's Page",
+  );
   await expect(previewControls.nth(1)).toHaveAccessibleName(/Buy on TCGPlayer/);
   await expect(previewControls.nth(1)).toHaveClass(/\bbg-success\b/);
-  await expect(previewControls.nth(2)).toHaveAccessibleName('Add to Another Deck');
+  await expect(previewControls.nth(2)).toHaveAccessibleName(
+    'Add to Another Deck',
+  );
   await expect(
     previewCardPage.locator('[class*="lucide:arrow-up-right"]'),
   ).toBeVisible();
@@ -1823,7 +1862,7 @@ test('subfolders show only their own decks and keep the parent trail', async ({
 test('suggested cuts appear inline and remove cards without rerunning suggestions', async ({
   page,
 }) => {
-  const state = await setupDeckDisplay(page, { pro: true });
+  const state = await setupDeckDisplay(page);
   let requests = 0;
   await page.route(
     BACKEND + `/library/lists/${displayDeckId}/cuts`,
@@ -1854,13 +1893,13 @@ test('suggested cuts appear inline and remove cards without rerunning suggestion
     }
     return route.fulfill({ json: state.items });
   });
-  await openDeckAction(page, 'Suggest Cuts · Pro');
+  await openDeckAction(page, 'Suggest Cuts');
   const section = page.getByRole('region', {
     name: 'Suggested Cuts',
     exact: true,
   });
   await expect(
-    section.getByRole('heading', { name: 'Suggested Cuts Pro', exact: true }),
+    section.getByRole('heading', { name: 'Suggested Cuts', exact: true }),
   ).toBeVisible();
   await expect(section).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -2026,7 +2065,11 @@ test('deck settings duplicate the saved deck, show failures and open the named c
     exact: true,
   });
   const banner = page.getByTestId('deck-banner');
-  for (const name of [state.deck.name!, state.deck.format!, state.deck.description!].filter(Boolean)) {
+  for (const name of [
+    state.deck.name!,
+    state.deck.format!,
+    state.deck.description!,
+  ].filter(Boolean)) {
     await settings.getByRole('button', { name: 'Close', exact: true }).click();
     await banner.getByRole('button', { name, exact: true }).click();
     await expect(settings).toBeVisible();

@@ -318,9 +318,13 @@
             @preview="setPreviewCard($event, 'Mainboard')"
             @cancel-preview="clearPendingPreviewCard"
           />
-          <template v-if="canSuggest && pro.isPro.value">
+          <template v-if="canSuggest">
             <p
-              v-if="(addsOpen || showNewCards) && deckBudget.error.value"
+              v-if="
+                pro.isPro.value &&
+                (addsOpen || showNewCards) &&
+                deckBudget.error.value
+              "
               role="alert"
               class="text-error text-sm my-3"
             >
@@ -339,8 +343,8 @@
               :list-id="listId"
               :oracle-ids="oracleIds"
               :ready="!loading"
-              :saved-budget="deckBudget.budget.value"
-              :budget-ready="deckBudget.ready.value"
+              :saved-budget="pro.isPro.value ? deckBudget.budget.value : null"
+              :budget-ready="!pro.isPro.value || deckBudget.ready.value"
               :budget-saving="deckBudget.saving.value"
               :save-budget="deckBudget.save"
               @close="addsOpen = false"
@@ -348,7 +352,7 @@
               @cancel-preview="clearPendingPreviewCard"
             />
             <DeckSuggestions
-              v-if="showNewCards"
+              v-if="pro.isPro.value && showNewCards"
               ref="suggestedNewCards"
               :key="newRelease.status.value?.set?.slug || 'latest'"
               id="deck-new-cards"
@@ -1618,13 +1622,12 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [
           ...(!isBrowser && !isCollection.value
             ? [
                 {
-                  label: 'Suggest Adds · Pro',
+                  label: 'Suggest Adds',
                   icon: 'i-lucide-list-plus',
                   disabled: !canSuggest.value,
-                  onSelect: () =>
-                    proAction(() => {
-                      addsOpen.value = true;
-                    }),
+                  onSelect: () => {
+                    addsOpen.value = true;
+                  },
                 },
                 {
                   label: 'Suggest New Cards · Pro',
@@ -1636,12 +1639,11 @@ const moreActions = computed<DropdownMenuItem[][]>(() => [
                     }),
                 },
                 {
-                  label: 'Suggest Cuts · Pro',
+                  label: 'Suggest Cuts',
                   icon: 'i-lucide-scissors',
-                  onSelect: () =>
-                    proAction(() => {
-                      cutsOpen.value = true;
-                    }),
+                  onSelect: () => {
+                    cutsOpen.value = true;
+                  },
                 },
               ]
             : []),

@@ -49,7 +49,6 @@ const cardActions = computed<CardActionMenu>(() => {
       icon: 'i-lucide-plus',
       disabled:
         !!adding.value ||
-        !api.isPro.value ||
         props.oracleIds.includes(data.oracle_id) ||
         added.value.has(data.oracle_id),
       onSelect: () => {
@@ -155,8 +154,7 @@ async function applyBudget() {
   }
 }
 async function load() {
-  if (!api.isPro.value || !props.ready || !props.budgetReady || loading.value)
-    return;
+  if (!props.ready || !props.budgetReady || loading.value) return;
   const current = ++sequence;
   loading.value = true;
   error.value = '';
@@ -196,13 +194,13 @@ watch(
     expanded.value = false;
     loading.value = false;
     error.value = '';
-    if (api.isPro.value && props.ready && props.budgetReady) void load();
+    if (props.ready && props.budgetReady) void load();
   },
   { immediate: true },
 );
 onBeforeUnmount(() => sequence++);
 async function add(card: Card) {
-  if (adding.value || !api.isPro.value) return;
+  if (adding.value) return;
   adding.value = card.card_data.oracle_id;
   error.value = '';
   try {
@@ -217,7 +215,7 @@ async function add(card: Card) {
       description: card.card_name,
       color: 'success',
     });
-    if (!remaining.value.length) await load();
+    if (api.isPro.value && !remaining.value.length) await load();
   } catch (cause) {
     error.value = (cause as Error).message;
   } finally {
@@ -241,11 +239,11 @@ async function add(card: Card) {
     />
     <div class="flex items-center justify-between gap-3 mb-3">
       <h2 class="min-w-0 wrap-anywhere font-semibold">
-        {{ title }} <span class="text-xs text-(--pro-accent)">Pro</span>
+        {{ title }}
+        <span v-if="newestSet" class="text-xs text-(--pro-accent)">Pro</span>
       </h2>
       <div class="flex flex-wrap items-center gap-1">
         <UButton
-          v-if="api.isPro.value"
           label="Refresh suggestions"
           icon="i-lucide-refresh-cw"
           size="xs"
@@ -305,34 +303,8 @@ async function add(card: Card) {
       >
     </form>
     <div>
-      <NuxtLink
-        v-if="!api.isPro.value"
-        to="/memberships"
-        class="block relative rounded-lg overflow-hidden p-2"
-        :aria-label="
-          newestSet
-            ? 'Subscribe for new-card alerts'
-            : 'Subscribe for suggestions'
-        "
-      >
-        <div :class="gridClasses" aria-hidden="true">
-          <div
-            v-for="n in rowCapacity"
-            :key="n"
-            class="w-full aspect-[488/680] rounded-[14px] bg-muted/50"
-          />
-        </div>
-        <div
-          class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-default/65"
-        >
-          <UIcon name="i-lucide-lock" class="size-5" /><span
-            class="font-semibold"
-            >Subscribe for suggestions</span
-          ><span class="text-sm text-(--pro-accent)">CardMystic Pro</span>
-        </div>
-      </NuxtLink>
       <div
-        v-else-if="(!budgetReady || loading) && !visible.length"
+        v-if="(!budgetReady || loading) && !visible.length"
         :class="gridClasses"
         role="status"
         aria-label="Loading suggestions"
