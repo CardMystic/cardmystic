@@ -157,7 +157,11 @@ for (const [index, search] of searches.entries()) {
   });
 }
 
-for (const search of searches) {
+// SearchError and the shared query retry policy handle 429s. Exercise the card
+// and paginated-directory flows once each; endpoint-specific recovery is above.
+for (const search of searches.filter(({ name }) =>
+  ['smart', 'articles'].includes(name),
+)) {
   test(`${search.name}: 429 shows the wait message without automatic retries`, async ({
     page,
   }) => {

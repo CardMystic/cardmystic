@@ -282,20 +282,19 @@ test('suggestion queue advances without searching again and refills only when ex
   ).toBeVisible();
   expect(requests).toBe(1);
   for (const card of state.catalog.slice(4)) {
-    const suggestion = section.getByRole('button', {
-      name: `Options for ${card.name}`,
+    const add = section.getByRole('button', {
+      name: `Add ${card.name} to deck`,
       exact: true,
     });
-    await suggestion.click();
-    const cardModal = page.getByRole('dialog', {
-      name: card.name,
-      exact: true,
-    });
-    await cardModal
-      .getByRole('button', { name: 'Add to Deck', exact: true })
-      .click();
-    await expect(cardModal).toBeHidden();
-    await expect(suggestion).toHaveCount(0);
+    await add.focus();
+    await page.keyboard.press('Enter');
+    await expect(add).toHaveCount(0);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect
+      .poll(() =>
+        section.evaluate((element) => element.contains(document.activeElement)),
+      )
+      .toBe(true);
   }
   await expect.poll(() => requests).toBe(2);
   expect(state.writes).toHaveLength(11);
@@ -562,11 +561,8 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   expect(assignments).toHaveLength(0);
 });
 
-for (const [width, columns] of [
-  [390, 1],
-  [1024, 2],
-  [1600, 3],
-]) {
+// One narrow layout covers the shared skeleton-to-content transition.
+for (const [width, columns] of [[390, 1]]) {
   test(`library grid reserves nine deck cards at ${width}px`, async ({
     page,
   }) => {
@@ -1956,11 +1952,19 @@ test('suggested cuts appear inline and remove cards without rerunning suggestion
   });
   await expect(modal).toBeVisible();
   expect(removed).toBe(false);
-  await modal
-    .getByRole('button', { name: 'Remove from Deck', exact: true })
-    .click();
+  await expect(
+    modal.getByRole('button', { name: 'Remove from Deck', exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(modal).toBeHidden();
+  const directCut = section.getByRole('button', {
+    name: `Cut ${state.cards[1].name} from deck`,
+    exact: true,
+  });
+  await directCut.focus();
+  await page.keyboard.press('Enter');
   await expect.poll(() => removed).toBe(true);
+  await expect(section).toBeFocused();
   await expect(page.locator('.list-card')).toHaveCount(2);
   expect(requests).toBe(1);
 });

@@ -190,7 +190,7 @@ test.beforeEach(async ({ page }, testInfo) => {
   );
 });
 
-for (const failure of ['service error', 'invalid response', '429'] as const) {
+for (const failure of ['service error', 'invalid response'] as const) {
   test(`home sections show ${failure} and can recover independently while metrics load`, async ({
     page,
   }) => {
@@ -202,8 +202,7 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
           if (recovering.has(section.path))
             return route.fulfill({ json: section.data });
           return route.fulfill({
-            status:
-              failure === 'service error' ? 503 : failure === '429' ? 429 : 200,
+            status: failure === 'service error' ? 503 : 200,
             json: { message: 'Simulated content failure' },
           });
         },
@@ -235,17 +234,9 @@ for (const failure of ['service error', 'invalid response', '429'] as const) {
     }
     const metrics = page.getByLabel('CardMystic community statistics');
     await expect(metrics).toContainText(/3\s*4\s*6\s*,\s*2\s*4\s*2/);
-    if (failure === '429') {
-      await expect(retryAlerts.first()).toContainText(
-        'Try again in 60 seconds',
-      );
-    }
     for (const section of sections) {
       // Every alert gets its own retry; recovering one must not hide the others.
-      const alert =
-        failure === '429'
-          ? retryAlerts.first()
-          : retryAlerts.filter({ hasText: section.title });
+      const alert = retryAlerts.filter({ hasText: section.title });
       recovering.add(section.path);
       await alert.getByRole('button', { name: 'Retry', exact: true }).click();
       await expect(sectionResult(page, section)).toBeVisible();

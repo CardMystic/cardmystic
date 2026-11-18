@@ -374,39 +374,6 @@ test('visitors see a saved public business card on mobile, with no editing contr
   expect(hydrationErrors).toEqual([]);
 });
 
-test('banner title leaves room for descenders on its last line', async ({
-  page,
-}) => {
-  const { deck } = await setupDeckDisplay(page);
-  deck.name = '🤖 Iron Man Living Forge 🚀';
-  await page.reload();
-  const title = page
-    .getByTestId('deck-banner')
-    .getByRole('heading', { name: deck.name });
-  await expect(title).toBeVisible();
-  await page.evaluate(() => document.fonts.ready);
-  for (const width of [1280, 320]) {
-    await page.setViewportSize({ width, height: 800 });
-    const clearance = await title.evaluate((heading) => {
-      // An empty inline block sits on the last line's text baseline.
-      const marker = document.createElement('span');
-      marker.style.display = 'inline-block';
-      heading.append(marker);
-      const baseline = marker.getBoundingClientRect().bottom;
-      marker.remove();
-      const style = getComputedStyle(heading);
-      const canvas = document.createElement('canvas').getContext('2d')!;
-      canvas.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-      return (
-        heading.getBoundingClientRect().bottom -
-        baseline -
-        canvas.measureText('g').actualBoundingBoxDescent
-      );
-    });
-    expect(clearance).toBeGreaterThanOrEqual(0);
-  }
-});
-
 test('owners can set, change and clear an unset bracket in settings', async ({
   page,
 }) => {

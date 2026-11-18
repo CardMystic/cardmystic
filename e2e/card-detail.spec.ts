@@ -11,7 +11,9 @@ const SEARCH_TIMEOUT = 45_000;
 const LIGHTNING_BOLT_ID = '4457ed35-7c10-48c8-9776-456485fdf070';
 
 test.describe('Card detail page', () => {
-  test('renders card image and name via SSR', async ({ page }) => {
+  test('loads a real card with artwork, mana, legalities and related searches', async ({
+    page,
+  }) => {
     await gotoHydrated(page, `/card/${LIGHTNING_BOLT_ID}`);
 
     // Card image has a fixed alt attribute on the detail page.
@@ -24,10 +26,6 @@ test.describe('Card detail page', () => {
       /Lightning Bolt/i,
       { timeout: SEARCH_TIMEOUT },
     );
-  });
-
-  test('renders mana cost as mana-font icons', async ({ page }) => {
-    await gotoHydrated(page, `/card/${LIGHTNING_BOLT_ID}`);
 
     // ManaCost component converts {R} to a <span class="ms ms-r ms-cost">.
     // At least one mana cost icon must be present after SSR.
@@ -39,12 +37,6 @@ test.describe('Card detail page', () => {
     await expect(page.locator('.ms-r').first()).toBeVisible({
       timeout: SEARCH_TIMEOUT,
     });
-  });
-
-  test('renders the Legalities section with format badges', async ({
-    page,
-  }) => {
-    await gotoHydrated(page, `/card/${LIGHTNING_BOLT_ID}`);
 
     // Legalities heading is part of the SSR output.
     await expect(
@@ -55,15 +47,9 @@ test.describe('Card detail page', () => {
     await expect(page.locator('.legality-chip').first()).toBeVisible({
       timeout: SEARCH_TIMEOUT,
     });
-  });
-
-  test('related cards section renders Similar Cards and Commanders tabs (client-side)', async ({
-    page,
-  }) => {
-    await gotoHydrated(page, `/card/${LIGHTNING_BOLT_ID}`);
 
     // The related-cards section is wrapped in <ClientOnly> so it only renders
-    // after hydration.  gotoHydrated already waits for networkidle, so the
+    // after hydration.  gotoHydrated already waits for hydration, so the
     // tab buttons should be present by the time we assert.
     const section = page.locator('.card-results');
     await expect(section).toBeVisible({ timeout: SEARCH_TIMEOUT });
