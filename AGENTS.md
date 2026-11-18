@@ -2,6 +2,22 @@
 
 Name every feature branch `Andrew/name` with a capital A and a short, descriptive name after the slash. Split changes into commits by functionality. Write descriptive commit messages in Andrew’s language, following his recent commits in the repository. Describe what changed and include the reason or user-visible behavior when it helps explain the change.
 
+# Deployment
+
+Use the existing requested branch and keep commits split by functionality. Before pushing, inspect staged and unstaged changes and unpublished commits so the release includes the intended work without sweeping in unrelated worktrees. Follow an explicitly requested branch name even when it differs from the default capitalization above.
+
+Run the checks required by the user and the focused checks described below before release. For frontend browser tests, use a production build. The local backend currently permits `http://localhost:5173`; an alternate port or `127.0.0.1` origin can produce `403 Origin not allowed` even when the app is correct. If the dev server occupies that address, stop it temporarily and restore it afterward. Do not loosen production origin checks to make tests pass.
+
+Merge through `dev`, then `main`, preserving the separate commits with merge commits. The frontend requires pull requests; use feature → dev and dev → main PRs rather than direct pushes. When multiple services change, release research first, backend second, and frontend last. Release only repositories that actually changed. Do not interrupt active data collection or publication jobs to deploy unrelated application changes.
+
+The frontend dev Azure Static Web App is currently removed to save money. Its deployment can fail with “No matching Static Web App was found or the api key was invalid.” This known missing dev target does not block main deployment. Verify that this is the actual failure; do not dismiss build failures, failing tests, or production deployment errors. Research dev availability is separate and must be checked independently.
+
+Keep the existing build paths: pnpm for local development and tests, and the configured npm/Oryx build for Azure Static Web Apps. Research deploys to staging first; require `/health` to report `ready` with the new workflow run's `build_id` before swapping into production. A healthy response from the old container is not enough.
+
+After a frontend PR is merged, cancel its superseded browser run if main's run uses the same test account, so concurrent cleanup and mutations cannot interfere. Keep main's validation running. The browser job currently allows 40 minutes including dependency installation; inspect a timeout's logs and review test scope before increasing it. Do not repeatedly rerun the same passing local checks while waiting for CI.
+
+After deployment, verify the live frontend commit from its footer, research's expected build ID and readiness when relevant, and representative live flows such as search and deck loading. Report the deployed changes, checks and any remaining failures clearly. Keep secrets and filled login snapshots out of tool output and release notes. Leave database migrations to the operator as described below.
+
 # Tests
 
 Keep the end-to-end suite focused on critical user flows: authentication and permissions, search submission, saving and editing data, checkout, and recovery from failures that could lose work or block a task. Do not add unnecessary E2E tests. Before adding one, check existing coverage and explain what distinct failure requires a real browser. Prefer extending an existing flow or using a unit test for matching, parsing, validation, and other pure logic.
