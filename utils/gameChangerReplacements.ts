@@ -32,6 +32,7 @@ export function filterGameChangerReplacements(
   return results.filter(({ card_data: card }) => {
     if (
       card.game_changer !== false ||
+      card.legalities?.commander !== 'legal' ||
       used.has(card.oracle_id) ||
       !Array.isArray(card.color_identity) ||
       !card.color_identity.every((color) => allowed.has(color))

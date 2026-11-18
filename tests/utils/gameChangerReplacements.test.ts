@@ -11,6 +11,7 @@ const card = (id: string, colors: string[], gameChanger = false) =>
     name: id,
     color_identity: colors,
     game_changer: gameChanger,
+    legalities: { commander: 'legal' },
   }) as ScryfallCard;
 const entry = (data: ScryfallCard, commander = false) => ({
   card: data,
@@ -54,6 +55,19 @@ describe('game changer replacements', () => {
         (r) => r.card_data.name,
       ),
     ).toEqual(['colorless']);
+  });
+  it('only includes cards explicitly legal in Commander', () => {
+    const results = [
+      card('legal first', []),
+      { ...card('banned', []), legalities: { commander: 'banned' } },
+      { ...card('not legal', []), legalities: { commander: 'not_legal' } },
+      { ...card('missing format', []), legalities: {} },
+      { ...card('missing legalities', []), legalities: undefined },
+      card('legal last', []),
+    ].map((card_data) => ({ card_data }) as Card);
+    expect(
+      filterGameChangerReplacements(results, [], []).map((r) => r.card_data.name),
+    ).toEqual(['legal first', 'legal last']);
   });
   it('does not truncate the pool before applying colors', () => {
     const results = [
