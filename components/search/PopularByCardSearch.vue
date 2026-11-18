@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import { CardSearchFiltersSchema } from '~/models/frontend-specific/filtersModel';
 import { getPlatformFilters, isValidPlatform } from '~/utils/platformConfig';
 import { refDebounced } from '~/utils/refDebounced';
@@ -31,12 +32,9 @@ watch(
   },
   { immediate: true },
 );
-const options = computed(() => {
-  if (search.value.length < 2) return state.card_name ? [state.card_name] : [];
-  return (names.value ?? [])
-    .filter((name) => name.toLowerCase().includes(search.value.toLowerCase()))
-    .slice(0, 100);
-});
+const options = computed(() =>
+  cardNameSuggestions(names.value ?? [], search.value, state.card_name),
+);
 async function submit() {
   if (!state.card_name.trim()) return;
   const query = {
@@ -60,6 +58,7 @@ async function submit() {
         v-model="state.card_name"
         v-model:search-term="searchTerm"
         :items="options"
+        ignore-filter
         placeholder="Choose a card…"
         icon="i-mdi-cards-outline"
         class="w-full"

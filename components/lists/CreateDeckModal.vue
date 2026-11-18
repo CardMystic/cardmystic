@@ -40,6 +40,7 @@
             v-model="newListCommander"
             v-model:search-term="commanderSearchTerm"
             :items="filteredCommanders"
+            ignore-filter
             placeholder="Search for a commander..."
             icon="i-lucide-crown"
             class="w-full"
@@ -53,6 +54,7 @@
             v-model="newListPartnerCommander"
             v-model:search-term="partnerSearchTerm"
             :items="filteredPartners"
+            ignore-filter
             placeholder="Search for a partner commander..."
             icon="i-lucide-crown"
             class="w-full"
@@ -85,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import { useCardLists } from '~/composables/useCardLists';
 import { useCommanders, usePartnerCommanders } from '~/composables/useBulkData';
 import { getPartnerType, getValidPartners } from '~/utils/partnerCommanders';
@@ -161,29 +164,19 @@ const validPartnerList = computed(() => {
 });
 
 // Filtered commander autocomplete
-const filteredCommanders = computed(() => {
-  if (
-    !commanderSearchTerm.value ||
-    commanderSearchTerm.value.length < 2 ||
-    !commanders.value
-  )
-    return [];
-  const search = commanderSearchTerm.value.toLowerCase();
-  return commanders.value
-    .filter((c) => c.toLowerCase().includes(search))
-    .slice(0, 100);
-});
+const filteredCommanders = computed(() =>
+  cardNameSuggestions(commanders.value ?? [], commanderSearchTerm.value),
+);
 
 // Filtered partner autocomplete
-const filteredPartners = computed(() => {
-  if (!partnerSearchTerm.value || partnerSearchTerm.value.length < 2) return [];
-  const search = partnerSearchTerm.value.toLowerCase();
-  return validPartnerList.value
-    .filter(
-      (c) => c !== newListCommander.value && c.toLowerCase().includes(search),
-    )
-    .slice(0, 100);
-});
+const filteredPartners = computed(() =>
+  cardNameSuggestions(
+    validPartnerList.value,
+    partnerSearchTerm.value,
+    '',
+    newListCommander.value,
+  ),
+);
 
 // Clear commander when format changes away from Commander
 watch(newListFormat, (format) => {

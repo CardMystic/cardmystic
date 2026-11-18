@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import { refDebounced } from '~/utils/refDebounced';
 import { useCardNames } from '~/composables/useBulkData';
 import { bracketOptions } from '~/utils/commanderBrackets';
@@ -45,17 +46,13 @@ const bannerPrinting = ref(saved.avatarPrintingId);
 const bannerSearch = ref('');
 const debouncedBannerSearch = refDebounced(bannerSearch, 150);
 const { data: cardNames } = useCardNames(() => open.value);
-const bannerOptions = computed(() => {
-  const query = debouncedBannerSearch.value.trim().toLowerCase();
-  const selected = bannerCard.value ? [bannerCard.value] : [];
-  if (query.length < 2) return selected;
-  for (const name of cardNames.value ?? []) {
-    if (selected.length >= 100) break;
-    if (name.toLowerCase().includes(query) && !selected.includes(name))
-      selected.push(name);
-  }
-  return selected;
-});
+const bannerOptions = computed(() =>
+  cardNameSuggestions(
+    cardNames.value ?? [],
+    debouncedBannerSearch.value.trim(),
+    bannerCard.value,
+  ),
+);
 const bannerChanged = computed(
   () =>
     bannerCard.value !== saved.avatarCardName ||
@@ -228,6 +225,7 @@ async function move() {
                 v-model="bannerCard"
                 v-model:search-term="bannerSearch"
                 :items="bannerOptions"
+                ignore-filter
                 aria-label="Banner image"
                 placeholder="Search for a card..."
                 icon="i-lucide-search"

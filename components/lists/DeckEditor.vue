@@ -121,6 +121,7 @@
           :aria-busy="isAddCardBusy"
           :disabled="addCardInputDisabled"
           :items="filteredAddCards"
+          ignore-filter
           placeholder="Add a card to the deck..."
           icon="i-heroicons-plus"
           class="flex-1 min-w-0 lg:w-64 cursor-pointer"
@@ -571,6 +572,7 @@
 </template>
 
 <script setup lang="ts">
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import { DECK_BUSINESS_CARDS_ENABLED } from '~/utils/featureFlags';
 import { cardActionStyles } from '~/utils/card-actions';
 import { getUsdPrice, isBasicLand } from '~/utils/cardPrice';
@@ -1415,28 +1417,9 @@ function handleJumpBoard(board: string) {
 }
 
 // Filter cards for add card autocomplete
-const filteredAddCards = computed(() => {
-  if (
-    !debouncedAddCardSearchTerm.value ||
-    debouncedAddCardSearchTerm.value.length < 2
-  ) {
-    return [];
-  }
-
-  const searchLower = debouncedAddCardSearchTerm.value.toLowerCase();
-  const filtered: string[] = [];
-
-  const cards = rawCards.value ?? [];
-
-  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
-    const card = cards[i];
-    if (card.toLowerCase().includes(searchLower)) {
-      filtered.push(card);
-    }
-  }
-
-  return filtered;
-});
+const filteredAddCards = computed(() =>
+  cardNameSuggestions(rawCards.value ?? [], debouncedAddCardSearchTerm.value),
+);
 
 // Handle adding a card to the list
 async function handleAddCard(cardName: string) {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import { useUserProfile } from '~/composables/useUserProfile';
 import { useCardNames } from '~/composables/useBulkData';
 import { refDebounced } from '~/utils/refDebounced';
@@ -66,28 +67,13 @@ const cardsStatus = computed(() =>
 );
 
 // Filter cards based on search
-const filteredCards = computed(() => {
-  if (!debouncedSearchTerm.value || debouncedSearchTerm.value.length < 2) {
-    if (selectedProfileCard.value) {
-      return [selectedProfileCard.value];
-    }
-    return [];
-  }
-
-  const searchLower = debouncedSearchTerm.value.toLowerCase();
-  const filtered = [selectedProfileCard.value];
-
-  const cards = rawCards.value ?? [];
-
-  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
-    const card = cards[i];
-    if (card.toLowerCase().includes(searchLower)) {
-      filtered.push(card);
-    }
-  }
-
-  return filtered;
-});
+const filteredCards = computed(() =>
+  cardNameSuggestions(
+    rawCards.value ?? [],
+    debouncedSearchTerm.value,
+    selectedProfileCard.value,
+  ),
+);
 
 const updateProfileCard = async (
   cardName: string,
@@ -247,6 +233,7 @@ const handleSignOut = async () => {
                       v-model:search-term="searchTerm"
                       :loading="updateAvatarMutation.isPending.value"
                       :items="filteredCards"
+                      ignore-filter
                       placeholder="Search for a card..."
                       aria-label="Search for a card..."
                       icon="i-lucide-search"
