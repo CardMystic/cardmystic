@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { setupDeckDisplay, createDisplayCards } from './utils/deckDisplay';
+import {
+  setupDeckDisplay,
+  createDisplayCards,
+  displayDeckId,
+} from './utils/deckDisplay';
 import { BACKEND } from './utils/mocks';
 import { openDeckAction } from './utils/deckActions';
 
@@ -11,7 +15,7 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
   Object.assign(state.cards[1], { game_changer: true });
   state.items[0].is_commander = true;
   state.cards[2].color_identity = ['R'];
-  const alternatives = createDisplayCards(10)
+  const alternatives = createDisplayCards(14)
     .slice(3)
     .map((card) => ({
       ...card,
@@ -50,7 +54,7 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   expect(calls).toBe(0);
   await openDeckAction(page, 'Replace Gamechangers');
-  const panel = page.getByRole('dialog', {
+  const panel = page.getByRole('region', {
     name: 'Replace Gamechangers',
     exact: true,
   });
@@ -58,11 +62,9 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
     name: `Replacements for ${state.cards[0].name}`,
     exact: true,
   });
-  await expect(row.getByRole('img')).toHaveCount(4);
+  await expect(row.getByRole('img')).toHaveCount(7);
   await expect(panel).toBeVisible();
-  for (const image of await row.getByRole('img').all()) {
-    expect((await image.boundingBox())!.width).toBeLessThanOrEqual(160);
-  }
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(
     await row
       .getByRole('img')
@@ -71,25 +73,47 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
       ),
   ).toEqual([
     state.cards[0].name,
-    ...alternatives.slice(1, 4).map((card) => card.name),
+    ...alternatives.slice(1, 7).map((card) => card.name),
   ]);
   await expect(
     panel.getByText('No Replacements In These Colors', { exact: true }),
   ).toBeVisible();
-  await expect(row.locator('.game-changer-source')).toHaveCSS(
+  await expect(row.locator('.game-changer-source > span')).toHaveCSS(
     'border-top-width',
-    '2px',
+    '3px',
   );
   await row.getByRole('button', { name: 'See more results' }).click();
-  await expect(row.getByRole('img')).toHaveCount(7);
+  await expect(row.getByRole('img')).toHaveCount(11);
   await expect(
     row.getByRole('img', { name: 'Another game changer' }),
   ).toHaveCount(0);
   await row.getByRole('button', { name: 'Show fewer results' }).click();
-  await expect(row.getByRole('img')).toHaveCount(4);
+  await expect(row.getByRole('img')).toHaveCount(7);
   await panel.screenshot({ path: '/tmp/cardmystic-game-changers-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(row.getByRole('img')).toHaveCount(4);
+  await expect(row.getByRole('img')).toHaveCount(7);
+  const grid = row.locator('.replacement-cards');
+  expect(await grid.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(
+    true,
+  );
+  await grid.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth;
+  });
+  expect(await grid.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+  await row.getByRole('button', { name: 'See more results' }).click();
+  await expect(row.getByRole('img')).toHaveCount(11);
+  expect(
+    await grid.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+  ).toBe(true);
+  expect(
+    await grid.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns.split(' ').length,
+    ),
+  ).toBe(2);
+  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+  expect(
+    await grid.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+  ).toBe(true);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -101,10 +125,14 @@ test('free players get ranked in-color replacements, expand rows, and reuse resu
     .click();
   await expect(panel).toHaveCount(0);
   await openDeckAction(page, 'Replace Gamechangers');
-  await expect(row.getByRole('img')).toHaveCount(4);
+  await expect(row.getByRole('img')).toHaveCount(7);
   expect(calls).toBe(2);
   expect(state.writes).toHaveLength(0);
-  await page.keyboard.press('Escape');
+  const close = panel.getByRole('button', {
+    name: 'Close game changer replacements',
+  });
+  await close.focus();
+  await page.keyboard.press('Enter');
   await expect(panel).not.toBeVisible();
 });
 
@@ -123,7 +151,7 @@ test('failed replacements show a retry rather than an empty match message', asyn
   );
   await page.reload();
   await openDeckAction(page, 'Replace Gamechangers');
-  const panel = page.getByRole('dialog', {
+  const panel = page.getByRole('region', {
     name: 'Replace Gamechangers',
     exact: true,
   });
@@ -138,4 +166,87 @@ test('failed replacements show a retry rather than an empty match message', asyn
   await expect(
     panel.getByText('No Replacements In These Colors', { exact: true }),
   ).toBeVisible();
+});
+
+test('replacement images and row counts match suggested adds at every breakpoint', async ({
+  page,
+}) => {
+  const state = await setupDeckDisplay(page, { extraCards: 12 });
+  Object.assign(state.cards[0], { game_changer: true });
+  const results = state.catalog.slice(3).map((card) => ({
+    card_name: card.name,
+    card_data: { ...card, game_changer: false },
+  }));
+  await page.route(BACKEND + '/search/game-changer-replacements', (route) =>
+    route.fulfill({ json: results }),
+  );
+  await page.route(
+    BACKEND + `/library/lists/${displayDeckId}/suggestions`,
+    (route) => route.fulfill({ json: { results } }),
+  );
+  await page.reload();
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
+  await openDeckAction(page, 'Replace Gamechangers');
+  await openDeckAction(page, 'Suggest Adds');
+  const replacements = page.getByRole('region', {
+    name: 'Replacements for ' + state.cards[0].name,
+    exact: true,
+  });
+  const adds = page.getByRole('region', {
+    name: 'Suggested cards',
+    exact: true,
+  });
+  const replacementImages = replacements.locator('.replacement-cards img');
+  const addImages = adds.locator('.deck-suggestion-grid img');
+  async function sameSize() {
+    await page.mouse.move(0, 0);
+    // Allow the existing hover and responsive layout transitions to settle.
+    await expect
+      .poll(async () => {
+        const expected = (await addImages.first().boundingBox())!;
+        const differences = [];
+        for (const image of [
+          replacementImages.nth(1),
+          replacements.locator('.game-changer-source img'),
+        ]) {
+          const actual = (await image.boundingBox())!;
+          differences.push(
+            Math.abs(actual.width - expected.width),
+            Math.abs(actual.height - expected.height),
+          );
+        }
+        return Math.max(...differences);
+      })
+      .toBeLessThan(1);
+  }
+  for (const [width, count] of [
+    [1024, 4],
+    [1800, 7],
+    [390, 7],
+  ]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(replacementImages).toHaveCount(count);
+    await expect(addImages).toHaveCount(count);
+    await sameSize();
+  }
+  await replacements
+    .getByRole('button', { name: 'See more results', exact: true })
+    .click();
+  await adds.getByRole('button', { name: 'Show more', exact: true }).click();
+  await expect(replacementImages).toHaveCount(13);
+  await expect(addImages).toHaveCount(12);
+  await sameSize();
+  for (const grid of [
+    replacements.locator('.replacement-cards'),
+    adds.locator('.deck-suggestion-grid'),
+  ]) {
+    expect(
+      await grid.evaluate(
+        (el) => getComputedStyle(el).gridTemplateColumns.split(' ').length,
+      ),
+    ).toBe(2);
+    expect(
+      await grid.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+    ).toBe(true);
+  }
 });

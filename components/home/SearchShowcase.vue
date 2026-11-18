@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DECK_BUSINESS_CARDS_ENABLED } from '~/utils/featureFlags';
 import { searchDemos } from '~/utils/search-showcase';
 
 const workflow = [
@@ -121,7 +122,10 @@ const workflow = [
     </section>
     <LazyBuilderShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
     <LazyCompareShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
-    <LazyBusinessCardShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
+    <LazyBusinessCardShowcase
+      v-if="DECK_BUSINESS_CARDS_ENABLED"
+      :hydrate-on-visible="{ rootMargin: '200px' }"
+    />
     <LazyProShowcase :hydrate-on-visible="{ rootMargin: '200px' }" />
   </section>
 </template>

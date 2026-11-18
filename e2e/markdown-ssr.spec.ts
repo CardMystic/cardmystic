@@ -1023,3 +1023,74 @@ test('gateway authenticates upstream, preserves JWT/body/errors, and blocks fore
     gatewayRequests[0].clientIp,
   );
 });
+
+for (const signedIn of [false, true]) {
+  test(`deck reload shows skeletons before hydration (${signedIn ? 'signed in' : 'signed out'})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: signedIn ? 1440 : 390, height: 900 });
+    if (signedIn) {
+      await signIn(page);
+      await page.route(
+        `**/supabase/card-lists/mine/${DECK_ACTIONS_ID}`,
+        (route) =>
+          route.fulfill({ status: 404, json: { message: 'Not owned' } }),
+      );
+    }
+    let scriptsReady = Promise.resolve();
+    await page.route('**/_nuxt/**', async (route) => {
+      if (route.request().resourceType() === 'script') await scriptsReady;
+      await route.continue();
+    });
+    for (const reload of [false, true]) {
+      let release!: () => void;
+      scriptsReady = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      try {
+        if (reload) await page.reload({ waitUntil: 'commit' });
+        else
+          await page.goto(`${previewUrl}/lists/${DECK_ACTIONS_ID}`, {
+            waitUntil: 'commit',
+          });
+        await expect(
+          page.getByRole('status', { name: 'Loading cards', exact: true }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole('list', { name: 'Cards in this list' }),
+        ).toBeHidden();
+        await expect(page.locator('.public-card-links a')).toHaveAttribute(
+          'href',
+          `/card/${BOLT_ID}`,
+        );
+      } finally {
+        release();
+      }
+      await waitForHydration(page);
+      await expect(page.locator('.public-card-links')).toHaveCount(0);
+      await expect(page.locator('.list-card img').first()).toBeVisible();
+    }
+  });
+}
+
+test('public deck fallback links remain usable without JavaScript', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    const response = await page.goto(`${previewUrl}/lists/${DECK_ACTIONS_ID}`);
+    expect(await response!.text()).toContain('Cards in this list');
+    const link = page
+      .getByRole('list', { name: 'Cards in this list' })
+      .getByRole('link', { name: 'Lightning Bolt' });
+    await expect(link).toBeVisible();
+    await expect(
+      page.getByRole('status', { name: 'Loading cards', exact: true }),
+    ).toBeHidden();
+    await link.click();
+    await expect(page).toHaveURL(`${previewUrl}/card/${BOLT_ID}`);
+  } finally {
+    await context.close();
+  }
+});

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
 import { findSimilarAction, type CardActionMenu } from '~/utils/card-actions';
-import { getCardImageUrl } from '~/utils/scryfall';
 const props = defineProps<{
   listId: string;
   revision: string;
@@ -23,7 +22,7 @@ const results = ref<Card[]>([]),
 const expanded = ref(false),
   loadedRevision = ref('');
 const section = ref<HTMLElement | null>(null);
-const { rowCapacity, gridClasses } = useDeckCardGrid();
+const { previewCount, expandThreshold } = useDeckSuggestionGrid();
 const remaining = computed(() =>
   results.value.filter(
     (card) =>
@@ -34,7 +33,7 @@ const remaining = computed(() =>
 const visible = computed(() =>
   expanded.value
     ? remaining.value
-    : remaining.value.slice(0, rowCapacity.value),
+    : remaining.value.slice(0, previewCount.value),
 );
 const selected = ref<Card | null>(null),
   modalOpen = ref(false);
@@ -148,19 +147,19 @@ onBeforeUnmount(() => sequence++);
       review it or remove all copies from the mainboard. Lands and commanders
       are excluded.
     </p>
-    <div
+    <DeckSuggestionGrid
       v-if="loading"
-      :class="gridClasses"
+      :expanded="expanded"
       role="status"
       aria-label="Loading suggested cuts"
     >
       <USkeleton
-        v-for="n in rowCapacity"
+        v-for="n in previewCount"
         :key="n"
         class="w-full aspect-[488/680] rounded-[14px]"
       />
-    </div>
-    <div v-else :class="gridClasses">
+    </DeckSuggestionGrid>
+    <DeckSuggestionGrid v-else :expanded="expanded">
       <button
         v-for="card in visible"
         :key="card.card_data.oracle_id"
@@ -180,16 +179,9 @@ onBeforeUnmount(() => sequence++);
           modalOpen = true;
         "
       >
-        <img
-          :src="getCardImageUrl(card.card_data)"
-          :alt="card.card_name"
-          width="488"
-          height="680"
-          loading="lazy"
-          class="block w-full aspect-[488/680] rounded-[inherit] object-cover"
-        />
+        <CardArtwork :card="card.card_data" />
       </button>
-    </div>
+    </DeckSuggestionGrid>
     <p
       v-if="!loading && !remaining.length && !error"
       class="text-sm text-muted"
@@ -197,8 +189,9 @@ onBeforeUnmount(() => sequence++);
       No more suggested cuts. Refresh after making changes to check again.
     </p>
     <UButton
-      v-if="remaining.length > rowCapacity"
+      v-if="expanded || remaining.length > expandThreshold"
       :label="expanded ? 'Show less' : 'Show more'"
+      :aria-expanded="expanded"
       variant="outline"
       class="mt-3"
       @click="expanded = !expanded"

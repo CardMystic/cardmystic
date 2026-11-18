@@ -54,7 +54,7 @@ test('a saved deck printing never requests the default image while its metadata 
       name: `Options for ${card.name}`,
       exact: true,
     });
-    await expect(button.locator('.image-placeholder')).toBeVisible();
+    await expect(button.getByText(card.name, { exact: true })).toBeVisible();
     await expect(button.locator('img')).toHaveCount(0);
     release();
     await expect(button.locator('img')).toHaveAttribute(

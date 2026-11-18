@@ -221,7 +221,7 @@ test('suggestion queue advances without searching again and refills only when ex
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
     section.getByRole('button', { name: /^Options for / }),
-  ).toHaveCount(2);
+  ).toHaveCount(7);
   const mobileCards = await section
     .getByRole('button', { name: /^Options for / })
     .evaluateAll((cards) =>
@@ -233,7 +233,18 @@ test('suggestion queue advances without searching again and refills only when ex
     );
   expect(mobileCards[0].width).toBeGreaterThan(120);
   expect(mobileCards[0].y).toBe(mobileCards[1].y);
-  expect(mobileCards[1].x + mobileCards[1].width).toBeLessThanOrEqual(390);
+  const mobileGrid = section.locator('.deck-suggestion-grid');
+  expect(
+    await mobileGrid.evaluate((grid) => grid.scrollWidth > grid.clientWidth),
+  ).toBe(true);
+  await mobileGrid.evaluate((grid) => {
+    grid.scrollLeft = grid.scrollWidth;
+  });
+  const lastCard = await section
+    .getByRole('button', { name: /^Options for / })
+    .last()
+    .boundingBox();
+  expect(lastCard!.x + lastCard!.width).toBeLessThanOrEqual(390);
   await page.setViewportSize({ width: 1600, height: 1000 });
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -781,17 +792,6 @@ test('collections paginate on mobile and Display fields stay aligned', async ({
     exact: true,
   });
   await expect(view).toBeVisible();
-  const bounds = await Promise.all([
-    view.boundingBox(),
-    group.boundingBox(),
-    sort.boundingBox(),
-  ]);
-  for (const bound of bounds) {
-    expect(bound).not.toBeNull();
-    expect(Math.abs(bound!.x - bounds[0]!.x)).toBeLessThan(1);
-    expect(Math.abs(bound!.width - bounds[0]!.width)).toBeLessThan(1);
-    expect(bound!.x + bound!.width).toBeLessThanOrEqual(390);
-  }
   await page
     .locator('[data-reka-popper-content-wrapper]')
     .evaluateAll(async (elements) => {
@@ -803,6 +803,17 @@ test('collections paginate on mobile and Display fields stay aligned', async ({
         ),
       );
     });
+  const bounds = await Promise.all([
+    view.boundingBox(),
+    group.boundingBox(),
+    sort.boundingBox(),
+  ]);
+  for (const bound of bounds) {
+    expect(bound).not.toBeNull();
+    expect(Math.abs(bound!.x - bounds[0]!.x)).toBeLessThan(1);
+    expect(Math.abs(bound!.width - bounds[0]!.width)).toBeLessThan(1);
+    expect(bound!.x + bound!.width).toBeLessThanOrEqual(390);
+  }
   await page.screenshot({ path: '/tmp/cardmystic-pro-mobile-display.png' });
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
@@ -815,6 +826,7 @@ test('Show more reveals queued cards without another recommendation request', as
 }) => {
   await page.setViewportSize({ width: 1024, height: 900 });
   const state = await setupDeckDisplay(page, { pro: true, extraCards: 15 });
+  Object.assign(state.catalog[3], { game_changer: true });
   let requests = 0;
   await page.route(
     BACKEND + `/library/lists/${displayDeckId}/suggestions`,
@@ -837,6 +849,15 @@ test('Show more reveals queued cards without another recommendation request', as
   });
   await openDeckAction(page, 'Suggest Adds');
   await section.scrollIntoViewIfNeeded();
+  await expect(section.locator('.gc-corner')).toHaveCount(1);
+  await expect(
+    section
+      .getByRole('button', {
+        name: 'Options for ' + state.catalog[3].name,
+        exact: true,
+      })
+      .locator('.gc-corner'),
+  ).toBeVisible();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
   ).toHaveCount(4);
@@ -847,15 +868,31 @@ test('Show more reveals queued cards without another recommendation request', as
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
     section.getByRole('button', { name: /^Options for / }),
-  ).toHaveCount(2);
+  ).toHaveCount(7);
+  const grid = section.locator('.deck-suggestion-grid');
+  expect(await grid.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(
+    true,
+  );
+  await grid.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth;
+  });
+  expect(await grid.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
   await section.getByRole('button', { name: 'Show more', exact: true }).click();
+  expect(
+    await grid.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+  ).toBe(true);
+  expect(
+    await grid.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns.split(' ').length,
+    ),
+  ).toBe(2);
   await expect(
     section.getByRole('button', { name: /^Options for / }),
   ).toHaveCount(15);
   await section.getByRole('button', { name: 'Show less', exact: true }).click();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
-  ).toHaveCount(2);
+  ).toHaveCount(7);
   await section.getByRole('button', { name: 'Show more', exact: true }).click();
   await expect(
     section.getByRole('button', { name: /^Options for / }),
@@ -2272,4 +2309,90 @@ test('deck prices, stats and sticky actions hydrate consistently on reload', asy
     await expect(page.getByTestId('deck-stats')).toHaveAttribute('open', '');
     expect(hydrationWarnings).toEqual([]);
   }
+});
+
+test('mobile cuts scroll through seven results and expand into two columns', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const state = await setupDeckDisplay(page, { cardCount: 12 });
+  Object.assign(state.cards[3], { game_changer: true });
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
+  let release = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let requests = 0;
+  await page.route(
+    BACKEND + `/library/lists/${displayDeckId}/cuts`,
+    async (route) => {
+      requests++;
+      await pending;
+      await route.fulfill({
+        json: {
+          results: state.cards
+            .slice(3, 10)
+            .map((card) => ({ card_name: card.name, card_data: card })),
+        },
+      });
+    },
+  );
+  await openDeckAction(page, 'Suggest Cuts');
+  const panel = page.getByRole('region', {
+    name: 'Suggested Cuts',
+    exact: true,
+  });
+  const skeleton = panel.getByRole('status', {
+    name: 'Loading suggested cuts',
+  });
+  await expect(skeleton.locator(':scope > *')).toHaveCount(7);
+  expect(await skeleton.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(
+    true,
+  );
+  release();
+  await expect(
+    panel.getByRole('button', { name: /^Options for / }),
+  ).toHaveCount(7);
+  await expect(panel.locator('.gc-corner')).toHaveCount(1);
+  await expect(
+    panel
+      .getByRole('button', {
+        name: 'Options for ' + state.cards[3].name,
+        exact: true,
+      })
+      .locator('.gc-corner'),
+  ).toBeVisible();
+  const grid = panel.locator('.deck-suggestion-grid');
+  await grid.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth;
+  });
+  expect(await grid.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+  const showMore = panel.getByRole('button', {
+    name: 'Show more',
+    exact: true,
+  });
+  await showMore.focus();
+  await page.keyboard.press('Enter');
+  await expect(
+    panel.getByRole('button', { name: /^Options for / }),
+  ).toHaveCount(7);
+  expect(
+    await grid.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+  ).toBe(true);
+  expect(
+    await grid.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns.split(' ').length,
+    ),
+  ).toBe(2);
+  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+  expect(
+    await grid.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+  ).toBe(true);
+  await panel.getByRole('button', { name: 'Show less', exact: true }).click();
+  await expect(
+    panel.getByRole('button', { name: /^Options for / }),
+  ).toHaveCount(7);
+  expect(requests).toBe(1);
+  await panel.getByRole('button', { name: 'Close suggested cuts' }).click();
+  await expect(panel).toHaveCount(0);
 });

@@ -60,6 +60,15 @@
           Card prices are estimates provided by Scryfall and are not guaranteed
           to be accurate. See stores for official prices.
         </p>
+        <p>
+          Deck recommendations and popularity counts use public decklists from
+          <a
+            href="https://archidekt.com/"
+            class="underline hover:text-purple-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            >Archidekt</a
+          >
+          and its users.
+        </p>
         <p>All other content © 2025 Fiasco Games LLC</p>
         <p class="text-xs text-gray-200 dark:text-gray-400">
           This site is protected by reCAPTCHA and the Google

@@ -14,26 +14,32 @@ const oracleIds = computed(() =>
 </script>
 
 <template>
-  <UModal
-    v-model:open="open"
-    title="Replace Gamechangers"
-    description="Find replacements within your deck's colors."
-    :close="{ 'aria-label': 'Close game changer replacements' }"
-    :ui="{ content: 'sm:max-w-3xl lg:max-w-5xl', description: 'sr-only' }"
+  <section
+    v-if="open"
+    aria-label="Replace Gamechangers"
+    class="my-4 rounded-lg border border-primary/25 bg-primary/5 p-4"
   >
-    <template #body>
-      <div v-if="open" class="mx-auto w-full max-w-3xl space-y-6">
-        <p v-if="!gameChangers.length" class="text-muted">
-          No game changers in this deck.
-        </p>
-        <GameChangerReplacementRow
-          v-for="card in gameChangers"
-          :key="card.oracle_id"
-          :card="card"
-          :colors="colors"
-          :deck-oracle-ids="oracleIds"
-        />
-      </div>
-    </template>
-  </UModal>
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <h2 class="min-w-0 wrap-anywhere font-semibold">Replace Gamechangers</h2>
+      <UButton
+        icon="i-lucide-x"
+        aria-label="Close game changer replacements"
+        variant="ghost"
+        class="shrink-0"
+        @click="open = false"
+      />
+    </div>
+    <div class="space-y-6">
+      <p v-if="!gameChangers.length" class="text-muted">
+        No game changers in this deck.
+      </p>
+      <GameChangerReplacementRow
+        v-for="card in gameChangers"
+        :key="card.oracle_id"
+        :card="card"
+        :colors="colors"
+        :deck-oracle-ids="oracleIds"
+      />
+    </div>
+  </section>
 </template>
