@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import type { SignUpRequest } from '@/models/userModel';
 import { useCardNames } from '~/composables/useBulkData';
 import { refDebounced } from '~/utils/refDebounced';
@@ -37,30 +38,13 @@ const cardsStatus = computed(() =>
   cardsQueryStatus.value === 'pending' ? 'pending' : 'success',
 );
 
-const filteredAvatarCards = computed(() => {
-  if (
-    !debouncedAvatarSearchTerm.value ||
-    debouncedAvatarSearchTerm.value.length < 2
-  ) {
-    return selectedProfileCard.value ? [selectedProfileCard.value] : [];
-  }
-
-  const searchLower = debouncedAvatarSearchTerm.value.toLowerCase();
-  const filtered = selectedProfileCard.value ? [selectedProfileCard.value] : [];
-
-  const cards = rawCards.value ?? [];
-  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
-    const card = cards[i];
-    if (
-      card.toLowerCase().includes(searchLower) &&
-      card !== selectedProfileCard.value
-    ) {
-      filtered.push(card);
-    }
-  }
-
-  return filtered;
-});
+const filteredAvatarCards = computed(() =>
+  cardNameSuggestions(
+    rawCards.value ?? [],
+    debouncedAvatarSearchTerm.value,
+    selectedProfileCard.value,
+  ),
+);
 
 const signUpWithGoogle = async () => {
   errorMessage.value = null;
@@ -208,6 +192,7 @@ const resendVerification = async () => {
       v-model="selectedProfileCard"
       v-model:search-term="avatarSearchTerm"
       :items="filteredAvatarCards"
+      ignore-filter
       :loading="cardsStatus === 'pending'"
       placeholder="Optional: choose a profile icon card"
       aria-label="Optional: choose a profile icon card"

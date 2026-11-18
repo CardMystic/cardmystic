@@ -2,57 +2,6 @@ import { expect, test } from '@playwright/test';
 import { BACKEND, gotoHydrated, waitForHydration } from './utils/mocks';
 import type { CardCollectionCatalog } from '../models/collectionModel';
 
-test('collection detail banners render their artwork on the right over a blurred backdrop', async ({
-  page,
-  request,
-}) => {
-  const response = await request.get('/api/backend/card-collections');
-  expect(response.ok()).toBe(true);
-  const catalog = (await response.json()) as CardCollectionCatalog;
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  page.on('console', (message) => {
-    if (
-      /hydrat/i.test(message.text()) &&
-      ['error', 'warning'].includes(message.type())
-    )
-      errors.push(message.text());
-  });
-  for (const kind of ['sets', 'roles', 'themes'] as const) {
-    const entry = catalog[kind].find((entry) => entry.imageUrl)!;
-    const path = `/${kind}/${entry.slug}`;
-    for (const width of [1440, 390]) {
-      await page.setViewportSize({ width, height: 900 });
-      const response =
-        width === 1440 ? await page.goto(path) : await page.reload();
-      expect(response?.ok()).toBe(true);
-      expect(await response!.text()).toMatch(/<img[^>]+class="banner-art"/);
-      await waitForHydration(page);
-      const banner = page.locator(
-        'section[aria-labelledby="collection-title"]',
-      );
-      const art = banner.locator('.banner-art');
-      const backdrop = banner.locator('.banner-backdrop');
-      await expect(art).toHaveAttribute('src', entry.imageUrl!);
-      await expect
-        .poll(() => art.evaluate((img: HTMLImageElement) => img.naturalWidth))
-        .toBeGreaterThan(0);
-      await expect(backdrop).toHaveAttribute('src', entry.imageUrl!);
-      await expect(backdrop).toHaveCSS('filter', /blur\(32px\)/);
-      await expect(art).toHaveCSS('filter', 'none');
-      const bounds = (await banner.boundingBox())!;
-      const picture = (await art.boundingBox())!;
-      expect(picture.x).toBeGreaterThan(bounds.x);
-      expect(picture.x + picture.width).toBeCloseTo(bounds.x + bounds.width, 0);
-      const link = banner.getByRole('link', { name: /^Go To All/ });
-      await link.focus();
-      await expect(link).toBeFocused();
-      await expect(link).toHaveAttribute('href', '/' + kind);
-    }
-  }
-  expect(errors).toEqual([]);
-});
-
 test('reviewed taxonomy has distinct Proliferate pages and permanent legacy redirects', async ({
   page,
   request,

@@ -121,6 +121,10 @@ for (const width of [390, 1440]) {
         .click();
       await page.keyboard.press('Escape');
       await expect(page.locator('.card-text-row')).toHaveCount(40);
+      await expect(page.locator('.card-text-row').first()).toHaveAttribute(
+        'aria-label',
+        /.+, \d+ copies/,
+      );
       const rowTop = (await page
         .locator('.card-text-row')
         .first()

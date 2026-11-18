@@ -13,6 +13,7 @@
           v-model="state.commander"
           v-model:search-term="commanderSearchTerm"
           :items="filteredCommanders"
+          ignore-filter
           placeholder="Select a commander..."
           icon="i-lucide-crown"
           class="flex-1"
@@ -38,6 +39,7 @@
           v-model="state.partnerCommander"
           v-model:search-term="partnerSearchTerm"
           :items="filteredPartners"
+          ignore-filter
           placeholder="Select a partner commander (optional)..."
           icon="i-lucide-flame"
           class="flex-1"
@@ -114,6 +116,7 @@
 </template>
 
 <script lang="ts" setup>
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import * as z from 'zod';
 import { useRoute } from 'vue-router';
 import { refDebounced } from '~/utils/refDebounced';
@@ -185,26 +188,13 @@ const { data: partnerCommanders } = usePartnerCommanders();
 const commanderSearchTerm = ref('');
 const debouncedCommanderSearch = refDebounced(commanderSearchTerm, 150);
 
-const filteredCommanders = computed(() => {
-  if (
-    !debouncedCommanderSearch.value ||
-    debouncedCommanderSearch.value.length < 2
-  ) {
-    if (state.commander) return [state.commander];
-    return [];
-  }
-  const searchLower = debouncedCommanderSearch.value.toLowerCase();
-  const filtered: string[] = [];
-  if (state.commander) filtered.push(state.commander);
-  const commanders = rawCommanders.value ?? [];
-  for (let i = 0; i < commanders.length && filtered.length < 100; i++) {
-    const cmd = commanders[i];
-    if (cmd.toLowerCase().includes(searchLower) && cmd !== state.commander) {
-      filtered.push(cmd);
-    }
-  }
-  return filtered;
-});
+const filteredCommanders = computed(() =>
+  cardNameSuggestions(
+    rawCommanders.value ?? [],
+    debouncedCommanderSearch.value,
+    state.commander,
+  ),
+);
 
 // Partner commander handling
 const partnerSearchTerm = ref('');
@@ -227,29 +217,14 @@ const validPartnerList = computed(() => {
   );
 });
 
-const filteredPartners = computed(() => {
-  if (
-    !debouncedPartnerSearch.value ||
-    debouncedPartnerSearch.value.length < 2
-  ) {
-    if (state.partnerCommander) return [state.partnerCommander];
-    return [];
-  }
-  const searchLower = debouncedPartnerSearch.value.toLowerCase();
-  const filtered: string[] = [];
-  if (state.partnerCommander) filtered.push(state.partnerCommander);
-  for (const cmd of validPartnerList.value) {
-    if (filtered.length >= 100) break;
-    if (
-      cmd !== state.commander &&
-      cmd !== state.partnerCommander &&
-      cmd.toLowerCase().includes(searchLower)
-    ) {
-      filtered.push(cmd);
-    }
-  }
-  return filtered;
-});
+const filteredPartners = computed(() =>
+  cardNameSuggestions(
+    validPartnerList.value,
+    debouncedPartnerSearch.value,
+    state.partnerCommander,
+    state.commander,
+  ),
+);
 
 function clearCommander() {
   state.commander = '';

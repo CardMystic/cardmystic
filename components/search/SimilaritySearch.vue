@@ -24,6 +24,7 @@
           v-model="state.card_name"
           v-model:search-term="searchTerm"
           :items="filteredCards"
+          ignore-filter
           placeholder="Enter a card name..."
           icon="i-mdi-cards-outline"
           class="flex-1 min-w-0"
@@ -55,6 +56,7 @@
 </template>
 
 <script lang="ts" setup>
+import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import * as z from 'zod';
 import { useRoute } from 'vue-router';
 
@@ -136,28 +138,13 @@ const debouncedSearchTerm = refDebounced(searchTerm, 150);
 const { data: rawCards } = useCardNames();
 
 // Pre-filter cards before passing to UInputMenu
-const filteredCards = computed(() => {
-  if (!debouncedSearchTerm.value || debouncedSearchTerm.value.length < 2) {
-    if (state.card_name) {
-      return [state.card_name];
-    }
-    return [];
-  }
-
-  const searchLower = debouncedSearchTerm.value.toLowerCase();
-  const filtered = [state.card_name];
-
-  // Only process first 100 matches for performance
-  const cards = rawCards.value ?? [];
-  for (let i = 0; i < cards.length && filtered.length < 100; i++) {
-    const card = cards[i];
-    if (card.toLowerCase().includes(searchLower)) {
-      filtered.push(card);
-    }
-  }
-
-  return filtered;
-});
+const filteredCards = computed(() =>
+  cardNameSuggestions(
+    rawCards.value ?? [],
+    debouncedSearchTerm.value,
+    state.card_name,
+  ),
+);
 
 // Honeypot field for bot detection
 const honeypot = ref('');

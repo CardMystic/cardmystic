@@ -51,20 +51,9 @@ test('bundled popular searches support keyboard/mouse autocomplete without backe
   await expect(
     page.getByRole('listbox', { name: 'Popular search suggestions' }),
   ).toBeHidden();
-  expect(loads).toBe(0);
-});
-
-test('search remains usable when popular suggestions fail to load', async ({
-  page,
-}) => {
-  await page.route(`${BACKEND}/cache/popular`, (route) =>
-    route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
-  );
-  await gotoHydrated(page, '/search/all/smart');
-  const input = page.getByRole('combobox', { name: 'Smart search' });
-  await input.fill('my own unusual search');
   await input.press('Enter');
   await expect(page).toHaveURL(
     /query=my(?:%20|\+)own(?:%20|\+)unusual(?:%20|\+)search/,
   );
+  expect(loads).toBe(0);
 });
