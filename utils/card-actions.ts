@@ -38,6 +38,12 @@ export const findSimilarAction = {
   ...cardActionStyles.similar,
 } as const;
 
+export const deckSuggestionActions = {
+  add: { label: 'Add', icon: 'i-lucide-plus', color: 'primary' },
+  cut: { label: 'Cut', icon: 'i-lucide-scissors', color: 'error' },
+  replace: { label: 'Replace', icon: 'i-lucide-replace-all', color: 'primary' },
+} as const;
+
 export const suggestDecksAction = {
   label: 'Suggest Decks · Pro',
   icon: 'i-lucide-layers-2',

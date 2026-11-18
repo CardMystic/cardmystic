@@ -309,8 +309,11 @@
         <template #before-cards="{ setPreviewCard, clearPendingPreviewCard }">
           <LazyDeckGameChangerReplacements
             v-if="gameChangerReplacementsOpen && !isCollection"
+            :key="listId"
             v-model:open="gameChangerReplacementsOpen"
             :entries="analysisCards"
+            :list-id="listId"
+            :editable="isOwner"
           />
 
           <DeckCuts

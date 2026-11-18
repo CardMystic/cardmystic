@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { getUsdPrice } from '~/utils/cardPrice';
+import { captureSuggestionFocus } from '~/utils/suggestionFocus';
 import type { Card } from '~/models/cardModel';
 import {
   cardActionStyles,
+  deckSuggestionActions,
   findSimilarAction,
   type CardActionMenu,
 } from '~/utils/card-actions';
@@ -44,8 +46,8 @@ const cardActions = computed<CardActionMenu>(() => {
   const data = card.card_data;
   return {
     addToDeck: {
+      ...deckSuggestionActions.add,
       label: 'Add to Deck',
-      icon: 'i-lucide-plus',
       disabled:
         !!adding.value ||
         props.oracleIds.includes(data.oracle_id) ||
@@ -199,7 +201,13 @@ watch(
 );
 onBeforeUnmount(() => sequence++);
 async function add(card: Card) {
-  if (adding.value) return;
+  if (
+    adding.value ||
+    props.oracleIds.includes(card.card_data.oracle_id) ||
+    added.value.has(card.card_data.oracle_id)
+  )
+    return;
+  const restoreFocus = captureSuggestionFocus(section.value);
   adding.value = card.card_data.oracle_id;
   error.value = '';
   try {
@@ -219,6 +227,7 @@ async function add(card: Card) {
     error.value = (cause as Error).message;
   } finally {
     adding.value = null;
+    await restoreFocus();
   }
 }
 </script>
@@ -228,6 +237,7 @@ async function add(card: Card) {
     ref="section"
     class="my-6 rounded-lg border border-primary/25 bg-primary/5 p-4"
     :aria-label="title"
+    tabindex="-1"
   >
     <LazyCardActionsModal
       v-if="selectedCard"
@@ -308,31 +318,38 @@ async function add(card: Card) {
         role="status"
         aria-label="Loading suggestions"
       >
-        <USkeleton
-          v-for="n in previewCount"
-          :key="n"
-          class="w-full aspect-[488/680] rounded-[14px]"
-        />
+        <DeckSuggestionSkeleton v-for="n in previewCount" :key="n" />
       </DeckSuggestionGrid>
       <DeckSuggestionGrid v-else-if="visible.length" :expanded="expanded">
-        <button
+        <div
           v-for="card in visible"
           :key="card.card_data.oracle_id"
-          type="button"
-          :aria-label="`Options for ${card.card_data.name}`"
-          aria-haspopup="dialog"
-          :aria-expanded="
-            actionsOpen &&
-            selectedCard?.card_data.oracle_id === card.card_data.oracle_id
-          "
-          class="deck-card-surface block min-w-0 w-full overflow-hidden rounded-[14px] focus-visible:outline-2 focus-visible:outline-primary"
-          @mouseenter="emit('preview', card)"
-          @focus="emit('preview', card)"
-          @mouseleave="emit('cancelPreview', card.card_data.id)"
-          @click="openActions(card, $event)"
+          class="min-w-0 flex flex-col gap-2"
         >
-          <CardArtwork :card="card.card_data" />
-        </button>
+          <button
+            type="button"
+            :aria-label="`Options for ${card.card_data.name}`"
+            aria-haspopup="dialog"
+            :aria-expanded="
+              actionsOpen &&
+              selectedCard?.card_data.oracle_id === card.card_data.oracle_id
+            "
+            class="deck-card-surface block min-w-0 w-full overflow-hidden rounded-[14px] focus-visible:outline-2 focus-visible:outline-primary"
+            @mouseenter="emit('preview', card)"
+            @focus="emit('preview', card)"
+            @mouseleave="emit('cancelPreview', card.card_data.id)"
+            @click="openActions(card, $event)"
+          >
+            <CardArtwork :card="card.card_data" />
+          </button>
+          <DeckSuggestionAction
+            action="add"
+            :label="`Add ${card.card_data.name} to deck`"
+            :disabled="!!adding"
+            :loading="adding === card.card_data.oracle_id"
+            @click="add(card)"
+          />
+        </div>
       </DeckSuggestionGrid>
       <p v-else-if="!error" class="text-sm text-muted">
         {{

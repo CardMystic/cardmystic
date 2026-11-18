@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { Card } from '~/models/cardModel';
-import { findSimilarAction, type CardActionMenu } from '~/utils/card-actions';
+import { captureSuggestionFocus } from '~/utils/suggestionFocus';
+import {
+  deckSuggestionActions,
+  findSimilarAction,
+  type CardActionMenu,
+} from '~/utils/card-actions';
 const props = defineProps<{
   listId: string;
   revision: string;
@@ -41,9 +46,8 @@ const actions = computed<CardActionMenu>(() =>
   selected.value
     ? {
         cut: {
+          ...deckSuggestionActions.cut,
           label: 'Remove from Deck',
-          icon: 'i-lucide-scissors',
-          color: 'error',
           disabled: !!removing.value,
           onSelect: () => {
             if (selected.value) void cut(selected.value);
@@ -83,6 +87,7 @@ async function load() {
 }
 async function cut(card: Card) {
   if (removing.value) return;
+  const restoreFocus = captureSuggestionFocus(section.value);
   removing.value = card.card_data.oracle_id;
   error.value = '';
   try {
@@ -101,6 +106,7 @@ async function cut(card: Card) {
     error.value = (cause as Error).message;
   } finally {
     removing.value = null;
+    await restoreFocus();
   }
 }
 watch(open, (value) => {
@@ -122,6 +128,7 @@ onBeforeUnmount(() => sequence++);
     v-if="open"
     ref="section"
     aria-label="Suggested Cuts"
+    tabindex="-1"
     class="my-4 rounded-lg border border-error/30 bg-error/5 p-4"
   >
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -153,34 +160,41 @@ onBeforeUnmount(() => sequence++);
       role="status"
       aria-label="Loading suggested cuts"
     >
-      <USkeleton
-        v-for="n in previewCount"
-        :key="n"
-        class="w-full aspect-[488/680] rounded-[14px]"
-      />
+      <DeckSuggestionSkeleton v-for="n in previewCount" :key="n" />
     </DeckSuggestionGrid>
     <DeckSuggestionGrid v-else :expanded="expanded">
-      <button
+      <div
         v-for="card in visible"
         :key="card.card_data.oracle_id"
-        type="button"
-        :aria-label="`Options for ${card.card_name}`"
-        aria-haspopup="dialog"
-        :aria-expanded="
-          modalOpen &&
-          selected?.card_data.oracle_id === card.card_data.oracle_id
-        "
-        class="deck-card-surface block min-w-0 w-full overflow-hidden rounded-[14px] focus-visible:outline-2 focus-visible:outline-primary"
-        @mouseenter="emit('preview', card)"
-        @focus="emit('preview', card)"
-        @mouseleave="emit('cancelPreview', card.card_data.id)"
-        @click="
-          selected = card;
-          modalOpen = true;
-        "
+        class="min-w-0 flex flex-col gap-2"
       >
-        <CardArtwork :card="card.card_data" />
-      </button>
+        <button
+          type="button"
+          :aria-label="`Options for ${card.card_name}`"
+          aria-haspopup="dialog"
+          :aria-expanded="
+            modalOpen &&
+            selected?.card_data.oracle_id === card.card_data.oracle_id
+          "
+          class="deck-card-surface block min-w-0 w-full overflow-hidden rounded-[14px] focus-visible:outline-2 focus-visible:outline-primary"
+          @mouseenter="emit('preview', card)"
+          @focus="emit('preview', card)"
+          @mouseleave="emit('cancelPreview', card.card_data.id)"
+          @click="
+            selected = card;
+            modalOpen = true;
+          "
+        >
+          <CardArtwork :card="card.card_data" />
+        </button>
+        <DeckSuggestionAction
+          action="cut"
+          :label="`Cut ${card.card_name} from deck`"
+          :disabled="!!removing"
+          :loading="removing === card.card_data.oracle_id"
+          @click="cut(card)"
+        />
+      </div>
     </DeckSuggestionGrid>
     <p
       v-if="!loading && !remaining.length && !error"
