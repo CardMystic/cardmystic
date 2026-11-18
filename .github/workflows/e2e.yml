@@ -3,12 +3,8 @@ name: E2E Tests
 # `on` is quoted to avoid YAML 1.1 boolean coercion (`on` -> true) that
 # some YAML linters (incl. VS Code's built-in) flag as invalid.
 #
-# Trigger policy:
-#   - Unit tests: run on every push / PR to `dev` or `main`.
-#   - Playwright e2e: run automatically only for `main` (push + PR).
-#     For `dev` and everything else, e2e is opt-in via `workflow_dispatch`
-#     (manual "Run workflow" button). This keeps CI green when the dev
-#     container is intentionally down.
+# Unit and gateway checks run for pushes and PRs to dev/main.
+# Browser E2E runs only on main pushes or a manual run selected on main.
 'on':
   push:
     branches:
@@ -20,9 +16,10 @@ name: E2E Tests
       - main
   workflow_dispatch:
 
-# Cancel superseded runs on the same branch / PR to keep CI minutes low.
+# Cancel superseded runs within one branch or PR. A merged PR can report its
+# base branch as github.ref, so identify PRs by number to protect main validation.
 concurrency:
-  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  group: e2e-${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -55,14 +52,9 @@ jobs:
   e2e:
     name: Playwright (${{ matrix.project }})
     needs: unit
-    # Run e2e only when it's meaningful:
-    #   - Any push to main (post-merge validation)
-    #   - Any PR targeting main
-    #   - Manual workflow_dispatch (opt-in for dev / feature branches)
     if: >-
-      github.event_name == 'workflow_dispatch'
-      || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-      || (github.event_name == 'pull_request' && github.base_ref == 'main')
+      github.ref == 'refs/heads/main'
+      && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     # Browser dependency installation and the full single-worker suite share this limit.
     timeout-minutes: 40
@@ -73,20 +65,13 @@ jobs:
         project: [chromium]
 
     env:
-      # Branch-paired integration testing:
-      #   - `dev` (push or PR target) -> api.next.cardmystic.com
-      #     The 3 containers (frontend, backend, research) all deploy
-      #     their `dev` code to *.next.cardmystic.com, so this validates
-      #     the latest of all three together.
-      #   - `main` (push or PR target) -> api.cardmystic.com
-      #     Validates the prod stack against the code about to be / just
-      #     released.
+      # Main-only browser integration checks use the production services.
       NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.NUXT_PUBLIC_SUPABASE_URL || 'https://ddbgietanhxrozzmogur.supabase.co' }}
       NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NUXT_PUBLIC_SUPABASE_KEY || 'test-anon-key' }}
       NUXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || 'test-recaptcha-site-key' }}
-      NUXT_BACKEND_URL: ${{ (github.base_ref == 'main' || github.ref == 'refs/heads/main') && 'https://api.cardmystic.com' || 'https://api.next.cardmystic.com' }}
+      NUXT_BACKEND_URL: https://api.cardmystic.com
       # Private service credential for the frontend test server only.
-      NUXT_BACKEND_API_KEY: ${{ (github.base_ref == 'main' || github.ref == 'refs/heads/main') && secrets.BACKEND_API_KEY_PRODUCTION || secrets.BACKEND_API_KEY_NEXT }}
+      NUXT_BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY_PRODUCTION }}
       # Real Supabase test user used by login / logout integration tests.
       # Tests that need these will skip cleanly if either is unset.
       E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
