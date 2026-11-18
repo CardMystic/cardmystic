@@ -1,3 +1,4 @@
+import { DECK_BUSINESS_CARDS_ENABLED } from '../utils/featureFlags';
 import { expect, test, type Page } from '@playwright/test';
 import { BACKEND, backendPath, SUPABASE, gotoHydrated } from './utils/mocks';
 
@@ -491,36 +492,40 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   const businessCard = businessSection.getByRole('article', {
     name: 'Deck business card preview',
   });
-  await businessCard.scrollIntoViewIfNeeded();
-  await expect(businessCard).toContainText('Commander · 100 cards');
-  await expect(businessCard.getByRole('link')).toHaveAttribute(
-    'href',
-    '/lists/e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a',
-  );
-  await expect
-    .poll(() =>
-      businessCard
-        .locator('img')
-        .evaluateAll((images) =>
-          images.every(
-            (image) =>
-              (image as HTMLImageElement).complete &&
-              (image as HTMLImageElement).naturalWidth > 0,
+  if (DECK_BUSINESS_CARDS_ENABLED) {
+    await businessCard.scrollIntoViewIfNeeded();
+    await expect(businessCard).toContainText('Commander · 100 cards');
+    await expect(businessCard.getByRole('link')).toHaveAttribute(
+      'href',
+      '/lists/e8cde3f9-5cb3-41d6-8d9c-c07fd2aed77a',
+    );
+    await expect
+      .poll(() =>
+        businessCard
+          .locator('img')
+          .evaluateAll((images) =>
+            images.every(
+              (image) =>
+                (image as HTMLImageElement).complete &&
+                (image as HTMLImageElement).naturalWidth > 0,
+            ),
           ),
-        ),
-    )
-    .toBe(true);
-  expect(
-    await businessSection.evaluate(
-      (section) =>
-        !!section.previousElementSibling?.querySelector(
-          '[aria-label="Deck comparison preview"]',
-        ),
-    ),
-  ).toBe(true);
-  await businessSection.screenshot({
-    path: '/tmp/cardmystic-business-mobile.png',
-  });
+      )
+      .toBe(true);
+    expect(
+      await businessSection.evaluate(
+        (section) =>
+          !!section.previousElementSibling?.querySelector(
+            '[aria-label="Deck comparison preview"]',
+          ),
+      ),
+    ).toBe(true);
+    await businessSection.screenshot({
+      path: '/tmp/cardmystic-business-mobile.png',
+    });
+  } else {
+    await expect(businessSection).toHaveCount(0);
+  }
   const pro = showcase.getByLabel('Pro tools preview');
   await expect(pro.getByText('Example deck', { exact: true })).toHaveCount(0);
   const deckSearch = pro.getByRole('figure', {
@@ -703,10 +708,12 @@ test('search showcase examples and artwork work on mobile and desktop', async ({
   await page.setViewportSize({ width: 1920, height: 1080 });
   await expect(page.locator('.home-content')).toHaveCSS('max-width', '2000px');
   expect((await showcase.boundingBox())!.width).toBeCloseTo(1440, 0);
-  await businessCard.scrollIntoViewIfNeeded();
-  await businessSection.screenshot({
-    path: '/tmp/cardmystic-business-desktop.png',
-  });
+  if (DECK_BUSINESS_CARDS_ENABLED) {
+    await businessCard.scrollIntoViewIfNeeded();
+    await businessSection.screenshot({
+      path: '/tmp/cardmystic-business-desktop.png',
+    });
+  }
   expect(previewRequests).toHaveLength(1);
   expect(previewRequests[0]!.pathname).toMatch(/\/card-lists\/summaries$/);
   await showcase
@@ -898,3 +905,17 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     expect(target.searchParams.get('description')).toBe('Finishers');
   });
 }
+
+test('hidden business cards are not advertised in public feature pages', async ({
+  request,
+}) => {
+  test.skip(DECK_BUSINESS_CARDS_ENABLED, 'Business cards are enabled.');
+  const home = await request.get('/');
+  expect(home.ok()).toBe(true);
+  expect(await home.text()).not.toContain("Create Your Deck's Business Card");
+  const memberships = await request.get('/memberships');
+  expect(memberships.ok()).toBe(true);
+  expect(await memberships.text()).not.toContain(
+    'Deck business cards and QR codes',
+  );
+});

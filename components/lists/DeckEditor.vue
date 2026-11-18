@@ -34,7 +34,9 @@
     >
       <template #actions>
         <DeckBusinessCard
-          v-if="!isBrowser && list && !isCollection"
+          v-if="
+            DECK_BUSINESS_CARDS_ENABLED && !isBrowser && list && !isCollection
+          "
           :list="list"
           :is-owner="isOwner"
           :entries="analysisCards"
@@ -569,6 +571,7 @@
 </template>
 
 <script setup lang="ts">
+import { DECK_BUSINESS_CARDS_ENABLED } from '~/utils/featureFlags';
 import { cardActionStyles } from '~/utils/card-actions';
 import { getUsdPrice, isBasicLand } from '~/utils/cardPrice';
 import { useCardLists, useOwnedDecklist } from '~/composables/useCardLists';
