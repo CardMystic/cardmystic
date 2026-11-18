@@ -168,7 +168,7 @@ export const useAccountActions = () => {
     if (error) throw new Error(error.message);
   };
 
-  /** Initiate Google OAuth signup flow. Sets a pending flag for the auth listener. */
+  /** Initiate Google OAuth signup flow. Sets a pending flag for the Google Ads conversion. */
   const signupWithGoogle = async (): Promise<void> => {
     const verified = await verifyRecaptcha('signup_google');
     if (!verified)
