@@ -10,6 +10,7 @@ const props = defineProps<{
 }>();
 const config = useRuntimeConfig();
 const expanded = ref(false);
+const { previewCount, expandThreshold } = useDeckSuggestionGrid();
 const { data, isPending, error, refetch } = useQuery({
   queryKey: computed(() => ['game-changer-replacements', props.card.oracle_id]),
   queryFn: async ({ signal }) => {
@@ -34,7 +35,9 @@ const replacements = computed(() =>
   ]),
 );
 const visible = computed(() =>
-  expanded.value ? replacements.value : replacements.value.slice(0, 3),
+  expanded.value
+    ? replacements.value
+    : replacements.value.slice(0, previewCount.value - 1),
 );
 watch(
   () => [
@@ -49,74 +52,65 @@ watch(
 </script>
 
 <template>
-  <section
-    :aria-label="`Replacements for ${card.name}`"
-    class="game-changer-row"
-  >
-    <div
-      class="game-changer-source rounded-xl border-2 border-purple-500 p-1 self-start"
+  <section :aria-label="`Replacements for ${card.name}`">
+    <DeckSuggestionGrid
+      :expanded="expanded"
+      class="replacement-cards"
+      :aria-busy="isPending"
     >
-      <Card
-        :card="{ card_data: card, card_name: card.name }"
-        hide-progress-bar
-        hide-thumbs-down-button
-      />
-    </div>
-    <div class="min-w-0">
-      <p v-if="isPending" role="status" class="text-muted py-4">
-        Finding replacements…
-      </p>
-      <div v-else-if="error" role="alert" class="py-4 space-y-2">
-        <p>Could not load replacements.</p>
-        <UButton label="Retry" variant="outline" @click="refetch()" />
+      <div
+        class="game-changer-source relative rounded-[14px] self-start"
+        role="group"
+        :aria-label="`Original Game Changer: ${card.name}`"
+      >
+        <Card
+          :card="{ card_data: card, card_name: card.name }"
+          flush
+          hide-progress-bar
+          hide-thumbs-down-button
+        />
+        <span
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 z-10 rounded-[14px] border-[3px] border-purple-500"
+        />
       </div>
-      <p v-else-if="!replacements.length" class="text-muted py-4">
-        No Replacements In These Colors
-      </p>
-      <template v-else>
-        <div class="replacement-cards">
-          <Card
-            v-for="replacement in visible"
-            :key="replacement.card_data.oracle_id"
-            :card="replacement"
-            hide-progress-bar
-            hide-thumbs-down-button
-          />
-        </div>
-        <UButton
-          v-if="replacements.length > 3"
-          class="mt-3"
-          :label="expanded ? 'Show fewer results' : 'See more results'"
-          :aria-expanded="expanded"
-          variant="ghost"
-          @click="expanded = !expanded"
+      <template v-if="isPending">
+        <USkeleton
+          v-for="n in previewCount - 1"
+          :key="n"
+          class="w-full aspect-[488/680] rounded-[14px]"
         />
       </template>
+      <template v-else-if="!error">
+        <Card
+          v-for="replacement in visible"
+          :key="replacement.card_data.oracle_id"
+          :card="replacement"
+          flush
+          hide-progress-bar
+          hide-thumbs-down-button
+        />
+      </template>
+    </DeckSuggestionGrid>
+    <p v-if="isPending" role="status" class="sr-only">Finding replacements…</p>
+    <div v-else-if="error" role="alert" class="py-4 space-y-2">
+      <p>Could not load replacements.</p>
+      <UButton label="Retry" variant="outline" @click="refetch()" />
     </div>
+    <p v-else-if="!replacements.length" class="text-muted py-4">
+      No Replacements In These Colors
+    </p>
+    <UButton
+      v-if="
+        !isPending &&
+        !error &&
+        (expanded || replacements.length + 1 > expandThreshold)
+      "
+      class="mt-3"
+      :label="expanded ? 'Show fewer results' : 'See more results'"
+      :aria-expanded="expanded"
+      variant="ghost"
+      @click="expanded = !expanded"
+    />
   </section>
 </template>
-
-<style scoped>
-.game-changer-row {
-  display: grid;
-  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
-  gap: 2rem;
-  align-items: start;
-}
-.replacement-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 10rem));
-  gap: 0.75rem;
-}
-@media (max-width: 639px) {
-  .game-changer-row {
-    grid-template-columns: 7rem minmax(0, 1fr);
-    gap: 1.5rem;
-  }
-  .replacement-cards {
-    grid-template-columns: repeat(3, 7rem);
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-  }
-}
-</style>

@@ -59,23 +59,13 @@
         :data-card-finish="card.card_data.selected_finish"
         @click="showActions = true"
       >
-        <GameChangerBadge v-if="card.card_data.game_changer" />
-        <img
+        <CardArtwork
+          :card="card.card_data"
           :src="imageUrl"
-          :alt="card.card_data.name"
+          image-class="card-large cursor-pointer aspect-[5/7]"
+          class="rounded-[14px]"
           @error="handleImageError"
-          v-if="imageUrl"
-          width="488"
-          height="680"
-          loading="lazy"
-          decoding="async"
-          class="card-large cursor-pointer"
         />
-        <div v-else class="image-placeholder">
-          <p class="placeholder-text">
-            {{ card.card_data.name }}
-          </p>
-        </div>
         <span
           v-if="highlight.status.value"
           aria-hidden="true"
@@ -108,7 +98,12 @@
         </div>
       </div>
     </div>
-    <DeckCardMetadata :card="card.card_data" :face="isDualFaced ? card.card_data.card_faces?.[isFlipped ? 1 : 0] : undefined" />
+    <DeckCardMetadata
+      :card="card.card_data"
+      :face="
+        isDualFaced ? card.card_data.card_faces?.[isFlipped ? 1 : 0] : undefined
+      "
+    />
     <DeckCardLabels :oracle-id="card.card_data.oracle_id" />
     <div
       v-if="card.ai_rerank_score !== undefined"
@@ -140,7 +135,11 @@
 <script setup lang="ts">
 import { getUsdPrice } from '~/utils/cardPrice';
 const highlight = useDeckHighlight(() => props.card.card_data);
-import { cardActionStyles, findSimilarAction, type CardActionMenu } from '~/utils/card-actions';
+import {
+  cardActionStyles,
+  findSimilarAction,
+  type CardActionMenu,
+} from '~/utils/card-actions';
 import type { Card } from '~/models/cardModel';
 import { getAffiliateLink } from '~/utils/tcgPlayer';
 import { getCardImageUrl } from '~/utils/scryfall';
@@ -491,38 +490,6 @@ function handleImageError(event: Event) {
   position: relative;
   width: 100%;
   aspect-ratio: 5 / 7;
-}
-
-.card-large {
-  aspect-ratio: 5/7;
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-  border-radius: 14px;
-}
-
-.image-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 5/7;
-  width: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(44, 44, 44, 0.9),
-    rgba(66, 66, 66, 0.8)
-  );
-  border-radius: 10px;
-  padding: 20px;
-}
-
-.placeholder-text {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
-  margin-top: 8px;
-  text-align: center;
 }
 
 .legality-overlay {

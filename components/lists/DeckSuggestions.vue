@@ -6,7 +6,6 @@ import {
   findSimilarAction,
   type CardActionMenu,
 } from '~/utils/card-actions';
-import { getCardImageUrl } from '~/utils/scryfall';
 import {
   generateTCGPlayerSearchUrl,
   getAffiliateLink,
@@ -118,10 +117,10 @@ const remaining = computed(() => {
     );
   });
 });
-const { rowCapacity, gridClasses } = useDeckCardGrid();
+const { previewCount, expandThreshold } = useDeckSuggestionGrid();
 const expanded = ref(false);
 const visibleCount = computed(() =>
-  expanded.value ? remaining.value.length : rowCapacity.value,
+  expanded.value ? remaining.value.length : previewCount.value,
 );
 const budgetInput = ref<string | number>('');
 const targetBudget = computed(() => props.savedBudget ?? undefined);
@@ -303,19 +302,19 @@ async function add(card: Card) {
       >
     </form>
     <div>
-      <div
+      <DeckSuggestionGrid
         v-if="(!budgetReady || loading) && !visible.length"
-        :class="gridClasses"
+        :expanded="expanded"
         role="status"
         aria-label="Loading suggestions"
       >
         <USkeleton
-          v-for="n in rowCapacity"
+          v-for="n in previewCount"
           :key="n"
           class="w-full aspect-[488/680] rounded-[14px]"
         />
-      </div>
-      <div v-else-if="visible.length" :class="gridClasses">
+      </DeckSuggestionGrid>
+      <DeckSuggestionGrid v-else-if="visible.length" :expanded="expanded">
         <button
           v-for="card in visible"
           :key="card.card_data.oracle_id"
@@ -332,16 +331,9 @@ async function add(card: Card) {
           @mouseleave="emit('cancelPreview', card.card_data.id)"
           @click="openActions(card, $event)"
         >
-          <img
-            :src="getCardImageUrl(card.card_data)"
-            :alt="card.card_name"
-            width="488"
-            height="680"
-            loading="lazy"
-            class="block w-full aspect-[488/680] rounded-[inherit] object-cover"
-          />
+          <CardArtwork :card="card.card_data" />
         </button>
-      </div>
+      </DeckSuggestionGrid>
       <p v-else-if="!error" class="text-sm text-muted">
         {{
           !oracleIds.length
@@ -353,8 +345,9 @@ async function add(card: Card) {
       </p>
     </div>
     <UButton
-      v-if="expanded || remaining.length > visibleCount"
+      v-if="expanded || remaining.length > expandThreshold"
       :label="expanded ? 'Show less' : 'Show more'"
+      :aria-expanded="expanded"
       variant="outline"
       class="mt-3"
       @click="expanded = !expanded"

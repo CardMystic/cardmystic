@@ -218,11 +218,6 @@
       :owner="isOwner"
     />
 
-    <LazyDeckGameChangerReplacements
-      v-if="gameChangerReplacementsOpen && !isCollection"
-      v-model:open="gameChangerReplacementsOpen"
-      :entries="analysisCards"
-    />
     <DeckSearch
       v-if="!isBrowser && list"
       v-model:open="searchOpen"
@@ -309,6 +304,12 @@
         @changeBoard="handleChangeBoard"
       >
         <template #before-cards="{ setPreviewCard, clearPendingPreviewCard }">
+          <LazyDeckGameChangerReplacements
+            v-if="gameChangerReplacementsOpen && !isCollection"
+            v-model:open="gameChangerReplacementsOpen"
+            :entries="analysisCards"
+          />
+
           <DeckCuts
             v-if="!isBrowser && isOwner && !isCollection"
             v-model:open="cutsOpen"

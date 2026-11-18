@@ -3,10 +3,11 @@
     variant="subtle"
     :class="[
       'card-root',
+      { 'card-flush': flush },
       isSearched ? 'searched-card-bg h-full' : '',
       goldHighlight ? 'dark:bg-[#3a3520] bg-[#fef3c7] commander-card-bg' : '',
     ]"
-    :ui="{ body: 'p-1 sm:p-1' }"
+    :ui="flush ? { root: 'ring-0 bg-transparent', body: 'p-0 sm:p-0' } : { body: 'p-1 sm:p-1' }"
   >
     <LazyCardActionsModal
       v-if="showActions"
@@ -338,6 +339,7 @@ const { saveSearchMutation } = useSearchHistory();
 const isMobile = useIsMobile();
 
 const props = defineProps({
+  flush: Boolean,
   printingPending: Boolean,
   card: {
     type: Object as PropType<Card>,
@@ -804,6 +806,14 @@ function handleImageError(event: Event) {
   /* center horizontally within container */
   display: block;
   box-sizing: border-box;
+}
+
+.card-root.card-flush {
+  max-width: none;
+}
+.card-flush .card-large {
+  display: block;
+  aspect-ratio: 488 / 680;
 }
 
 /* Reserve the same image height for a partner pair as a single card. */
