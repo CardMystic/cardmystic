@@ -1,3 +1,4 @@
+import { DECK_BUSINESS_CARDS_ENABLED } from '../utils/featureFlags';
 import { test, expect } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { BACKEND, SUPABASE } from './utils/mocks';
@@ -6,6 +7,10 @@ import type { DeckBusinessCardDetails } from '../utils/deckBusinessCard';
 test('free owners create, edit, reload and remove a business card without changing the deck', async ({
   page,
 }) => {
+  test.skip(
+    !DECK_BUSINESS_CARDS_ENABLED,
+    'Business cards are temporarily hidden.',
+  );
   const state = await setupDeckDisplay(page);
   await page.route(
     BACKEND + `/supabase/card-lists/primer/${displayDeckId}`,
@@ -132,6 +137,10 @@ test('free owners create, edit, reload and remove a business card without changi
 test('visitors see a saved public business card on mobile, with no editing controls and a printable QR', async ({
   page,
 }) => {
+  test.skip(
+    !DECK_BUSINESS_CARDS_ENABLED,
+    'Business cards are temporarily hidden.',
+  );
   const hydrationErrors: string[] = [];
   page.on('console', (message) => {
     if (
@@ -482,6 +491,10 @@ test('visitors see bracket descriptions without an edit control', async ({
 test('business card close paths warn only when the draft has unsaved changes', async ({
   page,
 }) => {
+  test.skip(
+    !DECK_BUSINESS_CARDS_ENABLED,
+    'Business cards are temporarily hidden.',
+  );
   await setupDeckDisplay(page);
   await page.route(
     BACKEND + `/library/lists/${displayDeckId}/business-card`,
@@ -548,3 +561,29 @@ test('business card close paths warn only when the draft has unsaved changes', a
   ).toBeEmpty();
   await expect(summary).toHaveValue(initial);
 });
+
+for (const owner of [true, false]) {
+  test(`business cards stay hidden for ${owner ? 'owners' : 'visitors'}, including shared links`, async ({
+    page,
+  }) => {
+    test.skip(DECK_BUSINESS_CARDS_ENABLED, 'Business cards are enabled.');
+    const calls: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.endsWith('/business-card'))
+        calls.push(request.url());
+    });
+    await setupDeckDisplay(page, { owner });
+    await page.goto(`/lists/${displayDeckId}?businessCard=1`);
+    await expect(
+      page.getByRole('navigation', { name: 'Deck actions' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /(?:Create|View) deck business card/ }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('dialog', { name: /business card/i }),
+    ).toHaveCount(0);
+    await expect(page.locator('#deck-business-card-print')).toHaveCount(0);
+    expect(calls).toEqual([]);
+  });
+}

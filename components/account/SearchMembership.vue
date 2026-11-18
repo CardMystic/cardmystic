@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DECK_BUSINESS_CARDS_ENABLED } from '~/utils/featureFlags';
 import benchmark from '~~/public/benchmarks/search-quality-graded-2026-09-28.json';
 import type { BillingStatus } from '~/models/searchAccessModel';
 import {
@@ -21,7 +22,9 @@ const planFeatures: {
   { name: 'Deck recommendations', free: true, pro: true },
   { name: 'Decks, collections, folders and card tags', free: true, pro: true },
   { name: 'Deck history and restore', free: true, pro: true },
-  { name: 'Deck business cards and QR codes', free: true, pro: true },
+  ...(DECK_BUSINESS_CARDS_ENABLED
+    ? [{ name: 'Deck business cards and QR codes', free: true, pro: true }]
+    : []),
   { name: 'Full playtester', free: true, pro: true },
   { name: 'Compare decks', free: true, pro: true },
   { name: 'Deck Analytics', free: true, pro: true },

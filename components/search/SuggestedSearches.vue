@@ -5,12 +5,6 @@
     >
       Suggested Searches
     </p>
-    <p
-      v-if="mode === 'recommend'"
-      class="text-xs text-muted text-center lg:text-left"
-    >
-      Try a sample decklist
-    </p>
     <div class="flex flex-wrap justify-center gap-1.5">
       <UButton
         v-for="query in visibleQueries"

@@ -34,7 +34,9 @@
     >
       <template #actions>
         <DeckBusinessCard
-          v-if="!isBrowser && list && !isCollection"
+          v-if="
+            DECK_BUSINESS_CARDS_ENABLED && !isBrowser && list && !isCollection
+          "
           :list="list"
           :is-owner="isOwner"
           :entries="analysisCards"
@@ -218,11 +220,6 @@
       :owner="isOwner"
     />
 
-    <LazyDeckGameChangerReplacements
-      v-if="gameChangerReplacementsOpen && !isCollection"
-      v-model:open="gameChangerReplacementsOpen"
-      :entries="analysisCards"
-    />
     <DeckSearch
       v-if="!isBrowser && list"
       v-model:open="searchOpen"
@@ -309,6 +306,12 @@
         @changeBoard="handleChangeBoard"
       >
         <template #before-cards="{ setPreviewCard, clearPendingPreviewCard }">
+          <LazyDeckGameChangerReplacements
+            v-if="gameChangerReplacementsOpen && !isCollection"
+            v-model:open="gameChangerReplacementsOpen"
+            :entries="analysisCards"
+          />
+
           <DeckCuts
             v-if="!isBrowser && isOwner && !isCollection"
             v-model:open="cutsOpen"
@@ -378,7 +381,7 @@
         <ul
           v-if="publicCardLinks.length"
           aria-label="Cards in this list"
-          class="my-3 grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3"
+          class="public-card-links my-3 grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3"
         >
           <li
             v-for="item in publicCardLinks"
@@ -394,7 +397,7 @@
           </li>
         </ul>
         <CardListResultsSkeleton
-          v-else
+          :class="{ 'public-card-loading': publicCardLinks.length > 0 }"
           :view="view"
           :commander-count="commanderOracleIds.length"
         />
@@ -568,6 +571,7 @@
 </template>
 
 <script setup lang="ts">
+import { DECK_BUSINESS_CARDS_ENABLED } from '~/utils/featureFlags';
 import { cardActionStyles } from '~/utils/card-actions';
 import { getUsdPrice, isBasicLand } from '~/utils/cardPrice';
 import { useCardLists, useOwnedDecklist } from '~/composables/useCardLists';
@@ -1965,3 +1969,19 @@ onMounted(() => {
   );
 });
 </script>
+
+<style scoped>
+/* Keep public card links in the initial HTML without flashing them while
+   the interactive deck hydrates. No-script visitors get the usable list. */
+.public-card-links {
+  display: none;
+}
+@media (scripting: none) {
+  .public-card-links {
+    display: grid;
+  }
+  .public-card-loading {
+    display: none;
+  }
+}
+</style>
