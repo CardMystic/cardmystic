@@ -1,12 +1,18 @@
 <template>
-  <div
-    v-if="showButton"
-    class="back-to-top cursor-pointer"
-    @click="scrollToTop"
-  >
-    <UIcon name="i-heroicons-arrow-up" class="mr-1" />
-    Back to top
-  </div>
+  <Teleport v-if="showButton" to="#back-to-top-anchor">
+    <button
+      type="button"
+      class="back-to-top cursor-pointer border border-default bg-default text-default shadow-md hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      @click="scrollToTop"
+    >
+      <UIcon
+        name="i-heroicons-arrow-up"
+        class="mr-1 shrink-0"
+        aria-hidden="true"
+      />
+      Back to top
+    </button>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -45,27 +51,17 @@ onUnmounted(() => {
 });
 </script>
 
-<style lang="sass" scoped>
-.back-to-top
-  position: fixed
-  top: 83px
-  left: 50%
-  transform: translateX(-50%)
-  z-index: 40
-  background: white
-  color: black
-  padding: 8px 20px
-  border-radius: 0 0 12px 12px
-  display: flex
-  align-items: center
-  justify-content: center
-  font-weight: 500
-  font-size: 0.875rem
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15)
-  border: 1px solid rgba(0, 0, 0, 0.1)
-  opacity: 0.9
-  &:hover
-    opacity: 1
-  @media (max-width: 767px)
-    top: 73px
+<style scoped>
+.back-to-top {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0 0 0.75rem 0.75rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
 </style>
