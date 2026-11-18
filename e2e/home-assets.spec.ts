@@ -906,6 +906,63 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
   });
 }
 
+test('Archidekt attribution is crawlable and readable at enlarged mobile text sizes', async ({
+  page,
+  request,
+  browser,
+}) => {
+  const html = await (await request.get('/')).text();
+  expect(html).toMatch(
+    /<a[^>]+href="https:\/\/archidekt\.com\/"[^>]*>\s*Archidekt\s*<\/a>/,
+  );
+  const hydrationErrors: string[] = [];
+  page.on('console', (message) => {
+    if (
+      /hydration/i.test(message.text()) &&
+      ['warning', 'error'].includes(message.type())
+    ) {
+      hydrationErrors.push(message.text());
+    }
+  });
+  await page.setViewportSize({ width: 375, height: 812 });
+  await gotoHydrated(page, '/');
+  await page.reload();
+  const credit = page
+    .locator('footer')
+    .getByRole('link', { name: 'Archidekt', exact: true });
+  await expect(credit).toHaveAttribute('href', 'https://archidekt.com/');
+  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+  for (const dark of [false, true]) {
+    await page.evaluate(
+      (value) => document.documentElement.classList.toggle('dark', value),
+      dark,
+    );
+    await credit.scrollIntoViewIfNeeded();
+    await expect(credit).toBeVisible();
+    const bounds = await credit.boundingBox();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(375);
+  }
+  await credit.focus();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  await expect(credit).toBeFocused();
+  expect(hydrationErrors).toEqual([]);
+
+  const noJs = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const staticPage = await noJs.newPage();
+    await staticPage.goto(new URL('/', page.url()).href);
+    await expect(
+      staticPage
+        .locator('footer')
+        .getByRole('link', { name: 'Archidekt', exact: true }),
+    ).toHaveAttribute('href', 'https://archidekt.com/');
+  } finally {
+    await noJs.close();
+  }
+});
+
 test('hidden business cards are not advertised in public feature pages', async ({
   request,
 }) => {
