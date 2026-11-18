@@ -67,9 +67,12 @@ process.env.NUXT_FRONTEND_URL = 'http://localhost';
 // Managed Static Web Apps can omit the App Service instance variable.
 delete process.env.WEBSITE_INSTANCE_ID;
 
-async function runNode(args) {
+async function runCommand(command, args) {
   await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, args, { stdio: 'inherit' });
+    const child = spawn(command, args, {
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    });
     child.once('error', reject);
     child.once('exit', (code, signal) => {
       if (code === 0) resolve();
@@ -81,15 +84,13 @@ async function runNode(args) {
 try {
   // Prerendering also uses the gateway. Keep the fixture available for both
   // the build and adapter checks instead of relying on local or CI secrets.
-  await runNode([
+  await runCommand(process.execPath, [
     '--experimental-strip-types',
     'scripts/update-sitemap-data.mjs',
   ]);
-  await runNode([
-    'node_modules/nuxt/bin/nuxt.mjs',
-    'build',
-    '--preset=azure-swa',
-  ]);
+  // Use the package-manager shim: pnpm supplies dependency resolution paths
+  // there that a direct Node invocation of Nuxt's entry point bypasses.
+  await runCommand('nuxt', ['build', '--preset=azure-swa']);
   const { handle } = await import('../.output/server/functions/index.mjs');
   await test('Azure serves dynamically requested icons from the production bundle', async () => {
     for (const [collection, icon] of [
