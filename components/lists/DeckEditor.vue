@@ -381,7 +381,7 @@
         <ul
           v-if="publicCardLinks.length"
           aria-label="Cards in this list"
-          class="my-3 grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3"
+          class="public-card-links my-3 grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3"
         >
           <li
             v-for="item in publicCardLinks"
@@ -397,7 +397,7 @@
           </li>
         </ul>
         <CardListResultsSkeleton
-          v-else
+          :class="{ 'public-card-loading': publicCardLinks.length > 0 }"
           :view="view"
           :commander-count="commanderOracleIds.length"
         />
@@ -1969,3 +1969,19 @@ onMounted(() => {
   );
 });
 </script>
+
+<style scoped>
+/* Keep public card links in the initial HTML without flashing them while
+   the interactive deck hydrates. No-script visitors get the usable list. */
+.public-card-links {
+  display: none;
+}
+@media (scripting: none) {
+  .public-card-links {
+    display: grid;
+  }
+  .public-card-loading {
+    display: none;
+  }
+}
+</style>
