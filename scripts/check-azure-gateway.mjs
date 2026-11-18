@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
@@ -8,11 +9,22 @@ import { gzipSync } from 'node:zlib';
 // headers by re-encoding the response, while Azure returns a buffered body.
 const apiKey = 'azure-gateway-test-key-01234567890123456789';
 const payload = { queries: [{ query: 'card draw', count: 100 }] };
+const catalog = {
+  dataReleaseId: 'azure-gateway-test',
+  themes: [],
+  roles: [],
+  sets: [],
+};
 let upstreamRequests = 0;
 const upstream = createServer((request, response) => {
   upstreamRequests++;
   if (request.headers['x-api-key'] !== apiKey) {
     response.writeHead(403).end();
+    return;
+  }
+  if (request.url === '/card-collections') {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify(catalog));
     return;
   }
   if (request.url === '/user/auth-check') {
@@ -55,7 +67,29 @@ process.env.NUXT_FRONTEND_URL = 'http://localhost';
 // Managed Static Web Apps can omit the App Service instance variable.
 delete process.env.WEBSITE_INSTANCE_ID;
 
+async function runNode(args) {
+  await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, args, { stdio: 'inherit' });
+    child.once('error', reject);
+    child.once('exit', (code, signal) => {
+      if (code === 0) resolve();
+      else reject(new Error(`Gateway build command failed: ${signal ?? code}`));
+    });
+  });
+}
+
 try {
+  // Prerendering also uses the gateway. Keep the fixture available for both
+  // the build and adapter checks instead of relying on local or CI secrets.
+  await runNode([
+    '--experimental-strip-types',
+    'scripts/update-sitemap-data.mjs',
+  ]);
+  await runNode([
+    'node_modules/nuxt/bin/nuxt.mjs',
+    'build',
+    '--preset=azure-swa',
+  ]);
   const { handle } = await import('../.output/server/functions/index.mjs');
   await test('Azure serves dynamically requested icons from the production bundle', async () => {
     for (const [collection, icon] of [
@@ -89,6 +123,23 @@ try {
     });
     return context.res;
   }
+
+  await test('Azure navigation loads through the configured fixture backend', async () => {
+    const context = {};
+    await handle(context, {
+      method: 'GET',
+      headers: {
+        host: 'localhost',
+        'x-ms-original-url': 'http://localhost/api/navigation',
+      },
+    });
+    assert.equal(context.res.status, 200);
+    assert.deepEqual(JSON.parse(Buffer.from(context.res.body).toString()), {
+      themes: [],
+      roles: [],
+      sets: [],
+    });
+  });
 
   await test('Azure returns decoded JSON without upstream transport or private headers', async () => {
     const response = await request('/cache/popular');
