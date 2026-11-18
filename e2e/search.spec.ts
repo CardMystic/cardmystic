@@ -67,101 +67,9 @@ const expectResultsRendered = async (page: import('@playwright/test').Page) => {
     .toBeGreaterThan(2);
 };
 
-// ─── 1. Homepage smoke ────────────────────────────────────────────────
-
-test.describe('Homepage', () => {
-  test('hero and bundled popular search links render without example searches', async ({
-    page,
-  }) => {
-    const unnecessaryRequests: string[] = [];
-    page.on('request', (request) => {
-      if (
-        request.url() === `${BACKEND}/search/example` ||
-        request.url().startsWith(`${BACKEND}/cache/popular`)
-      ) {
-        unnecessaryRequests.push(request.url());
-      }
-    });
-
-    await gotoHydrated(page, '/');
-
-    // Hero
-    await expect(
-      page.getByRole('heading', { name: 'Describe It. Find It.', level: 1 }),
-    ).toBeVisible();
-    await expect(page.getByAltText('Mondrak, Glory Dominus')).toBeVisible();
-
-    const popular = page.locator('.top-queries-container');
-    await popular.scrollIntoViewIfNeeded();
-    await expect(
-      popular.getByRole('heading', { name: 'Popular Searches', exact: true }),
-    ).toBeVisible();
-    await expect(
-      popular.getByRole('link', { name: 'Try', exact: true }),
-    ).toHaveCount(10);
-    const target = new URL(
-      (await popular
-        .getByRole('link', { name: 'Try', exact: true })
-        .first()
-        .getAttribute('href'))!,
-      page.url(),
-    );
-    expect(target.pathname).toBe('/search/all/smart');
-    expect(target.searchParams.get('query')).toBe('card draw');
-    expect(unnecessaryRequests).toEqual([]);
-  });
-});
-
 // ─── Search landing states ───────────────────────────────────────────
 
-const landingPages = [
-  {
-    path: '/search/all/smart',
-    heading: 'The Fastest Way To Find The Right Cards',
-    suggestion: 'Creatures that draw cards',
-  },
-  {
-    path: '/search/all/similarity',
-    heading: 'Find Similar Effects & Alternatives to Your Favorite Cards',
-    suggestion: 'Lightning Bolt',
-  },
-  {
-    path: '/search/all/commander',
-    heading: 'Find the Perfect Commander for Your Next Deck',
-    suggestion: 'Graveyard recursion',
-  },
-  {
-    path: '/search/all/keyword',
-    heading: 'Search MTG Cards by Mechanics and Rules Text',
-    suggestion: 'Draw a card',
-  },
-  {
-    path: '/search/all/deckbuilder',
-    heading: 'Find Cards That Belong in Your Deck',
-    suggestion: 'Korvold, Fae-Cursed King',
-  },
-] as const;
-
 test.describe('Search landing pages', () => {
-  for (const landing of landingPages) {
-    test(`${landing.path} presents useful suggested searches`, async ({
-      page,
-    }) => {
-      await gotoHydrated(page, landing.path);
-
-      await expect(
-        page.getByRole('heading', { level: 2, name: landing.heading }),
-      ).toBeVisible();
-      await expect(page.getByRole('link', { name: /^Try / })).toHaveCount(6);
-      await expect(
-        page.getByRole('link', {
-          name: `Try ${landing.suggestion}`,
-          exact: true,
-        }),
-      ).toBeVisible();
-    });
-  }
-
   test('a Smart Search suggestion starts a real search', async ({ page }) => {
     await gotoHydrated(page, '/search/all/smart');
     await page
@@ -336,14 +244,6 @@ test.describe('Platform routing', () => {
       expectFilters: (f) => expect(f.isArena).toBe(true),
     },
     {
-      platform: 'mtgo',
-      expectFilters: (f) => expect(f.isMTGO).toBe(true),
-    },
-    {
-      platform: 'paper',
-      expectFilters: (f) => expect(f.isPaper).toBe(true),
-    },
-    {
       platform: 'modern',
       expectFilters: (f) => {
         const formats = f.selectedCardFormats as
@@ -410,83 +310,5 @@ test.describe('SEO slug pages', () => {
     expect(response.ok()).toBeTruthy();
 
     await expectResultsRendered(page);
-  });
-
-  test('similarity slug renders SEO heading + similarity results', async ({
-    page,
-  }) => {
-    const similarityCall = waitForSearchCall(page, '/search/similarity');
-
-    await gotoHydrated(page, '/search/all/similarity/lightning-bolt');
-
-    await expect(
-      page.getByRole('heading', { name: /Lightning Bolt/i }).first(),
-    ).toBeVisible();
-
-    const response = await similarityCall;
-    expect(response.ok()).toBeTruthy();
-
-    await expectResultsRendered(page);
-  });
-
-  test('keyword slug renders SEO heading + keyword results', async ({
-    page,
-  }) => {
-    const keywordCall = waitForSearchCall(page, '/search/keyword');
-
-    await gotoHydrated(page, '/search/all/keyword/ward');
-
-    // Title casing varies per slug; we only assert the keyword appears.
-    await expect(page.locator('h1').first()).toBeVisible();
-    await expect(page.locator('h1').first()).toContainText(/ward/i);
-
-    const response = await keywordCall;
-    expect(response.ok()).toBeTruthy();
-
-    await expectResultsRendered(page);
-  });
-});
-
-// ─── 8. Card Text view ────────────────────────────────────────────────
-
-/**
- * The `CardText` component renders one row per card in "text" view
- * mode (as opposed to the default grid of images). Coverage here
- * exercises the shared row structure — name, mana cost, and the
- * ARIA-labelled row wrapper — that both search results and card
- * lists reuse.
- */
-test.describe('Card Text view', () => {
-  test('switching to text view renders CardText rows with name + mana cost', async ({
-    page,
-  }) => {
-    const colbertCall = waitForSearchCall(page, '/search/colbert');
-    await gotoHydrated(page, '/search/all/smart/best-card-draw');
-    const response = await colbertCall;
-    expect(response.ok()).toBeTruthy();
-
-    // Wait for results to render as a grid first, then flip the view.
-    await expectResultsRendered(page);
-
-    await page.getByRole('button', { name: 'Display', exact: true }).click();
-    await page.getByRole('combobox', { name: 'View', exact: true }).click();
-    await page.getByRole('option', { name: 'Card Text' }).click();
-
-    // The grid should now contain `.card-text-row` elements instead of
-    // full card images. Assert at least a few rows render and expose
-    // an ARIA-labelled group with `N copies` in the label.
-    const rows = page.locator('.card-text-row');
-    await expect
-      .poll(async () => rows.count(), { timeout: SEARCH_TIMEOUT })
-      .toBeGreaterThan(2);
-
-    // Each row's outer element has role="group" and an aria-label
-    // ending in "N copies".
-    await expect(rows.first()).toHaveAttribute('aria-label', /.+, \d+ copies/);
-    // The role="group" is on the same element (not a wrapper).
-    await expect(rows.first()).toHaveAttribute('role', 'group');
-    await expect(rows.first().locator('.card-name').first()).toHaveText(/\S/);
-    // Some cards (such as lands) have no mana cost; check a row that does.
-    await expect(rows.locator('.mana-cost').first()).toBeVisible();
   });
 });

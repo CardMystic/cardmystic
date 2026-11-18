@@ -2,6 +2,14 @@
 
 Name every feature branch `Andrew/name` with a capital A and a short, descriptive name after the slash. Split changes into commits by functionality. Write descriptive commit messages in Andrew’s language, following his recent commits in the repository. Describe what changed and include the reason or user-visible behavior when it helps explain the change.
 
+# Tests
+
+Keep the end-to-end suite focused on critical user flows: authentication and permissions, search submission, saving and editing data, checkout, and recovery from failures that could lose work or block a task. Do not add unnecessary E2E tests. Before adding one, check existing coverage and explain what distinct failure requires a real browser. Prefer extending an existing flow or using a unit test for matching, parsing, validation, and other pure logic.
+
+Use representative cases for shared components. Do not multiply the same flow across routes, viewports, themes, accounts, or inputs unless those cases exercise different behavior. Avoid standalone browser tests for copy, decorative styling, exact spacing, or static configuration. Keep necessary hydration, accessibility, mobile, and crawlability checks in the relevant flow rather than adding separate page-load matrices.
+
+Consider runtime as well as test count. Avoid fixed sleeps, repeated navigation, and live backend calls when a deterministic fixture covers the behavior; retain a small set of real backend integration flows. Do not combine unrelated tests just to lower the count. When changing a feature, remove or consolidate redundant coverage and run the smallest relevant checks. Do not increase suite timeouts to accommodate test growth without first reviewing the suite.
+
 # Content preferences
 
 Keep product copy simple. Do not add labels, disclaimers, or explanations that repeat what is already obvious from the surrounding UI. For example, homepage feature previews do not need an "Example deck" label. Add explanatory text only when it helps the user understand or use the feature.

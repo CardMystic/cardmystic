@@ -193,36 +193,6 @@ test('visitors can read card discussions and sign in to post', async ({ page }) 
   await expect(dialog.getByRole('button', { name: 'Post Comment' })).toHaveCount(0);
 });
 
-test('playstyle labels clear maximum scores and stay inside the chart', async ({
-  page,
-}) => {
-  await setup(page);
-  await navigate(page);
-  const chart = page.getByRole('img', { name: /^Playstyle scores:/ });
-  await expect(chart).toBeVisible();
-  await page.evaluate(() => document.fonts.ready);
-  for (const width of [390, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
-    const bounds = (await chart.boundingBox())!;
-    const labels = ['Aggro', 'Midrange', 'Control', 'Combo'];
-    for (const [i, label] of labels.entries()) {
-      const text = (await chart
-        .getByText(label, { exact: true })
-        .boundingBox())!;
-      const dot = (await chart.locator('circle').nth(i).boundingBox())!;
-      const gap = [
-        dot.y - (text.y + text.height),
-        text.x - (dot.x + dot.width),
-        text.y - (dot.y + dot.height),
-        dot.x - (text.x + text.width),
-      ][i];
-      expect(gap, label).toBeGreaterThanOrEqual(3);
-      expect(text.x).toBeGreaterThanOrEqual(bounds.x);
-      expect(text.x + text.width).toBeLessThanOrEqual(bounds.x + bounds.width);
-    }
-  }
-});
-
 test('Your Tags appears below the card summary and expands only tags assigned to this card', async ({
   page,
 }) => {
@@ -484,7 +454,8 @@ test('mobile non-commander searches share the input and filter layout and apply 
   });
 });
 
-for (const width of [390, 1440]) {
+// The shared artwork aspect ratio needs one browser check, on a narrow screen.
+for (const width of [390]) {
   test(`card-detail image and controls keep their space while artwork loads at ${width}px`, async ({
     page,
   }) => {

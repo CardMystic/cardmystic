@@ -562,11 +562,8 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   expect(assignments).toHaveLength(0);
 });
 
-for (const [width, columns] of [
-  [390, 1],
-  [1024, 2],
-  [1600, 3],
-]) {
+// One narrow layout covers the shared skeleton-to-content transition.
+for (const [width, columns] of [[390, 1]]) {
   test(`library grid reserves nine deck cards at ${width}px`, async ({
     page,
   }) => {

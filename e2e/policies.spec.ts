@@ -52,6 +52,11 @@ test('mobile footer links reach every policy and billing help is available to gu
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await gotoHydrated(page, '/terms');
+  await expect(
+    page
+      .locator('footer')
+      .getByRole('link', { name: 'Archidekt', exact: true }),
+  ).toHaveAttribute('href', 'https://archidekt.com/');
   await page
     .getByRole('region', { name: 'Cookie preferences' })
     .getByRole('button', { name: 'Reject all', exact: true })
