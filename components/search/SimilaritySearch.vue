@@ -3,6 +3,7 @@
     ref="formRef"
     :schema="schema"
     :state="state"
+    :validate-on="[]"
     class="grow space-y-4"
     @submit="onSubmit"
   >
@@ -92,7 +93,9 @@ defineShortcuts({
 });
 
 const schema = z.object({
-  card_name: z.string().min(1, ''),
+  card_name: z
+    .string({ error: 'Select a card to search for.' })
+    .min(1, 'Select a card to search for.'),
   filters: CardSearchFiltersSchema.optional(),
 });
 
@@ -215,8 +218,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 }
 
 function handleCardSelected(value: string) {
+  formRef.value?.clear('card_name');
   if (!value) return;
-  nextTick(() => performSearch(state.card_name, state.filters));
+  nextTick(() => performSearch(value, state.filters));
 }
 
 // If similarity button is clicked on the similarity page, this will update the card name in the search field
