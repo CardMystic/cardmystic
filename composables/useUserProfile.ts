@@ -118,17 +118,6 @@ export const useUserProfile = () => {
     }
   };
 
-  const recordOAuthSignup = async (accessToken: string) => {
-    try {
-      await fetch(`${config.public.backendPath}/user/signup/record`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-    } catch {
-      // Non-critical — silently ignore
-    }
-  };
-
   // Computed properties
   const username = computed(() => profileData.value?.username ?? '');
 
@@ -149,22 +138,6 @@ export const useUserProfile = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // After an OAuth redirect, Supabase may have already processed the
-      // URL tokens before the listener is registered, so the first event
-      // is INITIAL_SESSION rather than SIGNED_IN.  Check both for the
-      // pending OAuth signup flag.
-      if (
-        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') &&
-        session &&
-        sessionStorage.getItem('pendingOAuthSignup')
-      ) {
-        sessionStorage.removeItem('pendingOAuthSignup');
-        const accessToken = session.access_token;
-        if (accessToken) {
-          recordOAuthSignup(accessToken);
-        }
-      }
-
       // Refetch queries when auth state changes.
       // INITIAL_SESSION fires after an OAuth redirect when Supabase exchanges
       // the URL code for a session before this listener is registered. Without
