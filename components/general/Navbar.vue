@@ -250,5 +250,9 @@ watch(() => route.fullPath, closePopover);
         apologize for the inconvenience.</span
       >
     </div>
+    <div
+      id="back-to-top-anchor"
+      class="pointer-events-none absolute inset-x-0 top-full flex justify-center"
+    />
   </header>
 </template>
