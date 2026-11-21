@@ -232,6 +232,9 @@ export function sortSearchResults(
 
 function getCardTypePrimary(typeLine: string): string {
   const lower = typeLine.toLowerCase();
+  // Land takes precedence over other types on the front face, including
+  // enchantment lands, artifact lands, and land creatures.
+  if (/\bland\b/.test(lower.split('//')[0].split('—')[0])) return 'land';
   for (const type of Object.keys(typeOrder)) {
     if (lower.includes(type)) return type;
   }
@@ -325,7 +328,11 @@ export function groupCards(
     let key: string;
     switch (groupBy) {
       case 'type':
-        key = getCardTypePrimary(card.card_data.type_line ?? '');
+        key = getCardTypePrimary(
+          card.card_data.card_faces?.[0]?.type_line ??
+            card.card_data.type_line ??
+            '',
+        );
         break;
       case 'color':
         // Double-faced cards keep their colors on each face. Group by the
@@ -411,7 +418,13 @@ export function groupCards(
       if (key === 'land' && allCards) {
         const mdfcLandCount = allCards.reduce((sum, c) => {
           // Skip cards already in the land group
-          if (getCardTypePrimary(c.card_data.type_line ?? '') === 'land')
+          if (
+            getCardTypePrimary(
+              c.card_data.card_faces?.[0]?.type_line ??
+                c.card_data.type_line ??
+                '',
+            ) === 'land'
+          )
             return sum;
           // Check if it's an MDFC with a land on the back face
           const faces = c.card_data.card_faces;

@@ -285,6 +285,69 @@ describe('sortSearchResults', () => {
 // groupCards
 // ---------------------------------------------------------------------------
 describe('groupCards', () => {
+  it('groups and sorts multitype lands as lands before considering other types', () => {
+    const lands = [
+      makeCard({ name: "Urza's Saga", type_line: 'Enchantment Land — Saga' }),
+      makeCard({ name: 'Seat of the Synod', type_line: 'Artifact Land' }),
+      makeCard({
+        name: 'Dryad Arbor',
+        type_line: 'Land Creature — Forest Dryad',
+      }),
+    ];
+    const artifact = makeCard({ name: 'Sol Ring', type_line: 'Artifact' });
+    const enchantment = makeCard({
+      name: 'Wild Growth',
+      type_line: 'Enchantment — Aura',
+    });
+    const cards = [...lands, artifact, enchantment];
+    const groups = groupCards(cards, 'type', {
+      [lands[1].card_data.oracle_id]: 2,
+    });
+
+    expect(groups.map((group) => group.key)).toEqual([
+      'type:artifact',
+      'type:enchantment',
+      'type:land',
+    ]);
+    expect(groups[2].cards).toEqual(lands);
+    expect(groups[2].label).toBe('Lands (4)');
+    expect(sortSearchResults(cards, 'type', 'asc')).toEqual([
+      artifact,
+      enchantment,
+      lands[2],
+      lands[1],
+      lands[0],
+    ]);
+  });
+
+  it('keeps a spell with a land back in its spell group and counts its land option', () => {
+    const spell = makeCard({
+      name: 'Sink into Stupor',
+      type_line: 'Instant // Land',
+    });
+    spell.card_data.layout = 'modal_dfc';
+    spell.card_data.card_faces = [
+      { object: 'card_face', name: 'Sink into Stupor', type_line: 'Instant' },
+      { object: 'card_face', name: 'Soporific Springs', type_line: 'Land' },
+    ];
+    const land = makeCard({
+      name: "Urza's Saga",
+      type_line: 'Enchantment Land — Saga',
+    });
+    const cards = [spell, land];
+    const groups = groupCards(cards, 'type', undefined, cards);
+
+    expect(groups.map((group) => group.key)).toEqual([
+      'type:instant',
+      'type:land',
+    ]);
+    expect(groups[0].cards).toEqual([spell]);
+    expect(groups[1].cards).toEqual([land]);
+    expect(groups[1].label).toBe('Lands (1 · 2 with MDFC)');
+    delete spell.card_data.card_faces;
+    expect(groupCards([spell], 'type')[0].key).toBe('type:instant');
+  });
+
   it('groups by type and returns labels', () => {
     const cards = [
       makeCard({ type_line: 'Creature — Human' }),
