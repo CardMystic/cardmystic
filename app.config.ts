@@ -2,6 +2,10 @@
 const fieldText = {
   compoundVariants: [{ class: { base: 'text-base' } }],
 };
+const menuField = {
+  ...fieldText,
+  slots: { content: 'z-50' },
+};
 
 export default defineAppConfig({
   ui: {
@@ -12,11 +16,13 @@ export default defineAppConfig({
       },
     },
     input: fieldText,
-    inputMenu: fieldText,
+    inputMenu: menuField,
     inputNumber: fieldText,
     inputTags: fieldText,
-    select: fieldText,
-    selectMenu: fieldText,
+    select: menuField,
+    selectMenu: menuField,
+    dropdownMenu: { slots: { content: 'z-50' } },
+    popover: { slots: { content: 'z-50' } },
     textarea: fieldText,
   },
 });
