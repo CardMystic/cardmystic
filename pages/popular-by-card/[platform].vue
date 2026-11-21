@@ -59,19 +59,24 @@ usePublicPageSeo({
 useSeoMeta({
   robots: () => (hasSearch.value ? 'noindex, follow' : 'index, follow'),
 });
-definePageMeta({ title: 'Popular Commanders for a Card' });
+definePageMeta({
+  title: 'Popular Commanders for a Card',
+  breadcrumbsInPage: true,
+});
 </script>
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        :fallback-title="title"
-        :fallback-description="description"
-      />
-      <StatsSearch
-        default-stats-type="popular-by-card"
-        class="mt-6 w-full max-w-5xl"
-      />
+      <SearchPageHeader type="popular-by-card">
+        <SearchSEOTitleAndDescription
+          :fallback-title="title"
+          :fallback-description="description"
+        />
+        <StatsSearch
+          default-stats-type="popular-by-card"
+          class="mt-6 w-full max-w-5xl"
+        />
+      </SearchPageHeader>
       <UAlert
         v-if="invalid"
         class="mt-4 w-full"

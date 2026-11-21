@@ -1,17 +1,19 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        :seo-entry="seoEntry"
-        fallback-title="MTG Deck Recommender"
-        fallback-description="Build your deck using personalized deck recommendations."
-      />
+      <SearchPageHeader type="recommend">
+        <SearchSEOTitleAndDescription
+          :seo-entry="seoEntry"
+          fallback-title="MTG Deck Recommender"
+          fallback-description="Build your deck using personalized deck recommendations."
+        />
 
-      <Search
-        default-search-type="recommend"
-        :platform="searchPlatformProp"
-        class="mt-6 max-w-5xl"
-      />
+        <Search
+          default-search-type="recommend"
+          :platform="searchPlatformProp"
+          class="mt-6 max-w-5xl"
+        />
+      </SearchPageHeader>
 
       <UButton
         v-if="deckbuilder.selectedDeckId.value"
@@ -269,7 +271,7 @@ useSeoMeta({
   twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
-definePageMeta({ title: 'Deck Recommender' });
+definePageMeta({ title: 'Deck Recommender', breadcrumbsInPage: true });
 
 const alsRequest = computed<AlsRecommendRequest | undefined>(() => {
   const hasDecklist = !!decklistParam.value;

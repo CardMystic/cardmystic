@@ -1,17 +1,19 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        :seo-entry="seoEntry"
-        fallback-title="MTG Popular Commander Cards"
-        fallback-description="Discover the most popular commander cards across all decks."
-      />
+      <SearchPageHeader type="popular-cards">
+        <SearchSEOTitleAndDescription
+          :seo-entry="seoEntry"
+          fallback-title="MTG Popular Commander Cards"
+          fallback-description="Discover the most popular commander cards across all decks."
+        />
 
-      <StatsSearch
-        default-stats-type="popular-cards"
-        :platform="searchPlatformProp"
-        class="mt-6 max-w-5xl"
-      />
+        <StatsSearch
+          default-stats-type="popular-cards"
+          :platform="searchPlatformProp"
+          class="mt-6 max-w-5xl"
+        />
+      </SearchPageHeader>
 
       <!-- Results -->
       <div class="mb-10 w-full">
@@ -117,7 +119,7 @@ useSeoMeta({
   twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
-definePageMeta({ title: 'Popular Commander Cards' });
+definePageMeta({ title: 'Popular Commander Cards', breadcrumbsInPage: true });
 
 const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);

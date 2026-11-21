@@ -1,6 +1,5 @@
 <template>
   <div class="search-container">
-    <SearchBackground v-if="!hideBackground" :type="searchType" />
     <!-- Search type tabs -->
     <SearchTabs @select="selectSearchType" />
 
@@ -66,7 +65,6 @@ const ALSSearch = defineAsyncComponent(() => import('./ALSSearch.vue'));
 
 // Define props
 const props = defineProps<{
-  hideBackground?: boolean;
   similarity?: boolean;
   defaultSearchType?:
     'smart' | 'similarity' | 'commander' | 'keyword' | 'recommend';
