@@ -114,7 +114,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
     .click();
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: 'Set # of Copies', exact: true })
+    .getByRole('button', { name: 'Set Copies', exact: true })
     .click();
   await page.getByRole('menuitem', { name: 'Add a copy', exact: true }).click();
   await page.keyboard.press('Escape');

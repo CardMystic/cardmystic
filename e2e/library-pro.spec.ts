@@ -271,9 +271,7 @@ test('suggestion queue advances without searching again and refills only when ex
   await expect(page).toHaveURL(new RegExp(`/lists/${displayDeckId}$`));
   await modal.getByRole('button', { name: 'Add to Deck', exact: true }).click();
   await expect(modal).toBeHidden();
-  await expect(
-    page.getByText('Card added to deck', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('Card Added', { exact: true })).toBeVisible();
   await expect(
     section.getByRole('button', {
       name: `Options for ${state.catalog[10].name}`,

@@ -112,7 +112,9 @@
           />
         </UDropdownMenu>
       </nav>
-      <div class="flex w-full items-center gap-1 lg:w-auto lg:ml-auto">
+      <div
+        class="flex w-full flex-wrap items-center gap-1 lg:w-auto lg:ml-auto"
+      >
         <UInputMenu
           v-if="isOwner"
           ref="addCardInput"
@@ -127,6 +129,9 @@
           class="flex-1 min-w-0 lg:w-64 cursor-pointer"
           @update:model-value="handleAddCard"
         />
+        <span v-if="pendingAdds.size" role="status" class="sr-only">
+          Adding {{ [...pendingAdds.values()].join(', ') }}…
+        </span>
         <DeckHighlight
           v-if="list"
           v-model:mode="highlightMode"
@@ -618,6 +623,7 @@ const isBrowser = !!browser;
 const requestFetch = useRequestFetch();
 const listId = props.listId;
 const toast = useToast();
+const cardEditToast = useCardEditToast();
 const runtimeConfig = useRuntimeConfig();
 
 // SSR-seed vue-query for the public view so unfurlers see the deck name and
@@ -859,7 +865,7 @@ const addCardFocusPending = ref(false);
 const selectedCardToAdd = ref('');
 const addCardSearchTerm = ref('');
 const debouncedAddCardSearchTerm = refDebounced(addCardSearchTerm, 150);
-const addCardLoading = ref(false);
+const pendingAdds = ref(new Map<string, string>());
 const error = ref('');
 
 // Duplicate card confirmation state
@@ -1304,14 +1310,11 @@ async function handleRemoveCard(
     if (!listId || !oracleId) {
       throw new Error('Cannot remove card: missing listId or oracleId');
     }
+    cardEditToast.notify('removed');
     await removeCardFromListMutation.mutateAsync({
       listId,
       oracleId,
       board: fromBoard,
-    });
-    toast.add({
-      title: 'Card removed from list',
-      icon: 'i-lucide-check',
     });
   } catch (error: any) {
     toast.add({
@@ -1433,7 +1436,6 @@ const filteredAddCards = computed(() =>
 async function handleAddCard(cardName: string) {
   if (!cardName || !list.value) return;
 
-  addCardLoading.value = true;
   try {
     // Resolve oracle_id locally from the bulk name→oracle_id map. Avoids a
     // `/cards/name/:name` round-trip that breaks for DFCs like "Wear // Tear"
@@ -1458,29 +1460,25 @@ async function handleAddCard(cardName: string) {
       return;
     }
 
+    if (pendingAdds.value.has(oracleId)) return;
+    pendingAdds.value.set(oracleId, cardName);
+    selectedCardToAdd.value = '';
+    addCardSearchTerm.value = '';
+    addCardFocusPending.value = true;
+    cardEditToast.notify('added');
     await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
       oracleIds: [oracleId],
     });
-
-    toast.add({
-      title: `Added ${cardName} to list`,
-      icon: 'i-lucide-check',
-    });
-
-    selectedCardToAdd.value = '';
-    addCardSearchTerm.value = '';
   } catch (error: any) {
     toast.add({
       title: 'Error adding card',
       description: error.message,
       color: 'error',
     });
-    selectedCardToAdd.value = '';
-    addCardSearchTerm.value = '';
   } finally {
-    addCardLoading.value = false;
-    if (!showDuplicateModal.value) addCardFocusPending.value = true;
+    const oracleId = cardNameToOracleId.value?.[cardName.toLowerCase()];
+    if (oracleId) pendingAdds.value.delete(oracleId);
   }
 }
 
@@ -1493,14 +1491,11 @@ async function handleAddCard(cardName: string) {
 async function confirmAddDuplicate() {
   if (!pendingDuplicateCard.value || !list.value) return;
   try {
+    cardEditToast.notify('added');
     await addCardsToListMutation.mutateAsync({
       listId: list.value.id,
       oracleIds: [pendingDuplicateCard.value.oracle_id],
       board: 'Mainboard', // Always add duplicates to mainboard by default, user can move them later if desired
-    });
-    toast.add({
-      title: `Added ${pendingDuplicateCard.value.name}`,
-      icon: 'i-lucide-check',
     });
   } catch (error: any) {
     toast.add({
@@ -1730,7 +1725,7 @@ const addCardCatalogReady = computed(
   () => !!rawCards.value && !!cardNameToOracleId.value,
 );
 const addCardInputDisabled = computed(
-  () => loading.value || !addCardCatalogReady.value || addCardLoading.value,
+  () => loading.value || !addCardCatalogReady.value,
 );
 watch(
   () =>
@@ -1752,8 +1747,7 @@ const addCardCatalogError = computed(
 );
 // An unsuccessful query is not necessarily still loading (it may have failed).
 const isAddCardBusy = computed(
-  () =>
-    addCardLoading.value || fetchingCardNames.value || fetchingOracleMap.value,
+  () => fetchingCardNames.value || fetchingOracleMap.value,
 );
 async function retryCardCatalog() {
   await Promise.all([refetchCardNames(), refetchOracleMap()]);
@@ -1884,17 +1878,15 @@ async function handleChangeBoard(
   fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
 ) {
   if (!list.value) return;
+  cardEditToast.notifyMoved(board);
   try {
-    const response = await changeBoardMutation.mutateAsync({
+    await changeBoardMutation.mutateAsync({
       listId: list.value.id,
       cardName,
+      oracleId: cards.value.find((card) => card.card_data.name === cardName)
+        ?.card_data.oracle_id,
       board,
       fromBoard,
-    });
-    const merged = response?.message?.toLowerCase().includes('merged') ?? false;
-    toast.add({
-      title: response?.message ?? `Moved ${cardName} to ${board}`,
-      icon: merged ? 'i-lucide-merge' : 'i-lucide-check',
     });
   } catch (error: any) {
     toast.add({

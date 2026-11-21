@@ -171,6 +171,13 @@ body {
   color: var(--ui-text);
 }
 
+.notification-viewport {
+  bottom: var(
+    --notification-bottom,
+    calc(env(safe-area-inset-bottom) + 0.75rem)
+  );
+}
+
 :root {
   --card-column-adjustment: 0;
 }
