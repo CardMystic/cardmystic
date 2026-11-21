@@ -23,7 +23,7 @@
 
           <!-- Search (suggested searches + advanced filters render directly
                below the search bar on all breakpoints) -->
-          <Search :show-suggested-searches="true" hide-background />
+          <Search :show-suggested-searches="true" />
           <HeroStats class="mt-5" />
         </div>
 

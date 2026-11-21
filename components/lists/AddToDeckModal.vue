@@ -199,6 +199,7 @@ const debouncedDeckSearch = refDebounced(deckSearchTerm, 300);
 const { decklists: searchedDecklists } =
   useMyDecklistsSearch(debouncedDeckSearch);
 const toast = useToast();
+const cardEditToast = useCardEditToast();
 const {
   addNames: addGuestNames,
   ready: guestReady,
@@ -226,13 +227,18 @@ async function addToDraft() {
       names = resolved.map((card) => card.name);
     }
     if (!names.length) throw new Error('No cards selected.');
+    cardEditToast.notify('added', names.length);
     await addGuestNames(names);
-    toast.add({ title: 'Added to browser draft', color: 'success' });
     if (!guestStorageError.value) isOpen.value = false;
     emit('success');
   } catch (error) {
     errorMessage.value =
       error instanceof Error ? error.message : 'Could not add cards to draft.';
+    toast.add({
+      title: 'Could not add card',
+      description: errorMessage.value,
+      color: 'error',
+    });
   } finally {
     addingToDraft.value = false;
   }
@@ -312,10 +318,6 @@ function selectRecentList(listId: string) {
   selectedListId.value = listId;
   syncSelectedLabel();
 }
-
-const selectedList = computed(() =>
-  searchedDecklists.value.find((list) => list.id === selectedListId.value),
-);
 
 const selectedListIdRef = computed(() => selectedListId.value);
 const { data: selectedListItems } = useListItems(selectedListIdRef);
@@ -402,45 +404,24 @@ async function handleAddToDeck(onlyNew = false) {
   }
 
   try {
-    const deckName = selectedList.value?.name || 'deck';
-
     if (cardNames.value.length > 0) {
       const namesToAdd = onlyNew ? newCardNames.value : cardNames.value;
+      cardEditToast.notify('added', namesToAdd.length);
       const result = await addCardsByNameToListMutation.mutateAsync({
         listId: selectedListId.value,
         cardNames: namesToAdd,
       });
-      const messages: string[] = [];
-      if (result.addedCount > 0)
-        messages.push(
-          `Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`,
-        );
-      if (result.updatedCount > 0)
-        messages.push(`${result.updatedCount} updated`);
-      if (result.invalidCardNames?.length > 0)
-        messages.push(`${result.invalidCardNames.length} not found`);
-      toast.add({
-        title: messages.join('. ') || `Cards added to ${deckName}`,
-        icon: 'i-lucide-check',
-      });
+      if (result.invalidCardNames?.length)
+        throw new Error(`Could not add: ${result.invalidCardNames.join(', ')}`);
     } else {
       const idsToAdd = onlyNew ? newOracleIds.value : oracleIds.value;
+      cardEditToast.notify('added', idsToAdd.length);
       const result = await addCardsToListMutation.mutateAsync({
         listId: selectedListId.value,
         oracleIds: idsToAdd,
       });
-      const messages: string[] = [];
-      if (result?.addedCount)
-        messages.push(
-          `Added ${result.addedCount} card${result.addedCount === 1 ? '' : 's'}`,
-        );
-      if (result?.updatedCount) messages.push(`${result.updatedCount} updated`);
       if (result?.invalidOracleIds?.length)
-        messages.push(`${result.invalidOracleIds.length} not found`);
-      toast.add({
-        title: messages.join('. ') || `Cards added to ${deckName}`,
-        icon: 'i-lucide-check',
-      });
+        throw new Error('Some cards could not be added. Please try again.');
     }
 
     emit('success');
@@ -449,6 +430,11 @@ async function handleAddToDeck(onlyNew = false) {
     const message =
       error instanceof Error ? error.message : 'Failed to add card to deck.';
     errorMessage.value = message;
+    toast.add({
+      title: 'Could not add card',
+      description: message,
+      color: 'error',
+    });
   }
 }
 </script>

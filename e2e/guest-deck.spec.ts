@@ -114,7 +114,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
     .click();
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: 'Set # of Copies', exact: true })
+    .getByRole('button', { name: 'Set Copies', exact: true })
     .click();
   await page.getByRole('menuitem', { name: 'Add a copy', exact: true }).click();
   await page.keyboard.press('Escape');
@@ -500,9 +500,7 @@ test('a guest adds a search result to the same browser draft', async ({
   await page
     .getByRole('button', { name: 'Add to browser draft', exact: true })
     .click();
-  await expect(
-    page.getByText('Added to browser draft', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('Card Added', { exact: true })).toBeVisible();
   await gotoHydrated(page, '/build');
   await expect(page.getByText('1 cards', { exact: true })).toBeVisible();
   await expect(

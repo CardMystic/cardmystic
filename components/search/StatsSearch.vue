@@ -1,6 +1,5 @@
 <template>
   <div class="search-container">
-    <SearchBackground :type="statsType" />
     <!-- Stats search type tabs -->
     <ExploreTabs :stats-type="statsType" @select="switchType" />
 

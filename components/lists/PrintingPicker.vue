@@ -80,7 +80,7 @@ async function submit(reset = false) {
         class="mb-4 w-full"
         icon="i-lucide-search"
       />
-      <div v-if="query.isPending.value" role="status">Loading printings…</div>
+      <PrintingPickerSkeleton v-if="query.isPending.value" />
       <UAlert
         v-else-if="query.error.value"
         color="error"
@@ -95,7 +95,10 @@ async function submit(reset = false) {
         ]"
       />
       <p v-else-if="!printings.length">No printings found.</p>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div
+        v-if="!query.isPending.value && printings.length"
+        class="grid grid-cols-2 gap-3 sm:grid-cols-4"
+      >
         <button
           v-for="printing in printings"
           :key="printing.id"
@@ -143,6 +146,10 @@ async function submit(reset = false) {
           </p>
         </button>
       </div>
+      <PrintingPickerSkeleton
+        v-if="query.isFetchingNextPage.value"
+        class="mt-3"
+      />
       <UButton
         v-if="query.hasNextPage.value"
         label="Load more printings"

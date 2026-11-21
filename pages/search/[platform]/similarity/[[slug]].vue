@@ -1,29 +1,31 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        :seo-entry="seoEntry"
-        fallback-title="MTG Similarity Search"
-        fallback-description="Search a card name to find cards with similar effects."
-      />
+      <SearchPageHeader type="similarity">
+        <SearchSEOTitleAndDescription
+          :seo-entry="seoEntry"
+          fallback-title="MTG Similarity Search"
+          fallback-description="Search a card name to find cards with similar effects."
+        />
 
-      <p v-if="seoEntry?.oracleId" class="text-center text-sm text-muted">
-        View
-        <NuxtLink
-          :to="`/card/${seoEntry.oracleId}`"
-          no-prefetch
-          class="text-primary underline underline-offset-2"
-        >
-          {{ seoEntry.query }}
-        </NuxtLink>
-        for its rules text, printings, and prices.
-      </p>
+        <p v-if="seoEntry?.oracleId" class="text-center text-sm text-muted">
+          View
+          <NuxtLink
+            :to="`/card/${seoEntry.oracleId}`"
+            no-prefetch
+            class="text-primary underline underline-offset-2"
+          >
+            {{ seoEntry.query }}
+          </NuxtLink>
+          for its rules text, printings, and prices.
+        </p>
 
-      <Search
-        default-search-type="similarity"
-        :platform="searchPlatformProp"
-        class="mt-6 max-w-5xl"
-      />
+        <Search
+          default-search-type="similarity"
+          :platform="searchPlatformProp"
+          class="mt-6 max-w-5xl"
+        />
+      </SearchPageHeader>
 
       <SearchLandingContent
         v-if="!displayQuery"
@@ -142,7 +144,7 @@ useSeoMeta({
   twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
-definePageMeta({ title: 'Similarity Search' });
+definePageMeta({ title: 'Similarity Search', breadcrumbsInPage: true });
 
 const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);

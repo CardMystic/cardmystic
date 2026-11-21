@@ -4,7 +4,7 @@ import { BACKEND, SUPABASE } from './utils/mocks';
 import type { DeckAnalytics } from '../utils/deckAnalytics';
 import { openDeckAction } from './utils/deckActions';
 
-test('visitors open free analytics directly from the mobile Deck Stats button', async ({
+test('visitors open free analytics directly from the mobile Stats button', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -58,7 +58,7 @@ test('visitors open free analytics directly from the mobile Deck Stats button', 
   await expect(stats).not.toHaveAttribute('open', '');
   await page
     .locator('.sticky-footer-wrap')
-    .getByRole('button', { name: 'Deck Stats', exact: true })
+    .getByRole('button', { name: 'Stats', exact: true })
     .click();
   await expect(
     page.getByRole('heading', { name: 'Opening hand', exact: true }),
@@ -139,6 +139,7 @@ for (const width of [390, 1280]) {
       exact: true,
     });
     await expect(footer).toBeVisible();
+    await expect(jump).toHaveText('Jump');
     await jump.click();
     await expect(page.getByRole('menu')).toBeVisible();
     await expect(footer).toBeVisible();
@@ -215,7 +216,7 @@ test('Deck analytics show opening-hand odds and incomplete prices on mobile, wit
   await page.reload();
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   await page.screenshot({ path: '/tmp/cardmystic-new-footer-mobile.png' });
-  await page.getByRole('button', { name: 'Deck Stats', exact: true }).click();
+  await page.getByRole('button', { name: 'Stats', exact: true }).click();
   await expect(page.locator('.sticky-footer-wrap')).toBeVisible();
   const modal = page.getByTestId('deck-stats');
   await expect(modal.getByRole('alert')).toContainText(

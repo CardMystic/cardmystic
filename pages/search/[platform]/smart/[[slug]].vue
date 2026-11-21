@@ -1,17 +1,19 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        :seo-entry="seoEntry"
-        fallback-title="MTG Smart Search"
-        fallback-description="Search for cards using semantic natural language vector search."
-      />
+      <SearchPageHeader type="smart">
+        <SearchSEOTitleAndDescription
+          :seo-entry="seoEntry"
+          fallback-title="MTG Smart Search"
+          fallback-description="Search for cards using semantic natural language vector search."
+        />
 
-      <Search
-        default-search-type="smart"
-        :platform="searchPlatformProp"
-        class="mt-6 max-w-5xl"
-      />
+        <Search
+          default-search-type="smart"
+          :platform="searchPlatformProp"
+          class="mt-6 max-w-5xl"
+        />
+      </SearchPageHeader>
 
       <SearchLandingContent
         v-if="!displayQuery"
@@ -129,7 +131,7 @@ useSeoMeta({
   twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
-definePageMeta({ title: 'Smart Search' });
+definePageMeta({ title: 'Smart Search', breadcrumbsInPage: true });
 
 const limitParam = computed(() => 100);
 const platformFilters = getPlatformFilters(platform);

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const cardEditToast = useCardEditToast();
+const toast = useToast();
 import { suggestDecksAction } from '~/utils/card-actions';
 import {
   useInfiniteQuery,
@@ -103,6 +105,7 @@ async function add(id: string) {
   addError.value = '';
   const current = sequence;
   const cacheKey = key.value;
+  cardEditToast.notify('added');
   try {
     await addCardsToListMutation.mutateAsync({
       listId: id,
@@ -125,6 +128,11 @@ async function add(id: string) {
     );
   } catch (cause) {
     if (current === sequence) addError.value = (cause as Error).message;
+    toast.add({
+      title: 'Could not add card',
+      description: (cause as Error).message,
+      color: 'error',
+    });
   } finally {
     if (current === sequence) adding.value = '';
   }
@@ -136,7 +144,8 @@ async function add(id: string) {
       v-if="!requested"
       v-bind="suggestDecksAction"
       variant="ghost"
-      class="min-h-11 w-full justify-start"
+      class="min-h-11 w-full justify-start whitespace-normal text-left"
+      :ui="{ label: 'whitespace-normal wrap-anywhere' }"
       @click="suggest"
     />
     <template v-else>

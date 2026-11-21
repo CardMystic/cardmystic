@@ -17,11 +17,12 @@ const emit = defineEmits<{
 }>();
 const api = useLibraryApi(),
   toast = useToast();
+const cardEditToast = useCardEditToast();
 const { removeCardFromListMutation } = useCardLists();
 const open = defineModel<boolean>('open', { default: false });
 const loading = ref(false),
   error = ref(''),
-  removing = ref<string | null>(null);
+  removing = ref(new Set<string>());
 const results = ref<Card[]>([]),
   removed = ref(new Set<string>());
 const expanded = ref(false),
@@ -48,7 +49,7 @@ const actions = computed<CardActionMenu>(() =>
         cut: {
           ...deckSuggestionActions.cut,
           label: 'Remove from Deck',
-          disabled: !!removing.value,
+          disabled: removing.value.has(selected.value.card_data.oracle_id),
           onSelect: () => {
             if (selected.value) void cut(selected.value);
           },
@@ -86,9 +87,12 @@ async function load() {
   }
 }
 async function cut(card: Card) {
-  if (removing.value) return;
+  if (removing.value.has(card.card_data.oracle_id)) return;
   const restoreFocus = captureSuggestionFocus(section.value);
-  removing.value = card.card_data.oracle_id;
+  cardEditToast.notify('removed');
+  removing.value.add(card.card_data.oracle_id);
+  removed.value.add(card.card_data.oracle_id);
+  void nextTick().then(restoreFocus);
   error.value = '';
   try {
     await removeCardFromListMutation.mutateAsync({
@@ -97,16 +101,16 @@ async function cut(card: Card) {
       board: 'Mainboard',
     });
     removed.value = new Set([...removed.value, card.card_data.oracle_id]);
-    toast.add({
-      title: 'Card removed from deck',
-      description: card.card_name,
-      color: 'success',
-    });
   } catch (cause) {
+    removed.value.delete(card.card_data.oracle_id);
+    toast.add({
+      title: 'Could not remove card',
+      description: (cause as Error).message,
+      color: 'error',
+    });
     error.value = (cause as Error).message;
   } finally {
-    removing.value = null;
-    await restoreFocus();
+    removing.value.delete(card.card_data.oracle_id);
   }
 }
 watch(open, (value) => {
@@ -138,7 +142,7 @@ onBeforeUnmount(() => sequence++);
           icon="i-lucide-refresh-cw"
           aria-label="Refresh cuts"
           variant="ghost"
-          :disabled="!!removing"
+          :disabled="removing.size > 0"
           :loading="loading"
           @click="load"
         /><UButton
@@ -190,8 +194,8 @@ onBeforeUnmount(() => sequence++);
         <DeckSuggestionAction
           action="cut"
           :label="`Cut ${card.card_name} from deck`"
-          :disabled="!!removing"
-          :loading="removing === card.card_data.oracle_id"
+          :disabled="removing.has(card.card_data.oracle_id)"
+          :loading="removing.has(card.card_data.oracle_id)"
           @click="cut(card)"
         />
       </div>

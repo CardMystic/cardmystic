@@ -12,28 +12,22 @@
           <USkeleton class="h-4 w-1/2" />
         </div>
 
-        <div class="flex flex-wrap gap-2">
-          <USkeleton class="h-5 w-20 rounded-full" />
-          <USkeleton class="h-5 w-28 rounded-full" />
-          <USkeleton class="h-5 w-16 rounded-full" />
-        </div>
-
         <USkeleton v-if="variant === 'search'" class="h-2 w-full" />
       </div>
 
-      <div class="preview-actions">
-        <USkeleton v-for="n in 4" :key="n" class="h-10 w-full rounded-lg" />
-      </div>
+      <USkeleton class="h-11 w-full rounded-lg" />
 
       <div v-if="variant === 'deck'" class="preview-actions">
-        <USkeleton class="h-10 w-full rounded-lg" />
-        <div class="flex gap-2">
-          <USkeleton class="h-10 flex-1 rounded-lg" />
-          <USkeleton class="size-10 rounded-lg" />
-        </div>
+        <USkeleton v-for="n in 4" :key="n" class="h-11 w-full rounded-lg" />
       </div>
-      <div class="preview-actions">
-        <USkeleton class="h-10 w-full rounded-lg" />
+      <div
+        class="preview-actions"
+        :class="variant === 'deck' && 'border-t border-default pt-4'"
+      >
+        <USkeleton v-for="n in 4" :key="n" class="h-11 w-full rounded-lg" />
+      </div>
+      <div class="preview-actions border-t border-default pt-4">
+        <USkeleton class="h-11 w-full rounded-lg" />
       </div>
     </div>
   </div>

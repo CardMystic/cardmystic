@@ -171,6 +171,45 @@ body {
   color: var(--ui-text);
 }
 
+.notification-viewport {
+  bottom: var(
+    --notification-bottom,
+    calc(env(safe-area-inset-bottom) + 0.75rem)
+  );
+}
+
+:root {
+  --card-column-adjustment: 0;
+}
+:root[data-card-size='small'] {
+  --card-column-adjustment: 1;
+}
+:root[data-card-size='large'] {
+  --card-column-adjustment: -1;
+}
+.card-grid {
+  --card-columns: 2;
+  grid-template-columns: repeat(
+    calc(var(--card-columns) + var(--card-column-adjustment)),
+    minmax(0, 1fr)
+  );
+}
+@media (min-width: 40rem) {
+  .card-grid {
+    --card-columns: 3;
+  }
+}
+@media (min-width: 64rem) {
+  .card-grid {
+    --card-columns: 4;
+  }
+}
+@media (min-width: 80rem) {
+  .card-grid {
+    --card-columns: 7;
+  }
+}
+
 #__nuxt {
   min-height: 100%;
   display: flex;
