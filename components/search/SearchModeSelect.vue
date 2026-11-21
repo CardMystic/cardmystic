@@ -81,23 +81,15 @@ function select(value: unknown) {
         Pro searches</NuxtLink
       >
       <template v-else-if="!mounted || pending || !ready">Checking...</template>
-      <template v-else>
+      <template v-else-if="error && mode === 'enhanced'">
         {{ allowance }}
-        <button
-          v-if="error && mode === 'enhanced'"
-          type="button"
-          class="underline min-h-11"
-          @click="refresh()"
-        >
+        <button type="button" class="underline min-h-11" @click="refresh()">
           Retry allowance
         </button>
-        <template v-else>
-          <span aria-hidden="true"> | </span>
-          <NuxtLink to="/memberships" class="underline underline-offset-2"
-            >Memberships</NuxtLink
-          >
-        </template>
       </template>
+      <NuxtLink v-else to="/memberships" class="underline underline-offset-2">{{
+        allowance
+      }}</NuxtLink>
     </span>
   </div>
 </template>
