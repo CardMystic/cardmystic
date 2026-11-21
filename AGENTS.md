@@ -1,3 +1,7 @@
+# WSL access
+
+WSL is authorized for work on this project. Use it without asking for separate permission. If the tool sandbox requires escalation, use its required approval mechanism; this standing permission does not bypass tool restrictions.
+
 # Branches and commits
 
 Name every feature branch `Andrew/name` with a capital A and a short, descriptive name after the slash. Split changes into commits by functionality. Write descriptive commit messages in Andrew’s language, following his recent commits in the repository. Describe what changed and include the reason or user-visible behavior when it helps explain the change.
