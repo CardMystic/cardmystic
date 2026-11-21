@@ -19,4 +19,6 @@
 <script setup lang="ts">
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 const isDev = import.meta.env.VITE_IS_DEV === 'true';
+const { size: cardSize } = useCardSize();
+useHead({ htmlAttrs: { 'data-card-size': cardSize } });
 </script>

@@ -15,10 +15,7 @@
         </div>
         <USkeleton class="h-10 w-full mb-1 rounded-lg" />
       </template>
-      <div
-        v-if="view === 'grid'"
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2"
-      >
+      <div v-if="view === 'grid'" class="card-grid grid gap-2">
         <CardSkeleton
           v-for="i in skeletonCount"
           :key="`skeleton-${i}`"

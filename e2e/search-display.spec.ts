@@ -115,6 +115,30 @@ for (const width of [390, 1440]) {
         );
       }
       await display.click();
+      const size = page.getByRole('combobox', {
+        name: 'Card size',
+        exact: true,
+      });
+      await size.click();
+      await page.getByRole('option', { name: 'Small', exact: true }).click();
+      await expect
+        .poll(() =>
+          page
+            .locator('.card-grid')
+            .first()
+            .evaluate(
+              (element) =>
+                getComputedStyle(element).gridTemplateColumns.split(' ').length,
+            ),
+        )
+        .toBe(width < 640 ? 3 : 8);
+      expect(
+        await size.evaluate((element) =>
+          parseFloat(getComputedStyle(element).fontSize),
+        ),
+      ).toBeGreaterThanOrEqual(16);
+      await size.click();
+      await page.getByRole('option', { name: 'Medium', exact: true }).click();
       await page.getByRole('combobox', { name: 'View', exact: true }).click();
       await page
         .getByRole('option', { name: 'Card Text', exact: true })

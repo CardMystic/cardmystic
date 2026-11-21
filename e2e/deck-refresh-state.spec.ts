@@ -23,6 +23,18 @@ test('adding a card preserves mobile display choices and collapsed groups', asyn
   });
   const addedCard = state.catalog.at(-1)!;
   await page.getByRole('button', { name: 'Display', exact: true }).click();
+  await choose(page, 'Card size', 'Small');
+  await expect(page.locator('html')).toHaveAttribute('data-card-size', 'small');
+  await expect(page.locator('.card-grid').first()).toHaveCSS(
+    'grid-template-columns',
+    /^(\S+\s+){2}\S+$/,
+  );
+  await choose(page, 'Card size', 'Large');
+  await expect(page.locator('.card-grid').first()).toHaveCSS(
+    'grid-template-columns',
+    /^\S+$/,
+  );
+  await choose(page, 'Card size', 'Medium');
   await choose(page, 'Deck view', 'Card Text');
   await choose(page, 'Deck grouping', 'Color');
   await choose(page, 'Deck sorting', 'Price');
@@ -71,6 +83,23 @@ test('adding a card preserves mobile display choices and collapsed groups', asyn
     await expect(
       page.getByRole('button', { name: 'Descending', exact: true }),
     ).toBeVisible();
+    await choose(page, 'Deck view', 'Card Grid');
+    await choose(page, 'Card size', 'Small');
+    await page.keyboard.press('Escape');
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-card-size',
+      'small',
+    );
+    await expect(page.locator('.card-grid').first()).toHaveCSS(
+      'grid-template-columns',
+      /^(\S+\s+){2}\S+$/,
+    );
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await expect(page.locator('.card-grid').first()).toHaveCSS(
+      'grid-template-columns',
+      /^(\S+\s+){7}\S+$/,
+    );
   } finally {
     state.releaseAddedCardData();
   }
