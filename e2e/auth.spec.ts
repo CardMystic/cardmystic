@@ -109,6 +109,11 @@ test.describe('Google OAuth', () => {
   test('clicking "Continue with Google" navigates to Supabase OAuth endpoint', async ({
     page,
   }) => {
+    // This test checks the OAuth redirect parameters; backend reCAPTCHA
+    // verification is exercised by the real email sign-in flow.
+    await page.route(`${BACKEND}/recaptcha/verify`, (route) =>
+      route.fulfill({ json: { success: true } }),
+    );
     let authorizeUrl: string | null = null;
     await page.route(`${SUPABASE}/auth/v1/authorize**`, (route, request) => {
       authorizeUrl = request.url();
@@ -126,6 +131,9 @@ test.describe('Google OAuth', () => {
       .poll(() => authorizeUrl, { timeout: 15_000 })
       .toContain('provider=google');
     expect(authorizeUrl).toMatch(/\/auth\/v1\/authorize/);
+    expect(new URL(authorizeUrl!).searchParams.get('prompt')).toBe(
+      'select_account',
+    );
   });
 
   test('OAuth callback hash is captured and establishes a session (regression: Vue Router race)', async ({
