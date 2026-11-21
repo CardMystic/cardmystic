@@ -1191,9 +1191,13 @@ test('deck suggestions persist across modals and previews and card pages open su
   await expect(previewControls.nth(0)).toHaveAccessibleName(
     "Go To Card's Page",
   );
-  await expect(previewControls.nth(1)).toHaveAccessibleName(/Buy on TCGPlayer/);
-  await expect(previewControls.nth(1)).toHaveClass(/\bbg-success\b/);
-  await expect(previewControls.nth(2)).toHaveAccessibleName(
+  await expect(previewControls.nth(1)).toHaveAccessibleName('Change printing');
+  const generalControls = preview
+    .locator('[data-card-action-group="general"]')
+    .locator('a[href], button');
+  await expect(generalControls.nth(0)).toHaveAccessibleName(/Buy on TCGPlayer/);
+  await expect(generalControls.nth(0)).toHaveClass(/\bbg-success\b/);
+  await expect(generalControls.nth(1)).toHaveAccessibleName(
     'Add to Another Deck',
   );
   await expect(
