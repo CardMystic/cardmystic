@@ -542,6 +542,7 @@
             v-for="section in sectionLinks"
             :key="section.label"
             :label="section.label"
+            :icon="section.icon"
             variant="ghost"
             color="neutral"
             size="sm"
@@ -989,7 +990,11 @@ async function jumpToSection(id: string) {
     });
 }
 const sectionLinks = computed(() => [
-  { label: 'Deck Stats', onSelect: () => jumpToSection('deck-stats') },
+  {
+    label: 'Stats',
+    icon: 'i-lucide-chart-column',
+    onSelect: () => jumpToSection('deck-stats'),
+  },
 ]);
 const addsOpen = ref(false);
 const suggestedAdds = useTemplateRef<{ visible: Card[] }>('suggestedAdds');

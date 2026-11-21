@@ -2307,9 +2307,7 @@ test('deck prices, stats and sticky actions hydrate consistently on reload', asy
     await expect(footer.getByRole('button', { name: /^Buy \(/ })).toHaveText(
       await buy.innerText(),
     );
-    await footer
-      .getByRole('button', { name: 'Deck Stats', exact: true })
-      .click();
+    await footer.getByRole('button', { name: 'Stats', exact: true }).click();
     await expect(page.getByTestId('deck-stats')).toHaveAttribute('open', '');
     expect(hydrationWarnings).toEqual([]);
   }

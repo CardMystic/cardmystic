@@ -1,7 +1,11 @@
 <template>
   <ClientOnly>
     <Teleport to="body">
-      <div v-if="show && !nearPageBottom" class="sticky-footer-wrap">
+      <div
+        v-if="show && !nearPageBottom"
+        ref="footer"
+        class="sticky-footer-wrap"
+      >
         <div class="sticky-footer-shell" :class="shellLayoutClass">
           <slot v-if="slots.default" />
           <div
@@ -22,6 +26,21 @@
 </template>
 
 <script setup lang="ts">
+import { useResizeObserver } from '@vueuse/core';
+const footer = useTemplateRef<HTMLElement>('footer');
+function updateToastOffset() {
+  if (!import.meta.client) return;
+  if (footer.value) {
+    const bottom =
+      window.innerHeight - footer.value.getBoundingClientRect().top;
+    document.documentElement.style.setProperty(
+      '--notification-bottom',
+      `calc(${bottom}px + 0.5rem)`,
+    );
+  } else document.documentElement.style.removeProperty('--notification-bottom');
+}
+useResizeObserver(footer, updateToastOffset);
+watch(footer, updateToastOffset, { flush: 'post' });
 withDefaults(
   defineProps<{
     show?: boolean;
@@ -60,6 +79,7 @@ function checkScrollPosition() {
 onMounted(() => {
   if (import.meta.client) {
     window.addEventListener('scroll', checkScrollPosition, { passive: true });
+    window.addEventListener('resize', updateToastOffset);
     checkScrollPosition();
   }
 });
@@ -67,6 +87,8 @@ onMounted(() => {
 onUnmounted(() => {
   if (import.meta.client) {
     window.removeEventListener('scroll', checkScrollPosition);
+    window.removeEventListener('resize', updateToastOffset);
+    document.documentElement.style.removeProperty('--notification-bottom');
   }
 });
 </script>
@@ -102,9 +124,15 @@ onUnmounted(() => {
   pointer-events: auto;
 }
 
-@media (max-width: 639px) {
+@media (max-width: 39.999rem) {
+  .sticky-footer-wrap {
+    padding: 0 0.5rem;
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
   .sticky-footer-shell {
-    padding: 10px 12px;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid color-mix(in oklab, var(--ui-secondary) 52%, transparent);
+    border-radius: 1.25rem;
   }
 }
 </style>
