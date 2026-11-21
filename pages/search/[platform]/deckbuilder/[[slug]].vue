@@ -83,7 +83,7 @@
           :is-fetching="isFetching"
           :error="error"
           @retry="refetch()"
-          :search-results="searchResults"
+          :search-results="availableRecommendations"
           :query-param="
             decklistParam || commanderParam || partnerCommanderParam
           "
@@ -94,8 +94,16 @@
               ? `Loading recommendations for ${seoEntry.query}...`
               : `Select or paste a decklist above to get ${platformName} card recommendations.`
           "
-          empty-title="No Recommendations Available Yet"
-          empty-description="Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!"
+          :empty-title="
+            searchResults?.length
+              ? 'All recommendations added'
+              : 'No Recommendations Available Yet'
+          "
+          :empty-description="
+            searchResults?.length
+              ? 'Rerun search for more recommendations.'
+              : `Our model doesn't have enough data on this card yet. We are always working to improve our coverage, please check back later!`
+          "
         />
       </div>
     </div>
@@ -105,21 +113,19 @@
     :onClick="handleFabClick"
   />
   <LazyBackToTop />
-  <div
+  <UButton
     v-if="selectedDeckChanged"
-    class="fixed inset-x-0 bottom-0 z-[60] flex justify-center border-t border-default bg-default/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+    class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[60] w-max max-w-[calc(100%-2rem)] -translate-x-1/2 shadow-lg"
+    :ui="{ label: 'whitespace-normal text-center' }"
+    icon="i-lucide-refresh-cw"
+    :disabled="
+      isFetching ||
+      !deckbuilder.savedDeckReady.value ||
+      deckbuilder.pendingCards.value.length > 0
+    "
+    @click="deckbuilder.rerun.value++"
+    >Deck has changed: Rerun search</UButton
   >
-    <UButton
-      icon="i-lucide-refresh-cw"
-      :disabled="
-        isFetching ||
-        !deckbuilder.savedDeckReady.value ||
-        deckbuilder.pendingCards.value.length > 0
-      "
-      @click="deckbuilder.rerun.value++"
-      >Deck has changed: Rerun search</UButton
-    >
-  </div>
 
   <AddToDeckModal
     v-model:open="showSaveAllModal"
@@ -153,6 +159,9 @@ const deckbuilder = useDeckbuilder();
 const { decklist: deckbuilderDecklist, showSaveAllModal } = deckbuilder;
 
 const route = useRoute();
+// Initialize before rendering children so the server and first client render
+// agree on the selected deck and its link.
+deckbuilder.selectedDeckId.value = String(route.query.deckId || '');
 const pagePath = route.path;
 const platform = String(route.params.platform) as Platform;
 const slug = route.params.slug ? String(route.params.slug) : undefined;
@@ -302,6 +311,16 @@ const { searchResults, isLoading, isFetching, error, refetch, notFound } =
   useAlsRecommend(alsRequest);
 
 const mounted = useMounted();
+const availableRecommendations = computed(() => {
+  if (!mounted.value) return searchResults.value;
+  const included = new Set([
+    ...deckbuilder.cardNames.value,
+    ...deckbuilder.pendingCards.value,
+  ]);
+  return searchResults.value?.filter(
+    (card) => !included.has(card.card_data.name),
+  );
+});
 const { cards: commanderCards, isLoading: commanderCardsLoading } =
   useCardsByName(computed(() => (mounted.value ? commanderNames.value : [])));
 

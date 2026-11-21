@@ -60,8 +60,16 @@
 
       <div class="flex items-start gap-2">
         <UFormField v-if="sourceMode === 'select'" class="min-w-0 flex-1">
+          <USkeleton
+            v-if="selectedDeckId && !selectedDeckOption && !deckLoadError"
+            class="h-10 w-full rounded-md"
+            role="status"
+            aria-label="Loading selected deck"
+          />
           <UInputMenu
-            v-model="selectedDeckId"
+            v-else
+            :model-value="selectedDeckOption?.value"
+            @update:model-value="selectedDeckId = $event || ''"
             v-model:search-term="deckSearchTerm"
             :items="deckOptions"
             open-on-focus
@@ -369,6 +377,9 @@ const deckOptions = computed(() => {
     value: deck.id,
   }));
 });
+const selectedDeckOption = computed(() =>
+  deckOptions.value.find((deck) => deck.value === selectedDeckId.value),
+);
 watch(
   [
     sourceMode,
