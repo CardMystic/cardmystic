@@ -1,5 +1,6 @@
 <template>
   <div class="grid gap-3">
+    <CardSizeSelect />
     <label
       class="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-2 text-sm"
     >

@@ -368,7 +368,10 @@ test('free search status shows the available count without repeating the mode', 
   const description = page.locator(
     `[id="${await mode.getAttribute('aria-describedby')}"]`,
   );
-  await expect(description).toHaveText('10 Left | Memberships');
+  await expect(description).toHaveText('10 Left');
+  await expect(
+    description.getByRole('link', { name: '10 Left', exact: true }),
+  ).toHaveAttribute('href', '/memberships');
 });
 
 test('complimentary Pro shows unlimited access without offering another subscription', async ({

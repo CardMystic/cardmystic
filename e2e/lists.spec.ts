@@ -616,7 +616,7 @@ test.describe('Card lists CRUD', () => {
     const preview = page.locator('.preview-rail');
     await expect(preview.locator('.preview-title')).toHaveText('Sol Ring');
     await preview
-      .getByRole('button', { name: 'Set # of Copies', exact: true })
+      .getByRole('button', { name: 'Set Copies', exact: true })
       .click();
     await page
       .getByRole('menuitem', { name: 'Add a copy', exact: true })
@@ -758,7 +758,7 @@ test.describe('Card lists CRUD', () => {
     await options.click();
     await page
       .getByRole('dialog', { name: SINGLETON_TEST_CARD, exact: true })
-      .getByRole('button', { name: 'Set # of Copies', exact: true })
+      .getByRole('button', { name: 'Set Copies', exact: true })
       .click();
     await page
       .getByRole('menuitem', { name: /^add a copy$/i })

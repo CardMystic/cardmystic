@@ -49,7 +49,7 @@ const cardActions = computed<CardActionMenu>(() => {
       ...deckSuggestionActions.add,
       label: 'Add to Deck',
       disabled:
-        !!adding.value ||
+        adding.value.has(data.oracle_id) ||
         props.oracleIds.includes(data.oracle_id) ||
         added.value.has(data.oracle_id),
       onSelect: () => {
@@ -100,11 +100,12 @@ async function closeSuggestions() {
 }
 const { addCardsToListMutation } = useCardLists();
 const toast = useToast();
+const cardEditToast = useCardEditToast();
 const queue = ref<Card[]>([]),
   added = ref(new Set<string>());
 const loading = ref(false),
   error = ref(''),
-  adding = ref<string | null>(null);
+  adding = ref(new Set<string>());
 let sequence = 0;
 const remaining = computed(() => {
   const used = new Set([...props.oracleIds, ...added.value]);
@@ -202,32 +203,43 @@ watch(
 onBeforeUnmount(() => sequence++);
 async function add(card: Card) {
   if (
-    adding.value ||
+    adding.value.has(card.card_data.oracle_id) ||
     props.oracleIds.includes(card.card_data.oracle_id) ||
     added.value.has(card.card_data.oracle_id)
   )
     return;
   const restoreFocus = captureSuggestionFocus(section.value);
-  adding.value = card.card_data.oracle_id;
+  const currentSequence = sequence;
+  cardEditToast.notify('added');
+  adding.value.add(card.card_data.oracle_id);
+  added.value.add(card.card_data.oracle_id);
+  void nextTick().then(restoreFocus);
   error.value = '';
   try {
     await addCardsToListMutation.mutateAsync({
       listId: props.listId,
       oracleIds: [card.card_data.oracle_id],
+      cards: [card],
       board: 'Mainboard',
     });
     added.value = new Set([...added.value, card.card_data.oracle_id]);
-    toast.add({
-      title: 'Card added to deck',
-      description: card.card_name,
-      color: 'success',
-    });
-    if (api.isPro.value && !remaining.value.length) await load();
   } catch (cause) {
+    added.value.delete(card.card_data.oracle_id);
+    toast.add({
+      title: 'Could not add card',
+      description: (cause as Error).message,
+      color: 'error',
+    });
     error.value = (cause as Error).message;
   } finally {
-    adding.value = null;
-    await restoreFocus();
+    adding.value.delete(card.card_data.oracle_id);
+    if (
+      currentSequence === sequence &&
+      !adding.value.size &&
+      api.isPro.value &&
+      !remaining.value.length
+    )
+      await load();
   }
 }
 </script>
@@ -258,7 +270,7 @@ async function add(card: Card) {
           size="xs"
           color="neutral"
           variant="ghost"
-          :disabled="!ready || !budgetReady || budgetSaving || !!adding"
+          :disabled="!ready || !budgetReady || budgetSaving || adding.size > 0"
           :loading="loading"
           @click="load"
         />
@@ -270,7 +282,7 @@ async function add(card: Card) {
           variant="ghost"
           size="xs"
           :loading="acknowledging"
-          :disabled="newestSet && !!adding"
+          :disabled="newestSet && adding.size > 0"
           @click="closeSuggestions"
         />
       </div>
@@ -304,7 +316,7 @@ async function add(card: Card) {
         type="submit"
         label="Apply budget"
         variant="outline"
-        :disabled="!budgetReady || budgetSaving || loading || !!adding"
+        :disabled="!budgetReady || budgetSaving || loading || adding.size > 0"
       />
       <span v-if="targetBudget !== undefined" class="text-sm text-muted"
         >Cards at ${{ targetBudget.toFixed(2) }} or less each. Prices are
@@ -345,8 +357,8 @@ async function add(card: Card) {
           <DeckSuggestionAction
             action="add"
             :label="`Add ${card.card_data.name} to deck`"
-            :disabled="!!adding"
-            :loading="adding === card.card_data.oracle_id"
+            :disabled="adding.has(card.card_data.oracle_id)"
+            :loading="adding.has(card.card_data.oracle_id)"
             @click="add(card)"
           />
         </div>

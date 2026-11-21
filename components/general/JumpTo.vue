@@ -7,7 +7,7 @@
     :ui="{ content: 'max-h-72 overflow-y-auto' }"
   >
     <UButton
-      label="Jump To"
+      label="Jump"
       aria-label="Jump to group"
       icon="i-lucide-map-pin"
       color="neutral"

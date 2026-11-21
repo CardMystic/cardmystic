@@ -9,7 +9,12 @@ import {
   keepPreviousData,
 } from '@tanstack/vue-query';
 import { computed, ref, toValue, type Ref, type MaybeRefOrGetter } from 'vue';
-import type { ScryfallCard } from '~/models/cardModel';
+import type { Card, ScryfallCard } from '~/models/cardModel';
+import {
+  optimisticDeck,
+  addDeckItems,
+  moveDeckItem,
+} from '~/utils/optimisticDeck';
 import type { CardListFormatType } from '~/models/cardListModel';
 import {
   GetActiveUserDecklistsResponseSchema,
@@ -211,6 +216,8 @@ export const useCardLists = () => {
   const supabase = process.server ? null : useSupabase();
   const { userProfile } = useUserProfile();
   const queryClient = useQueryClient();
+  const edits = optimisticDeck(queryClient);
+  const editScope = { id: 'deck-card-edits' };
   const config = useRuntimeConfig();
 
   const createList = async (
@@ -326,9 +333,14 @@ export const useCardLists = () => {
     listId: string,
     oracleIds: string[],
     board?: 'Mainboard' | 'Sideboard' | 'Considering',
+    cards?: Card[],
   ) => {
     if (browser && listId === BROWSER_DECK_ID)
-      return browser.addIds(oracleIds, board);
+      return browser.addIds(
+        oracleIds,
+        board,
+        cards?.map((card) => card.card_data),
+      );
     if (!supabase) return;
     if (!userProfile.value?.id) {
       throw new Error('User not authenticated');
@@ -373,25 +385,36 @@ export const useCardLists = () => {
   };
 
   const addCardsToListMutation = useMutation({
+    scope: editScope,
     mutationFn: async ({
       listId,
       oracleIds,
       board,
+      cards,
     }: {
       listId: string;
       oracleIds: string[];
       board?: 'Mainboard' | 'Sideboard' | 'Considering';
+      cards?: Card[];
     }) => {
       if (!supabase) return;
-      return addCardsToList(listId, oracleIds, board);
+      const result = await addCardsToList(listId, oracleIds, board, cards);
+      if (result?.invalidOracleIds.length)
+        throw new Error('Some cards could not be added. Please try again.');
+      return result;
     },
-    onSuccess: (_, { listId }) => {
-      // Invalidate list-items — the list-cards query will auto-refetch
-      // because its queryKey includes oracleIds derived from list-items
-      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
+    onMutate: ({ listId, oracleIds, board, cards }) => {
+      for (const card of cards ?? [])
+        queryClient.setQueryData(['deck-card', card.card_data.oracle_id], card);
+      if (listId !== BROWSER_DECK_ID)
+        return edits.begin(listId, addDeckItems(listId, oracleIds, board));
     },
+    onSettled: (result, error, { listId }, operation) =>
+      edits.finish(
+        listId,
+        operation,
+        !!error || !!result?.invalidOracleIds.length,
+      ),
   });
 
   const addCardsByNameToList = async (
@@ -555,7 +578,7 @@ export const useCardLists = () => {
       data: computed(() =>
         browser && listIdRef.value === BROWSER_DECK_ID
           ? browser.items.value
-          : query.data.value,
+          : edits.items(listIdRef.value, query.data.value),
       ),
       isLoading: computed(() =>
         browser && listIdRef.value === BROWSER_DECK_ID
@@ -574,23 +597,47 @@ export const useCardLists = () => {
       queryFn: async () => {
         if (oracleIds.value.length === 0) return [];
 
-        const cardsData: ScryfallCard[] = [];
         const uniqueIds = [...new Set(oracleIds.value)];
-        for (let i = 0; i < uniqueIds.length; i += 500) {
+        const known = new Map<string, Card>();
+        for (const [key, cards] of queryClient.getQueriesData<Card[]>({
+          queryKey: ['list-cards', listId],
+        })) {
+          const state = queryClient.getQueryState(key);
+          if (
+            !state ||
+            state.isInvalidated ||
+            Date.now() - state.dataUpdatedAt >= 10 * 60 * 1000
+          )
+            continue;
+          for (const card of cards ?? [])
+            known.set(card.card_data.oracle_id, card);
+        }
+        for (const id of uniqueIds) {
+          const state = queryClient.getQueryState(['deck-card', id]);
+          if (
+            !state ||
+            state.isInvalidated ||
+            Date.now() - state.dataUpdatedAt >= 10 * 60 * 1000
+          )
+            continue;
+          const card = queryClient.getQueryData<Card>(['deck-card', id]);
+          if (card) known.set(id, card);
+        }
+        const missing = uniqueIds.filter((id) => !known.has(id));
+        for (let i = 0; i < missing.length; i += 500) {
           const batch = await $fetch<ScryfallCard[]>(
             `${config.public.backendPath}/cards/cards-by-oracle-ids`,
-            {
-              method: 'POST',
-              body: { oracleIds: uniqueIds.slice(i, i + 500) },
-            },
+            { method: 'POST', body: { oracleIds: missing.slice(i, i + 500) } },
           );
-          cardsData.push(...batch);
+          for (const data of batch)
+            known.set(data.oracle_id, {
+              card_name: data.name,
+              card_data: data,
+            });
         }
-
-        return cardsData.map((cardData) => ({
-          card_name: cardData.name,
-          card_data: cardData,
-        }));
+        return uniqueIds.flatMap((id) =>
+          known.has(id) ? [known.get(id)!] : [],
+        );
       },
       enabled: computed(
         () => oracleIds.value.length > 0 && listId !== BROWSER_DECK_ID,
@@ -654,6 +701,7 @@ export const useCardLists = () => {
   };
 
   const removeCardFromListMutation = useMutation({
+    scope: editScope,
     mutationFn: async ({
       listId,
       oracleId,
@@ -666,58 +714,21 @@ export const useCardLists = () => {
       if (!supabase) return;
       return removeCardFromList(listId, oracleId, board);
     },
-    onMutate: async ({ listId, oracleId, board }) => {
+    onMutate: ({ listId, oracleId, board }) => {
+      if (listId === BROWSER_DECK_ID) return;
       const removedIds = new Set(
         Array.isArray(oracleId) ? oracleId : [oracleId],
       );
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['list-items', listId] });
-      await queryClient.cancelQueries({ queryKey: ['list-cards', listId] });
-
-      // Optimistically remove the card from list-items cache.
-      // When board is provided, only drop the row matching that board so
-      // the same card in other boards remains.
-      queryClient.setQueriesData<any[]>(
-        { queryKey: ['list-items', listId] },
-        (old) =>
-          old?.filter((item: any) => {
-            if (!removedIds.has(item.oracle_id)) return true;
-            if (board && item.board !== board) return true;
-            return false;
-          }),
-      );
-
-      // Optimistically remove the card from list-cards cache only if no
-      // remaining list-items row references this oracle_id.
-      queryClient.setQueriesData<any[]>(
-        { queryKey: ['list-cards', listId] },
-        (old) => {
-          if (!old) return old;
-          const items =
-            queryClient.getQueryData<any[]>(['list-items', listId]) ?? [];
-          const remainingIds = new Set(
-            items.map((item: any) => item.oracle_id),
-          );
-          return old.filter(
-            (card: any) =>
-              !removedIds.has(card.card_data.oracle_id) ||
-              remainingIds.has(card.card_data.oracle_id),
-          );
-        },
+      return edits.begin(listId, (items) =>
+        items.filter(
+          (item) =>
+            !removedIds.has(item.oracle_id) ||
+            (!!board && item.board !== board),
+        ),
       );
     },
-    onSuccess: (_, { listId }) => {
-      // Only invalidate list-items — list-cards will re-key automatically
-      // since its queryKey depends on cardIds derived from list-items
-      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
-    },
-    onError: (_, { listId }) => {
-      // Refetch on error to restore correct state
-      queryClient.invalidateQueries({ queryKey: ['list-cards', listId] });
-      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-    },
+    onSettled: (_result, error, { listId }, operation) =>
+      edits.finish(listId, operation, !!error),
   });
 
   const deleteList = async (listId: string) => {
@@ -1137,6 +1148,7 @@ export const useCardLists = () => {
   };
 
   const changeBoardMutation = useMutation({
+    scope: editScope,
     mutationFn: async ({
       listId,
       cardName,
@@ -1145,16 +1157,22 @@ export const useCardLists = () => {
     }: {
       listId: string;
       cardName: string;
+      oracleId?: string;
       board: 'Mainboard' | 'Sideboard' | 'Considering';
       fromBoard?: 'Mainboard' | 'Sideboard' | 'Considering';
     }) => {
       if (!supabase) return;
       return changeBoard(listId, cardName, board, fromBoard);
     },
-    onSuccess: (_, { listId }) => {
-      queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
-      queryClient.invalidateQueries({ queryKey: ['user-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
+    onMutate: ({ listId, oracleId, board, fromBoard }) => {
+      if (listId === BROWSER_DECK_ID || !oracleId) return;
+      return edits.begin(listId, moveDeckItem(oracleId, board, fromBoard));
+    },
+    onSettled: (_result, error, { listId }, operation) => {
+      if (operation) return edits.finish(listId, operation, !!error);
+      void queryClient.invalidateQueries({ queryKey: ['user-lists'] });
+      void queryClient.invalidateQueries({ queryKey: ['card-deck-matches'] });
+      return queryClient.invalidateQueries({ queryKey: ['list-items', listId] });
     },
   });
 

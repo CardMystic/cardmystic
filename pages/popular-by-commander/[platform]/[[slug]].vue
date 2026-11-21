@@ -1,16 +1,18 @@
 <template>
   <UContainer class="mb-6 px-0 max-w-full">
     <div class="w-full flex flex-col items-center">
-      <SearchSEOTitleAndDescription
-        :seo-entry="seoEntry"
-        fallback-title="MTG Popular Cards by Commander"
-        fallback-description="Discover the most popular cards for your commander."
-      />
+      <SearchPageHeader type="popular-by-commander">
+        <SearchSEOTitleAndDescription
+          :seo-entry="seoEntry"
+          fallback-title="MTG Popular Cards by Commander"
+          fallback-description="Discover the most popular cards for your commander."
+        />
 
-      <StatsSearch
-        default-stats-type="popular-by-commander"
-        class="mt-6 max-w-5xl"
-      />
+        <StatsSearch
+          default-stats-type="popular-by-commander"
+          class="mt-6 max-w-5xl"
+        />
+      </SearchPageHeader>
 
       <!-- Commander Card(s) -->
       <div
@@ -177,7 +179,10 @@ useSeoMeta({
   twitterImage: 'https://cardmystic.com/cardmystic_preview.png',
 });
 
-definePageMeta({ title: 'Popular Cards by Commander' });
+definePageMeta({
+  title: 'Popular Cards by Commander',
+  breadcrumbsInPage: true,
+});
 
 const limitParam = computed(() => 100);
 

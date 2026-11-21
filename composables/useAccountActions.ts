@@ -164,6 +164,7 @@ export const useAccountActions = () => {
 
     const { error } = await supabase!.auth.signInWithOAuth({
       provider: 'google',
+      options: { queryParams: { prompt: 'select_account' } },
     });
     if (error) throw new Error(error.message);
   };
@@ -177,6 +178,7 @@ export const useAccountActions = () => {
     sessionStorage.setItem('pendingOAuthSignup', 'true');
     const { error } = await supabase!.auth.signInWithOAuth({
       provider: 'google',
+      options: { queryParams: { prompt: 'select_account' } },
     });
     if (error) {
       sessionStorage.removeItem('pendingOAuthSignup');

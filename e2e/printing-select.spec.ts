@@ -502,16 +502,9 @@ test('mobile draft returns to the card modal after closing the picker or saving 
     exact: true,
   });
   expect(catalogCalls).toBe(0);
-  const board = await actions
-    .getByText('Mainboard', { exact: true })
-    .boundingBox();
-  const tags = await actions
-    .getByRole('region', { name: 'Tags', exact: true })
-    .boundingBox();
-  const bounds = await selector.boundingBox();
-  expect(tags!.y).toBeGreaterThanOrEqual(bounds!.y + bounds!.height);
-  expect(bounds!.x).toBeGreaterThan(board!.x + board!.width);
-  await selector.click();
+  await expect(actions.getByText('Mainboard', { exact: true })).toHaveCount(0);
+  await selector.focus();
+  await selector.press('Enter');
   const picker = page.getByRole('dialog', {
     name: `Choose printing: ${card.name}`,
     exact: true,

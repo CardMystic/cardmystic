@@ -23,7 +23,7 @@ function menuItems(group: CardAction['group']) {
 <template>
   <div
     v-if="boards.length || copies.length || remove"
-    class="grid w-full gap-2"
+    class="grid w-full gap-1"
   >
     <UDropdownMenu
       v-if="boards.length"
@@ -33,42 +33,41 @@ function menuItems(group: CardAction['group']) {
     >
       <UButton
         label="Move To"
+        :ui="{ label: 'whitespace-normal', trailingIcon: 'ml-auto' }"
         icon="i-lucide-arrow-right-left"
         trailing-icon="i-lucide-chevron-down"
         color="neutral"
         :variant="variant"
-        class="w-full"
-        block
+        class="w-full min-h-11 justify-start text-left"
       />
     </UDropdownMenu>
-    <div v-if="copies.length || remove" class="flex w-full gap-2">
-      <UDropdownMenu
-        v-if="copies.length"
-        :items="copies"
-        :content="{ align: 'start' }"
-        :ui="{ content: 'w-[var(--reka-dropdown-menu-trigger-width)]' }"
-      >
-        <UButton
-          label="Set # of Copies"
-          icon="i-lucide-hash"
-          trailing-icon="i-lucide-chevron-down"
-          color="neutral"
-          :variant="variant"
-          class="min-w-0 flex-1"
-          block
-        />
-      </UDropdownMenu>
+    <UDropdownMenu
+      v-if="copies.length"
+      :items="copies"
+      :content="{ align: 'start' }"
+      :ui="{ content: 'w-[var(--reka-dropdown-menu-trigger-width)]' }"
+    >
       <UButton
-        v-if="remove"
-        aria-label="Remove From List"
-        title="Remove From List"
-        icon="i-lucide-trash-2"
-        color="error"
+        label="Set Copies"
+        :ui="{ label: 'whitespace-normal', trailingIcon: 'ml-auto' }"
+        icon="i-lucide-hash"
+        trailing-icon="i-lucide-chevron-down"
+        color="neutral"
         :variant="variant"
-        :disabled="remove.disabled"
-        square
-        @click="emit('select', remove)"
+        class="w-full min-w-0 min-h-11 justify-start whitespace-normal text-left"
       />
-    </div>
+    </UDropdownMenu>
+    <UButton
+      v-if="remove"
+      aria-label="Remove From List"
+      label="Remove"
+      title="Remove From List"
+      icon="i-lucide-trash-2"
+      color="error"
+      :variant="variant"
+      :disabled="remove.disabled"
+      class="w-full min-h-11 justify-start text-left"
+      @click="emit('select', remove)"
+    />
   </div>
 </template>

@@ -22,7 +22,30 @@ for (const owner of [true, false]) {
   test(`${owner ? 'owned' : 'public'} deck card menu adds the selected card to another deck`, async ({
     page,
   }) => {
+    const hydrationErrors: string[] = [];
+    page.on('console', (message) => {
+      if (/hydration.*mismatch|hydration completed but/i.test(message.text()))
+        hydrationErrors.push(message.text());
+    });
     const state = await setupDeckDisplay(page, { owner });
+    if (owner) {
+      await page.route(BACKEND + '/card-collections/labels', (route) =>
+        route.fulfill({
+          json: {
+            [state.cards[0].oracle_id]: {
+              roles: ['Burn', 'Card draw', 'Counter placement', 'Removal'],
+              themes: [
+                '+1/+1 counters',
+                'Commander matters',
+                'Artifacts',
+                'Tokens',
+              ],
+            },
+          },
+        }),
+      );
+      await gotoHydrated(page, '/lists/' + displayDeckId);
+    }
     const card = cardByName(page, state.cards[0].name);
     if (owner) {
       const image = card.getByRole('img', {
@@ -47,11 +70,120 @@ for (const owner of [true, false]) {
     await expect(page).toHaveURL(new RegExp('/lists/' + displayDeckId + '$'));
     if (owner) {
       await expect(
-        page.getByRole('button', { name: 'Set # of Copies', exact: true }),
+        page.getByRole('button', { name: 'Set Copies', exact: true }),
       ).toBeVisible();
+      const modal = page.getByRole('dialog');
+      await expect(modal).toHaveCSS('translate', 'none');
+      await expect.poll(async () => (await modal.boundingBox())?.x).toBe(0);
+      const box = (await modal.boundingBox())!;
+      expect(box.x).toBe(0);
+      expect(box.y).toBe(0);
+      expect(box.width).toBe(390);
+      expect(box.height).toBe(844);
+      const order = await modal
+        .locator(
+          '[aria-label="Card actions"] button, [aria-label="Card actions"] a',
+        )
+        .evaluateAll((elements) =>
+          elements
+            .slice(0, 5)
+            .map(
+              (element) =>
+                element.getAttribute('aria-label') ||
+                element.textContent?.trim(),
+            ),
+        );
+      expect(order).toEqual([
+        "Go To Card's Page",
+        'Change printing',
+        'Move To',
+        'Set Copies',
+        'Remove From List',
+      ]);
+      const editButtons = modal.locator(
+        '[data-card-action-group="list"] button',
+      );
+      const editBoxes = await editButtons.evaluateAll((buttons) =>
+        buttons.map((button) => ({
+          x: button.getBoundingClientRect().x,
+          width: button.getBoundingClientRect().width,
+          height: button.getBoundingClientRect().height,
+        })),
+      );
+      expect(editBoxes).toHaveLength(4);
+      await expect(modal.locator('[data-card-action-group="list"]')).toHaveCSS(
+        'border-top-width',
+        '0px',
+      );
+      await expect(modal.getByText('Mainboard', { exact: true })).toHaveCount(
+        0,
+      );
+      expect(new Set(editBoxes.map((box) => box.x)).size).toBe(1);
+      expect(new Set(editBoxes.map((box) => box.width)).size).toBe(1);
+      expect(editBoxes.every((box) => box.height >= 44)).toBe(true);
+      await expect(
+        modal.getByRole('button', { name: 'Remove From List', exact: true }),
+      ).toHaveText('Remove');
+      const roles = modal.getByRole('region', { name: 'Roles', exact: true });
+      const titleBox = (await roles.getByRole('heading').boundingBox())!;
+      const chipBox = (await roles
+        .getByRole('listitem')
+        .first()
+        .boundingBox())!;
+      expect(
+        Math.abs(
+          titleBox.y + titleBox.height / 2 - chipBox.y - chipBox.height / 2,
+        ),
+      ).toBeLessThan(2);
+      await page.screenshot({ path: 'test-results/mobile-deck-card-menu.png' });
+      await page.evaluate(() => {
+        document.documentElement.style.fontSize = '200%';
+      });
+      await modal
+        .getByRole('button', { name: 'Show more roles', exact: true })
+        .click();
+      await expect(
+        modal.getByRole('link', { name: 'Counter placement', exact: true }),
+      ).toBeVisible();
+      expect(
+        await modal.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
+        ),
+      ).toBe(true);
+      for (const chip of await modal
+        .locator(
+          'section[aria-label="Roles"] li, section[aria-label="Themes"] li',
+        )
+        .all()) {
+        expect(
+          await chip.evaluate(
+            (element) => element.scrollWidth <= element.clientWidth,
+          ),
+        ).toBe(true);
+      }
+      await page.screenshot({
+        path: 'test-results/mobile-deck-tags-large-text.png',
+      });
+      await page.evaluate(() => {
+        document.documentElement.style.fontSize = '';
+      });
+      const printingButton = modal.getByRole('button', {
+        name: 'Change printing',
+        exact: true,
+      });
+      await printingButton.focus();
+      await page.keyboard.press('Enter');
+      await expect(
+        page.getByRole('dialog', {
+          name: 'Choose printing: ' + state.cards[0].name,
+          exact: true,
+        }),
+      ).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(modal).toBeVisible();
     } else {
       await expect(
-        page.getByRole('button', { name: 'Set # of Copies', exact: true }),
+        page.getByRole('button', { name: 'Set Copies', exact: true }),
       ).toHaveCount(0);
     }
     await page
@@ -75,6 +207,7 @@ for (const owner of [true, false]) {
     await expect(dialog).not.toBeVisible();
     await expect(card.getByText('x2', { exact: true })).toBeVisible();
     await expect(page).toHaveURL(new RegExp('/lists/' + displayDeckId + '$'));
+    expect(hydrationErrors).toEqual([]);
   });
 }
 
@@ -248,7 +381,7 @@ test.describe('desktop card modal', () => {
       preview.getByRole('button', { name: 'Remove Commander', exact: true }),
     ).toHaveCount(0);
     await expect(
-      preview.getByRole('button', { name: 'Set # of Copies', exact: true }),
+      preview.getByRole('button', { name: 'Set Copies', exact: true }),
     ).toBeVisible();
     await expect(
       preview.getByRole('button', { name: 'Remove From List', exact: true }),
@@ -259,7 +392,7 @@ test.describe('desktop card modal', () => {
       .click();
     const modal = page.getByRole('dialog');
     await expect(
-      modal.getByRole('button', { name: 'Set # of Copies', exact: true }),
+      modal.getByRole('button', { name: 'Set Copies', exact: true }),
     ).toBeVisible();
     await expect(
       modal.getByRole('button', { name: 'Remove From List', exact: true }),
@@ -279,7 +412,7 @@ test.describe('desktop card modal', () => {
       modal.getByRole('button', { name: 'Move To', exact: true }),
     ).toHaveCount(0);
     await expect(
-      modal.getByRole('button', { name: 'Set # of Copies', exact: true }),
+      modal.getByRole('button', { name: 'Set Copies', exact: true }),
     ).toHaveCount(0);
     await expect(
       modal.getByRole('button', { name: 'Remove From List', exact: true }),
@@ -303,7 +436,7 @@ test.describe('desktop card modal', () => {
     ).toHaveCount(2);
     await rows.last().locator('button.card-name').click();
     await expect(
-      modal.getByRole('button', { name: 'Set # of Copies', exact: true }),
+      modal.getByRole('button', { name: 'Set Copies', exact: true }),
     ).toBeVisible();
     await expect(
       modal.getByRole('button', { name: 'Remove From List', exact: true }),
@@ -407,12 +540,12 @@ test.describe('compact desktop preview controls', () => {
       name: 'Remove From List',
       exact: true,
     });
-    await expect(remove).toHaveText('');
+    await expect(remove).toHaveText('Remove');
     const copies = preview.getByRole('button', {
-      name: 'Set # of Copies',
+      name: 'Set Copies',
       exact: true,
     });
-    expect((await remove.boundingBox())!.y).toBe(
+    expect((await remove.boundingBox())!.y).toBeGreaterThan(
       (await copies.boundingBox())!.y,
     );
     const copyBounds = (await copies.boundingBox())!;
@@ -455,7 +588,7 @@ test.describe('compact desktop preview controls', () => {
       .click();
     const modal = page.getByRole('dialog');
     await modal
-      .getByRole('button', { name: 'Set # of Copies', exact: true })
+      .getByRole('button', { name: 'Set Copies', exact: true })
       .click();
     await page
       .getByRole('menuitem', { name: 'Set Copies', exact: true })

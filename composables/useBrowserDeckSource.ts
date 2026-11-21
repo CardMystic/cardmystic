@@ -187,14 +187,26 @@ function createBrowserDeckSource() {
     });
     return { addedCount, updatedCount, invalidCardNames: [] as string[] };
   }
-  async function addIds(ids: string[], board?: GuestBoard) {
-    const resolved = await $fetch<ScryfallCard[]>(
-      `${config.public.backendPath}/cards/cards-by-oracle-ids`,
-      {
-        method: 'POST',
-        body: { oracleIds: ids },
-      },
+  async function addIds(
+    ids: string[],
+    board?: GuestBoard,
+    known: ScryfallCard[] = [],
+  ) {
+    remember(known);
+    const byId = new Map(
+      [...catalog.value.values()].map((card) => [card.oracle_id, card]),
     );
+    const missing = ids.filter((id) => !byId.has(id));
+    const fetched = missing.length
+      ? await $fetch<ScryfallCard[]>(
+          `${config.public.backendPath}/cards/cards-by-oracle-ids`,
+          {
+            method: 'POST',
+            body: { oracleIds: missing },
+          },
+        )
+      : [];
+    const resolved = [...byId.values(), ...fetched];
     if (ids.some((id) => !resolved.some((card) => card.oracle_id === id)))
       throw new Error(
         'Some cards could not be loaded. Your draft has not changed.',
