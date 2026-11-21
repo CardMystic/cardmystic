@@ -1435,6 +1435,7 @@ const filteredAddCards = computed(() =>
 // Handle adding a card to the list
 async function handleAddCard(cardName: string) {
   if (!cardName || !list.value) return;
+  let pendingOracleId: string | undefined;
 
   try {
     // Resolve oracle_id locally from the bulk name→oracle_id map. Avoids a
@@ -1462,6 +1463,7 @@ async function handleAddCard(cardName: string) {
 
     if (pendingAdds.value.has(oracleId)) return;
     pendingAdds.value.set(oracleId, cardName);
+    pendingOracleId = oracleId;
     selectedCardToAdd.value = '';
     addCardSearchTerm.value = '';
     addCardFocusPending.value = true;
@@ -1477,8 +1479,7 @@ async function handleAddCard(cardName: string) {
       color: 'error',
     });
   } finally {
-    const oracleId = cardNameToOracleId.value?.[cardName.toLowerCase()];
-    if (oracleId) pendingAdds.value.delete(oracleId);
+    if (pendingOracleId) pendingAdds.value.delete(pendingOracleId);
   }
 }
 

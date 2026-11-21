@@ -141,6 +141,11 @@ describe('optimistic deck edits', () => {
     const main = addDeckItems('deck', ['a'])([]);
     main[0].is_commander = true;
     const both = addDeckItems('deck', ['a'], 'Sideboard')(main);
+    both[0].num_copies = 100;
+    expect(addDeckItems('deck', ['a'], 'Sideboard')(both)[0].num_copies).toBe(
+      100,
+    );
+    both[0].num_copies = 1;
     const next = addDeckItems('deck', ['a'])(both);
     expect(next.map((item) => [item.board, item.num_copies])).toEqual([
       ['Sideboard', 1],

@@ -500,9 +500,7 @@ test('a guest adds a search result to the same browser draft', async ({
   await page
     .getByRole('button', { name: 'Add to browser draft', exact: true })
     .click();
-  await expect(
-    page.getByText('Added to browser draft', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('Card Added', { exact: true })).toBeVisible();
   await gotoHydrated(page, '/build');
   await expect(page.getByText('1 cards', { exact: true })).toBeVisible();
   await expect(

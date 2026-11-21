@@ -87,7 +87,7 @@ export function addDeckItems(
       );
       if (existing) {
         if (!existing.is_commander)
-          existing.num_copies = (existing.num_copies ?? 1) + 1;
+          existing.num_copies = Math.min((existing.num_copies ?? 1) + 1, 100);
       } else
         next.unshift({
           id: `pending:${board}:${oracleId}`,
