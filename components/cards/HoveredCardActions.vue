@@ -3,17 +3,21 @@
     <CardActionList
       :oracle-id="card.card_data.oracle_id"
       :actions="menu"
+      :printing-enabled="printingEnabled"
+      @change-printing="emit('changePrinting')"
       preview
       @view-card="emit('viewCard')"
       @select="(action) => action.onSelect?.()"
     />
   </div>
-  <UButton
-    v-bind="suggestDecksAction"
-    variant="outline"
-    block
-    @click="showSuggestions = true"
-  />
+  <div class="border-t border-default pt-4">
+    <UButton
+      v-bind="suggestDecksAction"
+      variant="outline"
+      block
+      @click="showSuggestions = true"
+    />
+  </div>
   <LazyCardActionsModal
     v-if="showSuggestions"
     v-model:open="showSuggestions"
@@ -65,6 +69,7 @@ const props = withDefaults(
     isThumbsDownClicked?: boolean;
     showAddToDeckbuilderButton?: boolean;
     isInDecklist?: boolean;
+    printingEnabled?: boolean;
   }>(),
   {
     board: 'Search results',
@@ -88,6 +93,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
+  (e: 'changePrinting'): void;
   (e: 'viewCard'): void;
   (e: 'flip'): void;
   (e: 'findSimilar'): void;

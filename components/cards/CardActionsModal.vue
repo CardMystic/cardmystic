@@ -4,11 +4,7 @@ import { computed } from 'vue';
 import { printingEditorKey } from '~/composables/useDeckPrintings';
 import type { Card } from '~/models/cardModel';
 import { getCardImageUrl } from '~/utils/scryfall';
-import {
-  cardActionStyles,
-  type CardActionMenu,
-  type CardAction,
-} from '~/utils/card-actions';
+import { type CardActionMenu, type CardAction } from '~/utils/card-actions';
 
 const props = defineProps<{
   open: boolean;
@@ -118,8 +114,10 @@ function act(action: CardAction) {
     :title="card.card_data.name"
     :description="`${board} card options`"
     :ui="{
-      content: 'sm:max-w-2xl',
-      body: 'max-h-[75dvh] overflow-y-auto pt-2 sm:pt-2',
+      header: 'pr-14 sm:pr-16',
+      wrapper: 'min-w-0',
+      content: 'deck-card-modal sm:max-w-2xl',
+      body: 'deck-card-modal-body overflow-y-auto pt-2 sm:pt-2',
     }"
   >
     <template #body>
@@ -168,20 +166,6 @@ function act(action: CardAction) {
             ><template v-else>{{ card.card_data.set_name }}</template>
             {{ selectedLabel }}
           </p>
-          <div
-            v-if="['Mainboard', 'Sideboard', 'Considering'].includes(board)"
-            class="mt-3 flex flex-wrap items-center gap-2"
-          >
-            <UBadge color="neutral" variant="subtle">{{ board }}</UBadge>
-            <UButton
-              v-if="printingEnabled && printingSelection"
-              label="Change printing"
-              v-bind="cardActionStyles.printing"
-              variant="ghost"
-              size="xs"
-              @click="printingOpen = true"
-            />
-          </div>
         </div>
         <div
           role="group"
@@ -191,6 +175,8 @@ function act(action: CardAction) {
           <CardActionList
             :oracle-id="card.card_data.oracle_id"
             :actions="actions"
+            :printing-enabled="!!(printingEnabled && printingSelection)"
+            @change-printing="printingOpen = true"
             @view-card="
               modelOpen = false;
               emit('viewCard');
@@ -199,6 +185,7 @@ function act(action: CardAction) {
           />
           <CardDeckMatches
             v-if="modelOpen"
+            class="mt-2 border-t border-default pt-3"
             :oracle-id="card.card_data.oracle_id"
             :auto-suggest="suggestDecks"
           />
@@ -212,7 +199,7 @@ function act(action: CardAction) {
             role="status"
             aria-label="Loading your tags"
           >
-            <CardChipRowSkeleton editable class="h-6" />
+            <CardChipRowSkeleton editable />
           </div>
           <CardModalChipRow
             v-else-if="userId"
@@ -231,7 +218,6 @@ function act(action: CardAction) {
             <CardChipRowSkeleton
               v-for="kind in ['roles', 'themes']"
               :key="kind"
-              class="h-6"
             />
           </div>
           <template v-else>
@@ -257,3 +243,23 @@ function act(action: CardAction) {
     @close="printingOpen = false"
   />
 </template>
+
+<style>
+@media (max-width: 39.999rem) {
+  .deck-card-modal {
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    transform: none;
+    translate: none;
+  }
+  .deck-card-modal-body {
+    flex: 1;
+    min-height: 0;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+</style>

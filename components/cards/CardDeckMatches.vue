@@ -144,7 +144,8 @@ async function add(id: string) {
       v-if="!requested"
       v-bind="suggestDecksAction"
       variant="ghost"
-      class="min-h-11 w-full justify-start"
+      class="min-h-11 w-full justify-start whitespace-normal text-left"
+      :ui="{ label: 'whitespace-normal wrap-anywhere' }"
       @click="suggest"
     />
     <template v-else>

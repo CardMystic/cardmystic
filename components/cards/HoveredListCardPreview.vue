@@ -67,23 +67,20 @@
           <p class="preview-subtitle">{{ simpleType }}</p>
         </div>
 
-        <div class="flex flex-wrap gap-2 text-xs">
+        <div
+          v-if="suggested || currentBoard !== 'Mainboard'"
+          class="flex flex-wrap gap-2 text-xs"
+        >
           <UBadge color="neutral" variant="subtle">{{
             suggested ? 'Suggested' : currentBoard
           }}</UBadge>
-          <UButton
-            v-if="isOwner && pickPrinting"
-            label="Change printing"
-            v-bind="cardActionStyles.printing"
-            variant="ghost"
-            size="xs"
-            @click="pickPrinting(card!, currentBoard)"
-          />
         </div>
       </div>
 
       <HoveredCardActions
         :card="card"
+        :printing-enabled="!!(!suggested && isOwner && pickPrinting)"
+        @change-printing="pickPrinting?.(card!, currentBoard)"
         :board="suggested ? 'Suggested' : currentBoard"
         :is-flipped="isFlipped"
         @flip="flipCard"
@@ -134,7 +131,6 @@
 </template>
 
 <script setup lang="ts">
-import { cardActionStyles } from '~/utils/card-actions';
 import { printingPickerKey } from '~/composables/useDeckPrintings';
 const pickPrinting = inject(printingPickerKey, null);
 import { getUsdPrice } from '~/utils/cardPrice';

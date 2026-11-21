@@ -296,6 +296,9 @@ test('suggestion queue advances without searching again and refills only when ex
   }
   await expect.poll(() => requests).toBe(2);
   expect(state.writes).toHaveLength(11);
+  await expect(page.locator('.app-toast')).toHaveCount(1);
+  await page.screenshot({ path: 'test-results/compact-notification.png' });
+  await expect(page.locator('.app-toast')).toHaveCount(0, { timeout: 4000 });
   await expect(
     section.getByText(
       'No more suggestions at this price. Try a higher card budget.',
@@ -413,9 +416,13 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   });
   const controls = actions.locator('a[href], button');
   await expect(controls.first()).toHaveAccessibleName("Go To Card's Page");
-  await expect(controls.nth(1)).toHaveAccessibleName(/Buy on TCGPlayer/);
-  await expect(controls.nth(1)).toHaveClass(/\btext-success\b/);
-  await expect(controls.nth(2)).toHaveAccessibleName('Add to Another Deck');
+  await expect(controls.nth(1)).toHaveAccessibleName('Change printing');
+  await expect(controls.nth(2)).toHaveAccessibleName('Move To');
+  await expect(controls.nth(3)).toHaveAccessibleName('Set Copies');
+  await expect(controls.nth(4)).toHaveAccessibleName('Remove From List');
+  await expect(controls.nth(5)).toHaveAccessibleName(/Buy on TCGPlayer/);
+  await expect(controls.nth(5)).toHaveClass(/\btext-success\b/);
+  await expect(controls.nth(6)).toHaveAccessibleName('Add to Another Deck');
   await expect(controls.last()).toHaveAccessibleName('Suggest Decks · Pro');
   await expect(
     dialog.getByRole('button', { name: 'Move To', exact: true }),
@@ -453,18 +460,16 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   const actionBounds = (await cardPage.boundingBox())!;
   expect(roleBounds.width).toBeGreaterThan(actionBounds.width);
   expect(roleBounds.y).toBeGreaterThan(actionBounds.y + actionBounds.height);
-  const desktopCount = await roleRow.getByRole('link').count();
   await expect(themeRow.getByRole('button')).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect
-    .poll(() => roleRow.getByRole('link').count())
-    .toBeLessThan(desktopCount);
-  const chipTops = await roleRow
-    .locator('li a')
-    .evaluateAll((links) =>
-      links.map((link) => link.getBoundingClientRect().top),
-    );
-  expect(new Set(chipTops).size).toBe(1);
+  await expect(roleRow.getByRole('listitem')).toHaveCount(3);
+  for (const chip of await roleRow.getByRole('listitem').all()) {
+    expect(
+      await chip.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+  }
   await roleRow.getByRole('button', { name: 'Show more roles' }).click();
   await expect(roleRow.getByRole('link', { name: 'Finisher' })).toBeVisible();
   await roleRow.getByRole('button', { name: 'Show fewer roles' }).click();
@@ -1325,6 +1330,11 @@ test('search card modal fetches deck matches only on request and adds directly',
     .first()
     .click();
   const modal = page.getByRole('dialog');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(async () => (await modal.boundingBox())?.x).toBe(0);
+  await expect(modal).toHaveCSS('height', '844px');
+  await page.screenshot({ path: 'test-results/mobile-search-card-menu.png' });
+  await page.setViewportSize({ width: 1280, height: 900 });
   await expect(
     modal.getByRole('button', { name: 'Suggest Decks · Pro', exact: true }),
   ).toBeVisible();
