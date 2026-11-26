@@ -148,6 +148,22 @@ const filterCount = computed(() => {
   );
 });
 
+const sharedControls = useSearchFilterControls();
+const controls = {
+  path: useRoute().path,
+  count: filterCount,
+  open(trigger: HTMLElement) {
+    filterTrigger.value = trigger;
+    open.value = true;
+  },
+};
+onMounted(() => {
+  sharedControls.value = controls;
+});
+onBeforeUnmount(() => {
+  if (sharedControls.value === controls) sharedControls.value = undefined;
+});
+
 function collapse() {
   open.value = false;
   appliedFilters.value = JSON.stringify(filters.value);

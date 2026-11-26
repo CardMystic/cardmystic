@@ -389,18 +389,32 @@
         v-if="isLoading || deferringHeavyRender"
         role="status"
         aria-label="Loading result actions"
-        class="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-1 sm:gap-3"
+        class="sticky-footer-actions"
       >
         <USkeleton
-          v-for="action in groupBy ? 3 : 2"
+          v-for="action in (groupBy ? 3 : 2) + Number(!!activeFilterControls)"
           :key="action"
           class="h-11 w-20 rounded-md"
         />
       </div>
-      <div
-        v-else
-        class="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-1 sm:gap-3"
-      >
+      <div v-else class="sticky-footer-actions">
+        <UButton
+          v-if="activeFilterControls"
+          label="Filters"
+          :aria-label="
+            activeFilterControls.count.value
+              ? `Filter results (${activeFilterControls.count.value} selected)`
+              : 'Filter results'
+          "
+          icon="i-lucide-sliders-horizontal"
+          color="primary"
+          variant="ghost"
+          size="sm"
+          class="min-h-11 whitespace-nowrap"
+          @click="
+            activeFilterControls.open($event.currentTarget as HTMLElement)
+          "
+        />
         <SearchResultsDisplayMenu
           v-bind="displayMenuProps"
           footer
@@ -416,7 +430,7 @@
           variant="ghost"
           size="sm"
           class="min-h-11 whitespace-normal text-left"
-          :ui="{ label: 'whitespace-normal' }"
+          :ui="{ label: 'hidden sm:inline' }"
           :to="searchFeedbackUrl(getPageInfo())"
           target="_blank"
           rel="noopener noreferrer"
@@ -435,6 +449,12 @@
 <script lang="ts" setup>
 const enhancementNotice = useSearchEnhancementNotice();
 const currentRoute = useRoute();
+const filterControls = useSearchFilterControls();
+const activeFilterControls = computed(() =>
+  filterControls.value?.path === currentRoute.path
+    ? filterControls.value
+    : undefined,
+);
 import type { Card } from '~/models/cardModel';
 import type { CardGroup } from '~/utils/sort';
 import {
