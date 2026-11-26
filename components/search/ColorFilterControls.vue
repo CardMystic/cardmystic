@@ -58,7 +58,7 @@ function toggle(color: CardColorType, checked: boolean) {
       :ui="{ base: 'text-base' }"
       @update:model-value="setOption($event as ColorFilterOption)"
     />
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <div class="color-checkboxes grid grid-cols-2 gap-2 sm:grid-cols-3">
       <UCheckbox
         v-for="color in CardColor.options"
         :key="color"

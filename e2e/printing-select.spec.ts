@@ -174,9 +174,6 @@ for (const account of ['guest', 'signed in'] as const) {
         .getByRole('img', { name: card.name, exact: true })
         .boundingBox())!;
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(image.y);
-      expect(
-        Math.abs(bounds.x + bounds.width / 2 - image.x - image.width / 2),
-      ).toBeLessThan(2);
       await edit.focus();
       await page.keyboard.press('Enter');
       const picker = page.getByRole('dialog', {

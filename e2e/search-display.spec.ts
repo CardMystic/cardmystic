@@ -227,10 +227,11 @@ for (const width of [390, 1440]) {
           drawer.getByRole('combobox', { name: 'Color matching rule' }),
         ).toContainText('Contains at Most');
         await identity.focus();
-        await page.keyboard.press('ArrowDown');
+        await page.keyboard.down('ArrowDown');
         await expect(
           drawer.getByRole('radio', { name: 'Casting Colors', exact: true }),
         ).toBeChecked();
+        await page.keyboard.up('ArrowDown');
         await drawer
           .getByRole('checkbox', { name: 'Blue', exact: true })
           .check();

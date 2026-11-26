@@ -375,6 +375,7 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
     return route.fulfill({ json: { saved: true } });
   });
   await page
+    .locator('.card-root')
     .getByRole('button', {
       name: `Options for ${state.cards[0].name}`,
       exact: true,
@@ -1146,6 +1147,7 @@ test('deck suggestions persist across modals and previews and card pages open su
     route.fulfill({ json: { card, llm: null } }),
   );
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${card.name}`, exact: true })
     .hover();
   await expect(
@@ -1167,6 +1169,7 @@ test('deck suggestions persist across modals and previews and card pages open su
   await expect(modal).toBeHidden();
 
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${card.name}`, exact: true })
     .click();
   await expect(
@@ -1328,6 +1331,7 @@ test('search card modal fetches deck matches only on request and adds directly',
   await gotoHydrated(page, '/search/all/smart?query=draw+cards');
   expect(requests).toBe(0);
   await page
+    .locator('.card-root')
     .getByRole('button', {
       name: `Options for ${state.cards[0].name}`,
       exact: true,
@@ -1402,6 +1406,7 @@ test('search card modal fetches deck matches only on request and adds directly',
   await page.keyboard.press('Escape');
   await expect(modal).toBeHidden();
   await page
+    .locator('.card-root')
     .getByRole('button', {
       name: `Options for ${state.cards[0].name}`,
       exact: true,
@@ -1452,6 +1457,7 @@ test('Suggested Decks distinguishes a Jev outage from an empty judgment and perm
   });
   await gotoHydrated(page, '/search/all/smart?query=draw+cards');
   await page
+    .locator('.card-root')
     .getByRole('button', {
       name: `Options for ${state.cards[0].name}`,
       exact: true,

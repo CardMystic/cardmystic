@@ -111,6 +111,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
   await page.getByRole('option', { name: cards[3].name, exact: true }).click();
   await expect(page.getByText('1 cards', { exact: true })).toBeVisible();
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${cards[3].name}`, exact: true })
     .click();
   await page
@@ -127,7 +128,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
   ).toBeVisible();
   await expect(page.getByText('2 cards', { exact: true })).toBeVisible();
   await expect(
-    page.getByRole('button', {
+    page.locator('.card-root').getByRole('button', {
       name: `Options for ${cards[3].name}`,
       exact: true,
     }),
@@ -360,7 +361,7 @@ test('two open tabs retain concurrent card additions after reload', async ({
   await other.reload();
   for (const card of [cards[2], cards[3]]) {
     await expect(
-      other.getByRole('button', {
+      other.locator('.card-root').getByRole('button', {
         name: `Options for ${card.name}`,
         exact: true,
       }),
@@ -493,6 +494,7 @@ test('a guest adds a search result to the same browser draft', async ({
   );
   await gotoHydrated(page, '/search/all/keyword?query=wizard');
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${cards[3].name}`, exact: true })
     .click();
   await page
@@ -506,7 +508,7 @@ test('a guest adds a search result to the same browser draft', async ({
   await gotoHydrated(page, '/build');
   await expect(page.getByText('1 cards', { exact: true })).toBeVisible();
   await expect(
-    page.getByRole('button', {
+    page.locator('.card-root').getByRole('button', {
       name: `Options for ${cards[3].name}`,
       exact: true,
     }),
@@ -569,7 +571,7 @@ for (const failure of ['unknown card', 'lookup unavailable'] as const) {
     });
     await gotoHydrated(page, '/build');
     await expect(
-      page.getByRole('button', {
+      page.locator('.card-root').getByRole('button', {
         name: `Options for ${cards[0].name}`,
         exact: true,
       }),
@@ -663,7 +665,9 @@ test('storage quota failure leaves the edited draft available for export', async
   await seedDraft(page);
   await gotoHydrated(page, '/build');
   await expect(
-    page.getByRole('button', { name: 'Options for Island', exact: true }),
+    page
+      .locator('.card-root')
+      .getByRole('button', { name: 'Options for Island', exact: true }),
   ).toBeVisible();
   const before = await readDraft(page);
   await page.evaluate((key) => {
@@ -785,6 +789,7 @@ test('draft uses shared import, comparison, board controls and export without sa
   await page.keyboard.press('Escape');
 
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${cards[1].name}`, exact: true })
     .click();
   await page
@@ -821,7 +826,7 @@ test('draft uses shared import, comparison, board controls and export without sa
     ]);
   await page.reload();
   await expect(
-    page.getByRole('button', {
+    page.locator('.card-root').getByRole('button', {
       name: `Options for ${cards[0].name}`,
       exact: true,
     }),

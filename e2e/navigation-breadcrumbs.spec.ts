@@ -34,6 +34,7 @@ for (const width of [1440, 390]) {
       return root.__vue_app__.config.globalProperties.$router.push(path);
     }, search);
     await page
+      .locator('.card-root')
       .getByRole('button', { name: 'Options for Island', exact: true })
       .click();
     await page
