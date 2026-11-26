@@ -530,9 +530,7 @@
       aria-label="Deck navigation"
       class="flex w-full max-w-[1900px] items-center gap-1 sm:gap-3"
     >
-      <div
-        class="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-1 sm:gap-3"
-      >
+      <div class="sticky-footer-actions">
         <span class="text-xs sm:text-sm whitespace-nowrap"
           >{{ totalCardCount }} cards</span
         >
@@ -540,10 +538,16 @@
           v-bind="cardActionStyles.buy"
           variant="ghost"
           size="sm"
-          :label="buyLabel"
+          :aria-label="buyLabel"
+          class="min-h-11 px-1.5 sm:px-2.5"
           :disabled="!cardActionsReady"
           @click="openMassEntry"
-        />
+        >
+          <span class="sm:hidden">{{
+            cardActionsReady ? `$${totalPrice.toFixed(2)}` : 'Buy'
+          }}</span>
+          <span class="hidden sm:inline">{{ buyLabel }}</span>
+        </UButton>
         <template v-if="!isCollection && analysisCards.length">
           <div
             class="items-center gap-1"
