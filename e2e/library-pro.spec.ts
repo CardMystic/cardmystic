@@ -2307,7 +2307,7 @@ test('deck prices, stats and sticky actions hydrate consistently on reload', asy
       hydrationWarnings.push(message.text());
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await setupDeckDisplay(page, { cardCount: 15 });
+  await setupDeckDisplay(page, { cardCount: 15, groupBy: 'type' });
   await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   for (let visit = 0; visit < 2; visit++) {
     const response = await page.reload();
@@ -2323,13 +2323,39 @@ test('deck prices, stats and sticky actions hydrate consistently on reload', asy
     await expect(buy).toBeEnabled();
     const footer = page.locator('.sticky-footer-wrap');
     await expect(footer).toBeVisible();
-    await expect(footer.getByRole('button', { name: /^Buy \(/ })).toHaveText(
-      await buy.innerText(),
+    const footerBuy = footer.getByRole('button', { name: /^Buy \(/ });
+    await expect(footerBuy).toHaveAccessibleName(await buy.innerText());
+    expect(await footerBuy.innerText()).toMatch(/^\$[\d,.]+$/);
+    const centers = await footer.locator('button').evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const box = button.getBoundingClientRect();
+        return box.y + box.height / 2;
+      }),
     );
+    expect(Math.max(...centers) - Math.min(...centers)).toBeLessThan(2);
+    expect(
+      await footer
+        .locator('.sticky-footer-actions')
+        .evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
     await footer.getByRole('button', { name: 'Stats', exact: true }).click();
     await expect(page.getByTestId('deck-stats')).toHaveAttribute('open', '');
     expect(hydrationWarnings).toEqual([]);
   }
+  await page.evaluate(() => (document.documentElement.style.fontSize = '200%'));
+  const footer = page.getByRole('navigation', { name: 'Deck navigation' });
+  const jump = footer.getByRole('button', { name: 'Jump to group' });
+  await jump.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('menu')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(jump).toBeFocused();
+  await expect(
+    footer.getByRole('button', { name: 'Back to top' }),
+  ).toBeInViewport();
+  expect(
+    await page.locator('body').evaluate((element) => element.scrollWidth),
+  ).toBeLessThanOrEqual(390);
 });
 
 test('mobile cuts scroll through seven results and expand into two columns', async ({

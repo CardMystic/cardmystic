@@ -207,7 +207,12 @@ for (const width of [390, 1440]) {
         .locator('.card-text-row')
         .first()
         .boundingBox())!.y;
-      await page.getByRole('button', { name: 'Filters', exact: true }).click();
+      const footerFilters = footer.getByRole('button', {
+        name: 'Filter results',
+        exact: true,
+      });
+      await footerFilters.focus();
+      await page.keyboard.press('Enter');
       const drawer = page.getByRole('dialog', { name: 'Search filters' });
       await expect(drawer).toBeVisible();
       expect(
@@ -250,6 +255,9 @@ for (const width of [390, 1440]) {
       await page.screenshot({ path: `.cache/search-filters-${width}.png` });
       await drawer.getByRole('button', { name: 'Done', exact: true }).click();
       expect(requests).toHaveLength(1);
+      await expect(
+        footer.getByRole('button', { name: /^Filter results/ }),
+      ).toBeFocused();
       await page
         .getByRole('button', {
           name: `Filters (${width < 640 ? 4 : 3} selected)`,
@@ -296,6 +304,20 @@ for (const width of [390, 1440]) {
         page.getByRole('combobox', { name: 'Search grouping' }),
       ).toBeHidden();
       await expect(jump).toBeVisible();
+      const controls = footer.locator('button, a[href]');
+      const centers = await controls.evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return box.y + box.height / 2;
+        }),
+      );
+      expect(Math.max(...centers) - Math.min(...centers)).toBeLessThan(2);
+      expect(
+        await footer
+          .locator('.sticky-footer-actions')
+          .evaluate((element) => element.scrollWidth <= element.clientWidth),
+      ).toBe(true);
+
       if (width >= 1280) {
         const groups = page.getByTestId('search-results-grid');
         const topResults = groups.first();
@@ -373,7 +395,10 @@ for (const width of [390, 1440]) {
         await footerDisplay.click();
         await expect(viewSelect).toBeHidden();
         await page
-          .getByRole('button', { name: 'Filters (4 selected)', exact: true })
+          .getByRole('button', {
+            name: 'Filter results (4 selected)',
+            exact: true,
+          })
           .click();
         await drawer
           .getByRole('button', { name: 'Colors', exact: true })
@@ -431,10 +456,21 @@ for (const width of [390, 1440]) {
       for (const control of await footer
         .locator('a:visible, button:visible')
         .all()) {
+        await control.focus();
+        await expect(control).toBeFocused();
         const bounds = (await control.boundingBox())!;
+        expect(bounds.x).toBeGreaterThanOrEqual(0);
         expect(bounds.x + bounds.width).toBeLessThanOrEqual(
           arrowBounds.x + arrowBounds.width + 1,
         );
+        expect(
+          Math.abs(
+            bounds.y +
+              bounds.height / 2 -
+              arrowBounds.y -
+              arrowBounds.height / 2,
+          ),
+        ).toBeLessThan(2);
       }
       if (width < 640) await backToTop.click();
       else {
