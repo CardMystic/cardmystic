@@ -114,13 +114,7 @@
         </div>
 
         <!-- Color Filter Option Chip -->
-        <div
-          v-if="
-            !hideColors &&
-            selectedColorFilterOption &&
-            selectedColorFilterOption !== 'Match Exactly'
-          "
-        >
+        <div v-if="!hideColors && (selectedColors || []).length > 0">
           <UButton
             class="cursor-pointer ma-1 rounded-pill"
             size="sm"
@@ -128,7 +122,9 @@
             variant="outline"
             icon="i-lucide-circle-x"
             @click="clearColorFilterOption()"
-            >Color: {{ selectedColorFilterOption }}
+          >
+            {{ colorSettings.selectedColorField }}:
+            {{ colorSettings.selectedColorFilterOption }}
           </UButton>
         </div>
 
@@ -278,60 +274,10 @@
           <!-- Colors Filter -->
           <template #colors>
             <div class="accordion-item">
-              <div class="flex gap-2">
-                <USelect
-                  v-model="selectedColorFilterOption"
-                  :items="colorFilterOptions"
-                  placeholder="Select How To Match Colors"
-                  class="w-full"
-                  :ui="{ base: 'text-base' }"
-                />
-
-                <UButton
-                  v-if="selectedColorFilterOption"
-                  icon="i-lucide-x"
-                  color="neutral"
-                  variant="ghost"
-                  @click="clearColorFilterOption()"
-                  size="sm"
-                  class="shrink-0"
-                  aria-label="Clear color filter"
-                >
-                </UButton>
-              </div>
-
-              <!-- Warning if no color filter option is selected -->
-              <div
-                v-if="!selectedColorFilterOption"
-                class="mt-2 text-yellow-500 text-xs"
-              >
-                Please Select How To Match Colors before using Color Checkboxes
-              </div>
-
-              <!-- Disable checkboxes when a filter option is selected -->
-              <div class="color-checkboxes flex flex-wrap">
-                <UCheckboxGroup
-                  :disabled="!selectedColorFilterOption"
-                  :items="cardColors"
-                  :orientation="orientation"
-                  variant="card"
-                  v-model="selectedColors"
-                  class="w-full flex flex-wrap"
-                >
-                  <template #label="{ item }">
-                    <span class="ml-2">
-                      <ManaColorIcon
-                        :type="
-                          cardColorToSymbol(
-                            (item as { value: CardColorType }).value,
-                          )
-                        "
-                      />
-                      {{ (item as { value: CardColorType }).value }}
-                    </span>
-                  </template>
-                </UCheckboxGroup>
-              </div>
+              <ColorFilterControls
+                :model-value="modelValue"
+                @update:model-value="emit('update:modelValue', $event!)"
+              />
             </div>
           </template>
           <!-- Rarities Filter -->
@@ -467,7 +413,6 @@ import { computed } from 'vue';
 import { z } from 'zod';
 import {
   CardType,
-  CardColor,
   CardRarity,
   CardFormat,
   CardFormatStatus,
@@ -477,9 +422,9 @@ import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel'
 import ManaColorIcon from '../general/ManaColorIcon.vue';
 import type { AccordionItem, CheckboxGroupItem } from '@nuxt/ui';
 import { getColorIdentityName } from '~/utils/colorPairings';
+import { colorFilterSettings } from '~/utils/colorFilters';
 import { hasAdvancedFilters } from '~/utils/quickFilters';
 
-type CardColorType = z.infer<typeof CardColor>;
 type CardRarityType = z.infer<typeof CardRarity>;
 
 const isMobile = useIsMobile();
@@ -569,12 +514,6 @@ const items = computed(() =>
 const cardTypes = CardType.options;
 const cardFormats = CardFormat.options;
 const cardFormatStatuses = CardFormatStatus.options;
-const colorFilterOptions = [
-  'Match Exactly',
-  'Contains At Least',
-  'Contains At Most',
-  'Color Identity',
-];
 const comparisonOperators = [
   'Equal To',
   'Not Equal To',
@@ -600,8 +539,6 @@ const hasActiveFilters = computed(() => {
     filters.selectedCMC ||
     filters.selectedPower ||
     filters.selectedToughness ||
-    (filters.selectedColorFilterOption &&
-      filters.selectedColorFilterOption !== 'Match Exactly') ||
     (filters.selectedCardFormats && filters.selectedCardFormats.length > 0) ||
     filters.isMTGO ||
     filters.isArena ||
@@ -638,79 +575,8 @@ const selectedCardTypes = computed({
   set: (value) => updateFilters({ selectedCardTypes: value }),
 });
 
-const selectedColorFilterOption = computed({
-  get: () => modelValue?.selectedColorFilterOption,
-  set: (value) => {
-    updateFilters({ selectedColorFilterOption: value });
-
-    // If color filter option is cleared, clear all selected colors
-    if (
-      value === undefined &&
-      modelValue?.selectedColors &&
-      modelValue.selectedColors.length > 0
-    ) {
-      updateFilters({ selectedColors: undefined });
-      return;
-    }
-
-    // When changing to Match Exactly, Contains At Least, or Color Identity, validate existing color selections
-    if (
-      (value === 'Match Exactly' ||
-        value === 'Contains At Least' ||
-        value === 'Color Identity') &&
-      modelValue?.selectedColors
-    ) {
-      const colors = [...modelValue.selectedColors];
-      const hasColorless = colors.includes('Colorless');
-      const hasOtherColors = colors.some((color) => color !== 'Colorless');
-
-      // If both colorless and other colors are selected, remove colorless
-      if (hasColorless && hasOtherColors) {
-        const updatedColors = colors.filter((color) => color !== 'Colorless');
-        updateFilters({ selectedColors: updatedColors });
-      }
-    }
-  },
-});
-
-const cardColors = CardColor.options.map((color) => ({
-  label: color,
-  value: color,
-})) as CheckboxGroupItem[];
-
-const selectedColors = computed({
-  get: () => modelValue?.selectedColors || [],
-  set: (value) => {
-    const colorOption = modelValue?.selectedColorFilterOption;
-
-    // Only apply validation for these specific filter options
-    if (
-      colorOption === 'Match Exactly' ||
-      colorOption === 'Contains At Least' ||
-      colorOption === 'Color Identity'
-    ) {
-      const hasColorless = value.includes('Colorless');
-      const hasOtherColors = value.some((color) => color !== 'Colorless');
-
-      // If we have both colorless and other colors, decide which to keep
-      if (hasColorless && hasOtherColors) {
-        // Get the previous selection
-        const previousSelection = modelValue?.selectedColors || [];
-
-        // Determine what changed by comparing previous and current selection
-        if (!previousSelection.includes('Colorless')) {
-          // Colorless was just added, remove all other colors
-          value = ['Colorless'];
-        } else {
-          // Another color was added, remove Colorless
-          value = value.filter((color) => color !== 'Colorless');
-        }
-      }
-    }
-
-    updateFilters({ selectedColors: value });
-  },
-});
+const colorSettings = computed(() => colorFilterSettings(modelValue));
+const selectedColors = computed(() => modelValue?.selectedColors || []);
 
 const cardRarities = CardRarity.options.map((rarity) => ({
   label: rarity,
@@ -843,7 +709,8 @@ function clearToughness() {
 function clearColorFilterOption() {
   // Clear both color filter option and selected colors simultaneously
   updateFilters({
-    selectedColorFilterOption: undefined,
+    selectedColorFilterOption: 'Contains At Most',
+    selectedColorField: 'Color Identity',
     selectedColors: undefined,
   });
 }
@@ -867,7 +734,8 @@ function clearAllFilters() {
     selectedCMCOption: undefined,
     selectedPowerOption: undefined,
     selectedToughnessOption: undefined,
-    selectedColorFilterOption: 'Match Exactly',
+    selectedColorFilterOption: 'Contains At Most',
+    selectedColorField: 'Color Identity',
     selectedCardFormats: undefined,
     maxPriceUsd: undefined,
     isCommander: commanderOnly ? modelValue?.isCommander : undefined,

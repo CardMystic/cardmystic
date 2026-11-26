@@ -50,7 +50,7 @@ test('a saved deck printing never requests the default image while its metadata 
   try {
     await page.reload();
     await expect.poll(() => requested).toBe(true);
-    const button = page.getByRole('button', {
+    const button = page.locator('.card-root').getByRole('button', {
       name: `Options for ${card.name}`,
       exact: true,
     });

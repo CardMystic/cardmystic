@@ -1,6 +1,6 @@
 <template>
   <UModal
-    v-model:open="isOpen"
+    v-model:open="dialogOpen"
     :title="modalTitle"
     description="Pick a recently edited deck or search your decks by name."
   >
@@ -198,6 +198,7 @@ const deckSearchTerm = ref('');
 const debouncedDeckSearch = refDebounced(deckSearchTerm, 300);
 const { decklists: searchedDecklists } =
   useMyDecklistsSearch(debouncedDeckSearch);
+const { decklists: recentlyEditedDecklists } = useMyDecklistsSearch(ref(''));
 const toast = useToast();
 const cardEditToast = useCardEditToast();
 const {
@@ -260,6 +261,15 @@ const isOpen = computed({
   get: () => props.open,
   set: (value: boolean) => emit('update:open', value),
 });
+// Hide immediately, but keep the component alive until the save settles so
+// confirmed-success callbacks (such as clearing the clipboard) still run.
+const submitted = ref(false);
+const dialogOpen = computed({
+  get: () => isOpen.value && !submitted.value,
+  set: (value: boolean) => {
+    isOpen.value = value;
+  },
+});
 
 const selectedListId = ref('');
 const selectedListItem = ref<
@@ -268,10 +278,8 @@ const selectedListItem = ref<
 const errorMessage = ref('');
 const showCreateDeckModal = ref(false);
 
-// The deck picker shows the top matches from the server; when the search
-// term is empty the backend returns the most-recently updated decks. The
-// first 4 populate the "Recent Decks" quick-pick row.
-const recentLists = computed(() => searchedDecklists.value.slice(0, 4));
+// Keep quick picks independent of the search, including its selected label.
+const recentLists = computed(() => recentlyEditedDecklists.value.slice(0, 4));
 
 function listName(list: CardListRow): string {
   return list.name?.trim() || 'Untitled Deck';
@@ -295,7 +303,7 @@ const filteredDeckLabels = computed(() =>
 );
 
 function syncSelectedLabel() {
-  const selected = searchedDecklists.value.find(
+  const selected = [...searchedDecklists.value, ...recentLists.value].find(
     (list) => list.id === selectedListId.value,
   );
   selectedListItem.value = selected
@@ -375,7 +383,9 @@ const effectiveNewCount = computed(() =>
     : newOracleIds.value.length,
 );
 
-const hasDuplicates = computed(() => effectiveDuplicateCount.value > 0);
+const hasDuplicates = computed(
+  () => !submitted.value && effectiveDuplicateCount.value > 0,
+);
 
 const loading = computed(
   () =>
@@ -385,6 +395,7 @@ const loading = computed(
 
 watch(isOpen, (opened) => {
   if (opened) {
+    submitted.value = false;
     errorMessage.value = '';
     selectedListId.value = '';
     selectedListItem.value = undefined;
@@ -396,6 +407,7 @@ watch(isOpen, (opened) => {
 });
 
 async function handleAddToDeck(onlyNew = false) {
+  if (loading.value || submitted.value) return;
   errorMessage.value = '';
 
   if (!selectedListId.value) {
@@ -403,21 +415,24 @@ async function handleAddToDeck(onlyNew = false) {
     return;
   }
 
+  const listId = selectedListId.value;
+  const namesToAdd = [...(onlyNew ? newCardNames.value : cardNames.value)];
+  const idsToAdd = [...(onlyNew ? newOracleIds.value : oracleIds.value)];
+  const useNames = cardNames.value.length > 0;
+  submitted.value = true;
+  cardEditToast.notify('added', useNames ? namesToAdd.length : idsToAdd.length);
+
   try {
-    if (cardNames.value.length > 0) {
-      const namesToAdd = onlyNew ? newCardNames.value : cardNames.value;
-      cardEditToast.notify('added', namesToAdd.length);
+    if (useNames) {
       const result = await addCardsByNameToListMutation.mutateAsync({
-        listId: selectedListId.value,
+        listId,
         cardNames: namesToAdd,
       });
       if (result.invalidCardNames?.length)
         throw new Error(`Could not add: ${result.invalidCardNames.join(', ')}`);
     } else {
-      const idsToAdd = onlyNew ? newOracleIds.value : oracleIds.value;
-      cardEditToast.notify('added', idsToAdd.length);
       const result = await addCardsToListMutation.mutateAsync({
-        listId: selectedListId.value,
+        listId,
         oracleIds: idsToAdd,
       });
       if (result?.invalidOracleIds?.length)
@@ -425,7 +440,6 @@ async function handleAddToDeck(onlyNew = false) {
     }
 
     emit('success');
-    isOpen.value = false;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to add card to deck.';
@@ -435,6 +449,8 @@ async function handleAddToDeck(onlyNew = false) {
       description: message,
       color: 'error',
     });
+  } finally {
+    isOpen.value = false;
   }
 }
 </script>

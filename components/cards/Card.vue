@@ -11,7 +11,8 @@
   >
     <LazyCardActionsModal
       v-if="showActions"
-      v-model:open="showActions"
+      :open="showActions"
+      @update:open="setActionsOpen"
       :is-flipped="isFlipped"
       @flip="flipCard"
       :card="actionCard"
@@ -474,6 +475,7 @@ const dislikedCards = ref(new Set<string>());
 const feedbackCardName = ref('');
 const showConfirmModal = ref(false);
 const showActions = ref(false);
+let actionTrigger: HTMLElement | null = null;
 const actionPartner = ref(false);
 const actionCard = computed(() =>
   actionPartner.value && props.card.partner_card_data
@@ -484,9 +486,17 @@ const actionCard = computed(() =>
     : props.card,
 );
 function openActions(partner = false) {
+  actionTrigger = document.activeElement as HTMLElement | null;
   actionPartner.value = partner;
   saveCurrentSearchQuery(route.query);
   showActions.value = true;
+}
+async function setActionsOpen(open: boolean) {
+  showActions.value = open;
+  if (open) return;
+  await nextTick();
+  if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+  if (actionTrigger?.isConnected) actionTrigger.focus({ preventScroll: true });
 }
 const showAddToDeckModal = ref(false);
 

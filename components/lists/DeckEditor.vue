@@ -72,6 +72,7 @@
         <div v-if="!isCollection" class="hidden md:block">
           <DeckPlaytest
             ref="deckPlaytest"
+            v-model:open="isPlaytestOpen"
             :entries="analysisCards"
             :format="list.format"
             :name="list.name || 'Deck'"
@@ -521,62 +522,69 @@
     </template>
   </UModal>
 
-  <BackToTop />
-
-  <StickyActionFooter :show="showStickyFooter && !isCompareModalOpen">
-    <div
-      class="flex max-w-full flex-wrap items-center justify-center gap-1 sm:gap-3"
+  <StickyActionFooter
+    :show="showStickyFooter && !isCompareModalOpen && !isPlaytestOpen"
+    :hide-at-page-bottom="false"
+  >
+    <nav
+      aria-label="Deck navigation"
+      class="flex w-full max-w-[1900px] items-center gap-1 sm:gap-3"
     >
-      <span class="text-xs sm:text-sm whitespace-nowrap"
-        >{{ totalCardCount }} cards</span
+      <div
+        class="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-1 sm:gap-3"
       >
-      <UButton
-        v-bind="cardActionStyles.buy"
-        variant="ghost"
-        size="sm"
-        :label="buyLabel"
-        :disabled="!cardActionsReady"
-        @click="openMassEntry"
-      />
-      <template v-if="!isCollection && analysisCards.length">
-        <div
-          class="items-center gap-1"
-          :class="sectionLinks.length > 1 ? 'hidden md:flex' : 'flex'"
+        <span class="text-xs sm:text-sm whitespace-nowrap"
+          >{{ totalCardCount }} cards</span
         >
-          <UButton
-            v-for="section in sectionLinks"
-            :key="section.label"
-            :label="section.label"
-            :icon="section.icon"
-            variant="ghost"
-            color="neutral"
-            size="sm"
-            @click="section.onSelect"
-          />
-        </div>
-        <UDropdownMenu
-          v-if="sectionLinks.length > 1"
-          :items="sectionLinks"
-          :modal="false"
-          :content="{ side: 'top', align: 'end' }"
-          class="md:hidden"
-        >
-          <UButton
-            label="Deck"
-            aria-label="Deck sections"
-            icon="i-lucide-chart-column"
-            variant="ghost"
-            color="neutral"
-            size="sm"
-          />
-        </UDropdownMenu>
-      </template>
-      <JumpTo
-        :groups="jumpToGroups"
-        :board-sections="jumpToBoardSections"
-        @jump-board="handleJumpBoard"
-      />
-    </div>
+        <UButton
+          v-bind="cardActionStyles.buy"
+          variant="ghost"
+          size="sm"
+          :label="buyLabel"
+          :disabled="!cardActionsReady"
+          @click="openMassEntry"
+        />
+        <template v-if="!isCollection && analysisCards.length">
+          <div
+            class="items-center gap-1"
+            :class="sectionLinks.length > 1 ? 'hidden md:flex' : 'flex'"
+          >
+            <UButton
+              v-for="section in sectionLinks"
+              :key="section.label"
+              :label="section.label"
+              :icon="section.icon"
+              variant="ghost"
+              color="neutral"
+              size="sm"
+              @click="section.onSelect"
+            />
+          </div>
+          <UDropdownMenu
+            v-if="sectionLinks.length > 1"
+            :items="sectionLinks"
+            :modal="false"
+            :content="{ side: 'top', align: 'end' }"
+            class="md:hidden"
+          >
+            <UButton
+              label="Deck"
+              aria-label="Deck sections"
+              icon="i-lucide-chart-column"
+              variant="ghost"
+              color="neutral"
+              size="sm"
+            />
+          </UDropdownMenu>
+        </template>
+        <JumpTo
+          :groups="jumpToGroups"
+          :board-sections="jumpToBoardSections"
+          @jump-board="handleJumpBoard"
+        />
+      </div>
+      <BackToTop inline />
+    </nav>
   </StickyActionFooter>
 </template>
 
@@ -1513,6 +1521,7 @@ async function confirmAddDuplicate() {
 // Bulk edit state
 const isBulkEditModalOpen = ref(false);
 const isCompareModalOpen = ref(false);
+const isPlaytestOpen = ref(false);
 const transferOpen = ref(false);
 const cutsOpen = ref(false);
 const searchOpen = ref(false);
@@ -1797,6 +1806,7 @@ async function handleSetCommander(commanderName: string) {
   if (!commanderName || !list.value) return;
 
   setCommanderLoading.value = true;
+  cardEditToast.notifyEdit('Commander Set');
   try {
     await setCommanderMutation.mutateAsync({
       listId: list.value.id,
@@ -1810,11 +1820,6 @@ async function handleSetCommander(commanderName: string) {
         cardName: commanderName,
       });
     }
-
-    toast.add({
-      title: `${commanderName} set as commander`,
-      icon: 'i-lucide-crown',
-    });
   } catch (error: any) {
     toast.add({
       title: 'Error setting commander',
@@ -1830,15 +1835,11 @@ async function handleClearCommander(oracleId: string) {
   if (!list.value) return;
 
   setCommanderLoading.value = true;
+  cardEditToast.notifyEdit('Commander Removed');
   try {
     await clearCommanderMutation.mutateAsync({
       listId: list.value.id,
       oracleId,
-    });
-
-    toast.add({
-      title: 'Commander cleared',
-      icon: 'i-lucide-check',
     });
   } catch (error: any) {
     toast.add({
@@ -1857,6 +1858,8 @@ async function handleUpdateNumCopies(
   fromBoard: 'Mainboard' | 'Sideboard' | 'Considering',
 ) {
   if (!list.value) return;
+  if (numCopies === 0) cardEditToast.notify('removed');
+  else cardEditToast.notifyEdit('Copies Updated');
   try {
     await updateNumCopiesMutation.mutateAsync({
       listId: list.value.id,

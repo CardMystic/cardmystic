@@ -158,6 +158,8 @@ async function select(printing: Printing | null, finish: Finish | null) {
     :variant="current ? 'outline' : 'ghost'"
     :size="current ? undefined : 'sm'"
     :block="!!current"
+    class="justify-start whitespace-normal text-left"
+    :ui="{ label: 'whitespace-normal wrap-anywhere' }"
     @click="openPicker"
   />
   <LazyPrintingPicker

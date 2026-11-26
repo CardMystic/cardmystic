@@ -105,11 +105,13 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
     .getByRole('textbox', { name: 'Name', exact: true })
     .fill('My browser deck');
   await settings.getByRole('button', { name: 'Save changes' }).click();
+  await expect(page.locator('.card-edit-toast')).toHaveText('Deck Updated');
   await expect(settings).toBeHidden();
   await page.getByPlaceholder('Add a card to the deck...').fill('Display Card');
   await page.getByRole('option', { name: cards[3].name, exact: true }).click();
   await expect(page.getByText('1 cards', { exact: true })).toBeVisible();
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${cards[3].name}`, exact: true })
     .click();
   await page
@@ -117,6 +119,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
     .getByRole('button', { name: 'Set Copies', exact: true })
     .click();
   await page.getByRole('menuitem', { name: 'Add a copy', exact: true }).click();
+  await expect(page.locator('.card-edit-toast')).toHaveText('Copies Updated');
   await page.keyboard.press('Escape');
   await expect(page.getByText('2 cards', { exact: true })).toBeVisible();
   await page.reload();
@@ -125,7 +128,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
   ).toBeVisible();
   await expect(page.getByText('2 cards', { exact: true })).toBeVisible();
   await expect(
-    page.getByRole('button', {
+    page.locator('.card-root').getByRole('button', {
       name: `Options for ${cards[3].name}`,
       exact: true,
     }),
@@ -358,7 +361,7 @@ test('two open tabs retain concurrent card additions after reload', async ({
   await other.reload();
   for (const card of [cards[2], cards[3]]) {
     await expect(
-      other.getByRole('button', {
+      other.locator('.card-root').getByRole('button', {
         name: `Options for ${card.name}`,
         exact: true,
       }),
@@ -491,6 +494,7 @@ test('a guest adds a search result to the same browser draft', async ({
   );
   await gotoHydrated(page, '/search/all/keyword?query=wizard');
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${cards[3].name}`, exact: true })
     .click();
   await page
@@ -504,7 +508,7 @@ test('a guest adds a search result to the same browser draft', async ({
   await gotoHydrated(page, '/build');
   await expect(page.getByText('1 cards', { exact: true })).toBeVisible();
   await expect(
-    page.getByRole('button', {
+    page.locator('.card-root').getByRole('button', {
       name: `Options for ${cards[3].name}`,
       exact: true,
     }),
@@ -567,7 +571,7 @@ for (const failure of ['unknown card', 'lookup unavailable'] as const) {
     });
     await gotoHydrated(page, '/build');
     await expect(
-      page.getByRole('button', {
+      page.locator('.card-root').getByRole('button', {
         name: `Options for ${cards[0].name}`,
         exact: true,
       }),
@@ -661,7 +665,9 @@ test('storage quota failure leaves the edited draft available for export', async
   await seedDraft(page);
   await gotoHydrated(page, '/build');
   await expect(
-    page.getByRole('button', { name: 'Options for Island', exact: true }),
+    page
+      .locator('.card-root')
+      .getByRole('button', { name: 'Options for Island', exact: true }),
   ).toBeVisible();
   const before = await readDraft(page);
   await page.evaluate((key) => {
@@ -783,11 +789,12 @@ test('draft uses shared import, comparison, board controls and export without sa
   await page.keyboard.press('Escape');
 
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${cards[1].name}`, exact: true })
     .click();
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: 'Move To', exact: true })
+    .getByRole('button', { name: 'Move', exact: true })
     .click();
   await page
     .getByRole('menuitem', { name: 'Move to Considering', exact: true })
@@ -819,7 +826,7 @@ test('draft uses shared import, comparison, board controls and export without sa
     ]);
   await page.reload();
   await expect(
-    page.getByRole('button', {
+    page.locator('.card-root').getByRole('button', {
       name: `Options for ${cards[0].name}`,
       exact: true,
     }),

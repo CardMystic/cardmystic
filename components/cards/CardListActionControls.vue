@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import type { CardAction } from '~/utils/card-actions';
+import { cardActionStyles, type CardAction } from '~/utils/card-actions';
 const props = withDefaults(
-  defineProps<{ actions: CardAction[]; variant?: 'outline' | 'ghost' }>(),
+  defineProps<{
+    actions: CardAction[];
+    printingEnabled?: boolean;
+    variant?: 'outline' | 'ghost';
+  }>(),
   { variant: 'outline' },
 );
-const emit = defineEmits<{ select: [action: CardAction] }>();
+const emit = defineEmits<{
+  select: [action: CardAction];
+  changePrinting: [];
+}>();
 const copies = computed(() => menuItems('copies'));
 const boards = computed(() => menuItems('board'));
 const remove = computed(() =>
@@ -22,52 +29,80 @@ function menuItems(group: CardAction['group']) {
 
 <template>
   <div
-    v-if="boards.length || copies.length || remove"
+    v-if="printingEnabled || boards.length || copies.length || remove"
     class="grid w-full gap-1"
   >
-    <UDropdownMenu
-      v-if="boards.length"
-      :items="boards"
-      :content="{ align: 'start' }"
-      :ui="{ content: 'w-[var(--reka-dropdown-menu-trigger-width)]' }"
-    >
+    <div v-if="printingEnabled || boards.length" class="flex flex-wrap gap-1">
       <UButton
-        label="Move To"
-        :ui="{ label: 'whitespace-normal', trailingIcon: 'ml-auto' }"
-        icon="i-lucide-arrow-right-left"
-        trailing-icon="i-lucide-chevron-down"
-        color="neutral"
+        v-if="printingEnabled"
+        label="Set Printing"
+        v-bind="cardActionStyles.printing"
         :variant="variant"
-        class="w-full min-h-11 justify-start text-left"
+        class="min-h-11 min-w-0 flex-1 basis-[8rem] justify-start whitespace-normal text-left"
+        :ui="{ label: 'whitespace-normal wrap-anywhere' }"
+        @click="emit('changePrinting')"
       />
-    </UDropdownMenu>
-    <UDropdownMenu
-      v-if="copies.length"
-      :items="copies"
-      :content="{ align: 'start' }"
-      :ui="{ content: 'w-[var(--reka-dropdown-menu-trigger-width)]' }"
-    >
+      <UDropdownMenu
+        v-if="boards.length"
+        :items="boards"
+        :content="{ align: 'start' }"
+        :ui="{
+          content:
+            'w-[max(12rem,var(--reka-dropdown-menu-trigger-width))] max-w-[calc(100vw-2rem)]',
+          itemLabel: 'whitespace-normal wrap-anywhere',
+        }"
+      >
+        <UButton
+          label="Move"
+          :ui="{
+            label: 'whitespace-normal wrap-anywhere',
+            trailingIcon: 'ml-auto',
+          }"
+          icon="i-lucide-arrow-right-left"
+          trailing-icon="i-lucide-chevron-down"
+          color="neutral"
+          :variant="variant"
+          class="min-h-11 min-w-0 flex-1 basis-[8rem] justify-start whitespace-normal text-left"
+        />
+      </UDropdownMenu>
+    </div>
+    <div v-if="copies.length || remove" class="flex flex-wrap gap-1">
+      <UDropdownMenu
+        v-if="copies.length"
+        :items="copies"
+        :content="{ align: 'start' }"
+        :ui="{
+          content:
+            'w-[max(12rem,var(--reka-dropdown-menu-trigger-width))] max-w-[calc(100vw-2rem)]',
+          itemLabel: 'whitespace-normal wrap-anywhere',
+        }"
+      >
+        <UButton
+          label="Set Copies"
+          :ui="{
+            label: 'whitespace-normal wrap-anywhere',
+            trailingIcon: 'ml-auto',
+          }"
+          icon="i-lucide-hash"
+          trailing-icon="i-lucide-chevron-down"
+          color="neutral"
+          :variant="variant"
+          class="min-h-11 min-w-0 flex-1 basis-[8rem] justify-start whitespace-normal text-left"
+        />
+      </UDropdownMenu>
       <UButton
-        label="Set Copies"
-        :ui="{ label: 'whitespace-normal', trailingIcon: 'ml-auto' }"
-        icon="i-lucide-hash"
-        trailing-icon="i-lucide-chevron-down"
-        color="neutral"
+        v-if="remove"
+        aria-label="Remove From List"
+        label="Remove"
+        title="Remove From List"
+        icon="i-lucide-trash-2"
+        color="error"
         :variant="variant"
-        class="w-full min-w-0 min-h-11 justify-start whitespace-normal text-left"
+        :disabled="remove.disabled"
+        class="min-h-11 min-w-0 flex-1 basis-[8rem] justify-start whitespace-normal text-left"
+        :ui="{ label: 'whitespace-normal wrap-anywhere' }"
+        @click="emit('select', remove)"
       />
-    </UDropdownMenu>
-    <UButton
-      v-if="remove"
-      aria-label="Remove From List"
-      label="Remove"
-      title="Remove From List"
-      icon="i-lucide-trash-2"
-      color="error"
-      :variant="variant"
-      :disabled="remove.disabled"
-      class="w-full min-h-11 justify-start text-left"
-      @click="emit('select', remove)"
-    />
+    </div>
   </div>
 </template>

@@ -71,6 +71,7 @@
 </template>
 
 <script lang="ts" setup>
+import { colorFilterSettings } from '~/utils/colorFilters';
 import * as z from 'zod';
 import { useRoute } from 'vue-router';
 
@@ -114,7 +115,8 @@ const queryParam = computed(() =>
 
 const parsedFilters = computed(() => {
   const base: Record<string, any> = {
-    selectedColorFilterOption: 'Color Identity' as 'Color Identity',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
@@ -123,6 +125,7 @@ const parsedFilters = computed(() => {
     return CardSearchFiltersSchema.parse({
       ...base,
       ...pageDefaults.filters.value,
+      ...colorFilterSettings(pageDefaults.filters.value),
     });
   }
   if (route.query.filters) {
@@ -169,11 +172,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (selColors && selColors.length > 0) {
       formData.filters.selectedColors = [...selColors];
       formData.filters.selectedColorFilterOption =
-        state.filters?.selectedColorFilterOption || 'Color Identity';
+        state.filters?.selectedColorFilterOption || 'Contains At Most';
     } else {
       // Keep other filters but remove color-related ones
       delete formData.filters.selectedColors;
       delete formData.filters.selectedColorFilterOption;
+      delete formData.filters.selectedColorField;
     }
 
     // For commander search, always set isCommander to true

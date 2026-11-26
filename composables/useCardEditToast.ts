@@ -24,5 +24,18 @@ export function useCardEditToast() {
   function notifyMoved(board: Board) {
     show(`Card Moved to ${board}`);
   }
-  return { notify, notifyMoved };
+  function notifyEdit(
+    title:
+      | 'Copies Updated'
+      | 'Commander Set'
+      | 'Commander Removed'
+      | 'Card Replaced'
+      | 'Deck Updated'
+      | 'Collection Updated'
+      | 'Deck Restored'
+      | 'Collection Restored',
+  ) {
+    show(title);
+  }
+  return { notify, notifyMoved, notifyEdit };
 }

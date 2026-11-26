@@ -33,12 +33,13 @@
     <div class="preview-card-stack">
       <div class="preview-image-wrapper card-image-wrapper">
         <GameChangerBadge v-if="activeCardData?.game_changer" />
-        <NuxtLink
-          class="card-finish block rounded-2xl"
+        <button
+          type="button"
+          class="card-finish block w-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           :data-card-finish="activeCardData?.selected_finish"
-          :to="`/card/${activeCardData?.oracle_id}`"
-          no-prefetch
-          @click="saveCurrentSearchQuery(route.query)"
+          :aria-label="`Options for ${activeCardData?.name}`"
+          aria-haspopup="dialog"
+          @click="openCardOptions"
         >
           <img
             :src="getCardImageUrl(activeCardData!, isFlipped, 'large')"
@@ -47,7 +48,7 @@
             loading="eager"
             decoding="async"
           />
-        </NuxtLink>
+        </button>
         <CardOverlayButtons
           :card="activeCardData"
           :is-dual-faced="isDualFaced"
@@ -147,8 +148,11 @@
       </div>
 
       <HoveredCardActions
+        ref="cardActions"
         @view-card="saveCurrentSearchQuery(route.query)"
-        :card="card"
+        :card="activeCard!"
+        :is-flipped="isFlipped"
+        @flip="flipCard"
         :buy-label="'Buy on TCGPlayer (' + priceLabel + ')'"
         :can-show-deck-menu="canShowDeckMenu"
         :find-similar-disabled="isSearched"
@@ -178,6 +182,9 @@ import type { Card } from '~/models/cardModel';
 import { getCardImageUrl } from '~/utils/scryfall';
 
 const router = useRouter();
+const cardActions = useTemplateRef<{ openCardOptions: () => void }>(
+  'cardActions',
+);
 const route = useRoute();
 const { saveCurrentSearchQuery, saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
@@ -204,12 +211,18 @@ const emit = defineEmits<{
 }>();
 
 // When showing partner commanders, display whichever card the user is hovering over in the grid
-const activeCardData = computed(() => {
+const activeCard = computed(() => {
   if (props.partnerIndex === 1 && props.card?.partner_card_data) {
-    return props.card.partner_card_data;
+    return {
+      ...props.card,
+      card_name: props.card.partner_card_data.name,
+      card_data: props.card.partner_card_data,
+      partner_card_data: undefined,
+    };
   }
-  return props.card?.card_data ?? null;
+  return props.card;
 });
+const activeCardData = computed(() => activeCard.value?.card_data ?? null);
 const isThumbsDownClicked = ref(false);
 const showConfirmModal = ref(false);
 const showAddToDeckModal = ref(false);
@@ -322,6 +335,12 @@ function flipCard() {
   if (props.card) emit('flip', props.card.card_data.id);
 }
 
+function openCardOptions(event: MouseEvent) {
+  saveCurrentSearchQuery(route.query);
+  (event.currentTarget as HTMLButtonElement).focus();
+  cardActions.value?.openCardOptions();
+}
+
 function handleDislike() {
   if (
     isThumbsDownClicked.value ||
@@ -344,12 +363,12 @@ function confirmDislike(close: () => void) {
 }
 
 function findSimilarCards() {
-  if (!props.card) return;
+  if (!activeCard.value) return;
   saveCurrentSearchQuery(route.query);
   router.push({
     path: '/search/all/similarity',
     query: {
-      card_name: props.card.card_name,
+      card_name: activeCard.value.card_name,
       filters: undefined,
       searchType: 'similarity',
     },

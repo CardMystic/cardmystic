@@ -1,5 +1,7 @@
 <template>
-  <div class="flex items-center gap-2 justify-start min-h-10">
+  <div
+    class="display-control-row flex items-center gap-2 justify-start min-h-10"
+  >
     <UIcon name="i-lucide-arrow-up-down" class="size-4 shrink-0" />
     <span class="text-sm min-w-11 shrink-0">Sort</span>
     <USelect

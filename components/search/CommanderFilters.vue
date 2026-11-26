@@ -35,123 +35,23 @@
     </UButton>
   </div>
 
-  <!-- Colors selector -->
-  <div class="accordion-item">
-    <div class="color-checkboxes">
-      <!-- Keep color choices within the filter drawer. -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full">
-        <UCheckbox
-          v-for="item in cardColors"
-          :key="(item as { value: CardColorType }).value"
-          :name="`color-${(item as { value: CardColorType }).value}`"
-          :model-value="
-            selectedColors.includes((item as { value: CardColorType }).value)
-          "
-          @update:model-value="
-            (value) =>
-              onToggle((item as { value: CardColorType }).value, value === true)
-          "
-          variant="card"
-          class="w-full"
-          :ui="{ root: 'p-2' }"
-        >
-          <template #label>
-            <span class="flex items-center gap-1 ml-2">
-              <ManaColorIcon
-                :type="
-                  cardColorToSymbol((item as { value: CardColorType }).value)
-                "
-                class="mr-1"
-              />
-              {{ (item as { value: CardColorType }).value }}
-            </span>
-          </template>
-        </UCheckbox>
-      </div>
-    </div>
-  </div>
+  <ColorFilterControls
+    :model-value="modelValue"
+    @update:model-value="emit('update:modelValue', $event)"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import ManaColorIcon from '~/components/general/ManaColorIcon.vue';
-import { CardColor, type CardColorType } from '~/models/cardModel';
 import { cardColorToSymbol } from '~/utils/cardHelpers';
-import type { CheckboxGroupItem } from '@nuxt/ui';
 import type { CardSearchFilters } from '~/models/frontend-specific/filtersModel';
 import { getColorIdentityName } from '~/utils/colorPairings';
 
 const { modelValue } = defineProps<{ modelValue?: CardSearchFilters }>();
 const emit = defineEmits(['update:modelValue']);
 
-// Map card colors to CheckboxGroup items
-const cardColors = CardColor.options.map((color) => ({
-  label: color,
-  value: color,
-})) as CheckboxGroupItem[];
-
-// Handle color checkbox toggles
-function onToggle(val: CardColorType, checked: boolean) {
-  const next = new Set(selectedColors.value);
-  if (checked) next.add(val);
-  else next.delete(val);
-  // Triggers setter (and the Colorless validation)
-  selectedColors.value = Array.from(next);
-}
-
-// Selected colors with Colorless validation
-const selectedColors = computed({
-  get: () => modelValue?.selectedColors || [],
-  set: (value) => {
-    const colorOption = modelValue?.selectedColorFilterOption;
-
-    // Only apply validation for these specific filter options
-    if (
-      colorOption === 'Match Exactly' ||
-      colorOption === 'Contains At Least'
-    ) {
-      const hasColorless = value.includes('Colorless');
-      const hasOtherColors = value.some((color) => color !== 'Colorless');
-
-      // If we have both colorless and other colors, decide which to keep
-      if (hasColorless && hasOtherColors) {
-        // Get the previous selection
-        const previousSelection = modelValue?.selectedColors || [];
-
-        // Determine what changed by comparing previous and current selection
-        if (!previousSelection.includes('Colorless')) {
-          // Colorless was just added, remove all other colors
-          value = ['Colorless'];
-        } else {
-          // Another color was added, remove Colorless
-          value = value.filter((color) => color !== 'Colorless');
-        }
-      }
-    }
-
-    updateFilters({ selectedColors: value });
-  },
-});
-
 function clearColors() {
   const newValue = { ...(modelValue ?? {}), selectedColors: undefined };
   emit('update:modelValue', newValue);
 }
-
-function updateFilters(updates: Partial<CardSearchFilters>) {
-  const current = modelValue || ({} as CardSearchFilters);
-  const newValue = { ...current, ...updates };
-  emit('update:modelValue', newValue);
-}
 </script>
-
-<style scoped>
-.accordion-item {
-  margin-bottom: 8px;
-}
-
-.color-checkboxes {
-  margin-top: 8px;
-  width: 100%;
-}
-</style>

@@ -99,7 +99,8 @@ const queryParam = computed(() => String(route.query.query || ''));
 
 const parsedFilters = computed(() => {
   const base: Record<string, any> = {
-    selectedColorFilterOption: 'Color Identity' as 'Color Identity',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
@@ -131,8 +132,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     ) {
       delete requestFilters.selectedColors;
       delete requestFilters.selectedColorFilterOption;
-    } else {
-      requestFilters.selectedColorFilterOption = 'Color Identity';
+      delete requestFilters.selectedColorField;
     }
 
     Object.keys(requestFilters).forEach((key) => {

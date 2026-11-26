@@ -125,7 +125,7 @@ function act(action: CardAction) {
         class="grid min-w-0 gap-x-5 gap-y-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]"
       >
         <div class="min-w-0">
-          <div class="mb-2 flex justify-center">
+          <div class="mb-2 flex justify-start">
             <CardDetailsPrintingSelect :card="card.card_data" />
           </div>
           <div

@@ -3,7 +3,9 @@ const { size, setSize } = useCardSize();
 </script>
 
 <template>
-  <label class="flex min-w-0 flex-wrap items-center gap-2 text-sm">
+  <label
+    class="display-control-row flex min-w-0 flex-wrap items-center gap-2 text-sm"
+  >
     <span class="shrink-0">Card size</span>
     <USelect
       :model-value="size"

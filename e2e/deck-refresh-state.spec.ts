@@ -234,7 +234,7 @@ test('deck edits appear before the server replies and failed saves restore the c
       .click();
     await page
       .getByRole('dialog')
-      .getByRole('button', { name: 'Move To', exact: true })
+      .getByRole('button', { name: 'Move', exact: true })
       .click();
     await page
       .getByRole('menuitem', { name: 'Move to ' + destination, exact: true })

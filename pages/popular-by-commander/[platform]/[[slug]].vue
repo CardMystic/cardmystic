@@ -54,6 +54,7 @@
       />
       <div v-else class="mb-10 w-full">
         <SearchResults
+          action-footer
           :reranking-enabled="route.query.useRerank !== 'false'"
           :is-loading="isLoading"
           :is-fetching="isFetching"
@@ -70,11 +71,6 @@
       </div>
     </div>
   </UContainer>
-  <IssuesFab
-    v-if="searchResults && searchResults.length"
-    :onClick="handleFabClick"
-  />
-  <BackToTop />
 </template>
 
 <script setup lang="ts">
@@ -82,7 +78,6 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { PopularByCommanderRequestSchema } from '~/models/deckStatsModel';
-import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePopularByCommander } from '~/composables/useDeckStats';
 import { useCardsByName } from '~/composables/useCards';
 import { isValidPlatform, type Platform } from '~/utils/platformConfig';
@@ -184,7 +179,7 @@ definePageMeta({
   breadcrumbsInPage: true,
 });
 
-const limitParam = computed(() => 100);
+const limitParam = computed(() => 200);
 
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -198,7 +193,7 @@ provideSearchPageDefaults(
   seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
 );
 
-const { setPageInfo, getPageInfo } = usePageInfo();
+const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
   page_name: 'Popular Cards by Commander',
@@ -206,10 +201,6 @@ setPageInfo({
   filters: parsedFilters.value,
   labels: ['popular-by-commander'],
 });
-
-function handleFabClick() {
-  window.open(searchFeedbackUrl(getPageInfo()), '_blank');
-}
 
 const searchParams = computed(() => {
   if (!commanderParam.value) return undefined;

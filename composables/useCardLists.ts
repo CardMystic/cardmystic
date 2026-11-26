@@ -44,7 +44,15 @@ export function useMyDecklists(
   const { userProfile } = useUserProfile();
   const config = useRuntimeConfig();
 
-  const { data, isLoading, isFetching, error, refetch } = useQuery({
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isSuccess,
+    isPlaceholderData,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: computed(
       () =>
         [
@@ -96,6 +104,9 @@ export function useMyDecklists(
     decklists: computed(() => data.value?.decklists ?? []),
     totalCount: computed(() => data.value?.totalCount ?? 0),
     totalPages: computed(() => data.value?.totalPages ?? 1),
+    resolvedPage: computed(() => data.value?.page),
+    isSuccess,
+    isPlaceholderData,
     isLoading,
     isFetching,
     error,

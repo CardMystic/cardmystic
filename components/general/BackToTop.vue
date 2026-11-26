@@ -1,5 +1,15 @@
 <template>
-  <Teleport v-if="showButton" to="#back-to-top-anchor">
+  <UButton
+    v-if="inline"
+    icon="i-heroicons-arrow-up"
+    aria-label="Back to top"
+    title="Back to top"
+    color="neutral"
+    variant="ghost"
+    class="min-h-11 min-w-11 shrink-0 justify-center cursor-pointer"
+    @click="scrollToTop"
+  />
+  <Teleport v-else-if="showButton" to="#back-to-top-anchor">
     <button
       type="button"
       class="back-to-top cursor-pointer border border-default bg-default text-default shadow-md hover:bg-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -16,6 +26,9 @@
 </template>
 
 <script setup lang="ts">
+const props = withDefaults(defineProps<{ inline?: boolean }>(), {
+  inline: false,
+});
 const showButton = ref(false);
 const scrollThreshold = 300;
 let _rafPending = false;
@@ -38,7 +51,7 @@ function scrollToTop() {
 }
 
 onMounted(() => {
-  if (process.client) {
+  if (process.client && !props.inline) {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
   }

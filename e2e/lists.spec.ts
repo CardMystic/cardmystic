@@ -563,9 +563,7 @@ test.describe('Card lists CRUD', () => {
         resp.request().method() === 'PUT',
       { timeout: API_TIMEOUT },
     );
-    await cardDialog
-      .getByRole('button', { name: 'Move To', exact: true })
-      .click();
+    await cardDialog.getByRole('button', { name: 'Move', exact: true }).click();
     await page
       .getByRole('menuitem', { name: 'Move to Sideboard', exact: true })
       .click();

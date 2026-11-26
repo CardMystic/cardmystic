@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/vue-query';
 const props = defineProps<{ listId: string; collection?: boolean }>();
 const api = useLibraryApi();
+const cardEditToast = useCardEditToast();
 const client = useQueryClient();
 type Version = {
   id: number;
@@ -101,6 +102,9 @@ async function restore() {
   busy.value = true;
   error.value = '';
   message.value = '';
+  cardEditToast.notifyEdit(
+    props.collection ? 'Collection Restored' : 'Deck Restored',
+  );
   try {
     await api.request(`/lists/${props.listId}/history/restore`, 'POST', {
       revision: selected.value.id,

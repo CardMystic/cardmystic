@@ -86,17 +86,19 @@ test('guest sees pricing and Normal search with a sign-in link without hydration
   }
   await expect(features).not.toContainText('Unlimited');
   const rows = features.locator('tbody tr');
-  const firstProRow = (await rows.allTextContents()).findIndex((text) =>
-    text.includes('Not included'),
+  const firstSharedRow = (await rows.allTextContents()).findIndex(
+    (text) => !text.includes('Not included'),
   );
-  expect(firstProRow).toBeGreaterThan(1);
-  for (let index = firstProRow; index < (await rows.count()); index++) {
+  expect(firstSharedRow).toBe(4);
+  for (let index = 0; index < firstSharedRow; index++) {
     await expect(rows.nth(index).getByRole('cell').first()).toHaveText(
       'Not included',
     );
     await expect(rows.nth(index).locator('.text-red-500')).toHaveCount(1);
     await expect(rows.nth(index).locator('.text-green-500')).toHaveCount(1);
   }
+  for (let index = firstSharedRow; index < (await rows.count()); index++)
+    await expect(rows.nth(index)).not.toContainText('Not included');
   await expect(page.locator('.membership-plan')).not.toContainText(
     '30% cheaper',
   );

@@ -53,7 +53,7 @@ export const PopularByCommanderRequestSchema = z.object({
     .min(1)
     .max(2)
     .describe('1 or 2 commander names (case-insensitive)'),
-  limit: z.number().int().min(1).max(100).default(100),
+  limit: z.number().int().min(1).max(200).default(200),
   useRerank: z.boolean().optional().default(true),
   query: z
     .string()

@@ -22,6 +22,7 @@
         <div class="flex gap-2 items-start">
           <UInput
             v-model="state.description"
+            aria-label="Search query"
             placeholder="Describe the cards you're looking for (i.e. artifact removal). Leave blank for general recommendations."
             icon="i-lucide-search"
             class="flex-1 min-w-0"
@@ -69,7 +70,7 @@
           <UInputMenu
             v-else
             :model-value="selectedDeckOption?.value"
-            @update:model-value="selectedDeckId = $event || ''"
+            @update:model-value="selectSavedDeck($event || '')"
             v-model:search-term="deckSearchTerm"
             :items="deckOptions"
             open-on-focus
@@ -91,6 +92,7 @@
           <div class="flex gap-2 items-center">
             <UInputMenu
               v-model="state.commander"
+              @update:model-value="touchSource"
               v-model:search-term="commanderSearchTerm"
               :items="filteredCommanders"
               ignore-filter
@@ -111,6 +113,7 @@
               @click="
                 () => {
                   state.commander = '';
+                  touchSource();
                 }
               "
             />
@@ -122,7 +125,7 @@
           type="button"
           variant="link"
           class="h-10 shrink-0 px-1"
-          @click="sourceMode = sourceMode === 'select' ? 'paste' : 'select'"
+          @click="toggleSource"
         >
           {{ sourceMode === 'select' ? 'Manual Entry' : 'Select a Decklist' }}
         </UButton>
@@ -133,6 +136,7 @@
           <div class="flex gap-2 items-center">
             <UInputMenu
               v-model="state.partnerCommander"
+              @update:model-value="touchSource"
               v-model:search-term="partnerSearchTerm"
               :items="filteredPartners"
               ignore-filter
@@ -151,6 +155,7 @@
               @click="
                 () => {
                   state.partnerCommander = '';
+                  touchSource();
                 }
               "
             />
@@ -161,6 +166,7 @@
           <div class="relative">
             <UTextarea
               v-model="state.decklist"
+              @update:model-value="touchSource"
               placeholder="Paste your decklist here (one card per line)..."
               :rows="6"
               class="w-full"
@@ -186,6 +192,7 @@
       <SearchFilterDrawer
         ref="filtersRef"
         v-model="state.filters"
+        apply-label="Recommend"
         hide-formats
         :quick-filters="['arena', 'mtgo', 'paper']"
         :can-apply="
@@ -200,6 +207,7 @@
 </template>
 
 <script lang="ts" setup>
+import { colorFilterSettings } from '~/utils/colorFilters';
 import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import * as z from 'zod';
 import { useMounted } from '@vueuse/core';
@@ -222,9 +230,15 @@ import {
 } from '~/composables/useCardLists';
 import { useCardsByOracleIds } from '~/composables/useCards';
 import type { ScryfallCard } from '~/models/cardModel';
+import type { AlsRecommendRequest } from '~/composables/useAlsRecommend';
 
 const props = defineProps<{
   platform?: 'arena' | 'mtgo' | 'paper';
+  embeddedCommander?: string;
+}>();
+const emit = defineEmits<{
+  recommend: [request: AlsRecommendRequest];
+  initializing: [value: boolean];
 }>();
 
 const deckbuilderStore = useDeckbuilder();
@@ -281,7 +295,12 @@ const numCardsInDecklist: Ref<number> = computed(() => {
 const decklistParam = computed(() => String(route.query.decklist || ''));
 const descriptionParam = computed(() => String(route.query.description || ''));
 const commanderParam = computed(() =>
-  String(pageDefaults?.query ?? route.query.commander ?? ''),
+  String(
+    props.embeddedCommander ??
+      pageDefaults?.query ??
+      route.query.commander ??
+      '',
+  ),
 );
 const partnerCommanderParam = computed(() =>
   String(route.query.partnerCommander || ''),
@@ -289,7 +308,8 @@ const partnerCommanderParam = computed(() =>
 
 const parsedFilters = computed(() => {
   const base: Record<string, unknown> = {
-    selectedColorFilterOption: 'Color Identity',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
@@ -298,6 +318,7 @@ const parsedFilters = computed(() => {
     return CardSearchFiltersSchema.parse({
       ...base,
       ...pageDefaults.filters.value,
+      ...colorFilterSettings(pageDefaults.filters.value),
     });
   }
   if (route.query.filters) {
@@ -314,7 +335,8 @@ const state = reactive<Partial<Schema>>({
   partnerCommander: partnerCommanderParam.value || '',
   decklist: decklistParam.value || '',
   filters: parsedFilters.value || {
-    selectedColorFilterOption: 'Color Identity',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   },
 });
 
@@ -324,10 +346,37 @@ const userId = computed(() =>
   mounted.value ? userProfile.value?.id : undefined,
 );
 const sourceMode = ref<'select' | 'paste'>(
-  route.query.deckId ? 'select' : 'paste',
+  !props.embeddedCommander && route.query.deckId ? 'select' : 'paste',
 );
 const { selectedDeckId } = deckbuilderStore;
-selectedDeckId.value = String(route.query.deckId || '');
+selectedDeckId.value = props.embeddedCommander
+  ? ''
+  : String(route.query.deckId || '');
+const latestCommanderDeck = useLatestCommanderDeck(
+  () => props.embeddedCommander,
+);
+if (props.embeddedCommander)
+  deckbuilderStore.decklist.value = state.decklist || '';
+const sourceTouched = ref(false);
+const autoSearchPending = ref(!!props.embeddedCommander);
+let defaultApplied = false;
+function touchSource() {
+  sourceTouched.value = true;
+  autoSearchPending.value = false;
+}
+function selectSavedDeck(id: string) {
+  touchSource();
+  selectedDeckId.value = id;
+}
+function toggleSource() {
+  touchSource();
+  sourceMode.value = sourceMode.value === 'select' ? 'paste' : 'select';
+  if (props.embeddedCommander && sourceMode.value === 'paste') {
+    state.commander = props.embeddedCommander;
+    state.partnerCommander = '';
+    state.decklist = '';
+  }
+}
 const deckSearchTerm = ref('');
 const { decklists: savedDecks, isLoading: decksLoading } = useMyDecklistsSearch(
   refDebounced(deckSearchTerm, 250),
@@ -367,6 +416,11 @@ const deckLoadError = computed(
     itemsError.value ||
     cardsError.value ||
     (activeDeckId.value && !deckLoading.value && !ownedDeck.value),
+);
+watch(
+  () => autoSearchPending.value && !deckLoadError.value,
+  (pending) => emit('initializing', pending),
+  { immediate: true },
 );
 const deckOptions = computed(() => {
   const decks = [...savedDecks.value];
@@ -430,6 +484,19 @@ watch(sourceMode, (mode) => {
 });
 watch(userId, (id, previous) => {
   if (id === previous) return;
+  if (props.embeddedCommander) {
+    // A late initial session response must not discard an edited manual source.
+    if (!previous && id && sourceTouched.value) return;
+    defaultApplied = false;
+    sourceTouched.value = false;
+    autoSearchPending.value = true;
+    selectedDeckId.value = '';
+    sourceMode.value = 'paste';
+    state.commander = props.embeddedCommander;
+    state.partnerCommander = '';
+    state.decklist = '';
+    return;
+  }
   if (id && route.query.deckId) {
     selectedDeckId.value = String(route.query.deckId);
     sourceMode.value = 'select';
@@ -444,6 +511,7 @@ watch(userId, (id, previous) => {
 watch(
   () => route.query.deckId,
   (id) => {
+    if (props.embeddedCommander) return;
     selectedDeckId.value = String(id || '');
     sourceMode.value = id ? 'select' : 'paste';
   },
@@ -541,8 +609,44 @@ const honeypot = ref('');
 
 const toast = useToast();
 const { saveSearchMutation } = useSearchHistory();
+watch(
+  [
+    latestCommanderDeck.pending,
+    latestCommanderDeck.deck,
+    deckbuilderStore.savedDeckReady,
+    mounted,
+    deckLoadError,
+  ],
+  () => {
+    if (
+      !props.embeddedCommander ||
+      !mounted.value ||
+      latestCommanderDeck.pending.value
+    )
+      return;
+    if (!defaultApplied && !sourceTouched.value) {
+      defaultApplied = true;
+      if (latestCommanderDeck.deck.value) {
+        selectedDeckId.value = latestCommanderDeck.deck.value.id;
+        sourceMode.value = 'select';
+        return;
+      }
+    }
+    if (
+      !autoSearchPending.value ||
+      deckLoadError.value ||
+      (sourceMode.value === 'select' && !deckbuilderStore.savedDeckReady.value)
+    )
+      return;
+    autoSearchPending.value = false;
+    const parsed = schema.safeParse(state);
+    if (parsed.success)
+      void onSubmit({ data: parsed.data } as FormSubmitEvent<Schema>, true);
+  },
+  { flush: 'post' },
+);
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+async function onSubmit(event: FormSubmitEvent<Schema>, automatic = false) {
   // Bot detection: if honeypot field is filled, reject the submission
   if (honeypot.value) {
     toast.add({
@@ -565,6 +669,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     ) {
       delete requestFilters.selectedColors;
       delete requestFilters.selectedColorFilterOption;
+      delete requestFilters.selectedColorField;
     }
 
     // Remove undefined/null/empty values from filters
@@ -579,6 +684,22 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       }
     });
 
+    if (props.embeddedCommander) {
+      if (!automatic) touchSource();
+      emit('recommend', {
+        cards: parseDecklist(event.data.decklist || ''),
+        commanders: [event.data.commander, event.data.partnerCommander].filter(
+          (value): value is string => !!value,
+        ),
+        limit: 200,
+        query: event.data.description?.trim() || undefined,
+        filters: requestFilters,
+        useRerank: route.query.useRerank !== 'false',
+      });
+      filtersRef.value?.collapse();
+      return;
+    }
+
     const query: Record<string, string | number | undefined> = {
       useRerank: String(route.query.useRerank !== 'false'),
       deckId: sourceMode.value === 'select' ? selectedDeckId.value : undefined,
@@ -586,7 +707,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       description: event.data.description || undefined,
       commander: event.data.commander || undefined,
       partnerCommander: event.data.partnerCommander || undefined,
-      limit: 100,
+      limit: 200,
       filters:
         requestFilters && Object.keys(requestFilters).length > 0
           ? JSON.stringify(requestFilters)
@@ -602,7 +723,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         commander: event.data.commander || undefined,
         partnerCommander: event.data.partnerCommander || undefined,
         decklist: event.data.decklist || undefined,
-        limit: 100,
+        limit: 200,
       },
     });
 

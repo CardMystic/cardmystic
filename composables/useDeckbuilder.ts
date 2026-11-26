@@ -1,6 +1,22 @@
 import { parseDecklist } from '~/utils/decklist';
+import { hasInjectionContext, inject, provide, type InjectionKey } from 'vue';
+
+const deckbuilderKey: InjectionKey<ReturnType<typeof createDeckbuilder>> =
+  Symbol('deckbuilder');
 
 export const useDeckbuilder = () => {
+  const shared = hasInjectionContext() ? inject(deckbuilderKey, null) : null;
+  return shared ?? createDeckbuilder();
+};
+
+// Share the parsed deck and query/mutation observers across all result cards.
+export const provideDeckbuilder = () => {
+  const deckbuilder = useDeckbuilder();
+  provide(deckbuilderKey, deckbuilder);
+  return deckbuilder;
+};
+
+const createDeckbuilder = () => {
   const decklist = useState<string>('deckbuilder-decklist', () => '');
   const showSaveAllModal = useState<boolean>(
     'deckbuilder-showSaveAllModal',

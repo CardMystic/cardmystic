@@ -429,6 +429,7 @@ let saveQueue = Promise.resolve();
 const comparing = ref(false);
 const needsRefresh = ref(false);
 const toast = useToast();
+const cardEditToast = useCardEditToast();
 const config = useRuntimeConfig();
 const queryClient = useQueryClient();
 const {
@@ -831,21 +832,12 @@ async function apply(action: Action, entries: Entry[]) {
     else nextCards.set(card.oracleId, card);
   }
   pendingCards.value = [...nextCards.values()];
-  const target =
-    entries.length === 1 ? entries[0].name : entries.length + ' cards';
-  const notification = toast.add({
-    title:
-      (action === 'missing'
-        ? 'Adding '
-        : action === 'extra'
-          ? 'Removing '
-          : 'Updating ') +
-      target +
-      '…',
-    description: 'Saving changes to ' + board.value + '.',
-    color: 'info',
-    duration: 0,
-  });
+  if (action === 'count') cardEditToast.notifyEdit('Copies Updated');
+  else
+    cardEditToast.notify(
+      action === 'missing' ? 'added' : 'removed',
+      entries.length,
+    );
 
   // Accept clicks immediately, but serialize writes to avoid lost updates.
   const previousSave = saveQueue;
@@ -918,18 +910,12 @@ async function apply(action: Action, entries: Entry[]) {
       busy.value = queuedSaves > 0;
       if (!busy.value) pendingCards.value = null;
       if (actionError) error.value = actionError;
-      toast.update(notification.id, {
-        title: actionError
-          ? 'Review deck changes'
-          : (action === 'missing'
-              ? 'Added '
-              : action === 'extra'
-                ? 'Removed '
-                : 'Updated ') + target,
-        description: actionError || 'Saved to ' + board.value + '.',
-        color: actionError ? 'error' : 'success',
-        duration: 5000,
-      });
+      if (actionError)
+        toast.add({
+          title: 'Review deck changes',
+          description: actionError,
+          color: 'error',
+        });
       release();
     }
   }

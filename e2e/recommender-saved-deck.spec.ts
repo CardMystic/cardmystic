@@ -18,8 +18,9 @@ test.beforeEach(async ({ page }) => {
 test('saved deck recommendations add cards without searching until rerun', async ({
   page,
 }) => {
-  const state = await setupDeckDisplay(page, { extraCards: 1 });
-  const added = state.catalog.at(-1)!;
+  const state = await setupDeckDisplay(page, { extraCards: 2 });
+  const added = state.catalog.at(-2)!;
+  const remaining = state.catalog.at(-1)!;
   const searches: { cards: string[] }[] = [];
   const writes: { listId: string; cardNames: string[] }[] = [];
   let releaseSave!: () => void;
@@ -30,7 +31,11 @@ test('saved deck recommendations add cards without searching until rerun', async
     searches.push(route.request().postDataJSON());
     return route.fulfill({
       json: {
-        results: [{ card_data: added, card_name: added.name, score: 1 }],
+        results: [added, remaining].map((card) => ({
+          card_data: card,
+          card_name: card.name,
+          score: 1,
+        })),
         not_found: [],
       },
     });
@@ -44,10 +49,13 @@ test('saved deck recommendations add cards without searching until rerun', async
         await saveGate;
         return route.fulfill({ status: 500, json: { message: 'Save failed' } });
       }
+      const savedCard = state.catalog.find((card) =>
+        body.cardNames.includes(card.name),
+      )!;
       state.items.push({
-        id: added.oracle_id,
+        id: savedCard.oracle_id,
         list_id: displayDeckId,
-        oracle_id: added.oracle_id,
+        oracle_id: savedCard.oracle_id,
         num_copies: 1,
         board: 'Mainboard',
         is_commander: false,
@@ -66,7 +74,9 @@ test('saved deck recommendations add cards without searching until rerun', async
   await expect(page.getByPlaceholder(/Paste your decklist/)).toHaveCount(0);
   await expect.poll(() => searches.length).toBe(1);
   await page
+    .locator('.card-root')
     .getByRole('button', { name: `Options for ${added.name}`, exact: true })
+    .first()
     .click();
   const cardOptions = page.getByRole('dialog', {
     name: added.name,
@@ -84,7 +94,7 @@ test('saved deck recommendations add cards without searching until rerun', async
   });
   await expect(add).toBeEnabled();
   await add.click();
-  const result = page.getByRole('button', {
+  const result = page.locator('.card-root').getByRole('button', {
     name: `Options for ${added.name}`,
     exact: true,
   });
@@ -98,8 +108,8 @@ test('saved deck recommendations add cards without searching until rerun', async
   await expect(
     page.getByText('Could not add card to deck', { exact: true }),
   ).toBeVisible();
-  await expect(result).toBeVisible();
-  await result.click();
+  await expect(result.first()).toBeVisible();
+  await result.first().click();
   await add.click();
   await expect.poll(() => writes.length).toBe(2);
   await expect(result).toHaveCount(0);
@@ -112,16 +122,47 @@ test('saved deck recommendations add cards without searching until rerun', async
     exact: true,
   });
   await expect(rerun).toBeEnabled();
+  await page.setViewportSize({ width: 390, height: 900 });
+  const actions = page.getByRole('navigation', {
+    name: 'Search results actions',
+    exact: true,
+  });
+  await expect(actions).toBeVisible();
+  await expect
+    .poll(async () => {
+      const bar = (await actions.boundingBox())!;
+      const button = (await rerun.boundingBox())!;
+      return bar.y - button.y - button.height;
+    })
+    .toBeGreaterThanOrEqual(0);
+  await expect(
+    page.getByText('All recommendations added', { exact: true }),
+  ).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/mobile-recommender-rerun.png' });
+  await page
+    .locator('.card-root')
+    .getByRole('button', { name: `Options for ${remaining.name}`, exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole('dialog', { name: remaining.name, exact: true })
+    .getByRole('button', { name: 'Add to deck', exact: true })
+    .click();
+  await expect.poll(() => writes.length).toBe(3);
+  expect(writes[2]).toMatchObject({
+    listId: displayDeckId,
+    cardNames: [remaining.name],
+  });
   await expect(
     page.getByText('All recommendations added', { exact: true }),
   ).toBeVisible();
+  await expect(rerun).toBeEnabled();
   await expect(rerun).toHaveCSS('position', 'fixed');
-  await page.setViewportSize({ width: 390, height: 900 });
-  await page.screenshot({ path: 'test-results/mobile-recommender-rerun.png' });
   expect(searches).toHaveLength(1);
   await rerun.click();
   await expect.poll(() => searches.length).toBe(2);
   expect(searches[1].cards).toContain(added.name);
+  expect(searches[1].cards).toContain(remaining.name);
   await expect(rerun).toHaveCount(0);
   await page.getByRole('button', { name: 'Manual Entry', exact: true }).click();
   await expect(page.getByPlaceholder(/Paste your decklist/)).toBeVisible();

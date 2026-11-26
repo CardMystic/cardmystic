@@ -17,8 +17,10 @@ const tabLabels: Record<string, string> = {
   Commanders: 'Popular Commanders As 99',
 };
 type Request = {
+  cards?: string[];
   card_name?: string;
   commanders?: string[];
+  limit?: number;
   query?: string;
   useRerank?: boolean;
   filters?: { isArena?: boolean };
@@ -34,9 +36,33 @@ async function setup(page: Page) {
       }),
     ),
   );
-  await setupDeckDisplay(page, { cardCount: 4 });
+  const state = await setupDeckDisplay(page, { cardCount: 4 });
+  await page.route(BACKEND + '/supabase/card-lists?**', (route) =>
+    route.fulfill({
+      json: {
+        decklists: [],
+        totalCount: 0,
+        totalPages: 1,
+        page: 1,
+        pageSize: 50,
+      },
+    }),
+  );
   await page.route(`${BACKEND}/bulkdata/commanders.min.json`, (route) =>
     route.fulfill({ json: [cards[0].name] }),
+  );
+  await page.route(`${BACKEND}/bulkdata/partner-commanders`, (route) =>
+    route.fulfill({
+      json: {
+        partner: [],
+        partnerWith: {},
+        friendsForever: [],
+        chooseABackground: [],
+        background: [],
+        doctorsCompanion: [],
+        timeLordDoctor: [],
+      },
+    }),
   );
   await page.route(`${BACKEND}/cards/with-llm/**`, (route) =>
     route.fulfill({
@@ -86,7 +112,7 @@ async function setup(page: Page) {
   }
   // A fresh app instance avoids carrying the deck fixture's cached commander list.
   await gotoHydrated(page, '/about');
-  return requests;
+  return { requests, state };
 }
 async function navigate(page: Page, card = cards[0]) {
   await page.evaluate((path) => {
@@ -249,13 +275,15 @@ test('Your Tags appears below the card summary and expands only tags assigned to
   await expect(section.getByText(/^Personal tag /)).toHaveCount(0);
   await section.getByRole('button', { name: 'Edit tags' }).click();
   const editor = page.getByRole('dialog', { name: 'Edit tags', exact: true });
-  await expect(editor.getByRole('button', { name: 'Select tags' })).toBeVisible();
+  await expect(
+    editor.getByRole('button', { name: 'Select tags' }),
+  ).toBeVisible();
 });
 
 test('all card-detail searches apply independent filters on submit and retain controls for empty results', async ({
   page,
 }) => {
-  const requests = await setup(page);
+  const { requests } = await setup(page);
   await navigate(page);
   const summary = page.locator('.summary-card');
   await expect(
@@ -296,9 +324,26 @@ test('all card-detail searches apply independent filters on submit and retain co
     await expect.poll(() => requests[endpoint].length).toBeGreaterThan(0);
     expect(requests[endpoint].at(-1)?.filters?.isArena).not.toBe(true);
     const form = section.locator('form');
-    const selectedCard = form.getByRole('textbox', { name: 'Selected card' });
+    const selectedCard =
+      tab === 'Recommender'
+        ? form.getByRole('combobox', {
+            name: 'Select a commander (optional)',
+            exact: true,
+          })
+        : form.getByRole('textbox', { name: 'Selected card' });
     await expect(selectedCard).toHaveValue(cards[0].name);
-    await expect(selectedCard).toHaveAttribute('readonly', '');
+    if (tab === 'Recommender') {
+      await expect(selectedCard).toBeEditable();
+      await expect(
+        form.getByRole('button', { name: 'Select a Decklist', exact: true }),
+      ).toBeVisible();
+      await expect(form.getByPlaceholder(/Paste your decklist/)).toHaveValue(
+        '',
+      );
+      expect(requests[endpoint].at(-1)?.limit).toBe(200);
+    } else {
+      await expect(selectedCard).toHaveAttribute('readonly', '');
+    }
     const query = form.getByRole('textbox', { name: 'Search query' });
     const action = tab === 'Recommender' ? 'Recommend' : 'Search';
     await expect(
@@ -307,9 +352,15 @@ test('all card-detail searches apply independent filters on submit and retain co
     if (tab !== 'Similar') {
       const selectedBounds = await selectedCard.boundingBox();
       const queryBounds = await query.boundingBox();
-      expect(queryBounds!.y).toBeGreaterThanOrEqual(
-        selectedBounds!.y + selectedBounds!.height,
-      );
+      if (tab === 'Recommender') {
+        expect(selectedBounds!.y).toBeGreaterThanOrEqual(
+          queryBounds!.y + queryBounds!.height,
+        );
+      } else {
+        expect(queryBounds!.y).toBeGreaterThanOrEqual(
+          selectedBounds!.y + selectedBounds!.height,
+        );
+      }
       await query.fill('  ramp  ');
     }
     const before = requests[endpoint].length;
@@ -367,7 +418,10 @@ test('all card-detail searches apply independent filters on submit and retain co
     .click();
   await drawer.getByRole('button', { name: 'Recommend', exact: true }).click();
   await expect(drawer).toHaveCount(0);
-  await expect(section.locator('.card-root')).toHaveCount(1);
+  await expect(
+    section.getByRole('button', { name: 'Top Results', exact: true }),
+  ).toBeVisible();
+  await expect(section.locator('.card-root')).toHaveCount(2);
   await expect(
     section.getByRole('button', { name: 'Filters', exact: true }),
   ).toBeVisible();
@@ -382,11 +436,217 @@ test('all card-detail searches apply independent filters on submit and retain co
   });
 });
 
+test('card recommendations use the newest matching owned deck without delaying details, and support manual entry', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (
+      /hydrat|TypeError|ReferenceError/i.test(message.text()) &&
+      ['warning', 'error'].includes(message.type())
+    )
+      errors.push(message.text());
+  });
+  const { state } = await setup(page);
+  const deck = {
+    ...state.deck,
+    name: 'Recent Tamiyo deck',
+    commanders: [cards[0].name],
+    format: 'Commander',
+    updated_at: '2026-11-21T18:00:00Z',
+  };
+  state.items[0].is_commander = true;
+  // A newer unrelated deck must be skipped, and the older matching deck must
+  // not replace the first match from the server's newest-first page.
+  const decklists = [
+    {
+      ...deck,
+      id: '41000000-0000-4000-8000-000000000002',
+      name: 'Other commander',
+      commanders: [cards[1].name],
+      updated_at: '2026-11-22T18:00:00Z',
+    },
+    deck,
+    {
+      ...deck,
+      id: '41000000-0000-4000-8000-000000000003',
+      name: 'Older Tamiyo deck',
+      updated_at: '2026-11-20T18:00:00Z',
+    },
+  ];
+  const listQueries: URLSearchParams[] = [];
+  await page.route(BACKEND + '/supabase/card-lists?**', (route) => {
+    listQueries.push(new URL(route.request().url()).searchParams);
+    return route.fulfill({
+      json: {
+        decklists,
+        totalCount: decklists.length,
+        totalPages: 1,
+        page: 1,
+        pageSize: 50,
+      },
+    });
+  });
+  await page.route(BACKEND + '/supabase/card-lists/mine/' + deck.id, (route) =>
+    route.fulfill({ json: { decklist: deck } }),
+  );
+  const searches: Request[] = [];
+  let releaseSearch!: () => void;
+  const searchGate = new Promise<void>((resolve) => {
+    releaseSearch = resolve;
+  });
+  await page.route(BACKEND + endpoints.Recommender, async (route) => {
+    searches.push(route.request().postDataJSON());
+    await searchGate;
+    return route.fulfill({ json: { results: [], not_found: [] } });
+  });
+  const section = page.locator('.card-results');
+  const form = section.locator('form');
+  try {
+    await navigate(page);
+    await expect.poll(() => searches.length).toBe(1);
+    await expect(page.locator('.card-detail-art .card-image')).toBeVisible();
+    await expect(
+      page.locator('.card-detail-info .card-details-card'),
+    ).toBeVisible();
+    await expect(page.locator('.summary-card')).toContainText(
+      'A card for this strategy.',
+    );
+    await expect(
+      form.getByRole('combobox', { name: 'Select a decklist', exact: true }),
+    ).toHaveValue(deck.name);
+    expect(listQueries.at(-1)?.get('kind')).toBe('deck');
+    expect(listQueries.at(-1)?.get('sort')).toBe('updated_at');
+    expect(listQueries.at(-1)?.get('direction')).toBe('desc');
+    expect(searches[0]).toMatchObject({
+      commanders: [cards[0].name],
+      cards: cards.map((card) => card.name),
+      limit: 200,
+    });
+    await expect(
+      section.getByRole('link', { name: 'Go to deck', exact: true }),
+    ).toHaveAttribute('href', '/lists/' + deck.id);
+  } finally {
+    releaseSearch();
+  }
+  await expect(
+    section.getByText('No matching recommendations', { exact: true }),
+  ).toBeVisible();
+  const cardUrl = page.url();
+  await form.getByRole('button', { name: 'Manual Entry', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  expect(errors).toEqual([]);
+  await expect(
+    form.getByRole('combobox', {
+      name: 'Select a commander (optional)',
+      exact: true,
+    }),
+  ).toHaveValue(cards[0].name);
+  await expect(form.getByPlaceholder(/Paste your decklist/)).toHaveValue('');
+  await form.getByRole('textbox', { name: 'Search query' }).fill('draw cards');
+  await form.getByRole('button', { name: 'Recommend', exact: true }).click();
+  await expect.poll(() => searches.length).toBe(2);
+  expect(searches[1]).toMatchObject({
+    cards: [],
+    commanders: [cards[0].name],
+    query: 'draw cards',
+    limit: 200,
+  });
+  expect(page.url()).toBe(cardUrl);
+  await expect(
+    form.getByRole('button', { name: 'Select a Decklist', exact: true }),
+  ).toBeVisible();
+  await form
+    .getByRole('combobox', { name: 'Search mode', exact: true })
+    .click();
+  await page.getByRole('option', { name: 'Normal', exact: true }).click();
+  await expect.poll(() => searches.length).toBe(3);
+  expect(searches[2]).toMatchObject({
+    cards: [],
+    commanders: [cards[0].name],
+    query: 'draw cards',
+    limit: 200,
+    useRerank: false,
+  });
+  expect(new URL(page.url()).pathname).toBe(new URL(cardUrl).pathname);
+  expect(errors).toEqual([]);
+});
+
+test('late matching deck lookup preserves a manual card recommendation search', async ({
+  page,
+}) => {
+  const { requests, state } = await setup(page);
+  const deck = {
+    ...state.deck,
+    commanders: [cards[0].name],
+    updated_at: '2026-11-21T18:00:00Z',
+  };
+  let releaseDecks!: () => void;
+  const decksGate = new Promise<void>((resolve) => {
+    releaseDecks = resolve;
+  });
+  let listReads = 0;
+  await page.route(BACKEND + '/supabase/card-lists?**', async (route) => {
+    listReads++;
+    await decksGate;
+    return route.fulfill({
+      json: {
+        decklists: [deck],
+        totalCount: 1,
+        totalPages: 1,
+        page: 1,
+        pageSize: 50,
+      },
+    });
+  });
+  const form = page.locator('.card-results form');
+  const textarea = form.getByPlaceholder(/Paste your decklist/);
+  const query = form.getByRole('textbox', { name: 'Search query' });
+  const searches = requests[endpoints.Recommender];
+  try {
+    await navigate(page);
+    await expect.poll(() => listReads).toBe(1);
+    await textarea.fill(cards[2].name);
+    await query.fill('manual draft');
+    await form.getByRole('button', { name: 'Recommend', exact: true }).click();
+    await expect.poll(() => searches.length).toBe(1);
+    expect(searches[0]).toMatchObject({
+      cards: [cards[2].name],
+      commanders: [cards[0].name],
+      query: 'manual draft',
+      limit: 200,
+    });
+    const listResponse = page.waitForResponse((response) =>
+      response.url().startsWith(BACKEND + '/supabase/card-lists?'),
+    );
+    releaseDecks();
+    await (await listResponse).finished();
+    // Observe the first paint after the completed query and its Vue watchers.
+    await page.evaluate(
+      () => new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+    );
+    await expect(textarea).toHaveValue(cards[2].name);
+    await expect(query).toHaveValue('manual draft');
+    await expect(
+      form.getByRole('button', { name: 'Select a Decklist', exact: true }),
+    ).toBeVisible();
+    await expect(
+      form.getByRole('combobox', { name: 'Select a decklist', exact: true }),
+    ).toHaveCount(0);
+    expect(searches).toHaveLength(1);
+  } finally {
+    releaseDecks();
+  }
+});
+
 test('mobile non-commander searches share the input and filter layout and apply similarity mode', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  const requests = await setup(page);
+  const { requests } = await setup(page);
   await navigate(page, cards[3]);
   const section = page.locator('.card-results');
   for (const tab of ['Commanders', 'Similar Cards']) {

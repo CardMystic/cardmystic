@@ -6,7 +6,7 @@ const props = defineProps<{
   name: string;
   loading?: boolean;
 }>();
-const playtestOpen = ref(false);
+const playtestOpen = defineModel<boolean>('open', { default: false });
 const launched = ref(false);
 const hasCards = computed(() =>
   props.entries.some((entry) => !entry.commander && entry.quantity > 0),
