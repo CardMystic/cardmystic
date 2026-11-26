@@ -14,7 +14,7 @@ const props = defineProps<{
 const open = defineModel<boolean>('open', { default: false });
 const { addCardsByNameToListMutation, removeCardFromListMutation } =
   useCardLists();
-const toast = useToast();
+const cardEditToast = useCardEditToast();
 const section = ref<HTMLElement | null>(null);
 const busy = ref(false);
 const error = ref('');
@@ -49,11 +49,6 @@ async function finishRemoval() {
     board: 'Mainboard',
   });
   pendingRemoval.value = null;
-  toast.add({
-    title: 'Card replaced',
-    description: `${pending.source.name} → ${pending.replacement.name}`,
-    color: 'success',
-  });
 }
 
 async function replace(source: ScryfallCard, replacement: ScryfallCard) {
@@ -73,6 +68,7 @@ async function replace(source: ScryfallCard, replacement: ScryfallCard) {
   busy.value = true;
   replacingId.value = replacement.oracle_id;
   error.value = '';
+  cardEditToast.notifyEdit('Card Replaced');
   try {
     const result = await addCardsByNameToListMutation.mutateAsync({
       listId: props.listId,
@@ -104,6 +100,7 @@ async function retryRemoval() {
   snapshot.value = [...props.entries];
   busy.value = true;
   error.value = '';
+  cardEditToast.notify('removed');
   try {
     await finishRemoval();
   } catch {

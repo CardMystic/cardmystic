@@ -136,6 +136,7 @@ const props = defineProps<{
 const isOpen = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
+const cardEditToast = useCardEditToast();
 const { bulkEditListMutation } = useCardLists();
 const browser = useBrowserDeckSource();
 let originalGuestCards: string | undefined;
@@ -196,6 +197,9 @@ async function handleBulkEdit() {
 
   bulkEditLoading.value = true;
   bulkEditResult.value = null;
+  cardEditToast.notifyEdit(
+    props.collection ? 'Collection Updated' : 'Deck Updated',
+  );
 
   try {
     const result = await bulkEditListMutation.mutateAsync({
@@ -205,20 +209,6 @@ async function handleBulkEdit() {
     });
 
     bulkEditResult.value = result;
-
-    const changes = (result.addedCount || 0) + (result.removedCount || 0);
-    if (changes > 0) {
-      toast.add({
-        title: props.collection ? 'Collection updated' : 'Deck updated',
-        description: `${result.addedCount} added, ${result.removedCount} removed`,
-        icon: 'i-lucide-check',
-      });
-    } else {
-      toast.add({
-        title: 'No changes needed',
-        icon: 'i-lucide-check',
-      });
-    }
 
     if (result.invalidCardNames.length === 0) {
       handleClose();

@@ -32,6 +32,7 @@ const preview = ref<TransferCard[]>([]),
   applied = ref(false);
 const { addCardsByNameToListMutation, setCommanderMutation } = useCardLists();
 const printingImport = usePrintingImport(props.listId);
+const cardEditToast = useCardEditToast();
 const exportPending = computed(
   () =>
     props.cardsLoading ||
@@ -114,6 +115,7 @@ async function apply() {
       message.value = 'No cards were added.';
       return;
     }
+    cardEditToast.notify('added', newCards.length);
     const applyPrintings = await printingImport.prepare(newCards);
     const result = await applyDeckImport(
       newCards,

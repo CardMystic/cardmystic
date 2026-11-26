@@ -105,6 +105,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
     .getByRole('textbox', { name: 'Name', exact: true })
     .fill('My browser deck');
   await settings.getByRole('button', { name: 'Save changes' }).click();
+  await expect(page.locator('.card-edit-toast')).toHaveText('Deck Updated');
   await expect(settings).toBeHidden();
   await page.getByPlaceholder('Add a card to the deck...').fill('Display Card');
   await page.getByRole('option', { name: cards[3].name, exact: true }).click();
@@ -117,6 +118,7 @@ test('guest builds one draft and reloads without account writes on mobile', asyn
     .getByRole('button', { name: 'Set Copies', exact: true })
     .click();
   await page.getByRole('menuitem', { name: 'Add a copy', exact: true }).click();
+  await expect(page.locator('.card-edit-toast')).toHaveText('Copies Updated');
   await page.keyboard.press('Escape');
   await expect(page.getByText('2 cards', { exact: true })).toBeVisible();
   await page.reload();
@@ -787,7 +789,7 @@ test('draft uses shared import, comparison, board controls and export without sa
     .click();
   await page
     .getByRole('dialog')
-    .getByRole('button', { name: 'Move To', exact: true })
+    .getByRole('button', { name: 'Move', exact: true })
     .click();
   await page
     .getByRole('menuitem', { name: 'Move to Considering', exact: true })

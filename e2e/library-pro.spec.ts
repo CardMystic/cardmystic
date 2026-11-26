@@ -416,8 +416,8 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   });
   const controls = actions.locator('a[href], button');
   await expect(controls.first()).toHaveAccessibleName("Go To Card's Page");
-  await expect(controls.nth(1)).toHaveAccessibleName('Change printing');
-  await expect(controls.nth(2)).toHaveAccessibleName('Move To');
+  await expect(controls.nth(1)).toHaveAccessibleName('Set Printing');
+  await expect(controls.nth(2)).toHaveAccessibleName('Move');
   await expect(controls.nth(3)).toHaveAccessibleName('Set Copies');
   await expect(controls.nth(4)).toHaveAccessibleName('Remove From List');
   await expect(controls.nth(5)).toHaveAccessibleName(/Buy on TCGPlayer/);
@@ -425,7 +425,7 @@ test('card modal saves a personal tag and tag grouping updates immediately', asy
   await expect(controls.nth(6)).toHaveAccessibleName('Add to Another Deck');
   await expect(controls.last()).toHaveAccessibleName('Suggest Decks · Pro');
   await expect(
-    dialog.getByRole('button', { name: 'Move To', exact: true }),
+    dialog.getByRole('button', { name: 'Move', exact: true }),
   ).not.toHaveClass(/\bring-inset\b/);
   await expect(
     dialog.getByRole('button', { name: 'Suggest Decks · Pro', exact: true }),
@@ -1021,6 +1021,7 @@ test('free deck tools export CSV, preview an import, draw a hand and restore a v
   await page
     .getByRole('button', { name: 'Confirm restore', exact: true })
     .click();
+  await expect(page.locator('.card-edit-toast')).toHaveText('Deck Restored');
   await expect.poll(() => restored).toEqual({ revision: 1, expectedHead: 2 });
   await expect(
     page.getByText('Deck restored. Your previous version is still in history.'),
@@ -1191,7 +1192,7 @@ test('deck suggestions persist across modals and previews and card pages open su
   await expect(previewControls.nth(0)).toHaveAccessibleName(
     "Go To Card's Page",
   );
-  await expect(previewControls.nth(1)).toHaveAccessibleName('Change printing');
+  await expect(previewControls.nth(1)).toHaveAccessibleName('Set Printing');
   const generalControls = preview
     .locator('[data-card-action-group="general"]')
     .locator('a[href], button');
@@ -1213,7 +1214,7 @@ test('deck suggestions persist across modals and previews and card pages open su
     modal.getByText('Already in deck', { exact: true }),
   ).toBeVisible();
   await expect(
-    modal.getByRole('button', { name: 'Move To', exact: true }),
+    modal.getByRole('button', { name: 'Move', exact: true }),
   ).toBeVisible();
   expect(requests).toHaveLength(1);
   await page.keyboard.press('Escape');

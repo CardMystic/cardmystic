@@ -28,6 +28,32 @@ for (const owner of [true, false]) {
         hydrationErrors.push(message.text());
     });
     const state = await setupDeckDisplay(page, { owner });
+    const deckSearches: string[] = [];
+    if (owner) {
+      const recentDecks = [
+        { ...state.deck, id: destinationDeckId, name: 'Destination deck' },
+        {
+          ...state.deck,
+          id: '41000000-0000-4000-8000-000000000003',
+          name: 'Other recent deck',
+        },
+      ];
+      await page.route(
+        BACKEND + '/supabase/card-lists/mine/search**',
+        (route) => {
+          const query =
+            new URL(route.request().url()).searchParams.get('query') ?? '';
+          deckSearches.push(query);
+          return route.fulfill({
+            json: {
+              decklists: recentDecks.filter((deck) =>
+                deck.name.toLowerCase().includes(query.toLowerCase()),
+              ),
+            },
+          });
+        },
+      );
+    }
     if (owner) {
       await page.route(BACKEND + '/card-collections/labels', (route) =>
         route.fulfill({
@@ -95,8 +121,8 @@ for (const owner of [true, false]) {
         );
       expect(order).toEqual([
         "Go To Card's Page",
-        'Change printing',
-        'Move To',
+        'Set Printing',
+        'Move',
         'Set Copies',
         'Remove From List',
       ]);
@@ -106,6 +132,7 @@ for (const owner of [true, false]) {
       const editBoxes = await editButtons.evaluateAll((buttons) =>
         buttons.map((button) => ({
           x: button.getBoundingClientRect().x,
+          y: button.getBoundingClientRect().y,
           width: button.getBoundingClientRect().width,
           height: button.getBoundingClientRect().height,
         })),
@@ -118,7 +145,14 @@ for (const owner of [true, false]) {
       await expect(modal.getByText('Mainboard', { exact: true })).toHaveCount(
         0,
       );
-      expect(new Set(editBoxes.map((box) => box.x)).size).toBe(1);
+      expect(editBoxes[0].x).toBeLessThan(editBoxes[1].x);
+      expect(editBoxes[0].y).toBeCloseTo(editBoxes[1].y, 0);
+      expect(editBoxes[2].x).toBe(editBoxes[0].x);
+      expect(editBoxes[3].x).toBe(editBoxes[1].x);
+      expect(editBoxes[2].y).toBeCloseTo(editBoxes[3].y, 0);
+      expect(editBoxes[2].y).toBeGreaterThanOrEqual(
+        editBoxes[0].y + editBoxes[0].height,
+      );
       expect(new Set(editBoxes.map((box) => box.width)).size).toBe(1);
       expect(editBoxes.every((box) => box.height >= 44)).toBe(true);
       await expect(
@@ -150,6 +184,13 @@ for (const owner of [true, false]) {
           (element) => element.scrollWidth <= element.clientWidth,
         ),
       ).toBe(true);
+      for (const button of await editButtons.all()) {
+        expect(
+          await button.evaluate(
+            (element) => element.scrollWidth <= element.clientWidth,
+          ),
+        ).toBe(true);
+      }
       for (const chip of await modal
         .locator(
           'section[aria-label="Roles"] li, section[aria-label="Themes"] li',
@@ -168,7 +209,7 @@ for (const owner of [true, false]) {
         document.documentElement.style.fontSize = '';
       });
       const printingButton = modal.getByRole('button', {
-        name: 'Change printing',
+        name: 'Set Printing',
         exact: true,
       });
       await printingButton.focus();
@@ -191,7 +232,68 @@ for (const owner of [true, false]) {
       .click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
+    if (owner) {
+      const search = dialog.getByRole('combobox');
+      const otherRecent = dialog.getByRole('button', {
+        name: /Other recent deck/,
+      });
+      await expect(otherRecent).toBeVisible();
+      await search.fill('No matching decks');
+      await expect.poll(() => deckSearches).toContain('No matching decks');
+      await expect(dialog.getByRole('option')).toHaveCount(0);
+      await expect(otherRecent).toBeVisible();
+      await otherRecent.click();
+      await expect(search).toHaveValue('Other recent deck');
+      await expect(
+        dialog.getByRole('button', { name: /Destination deck/ }),
+      ).toBeVisible();
+    }
     await dialog.getByRole('button', { name: /Destination deck/ }).click();
+    if (owner) {
+      await expect(dialog.getByRole('combobox')).toHaveValue(
+        'Destination deck',
+      );
+      await expect(
+        dialog.getByRole('button', { name: /Other recent deck/ }),
+      ).toBeVisible();
+      let releaseAdd!: () => void;
+      const addGate = new Promise<void>((resolve) => {
+        releaseAdd = resolve;
+      });
+      let failed = false;
+      await page.route(
+        BACKEND + '/supabase/card-lists/add-cards-by-oracle-id',
+        async (route) => {
+          if (failed) return route.fallback();
+          await addGate;
+          failed = true;
+          await route.fulfill({
+            status: 500,
+            json: { message: 'Could not save card. Try again.' },
+          });
+        },
+      );
+      await dialog
+        .getByRole('button', { name: 'Add to Deck', exact: true })
+        .click();
+      try {
+        await expect(dialog).toBeHidden();
+        await expect(page.locator('.card-edit-toast')).toHaveText('Card Added');
+        await expect(page.getByText(/already in this deck/)).toBeHidden();
+        expect(state.writes).toHaveLength(0);
+      } finally {
+        releaseAdd();
+      }
+      await expect(
+        page.getByText('Could not add card', { exact: true }),
+      ).toBeVisible();
+      await expect(dialog).toBeHidden();
+      await trigger.click();
+      await page
+        .getByRole('button', { name: 'Add to Another Deck', exact: true })
+        .click();
+      await dialog.getByRole('button', { name: /Destination deck/ }).click();
+    }
     await dialog
       .getByRole('button', { name: 'Add to Deck', exact: true })
       .click();
@@ -409,7 +511,7 @@ test.describe('desktop card modal', () => {
       modal.getByRole('button', { name: 'Remove Commander', exact: true }),
     ).toBeVisible();
     await expect(
-      modal.getByRole('button', { name: 'Move To', exact: true }),
+      modal.getByRole('button', { name: 'Move', exact: true }),
     ).toHaveCount(0);
     await expect(
       modal.getByRole('button', { name: 'Set Copies', exact: true }),
@@ -449,13 +551,39 @@ test.describe('desktop card modal', () => {
   test('click and keyboard open the modal; Escape restores focus', async ({
     page,
   }) => {
-    const state = await setupDeckDisplay(page);
+    const state = await setupDeckDisplay(page, { cardCount: 24 });
+    const footer = page.locator('.sticky-footer-wrap');
+    await expect(footer).toBeVisible();
     const trigger = page.getByRole('button', {
       name: `Options for ${state.cards[0].name}`,
       exact: true,
     });
     await trigger.click();
     await expect(page.getByRole('dialog')).toBeVisible();
+    // The modal overlay must cover the bar without relying on aria-hidden
+    // to visually hide it (select menus apply that attribute too).
+    await expect
+      .poll(() =>
+        footer.evaluate((element) => {
+          const bounds = element.getBoundingClientRect();
+          const shell = element.querySelector<HTMLElement>(
+            '.sticky-footer-shell',
+          )!;
+          const pointerEvents = shell.style.pointerEvents;
+          // Hit-test the actual stacking order, not the background interaction lock.
+          shell.style.pointerEvents = 'auto';
+          try {
+            const target = document.elementFromPoint(
+              bounds.x + bounds.width / 2,
+              bounds.y + bounds.height / 2,
+            );
+            return !!target && !element.contains(target);
+          } finally {
+            shell.style.pointerEvents = pointerEvents;
+          }
+        }),
+      )
+      .toBe(true);
     await expect(
       page.getByRole('link', { name: "Go To Card's Page", exact: true }),
     ).toBeVisible();
@@ -470,6 +598,8 @@ test.describe('desktop card modal', () => {
     await page
       .getByRole('combobox', { name: 'Deck view', exact: true })
       .click();
+    await expect(page.getByRole('listbox')).toBeVisible();
+    await expect(footer).toBeVisible();
     await page.getByRole('option', { name: 'Card Text', exact: true }).click();
     await page.keyboard.press('Escape');
     await expect(page.locator('.card-text-row')).toHaveCount(
@@ -498,6 +628,16 @@ test.describe('compact desktop preview controls', () => {
     page,
   }) => {
     const state = await setupDeckDisplay(page);
+    await page.route(
+      BACKEND + '/supabase/card-lists/update-num-copies',
+      (route) => {
+        const body = route.request().postDataJSON();
+        state.items[0].num_copies = body.numCopies;
+        return route.fulfill({
+          json: { cardName: body.cardName, numCopies: body.numCopies },
+        });
+      },
+    );
     const card = cardByName(page, state.cards[0].name);
     await card.hover();
     const preview = page.locator('.preview-rail');
@@ -526,6 +666,35 @@ test.describe('compact desktop preview controls', () => {
       .getByRole('button', { name: 'Flip Card', exact: true })
       .click();
     await expect(image).toHaveAttribute('src', /\/back\//);
+    const previewTrigger = preview.getByRole('button', {
+      name: `Options for ${state.cards[0].name}`,
+      exact: true,
+    });
+    const deckUrl = page.url();
+    await image.click();
+    const previewModal = page.getByRole('dialog', {
+      name: state.cards[0].name,
+      exact: true,
+    });
+    await expect(previewModal).toBeVisible();
+    await expect(
+      previewModal.getByRole('button', { name: 'Set Copies', exact: true }),
+    ).toBeVisible();
+    expect(page.url()).toBe(deckUrl);
+    await previewModal
+      .getByRole('button', { name: 'Set Copies', exact: true })
+      .click();
+    const modalUpdate = page.waitForRequest(
+      (request) =>
+        request.url() === `${BACKEND}/supabase/card-lists/update-num-copies` &&
+        request.method() === 'PUT',
+    );
+    await page
+      .getByRole('menuitem', { name: 'Add a copy', exact: true })
+      .click();
+    expect((await modalUpdate).postDataJSON()).toMatchObject({ numCopies: 3 });
+    await expect(previewModal).toBeHidden();
+    await expect(previewTrigger).toBeFocused();
     await preview
       .getByRole('button', { name: 'Add Card', exact: true })
       .click();
@@ -545,21 +714,47 @@ test.describe('compact desktop preview controls', () => {
       name: 'Set Copies',
       exact: true,
     });
-    expect((await remove.boundingBox())!.y).toBeGreaterThan(
-      (await copies.boundingBox())!.y,
-    );
     const copyBounds = (await copies.boundingBox())!;
+    const removeBounds = (await remove.boundingBox())!;
+    const printingBounds = (await preview
+      .getByRole('button', { name: 'Set Printing', exact: true })
+      .boundingBox())!;
     const moveBounds = (await preview
-      .getByRole('button', { name: 'Move To', exact: true })
+      .getByRole('button', { name: 'Move', exact: true })
       .boundingBox())!;
     const otherBounds = (await preview
       .getByRole('button', { name: 'Add to Another Deck', exact: true })
       .boundingBox())!;
-    expect(moveBounds.width).toBeCloseTo(otherBounds.width, 0);
+    expect(printingBounds.x + printingBounds.width).toBeLessThan(moveBounds.x);
+    expect(printingBounds.y).toBeCloseTo(moveBounds.y, 0);
+    expect(copyBounds.x + copyBounds.width).toBeLessThan(removeBounds.x);
+    expect(copyBounds.y).toBeCloseTo(removeBounds.y, 0);
+    expect(copyBounds.x).toBeCloseTo(printingBounds.x, 0);
+    expect(removeBounds.x).toBeCloseTo(moveBounds.x, 0);
+    expect(copyBounds.y).toBeGreaterThanOrEqual(
+      printingBounds.y + printingBounds.height,
+    );
+    expect(moveBounds.width).toBeCloseTo(printingBounds.width, 0);
+    expect(copyBounds.width).toBeCloseTo(removeBounds.width, 0);
+    expect(moveBounds.x + moveBounds.width).toBeCloseTo(
+      otherBounds.x + otherBounds.width,
+      0,
+    );
+    for (const name of [
+      'Set Printing',
+      'Move',
+      'Set Copies',
+      'Remove From List',
+      'Add to Another Deck',
+    ]) {
+      const action = preview.getByRole('button', { name, exact: true });
+      await expect(action).toHaveCSS('justify-content', 'flex-start');
+      await expect(action).toHaveCSS('text-align', 'left');
+    }
     await copies.click();
     await expect
       .poll(async () => (await page.getByRole('menu').boundingBox())!.width)
-      .toBeCloseTo(copyBounds.width, 0);
+      .toBeGreaterThanOrEqual(copyBounds.width);
 
     const update = page.waitForRequest(
       (request) =>
@@ -569,8 +764,25 @@ test.describe('compact desktop preview controls', () => {
     await page
       .getByRole('menuitem', { name: 'Add a copy', exact: true })
       .click();
-    expect((await update).postDataJSON()).toMatchObject({ numCopies: 3 });
-    await preview.getByRole('button', { name: 'Move To', exact: true }).click();
+    expect((await update).postDataJSON()).toMatchObject({ numCopies: 4 });
+    await previewTrigger.click();
+    await expect(previewModal).toBeVisible();
+    await previewModal
+      .getByRole('button', { name: 'Set Copies', exact: true })
+      .click();
+    await page
+      .getByRole('menuitem', { name: 'Set Copies', exact: true })
+      .click();
+    const copiesDialog = page.getByRole('dialog', {
+      name: 'Set Copies',
+      exact: true,
+    });
+    await expect(previewModal).toBeHidden();
+    await expect(copiesDialog.getByRole('spinbutton')).toBeFocused();
+    expect(page.url()).toBe(deckUrl);
+    await page.keyboard.press('Escape');
+    await expect(copiesDialog).toBeHidden();
+    await preview.getByRole('button', { name: 'Move', exact: true }).click();
     const move = page.waitForRequest(
       (request) =>
         request.url() === `${BACKEND}/supabase/card-lists/change-board` &&
@@ -580,21 +792,5 @@ test.describe('compact desktop preview controls', () => {
       .getByRole('menuitem', { name: 'Move to Sideboard', exact: true })
       .click();
     expect((await move).postDataJSON()).toMatchObject({ board: 'Sideboard' });
-    await card
-      .getByRole('button', {
-        name: `Options for ${state.cards[0].name}`,
-        exact: true,
-      })
-      .click();
-    const modal = page.getByRole('dialog');
-    await modal
-      .getByRole('button', { name: 'Set Copies', exact: true })
-      .click();
-    await page
-      .getByRole('menuitem', { name: 'Set Copies', exact: true })
-      .click();
-    await expect(
-      page.getByRole('dialog').getByRole('spinbutton'),
-    ).toBeVisible();
   });
 });

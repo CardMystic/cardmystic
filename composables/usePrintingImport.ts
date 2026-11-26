@@ -126,7 +126,7 @@ export function usePrintingImport(listId: string) {
             });
             if (error)
               throw new Error(
-                'Cards were added, but some printing choices could not be saved. Use Change printing for the remaining cards.',
+                'Cards were added, but some printing choices could not be saved. Use Set Printing for the remaining cards.',
               );
           }
         } finally {

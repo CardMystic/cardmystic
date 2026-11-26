@@ -123,10 +123,12 @@ const targetChance = computed(() =>
 );
 const cutError = ref('');
 const { removeCardFromListMutation } = useCardLists();
+const cardEditToast = useCardEditToast();
 async function cut(oracleId: string) {
   if (!props.isOwner || cutting.value) return;
   cutting.value = oracleId;
   cutError.value = '';
+  cardEditToast.notify('removed');
   try {
     await removeCardFromListMutation.mutateAsync({
       listId: props.listId,

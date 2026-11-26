@@ -14,19 +14,20 @@
     <UButton
       v-bind="suggestDecksAction"
       variant="outline"
-      block
-      @click="showSuggestions = true"
+      class="min-h-11 w-full justify-start whitespace-normal text-left"
+      :ui="{ label: 'whitespace-normal wrap-anywhere' }"
+      @click="openSuggestions"
     />
   </div>
   <LazyCardActionsModal
-    v-if="showSuggestions"
-    v-model:open="showSuggestions"
+    v-if="showModal"
+    v-model:open="showModal"
     :card="card"
     :actions="menu"
     @view-card="emit('viewCard')"
     :board="board"
     :is-flipped="isFlipped"
-    suggest-decks
+    :suggest-decks="suggestionsMode"
     @flip="emit('flip')"
   />
 </template>
@@ -153,7 +154,28 @@ const listActions = computed<CardAction[]>(() => [
       ]),
 ]);
 
-const showSuggestions = ref(false);
+const showModal = ref(false);
+const suggestionsMode = ref(false);
+let modalTrigger: HTMLElement | null = null;
+function openCardOptions() {
+  modalTrigger = document.activeElement as HTMLElement | null;
+  suggestionsMode.value = false;
+  showModal.value = true;
+}
+function openSuggestions() {
+  modalTrigger = document.activeElement as HTMLElement | null;
+  suggestionsMode.value = true;
+  showModal.value = true;
+}
+watch(showModal, async (open) => {
+  if (open) return;
+  await nextTick();
+  if (!modalTrigger?.isConnected) return;
+  // Actions that open another dialog leave focus with that dialog.
+  if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+  modalTrigger.focus({ preventScroll: true });
+});
+defineExpose({ openCardOptions });
 const menu = computed<CardActionMenu>(() => {
   const data = props.card.card_data;
   const actions: CardActionMenu = {
@@ -176,7 +198,11 @@ const menu = computed<CardActionMenu>(() => {
   };
   if (props.canShowDeckMenu)
     actions.addToDeck = {
-      label: props.isListCard ? 'Add to Another Deck' : 'Add to Deck',
+      label:
+        props.isListCard ||
+        (props.showAddToDeckbuilderButton && deckbuilder.selectedDeckId.value)
+          ? 'Add to Another Deck'
+          : 'Add to Deck',
       ...cardActionStyles.addToDeck,
       onSelect: () => emit('openAddToDeck'),
     };
