@@ -48,6 +48,17 @@ const description = computed(() =>
     ? `Find commanders most often played with ${cardName.value}.`
     : 'Choose a card to find the commanders whose decks include it.',
 );
+const { setPageInfo } = usePageInfo();
+watchEffect(() => {
+  setPageInfo({
+    page_url: route.fullPath,
+    page_name: title.value,
+    card_name: cardName.value,
+    query: queryText.value,
+    filters: filters.value,
+    labels: [platform, 'popular-by-card'],
+  });
+});
 const hasSearch = computed(
   () => !!(cardName.value || queryText.value || route.query.filters),
 );
@@ -105,6 +116,7 @@ definePageMeta({
         :platform="platform"
       />
       <SearchResults
+        action-footer
         v-else-if="!invalid"
         class="w-full mb-10"
         :search-results="searchResults"
@@ -125,5 +137,4 @@ definePageMeta({
       />
     </div>
   </UContainer>
-  <BackToTop />
 </template>

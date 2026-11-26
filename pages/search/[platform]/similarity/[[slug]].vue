@@ -37,6 +37,7 @@
       <div v-else class="mb-10 w-full">
         <!-- Results -->
         <SearchResults
+          action-footer
           :is-loading="isLoading"
           :is-fetching="isFetching"
           :error="error"
@@ -57,11 +58,6 @@
       </div>
     </div>
   </UContainer>
-  <LazyIssuesFab
-    v-if="searchResults && searchResults.length"
-    :onClick="handleFabClick"
-  />
-  <LazyBackToTop />
 </template>
 
 <script setup lang="ts">
@@ -69,7 +65,6 @@ import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { SimilaritySearchSchema } from '~/models/searchModel';
-import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useSimilaritySearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
 import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
@@ -166,7 +161,7 @@ provideSearchPageDefaults(
   seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
 );
 
-const { setPageInfo, getPageInfo } = usePageInfo();
+const { setPageInfo } = usePageInfo();
 watch(
   [displayQuery, parsedFilters],
   ([newQuery, newFilters]) => {
@@ -180,10 +175,6 @@ watch(
   },
   { immediate: true },
 );
-
-function handleFabClick() {
-  window.open(searchFeedbackUrl(getPageInfo()), '_blank');
-}
 
 const similaritySearch = computed(() => {
   const cardName = seoEntry?.query || cardNameParam.value;

@@ -23,6 +23,8 @@ export default defineAppConfig({
     selectMenu: menuField,
     dropdownMenu: { slots: { content: 'z-50' } },
     popover: { slots: { content: 'z-50' } },
+    modal: { slots: { overlay: 'z-50', content: 'z-50' } },
+    slideover: { slots: { overlay: 'z-50', content: 'z-50' } },
     textarea: fieldText,
   },
 });

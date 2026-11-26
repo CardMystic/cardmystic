@@ -25,6 +25,7 @@
       <!-- Results -->
       <div v-else class="mb-10 w-full">
         <SearchResults
+          action-footer
           :is-loading="isLoading"
           :is-fetching="isFetching"
           :error="error"
@@ -42,11 +43,6 @@
       </div>
     </div>
   </UContainer>
-  <LazyIssuesFab
-    v-if="searchResults && searchResults.length"
-    :onClick="handleFabClick"
-  />
-  <LazyBackToTop />
 </template>
 
 <script setup lang="ts">
@@ -54,7 +50,6 @@ import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { WordSearchSchema } from '~/models/searchModel';
-import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useColbertSearch } from '~/composables/useSearch';
 import { getSeoEntry } from '~/utils/seoQueries';
 import { provideSearchPageDefaults } from '~/composables/useSearchPageDefaults';
@@ -153,7 +148,7 @@ provideSearchPageDefaults(
   seoEntry ? { query: seoEntry.query, filters: parsedFilters } : undefined,
 );
 
-const { setPageInfo, getPageInfo } = usePageInfo();
+const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
   page_name: `${platformName} Smart Search: ${displayQuery.value}`,
@@ -161,10 +156,6 @@ setPageInfo({
   filters: parsedFilters.value,
   labels: [platform, 'Smart search'],
 });
-
-function handleFabClick() {
-  window.open(searchFeedbackUrl(getPageInfo()), '_blank');
-}
 
 const wordSearch = computed(() => {
   const query = seoEntry?.query || queryParam.value;

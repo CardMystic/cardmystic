@@ -1,6 +1,7 @@
 <template>
   <footer
-    class="w-full bg-secondary dark:bg-gray-950/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 z-50"
+    class="w-full bg-secondary dark:bg-gray-950/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 z-0"
+    :style="{ paddingBottom: 'var(--persistent-footer-height, 0px)' }"
   >
     <UContainer class="py-6 text-left">
       <!-- Social Links -->

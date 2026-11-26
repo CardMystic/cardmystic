@@ -9,36 +9,39 @@
     </aside>
 
     <div class="min-w-0 flex-1">
-      <template v-if="defaultGroupBy">
-        <div class="mb-1 flex h-6 justify-end gap-2">
-          <USkeleton class="w-24" /><USkeleton class="w-24" />
-        </div>
-        <USkeleton class="h-10 w-full mb-1 rounded-lg" />
-      </template>
-      <div v-if="view === 'grid'" class="card-grid grid gap-2">
-        <CardSkeleton
-          v-for="i in skeletonCount"
-          :key="`skeleton-${i}`"
-          :showCardInfo="true"
-          :hide-progress-bar="hideProgressBar"
-        />
+      <div v-if="defaultGroupBy" class="mb-1 flex h-6 justify-end gap-2">
+        <USkeleton class="w-24" /><USkeleton class="w-24" />
       </div>
-
       <div
-        v-else
-        class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-x-4 gap-y-1"
+        v-for="(count, section) in skeletonGroups"
+        :key="section"
+        :class="defaultGroupBy ? 'pb-4' : ''"
       >
-        <div
-          v-for="i in skeletonCount"
-          :key="`text-skeleton-${i}`"
-          class="h-9 flex items-center gap-2 px-1.5 border-b border-default"
-        >
-          <USkeleton class="h-3.5 w-5 shrink-0" />
-          <USkeleton
-            class="h-3.5"
-            :class="i % 3 === 0 ? 'w-2/3' : i % 2 === 0 ? 'w-1/2' : 'w-3/4'"
+        <USkeleton v-if="defaultGroupBy" class="h-10 w-full mb-1 rounded-lg" />
+        <div v-if="view === 'grid'" class="card-grid grid gap-2">
+          <CardSkeleton
+            v-for="i in count"
+            :key="`skeleton-${i}`"
+            :showCardInfo="true"
+            :hide-progress-bar="hideProgressBar"
           />
-          <USkeleton class="h-4 w-10 ml-auto shrink-0" />
+        </div>
+        <div
+          v-else
+          class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-x-4 gap-y-1"
+        >
+          <div
+            v-for="i in count"
+            :key="`text-skeleton-${i}`"
+            class="h-9 flex items-center gap-2 px-1.5 border-b border-default"
+          >
+            <USkeleton class="h-3.5 w-5 shrink-0" />
+            <USkeleton
+              class="h-3.5"
+              :class="i % 3 === 0 ? 'w-2/3' : i % 2 === 0 ? 'w-1/2' : 'w-3/4'"
+            />
+            <USkeleton class="h-4 w-10 ml-auto shrink-0" />
+          </div>
         </div>
       </div>
     </div>
@@ -46,7 +49,9 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
+import { TOP_RESULTS_COUNT } from '~/utils/searchResultGroups';
+
+const props = withDefaults(
   defineProps<{
     skeletonCount?: number;
     defaultGroupBy?: string;
@@ -57,6 +62,12 @@ withDefaults(
     skeletonCount: 40,
     view: 'grid',
   },
+);
+
+const skeletonGroups = computed(() =>
+  props.defaultGroupBy
+    ? [Math.min(TOP_RESULTS_COUNT, props.skeletonCount), props.skeletonCount]
+    : [props.skeletonCount],
 );
 </script>
 
