@@ -315,7 +315,10 @@
                 </div>
               </div>
             </UCard>
-            <CardDiscussionButton :card="card" class="mt-2 hidden lg:flex w-full max-w-75 lg:max-w-none" />
+            <CardDiscussionButton
+              :card="card"
+              class="mt-2 hidden lg:flex w-full max-w-75 lg:max-w-none"
+            />
             <UButton
               v-bind="suggestDecksAction"
               variant="outline"
@@ -346,9 +349,14 @@
                   no-prefetch
                   class="set-name hover:underline focus-visible:outline-2 focus-visible:outline-primary"
                 >
-                  {{ currentPrinting.set_name || currentPrinting.set.toUpperCase() }}
+                  {{
+                    currentPrinting.set_name ||
+                    currentPrinting.set.toUpperCase()
+                  }}
                 </NuxtLink>
-                <span v-else-if="currentPrinting?.set_name" class="set-name">{{ currentPrinting.set_name }}</span>
+                <span v-else-if="currentPrinting?.set_name" class="set-name">{{
+                  currentPrinting.set_name
+                }}</span>
                 <RarityBadge
                   v-if="currentPrinting?.rarity"
                   :rarity="currentPrinting.rarity"
@@ -358,7 +366,14 @@
                   v-if="card.game_changer"
                   text="Is a Commander Game Changer"
                 >
-                  <NuxtLink to="/roles/game-changers" no-prefetch class="rounded hover:underline"><UBadge size="xl" color="primary" variant="subtle">Game Changer</UBadge></NuxtLink>
+                  <NuxtLink
+                    to="/roles/game-changers"
+                    no-prefetch
+                    class="rounded hover:underline"
+                    ><UBadge size="xl" color="primary" variant="subtle"
+                      >Game Changer</UBadge
+                    ></NuxtLink
+                  >
                 </UTooltip>
               </div>
               <p class="card-type">
@@ -639,34 +654,24 @@
       <!-- Commander vs Non-commander searches: wrapped in ClientOnly because isCommander
              depends on TanStack Query data that may differ between SSR and client hydration -->
       <ClientOnly>
-        <div v-if="card && isCommander" class="w-full mb-12">
+        <CardDetailsResultsSkeleton
+          v-if="!isCommanderReady || commandersLoading"
+          :tab-count="commandersSet?.has(card.name) ? 4 : 2"
+        />
+        <div v-else-if="card && isCommander" class="w-full mb-12">
           <SearchTypeChips
             :active-value="activeCommanderTab"
             :items="cardTabs"
             class="mx-auto w-full max-w-5xl"
             @select="activeCommanderTab = $event"
           />
-          <div v-if="activeCommanderTab === 'recommended'">
-            <CardDetailsSearch
-              v-model="searchDrafts.recommended"
-              kind="recommended"
-              :card-name="card.name"
-              :loading="isRecommendedFetching"
-              @submit="appliedSearches.recommended = $event"
+          <KeepAlive>
+            <LazyCardRecommendations
+              v-if="activeCommanderTab === 'recommended'"
+              :key="card.oracle_id"
+              :commander="card.name"
             />
-            <SearchResults
-              :is-loading="isRecommendedCardsEffectivelyLoading"
-              :is-fetching="isRecommendedFetching"
-              :error="recommendedError"
-              @retry="refetchRecommendedCards()"
-              :search-results="recommendedCards ?? undefined"
-              :reranking-enabled="route.query.useRerank !== 'false'"
-              :query-param="cardName ?? null"
-              :hide-thumbs-down-button="true"
-              empty-title="No matching recommendations"
-              empty-description="Try changing your search or filters."
-            />
-          </div>
+          </KeepAlive>
 
           <div v-if="activeCommanderTab === 'popular'">
             <CardDetailsSearch
@@ -677,6 +682,7 @@
               @submit="appliedSearches.popular = $event"
             />
             <SearchResults
+              default-group-by="type"
               :is-loading="isPopularCardsEffectivelyLoading"
               :is-fetching="isPopularCardsFetching"
               :error="popularCardsError"
@@ -822,7 +828,12 @@ import {
   getLegalityColor,
   standardizeFormatName,
 } from '@/utils/scryfall';
-import { cardActionStyles, findSimilarAction, suggestDecksAction, type CardActionMenu } from '~/utils/card-actions';
+import {
+  cardActionStyles,
+  findSimilarAction,
+  suggestDecksAction,
+  type CardActionMenu,
+} from '~/utils/card-actions';
 import { getUsdPrice } from '~/utils/cardPrice';
 import { safeJsonLd } from '~/utils/safeJsonLd';
 import { getSearchLink } from '~/utils/searchLinks';
@@ -1104,7 +1115,9 @@ onMounted(() => {
 
 // Keep the selected printing independent of catalog pagination and filtering.
 const printingResolved = computed(
-  () => !!selectedPrinting.value && selectedPrinting.value.oracle_id === card.value?.oracle_id,
+  () =>
+    !!selectedPrinting.value &&
+    selectedPrinting.value.oracle_id === card.value?.oracle_id,
 );
 const currentPrinting = computed(() =>
   printingResolved.value ? selectedPrinting.value : card.value,
@@ -1290,21 +1303,6 @@ const activeCommanderTab = ref('recommended');
 const activeNonCommanderTab = ref('similar');
 const activatedTabs = reactive(new Set<string>());
 
-watch(
-  activeCommanderTab,
-  (tab) => {
-    activatedTabs.add(tab);
-  },
-  { immediate: true },
-);
-watch(
-  activeNonCommanderTab,
-  (tab) => {
-    activatedTabs.add(tab);
-  },
-  { immediate: true },
-);
-
 const similarSearchLink = computed(() =>
   getSearchLink({
     platform: 'all',
@@ -1362,13 +1360,11 @@ function emptyCardSearch(): CardDetailsSearchState {
   return { query: '', filters: {} };
 }
 const searchDrafts = reactive({
-  recommended: emptyCardSearch(),
   popular: emptyCardSearch(),
   similar: emptyCardSearch(),
   'popular-commanders': emptyCardSearch(),
 });
 const appliedSearches = reactive({
-  recommended: emptyCardSearch(),
   popular: emptyCardSearch(),
   similar: emptyCardSearch(),
   'popular-commanders': emptyCardSearch(),
@@ -1431,7 +1427,8 @@ const filteredSimilarCards = computed(() => {
 
 // Commander detection — deferred to post-mount so SSR and client hydration both start as false,
 // avoiding mismatch when commandersSet loads from TanStack Query localStorage cache on client.
-const { data: commandersSet } = useCommandersSet();
+const { data: commandersSet, isLoading: commandersLoading } =
+  useCommandersSet();
 const isCommanderReady = ref(false);
 const isCommander = computed(() => {
   if (!isCommanderReady.value) return false;
@@ -1442,6 +1439,25 @@ const isCommander = computed(() => {
 onMounted(() => {
   isCommanderReady.value = true;
 });
+
+watch(
+  [
+    isCommanderReady,
+    commandersLoading,
+    isCommander,
+    activeCommanderTab,
+    activeNonCommanderTab,
+  ],
+  () => {
+    if (!isCommanderReady.value || commandersLoading.value) return;
+    activatedTabs.add(
+      isCommander.value
+        ? activeCommanderTab.value
+        : activeNonCommanderTab.value,
+    );
+  },
+  { immediate: true },
+);
 
 const cardTabs = [
   {
@@ -1478,39 +1494,12 @@ const nonCommanderTabs = [
   },
 ];
 
-const alsRecommendRequest = computed(() => {
-  if (!activatedTabs.has('recommended')) return undefined;
-  if (!isCommander.value || !card.value?.name) return undefined;
-  return {
-    commanders: [card.value.name],
-    limit: 100,
-    query: appliedSearches.recommended.query || undefined,
-    filters: appliedSearches.recommended.filters,
-    useRerank: route.query.useRerank !== 'false',
-  };
-});
-
-const {
-  searchResults: recommendedCards,
-  isLoading: isRecommendedLoading,
-  error: recommendedError,
-  isFetching: isRecommendedFetching,
-  refetch: refetchRecommendedCards,
-} = useAlsRecommend(alsRecommendRequest);
-
-const isRecommendedCardsEffectivelyLoading = computed(() => {
-  if (!activatedTabs.has('recommended')) return false;
-  if (recommendedError.value) return false;
-  return (
-    isRecommendedLoading.value || (!recommendedCards.value && isCommander.value)
-  );
-});
-
 const popularByCommanderRequest = computed(() => {
   if (!activatedTabs.has('popular')) return undefined;
   if (!isCommander.value || !card.value?.name) return undefined;
   return PopularByCommanderRequestSchema.parse({
     commanders: [card.value.name],
+    limit: 200,
     query: appliedSearches.popular.query || undefined,
     filters: appliedSearches.popular.filters,
     useRerank: route.query.useRerank !== 'false',

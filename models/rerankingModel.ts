@@ -7,6 +7,6 @@ export const RecommendationRankingFields = {
   reranker: z.literal('jev').nullable().optional(),
   reranker_model: z.string().nullable().optional(),
   ranking_version: z.string().optional(),
-  rerank_candidate_count: z.number().int().min(0).max(100).optional(),
+  rerank_candidate_count: z.number().int().min(0).max(200).optional(),
   rerank_ms: z.number().nonnegative().optional(),
 };

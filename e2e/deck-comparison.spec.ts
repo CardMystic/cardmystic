@@ -546,6 +546,7 @@ test('comparison actions update the diff and preserve collapsed groups', async (
   await differences
     .getByRole('button', { name: 'Match count for Sol Ring' })
     .click();
+  await expect(page.locator('.card-edit-toast')).toHaveText('Copies Updated');
   await expect(countRows).toHaveCount(0);
   // Hold the response to prove the diff updates before the server replies.
   state.failAdd();
@@ -555,9 +556,7 @@ test('comparison actions update the diff and preserve collapsed groups', async (
       .getByRole('button', { name: 'Add Counterspell', exact: true })
       .click();
     await expect(missingRows).toHaveCount(1);
-    await expect(
-      page.getByText('Adding Counterspell…', { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText('Card Added', { exact: true })).toBeVisible();
     expect(state.items().some((row) => row.oracle_id === ids[3])).toBe(false);
   } finally {
     releaseAdd();
@@ -575,23 +574,21 @@ test('comparison actions update the diff and preserve collapsed groups', async (
   await expect(missingRows).toHaveCount(1);
   await missing.getByRole('button', { name: 'Add All', exact: true }).click();
   await expect(missingRows).toHaveCount(0);
-  await expect(page.getByText('Added Forest', { exact: true })).toBeVisible();
+  await expect(page.locator('.card-edit-toast')).toHaveText('Card Added');
   const releaseRemove = state.holdNextWrite();
   try {
     await differences
       .getByRole('button', { name: 'Remove Lightning Bolt', exact: true })
       .click();
     await expect(extraRows).toHaveCount(1);
-    await expect(
-      page.getByText('Removing Lightning Bolt…', { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText('Card Removed', { exact: true })).toBeVisible();
     expect(state.items().some((row) => row.oracle_id === ids[2])).toBe(true);
   } finally {
     releaseRemove();
   }
-  await expect(
-    page.getByText('Removed Lightning Bolt', { exact: true }),
-  ).toBeVisible();
+  await expect
+    .poll(() => state.items().some((row) => row.oracle_id === ids[2]))
+    .toBe(false);
   await extra.getByRole('button', { name: 'Remove All', exact: true }).click();
   await expect(dialog.getByText('The cards and counts match.')).toBeVisible();
   expect(
@@ -819,6 +816,7 @@ test('comparison accepts another action while saving without resizing', async ({
     await list
       .getByRole('button', { name: 'Remove Lightning Bolt', exact: true })
       .click();
+    await expect(page.locator('.card-edit-toast')).toHaveText('Card Removed');
     await expect(
       list.getByRole('link', { name: 'Lightning Bolt', exact: true }),
     ).toHaveCount(0);
@@ -835,9 +833,9 @@ test('comparison accepts another action while saving without resizing', async ({
   } finally {
     release();
   }
-  await expect(
-    page.getByText('Removed Lightning Bolt', { exact: true }),
-  ).toBeVisible();
+  await expect
+    .poll(() => state.items().some((row) => row.oracle_id === ids[2]))
+    .toBe(false);
   await expect(deckCount).toHaveText(/Your Deck has\s*9\s*cards/);
   expect(state.items().some((row) => row.oracle_id === ids[3])).toBe(true);
   expect(state.items().some((row) => row.oracle_id === ids[2])).toBe(false);
@@ -861,19 +859,15 @@ test('Add All and Remove All each send one batch and preserve the other board', 
     .fill('2 Counterspell\n3 Forest');
   await dialog.getByRole('button', { name: 'Compare', exact: true }).click();
   await dialog.getByRole('button', { name: 'Remove All', exact: true }).click();
-  await expect(
-    page.getByText('Removed 3 cards', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('Cards Removed', { exact: true })).toBeVisible();
   expect(state.writes).toEqual(['remove']);
-  expect(state.items()).toEqual([item(0, 4, 'Sideboard')]);
+  await expect.poll(() => state.items()).toEqual([item(0, 4, 'Sideboard')]);
   await dialog.getByRole('button', { name: 'Add All', exact: true }).click();
   await expect(dialog.getByText('The cards and counts match.')).toBeVisible();
   expect(state.writes).toEqual(['remove', 'add']);
-  expect(state.items()).toEqual([
-    item(0, 4, 'Sideboard'),
-    item(3, 2),
-    item(4, 3),
-  ]);
+  await expect
+    .poll(() => state.items())
+    .toEqual([item(0, 4, 'Sideboard'), item(3, 2), item(4, 3)]);
 });
 
 test('selects a private saved deck and compares the selected board', async ({

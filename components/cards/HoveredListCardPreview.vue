@@ -34,11 +34,13 @@
     <div class="preview-card-stack">
       <div class="preview-image-wrapper card-image-wrapper">
         <GameChangerBadge v-if="card.card_data.game_changer" />
-        <NuxtLink
-          class="card-finish block rounded-2xl"
+        <button
+          type="button"
+          class="card-finish block w-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           :data-card-finish="card.card_data.selected_finish"
-          :to="`/card/${card.card_data.oracle_id}`"
-          no-prefetch
+          :aria-label="`Options for ${card.card_data.name}`"
+          aria-haspopup="dialog"
+          @click="openCardOptions"
         >
           <img
             :src="getCardImageUrl(card.card_data, isFlipped, 'large')"
@@ -52,7 +54,7 @@
             class="copy-count-pill"
             >x{{ numCopies ?? 1 }}</span
           >
-        </NuxtLink>
+        </button>
         <CardOverlayButtons
           :card="card"
           :is-dual-faced="isDualFaced"
@@ -78,6 +80,7 @@
       </div>
 
       <HoveredCardActions
+        ref="cardActions"
         :card="card"
         :printing-enabled="!!(!suggested && isOwner && pickPrinting)"
         @change-printing="pickPrinting?.(card!, currentBoard)"
@@ -141,6 +144,9 @@ import { useCommandersSet } from '~/composables/useBulkData';
 import { getCardImageUrl } from '~/utils/scryfall';
 
 const router = useRouter();
+const cardActions = useTemplateRef<{ openCardOptions: () => void }>(
+  'cardActions',
+);
 const { saveSearchQuery } = useSearchType();
 const { saveSearchMutation } = useSearchHistory();
 const { data: commanders } = useCommandersSet();
@@ -227,6 +233,11 @@ const simpleType = computed(() => {
 
 function flipCard() {
   if (props.card) emit('flip', props.card.card_data.id);
+}
+
+function openCardOptions(event: MouseEvent) {
+  (event.currentTarget as HTMLButtonElement).focus();
+  cardActions.value?.openCardOptions();
 }
 
 function openSetCopiesModal() {

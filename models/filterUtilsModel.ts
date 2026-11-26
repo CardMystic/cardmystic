@@ -7,6 +7,8 @@ export const ColorFilterEnum = z.enum([
   'Contains At Most',
   'Color Identity',
 ]);
+export const ColorFieldEnum = z.enum(['Color Identity', 'Casting Colors']);
+export type ColorField = z.infer<typeof ColorFieldEnum>;
 export type ColorFilterOption = z.infer<typeof ColorFilterEnum>;
 export const ComparisonOperatorEnum = z.enum([
   'Equal To',

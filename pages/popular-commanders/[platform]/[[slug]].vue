@@ -18,6 +18,7 @@
       <!-- Results -->
       <div class="mb-10 w-full">
         <SearchResults
+          action-footer
           :reranking-enabled="route.query.useRerank !== 'false'"
           :is-loading="isLoading"
           :is-fetching="isFetching"
@@ -31,11 +32,6 @@
       </div>
     </div>
   </UContainer>
-  <IssuesFab
-    v-if="searchResults && searchResults.length"
-    :onClick="handleFabClick"
-  />
-  <BackToTop />
 </template>
 
 <script setup lang="ts">
@@ -43,7 +39,6 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { CardSearchFiltersSchema } from '@/models/frontend-specific/filtersModel';
 import { TopCommandersRequestSchema } from '~/models/deckStatsModel';
-import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { useTopCommandersSearch } from '~/composables/useDeckStats';
 import { getSeoEntry } from '~/utils/seoQueries';
 import {
@@ -133,7 +128,7 @@ const parsedFilters = computed(() => {
   );
 });
 
-const { setPageInfo, getPageInfo } = usePageInfo();
+const { setPageInfo } = usePageInfo();
 setPageInfo({
   page_url: route.fullPath,
   page_name: `${platformName} Popular Commanders`,
@@ -141,10 +136,6 @@ setPageInfo({
   filters: parsedFilters.value,
   labels: [platform, 'popular commanders'],
 });
-
-function handleFabClick() {
-  window.open(searchFeedbackUrl(getPageInfo()), '_blank');
-}
 
 const topCommandersSearch = computed(() => {
   return TopCommandersRequestSchema.parse({

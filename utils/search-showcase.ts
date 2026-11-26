@@ -110,8 +110,8 @@ export const deckExamples = [
     }),
 }));
 
-// Selected examples and Normal-search scores checked against the public API on 2026-11-08.
-// Recommendation scores use Kaalia as commander with an empty starting deck; these are not a top-three ranking.
+// Current top Normal-mode results for each exact linked query, captured on 2026-11-22.
+// Similarity includes the searched card followed by its top two matches.
 export const searchDemos: SearchDemo[] = [
   {
     id: 'smart',
@@ -131,25 +131,25 @@ export const searchDemos: SearchDemo[] = [
     scoreLabel: 'Match score',
     cards: [
       {
-        name: 'Toxic Deluge',
-        id: 'afaef788-34d1-460b-b884-9d7ae6ddeb18',
+        name: 'Savage Twister',
+        id: '5268518e-7631-4149-8eea-c2475b9b14df',
         image:
-          'https://cards.scryfall.io/normal/front/1/d/1df2c2a6-94a9-4365-9bd5-dd5f2854c562.jpg?1793023039',
-        score: 86.0,
+          'https://cards.scryfall.io/normal/front/0/6/06ec1b2d-06dd-4364-a913-c34889b70fa1.jpg?1783934269',
+        score: 79.7,
       },
       {
-        name: "Black Sun's Zenith",
-        id: '038c0165-32b6-4e81-8180-604b49905207',
+        name: 'Lavalanche',
+        id: '4475e9a7-4e94-4965-8e7e-211d40a98217',
         image:
-          'https://cards.scryfall.io/normal/front/e/d/eda98f51-a918-4ef7-a123-7d4200c79620.jpg?1783904562',
-        score: 83.9,
+          'https://cards.scryfall.io/normal/front/e/3/e3a3b450-d988-40cb-a1ee-8b00ccdf5071.jpg?1783921410',
+        score: 79.1,
       },
       {
-        name: 'Starstorm',
-        id: '34d112c3-cc2d-4428-bd7f-568bda61bd30',
+        name: 'Nova Flame',
+        id: 'f4310dfd-52eb-4c1f-b1ad-bfbc9b50fe7b',
         image:
-          'https://cards.scryfall.io/normal/front/7/2/728b356a-e2ec-4c44-bd0a-bb9a5427a1ad.jpg?1783923956',
-        score: 83.3,
+          'https://cards.scryfall.io/normal/front/1/b/1b5f713f-6ad9-445e-ae4c-56250bb3aecb.jpg?1783903280',
+        score: 78.1,
       },
     ],
     examples: [
@@ -187,18 +187,18 @@ export const searchDemos: SearchDemo[] = [
         searched: true,
       },
       {
-        name: 'Clever Concealment',
-        id: '42bb7ea9-f6e4-4551-8d93-3b1eae84b865',
+        name: 'Ultimate Magic: Holy',
+        id: '1eae48aa-f01d-4398-a68e-3b5af0542ab1',
         image:
-          'https://cards.scryfall.io/normal/front/4/1/41d45a8a-ea1d-4fbc-86d2-5d6340f3b639.jpg?1783903251',
-        score: 63.5,
+          'https://cards.scryfall.io/normal/front/8/f/8fdb8414-2f08-42fb-ae0a-c7f0af1e144e.jpg?1783906364',
+        score: 78.3,
       },
       {
-        name: 'Flawless Maneuver',
-        id: '4e183439-17d2-47ff-9d99-5e22821d91e3',
+        name: 'Perch Protection',
+        id: '295fe873-ecb5-4d5e-a73c-3af6c478afc5',
         image:
-          'https://cards.scryfall.io/normal/front/3/f/3ffe82a4-584e-4ebd-9551-a745bed01e26.jpg?1789599786',
-        score: 58.3,
+          'https://cards.scryfall.io/normal/front/f/3/f3afb862-c156-495b-a0df-4c4ed0bbc869.jpg?1787677318',
+        score: 77.9,
       },
     ],
     examples: [
@@ -232,28 +232,28 @@ export const searchDemos: SearchDemo[] = [
         description: 'Finishers',
         useRerank: 'false',
       }),
-    scoreLabel: 'Synergy score',
+    scoreLabel: 'Match score',
     cards: [
       {
-        name: 'Master of Cruelties',
-        id: 'd135c457-9be5-4a6e-a6fb-5b35cfb70cb0',
+        name: 'Lava Axe',
+        id: '387b6b07-a283-412d-94c3-f7f1dc76e858',
         image:
-          'https://cards.scryfall.io/normal/front/f/f/ffd68fe1-5cfc-44cf-8dfe-3488278cdcef.jpg?1783913284',
-        score: 77.4,
+          'https://cards.scryfall.io/normal/front/c/3/c3dab325-8f4f-4288-9f3f-960e52b4335b.jpg?1783934548',
+        score: 73.2,
       },
       {
-        name: 'Avacyn, Angel of Hope',
-        id: '216cb26e-8da9-478b-bfbc-8030f7adee72',
+        name: 'Flame Rift',
+        id: '28479aa8-d1cd-421a-8bbb-0594bb4dd410',
         image:
-          'https://cards.scryfall.io/normal/front/7/4/74e5dcec-ef1d-4461-bb23-61d98ff082dd.jpg?1783907976',
-        score: 88.5,
+          'https://cards.scryfall.io/normal/front/e/6/e63ed449-d249-4639-85d2-f8fe75496d5c.jpg?1783926784',
+        score: 68.1,
       },
       {
-        name: 'Archfiend of Despair',
-        id: '9c36760b-57c5-488b-afc9-ef141942c6ab',
+        name: 'City on Fire',
+        id: '41eec4e8-92d3-4f98-9346-3a3e3cc602ce',
         image:
-          'https://cards.scryfall.io/normal/front/1/3/137b69ad-3296-49f1-bddf-24818a03830f.jpg?1789599815',
-        score: 63.7,
+          'https://cards.scryfall.io/normal/front/6/f/6f455cc1-a822-44ef-ba7c-bfcff69bd45e.jpg?1783916996',
+        score: 67.5,
       },
     ],
     examples: deckExamples,

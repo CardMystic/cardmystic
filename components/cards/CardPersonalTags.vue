@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { cardLabelColors } from '~/utils/deckHighlight';
+import { useMounted } from '@vueuse/core';
 const props = defineProps<{ oracleId: string }>();
+const mounted = useMounted();
 const { labels, isLoading, error, retry, userId } = useCardLabels(() => [
   props.oracleId,
 ]);
@@ -16,7 +18,7 @@ watch(
 </script>
 <template>
   <div
-    v-if="isLoading && !tags.length && !error"
+    v-if="mounted && isLoading && !tags.length && !error"
     role="status"
     aria-label="Loading your tags"
     class="py-2"
@@ -24,7 +26,7 @@ watch(
     <CardChipRowSkeleton editable />
   </div>
   <section
-    v-else-if="userId"
+    v-else-if="mounted && userId"
     class="flex min-w-0 flex-wrap items-center gap-2 py-2"
     aria-label="Your Tags"
   >

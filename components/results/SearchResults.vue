@@ -1,6 +1,10 @@
 <template>
   <!-- Results -->
-  <div ref="resultsTop" class="mt-3 w-full scroll-mt-24">
+  <div
+    ref="resultsTop"
+    class="mt-3 w-full scroll-mt-24"
+    :class="{ 'pb-24': showActionFooter }"
+  >
     <div
       v-if="
         !error && (isLoading || deferringHeavyRender || searchResults?.length)
@@ -40,31 +44,12 @@
           />
         </template>
       </div>
-      <UPopover>
-        <UButton
-          icon="i-lucide-settings-2"
-          color="neutral"
-          variant="outline"
-          label="Display"
-          class="cursor-pointer"
-        />
-        <template #content>
-          <div class="p-3 space-y-3 w-72 max-w-[calc(100vw-2rem)]">
-            <View :default-value="view" @update:view="handleView" />
-            <GroupBy :default-value="groupBy" @update:groupBy="handleGroupBy" />
-            <SortComponent
-              :key="rerankingEnabled ? 'reranked' : 'original'"
-              :default-sort-by="sortBy"
-              :collection-order="collectionOrder"
-              :default-direction="sortDirection"
-              :has-als-score="hasAlsScore"
-              :has-ai-score="hasAiScore"
-              :has-popularity="hasPopularity"
-              @sort="handleSort"
-            />
-          </div>
-        </template>
-      </UPopover>
+      <SearchResultsDisplayMenu
+        v-bind="displayMenuProps"
+        @view="handleView"
+        @group-by="handleGroupBy"
+        @sort="handleSort"
+      />
     </div>
     <UAlert
       v-if="
@@ -221,9 +206,12 @@
                   data-testid="search-results-grid"
                   :class="resultsGridClass"
                 >
-                  <div
+                  <DeferredSearchResult
                     v-for="result in group.cards"
                     :key="resultKey(result)"
+                    :eager="groupKey(group) === TOP_RESULTS_GROUP_KEY"
+                    :view="view"
+                    :hide-progress-bar="hideProgressBar"
                     @mouseenter="setPreviewCard(result)"
                     @focusin="setPreviewCard(result)"
                     @mouseleave="clearPendingPreviewCard(resultKey(result))"
@@ -262,7 +250,7 @@
                       @flip="handleCardFlip"
                       @partner-hover="handlePartnerHover"
                     />
-                  </div>
+                  </DeferredSearchResult>
                 </div>
               </template>
             </UAccordion>
@@ -383,11 +371,64 @@
   </div>
 
   <LazyStickyActionFooter
-    :show="!error && !hideGroupNavigation && jumpToGroups.length > 0"
+    :show="
+      showActionFooter ||
+      (!actionFooter &&
+        !error &&
+        !hideGroupNavigation &&
+        jumpToGroups.length > 0)
+    "
+    :hide-at-page-bottom="!actionFooter"
   >
-    <template #right>
-      <LazyJumpTo :groups="jumpToGroups" />
-    </template>
+    <nav
+      v-if="actionFooter"
+      aria-label="Search results actions"
+      class="flex w-full max-w-[1900px] items-center gap-1 sm:gap-3"
+    >
+      <div
+        v-if="isLoading || deferringHeavyRender"
+        role="status"
+        aria-label="Loading result actions"
+        class="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-1 sm:gap-3"
+      >
+        <USkeleton
+          v-for="action in groupBy ? 3 : 2"
+          :key="action"
+          class="h-11 w-20 rounded-md"
+        />
+      </div>
+      <div
+        v-else
+        class="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-1 sm:gap-3"
+      >
+        <SearchResultsDisplayMenu
+          v-bind="displayMenuProps"
+          footer
+          @view="handleView"
+          @group-by="handleGroupBy"
+          @sort="handleSort"
+        />
+        <UButton
+          label="Report"
+          aria-label="Report an issue with these results"
+          icon="i-lucide-circle-alert"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          class="min-h-11 whitespace-normal text-left"
+          :ui="{ label: 'whitespace-normal' }"
+          :to="searchFeedbackUrl(getPageInfo())"
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+        <LazyJumpTo
+          v-if="hasGroups && !hideGroupNavigation"
+          :groups="jumpToGroups"
+        />
+      </div>
+      <BackToTop inline />
+    </nav>
+    <LazyJumpTo v-else :groups="jumpToGroups" />
   </LazyStickyActionFooter>
 </template>
 
@@ -401,18 +442,22 @@ import {
   useCardGroupExpansion,
 } from '~/composables/useCardGroupExpansion';
 import type { AccordionItem } from '@nuxt/ui';
-import SortComponent from '~/components/search/Sort.vue';
-const GroupBy = defineAsyncComponent(
-  () => import('~/components/search/GroupBy.vue'),
-);
+import SearchResultsDisplayMenu from '~/components/results/SearchResultsDisplayMenu.vue';
 import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
-import { sortSearchResults, groupAndSortCards } from '~/utils/sort';
+import { sortSearchResults } from '~/utils/sort';
+import {
+  groupSearchResults,
+  TOP_RESULTS_GROUP_KEY,
+} from '~/utils/searchResultGroups';
 import { provideCommandersSet } from '~/composables/useBulkData';
 import { provideSearchHistory } from '~/composables/useSearchHistory';
+import { provideDeckbuilder } from '~/composables/useDeckbuilder';
+import { provideSearchResultVisibility } from '~/composables/useSearchResultVisibility';
 import { useDesktopPreview } from '~/composables/useIsMobile';
 
 provideSearchHistory();
 provideCardFeedback();
+provideSearchResultVisibility();
 const isDesktopPreview = useDesktopPreview();
 
 const { getPageInfo } = usePageInfo();
@@ -455,6 +500,7 @@ const props = withDefaults(
     hideSearchedCard?: boolean;
     hideThumbsDownButton?: boolean;
     hideGroupNavigation?: boolean;
+    actionFooter?: boolean;
     collectionOrder?: boolean;
     initialSort?: { field?: string; direction: 'asc' | 'desc' };
     defaultGroupBy?: string;
@@ -474,6 +520,8 @@ const emit = defineEmits<{
   sort: [field: string | undefined, direction: 'asc' | 'desc'];
 }>();
 
+if (props.showAddToDeckbuilderButton) provideDeckbuilder();
+
 const { cards: preferredResults, pending: printingPending } =
   useSearchResultPrintings(
     computed(() =>
@@ -492,6 +540,12 @@ const PAGE_SIZE = 40;
 const currentPage = ref(1);
 const resultsTop = ref<HTMLElement | null>(null);
 const totalResults = computed(() => props.searchResults?.length ?? 0);
+const showActionFooter = computed(
+  () =>
+    props.actionFooter &&
+    !props.error &&
+    (props.isLoading || deferringHeavyRender.value || totalResults.value > 0),
+);
 const pageStart = computed(() => (currentPage.value - 1) * PAGE_SIZE);
 const pageEnd = computed(() =>
   Math.min(pageStart.value + PAGE_SIZE, totalResults.value),
@@ -596,6 +650,18 @@ const hasPopularity = computed(
     ),
 );
 
+const displayMenuProps = computed(() => ({
+  view: view.value,
+  groupBy: groupBy.value,
+  sortBy: sortBy.value,
+  sortDirection: sortDirection.value,
+  collectionOrder: props.collectionOrder,
+  rerankingEnabled: props.rerankingEnabled,
+  hasAlsScore: hasAlsScore.value,
+  hasAiScore: hasAiScore.value,
+  hasPopularity: hasPopularity.value,
+}));
+
 // Computed sorted results for flat display (no grouping, or similarity search)
 const sortedResults = computed(() => {
   if (!displayResults.value || displayResults.value.length === 0) {
@@ -648,24 +714,20 @@ const groupedResults = computed<CardGroup[] | null>(() => {
   // For similarity search, keep first card out of groups
   if (props.isSimilaritySearch && !props.hideSearchedCard) {
     const [, ...restCards] = displayResults.value;
-    return groupAndSortCards(
+    return groupSearchResults(
       restCards,
       groupBy.value,
       clientSort.value,
       sortDirection.value,
-      undefined,
-      undefined,
       props.preserveResultOrder,
     );
   }
 
-  return groupAndSortCards(
+  return groupSearchResults(
     displayResults.value,
     groupBy.value,
     clientSort.value,
     sortDirection.value,
-    undefined,
-    undefined,
     props.preserveResultOrder,
   );
 });

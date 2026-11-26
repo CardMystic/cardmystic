@@ -112,12 +112,39 @@ async function expectCards(scope: Page | Locator, names: string[]) {
   await expect
     .poll(() =>
       cards
-        .locator('img')
-        .evaluateAll((images) =>
-          images.map((image) => image.getAttribute('alt')),
+        .locator('button[aria-label^="Options for "]')
+        .evaluateAll((buttons) =>
+          buttons.map((button) =>
+            button.getAttribute('aria-label')?.replace('Options for ', ''),
+          ),
         ),
     )
     .toEqual(names);
+}
+
+async function expectGroupedCards(
+  scope: Page | Locator,
+  names: string[],
+  text = false,
+) {
+  const groups = scope.getByTestId('search-results-grid');
+  // All results remain in their groups; Top Results repeats the best seven.
+  await expect(groups.locator(':scope > div')).toHaveCount(names.length + 7);
+  const last = groups.last().locator(':scope > div').last();
+  await last.scrollIntoViewIfNeeded();
+  if (text) {
+    await expect(last.locator('.card-text-row')).toHaveAttribute(
+      'aria-label',
+      names.at(-1) + ', 1 copies',
+    );
+  } else {
+    await expect(
+      last.getByRole('button', {
+        name: 'Options for ' + names.at(-1),
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
 }
 
 test('mobile pagination exposes every zero-score result and new queries start at page one', async ({
@@ -175,7 +202,8 @@ test('grouping shows complete groups and switching back restores 40-card pages',
   const white = state.names.filter((_, index) => index % 2 === 1);
   const group = (name: RegExp) =>
     page.getByRole('button', { name }).and(page.locator('[aria-expanded]'));
-  await expectCards(page, [...blue, ...white]);
+  await page.keyboard.press('Escape');
+  await expectGroupedCards(page, [...blue, ...white]);
   await expect(pages).toHaveCount(0);
   await expect(group(/^Blue \(43\)/)).not.toContainText('shown');
   await expect(group(/^White \(42\)/)).not.toContainText('shown');
@@ -184,10 +212,11 @@ test('grouping shows complete groups and switching back restores 40-card pages',
   await group(/^Blue \(43\)/).click();
   await expect(group(/^Blue \(43\)/)).toHaveAttribute('aria-expanded', 'false');
   await group(/^Blue \(43\)/).click();
-  await expectCards(page, [...blue, ...white]);
+  await page.keyboard.press('Escape');
+  await expectGroupedCards(page, [...blue, ...white]);
 
   await page.getByRole('button', { name: 'Display', exact: true }).click();
-  await page.getByTitle('Clear grouping', { exact: true }).click();
+  await page.getByTitle('Clear grouping', { exact: true }).press('Enter');
   await page.keyboard.press('Escape');
   await expectCards(page, state.names.slice(0, 40));
   await expect(
@@ -226,15 +255,26 @@ test('similarity counts the searched card on the first page and cached navigatio
     .getByRole('combobox', { name: 'Search grouping', exact: true })
     .click();
   await page.getByRole('option', { name: 'Color', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   const blue = state.names.filter((_, index) => index % 2 === 0);
   const white = state.names.filter((_, index) => index % 2 === 1);
   const allNames = [state.seed.card_name, ...blue, ...white];
-  await expectCards(page, allNames);
+  await page.keyboard.press('Escape');
+  await expectGroupedCards(page, [...blue, ...white]);
+  await page
+    .getByRole('button', { name: 'Display results', exact: true })
+    .click();
   await expect(pages).toHaveCount(0);
-  await page.getByRole('combobox').filter({ hasText: 'Card Grid' }).click();
-  await page.getByRole('option', { name: 'Card Text', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'View', exact: true })
+    .press('Enter');
+  await page
+    .getByRole('option', { name: 'Card Text', exact: true })
+    .press('Enter');
   const rows = page.locator('.card-text-row');
-  await expect(rows).toHaveCount(allNames.length);
+  await page.keyboard.press('Escape');
+  await expectGroupedCards(page, [...blue, ...white], true);
   await expect(rows.first()).toHaveAttribute(
     'aria-label',
     allNames[0] + ', 1 copies',
@@ -243,9 +283,17 @@ test('similarity counts the searched card on the first page and cached navigatio
     'aria-label',
     allNames.at(-1) + ', 1 copies',
   );
-  await page.getByRole('combobox').filter({ hasText: 'Card Text' }).click();
-  await page.getByRole('option', { name: 'Card Grid', exact: true }).click();
-  await expectCards(page, allNames);
+  await page
+    .getByRole('button', { name: 'Display results', exact: true })
+    .click();
+  await page
+    .getByRole('combobox', { name: 'View', exact: true })
+    .press('Enter');
+  await page
+    .getByRole('option', { name: 'Card Grid', exact: true })
+    .press('Enter');
+  await page.keyboard.press('Escape');
+  await expectGroupedCards(page, [...blue, ...white]);
   expect(state.requests()).toBe(1);
   expect(state.hydrationWarnings).toEqual([]);
 });
@@ -272,9 +320,11 @@ test('card-page similar cards paginate by default and support complete groups', 
   await page.getByRole('option', { name: 'Color', exact: true }).click();
   const blue = state.names.filter((_, index) => index % 2 === 0);
   const white = state.names.filter((_, index) => index % 2 === 1);
-  await expectCards(related, [...blue, ...white]);
+  await page.keyboard.press('Escape');
+  await expectGroupedCards(related, [...blue, ...white]);
+  await related.getByRole('button', { name: 'Display', exact: true }).click();
   await expect(pages).toHaveCount(0);
-  await page.getByTitle('Clear grouping', { exact: true }).click();
+  await page.getByTitle('Clear grouping', { exact: true }).press('Enter');
   await page.keyboard.press('Escape');
   await expectCards(related, state.names.slice(0, 40));
   await expect(
@@ -296,7 +346,7 @@ test('similarity search handles a bodyless no-matches response', async ({
   await expect(pagination(page)).toHaveCount(0);
 });
 
-test('deck recommender hides the limit input and always requests 100', async ({
+test('deck recommender hides the limit input and always requests 200', async ({
   page,
 }) => {
   const state = await setup(page, 'smart');
@@ -309,8 +359,16 @@ test('deck recommender hides the limit input and always requests 100', async ({
     page,
     '/search/all/deckbuilder?commander=The%20Wandering%20Emperor&limit=200',
   );
-  await expectCards(page, [state.seed.card_name]);
-  expect(limit).toBe(100);
+  await expect(
+    page
+      .getByTestId('search-results-grid')
+      .first()
+      .getByRole('button', {
+        name: 'Options for ' + state.seed.card_name,
+        exact: true,
+      }),
+  ).toBeVisible();
+  expect(limit).toBe(200);
   await expect(page.getByPlaceholder(/Results limit/)).toHaveCount(0);
 });
 

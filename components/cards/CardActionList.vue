@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   cardPageAction,
-  cardActionStyles,
   type CardAction,
   type CardActionMenu,
 } from '~/utils/card-actions';
@@ -56,9 +55,7 @@ const groups = computed(() =>
     :ui="{ label: 'whitespace-normal wrap-anywhere' }"
     :to="`/card/${oracleId}`"
     no-prefetch
-    :block="preview"
-    class="min-h-11"
-    :class="!preview && 'justify-start'"
+    class="min-h-11 w-full justify-start text-left"
     @click="emit('viewCard')"
   />
   <div
@@ -72,19 +69,12 @@ const groups = computed(() =>
       index > 0 && (preview ? 'pt-4' : 'pt-3'),
     ]"
   >
-    <UButton
-      v-if="group.name === 'list' && printingEnabled"
-      label="Change printing"
-      v-bind="cardActionStyles.printing"
-      :variant="variant"
-      class="min-h-11 w-full justify-start whitespace-normal text-left"
-      :ui="{ label: 'whitespace-normal' }"
-      @click="emit('changePrinting')"
-    />
     <CardListActionControls
-      v-if="group.name === 'list' && actions.list?.length"
-      :actions="actions.list"
+      v-if="group.name === 'list' && (actions.list?.length || printingEnabled)"
+      :actions="actions.list ?? []"
+      :printing-enabled="printingEnabled"
       :variant="variant"
+      @change-printing="emit('changePrinting')"
       @select="emit('select', $event)"
     />
     <UButton
@@ -103,9 +93,7 @@ const groups = computed(() =>
           ? 'solid'
           : (action.variant ?? variant)
       "
-      :block="preview"
-      class="min-h-11 whitespace-normal text-left"
-      :class="!preview && 'justify-start'"
+      class="min-h-11 w-full justify-start whitespace-normal text-left"
       @click="emit('select', action)"
     />
   </div>

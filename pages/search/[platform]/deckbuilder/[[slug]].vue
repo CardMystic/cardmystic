@@ -77,6 +77,8 @@
       <div v-else class="mb-10 w-full">
         <!-- Results -->
         <SearchResults
+          action-footer
+          default-group-by="type"
           :reranking-enabled="route.query.useRerank !== 'false'"
           :show-add-to-deckbuilder-button="true"
           :is-loading="isLoading"
@@ -108,14 +110,9 @@
       </div>
     </div>
   </UContainer>
-  <LazyIssuesFab
-    v-if="searchResults && searchResults.length"
-    :onClick="handleFabClick"
-  />
-  <LazyBackToTop />
   <UButton
     v-if="selectedDeckChanged"
-    class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[60] w-max max-w-[calc(100%-2rem)] -translate-x-1/2 shadow-lg"
+    class="fixed bottom-[var(--notification-bottom,max(0.5rem,env(safe-area-inset-bottom)))] left-1/2 z-40 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 shadow-lg"
     :ui="{ label: 'whitespace-normal text-center' }"
     icon="i-lucide-refresh-cw"
     :disabled="
@@ -137,7 +134,6 @@
 import { computed, watch } from 'vue';
 import { useMounted } from '@vueuse/core';
 import { useRoute } from 'vue-router';
-import searchFeedbackUrl from '~/utils/searchFeedbackUrl';
 import { usePageInfo } from '~/composables/usePageInfo';
 import { useAlsRecommend } from '~/composables/useAlsRecommend';
 import type { AlsRecommendRequest } from '~/composables/useAlsRecommend';
@@ -204,7 +200,7 @@ const hasSearchInput = computed(
   () => !!decklistParam.value || commanderNames.value.length > 0,
 );
 const firstCommanderName = computed(() => commanderParam.value || '');
-const limitParam = computed(() => 100);
+const limitParam = computed(() => 200);
 const platformFilters = getPlatformFilters(platform);
 const parsedFilters = computed(() => {
   if (route.query?.filters) {
@@ -324,7 +320,7 @@ const availableRecommendations = computed(() => {
 const { cards: commanderCards, isLoading: commanderCardsLoading } =
   useCardsByName(computed(() => (mounted.value ? commanderNames.value : [])));
 
-const { setPageInfo, getPageInfo } = usePageInfo();
+const { setPageInfo } = usePageInfo();
 const { saveSearchQuery } = useSearchType();
 
 watch(
@@ -349,8 +345,4 @@ watch(
   },
   { immediate: true },
 );
-
-function handleFabClick() {
-  window.open(searchFeedbackUrl(getPageInfo()), '_blank');
-}
 </script>

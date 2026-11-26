@@ -13,6 +13,8 @@
       color="neutral"
       variant="ghost"
       size="sm"
+      class="min-h-11 whitespace-normal text-left"
+      :ui="{ label: 'whitespace-normal' }"
     />
   </UDropdownMenu>
 </template>
@@ -36,20 +38,6 @@ const isMounted = ref(false);
 const hasJumpTargets = computed(
   () => props.groups.length > 0 || props.boardSections.length > 1,
 );
-
-const jumpToVisible = useJumpToVisible();
-
-watch(
-  () => isMounted.value && hasJumpTargets.value,
-  (value) => {
-    jumpToVisible.value = value;
-  },
-  { immediate: true },
-);
-
-onUnmounted(() => {
-  jumpToVisible.value = false;
-});
 
 function groupToId(label: string): string {
   return (

@@ -68,6 +68,7 @@ const currentFolder = ref(destination.value);
 const deleting = ref(false);
 const duplicating = ref(false);
 const toast = useToast();
+const cardEditToast = useCardEditToast();
 const busy = ref(false);
 const error = ref('');
 const folderOptions = computed(() => [
@@ -111,6 +112,16 @@ async function save() {
   if (!name.value.trim() || !changed.value) return;
   await run(async () => {
     // Track successful edits so retrying a later failed operation doesn't repeat them.
+    if (
+      (bracket.value || null) !== saved.bracket ||
+      name.value.trim() !== saved.name ||
+      description.value !== saved.description ||
+      format.value !== saved.format ||
+      bannerCard.value !== saved.avatarCardName
+    )
+      cardEditToast.notifyEdit(
+        noun.value === 'deck' ? 'Deck Updated' : 'Collection Updated',
+      );
     if (
       (bracket.value || null) !== saved.bracket ||
       name.value.trim() !== saved.name ||

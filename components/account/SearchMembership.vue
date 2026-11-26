@@ -12,6 +12,14 @@ const planFeatures: {
   free: string | boolean;
   pro: string | boolean;
 }[] = [
+  { name: 'Search within decks and collections', free: false, pro: true },
+  {
+    name: 'Target budgets for suggested cards',
+    free: false,
+    pro: true,
+  },
+  { name: 'New-card alerts on your decks', free: false, pro: true },
+  { name: 'Suggested decks for search results', free: false, pro: true },
   { name: 'Normal searches', free: true, pro: true },
   {
     name: 'Pro search',
@@ -30,14 +38,6 @@ const planFeatures: {
   { name: 'Deck Analytics', free: true, pro: true },
   { name: 'Highlight cards owned in a collection', free: true, pro: true },
   { name: 'Suggested adds and cuts on your decks', free: true, pro: true },
-  { name: 'Search within decks and collections', free: false, pro: true },
-  {
-    name: 'Target budgets for suggested cards',
-    free: false,
-    pro: true,
-  },
-  { name: 'New-card alerts on your decks', free: false, pro: true },
-  { name: 'Suggested decks for search results', free: false, pro: true },
 ];
 const emit = defineEmits<{ changed: [] }>();
 const { userProfile: session, userId } = useUserProfile();

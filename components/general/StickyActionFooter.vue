@@ -2,7 +2,7 @@
   <ClientOnly>
     <Teleport to="body">
       <div
-        v-if="show && !nearPageBottom"
+        v-if="show && (!hideAtPageBottom || !nearPageBottom)"
         ref="footer"
         class="sticky-footer-wrap"
       >
@@ -37,16 +37,27 @@ function updateToastOffset() {
       '--notification-bottom',
       `calc(${bottom}px + 0.5rem)`,
     );
-  } else document.documentElement.style.removeProperty('--notification-bottom');
+    if (!props.hideAtPageBottom) {
+      document.documentElement.style.setProperty(
+        '--persistent-footer-height',
+        `${bottom}px`,
+      );
+    }
+  } else {
+    document.documentElement.style.removeProperty('--notification-bottom');
+    document.documentElement.style.removeProperty('--persistent-footer-height');
+  }
 }
 useResizeObserver(footer, updateToastOffset);
 watch(footer, updateToastOffset, { flush: 'post' });
-withDefaults(
+const props = withDefaults(
   defineProps<{
     show?: boolean;
+    hideAtPageBottom?: boolean;
   }>(),
   {
     show: true,
+    hideAtPageBottom: true,
   },
 );
 
@@ -89,6 +100,7 @@ onUnmounted(() => {
     window.removeEventListener('scroll', checkScrollPosition);
     window.removeEventListener('resize', updateToastOffset);
     document.documentElement.style.removeProperty('--notification-bottom');
+    document.documentElement.style.removeProperty('--persistent-footer-height');
   }
 });
 </script>
@@ -104,9 +116,9 @@ onUnmounted(() => {
   padding: 0;
 }
 
-/* Dialogs mark background portals inert; do not cover them with purchase controls. */
-.sticky-footer-wrap[aria-hidden='true'] {
-  visibility: hidden;
+/* Menus also hide background portals from assistive technology. Keep the bar
+   visible while respecting their interaction lock; dialogs stack above it. */
+.sticky-footer-wrap[aria-hidden='true'] .sticky-footer-shell {
   pointer-events: none;
 }
 

@@ -17,8 +17,14 @@
 
       <USkeleton class="h-11 w-full rounded-lg" />
 
-      <div v-if="variant === 'deck'" class="preview-actions">
-        <USkeleton v-for="n in 4" :key="n" class="h-11 w-full rounded-lg" />
+      <div v-if="variant === 'deck'" class="grid gap-1">
+        <div v-for="row in 2" :key="row" class="flex flex-wrap gap-1">
+          <USkeleton
+            v-for="column in 2"
+            :key="column"
+            class="h-11 min-w-0 flex-1 basis-[8rem] rounded-lg"
+          />
+        </div>
       </div>
       <div
         class="preview-actions"

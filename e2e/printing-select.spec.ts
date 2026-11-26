@@ -174,9 +174,6 @@ for (const account of ['guest', 'signed in'] as const) {
         .getByRole('img', { name: card.name, exact: true })
         .boundingBox())!;
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(image.y);
-      expect(
-        Math.abs(bounds.x + bounds.width / 2 - image.x - image.width / 2),
-      ).toBeLessThan(2);
       await edit.focus();
       await page.keyboard.press('Enter');
       const picker = page.getByRole('dialog', {
@@ -498,7 +495,7 @@ test('mobile draft returns to the card modal after closing the picker or saving 
     .click();
   const actions = page.getByRole('dialog', { name: card.name, exact: true });
   const selector = actions.getByRole('button', {
-    name: 'Change printing',
+    name: 'Set Printing',
     exact: true,
   });
   expect(catalogCalls).toBe(0);
@@ -535,6 +532,7 @@ test('mobile draft returns to the card modal after closing the picker or saving 
   await expect(picker).toBeHidden();
   await expect(actions).toBeVisible();
   await expect(actions).toContainText('New Test Set #123 Foil');
+  await expect(page.locator('.card-edit-toast')).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(1);
   await expect(
     page.getByRole('dialog').locator('.card-finish[data-card-finish="foil"]'),

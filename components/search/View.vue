@@ -1,6 +1,8 @@
 <template>
   <div class="grid gap-2">
-    <div class="flex items-center gap-2 justify-start min-h-10">
+    <div
+      class="display-control-row flex items-center gap-2 justify-start min-h-10"
+    >
       <UIcon name="i-lucide-layout-dashboard" class="size-4 shrink-0" />
       <span class="text-sm w-11 shrink-0">View</span>
       <USelect

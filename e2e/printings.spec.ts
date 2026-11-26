@@ -144,7 +144,7 @@ async function choose(page: Page) {
     .getByRole('region', { name: 'Tags', exact: true })
     .boundingBox();
   const selector = actions.getByRole('button', {
-    name: 'Change printing',
+    name: 'Set Printing',
     exact: true,
   });
   const bounds = await selector.boundingBox();
@@ -205,7 +205,7 @@ test('saved deck selection persists through the real database API, reload, and d
     .click();
   await page
     .getByRole('dialog', { name: card.name, exact: true })
-    .getByRole('button', { name: 'Change printing', exact: true })
+    .getByRole('button', { name: 'Set Printing', exact: true })
     .click();
   await page
     .getByRole('button', { name: 'Use default printing', exact: true })
@@ -366,7 +366,7 @@ test('public readers see the saved printing without an edit action', async ({
     .click();
   await expect(page.getByRole('dialog')).toContainText('New Test Set #123');
   await expect(
-    page.getByRole('button', { name: 'Change printing', exact: true }),
+    page.getByRole('button', { name: 'Set Printing', exact: true }),
   ).toHaveCount(0);
 });
 
@@ -459,7 +459,7 @@ test('printing picker loads further pages and filters by set name', async ({
       .click();
     await page
       .getByRole('dialog', { name: card.name, exact: true })
-      .getByRole('button', { name: 'Change printing', exact: true })
+      .getByRole('button', { name: 'Set Printing', exact: true })
       .click();
     await page
       .getByRole('button', { name: 'Load more printings', exact: true })

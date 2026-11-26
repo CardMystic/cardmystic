@@ -241,7 +241,7 @@ test('owners replace mainboard copies and retry a failed cut without adding twic
   await panel
     .getByRole('button', { name: 'Retry removal', exact: true })
     .click();
-  await expect(page.getByText('Card replaced', { exact: true })).toBeVisible();
+  await expect(page.getByText('Card Removed', { exact: true })).toBeVisible();
   expect(adds).toBe(2);
   expect(cuts).toBe(2);
   expect(

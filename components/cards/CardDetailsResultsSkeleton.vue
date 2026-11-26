@@ -22,9 +22,13 @@ withDefaults(defineProps<{ tabCount?: number }>(), { tabCount: 2 });
       </div>
       <div class="mt-2 mb-4 space-y-4">
         <div class="flex flex-wrap gap-2">
-          <USkeleton class="h-10 w-full rounded-md" />
+          <USkeleton v-if="tabCount !== 4" class="h-10 w-full rounded-md" />
           <USkeleton class="h-10 min-w-0 flex-1 rounded-md" />
           <USkeleton class="h-10 w-10 rounded-md sm:w-28" />
+          <template v-if="tabCount === 4">
+            <USkeleton class="h-10 w-full rounded-md" />
+            <USkeleton class="h-39 w-full rounded-md" />
+          </template>
         </div>
         <div class="flex items-center justify-between gap-2">
           <USkeleton class="h-11 w-24 rounded-md" />
@@ -40,9 +44,11 @@ withDefaults(defineProps<{ tabCount?: number }>(), { tabCount: 2 });
     <div class="mt-3" aria-hidden="true">
       <div class="mb-3 flex min-h-11 items-center justify-between gap-3">
         <USkeleton class="h-5 w-32" />
-        <USkeleton class="h-8 w-24 rounded-md" />
+        <USkeleton class="h-11 w-24 rounded-md" />
       </div>
-      <SearchResultsSkeleton />
+      <SearchResultsSkeleton
+        :default-group-by="tabCount === 4 ? 'type' : undefined"
+      />
     </div>
   </div>
 </template>

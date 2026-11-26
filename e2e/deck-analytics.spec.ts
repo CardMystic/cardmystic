@@ -127,7 +127,7 @@ test('Top Tags ranks mainboard copies and expands beyond the first four', async 
 });
 
 for (const width of [390, 1280]) {
-  test(`Jump To keeps the footer visible while choosing a group at ${width}px`, async ({
+  test(`deck navigation keeps Jump and Back to top accessible at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 });
@@ -152,6 +152,46 @@ for (const width of [390, 1280]) {
     await expect
       .poll(() => page.evaluate(() => window.scrollY))
       .toBeGreaterThan(100);
+    await expect(footer).toBeVisible();
+    await page.evaluate(() =>
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'instant',
+      }),
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document.documentElement.scrollHeight -
+            window.innerHeight -
+            window.scrollY,
+        ),
+      )
+      .toBeLessThanOrEqual(2);
+    await expect(footer).toBeVisible();
+    const backToTop = footer.getByRole('button', {
+      name: 'Back to top',
+      exact: true,
+    });
+    await expect(footer.locator('a, button').last()).toHaveAccessibleName(
+      'Back to top',
+    );
+    const arrowBounds = (await backToTop.boundingBox())!;
+    for (const control of await footer
+      .locator('a:visible, button:visible')
+      .all()) {
+      const bounds = (await control.boundingBox())!;
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+        arrowBounds.x + arrowBounds.width + 1,
+      );
+    }
+    if (width < 640) await backToTop.click();
+    else {
+      await backToTop.focus();
+      await page.keyboard.press('Enter');
+    }
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expect(footer).toBeVisible();
   });
 }
