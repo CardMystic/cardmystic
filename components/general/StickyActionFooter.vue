@@ -6,7 +6,11 @@
         ref="footer"
         class="sticky-footer-wrap"
       >
-        <div class="sticky-footer-shell" :class="shellLayoutClass">
+        <div
+          class="sticky-footer-shell"
+          :class="shellLayoutClass"
+          @focusin="revealFocusedAction"
+        >
           <slot v-if="slots.default" />
           <div
             v-else
@@ -28,6 +32,18 @@
 <script setup lang="ts">
 import { useResizeObserver } from '@vueuse/core';
 const footer = useTemplateRef<HTMLElement>('footer');
+function revealFocusedAction(event: FocusEvent) {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const row = target.closest<HTMLElement>('.sticky-footer-actions');
+  if (!row) return;
+  const control = target.getBoundingClientRect();
+  const bounds = row.getBoundingClientRect();
+  if (control.left < bounds.left) row.scrollLeft += control.left - bounds.left;
+  else if (control.right > bounds.right)
+    row.scrollLeft += control.right - bounds.right;
+}
+
 function updateToastOffset() {
   if (!import.meta.client) return;
   if (footer.value) {
@@ -134,6 +150,32 @@ onUnmounted(() => {
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);
   padding: 12px 16px;
   pointer-events: auto;
+}
+
+.sticky-footer-shell :deep(.sticky-footer-actions) {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: safe center;
+  gap: 0.25rem;
+  overflow-x: auto;
+  padding: 0.125rem;
+}
+
+.sticky-footer-shell :deep(.sticky-footer-actions > *) {
+  flex-shrink: 0;
+}
+
+.sticky-footer-shell :deep(.sticky-footer-actions button) {
+  white-space: nowrap;
+}
+
+@media (min-width: 40rem) {
+  .sticky-footer-shell :deep(.sticky-footer-actions) {
+    gap: 0.75rem;
+  }
 }
 
 @media (max-width: 39.999rem) {
