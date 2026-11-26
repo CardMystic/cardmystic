@@ -72,6 +72,7 @@
         <div v-if="!isCollection" class="hidden md:block">
           <DeckPlaytest
             ref="deckPlaytest"
+            v-model:open="isPlaytestOpen"
             :entries="analysisCards"
             :format="list.format"
             :name="list.name || 'Deck'"
@@ -522,7 +523,7 @@
   </UModal>
 
   <StickyActionFooter
-    :show="showStickyFooter && !isCompareModalOpen"
+    :show="showStickyFooter && !isCompareModalOpen && !isPlaytestOpen"
     :hide-at-page-bottom="false"
   >
     <nav
@@ -1520,6 +1521,7 @@ async function confirmAddDuplicate() {
 // Bulk edit state
 const isBulkEditModalOpen = ref(false);
 const isCompareModalOpen = ref(false);
+const isPlaytestOpen = ref(false);
 const transferOpen = ref(false);
 const cutsOpen = ref(false);
 const searchOpen = ref(false);
