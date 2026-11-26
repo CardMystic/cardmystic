@@ -57,7 +57,7 @@
           <NuxtLink
             :to="{
               path: '/search/all/smart',
-              query: { query: readyToSearch.query },
+              query: { query: readyToSearch.query, useRerank: 'false' },
             }"
             no-prefetch
             class="ready-card"
@@ -215,10 +215,7 @@ const isLoggedIn = computed(() => !!userProfile.value);
 
 const sectionVisibility = { rootMargin: '200px' };
 
-// Hardcoded hero cards, fanned out on the right side of the hero.
-// Each renders as an image link to its card detail page. The
-// "Ready To Search" example query below them is chosen to match
-// these cards, so the hero reads as a live search result.
+// Token-doubling creatures illustrate the example search below.
 const heroCards = [
   {
     id: '12a6cad9-eb42-43bd-9e68-aaf862cd83db',
@@ -234,8 +231,7 @@ const heroCards = [
   },
 ];
 
-// Example query shown in the "Ready To Search" card — kept in sync
-// with the token-doubling creatures above.
+// Match the example query to the hero cards.
 const readyToSearch = {
   query: 'Creatures that double your tokens',
 };

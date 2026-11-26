@@ -234,12 +234,23 @@ test.describe('desktop without JavaScript', () => {
     await expect(
       page.getByPlaceholder('Describe the cards you want...'),
     ).toBeVisible();
-    for (const [name, path] of [
-      ['Adrix and Nev, Twincasters', 'adrix-and-nev'],
-      ['Mondrak, Glory Dominus', 'mondrak'],
+    for (const [name, path, oracleId] of [
+      [
+        'Mondrak, Glory Dominus',
+        'mondrak',
+        'fe83087d-c6c1-40be-9295-baaa1c6b2db1',
+      ],
+      [
+        'Adrix and Nev, Twincasters',
+        'adrix-and-nev',
+        '12a6cad9-eb42-43bd-9e68-aaf862cd83db',
+      ],
     ]) {
       const image = page.getByAltText(name);
       await expect(image).toBeVisible();
+      await expect(
+        page.getByRole('link', { name, exact: true }),
+      ).toHaveAttribute('href', `/card/${oracleId}`);
       await expect
         .poll(() =>
           image.evaluate(
@@ -254,6 +265,11 @@ test.describe('desktop without JavaScript', () => {
     await expect(
       page.getByText('“Creatures that double your tokens”', { exact: true }),
     ).toBeVisible();
+    const exampleUrl = new URL(
+      (await page.locator('.ready-card').getAttribute('href'))!,
+      page.url(),
+    );
+    expect(exampleUrl.searchParams.get('useRerank')).toBe('false');
   });
   test('direct visits server-render every deferred search form', async ({
     page,
@@ -375,8 +391,8 @@ test('homepage examples open the intended search and load deck summaries once', 
   await demo.scrollIntoViewIfNeeded();
   await expect(demo.locator('.results-ready')).toHaveCount(3);
   await expect(
-    demo.getByRole('link', { name: 'Toxic Deluge', exact: true }),
-  ).toHaveAttribute('href', '/card/afaef788-34d1-460b-b884-9d7ae6ddeb18');
+    demo.getByRole('link', { name: 'Savage Twister', exact: true }),
+  ).toHaveAttribute('href', '/card/5268518e-7631-4149-8eea-c2475b9b14df');
   const decks = showcase.getByRole('navigation', {
     name: 'Example deck and collection',
   });
