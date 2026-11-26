@@ -49,6 +49,7 @@
 </template>
 
 <script lang="ts" setup>
+import { colorFilterSettings } from '~/utils/colorFilters';
 import * as z from 'zod';
 import { useRoute } from 'vue-router';
 
@@ -91,8 +92,10 @@ const queryParam = computed(() =>
 const parsedFilters = computed(() => {
   if (pageDefaults) {
     return CardSearchFiltersSchema.parse({
-      selectedColorFilterOption: 'Match Exactly',
+      selectedColorFilterOption: 'Contains At Most' as const,
+      selectedColorField: 'Color Identity' as const,
       ...pageDefaults.filters.value,
+      ...colorFilterSettings(pageDefaults.filters.value),
     });
   }
   if (route.query.filters) {
@@ -101,7 +104,8 @@ const parsedFilters = computed(() => {
     );
   }
   return CardSearchFiltersSchema.parse({
-    selectedColorFilterOption: 'Match Exactly',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   });
 });
 
@@ -141,6 +145,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     ) {
       delete requestFilters.selectedColors;
       delete requestFilters.selectedColorFilterOption;
+      delete requestFilters.selectedColorField;
     }
 
     // Remove undefined/null/empty values from filters

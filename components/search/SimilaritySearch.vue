@@ -57,6 +57,7 @@
 </template>
 
 <script lang="ts" setup>
+import { colorFilterSettings } from '~/utils/colorFilters';
 import { cardNameSuggestions } from '~/utils/cardNameSuggestions';
 import * as z from 'zod';
 import { useRoute } from 'vue-router';
@@ -107,7 +108,8 @@ const cardNameParam = computed(() =>
 
 const parsedFilters = computed(() => {
   const base: Record<string, unknown> = {
-    selectedColorFilterOption: 'Match Exactly',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
@@ -116,6 +118,7 @@ const parsedFilters = computed(() => {
     return CardSearchFiltersSchema.parse({
       ...base,
       ...pageDefaults.filters.value,
+      ...colorFilterSettings(pageDefaults.filters.value),
     });
   }
   if (route.query.filters) {
@@ -129,7 +132,8 @@ const parsedFilters = computed(() => {
 const state = reactive<Schema>({
   card_name: cardNameParam.value || '',
   filters: parsedFilters.value || {
-    selectedColorFilterOption: 'Match Exactly',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   },
 });
 
@@ -164,6 +168,7 @@ async function performSearch(cardName: string, filters: Schema['filters']) {
     if (!filters?.selectedColors || filters?.selectedColors.length === 0) {
       delete requestFilters.selectedColors;
       delete requestFilters.selectedColorFilterOption;
+      delete requestFilters.selectedColorField;
     }
 
     // Remove undefined/null/empty values from filters

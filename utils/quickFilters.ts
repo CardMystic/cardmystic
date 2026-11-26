@@ -6,6 +6,7 @@ const quickFilterKeys = new Set([
   'isPaper',
   'selectedCardFormats',
   'selectedColorFilterOption',
+  'selectedColorField',
 ]);
 
 export function hasAdvancedFilters(

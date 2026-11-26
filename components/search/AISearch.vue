@@ -114,6 +114,7 @@
 </template>
 
 <script lang="ts" setup>
+import { colorFilterSettings } from '~/utils/colorFilters';
 import * as z from 'zod';
 import { searchSuggestions } from '~/utils/searchSuggestions';
 import { usePopularQueries } from '~/composables/usePopularQueries';
@@ -166,7 +167,8 @@ const queryParam = computed(() =>
 
 const parsedFilters = computed(() => {
   const base: Record<string, unknown> = {
-    selectedColorFilterOption: 'Match Exactly' as const,
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   };
   if (props.platform === 'arena') base.isArena = true;
   if (props.platform === 'mtgo') base.isMTGO = true;
@@ -175,6 +177,7 @@ const parsedFilters = computed(() => {
     return CardSearchFiltersSchema.parse({
       ...base,
       ...pageDefaults.filters.value,
+      ...colorFilterSettings(pageDefaults.filters.value),
     });
   }
   if (route.query.filters) {
@@ -188,7 +191,8 @@ const parsedFilters = computed(() => {
 const state = reactive<Partial<Schema>>({
   query: queryParam.value || '',
   filters: parsedFilters.value || {
-    selectedColorFilterOption: 'Match Exactly',
+    selectedColorFilterOption: 'Contains At Most' as const,
+    selectedColorField: 'Color Identity' as const,
   },
 });
 
@@ -272,6 +276,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     ) {
       delete requestFilters.selectedColors;
       delete requestFilters.selectedColorFilterOption;
+      delete requestFilters.selectedColorField;
     }
 
     // Remove undefined/null/empty values from filters

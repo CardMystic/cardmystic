@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { computed, ref, type Ref } from 'vue';
-import { useDeckbuilder } from '~/composables/useDeckbuilder';
+import { computed, createSSRApp, defineComponent, h, ref, type Ref } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import {
+  provideDeckbuilder,
+  useDeckbuilder,
+} from '~/composables/useDeckbuilder';
 
 const mutateAsync = vi.fn();
 const notify = vi.fn();
+const cardLists = vi.fn(() => ({
+  addCardsByNameToListMutation: { mutateAsync },
+}));
 beforeEach(() => {
   const state = new Map<string, Ref>();
   vi.stubGlobal('useState', (key: string, initial: () => unknown) => {
@@ -11,14 +18,42 @@ beforeEach(() => {
     return state.get(key);
   });
   vi.stubGlobal('computed', computed);
-  vi.stubGlobal('useCardLists', () => ({
-    addCardsByNameToListMutation: { mutateAsync },
-  }));
+  cardLists.mockClear();
+  vi.stubGlobal('useCardLists', cardLists);
   vi.stubGlobal('useToast', () => ({ add: notify }));
   mutateAsync.mockReset().mockResolvedValue({ invalidCardNames: [] });
   notify.mockReset();
 });
 afterEach(() => vi.unstubAllGlobals());
+
+it('shares one parsed deck and mutation scope across a result list', async () => {
+  const stores: ReturnType<typeof useDeckbuilder>[] = [];
+  const Card = defineComponent({
+    setup() {
+      stores.push(useDeckbuilder());
+      return () => h('span');
+    },
+  });
+  const Results = defineComponent({
+    setup() {
+      stores.push(provideDeckbuilder());
+      return () => Array.from({ length: 200 }, () => h(Card));
+    },
+  });
+  const app = createSSRApp({
+    setup() {
+      const source = provideDeckbuilder();
+      source.decklist.value = '2 Island\nSol Ring';
+      stores.push(source);
+      return () => h(Results);
+    },
+  });
+  await renderToString(app);
+  expect(stores).toHaveLength(202);
+  expect(new Set(stores).size).toBe(1);
+  expect(stores[0].cardNames.value).toEqual(new Set(['Island', 'Sol Ring']));
+  expect(cardLists).toHaveBeenCalledOnce();
+});
 
 it('pasted decks change locally without saving or rerunning', async () => {
   const deck = useDeckbuilder();

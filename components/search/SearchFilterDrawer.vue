@@ -53,10 +53,10 @@
           <QuickFilters v-model="filters" :show="quickFilters" />
           <section
             v-if="commanderColors"
-            aria-label="Commander color identity"
+            aria-label="Commander colors"
             class="space-y-2"
           >
-            <h3 class="text-sm font-semibold">Color identity</h3>
+            <h3 class="text-sm font-semibold">Colors</h3>
             <CommanderFilters v-model="filters" />
           </section>
           <LazyFilters
