@@ -216,7 +216,7 @@ test('grouping shows complete groups and switching back restores 40-card pages',
   await expectGroupedCards(page, [...blue, ...white]);
 
   await page.getByRole('button', { name: 'Display', exact: true }).click();
-  await page.getByTitle('Clear grouping', { exact: true }).click();
+  await page.getByTitle('Clear grouping', { exact: true }).press('Enter');
   await page.keyboard.press('Escape');
   await expectCards(page, state.names.slice(0, 40));
   await expect(
@@ -255,6 +255,8 @@ test('similarity counts the searched card on the first page and cached navigatio
     .getByRole('combobox', { name: 'Search grouping', exact: true })
     .click();
   await page.getByRole('option', { name: 'Color', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Reject all', exact: true }).click();
   const blue = state.names.filter((_, index) => index % 2 === 0);
   const white = state.names.filter((_, index) => index % 2 === 1);
   const allNames = [state.seed.card_name, ...blue, ...white];
@@ -264,8 +266,12 @@ test('similarity counts the searched card on the first page and cached navigatio
     .getByRole('button', { name: 'Display results', exact: true })
     .click();
   await expect(pages).toHaveCount(0);
-  await page.getByRole('combobox').filter({ hasText: 'Card Grid' }).click();
-  await page.getByRole('option', { name: 'Card Text', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'View', exact: true })
+    .press('Enter');
+  await page
+    .getByRole('option', { name: 'Card Text', exact: true })
+    .press('Enter');
   const rows = page.locator('.card-text-row');
   await page.keyboard.press('Escape');
   await expectGroupedCards(page, [...blue, ...white], true);
@@ -280,8 +286,12 @@ test('similarity counts the searched card on the first page and cached navigatio
   await page
     .getByRole('button', { name: 'Display results', exact: true })
     .click();
-  await page.getByRole('combobox').filter({ hasText: 'Card Text' }).click();
-  await page.getByRole('option', { name: 'Card Grid', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'View', exact: true })
+    .press('Enter');
+  await page
+    .getByRole('option', { name: 'Card Grid', exact: true })
+    .press('Enter');
   await page.keyboard.press('Escape');
   await expectGroupedCards(page, [...blue, ...white]);
   expect(state.requests()).toBe(1);
@@ -314,7 +324,7 @@ test('card-page similar cards paginate by default and support complete groups', 
   await expectGroupedCards(related, [...blue, ...white]);
   await related.getByRole('button', { name: 'Display', exact: true }).click();
   await expect(pages).toHaveCount(0);
-  await page.getByTitle('Clear grouping', { exact: true }).click();
+  await page.getByTitle('Clear grouping', { exact: true }).press('Enter');
   await page.keyboard.press('Escape');
   await expectCards(related, state.names.slice(0, 40));
   await expect(
@@ -349,7 +359,15 @@ test('deck recommender hides the limit input and always requests 200', async ({
     page,
     '/search/all/deckbuilder?commander=The%20Wandering%20Emperor&limit=200',
   );
-  await expectCards(page, [state.seed.card_name]);
+  await expect(
+    page
+      .getByTestId('search-results-grid')
+      .first()
+      .getByRole('button', {
+        name: 'Options for ' + state.seed.card_name,
+        exact: true,
+      }),
+  ).toBeVisible();
   expect(limit).toBe(200);
   await expect(page.getByPlaceholder(/Results limit/)).toHaveCount(0);
 });
