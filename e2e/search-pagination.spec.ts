@@ -128,8 +128,8 @@ async function expectGroupedCards(
   text = false,
 ) {
   const groups = scope.getByTestId('search-results-grid');
-  // All results remain in their groups; Top Results repeats the best seven.
-  await expect(groups.locator(':scope > div')).toHaveCount(names.length + 7);
+  // All results remain in their groups; Top Results repeats the best fourteen.
+  await expect(groups.locator(':scope > div')).toHaveCount(names.length + 14);
   const last = groups.last().locator(':scope > div').last();
   await last.scrollIntoViewIfNeeded();
   if (text) {

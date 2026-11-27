@@ -1,7 +1,7 @@
 import type { Card } from '~/models/cardModel';
 import { groupAndSortCards, sortSearchResults, type CardGroup } from './sort';
 
-export const TOP_RESULTS_COUNT = 7;
+export const TOP_RESULTS_COUNT = 14;
 export const TOP_RESULTS_GROUP_KEY = 'search-top-results';
 
 export function groupSearchResults(
