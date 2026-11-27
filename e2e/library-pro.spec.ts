@@ -669,10 +669,23 @@ test('my lists support folder management, typed deletion, sorting, list view and
       },
     });
   });
+  const collection = {
+    ...state.deck,
+    id: '73000000-0000-4000-8000-000000000001',
+    name: 'Owned cards',
+    kind: 'collection',
+    format: 'Any',
+    visibility: 'private',
+    commanders: [],
+  };
+  await page.route(
+    BACKEND + '/supabase/card-lists/mine/' + collection.id,
+    (route) => route.fulfill({ json: { decklist: collection } }),
+  );
   await page.route(BACKEND + '/supabase/card-lists/create', (route) => {
     creates.push(route.request().postDataJSON());
     return route.fulfill({
-      json: { id: '73000000-0000-4000-8000-000000000001', name: 'Owned cards' },
+      json: { id: collection.id, name: collection.name },
     });
   });
   await page.evaluate(() => {
@@ -756,6 +769,11 @@ test('my lists support folder management, typed deletion, sorting, list view and
     format: 'Any',
     visibility: 'private',
   });
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page).toHaveURL(`/lists/${collection.id}`);
+  await expect(
+    page.getByRole('heading', { name: collection.name, exact: true }),
+  ).toBeVisible();
 });
 
 test('collections paginate on mobile and Display fields stay aligned', async ({

@@ -252,10 +252,11 @@ const handleCreate = async () => {
     });
     emit('success');
     isOpen.value = false;
-  } catch (error: any) {
+    if (result?.id) await navigateTo(`/lists/${result.id}`);
+  } catch (error) {
     toast.add({
       title: 'Error creating list',
-      description: error.message,
+      description: error instanceof Error ? error.message : String(error),
       color: 'error',
     });
   }
