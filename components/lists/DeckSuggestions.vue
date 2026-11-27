@@ -263,9 +263,9 @@ async function add(card: Card) {
         {{ title }}
         <span v-if="newestSet" class="text-xs text-(--pro-accent)">Pro</span>
       </h2>
-      <div class="flex flex-wrap items-center gap-1">
+      <div class="flex shrink-0 items-center gap-1">
         <UButton
-          label="Refresh suggestions"
+          aria-label="Refresh suggestions"
           icon="i-lucide-refresh-cw"
           size="xs"
           color="neutral"
@@ -288,9 +288,7 @@ async function add(card: Card) {
       </div>
     </div>
     <p v-if="newestSet" class="text-sm text-muted mb-3">
-      Suggestions from {{ setName || 'the newest released expansion' }}. Card
-      suggestions will show automatically when there are new cards you should
-      know about!
+      Suggestions from {{ setName || 'the newest released expansion' }}
     </p>
     <form
       v-if="api.isPro.value"

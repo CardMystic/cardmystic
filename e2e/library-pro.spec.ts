@@ -15,7 +15,7 @@ test('free deck owners request suggested adds on demand', async ({ page }) => {
     });
   });
   await expect(
-    page.getByRole('region', { name: 'Suggested cards' }),
+    page.getByRole('region', { name: 'Suggested Adds' }),
   ).toHaveCount(0);
   expect(state.writes).toHaveLength(0);
   await openDeckAction(page, 'Compare decks');
@@ -23,7 +23,7 @@ test('free deck owners request suggested adds on demand', async ({ page }) => {
   await page.keyboard.press('Escape');
   expect(requests).toBe(0);
   await openDeckAction(page, 'Suggest Adds');
-  const panel = page.getByRole('region', { name: 'Suggested cards' });
+  const panel = page.getByRole('region', { name: 'Suggested Adds' });
   await expect(panel).toBeVisible();
   const card = panel.getByRole('button', {
     name: `Options for ${suggested.name}`,
@@ -167,7 +167,7 @@ test('suggestion queue advances without searching again and refills only when ex
       });
     },
   );
-  const section = page.getByRole('region', { name: 'Suggested cards' });
+  const section = page.getByRole('region', { name: 'Suggested Adds' });
   await page.getByRole('button', { name: 'More deck actions' }).click();
   const scrollBefore = await page.evaluate(() => window.scrollY);
   await page
@@ -862,7 +862,7 @@ test('Show more reveals queued cards without another recommendation request', as
     },
   );
   const section = page.getByRole('region', {
-    name: 'Suggested cards',
+    name: 'Suggested Adds',
     exact: true,
   });
   await openDeckAction(page, 'Suggest Adds');
@@ -1091,7 +1091,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
       }),
   );
   const suggestions = page.getByRole('region', {
-    name: 'Suggested cards',
+    name: 'Suggested Adds',
     exact: true,
   });
   await openDeckAction(page, 'Suggest Adds');
@@ -1105,7 +1105,7 @@ test('Pro budget and ownership controls use the selected budget and collection',
     .poll(() => budgets)
     .toContainEqual({ targetBudget: 25, newestSet: false });
   const alerts = page.getByRole('region', {
-    name: `New Cards for ${state.deck.name}`,
+    name: 'New Cards',
     exact: true,
   });
   await openDeckAction(page, 'Suggest New Cards · Pro');
@@ -2079,7 +2079,7 @@ test('collections have their own history and empty decks do not load analysis or
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await expect(page.getByTestId('deck-stats')).toHaveCount(0);
   await expect(
-    page.getByRole('region', { name: 'Suggested cards', exact: true }),
+    page.getByRole('region', { name: 'Suggested Adds', exact: true }),
   ).toHaveCount(0);
   expect(requests).toBe(0);
 });
