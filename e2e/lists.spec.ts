@@ -169,10 +169,11 @@ test.describe('Card lists CRUD', () => {
     expect(body.id).toBeTruthy();
     expect(body.name).toBe(LIST_NAME);
 
-    // Modal closes and the New Deck appears in the grid.
+    // Creation opens the saved deck immediately.
     await expect(dialog).toBeHidden({ timeout: API_TIMEOUT });
+    await expect(page).toHaveURL(`/lists/${LIST_ID}`);
     await expect(
-      page.locator('h3').filter({ hasText: LIST_NAME }).first(),
+      page.getByRole('heading', { name: LIST_NAME, exact: true }),
     ).toBeVisible({ timeout: API_TIMEOUT });
   });
 

@@ -319,7 +319,7 @@ test('replacement images and row counts match suggested adds at every breakpoint
     exact: true,
   });
   const adds = page.getByRole('region', {
-    name: 'Suggested cards',
+    name: 'Suggested Adds',
     exact: true,
   });
   const replacementImages = replacements.locator('.replacement-cards img');

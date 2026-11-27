@@ -54,12 +54,12 @@ test('closing new-card suggestions dismisses the release across visits, with man
   );
   await page.reload();
   const panel = page.getByRole('region', {
-    name: `New Cards for ${state.deck.name}`,
+    name: 'New Cards',
     exact: true,
   });
   await expect(panel).toBeVisible();
   await expect(panel.getByRole('heading', { level: 2 })).toContainText(
-    `New Cards for ${state.deck.name}`,
+    'New Cards',
   );
   expect(recommendationRequests).toBe(1);
   const panelBottom = await panel.evaluate(
@@ -114,13 +114,30 @@ test('closing new-card suggestions dismisses the release across visits, with man
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
   await page.screenshot({ path: '/tmp/cardmystic-new-cards-mobile.png' });
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  const refresh = panel.getByRole('button', { name: 'Refresh suggestions' });
+  await refresh.focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => recommendationRequests).toBe(4);
+  await expect(refresh).toBeEnabled();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await expect(close).toBeInViewport();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({ path: '/tmp/cardmystic-new-cards-large-text.png' });
+  await page.keyboard.press('Enter');
+  await expect(panel).toHaveCount(0);
 });
 
 for (const outcome of ['no matches', 'ranking unavailable'] as const) {
   test(`automatic alerts stay hidden for ${outcome}; manual action explains the result`, async ({
     page,
   }) => {
-    const state = await setupDeckDisplay(page, { pro: true });
+    await setupDeckDisplay(page, { pro: true });
     await page.route(BACKEND + '/library/lists/*/new-cards', (route) =>
       route.fulfill({
         json: {
@@ -147,7 +164,7 @@ for (const outcome of ['no matches', 'ranking unavailable'] as const) {
     await page.reload();
     await expect.poll(() => requests).toBe(1);
     const panel = page.getByRole('region', {
-      name: `New Cards for ${state.deck.name}`,
+      name: 'New Cards',
       exact: true,
     });
     await expect(panel).toBeHidden();
@@ -192,7 +209,7 @@ test('failed dismissal keeps the panel open and allows retry', async ({
   );
   await openDeckAction(page, 'Suggest New Cards · Pro');
   const panel = page.getByRole('region', {
-    name: `New Cards for ${state.deck.name}`,
+    name: 'New Cards',
     exact: true,
   });
   const close = panel.getByRole('button', {
@@ -213,7 +230,7 @@ test('Suggest Adds opens above the deck and closes without leaving a bottom pane
 }) => {
   await setupDeckDisplay(page, { pro: true });
   const panel = page.getByRole('region', {
-    name: 'Suggested cards',
+    name: 'Suggested Adds',
     exact: true,
   });
   await expect(panel).toHaveCount(0);
