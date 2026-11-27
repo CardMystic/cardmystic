@@ -67,13 +67,12 @@
             role="status"
             aria-label="Loading selected deck"
           />
-          <UInputMenu
+          <AppInputMenu
             v-else
             :model-value="selectedDeckOption?.value"
             @update:model-value="selectSavedDeck($event || '')"
             v-model:search-term="deckSearchTerm"
             :items="deckOptions"
-            open-on-focus
             open-on-click
             value-key="value"
             label-key="label"
@@ -90,7 +89,7 @@
         </UFormField>
         <UFormField v-else name="commander" class="min-w-0 flex-1">
           <div class="flex gap-2 items-center">
-            <UInputMenu
+            <AppInputMenu
               v-model="state.commander"
               @update:model-value="touchSource"
               v-model:search-term="commanderSearchTerm"
@@ -134,7 +133,7 @@
       <template v-if="sourceMode === 'paste'">
         <UFormField v-if="showPartnerField" name="partnerCommander">
           <div class="flex gap-2 items-center">
-            <UInputMenu
+            <AppInputMenu
               v-model="state.partnerCommander"
               @update:model-value="touchSource"
               v-model:search-term="partnerSearchTerm"

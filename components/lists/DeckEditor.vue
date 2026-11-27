@@ -116,8 +116,9 @@
       <div
         class="flex w-full flex-wrap items-center gap-1 lg:w-auto lg:ml-auto"
       >
-        <UInputMenu
+        <AppInputMenu
           v-if="isOwner"
+          retain-focus-on-select
           ref="addCardInput"
           v-model="selectedCardToAdd"
           v-model:search-term="addCardSearchTerm"

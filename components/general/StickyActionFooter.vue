@@ -148,7 +148,7 @@ onUnmounted(() => {
   background: color-mix(in oklab, var(--ui-bg) 92%, transparent);
   backdrop-filter: blur(10px);
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);
-  padding: 12px 16px;
+  padding: 0.25rem 0.5rem;
   pointer-events: auto;
 }
 
@@ -184,7 +184,6 @@ onUnmounted(() => {
     bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
   .sticky-footer-shell {
-    padding: 0.625rem 0.75rem;
     border: 1px solid color-mix(in oklab, var(--ui-secondary) 52%, transparent);
     border-radius: 1.25rem;
   }

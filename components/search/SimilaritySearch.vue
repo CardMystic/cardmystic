@@ -20,7 +20,7 @@
 
     <UFormField name="card_name" class="mb-2">
       <div class="flex gap-2">
-        <UInputMenu
+        <AppInputMenu
           ref="autoComplete"
           v-model="state.card_name"
           v-model:search-term="searchTerm"

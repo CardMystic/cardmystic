@@ -36,7 +36,7 @@
           />
         </UFormField>
         <UFormField v-if="isCommanderFormat" label="Commander (optional)">
-          <UInputMenu
+          <AppInputMenu
             v-model="newListCommander"
             v-model:search-term="commanderSearchTerm"
             :items="filteredCommanders"
@@ -50,7 +50,7 @@
           v-if="isCommanderFormat && showPartnerField"
           label="Partner Commander (optional)"
         >
-          <UInputMenu
+          <AppInputMenu
             v-model="newListPartnerCommander"
             v-model:search-term="partnerSearchTerm"
             :items="filteredPartners"

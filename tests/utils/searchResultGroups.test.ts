@@ -25,13 +25,13 @@ const cards = Array.from(
 
 describe('grouped search highlights', () => {
   it.each(['type', 'color', 'colorIdentity', 'cmc'])(
-    'puts the seven best matches first when grouped by %s, independently of the selected sort',
+    'puts the fourteen best matches first when grouped by %s, independently of the selected sort',
     (groupBy) => {
       const groups = groupSearchResults(cards, groupBy, 'name', 'asc')!;
       expect(groups[0]).toEqual({
         key: TOP_RESULTS_GROUP_KEY,
         label: 'Top Results',
-        cards: cards.slice(-7).reverse(),
+        cards: cards.slice(-14).reverse(),
       });
       const normalCards = groups.slice(1).flatMap((group) => group.cards);
       expect(normalCards).toHaveLength(200);
@@ -42,7 +42,7 @@ describe('grouped search highlights', () => {
 
   it('keeps server reranking for Top Results and the normal groups', () => {
     const groups = groupSearchResults(cards, 'type', undefined, 'asc', true)!;
-    expect(groups[0].cards).toEqual(cards.slice(0, 7));
+    expect(groups[0].cards).toEqual(cards.slice(0, 14));
     expect(groups[1].cards).toEqual(
       cards.filter((_, index) => index % 2 === 0),
     );

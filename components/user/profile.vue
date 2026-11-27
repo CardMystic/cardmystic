@@ -228,7 +228,7 @@ const handleSignOut = async () => {
                     <h3 class="text-sm font-semibold mb-2">
                       Choose Profile Icon
                     </h3>
-                    <UInputMenu
+                    <AppInputMenu
                       v-model="selectedProfileCard"
                       v-model:search-term="searchTerm"
                       :loading="updateAvatarMutation.isPending.value"

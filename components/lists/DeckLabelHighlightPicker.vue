@@ -36,7 +36,7 @@ const options = computed(() => {
 </script>
 <template>
   <UFormField :label="label.charAt(0).toUpperCase() + label.slice(1)">
-    <UInputMenu
+    <AppInputMenu
       v-model="target"
       :items="options"
       :loading="loading"

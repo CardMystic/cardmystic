@@ -47,7 +47,7 @@ function removeRole(name: string) {
       <h3 id="deck-role-counts-title" class="text-lg font-semibold">
         <NuxtLink to="/roles" class="hover:underline">Cards by Role</NuxtLink>
       </h3>
-      <UInputMenu
+      <AppInputMenu
         v-if="availableRoles.length"
         :items="availableRoles"
         :model-value="undefined"

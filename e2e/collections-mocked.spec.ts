@@ -176,6 +176,8 @@ test('collections match the navigation, responsive directory layout, and SEO met
   await page.getByRole('button', { name: 'Themes', exact: true }).click();
   await page.getByRole('link', { name: 'All themes', exact: true }).click();
   await expect(page).toHaveURL(/\/themes$/);
+  await expect(menu).toBeHidden();
+  await expect(opener).toBeFocused();
   await expect(page.getByTestId('collection-tile')).toHaveCount(1);
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
   for (const [kind, name] of [
