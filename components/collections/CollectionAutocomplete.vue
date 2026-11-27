@@ -27,7 +27,7 @@ const options = computed(() =>
 </script>
 
 <template>
-  <UInputMenu
+  <AppInputMenu
     v-model:search-term="searchTerm"
     :items="options"
     label-key="name"
@@ -46,5 +46,5 @@ const options = computed(() =>
       {{ item.name }}
       <span class="text-muted">({{ item.slug.toUpperCase() }})</span>
     </template>
-  </UInputMenu>
+  </AppInputMenu>
 </template>

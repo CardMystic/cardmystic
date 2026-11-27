@@ -261,6 +261,9 @@ for (const owner of [true, false]) {
       await search.fill('No matching decks');
       await expect.poll(() => deckSearches).toContain('No matching decks');
       await expect(dialog.getByRole('option')).toHaveCount(0);
+      await search.press('Enter');
+      await expect(search).toHaveAttribute('aria-expanded', 'false');
+      await expect(search).not.toBeFocused();
       await expect(otherRecent).toBeVisible();
       await otherRecent.click();
       await expect(search).toHaveValue('Other recent deck');

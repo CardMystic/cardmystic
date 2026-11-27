@@ -222,7 +222,7 @@ const money = (cents: number) =>
         </h3>
         <div class="flex flex-wrap items-end gap-x-5 gap-y-3">
           <UFormField label="Role, theme, or card type" class="w-full sm:w-72">
-            <UInputMenu
+            <AppInputMenu
               v-model="target"
               :items="targets"
               value-key="value"

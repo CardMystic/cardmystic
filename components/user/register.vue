@@ -188,7 +188,7 @@ const resendVerification = async () => {
       size="lg"
     />
 
-    <UInputMenu
+    <AppInputMenu
       v-model="selectedProfileCard"
       v-model:search-term="avatarSearchTerm"
       :items="filteredAvatarCards"

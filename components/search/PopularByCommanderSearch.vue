@@ -9,7 +9,7 @@
     <!-- Commander autocomplete -->
     <UFormField name="commander" class="mb-2">
       <div class="flex gap-2 items-center">
-        <UInputMenu
+        <AppInputMenu
           v-model="state.commander"
           v-model:search-term="commanderSearchTerm"
           :items="filteredCommanders"
@@ -35,7 +35,7 @@
     <!-- Partner commander autocomplete -->
     <UFormField v-if="showPartnerField" name="partnerCommander" class="mb-2">
       <div class="flex gap-2 items-center">
-        <UInputMenu
+        <AppInputMenu
           v-model="state.partnerCommander"
           v-model:search-term="partnerSearchTerm"
           :items="filteredPartners"

@@ -71,6 +71,7 @@ test('adding a card preserves mobile display choices and collapsed groups', asyn
       'aria-expanded',
       'false',
     );
+    await expect(input).toBeFocused();
     await page.getByRole('button', { name: 'Display', exact: true }).click();
     await expect(
       page.getByRole('combobox', { name: 'Deck view', exact: true }),

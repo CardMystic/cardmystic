@@ -45,7 +45,7 @@
             "
           />
         </div>
-        <UInputMenu
+        <AppInputMenu
           v-if="sourceMode === 'select'"
           v-model="selectedDeckId"
           v-model:search-term="deckSearchTerm"

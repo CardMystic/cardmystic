@@ -54,7 +54,7 @@ async function submit() {
 <template>
   <form class="grow space-y-4" @submit.prevent="submit">
     <UFormField label="Card" name="card_name">
-      <UInputMenu
+      <AppInputMenu
         v-model="state.card_name"
         v-model:search-term="searchTerm"
         :items="options"

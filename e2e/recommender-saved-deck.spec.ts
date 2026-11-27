@@ -2,6 +2,8 @@ import { expect, test, type Locator } from '@playwright/test';
 import { setupDeckDisplay, displayDeckId } from './utils/deckDisplay';
 import { BACKEND, waitForHydration } from './utils/mocks';
 
+test.use({ hasTouch: true });
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
@@ -170,9 +172,17 @@ test('saved deck recommendations add cards without searching until rerun', async
 
 test('signed-in users default to selecting a saved deck', async ({ page }) => {
   const state = await setupDeckDisplay(page);
-  await page.route(BACKEND + '/supabase/card-lists/mine/search**', (route) =>
-    route.fulfill({ json: { decklists: [state.deck] } }),
-  );
+  await page.route(BACKEND + '/supabase/card-lists/mine/search**', (route) => {
+    const query =
+      new URL(route.request().url()).searchParams.get('query') ?? '';
+    return route.fulfill({
+      json: {
+        decklists: state.deck.name.toLowerCase().includes(query.toLowerCase())
+          ? [state.deck]
+          : [],
+      },
+    });
+  });
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
@@ -237,8 +247,34 @@ test('signed-in users default to selecting a saved deck', async ({ page }) => {
     await expect(selector).toBeVisible();
   }
   await expect(page.getByPlaceholder(/Paste your decklist/)).toHaveCount(0);
+  const caret = selector.locator('..').getByRole('button');
+  await selector.tap();
+  await expect(selector).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('heading', { name: 'MTG Deck Recommender' }).tap();
+  await expect(selector).toHaveAttribute('aria-expanded', 'false');
+  await expect(selector).not.toBeFocused();
+  await selector.tap();
+  const query = page.getByRole('textbox', {
+    name: 'Search query',
+    exact: true,
+  });
+  await query.tap();
+  await expect(selector).toHaveAttribute('aria-expanded', 'false');
+  await expect(query).toBeFocused();
+  await selector.tap();
+  await selector.press('Tab');
+  await expect(selector).toHaveAttribute('aria-expanded', 'false');
+  await expect(paste).toBeFocused();
+  await selector.tap();
+  await caret.tap();
+  await expect(selector).toHaveAttribute('aria-expanded', 'false');
+  await expect(selector).not.toBeFocused();
+  await selector.tap();
+  await selector.press('Enter');
+  await expect(selector).toHaveAttribute('aria-expanded', 'false');
+  await expect(selector).not.toBeFocused();
   await selector.click();
-  await expect(selector).toHaveValue('');
+  await selector.fill('');
   await expect(
     page.getByRole('option', { name: 'My display deck', exact: true }),
   ).toBeVisible();
