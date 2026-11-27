@@ -270,6 +270,10 @@ test('signed-in users default to selecting a saved deck', async ({ page }) => {
   await expect(selector).toHaveAttribute('aria-expanded', 'false');
   await expect(selector).not.toBeFocused();
   await selector.tap();
+  await selector.evaluate((input: HTMLInputElement) => input.blur());
+  await expect(selector).toHaveAttribute('aria-expanded', 'false');
+  await expect(selector).not.toBeFocused();
+  await selector.tap();
   await selector.press('Enter');
   await expect(selector).toHaveAttribute('aria-expanded', 'false');
   await expect(selector).not.toBeFocused();

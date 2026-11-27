@@ -12,6 +12,28 @@ const inputRef = computed(() => menu.value?.inputRef);
 defineExpose({ inputRef });
 let outsideFocus: HTMLElement | null | undefined;
 let selected = false;
+let pointerInsideOptions = false;
+let closing = false;
+
+function protectOptionTap() {
+  pointerInsideOptions = true;
+  setTimeout(() => {
+    pointerInsideOptions = false;
+  }, 0);
+}
+
+function dismissKeyboard(event: FocusEvent) {
+  const input = inputRef.value?.$el;
+  // Mobile keyboard dismissal can blur without sending Enter. Option taps
+  // must finish selecting before their menu closes.
+  if (
+    event.target === input &&
+    event.relatedTarget === null &&
+    !pointerInsideOptions &&
+    !input?.disabled
+  )
+    closeMenu();
+}
 
 async function updateOpen(value: boolean) {
   open.value = value;
@@ -40,10 +62,14 @@ async function updateOpen(value: boolean) {
 
 function closeMenu() {
   // Use the normal toggle so Reka also resets its internal search state.
-  if (open.value)
-    inputRef.value?.$el?.parentElement
-      .querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]')
-      ?.click();
+  if (!open.value || closing) return;
+  closing = true;
+  inputRef.value?.$el?.parentElement
+    .querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]')
+    ?.click();
+  void nextTick(() => {
+    closing = false;
+  });
 }
 
 function trackOutsideFocus(event: Event) {
@@ -83,10 +109,12 @@ async function finishInput(event: KeyboardEvent) {
       ...((attrs.content as Record<string, unknown>) ?? {}),
       onPointerDownOutside: trackOutsideFocus,
       onFocusOutside: dismissFocusOutside,
+      onPointerdownCapture: protectOptionTap,
     }"
     @update:open="updateOpen"
     @update:model-value="selected = true"
     @keydown="finishInput"
+    @blur="dismissKeyboard"
   >
     <template v-for="(_, name) in $slots" #[name]="slotProps">
       <slot :name="name" v-bind="slotProps ?? {}" />
