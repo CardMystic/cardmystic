@@ -62,7 +62,7 @@
 
         <div class="space-y-2">
           <div class="text-sm font-medium">Search Decks</div>
-          <UInputMenu
+          <AppInputMenu
             v-model="selectedListItem"
             v-model:search-term="deckSearchTerm"
             :items="filteredDeckLabels"
@@ -79,7 +79,7 @@
                 }}</span>
               </div>
             </template>
-          </UInputMenu>
+          </AppInputMenu>
         </div>
 
         <UAlert

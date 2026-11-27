@@ -116,8 +116,9 @@
       <div
         class="flex w-full flex-wrap items-center gap-1 lg:w-auto lg:ml-auto"
       >
-        <UInputMenu
+        <AppInputMenu
           v-if="isOwner"
+          retain-focus-on-select
           ref="addCardInput"
           v-model="selectedCardToAdd"
           v-model:search-term="addCardSearchTerm"
@@ -352,7 +353,7 @@
               v-if="addsOpen"
               ref="suggestedAdds"
               id="deck-suggestions"
-              title="Suggested cards"
+              title="Suggested Adds"
               :list-id="listId"
               :oracle-ids="oracleIds"
               :ready="!loading"
@@ -369,7 +370,7 @@
               ref="suggestedNewCards"
               :key="newRelease.status.value?.set?.slug || 'latest'"
               id="deck-new-cards"
-              :title="`New Cards for ${list?.name || 'Untitled deck'}`"
+              title="New Cards"
               :list-id="listId"
               :oracle-ids="oracleIds"
               :ready="!loading"

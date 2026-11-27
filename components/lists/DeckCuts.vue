@@ -135,12 +135,14 @@ onBeforeUnmount(() => sequence++);
     tabindex="-1"
     class="my-4 rounded-lg border border-error/30 bg-error/5 p-4"
   >
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <h2 class="font-semibold">Suggested Cuts</h2>
-      <div class="flex gap-1">
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <h2 class="min-w-0 wrap-anywhere font-semibold">Suggested Cuts</h2>
+      <div class="flex shrink-0 items-center gap-1">
         <UButton
           icon="i-lucide-refresh-cw"
           aria-label="Refresh cuts"
+          color="neutral"
+          size="xs"
           variant="ghost"
           :disabled="removing.size > 0"
           :loading="loading"
@@ -148,16 +150,12 @@ onBeforeUnmount(() => sequence++);
         /><UButton
           icon="i-lucide-x"
           aria-label="Close suggested cuts"
+          size="xs"
           variant="ghost"
           @click="open = false"
         />
       </div>
     </div>
-    <p class="text-sm text-muted mb-3">
-      Cards that fit less closely with the rest of your deck. Click a card to
-      review it or remove all copies from the mainboard. Lands and commanders
-      are excluded.
-    </p>
     <DeckSuggestionGrid
       v-if="loading"
       :expanded="expanded"

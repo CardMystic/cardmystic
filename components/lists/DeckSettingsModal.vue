@@ -232,7 +232,7 @@ async function move() {
                 class="w-full"
             /></UFormField>
             <UFormField label="Banner image">
-              <UInputMenu
+              <AppInputMenu
                 v-model="bannerCard"
                 v-model:search-term="bannerSearch"
                 :items="bannerOptions"

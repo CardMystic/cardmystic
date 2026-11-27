@@ -38,7 +38,7 @@
           >
             <UIcon name="i-lucide-user" class="w-8 h-8" />
           </div>
-          <UInputMenu
+          <AppInputMenu
             v-model="selectedProfileCard"
             v-model:search-term="avatarSearchTerm"
             :items="filteredAvatarCards"

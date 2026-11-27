@@ -322,7 +322,7 @@ for (const width of [390, 1440]) {
         const groups = page.getByTestId('search-results-grid');
         const topResults = groups.first();
         await expect(topResults).toHaveAttribute('id', 'group-top-results');
-        await expect(topResults.locator('.card-root')).toHaveCount(7);
+        await expect(topResults.locator('.card-root')).toHaveCount(14);
         // The closing Display popover can keep the result region inert briefly.
         await expect
           .poll(() =>
@@ -332,7 +332,7 @@ for (const width of [390, 1440]) {
                 buttons.map((button) => button.getAttribute('aria-label')),
               ),
           )
-          .toEqual(cards.slice(0, 7).map((card) => `Options for ${card.name}`));
+          .toEqual(cards.slice(0, 14).map((card) => `Options for ${card.name}`));
         // A 200-card result list should not mount every interactive card at once.
         await expect
           .poll(() => page.locator('[data-deferred]').count())

@@ -106,6 +106,26 @@ for (const owner of [true, false]) {
       expect(box.y).toBe(0);
       expect(box.width).toBe(390);
       expect(box.height).toBe(844);
+      const art = modal.locator('.card-image-wrapper img');
+      expect((await art.boundingBox())!.width).toBeGreaterThan(280);
+      const defaultPrinting = modal.getByRole('button', {
+        name: 'Set Default Printing',
+        exact: true,
+      });
+      expect((await defaultPrinting.boundingBox())!.y).toBeLessThan(
+        (await art.boundingBox())!.y,
+      );
+      for (const height of [844, 650]) {
+        await page.setViewportSize({ width: 390, height });
+        await expect(
+          modal.getByRole('button', {
+            name: 'Remove From List',
+            exact: true,
+          }),
+        ).toBeInViewport({ ratio: 1 });
+        expect((await art.boundingBox())!.width).toBeGreaterThan(192);
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
       const order = await modal
         .locator(
           '[aria-label="Card actions"] button, [aria-label="Card actions"] a',
@@ -241,6 +261,9 @@ for (const owner of [true, false]) {
       await search.fill('No matching decks');
       await expect.poll(() => deckSearches).toContain('No matching decks');
       await expect(dialog.getByRole('option')).toHaveCount(0);
+      await search.press('Enter');
+      await expect(search).toHaveAttribute('aria-expanded', 'false');
+      await expect(search).not.toBeFocused();
       await expect(otherRecent).toBeVisible();
       await otherRecent.click();
       await expect(search).toHaveValue('Other recent deck');
