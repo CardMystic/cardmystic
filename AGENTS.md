@@ -8,6 +8,8 @@ Name every feature branch `Andrew/name` with a capital A and a short, descriptiv
 
 # Deployment
 
+Do not deploy until Andrew explicitly tells you to deploy the current changes. Finish the requested work and checks, then stop before merging into `main` or triggering a deployment. Earlier deployment permission does not carry forward to later changes.
+
 Use the existing requested branch and keep commits split by functionality. Before pushing, inspect staged and unstaged changes and unpublished commits so the release includes the intended work without sweeping in unrelated worktrees. Follow an explicitly requested branch name even when it differs from the default capitalization above.
 
 Run the checks required by the user and the focused checks described below before release. For frontend browser tests, use a production build. The local backend currently permits `http://localhost:5173`; an alternate port or `127.0.0.1` origin can produce `403 Origin not allowed` even when the app is correct. If the dev server occupies that address, stop it temporarily and restore it afterward. Do not loosen production origin checks to make tests pass.
