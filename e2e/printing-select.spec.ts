@@ -70,6 +70,8 @@ for (const account of ['guest', 'signed in'] as const) {
   test(`search loads the saved art first for a ${account} user and can edit it in the card modal`, async ({
     page,
   }) => {
+    if (account === 'guest')
+      await page.setViewportSize({ width: 390, height: 650 });
     if (account === 'signed in') await setupDeckDisplay(page, { cardCount: 4 });
     else
       await page.addInitScript(
@@ -174,6 +176,7 @@ for (const account of ['guest', 'signed in'] as const) {
         .getByRole('img', { name: card.name, exact: true })
         .boundingBox())!;
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(image.y);
+      if (account === 'guest') expect(image.width).toBeGreaterThan(192);
       await edit.focus();
       await page.keyboard.press('Enter');
       const picker = page.getByRole('dialog', {

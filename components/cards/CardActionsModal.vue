@@ -114,23 +114,24 @@ function act(action: CardAction) {
     :title="card.card_data.name"
     :description="`${board} card options`"
     :ui="{
-      header: 'pr-14 sm:pr-16',
+      header: 'flex-col items-start gap-1 pr-14 sm:pr-16',
       wrapper: 'min-w-0',
+      description: 'sr-only',
       content: 'deck-card-modal sm:max-w-2xl',
       body: 'deck-card-modal-body overflow-y-auto pt-2 sm:pt-2',
     }"
   >
+    <template #actions>
+      <CardDetailsPrintingSelect :card="card.card_data" />
+    </template>
     <template #body>
       <div
         class="grid min-w-0 gap-x-5 gap-y-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]"
       >
         <div class="min-w-0">
-          <div class="mb-2 flex justify-start">
-            <CardDetailsPrintingSelect :card="card.card_data" />
-          </div>
           <div
             v-if="imageUrl"
-            class="card-finish card-image-wrapper relative mx-auto w-full max-w-48 rounded-xl sm:max-w-none"
+            class="card-modal-image card-finish card-image-wrapper relative mx-auto w-full rounded-xl"
             :data-card-finish="card.card_data.selected_finish"
           >
             <img
@@ -246,6 +247,9 @@ function act(action: CardAction) {
 
 <style>
 @media (max-width: 39.999rem) {
+  .card-modal-image {
+    max-width: clamp(12rem, calc((100dvh - 20rem) * 488 / 680), 20rem);
+  }
   .deck-card-modal {
     inset: 0;
     width: 100%;
